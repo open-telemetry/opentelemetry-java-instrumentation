@@ -232,6 +232,33 @@ class SelectorConfigTest {
   }
 
   @Test
+  void renamedDeprecatedConfigWarningListsReplacementSelectorProperties() {
+    DeclarativeConfigProperties config = mockStableConfig();
+    when(config.getScalarList("capture_mdc_attributes/development", String.class))
+        .thenReturn(singletonList("legacy"));
+    TestHandler handler = attachWarningHandler();
+    try {
+      IncludeExclude selector =
+          SelectorConfig.resolveDeprecatedCapture(
+              config, "deprecated", SELECTOR, "replacement", STABLE, false);
+
+      assertThat(selector).isNotNull();
+      assertThat(selector.matches("legacy")).isTrue();
+      assertThat(handler.records).hasSize(1);
+      assertThat(handler.records.get(0).getMessage())
+          .isEqualTo(
+              "The otel.instrumentation.deprecated.experimental.capture-mdc-attributes"
+                  + " setting and the equivalent declarative configuration property are deprecated"
+                  + " and may be removed in the next minor release. Use"
+                  + " otel.instrumentation.replacement.mdc-attributes.included or"
+                  + " otel.instrumentation.replacement.mdc-attributes.excluded or equivalent"
+                  + " declarative configuration instead.");
+    } finally {
+      detachWarningHandler(handler);
+    }
+  }
+
+  @Test
   void deprecatedConfigLoneWildcardCapturesAll() {
     DeclarativeConfigProperties config = mockConfig();
     when(config.getScalarList("capture_mdc_attributes/development", String.class))

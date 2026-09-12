@@ -29,6 +29,11 @@
 - Deprecate `otel.instrumentation.opensearch.capture-search-query`. There is no replacement.
 - Deprecate `otel.instrumentation.elasticsearch.capture-search-query` There is no replacement.
   ([#19675](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19675))
+- Deprecate `otel.instrumentation.messaging.experimental.receive-telemetry.enabled`,
+  `otel.instrumentation.messaging.experimental.headers.included`,
+  and `otel.instrumentation.messaging.experimental.headers.excluded` in favor of the corresponding
+  `otel.instrumentation.common.messaging.experimental` properties.
+  ([#20060](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20060))
 
 ## Version 2.31.1 (2026-08-23)
 

@@ -32,7 +32,7 @@ testing {
         all {
           testTask.configure {
             jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
-            jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+            jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
           }
         }
       }
@@ -46,7 +46,7 @@ tasks {
   }
 
   test {
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
   }
 
   val experimentalSuites = testing.suites.withType(JvmTestSuite::class)
@@ -67,14 +67,14 @@ tasks {
   val testMessagingPreview = register<Test>("testMessagingPreview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
   }
 
   val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
   }
 
@@ -82,7 +82,7 @@ tasks {
     testClassesDirs = sourceSets["testNoReceiveTelemetry"].output.classesDirs
     classpath = sourceSets["testNoReceiveTelemetry"].runtimeClasspath
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
   }
 
@@ -91,7 +91,7 @@ tasks {
     classpath = sourceSets["testNoReceiveTelemetry"].runtimeClasspath
     isEnabled = project.tasks.named("testNoReceiveTelemetry").get().enabled
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
     jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
   }
 

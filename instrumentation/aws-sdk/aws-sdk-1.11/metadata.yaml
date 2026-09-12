@@ -19,19 +19,22 @@ configurations:
       `aws.lambda.function.name` for AWS SDK instrumentation.
     type: boolean
     default: false
-  - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+  - name: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
     declarative_name: java.common.messaging.receive_telemetry/development.enabled
     description: >
       Enables experimental receive telemetry, which will cause consumers to start a new trace, with
       only a span link connecting it to the producer trace.
     type: boolean
     default: false
+  - ref: messaging.deprecated-receive-telemetry.enabled
   - ref: messaging.headers.included
   - ref: messaging.headers.excluded
   - ref: messaging.capture-headers
-  - name: otel.instrumentation.aws-sdk.batch-send.message-creation-spans.enabled
-    declarative_name: java.aws_sdk.batch_send.message_creation_spans.enabled
-    description: Determines whether to create a producer span for each eligible message in an SQS batch send when stable messaging semantic conventions are enabled. Overrides `otel.instrumentation.messaging.batch-send.message-creation-spans.enabled`.
+  - ref: messaging.deprecated-headers.included
+  - ref: messaging.deprecated-headers.excluded
+  - name: otel.instrumentation.aws-sdk.message-create-spans.enabled
+    declarative_name: java.aws_sdk.message_create_spans.enabled
+    description: Determines whether to create a producer span for each eligible message in an SQS batch send when stable messaging semantic conventions are enabled. Overrides `otel.instrumentation.common.messaging.message-create-spans.enabled`.
     type: boolean
     default: true
-  - ref: messaging.batch-send.message-creation-spans.enabled
+  - ref: common.messaging.message-create-spans.enabled
