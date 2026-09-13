@@ -28,9 +28,15 @@ final class ApplicationLoggerFactory extends ApplicationLoggerBridge
 
   @Override
   protected void install(InternalLogger.Factory applicationLoggerFactory) {
+    // the agent must not call into the application logging system while a class file
+    // transformation is in progress - see TransformSafeApplicationLoggerFactory. Created up here
+    // so that the duplicate-install warning below goes through it too.
+    InternalLogger.Factory transformSafeFactory =
+        new TransformSafeApplicationLoggerFactory(applicationLoggerFactory);
+
     // just use the first bridge that gets discovered and ignore the rest
     if (!installed.compareAndSet(false, true)) {
-      applicationLoggerFactory
+      transformSafeFactory
           .create(ApplicationLoggerBridge.class.getName())
           .log(
               InternalLogger.Level.WARN,
@@ -39,11 +45,6 @@ final class ApplicationLoggerFactory extends ApplicationLoggerBridge
               null);
       return;
     }
-
-    // the agent must not call into the application logging system while a class file
-    // transformation is in progress - see TransformSafeApplicationLoggerFactory
-    InternalLogger.Factory transformSafeFactory =
-        new TransformSafeApplicationLoggerFactory(applicationLoggerFactory);
 
     // flushing may cause additional classes to be loaded (e.g. slf4j loads logback, which we
     // instrument), so we're doing this repeatedly to clear the in-memory store and preserve the
