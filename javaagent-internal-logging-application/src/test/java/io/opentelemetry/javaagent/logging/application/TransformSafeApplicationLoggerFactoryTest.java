@@ -12,7 +12,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.javaagent.bootstrap.InternalLogger;
 import io.opentelemetry.javaagent.bootstrap.internal.InTransformation;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -39,21 +38,20 @@ class TransformSafeApplicationLoggerFactoryTest {
   }
 
   @Test
-  void shouldNotCallApplicationLoggerOnAThreadInsideATransformation() throws Exception {
+  void shouldNotCallApplicationLoggerOnAThreadInsideATransformation() {
     RecordingFactory delegate = new RecordingFactory();
     InternalLogger logger = new TransformSafeApplicationLoggerFactory(delegate).create("test");
 
     InTransformation.enter();
     logger.log(INFO, "a", null);
 
-    // the record is not lost, it is just emitted from somewhere other than the transforming thread
-    assertThat(delegate.await()).isTrue();
-    assertThat(delegate.message.get()).isEqualTo("a");
-    assertThat(delegate.loggedOn.get()).isNotSameAs(Thread.currentThread());
+    // the record is dropped, not queued - the delegate is never called at all
+    assertThat(delegate.logged.getCount()).isEqualTo(1);
+    assertThat(delegate.createdOn.get()).isNull();
   }
 
   @Test
-  void shouldNotCreateTheBridgedLoggerOnAThreadInsideATransformation() throws Exception {
+  void shouldNotCreateTheBridgedLoggerOnAThreadInsideATransformation() {
     RecordingFactory delegate = new RecordingFactory();
     InternalLogger logger = new TransformSafeApplicationLoggerFactory(delegate).create("test");
 
@@ -62,40 +60,24 @@ class TransformSafeApplicationLoggerFactoryTest {
 
     // creating the bridged logger calls into the application logging system as well, so it must
     // not happen on the transforming thread either
-    assertThat(delegate.await()).isTrue();
-    assertThat(delegate.createdOn.get()).isNotSameAs(Thread.currentThread());
+    assertThat(delegate.createdOn.get()).isNull();
   }
 
   @Test
-  void shouldKeepDrainingAfterTheApplicationLoggerThrows() throws Exception {
-    RecordingFactory delegate = new RecordingFactory();
-    InternalLogger logger = new TransformSafeApplicationLoggerFactory(delegate).create("test");
-    delegate.failNext.set(true);
-
-    InTransformation.enter();
-    logger.log(INFO, "boom", null);
-    logger.log(INFO, "after", null);
-
-    // the first record blows up in the drain thread, the second one still gets through
-    assertThat(delegate.await()).isTrue();
-    assertThat(delegate.message.get()).isEqualTo("after");
-  }
-
-  @Test
-  void shouldAlwaysBeLoggableWhileInTransformation() {
+  void shouldNotBeLoggableWhileInTransformation() {
     RecordingFactory delegate = new RecordingFactory();
     InternalLogger logger = new TransformSafeApplicationLoggerFactory(delegate).create("test");
 
     InTransformation.enter();
 
-    // the application logging system can't be consulted here, so the record has to be built
-    assertThat(logger.isLoggable(INFO)).isTrue();
+    // the application logging system can't be consulted here, so the caller should skip
+    // building the record entirely
+    assertThat(logger.isLoggable(INFO)).isFalse();
     assertThat(delegate.createdOn.get()).isNull();
   }
 
   private static final class RecordingFactory implements InternalLogger.Factory {
 
-    final AtomicBoolean failNext = new AtomicBoolean();
     final AtomicReference<Thread> createdOn = new AtomicReference<>();
     final AtomicReference<Thread> loggedOn = new AtomicReference<>();
     final AtomicReference<String> message = new AtomicReference<>();
@@ -116,9 +98,6 @@ class TransformSafeApplicationLoggerFactoryTest {
 
         @Override
         public void log(Level level, String message, Throwable error) {
-          if (RecordingFactory.this.failNext.compareAndSet(true, false)) {
-            throw new IllegalStateException("application logger failed");
-          }
           loggedOn.set(Thread.currentThread());
           RecordingFactory.this.message.set(message);
           logged.countDown();
