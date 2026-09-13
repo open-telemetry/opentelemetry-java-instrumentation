@@ -145,6 +145,11 @@ afterEvaluate {
     val failOnContextLeakOverride = failOnContextLeakProperty.get()
     val testIndyEnabled = testIndyProperty.get()
 
+    val suite = testing.suites.findByName(name) as? JvmTestSuite
+    if (suite != null && suite.name.endsWith("unitTests", true)) {
+      return@configureEach
+    }
+
     jvmArgumentProviders.add(
       JavaagentTestArgumentsProvider(
         agentShadowJar,

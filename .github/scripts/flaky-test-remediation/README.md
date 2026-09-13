@@ -52,5 +52,5 @@ and opens an automated draft PR when Copilot produces a change.
 
 ## Environment
 
-`DEVELOCITY_URL` (defaults to `https://develocity.opentelemetry.io`). The
+`DEVELOCITY_URL` (defaults to `https://community.develocity.cloud`). The
 dashboard data endpoints used here are unauthenticated; no access key needed.

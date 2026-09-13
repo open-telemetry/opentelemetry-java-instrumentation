@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoInstrumenterFactory.DEFAULT_MAX_NORMALIZED_QUERY_LENGTH;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -14,13 +15,25 @@ import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import com.mongodb.MongoException;
 import com.mongodb.MongoSocketException;
 import com.mongodb.ServerAddress;
+import com.mongodb.connection.ClusterId;
+import com.mongodb.connection.ConnectionDescription;
+import com.mongodb.connection.ServerId;
+import com.mongodb.event.CommandStartedEvent;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.net.UnknownHostException;
+import java.nio.file.Paths;
 import java.util.stream.Stream;
+import jnr.unixsocket.UnixSocketAddress;
 import org.bson.BsonArray;
 import org.bson.BsonDocument;
 import org.bson.BsonInt32;
 import org.bson.BsonString;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledForJreRange;
+import org.junit.jupiter.api.condition.JRE;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -108,6 +121,77 @@ class MongoDbAttributesGetterTest {
     assertThat(getter.getErrorType(null, null, error)).isEqualTo(expectedErrorType);
   }
 
+  @Test
+  void networkPeerComesOnlyFromTheAgentResolver() {
+    CommandStartedEvent event = commandStartedEvent();
+    InetSocketAddress socketAddress =
+        new InetSocketAddress(InetAddress.getLoopbackAddress(), 27018);
+    MongoNetworkPeer peer = MongoNetworkPeer.fromSocketAddress(socketAddress);
+
+    MongoDbAttributesGetter libraryGetter =
+        new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH);
+    MongoDbAttributesGetter agentGetter =
+        new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH, ignored -> peer);
+
+    assertThat(libraryGetter.getNetworkPeerAddress(event, null)).isNull();
+    assertThat(libraryGetter.getNetworkPeerPort(event, null)).isNull();
+    assertThat(libraryGetter.getNetworkPeerInetSocketAddress(event, null)).isNull();
+    assertThat(agentGetter.getNetworkPeerAddress(event, null))
+        .isEqualTo(
+            emitStableDatabaseSemconv() ? InetAddress.getLoopbackAddress().getHostAddress() : null);
+    assertThat(agentGetter.getNetworkPeerPort(event, null))
+        .isEqualTo(emitStableDatabaseSemconv() ? 27018 : null);
+    assertThat(agentGetter.getNetworkPeerInetSocketAddress(event, null))
+        .isSameAs(emitStableDatabaseSemconv() ? socketAddress : null);
+  }
+
+  @Test
+  void networkPeerUsesTheNumericIpv6AddressInsteadOfTheHostLabel() throws UnknownHostException {
+    byte[] address = new byte[16];
+    address[15] = 1;
+    InetAddress ipv6Address = InetAddress.getByAddress("[::1]", address);
+    MongoNetworkPeer peer =
+        MongoNetworkPeer.fromSocketAddress(new InetSocketAddress(ipv6Address, 27018));
+    MongoDbAttributesGetter getter =
+        new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH, ignored -> peer);
+
+    assertThat(getter.getNetworkPeerAddress(commandStartedEvent(), null))
+        .isEqualTo(emitStableDatabaseSemconv() ? "0:0:0:0:0:0:0:1" : null);
+    assertThat(getter.getNetworkPeerPort(commandStartedEvent(), null))
+        .isEqualTo(emitStableDatabaseSemconv() ? 27018 : null);
+  }
+
+  @Test
+  @EnabledForJreRange(min = JRE.JAVA_16)
+  void unixNetworkPeerHasNoPort() throws ReflectiveOperationException {
+    String socketPath = Paths.get("/tmp/mongodb-27017.sock").toString();
+    Class<?> unixDomainSocketAddress = Class.forName("java.net.UnixDomainSocketAddress");
+    SocketAddress socketAddress =
+        (SocketAddress)
+            unixDomainSocketAddress.getMethod("of", String.class).invoke(null, socketPath);
+    MongoNetworkPeer peer = MongoNetworkPeer.fromSocketAddress(socketAddress);
+    MongoDbAttributesGetter getter =
+        new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH, ignored -> peer);
+
+    assertThat(getter.getNetworkPeerAddress(commandStartedEvent(), null))
+        .isEqualTo(emitStableDatabaseSemconv() ? socketPath : null);
+    assertThat(getter.getNetworkPeerPort(commandStartedEvent(), null)).isNull();
+    assertThat(getter.getNetworkPeerInetSocketAddress(commandStartedEvent(), null)).isNull();
+  }
+
+  @Test
+  void jnrUnixNetworkPeerHasNoPort() {
+    String socketPath = Paths.get("/tmp/mongodb-27017.sock").toString();
+    MongoNetworkPeer peer = MongoNetworkPeer.fromSocketAddress(new UnixSocketAddress(socketPath));
+    MongoDbAttributesGetter getter =
+        new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH, ignored -> peer);
+
+    assertThat(getter.getNetworkPeerAddress(commandStartedEvent(), null))
+        .isEqualTo(emitStableDatabaseSemconv() ? socketPath : null);
+    assertThat(getter.getNetworkPeerPort(commandStartedEvent(), null)).isNull();
+    assertThat(getter.getNetworkPeerInetSocketAddress(commandStartedEvent(), null)).isNull();
+  }
+
   private static Stream<Arguments> errorTypes() {
     return Stream.of(
         argumentSet("server error code", new MongoException(11000, "duplicate key"), "11000"),
@@ -123,6 +207,18 @@ class MongoDbAttributesGetterTest {
             null),
         argumentSet("non-mongo exception", new IllegalStateException("boom"), null),
         argumentSet("no error", null, null));
+  }
+
+  private static CommandStartedEvent commandStartedEvent() {
+    ConnectionDescription connectionDescription =
+        new ConnectionDescription(
+            new ServerId(new ClusterId(), new ServerAddress("configured.example", 27017)));
+    return new CommandStartedEvent(
+        1,
+        connectionDescription,
+        "test",
+        "find",
+        new BsonDocument("find", new BsonString("collection")));
   }
 
   private static String sanitizeQueryAcrossVersions(

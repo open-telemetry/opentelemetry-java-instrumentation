@@ -7,6 +7,8 @@ muzzle {
     group.set("org.opensearch.client")
     module.set("opensearch-java")
     versions.set("[3.0,)")
+    assertInverse.set(true)
+    extraDependency("org.opensearch.client:opensearch-rest-client:3.0.0")
   }
 }
 
@@ -16,13 +18,18 @@ otelJava {
 
 dependencies {
   library("org.opensearch.client:opensearch-java:3.0.0")
+
+  implementation(project(":instrumentation:opensearch:opensearch-rest-common-1.0:javaagent"))
+
   compileOnly("com.google.auto.value:auto-value-annotations")
+  compileOnly("org.opensearch.client:opensearch-rest-client:3.0.0")
   annotationProcessor("com.google.auto.value:auto-value")
   compileOnly("com.fasterxml.jackson.core:jackson-core")
 
   testImplementation("org.opensearch.client:opensearch-rest-client:3.0.0")
   testImplementation("com.fasterxml.jackson.core:jackson-databind")
   testImplementation(project(":instrumentation:opensearch:opensearch-rest-common-1.0:testing"))
+  testInstrumentation(project(":instrumentation:opensearch:opensearch-rest-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-5.0:javaagent"))
 
   // AwsSdk2Transport supports awssdk version 2.26.0

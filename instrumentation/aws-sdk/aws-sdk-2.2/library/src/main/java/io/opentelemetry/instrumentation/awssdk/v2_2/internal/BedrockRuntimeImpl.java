@@ -30,6 +30,8 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.awscore.eventstream.EventStreamResponseHandler;
 import software.amazon.awssdk.core.SdkBytes;
+import software.amazon.awssdk.core.SdkField;
+import software.amazon.awssdk.core.SdkPojo;
 import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.SdkResponse;
 import software.amazon.awssdk.core.async.SdkPublisher;
@@ -183,6 +185,29 @@ public final class BedrockRuntimeImpl {
   }
 
   @Nullable
+  static String getGuardrailIdentifier(ExecutionAttributes executionAttributes) {
+    SdkRequest request = executionAttributes.getAttribute(SDK_REQUEST_ATTRIBUTE);
+    String guardrailIdentifier =
+        request.getValueForField("guardrailIdentifier", String.class).orElse(null);
+    if (guardrailIdentifier != null) {
+      return guardrailIdentifier;
+    }
+
+    Object guardrailConfig = request.getValueForField("guardrailConfig", Object.class).orElse(null);
+    if (!(guardrailConfig instanceof SdkPojo)) {
+      return null;
+    }
+
+    for (SdkField<?> field : ((SdkPojo) guardrailConfig).sdkFields()) {
+      if (field.memberName().equals("guardrailIdentifier")) {
+        Object value = field.getValueOrDefault(guardrailConfig);
+        return value instanceof String ? (String) value : null;
+      }
+    }
+    return null;
+  }
+
+  @Nullable
   static String getOperationName(ExecutionAttributes executionAttributes) {
     SdkRequest request = executionAttributes.getAttribute(SDK_REQUEST_ATTRIBUTE);
     if (request instanceof ConverseRequest) {
@@ -200,6 +225,12 @@ public final class BedrockRuntimeImpl {
     }
 
     return null;
+  }
+
+  static boolean isRequestStreaming(ExecutionAttributes executionAttributes) {
+    SdkRequest request = executionAttributes.getAttribute(SDK_REQUEST_ATTRIBUTE);
+    return request instanceof ConverseStreamRequest
+        || request instanceof InvokeModelWithResponseStreamRequest;
   }
 
   @Nullable

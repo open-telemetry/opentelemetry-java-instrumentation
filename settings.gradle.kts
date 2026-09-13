@@ -7,7 +7,7 @@ pluginManagement {
     id("org.jetbrains.kotlin.jvm") version "2.4.10"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.9.1"
-    id("org.graalvm.buildtools.native") version "1.1.10"
+    id("org.graalvm.buildtools.native") version "1.1.12"
     id("com.google.osdetector") version "1.7.3"
     id("com.google.protobuf") version "0.10.0"
   }
@@ -68,7 +68,7 @@ dependencyResolutionManagement {
   }
 }
 
-val develocityServer = "https://develocity.opentelemetry.io"
+val develocityServer = "https://community.develocity.cloud"
 val isCI = System.getenv("CI") != null
 val develocityAccessKey = System.getenv("DEVELOCITY_ACCESS_KEY") ?: ""
 val isRemoteBuildCachePushEnabled = isCI && develocityAccessKey.isNotEmpty()
@@ -76,9 +76,8 @@ val shouldDisableLocalBuildCache =
   isRemoteBuildCachePushEnabled && System.getenv("GITHUB_REF_NAME") == "main"
 
 develocity {
-  if (develocityAccessKey.isNotEmpty()) {
-    server = develocityServer
-  }
+  server = develocityServer
+  projectId = "OpenTelemetry"
 
   buildScan {
     if (develocityAccessKey.isNotEmpty()) {
@@ -115,9 +114,7 @@ buildCache {
   local {
     isEnabled = !shouldDisableLocalBuildCache
   }
-
   remote(develocity.buildCache) {
-    server = develocityServer
     isPush = isRemoteBuildCachePushEnabled
   }
 }
@@ -257,8 +254,11 @@ include(":instrumentation:c3p0-0.9:testing")
 include(":instrumentation:camel-2.20:javaagent")
 include(":instrumentation:camel-2.20:javaagent-unit-tests")
 include(":instrumentation:cassandra:cassandra-3.0:javaagent")
+include(":instrumentation:cassandra:cassandra-3.0:javaagent-unit-tests")
 include(":instrumentation:cassandra:cassandra-4.0:javaagent")
+include(":instrumentation:cassandra:cassandra-4.0:javaagent-unit-tests")
 include(":instrumentation:cassandra:cassandra-4.4:javaagent")
+include(":instrumentation:cassandra:cassandra-4.4:javaagent-unit-tests")
 include(":instrumentation:cassandra:cassandra-4.4:library")
 include(":instrumentation:cassandra:cassandra-4.4:testing")
 include(":instrumentation:cassandra:cassandra-common-4.0:testing")
@@ -270,14 +270,13 @@ include(":instrumentation:couchbase:couchbase-2.0:javaagent")
 include(":instrumentation:couchbase:couchbase-2.6:javaagent")
 include(":instrumentation:couchbase:couchbase-common-2.0:javaagent")
 include(":instrumentation:couchbase:couchbase-common-2.0:javaagent-unit-tests")
+include(":instrumentation:couchbase:couchbase-common-3.0:javaagent")
+include(":instrumentation:couchbase:couchbase-common-3.0:javaagent-unit-tests")
+include(":instrumentation:couchbase:couchbase-common-3.1:javaagent")
+include(":instrumentation:couchbase:couchbase-common-3.1:javaagent-unit-tests")
+include(":instrumentation:couchbase:couchbase-3.0:javaagent")
 include(":instrumentation:couchbase:couchbase-3.1:javaagent")
-include(":instrumentation:couchbase:couchbase-3.1:tracing-opentelemetry-shaded")
-include(":instrumentation:couchbase:couchbase-3.1.6:javaagent")
-include(":instrumentation:couchbase:couchbase-3.1.6:tracing-opentelemetry-shaded")
 include(":instrumentation:couchbase:couchbase-3.2:javaagent")
-include(":instrumentation:couchbase:couchbase-3.2:tracing-opentelemetry-shaded")
-include(":instrumentation:couchbase:couchbase-3.4:javaagent")
-include(":instrumentation:couchbase:couchbase-3.4:tracing-opentelemetry-shaded")
 include(":instrumentation:couchbase:couchbase-common:testing")
 include(":instrumentation:dropwizard:dropwizard-metrics-4.0:javaagent")
 include(":instrumentation:dropwizard:dropwizard-testing")
@@ -310,6 +309,7 @@ include(":instrumentation:finagle-http-23.11:compile-stub")
 include(":instrumentation:finagle-http-23.11:javaagent")
 include(":instrumentation:finatra-2.9:javaagent")
 include(":instrumentation:geode-1.4:javaagent")
+include(":instrumentation:geode-1.4:javaagent-unit-tests")
 include(":instrumentation:google-http-client-1.19:javaagent")
 include(":instrumentation:grails-3.0:javaagent")
 include(":instrumentation:graphql-java:graphql-java-12.0:javaagent")
@@ -329,6 +329,7 @@ include(":instrumentation:hbase:hbase-client-1.0:javaagent")
 include(":instrumentation:hbase:hbase-client-1.4:javaagent")
 include(":instrumentation:hbase:hbase-client-2.0:javaagent")
 include(":instrumentation:hbase:hbase-client-common-1.0:javaagent")
+include(":instrumentation:hbase:hbase-client-common-1.0:javaagent-unit-tests")
 include(":instrumentation:hbase:hbase-client-common-1.0:testing")
 include(":instrumentation:helidon-4.3:javaagent")
 include(":instrumentation:helidon-4.3:library")
@@ -510,7 +511,9 @@ include(":instrumentation:mongo:mongo-3.1:javaagent")
 include(":instrumentation:mongo:mongo-3.1:library")
 include(":instrumentation:mongo:mongo-3.1:testing")
 include(":instrumentation:mongo:mongo-3.7:javaagent")
+include(":instrumentation:mongo:mongo-3.7:javaagent-unit-tests")
 include(":instrumentation:mongo:mongo-4.0:javaagent")
+include(":instrumentation:mongo:mongo-4.0:javaagent-unit-tests")
 include(":instrumentation:mongo:mongo-async-3.3:javaagent")
 include(":instrumentation:mongo:mongo-common:testing")
 include(":instrumentation:mybatis-3.2:javaagent")
@@ -539,6 +542,7 @@ include(":instrumentation:opensearch:opensearch-java-3.0:javaagent-unit-tests")
 include(":instrumentation:opensearch:opensearch-rest-1.0:javaagent")
 include(":instrumentation:opensearch:opensearch-rest-3.0:javaagent")
 include(":instrumentation:opensearch:opensearch-rest-common-1.0:javaagent")
+include(":instrumentation:opensearch:opensearch-rest-common-1.0:javaagent-unit-tests")
 include(":instrumentation:opensearch:opensearch-rest-common-1.0:testing")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:testing")
@@ -575,6 +579,7 @@ include(":instrumentation:oshi-5.0:testing")
 include(":instrumentation:payara-5.2020:javaagent")
 include(":instrumentation:pekko:pekko-actor-1.0:javaagent")
 include(":instrumentation:pekko:pekko-http-1.0:javaagent")
+include(":instrumentation:pekko:pekko-remote-1.0:javaagent")
 include(":instrumentation:play:play-mvc:play-mvc-2.4:javaagent")
 include(":instrumentation:play:play-mvc:play-mvc-2.6:javaagent")
 include(":instrumentation:play:play-ws:play-ws-1.0:javaagent")
@@ -601,6 +606,7 @@ include(":instrumentation:r2dbc-1.0:javaagent")
 include(":instrumentation:r2dbc-1.0:library")
 include(":instrumentation:r2dbc-1.0:library-instrumentation-shaded")
 include(":instrumentation:r2dbc-1.0:testing")
+include(":instrumentation:rabbitmq-2.7:bootstrap")
 include(":instrumentation:rabbitmq-2.7:javaagent")
 include(":instrumentation:ratpack:ratpack-1.4:javaagent")
 include(":instrumentation:ratpack:ratpack-1.4:testing")
@@ -620,10 +626,11 @@ include(":instrumentation:redisson:redisson-3.0:javaagent")
 include(":instrumentation:redisson:redisson-3.17:javaagent")
 include(":instrumentation:redisson:redisson-common-3.0:javaagent")
 include(":instrumentation:redisson:redisson-common-3.0:testing")
+include(":instrumentation:redisson:redisson-metrics-2.3:javaagent")
 include(":instrumentation:redisson:redisson-metrics-3.18:javaagent")
 include(":instrumentation:redisson:redisson-metrics-3.26:javaagent")
-include(":instrumentation:redisson:redisson-metrics-common-3.18:javaagent")
-include(":instrumentation:redisson:redisson-metrics-common-3.18:testing")
+include(":instrumentation:redisson:redisson-metrics-common-2.3:javaagent")
+include(":instrumentation:redisson:redisson-metrics-common-2.3:testing")
 include(":instrumentation:resources:library")
 include(":instrumentation:restlet:restlet-1.1:javaagent")
 include(":instrumentation:restlet:restlet-1.1:library")
@@ -731,6 +738,7 @@ include(":instrumentation:spring:spring-ws-2.0:testing")
 include(":instrumentation:spring:starters:spring-boot-starter")
 include(":instrumentation:spring:starters:zipkin-spring-boot-starter")
 include(":instrumentation:spymemcached-2.12:javaagent")
+include(":instrumentation:spymemcached-2.12:javaagent-unit-tests")
 include(":instrumentation:struts:struts-2.3:javaagent")
 include(":instrumentation:struts:struts-7.0:javaagent")
 include(":instrumentation:tapestry-5.4:javaagent")
@@ -759,8 +767,10 @@ include(":instrumentation:vertx:vertx-kafka-client-3.6:vertx-kafka-client-5-test
 include(":instrumentation:vertx:vertx-redis-client-4.0:javaagent")
 include(":instrumentation:vertx:vertx-rx-java-3.5:javaagent")
 include(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-4.0:javaagent")
+include(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-4.0:javaagent-unit-tests")
 include(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-5.0:javaagent")
 include(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-common-4.0:javaagent")
+include(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-common-4.0:javaagent-unit-tests")
 include(":instrumentation:vertx:vertx-web-3.0:javaagent")
 include(":instrumentation:vertx:vertx-web-3.0:testing")
 include(":instrumentation:vibur-dbcp-11.0:javaagent")

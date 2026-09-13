@@ -9,6 +9,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -26,6 +27,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
+import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequestEntry;
 
 class SqsParentContextTest {
 
@@ -114,6 +116,28 @@ class SqsParentContextTest {
     SpanContext extracted = Span.fromContext(extractedContext).getSpanContext();
     assertThat(extracted.getTraceId()).isEqualTo(ambient.getTraceId());
     assertThat(extracted.getSpanId()).isEqualTo(ambient.getSpanId());
+  }
+
+  @Test
+  void readsAndWritesMessageSystemAttribute() {
+    assumeTrue(SqsMessageSystemAttributeAccess.isAvailable());
+
+    SendMessageBatchRequestEntry entry =
+        SendMessageBatchRequestEntry.builder().id("id").messageBody("body").build();
+    assertThat(SqsMessageSystemAttributeAccess.canSetTraceHeader(entry)).isTrue();
+    SendMessageBatchRequestEntry updatedEntry =
+        SqsMessageSystemAttributeAccess.withTraceHeader(entry, TRACE_HEADER);
+    assertThat(updatedEntry).isNotNull();
+    assertThat(SqsMessageSystemAttributeAccess.canSetTraceHeader(updatedEntry)).isFalse();
+    assertThat(SqsMessageSystemAttributeAccess.getTraceHeader(updatedEntry))
+        .isEqualTo(TRACE_HEADER);
+    assertThat(SqsMessageSystemAttributeAccess.withTraceHeader(updatedEntry, "replacement"))
+        .isNull();
+    Context creationContext =
+        SqsParentContext.ofTraceHeader(
+            SqsMessageSystemAttributeAccess.getTraceHeader(updatedEntry));
+    assertThat(Span.fromContext(creationContext).getSpanContext().getSpanId())
+        .isEqualTo("53995c3f42cd8ad8");
   }
 
   private static String traceParent(SpanContext spanContext) {

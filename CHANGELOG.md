@@ -4,6 +4,8 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Add the required `isRequestStreaming(REQUEST)` method to `GenAiAttributesGetter`.
+  ([#19879](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19879))
 - Elasticsearch REST javaagent and 7.x library instrumentation now capture sanitized search query
   bodies by default under v3-preview; outside v3-preview, capture defaults remain unchanged. The
   javaagent also sanitizes explicitly enabled capture by default, replacing literal values with `?`
@@ -15,6 +17,15 @@
 
 ### 🚫 Deprecations
 
+- Deprecate the Elasticsearch REST library artifacts and their public entrypoints. Elasticsearch
+  Java API Client users should use its [native OpenTelemetry
+  support](https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/8.10/opentelemetry.html),
+  available in 7.17.20+ on the 7.x line and 8.10+. Applications that use the REST Client directly
+  have no drop-in library replacement; they can use the javaagent or migrate to the Java API Client.
+  ([#19697](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/19697))
+- Deprecate `SelectorConfig.resolve` overloads that do not specify `SelectorConfig.Stability` in favor
+  of overloads that require callers to choose the stability explicitly.
+  ([#19969](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19969))
 - Deprecate `otel.instrumentation.opensearch.capture-search-query`. There is no replacement.
 - Deprecate `otel.instrumentation.elasticsearch.capture-search-query` There is no replacement.
   ([#19675](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19675))
