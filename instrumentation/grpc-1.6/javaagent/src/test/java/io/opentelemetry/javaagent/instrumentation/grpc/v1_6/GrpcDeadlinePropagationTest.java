@@ -96,6 +96,6 @@ class GrpcDeadlinePropagationTest {
 
     checkedDeadline.await(10, SECONDS);
 
-    assertThat(deadlineSeenOnHoppedThread).hasValue(PROPAGATE_GRPC_DEADLINE);
+    assertThat(deadlineSeenOnHoppedThread.get()).isEqualTo(PROPAGATE_GRPC_DEADLINE);
   }
 }
