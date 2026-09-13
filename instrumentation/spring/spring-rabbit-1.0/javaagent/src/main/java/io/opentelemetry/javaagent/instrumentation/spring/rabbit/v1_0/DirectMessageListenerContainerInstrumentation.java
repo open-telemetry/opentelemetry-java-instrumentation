@@ -5,13 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
-import static io.opentelemetry.javaagent.bootstrap.rabbitmq.RabbitMqConsumerProcessTracing.isWrappingEnabled;
-import static io.opentelemetry.javaagent.bootstrap.rabbitmq.RabbitMqConsumerProcessTracing.setWrappingEnabled;
+import static io.opentelemetry.javaagent.bootstrap.rabbitmq.RabbitMqConsumerProcessTracing.startSpringProcessTelemetry;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.javaagent.bootstrap.rabbitmq.RabbitMqConsumerProcessTracing.Registration;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -36,17 +37,19 @@ class DirectMessageListenerContainerInstrumentation implements TypeInstrumentati
   public static class ConsumeAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static boolean onEnter(@Advice.This AbstractMessageListenerContainer container) {
-      boolean previous = isWrappingEnabled();
+    @Nullable
+    public static Registration onEnter(@Advice.This AbstractMessageListenerContainer container) {
       if (SpringRabbitListenerUtil.shouldTraceListenerProcess(container)) {
-        setWrappingEnabled(false);
+        return startSpringProcessTelemetry();
       }
-      return previous;
+      return null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter boolean previous) {
-      setWrappingEnabled(previous);
+    public static void onExit(@Advice.Enter @Nullable Registration registration) {
+      if (registration != null) {
+        registration.close();
+      }
     }
   }
 }
