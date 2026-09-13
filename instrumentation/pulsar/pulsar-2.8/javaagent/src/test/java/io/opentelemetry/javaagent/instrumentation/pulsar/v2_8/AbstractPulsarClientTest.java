@@ -29,6 +29,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
@@ -192,6 +193,7 @@ abstract class AbstractPulsarClientTest {
                         .hasAttributesSatisfyingExactly(
                             batchReceiveAttributes(topic, null, false))));
 
+    assertConsumedMessages(topic, 1);
     if (!emitOldMessagingSemconv()) {
       return;
     }
@@ -322,6 +324,7 @@ abstract class AbstractPulsarClientTest {
                         .hasParent(
                             emitStableMessagingSemconv() ? trace.getSpan(0) : trace.getSpan(1))));
 
+    assertConsumedMessages(topic, 1);
     if (!emitOldMessagingSemconv()) {
       return;
     }
@@ -393,6 +396,76 @@ abstract class AbstractPulsarClientTest {
                                                 equalTo(MESSAGING_OPERATION, "receive"),
                                                 equalTo(SERVER_PORT, brokerPort),
                                                 equalTo(SERVER_ADDRESS, brokerHost))))));
+  }
+
+  @Test
+  void failedReceiveDoesNotCountConsumedMessage() throws Exception {
+    String topic = "persistent://public/default/failedReceiveDoesNotCountConsumedMessage";
+    admin.topics().createNonPartitionedTopic(topic);
+    consumer =
+        client.newConsumer(Schema.STRING).subscriptionName("test_sub").topic(topic).subscribe();
+
+    CompletableFuture<Message<String>> receive =
+        testing.runWithSpan("receive-parent", consumer::receiveAsync);
+    consumer.close();
+
+    assertThatThrownBy(() -> receive.get(1, MINUTES))
+        .hasCauseInstanceOf(PulsarClientException.class);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("receive-parent").hasKind(SpanKind.INTERNAL).hasNoParent()));
+    assertThat(testing.metrics())
+        .noneMatch(metric -> metric.getName().equals("messaging.client.consumed.messages"));
+  }
+
+  @Test
+  void failedBatchReceiveDoesNotCountConsumedMessage() throws Exception {
+    String topic = "persistent://public/default/failedBatchReceiveDoesNotCountConsumedMessage";
+    admin.topics().createNonPartitionedTopic(topic);
+    consumer =
+        client.newConsumer(Schema.STRING).subscriptionName("test_sub").topic(topic).subscribe();
+
+    CompletableFuture<Messages<String>> receive =
+        testing.runWithSpan("receive-parent", consumer::batchReceiveAsync);
+    consumer.close();
+
+    assertThatThrownBy(() -> receive.get(1, MINUTES))
+        .hasCauseInstanceOf(PulsarClientException.class);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("receive-parent").hasKind(SpanKind.INTERNAL).hasNoParent()));
+    assertThat(testing.metrics())
+        .noneMatch(metric -> metric.getName().equals("messaging.client.consumed.messages"));
+  }
+
+  private static void assertConsumedMessages(String topic, long expectedCount) {
+    if (!emitStableMessagingSemconv()) {
+      return;
+    }
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        "messaging.client.consumed.messages",
+        metrics ->
+            metrics.satisfiesExactly(
+                metric ->
+                    assertThat(metric)
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(expectedCount)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                                equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                                equalTo(
+                                                    MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                                    "test_sub"),
+                                                equalTo(SERVER_ADDRESS, brokerHost),
+                                                equalTo(SERVER_PORT, brokerPort))))));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
