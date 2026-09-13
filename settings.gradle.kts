@@ -76,10 +76,8 @@ val shouldDisableLocalBuildCache =
   isRemoteBuildCachePushEnabled && System.getenv("GITHUB_REF_NAME") == "main"
 
 develocity {
-  if (develocityAccessKey.isNotEmpty()) {
-    server = develocityServer
-    projectId = "OpenTelemetry"
-  }
+  server = develocityServer
+  projectId = "OpenTelemetry"
 
   buildScan {
     if (develocityAccessKey.isNotEmpty()) {
@@ -116,9 +114,7 @@ buildCache {
   local {
     isEnabled = !shouldDisableLocalBuildCache
   }
-
   remote(develocity.buildCache) {
-    server = develocityServer
     isPush = isRemoteBuildCachePushEnabled
   }
 }
