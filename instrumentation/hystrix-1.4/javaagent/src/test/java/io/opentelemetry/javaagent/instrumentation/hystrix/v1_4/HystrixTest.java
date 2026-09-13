@@ -36,7 +36,7 @@ class HystrixTest {
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Test
-  @EnabledIfSystemProperty(named = "testV3PreviewDisabled", matches = "true")
+  @EnabledIfSystemProperty(named = "otel.instrumentation.common.v3-preview", matches = "true")
   void v3PreviewDisablesHystrixByDefault() {
     class TestCommand extends HystrixCommand<String> {
       TestCommand() {

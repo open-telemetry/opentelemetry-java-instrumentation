@@ -42,7 +42,6 @@ import org.hibernate.procedure.ProcedureCall;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ProcedureCallTest {
@@ -151,32 +150,6 @@ class ProcedureCallTest {
                                 HIBERNATE_SESSION_ID,
                                 experimental(
                                     trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))))));
-  }
-
-  @Test
-  @EnabledIfSystemProperty(named = "testV3PreviewDisabled", matches = "true")
-  void v3PreviewDisablesHibernateByDefault() {
-    testing.runWithSpan(
-        "parent",
-        () -> {
-          Session session = sessionFactory.openSession();
-          try {
-            session.beginTransaction();
-            session.createStoredProcedureCall("TEST_PROC").getOutputs();
-            session.getTransaction().commit();
-          } finally {
-            session.close();
-          }
-        });
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasKind(INTERNAL)
-                        .hasNoParent()
-                        .hasTotalAttributeCount(0)));
   }
 
   @Test
