@@ -37,7 +37,7 @@ public final class KafkaConsumerBatchStateUtil {
   public static BooleanSupplier processSpanEnabled(
       ConsumerRecords<?, ?> records, BooleanSupplier defaultValue) {
     KafkaConsumerBatchState state = BATCH_STATE.get(records);
-    return state != null ? state : defaultValue;
+    return state != null ? () -> state.getAsBoolean() && defaultValue.getAsBoolean() : defaultValue;
   }
 
   private KafkaConsumerBatchStateUtil() {}

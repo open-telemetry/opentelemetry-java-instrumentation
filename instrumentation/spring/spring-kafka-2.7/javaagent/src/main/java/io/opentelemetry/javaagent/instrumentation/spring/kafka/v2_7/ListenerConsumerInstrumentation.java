@@ -119,7 +119,7 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
           return null;
         }
         Context context = batchProcessInstrumenter().start(parentContext, request);
-        context = KafkaClientsConsumerProcessTracing.markFrameworkProcess(context, parentContext);
+        context = KafkaClientsConsumerProcessTracing.markFrameworkProcess(context);
         return new AdviceScope(request, context, context.makeCurrent());
       }
 
