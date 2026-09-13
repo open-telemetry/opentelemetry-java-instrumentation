@@ -15,10 +15,12 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.instrumentation.api.internal.Timer;
+import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageWithDestination;
 import jakarta.jms.Message;
+import jakarta.jms.MessageConsumer;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -62,17 +64,30 @@ class JmsConsumerInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$ConsumerAdvice");
   }
 
-  @SuppressWarnings("unused")
-  public static class ConsumerAdvice {
+  public static class AdviceScope {
+    private final CallDepth callDepth;
+    @Nullable private final Timer timer;
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Timer onEnter() {
-      return Timer.start();
+    private AdviceScope(CallDepth callDepth, @Nullable Timer timer) {
+      this.callDepth = callDepth;
+      this.timer = timer;
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void stopSpan(
-        @Advice.Enter Timer timer, @Advice.Return @Nullable Message message) {
+    public static AdviceScope enter() {
+      // deliberately keyed on MessageConsumer, not JMSConsumer: providers typically implement
+      // JMSConsumer.receive by delegating to a MessageConsumer, and sharing the key means the
+      // outermost receive wins and exactly one receive span is emitted
+      CallDepth callDepth = CallDepth.forClass(MessageConsumer.class);
+      if (callDepth.getAndIncrement() > 0) {
+        return new AdviceScope(callDepth, null);
+      }
+      return new AdviceScope(callDepth, Timer.start());
+    }
+
+    public void exit(@Nullable Message message) {
+      if (callDepth.decrementAndGet() > 0 || timer == null) {
+        return;
+      }
       if (message == null) {
         // Do not create span when no message is received
         return;
@@ -82,6 +97,21 @@ class JmsConsumerInstrumentation implements TypeInstrumentation {
           MessageWithDestination.create(JakartaMessageAdapter.create(message), null, null);
 
       createReceiveSpan(consumerReceiveInstrumenter(), request, timer, null);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ConsumerAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static AdviceScope onEnter() {
+      return AdviceScope.enter();
+    }
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void stopSpan(
+        @Advice.Enter AdviceScope adviceScope, @Advice.Return @Nullable Message message) {
+      adviceScope.exit(message);
     }
   }
 }
