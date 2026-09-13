@@ -5,13 +5,13 @@
 
 package io.opentelemetry.instrumentation.thrift.v0_13.internal;
 
+import javax.annotation.Nullable;
 import org.apache.thrift.TAsyncProcessor;
 import org.apache.thrift.TBaseAsyncProcessor;
 import org.apache.thrift.TException;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.server.AbstractNonblockingServer;
-import org.apache.thrift.server.FrameBufferUtil;
 import org.apache.thrift.transport.TTransport;
 
 /**
@@ -35,7 +35,7 @@ public final class ServerAsyncProcessorDecorator implements TAsyncProcessor, TPr
       return;
     }
 
-    TTransport transport = FrameBufferUtil.getTransport(fb);
+    TTransport transport = FrameBufferAccess.getTransport(fb);
     ServerInProtocolDecorator serverInProtocolDecorator =
         (ServerInProtocolDecorator) fb.getInputProtocol();
     ServerOutProtocolDecorator serverOutProtocolDecorator =
@@ -43,7 +43,9 @@ public final class ServerAsyncProcessorDecorator implements TAsyncProcessor, TPr
 
     serverOutProtocolDecorator.resetExceptionState();
     serverInProtocolDecorator.setServiceName(serviceName);
-    ServerCallContext serverCallContext = ServerCallContext.start(transport);
+    @Nullable
+    ServerCallContext serverCallContext =
+        transport == null ? null : ServerCallContext.start(transport);
     Throwable error = null;
     try {
       processor.process(fb);
@@ -51,7 +53,9 @@ public final class ServerAsyncProcessorDecorator implements TAsyncProcessor, TPr
       error = t;
       throw t;
     } finally {
-      serverCallContext.end();
+      if (serverCallContext != null) {
+        serverCallContext.end();
+      }
       serverInProtocolDecorator.closeScope();
       if (serverInProtocolDecorator.isOneway()
           || serverOutProtocolDecorator.hasException()

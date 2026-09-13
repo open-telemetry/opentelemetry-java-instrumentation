@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
 import javax.annotation.Nullable;
-import redis.clients.jedis.DefaultJedisSocketFactoryUtil;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisClientConfig;
 import redis.clients.jedis.JedisSocketFactory;
@@ -25,7 +24,7 @@ class JedisConnectionInfo {
 
   static JedisConnectionInfo create(
       @Nullable JedisSocketFactory socketFactory, @Nullable Object clientConfig) {
-    HostAndPort hostAndPort = DefaultJedisSocketFactoryUtil.getHostAndPort(socketFactory);
+    HostAndPort hostAndPort = DefaultJedisSocketFactoryAccess.getHostAndPort(socketFactory);
     // Without a client config, Jedis leaves the new Redis connection on the default database 0.
     Long databaseIndex =
         clientConfig instanceof JedisClientConfig

@@ -10,12 +10,14 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.vertx.sqlclient.impl.QueryExecutorUtil;
-import net.bytebuddy.asm.Advice;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientQueryBaseHelper;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 class QueryBaseInstrumentation implements TypeInstrumentation {
+
+  private static final String COPY_ADVICE_CLASS_NAME =
+      VertxSqlClientQueryBaseHelper.class.getName();
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -24,16 +26,6 @@ class QueryBaseInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        namedOneOf("mapping", "collecting"), getClass().getName() + "$CopyAdvice");
-  }
-
-  @SuppressWarnings("unused")
-  public static class CopyAdvice {
-
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.This Object sourceQuery, @Advice.Return Object copiedQuery) {
-      QueryExecutorUtil.copyQueryExecutorData(sourceQuery, copiedQuery);
-    }
+    transformer.applyAdviceToMethod(namedOneOf("mapping", "collecting"), COPY_ADVICE_CLASS_NAME);
   }
 }

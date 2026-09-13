@@ -10,7 +10,6 @@ import com.clickhouse.client.ClickHouseNode;
 import com.clickhouse.client.ClickHouseNodes;
 import com.clickhouse.client.ClickHouseProtocol;
 import com.clickhouse.client.ClickHouseRequest;
-import com.clickhouse.client.ClickHouseRequestAccess;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerEndpointUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;

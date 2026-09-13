@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -23,21 +22,11 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isHelperClass(String className) {
-    return className.equals("rx.OpenTelemetryTracingUtil");
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new CouchbaseBucketInstrumentation(),
         new CouchbaseClusterInstrumentation(),
         new CouchbaseClusterTargetInstrumentation());
-  }
-
-  @Override
-  public List<String> injectedClassNames() {
-    return singletonList("rx.OpenTelemetryTracingUtil");
   }
 
   @Override

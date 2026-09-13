@@ -158,8 +158,15 @@ public abstract class InstrumentationModule implements Ordered {
    * advice. This method only has an effect when isolated loading is used; when all helper classes
    * are injected, they are already defined in the class loader of the instrumented library.
    *
-   * <p>Override this method when a helper class must access package-private members of an
-   * instrumented library class.
+   * <p>Override this method when a helper class must be defined in the class loader of the
+   * instrumented library, for example to implement a library SPI. Do not use this method (or a
+   * helper class placed in the same package as an instrumented library class) as a way to reach
+   * package-private members of that library: muzzle rejects same-package helper references to
+   * non-public library classes and members at compile time, because such a helper class is not
+   * guaranteed to share the library class's Java module at runtime, even when it shares the same
+   * package name. Use a public API, or a cached reflective {@link java.lang.reflect.Method}/{@link
+   * java.lang.invoke.MethodHandle} lookup from a helper class in a normal {@code
+   * io.opentelemetry.*} package, instead.
    */
   public List<String> injectedClassNames() {
     return emptyList();

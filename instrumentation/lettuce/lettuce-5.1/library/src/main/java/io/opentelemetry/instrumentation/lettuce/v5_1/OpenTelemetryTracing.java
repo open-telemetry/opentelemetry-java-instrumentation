@@ -10,7 +10,6 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.lettuce.core.output.CommandOutput;
 import io.lettuce.core.protocol.CompleteableCommand;
-import io.lettuce.core.protocol.OtelCommandArgsUtil;
 import io.lettuce.core.protocol.ProtocolKeyword;
 import io.lettuce.core.protocol.RedisCommand;
 import io.lettuce.core.tracing.TraceContext;
@@ -22,6 +21,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.lettuce.v5_1.internal.CommandArgsAccess;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.time.Instant;
@@ -212,7 +212,7 @@ final class OpenTelemetryTracing implements Tracing {
 
       // Extract args BEFORE calling start() so db.query.text can include them
       if (command.getArgs() != null) {
-        request.setArgsList(OtelCommandArgsUtil.getCommandArgs(command.getArgs()));
+        request.setArgsList(CommandArgsAccess.getCommandArgs(command.getArgs()));
       }
 
       start();

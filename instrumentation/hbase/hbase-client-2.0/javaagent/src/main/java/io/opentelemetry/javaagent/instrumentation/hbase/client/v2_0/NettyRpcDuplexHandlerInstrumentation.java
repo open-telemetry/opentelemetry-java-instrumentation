@@ -10,11 +10,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.apache.hadoop.hbase.ipc.OpenTelemetryCallUtil;
-import org.apache.hbase.thirdparty.io.netty.channel.ChannelHandlerContext;
 
 class NettyRpcDuplexHandlerInstrumentation implements TypeInstrumentation {
 
@@ -34,17 +31,6 @@ class NettyRpcDuplexHandlerInstrumentation implements TypeInstrumentation {
             .and(
                 takesArgument(
                     2, named("org.apache.hbase.thirdparty.io.netty.channel.ChannelPromise"))),
-        getClass().getName() + "$WriteAdvice");
-  }
-
-  @SuppressWarnings("unused")
-  public static class WriteAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) ChannelHandlerContext context, @Advice.Argument(1) Object message) {
-      if (OpenTelemetryCallUtil.isCall(message)) {
-        OpenTelemetryCallUtil.setNetworkPeer(message, context.channel().remoteAddress());
-      }
-    }
+        "org.apache.hadoop.hbase.ipc.HbaseCall20Advice$WriteAdvice");
   }
 }

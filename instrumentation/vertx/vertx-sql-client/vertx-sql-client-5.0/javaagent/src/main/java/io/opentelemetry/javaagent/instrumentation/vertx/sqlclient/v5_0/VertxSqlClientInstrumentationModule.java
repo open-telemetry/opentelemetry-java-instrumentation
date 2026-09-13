@@ -33,13 +33,9 @@ public class VertxSqlClientInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public boolean isHelperClass(String className) {
-    return "io.vertx.sqlclient.impl.QueryExecutorUtil".equals(className);
-  }
-
-  @Override
   public List<String> injectedClassNames() {
-    return singletonList("io.vertx.sqlclient.impl.QueryExecutorUtil");
+    return singletonList(
+        "io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientQueryBaseHelper");
   }
 
   @Override
@@ -60,6 +56,7 @@ public class VertxSqlClientInstrumentationModule extends InstrumentationModule
 
   @Override
   public void registerVirtualFields(BiConsumer<String, String> virtualFieldRegistrar) {
+    virtualFieldRegistrar.accept("io.vertx.sqlclient.impl.QueryExecutor", Object.class.getName());
     // we add the virtual field to CommandBase manually because it is in different package in 5.0
     // and 5.1
     // used in 5.0

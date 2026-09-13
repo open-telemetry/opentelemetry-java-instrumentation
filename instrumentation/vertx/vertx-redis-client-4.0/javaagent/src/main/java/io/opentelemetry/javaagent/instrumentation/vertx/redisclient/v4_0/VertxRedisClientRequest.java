@@ -13,7 +13,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSan
 import io.vertx.core.net.NetSocket;
 import io.vertx.redis.client.Request;
 import io.vertx.redis.client.impl.RedisURI;
-import io.vertx.redis.client.impl.RequestUtil;
 import java.util.List;
 import java.util.Locale;
 import javax.annotation.Nullable;
@@ -166,7 +165,7 @@ class VertxRedisClientRequest {
         continue;
       }
       String queryText =
-          sanitize(commandName.toUpperCase(Locale.ROOT), RequestUtil.getArgs(request));
+          sanitize(commandName.toUpperCase(Locale.ROOT), RequestAccess.getArgs(request));
       String separator = batchQuerySeparator();
       int newLength = builder.length();
       if (builder.length() > 0) {

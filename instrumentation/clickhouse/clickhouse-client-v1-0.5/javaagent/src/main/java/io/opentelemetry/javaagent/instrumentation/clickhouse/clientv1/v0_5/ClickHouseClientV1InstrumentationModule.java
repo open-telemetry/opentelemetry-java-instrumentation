@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.clickhouse.clientv1.v0_5;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -23,19 +22,9 @@ public class ClickHouseClientV1InstrumentationModule extends InstrumentationModu
   }
 
   @Override
-  public boolean isHelperClass(String className) {
-    return "com.clickhouse.client.ClickHouseRequestAccess".equals(className);
-  }
-
-  @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // added in 0.5.0
     return hasClassesNamed("com.clickhouse.client.config.ClickHouseProxyType");
-  }
-
-  @Override
-  public List<String> injectedClassNames() {
-    return singletonList("com.clickhouse.client.ClickHouseRequestAccess");
   }
 
   @Override

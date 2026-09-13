@@ -12,13 +12,15 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
+import io.opentelemetry.javaagent.instrumentation.hbase.client.common.RequestAndContext;
 import java.util.List;
+import java.util.function.BiConsumer;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public final class HbaseInstrumentationModule extends InstrumentationModule {
-
-  private static final String CALL_UTIL = "org.apache.hadoop.hbase.ipc.OpenTelemetryCallUtil";
+public final class HbaseInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public HbaseInstrumentationModule() {
     super("hbase-client", "hbase-client-2.0");
@@ -36,16 +38,6 @@ public final class HbaseInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isHelperClass(String className) {
-    return CALL_UTIL.equals(className);
-  }
-
-  @Override
-  public List<String> injectedClassNames() {
-    return asList(CALL_UTIL);
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new RegionServerCallableInstrumentation(),
@@ -53,5 +45,11 @@ public final class HbaseInstrumentationModule extends InstrumentationModule {
         new RpcConnectionInstrumentation(),
         new NettyRpcDuplexHandlerInstrumentation(),
         new IpcCallInstrumentation());
+  }
+
+  @Override
+  public void registerVirtualFields(BiConsumer<String, String> virtualFieldRegistrar) {
+    virtualFieldRegistrar.accept(
+        "org.apache.hadoop.hbase.ipc.Call", RequestAndContext.class.getName());
   }
 }

@@ -12,11 +12,14 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
+import java.util.function.BiConsumer;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class VertxSqlClientInstrumentationModule extends InstrumentationModule {
+public class VertxSqlClientInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public VertxSqlClientInstrumentationModule() {
     super("vertx-sql-client", "vertx-sql-client-4.0", "vertx");
@@ -29,13 +32,9 @@ public class VertxSqlClientInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isHelperClass(String className) {
-    return "io.vertx.sqlclient.impl.QueryExecutorUtil".equals(className);
-  }
-
-  @Override
   public List<String> injectedClassNames() {
-    return singletonList("io.vertx.sqlclient.impl.QueryExecutorUtil");
+    return singletonList(
+        "io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientQueryBaseHelper");
   }
 
   @Override
@@ -49,5 +48,10 @@ public class VertxSqlClientInstrumentationModule extends InstrumentationModule {
         new QueryExecutorInstrumentation(),
         new QueryResultBuilderInstrumentation(),
         new TransactionImplInstrumentation());
+  }
+
+  @Override
+  public void registerVirtualFields(BiConsumer<String, String> virtualFieldRegistrar) {
+    virtualFieldRegistrar.accept("io.vertx.sqlclient.impl.QueryExecutor", Object.class.getName());
   }
 }

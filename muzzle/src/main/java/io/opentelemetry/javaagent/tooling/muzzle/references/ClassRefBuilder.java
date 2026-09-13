@@ -67,8 +67,13 @@ public final class ClassRefBuilder {
 
   @CanIgnoreReturnValue
   public ClassRefBuilder addSource(String sourceName, int line) {
+    return addSource(sourceName, line, false);
+  }
+
+  @CanIgnoreReturnValue
+  public ClassRefBuilder addSource(String sourceName, int line, boolean inlinedAdvice) {
     if (COLLECT_SOURCES) {
-      sources.add(new Source(sourceName, line));
+      sources.add(new Source(sourceName, line, inlinedAdvice));
     }
     return this;
   }

@@ -8,18 +8,17 @@ package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 import static io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientRequestTracingHandler.HTTP_CLIENT_REQUEST;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyClientSingletons.clientHandlerFactory;
 
-import com.twitter.finagle.ChannelTransportHelpers;
-import com.twitter.finagle.Netty4HttpPackageHelpers;
 import com.twitter.finagle.http.Request;
 import com.twitter.finagle.http.Request$;
 import com.twitter.finagle.http.collection.RecordSchema;
 import com.twitter.finagle.http2.transport.common.Http2StreamMessageHandler;
+import com.twitter.finagle.netty4.http.package$;
+import com.twitter.finagle.netty4.transport.ChannelTransport;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
-import io.netty.channel.OpenTelemetryChannelInitializerDelegate;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpServerCodec;
@@ -49,6 +48,9 @@ public class Helpers {
 
   /** Bridges the netty instrumentation to the finagle-netty integration. */
   public static <C extends Channel> ChannelInitializer<C> wrapServer(ChannelInitializer<C> inner) {
+    if (!OpenTelemetryChannelInitializerDelegate.isSupported()) {
+      return inner;
+    }
     return new OpenTelemetryChannelInitializerDelegate<C>(inner) {
 
       @Override
@@ -86,6 +88,9 @@ public class Helpers {
 
   /** Bridges the netty instrumentation to the finagle-netty integration (for h2). */
   public static <C extends Channel> ChannelInitializer<C> wrapClient(ChannelInitializer<C> inner) {
+    if (!OpenTelemetryChannelInitializerDelegate.isSupported()) {
+      return inner;
+    }
     return new OpenTelemetryChannelInitializerDelegate<C>(inner) {
 
       // wraps everything for roughly the same reasons as in wrapServer(), above
@@ -124,7 +129,7 @@ public class Helpers {
 
   /** Part 1/3 of bridging the otel Context from netty to finagle (for h2). */
   public static void mutateHandlerPipeline(Channel ch) {
-    ChannelHandler h1Handler = ch.pipeline().get(Netty4HttpPackageHelpers.getHttpCodecName());
+    ChannelHandler h1Handler = ch.pipeline().get(package$.MODULE$.HttpCodecName());
     Http2StreamMessageHandler h2Handler = ch.pipeline().get(Http2StreamMessageHandler.class);
 
     // h1 server handler || h2 server handler;
@@ -141,7 +146,7 @@ public class Helpers {
       // not applicable to clients
       ch.pipeline()
           .addBefore(
-              ChannelTransportHelpers.getHandlerName(),
+              ChannelTransport.HandlerName(),
               OTEL_NETTY_HANDLER,
               new ChannelInboundHandlerAdapter() {
                 /*

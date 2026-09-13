@@ -27,20 +27,4 @@ public class FinagleHttpInstrumentationModule extends InstrumentationModule {
         new ChannelTransportInstrumentation(),
         new H2StreamChannelInitInstrumentation());
   }
-
-  @Override
-  public List<String> injectedClassNames() {
-    // these are injected so that they can access package-private members
-    return asList(
-        "com.twitter.finagle.ChannelTransportHelpers",
-        "com.twitter.finagle.Netty4HttpPackageHelpers",
-        "io.netty.channel.OpenTelemetryChannelInitializerDelegate");
-  }
-
-  @Override
-  public boolean isHelperClass(String className) {
-    return className.equals("com.twitter.finagle.ChannelTransportHelpers")
-        || className.equals("com.twitter.finagle.Netty4HttpPackageHelpers")
-        || className.equals("io.netty.channel.OpenTelemetryChannelInitializerDelegate");
-  }
 }

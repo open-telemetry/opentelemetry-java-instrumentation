@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
+import net.bytebuddy.asm.Advice;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Handle;
@@ -279,7 +280,12 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
             if (skip) {
               target = methodVisitor;
             } else {
-              target = new AdviceReferenceMethodVisitor(methodVisitor);
+              target =
+                  new AdviceReferenceMethodVisitor(
+                      methodVisitor,
+                      isAdviceClass
+                          && (isInlinedAdvice(visibleAnnotations)
+                              || isInlinedAdvice(invisibleAnnotations)));
               target = new VirtualFieldCollectingMethodVisitor(target);
             }
             if (target != null) {
@@ -290,6 +296,27 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
     // Additional references we could check
     // - Classes in signature (return type, params) and visible from this package
     return methodNode;
+  }
+
+  private static boolean isInlinedAdvice(@Nullable List<AnnotationNode> annotations) {
+    if (annotations == null) {
+      return false;
+    }
+    for (AnnotationNode annotation : annotations) {
+      if (!Type.getDescriptor(Advice.OnMethodEnter.class).equals(annotation.desc)
+          && !Type.getDescriptor(Advice.OnMethodExit.class).equals(annotation.desc)) {
+        continue;
+      }
+      if (annotation.values != null) {
+        for (int i = 0; i < annotation.values.size(); i += 2) {
+          if ("inline".equals(annotation.values.get(i))) {
+            return !Boolean.FALSE.equals(annotation.values.get(i + 1));
+          }
+        }
+      }
+      return true;
+    }
+    return false;
   }
 
   private static VisibilityFlag computeVisibilityFlag(int access) {
@@ -323,16 +350,25 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
   }
 
   private class AdviceReferenceMethodVisitor extends MethodVisitor {
+    private final boolean inlinedAdvice;
     private int currentLineNumber = -1;
 
-    AdviceReferenceMethodVisitor(MethodVisitor methodVisitor) {
+    AdviceReferenceMethodVisitor(MethodVisitor methodVisitor, boolean inlinedAdvice) {
       super(AsmApi.VERSION, methodVisitor);
+      this.inlinedAdvice = inlinedAdvice;
     }
 
     @Override
     public void visitLineNumber(int line, Label start) {
       currentLineNumber = line;
       super.visitLineNumber(line, start);
+    }
+
+    private Source source() {
+      String sourceClassName =
+          requireNonNull(
+              refSourceClassName, "refSourceClassName must be set by visit() before use");
+      return new Source(sourceClassName, currentLineNumber, inlinedAdvice);
     }
 
     @Override
@@ -368,10 +404,10 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
 
       addReference(
           ClassRef.builder(ownerType.getClassName())
-              .addSource(sourceClassName, currentLineNumber)
+              .addSource(sourceClassName, currentLineNumber, inlinedAdvice)
               .addFlag(computeMinimumClassAccess(sourceType, ownerType))
               .addField(
-                  new Source[] {new Source(sourceClassName, currentLineNumber)},
+                  new Source[] {source()},
                   fieldFlags.toArray(new Flag[0]),
                   name,
                   fieldType,
@@ -382,7 +418,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
       if (underlyingFieldType.getSort() == Type.OBJECT) {
         addReference(
             ClassRef.builder(underlyingFieldType.getClassName())
-                .addSource(sourceClassName, currentLineNumber)
+                .addSource(sourceClassName, currentLineNumber, inlinedAdvice)
                 .addFlag(computeMinimumClassAccess(sourceType, underlyingFieldType))
                 .build());
       }
@@ -426,7 +462,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
         if (returnType.getSort() == Type.OBJECT) {
           addReference(
               ClassRef.builder(returnType.getClassName())
-                  .addSource(sourceClassName, currentLineNumber)
+                  .addSource(sourceClassName, currentLineNumber, inlinedAdvice)
                   .addFlag(computeMinimumClassAccess(sourceType, returnType))
                   .build());
         }
@@ -437,7 +473,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
         if (paramType.getSort() == Type.OBJECT) {
           addReference(
               ClassRef.builder(paramType.getClassName())
-                  .addSource(sourceClassName, currentLineNumber)
+                  .addSource(sourceClassName, currentLineNumber, inlinedAdvice)
                   .addFlag(computeMinimumClassAccess(sourceType, paramType))
                   .build());
         }
@@ -450,11 +486,11 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
 
       addReference(
           ClassRef.builder(ownerType.getClassName())
-              .addSource(sourceClassName, currentLineNumber)
+              .addSource(sourceClassName, currentLineNumber, inlinedAdvice)
               .addFlag(isInterface ? ManifestationFlag.INTERFACE : ManifestationFlag.NON_INTERFACE)
               .addFlag(computeMinimumClassAccess(sourceType, ownerType))
               .addMethod(
-                  new Source[] {new Source(sourceClassName, currentLineNumber)},
+                  new Source[] {source()},
                   methodFlags.toArray(new Flag[0]),
                   name,
                   methodType.getReturnType(),
@@ -466,21 +502,38 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
 
     @Override
     public void visitTypeInsn(int opcode, String type) {
-      Type typeObj = underlyingType(Type.getObjectType(type));
-      if (typeObj.getSort() == Type.OBJECT) {
-        String sourceClassName =
-            requireNonNull(
-                refSourceClassName, "refSourceClassName must be set by visit() before use");
-        Type sourceType =
-            requireNonNull(refSourceType, "refSourceType must be set by visit() before use");
-        addReference(
-            ClassRef.builder(typeObj.getClassName())
-                .addSource(sourceClassName, currentLineNumber)
-                .addFlag(computeMinimumClassAccess(sourceType, typeObj))
-                .build());
-      }
-
+      addClassReference(underlyingType(Type.getObjectType(type)));
       super.visitTypeInsn(opcode, type);
+    }
+
+    @Override
+    public void visitMultiANewArrayInsn(String descriptor, int numDimensions) {
+      addClassReference(underlyingType(Type.getType(descriptor)));
+      super.visitMultiANewArrayInsn(descriptor, numDimensions);
+    }
+
+    @Override
+    public void visitTryCatchBlock(Label start, Label end, Label handler, @Nullable String type) {
+      if (type != null) {
+        addClassReference(Type.getObjectType(type));
+      }
+      super.visitTryCatchBlock(start, end, handler, type);
+    }
+
+    private void addClassReference(Type type) {
+      if (type.getSort() != Type.OBJECT) {
+        return;
+      }
+      String sourceClassName =
+          requireNonNull(
+              refSourceClassName, "refSourceClassName must be set by visit() before use");
+      Type sourceType =
+          requireNonNull(refSourceType, "refSourceType must be set by visit() before use");
+      addReference(
+          ClassRef.builder(type.getClassName())
+              .addSource(sourceClassName, currentLineNumber, inlinedAdvice)
+              .addFlag(computeMinimumClassAccess(sourceType, type))
+              .build());
     }
 
     @Override
@@ -498,7 +551,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
       // This part might be unnecessary...
       addReference(
           ClassRef.builder(Utils.getClassName(bootstrapMethodHandle.getOwner()))
-              .addSource(sourceClassName, currentLineNumber)
+              .addSource(sourceClassName, currentLineNumber, inlinedAdvice)
               .addFlag(
                   computeMinimumClassAccess(
                       sourceType, Type.getObjectType(bootstrapMethodHandle.getOwner())))
@@ -508,7 +561,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
           Handle handle = (Handle) arg;
           ClassRefBuilder classRefBuilder =
               ClassRef.builder(Utils.getClassName(handle.getOwner()))
-                  .addSource(sourceClassName, currentLineNumber)
+                  .addSource(sourceClassName, currentLineNumber, inlinedAdvice)
                   .addFlag(
                       computeMinimumClassAccess(sourceType, Type.getObjectType(handle.getOwner())));
 
@@ -527,7 +580,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
             methodFlags.add(computeMinimumMethodAccess(sourceType, ownerType));
 
             classRefBuilder.addMethod(
-                new Source[] {new Source(sourceClassName, currentLineNumber)},
+                new Source[] {source()},
                 methodFlags.toArray(new Flag[0]),
                 handle.getName(),
                 methodType.getReturnType(),
@@ -552,7 +605,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
               requireNonNull(refSourceType, "refSourceType must be set by visit() before use");
           addReference(
               ClassRef.builder(type.getClassName())
-                  .addSource(sourceClassName, currentLineNumber)
+                  .addSource(sourceClassName, currentLineNumber, inlinedAdvice)
                   .addFlag(computeMinimumClassAccess(sourceType, type))
                   .build());
         }

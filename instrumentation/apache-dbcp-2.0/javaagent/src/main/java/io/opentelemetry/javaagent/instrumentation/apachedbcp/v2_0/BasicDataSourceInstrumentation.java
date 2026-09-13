@@ -22,7 +22,6 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.commons.dbcp2.BasicDataSource;
-import org.apache.commons.dbcp2.OpenTelemetryBasicDataSourceUtil;
 
 class BasicDataSourceInstrumentation implements TypeInstrumentation {
   @Override
@@ -69,7 +68,7 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
   public static class StartPoolMaintenanceAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This BasicDataSource dataSource) {
-      ObjectName objectName = OpenTelemetryBasicDataSourceUtil.getRegisteredJmxName(dataSource);
+      ObjectName objectName = BasicDataSourceAccess.getRegisteredJmxName(dataSource);
       String dataSourceName =
           objectName != null ? getDataSourceName(objectName) : getDataSourceName(dataSource);
       telemetry().registerMetrics(dataSource, dataSourceName);

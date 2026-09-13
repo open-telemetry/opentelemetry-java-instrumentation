@@ -9,6 +9,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfo;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientQueryBaseHelper;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientRequest;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlInstrumenterFactory;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
@@ -19,7 +20,6 @@ import io.vertx.sqlclient.PreparedStatement;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.impl.ClientBuilderBase;
-import io.vertx.sqlclient.impl.QueryExecutorUtil;
 import io.vertx.sqlclient.internal.SqlClientBase;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -68,12 +68,12 @@ public class VertxSqlClientSingletons {
   }
 
   public static void setQueryExecutorInfo(Object queryExecutor, @Nullable VertxSqlClientInfo info) {
-    QueryExecutorUtil.setData(queryExecutor, info);
+    VertxSqlClientQueryBaseHelper.setData(queryExecutor, info);
   }
 
   @Nullable
   public static VertxSqlClientInfo getQueryExecutorInfo(Object queryExecutor) {
-    return (VertxSqlClientInfo) QueryExecutorUtil.getData(queryExecutor);
+    return (VertxSqlClientInfo) VertxSqlClientQueryBaseHelper.getData(queryExecutor);
   }
 
   public static void setPoolClientInfo(Pool pool, @Nullable VertxSqlClientInfo info) {

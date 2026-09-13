@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("org.apache.tomcat")
     module.set("tomcat-dbcp")
-    versions.set("[8.0.3,)")
+    versions.set("[8.0.1,)")
     assertInverse.set(true)
   }
 }

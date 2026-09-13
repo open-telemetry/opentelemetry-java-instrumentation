@@ -48,6 +48,35 @@ muzzle will only generate those methods that do not have a custom implementation
 The source code of the compile-time plugin is located in the `muzzle` module,
 package `io.opentelemetry.javaagent.tooling.muzzle.generation`.
 
+### Same-package public-access invariant
+
+As part of compile-time reference collection, muzzle also enforces that a helper class never
+relies on being in the same Java package as an instrumented library class in order to reach a
+non-public library class, constructor, method, or field (including inherited and protected
+members). This check looks at every direct reference whose source is a helper class and whose
+target is library code; if the source and target share a package, the referenced class or member
+must be `public`, or generation fails with a diagnostic listing every offending helper class,
+line, and target symbol.
+
+References from advice methods that permit inlining are exempt: their bytecode can be copied
+directly into the instrumented library class at weave time, so a same-package reference executes as
+if it were written inside the library itself. Non-inline advice methods and ordinary helper methods
+declared on an advice class are checked like other helper code. References from one helper class to
+another helper class are exempt too, since no library boundary is being crossed.
+
+This rule exists because "same package" is not by itself a reliable substitute for `public` access.
+On the classic classpath, two classes with the same package name and class loader can always reach
+each other's package-private members. But any ordinary JAR can become an automatic named module
+simply by being placed on the module path, and the Java Platform Module System additionally
+requires package-private (and protected, cross-package) access to originate from the *same module*,
+not just the same package name. A helper class injected into an application class loader is not
+guaranteed to end up in the same module as the library class it shares a package name with, so
+same-package tricks that work today can throw `IllegalAccessError` once the instrumented library is
+loaded as a module. Helper classes must instead use a public library API, or a cached reflective
+`Method`/`Field`/`MethodHandle` lookup (with `setAccessible(true)`, guarded so lookup or invocation
+failures never escape into application code) from a helper class that lives in a normal
+`io.opentelemetry.*` package.
+
 ### Runtime reference matching
 
 The runtime reference matching process is implemented as a ByteBuddy matcher in `InstrumentationModule`.
@@ -72,7 +101,7 @@ library versions, when the project is built.
 The `muzzle-check` gradle plugin is just an additional utility for enhanced build-time checking
 to alert us when there are breaking changes in the underlying third party library
 that will cause the instrumentation not to get applied.
-**Even without using it muzzle reference matching is _always_ active in runtime**,
+**Even without using it muzzle reference matching is *always* active in runtime**,
 it's not an optional feature.
 
 The gradle plugin defines two tasks:
