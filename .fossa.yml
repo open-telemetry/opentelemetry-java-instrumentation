@@ -666,6 +666,9 @@ targets:
       target: ':instrumentation:jms:jms-1.1:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:jms:jms-2.0:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:jms:jms-3.0:javaagent'
     - type: gradle
       path: ./
