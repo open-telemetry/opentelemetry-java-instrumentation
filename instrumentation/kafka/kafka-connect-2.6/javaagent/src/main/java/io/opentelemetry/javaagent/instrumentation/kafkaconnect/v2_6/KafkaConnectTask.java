@@ -26,10 +26,12 @@ public class KafkaConnectTask {
       VirtualField.find(SinkRecord.class, Boolean.class);
 
   private final Collection<SinkRecord> records;
+  private final long unownedRecordCount;
   @Nullable private KafkaConnectBatchRecordAttributes batchRecordAttributes;
 
   public KafkaConnectTask(Collection<SinkRecord> records) {
     this.records = records;
+    this.unownedRecordCount = consumeReceiveOwnedMarkers(records);
   }
 
   public Collection<SinkRecord> getRecords() {
@@ -60,12 +62,14 @@ public class KafkaConnectTask {
     }
   }
 
-  // counts the records of this put() invocation that were not already counted by a receive
-  // operation, so every put() invocation, including failed and redelivered ones, counts its own
-  // attempt.
-  // The marker is cleared after suppressing a record so that a retry of the same put() — which
-  // Kafka Connect performs when the task throws a RetriableException — is counted as a new attempt.
   long countUnmarkedRecords() {
+    return unownedRecordCount;
+  }
+
+  // Consumes receive ownership at the start of each put() attempt, independently of whether a
+  // process span starts. Kafka Connect may redeliver the same SinkRecord object after a failure, and
+  // that retry is a new delivery attempt that must not inherit the prior attempt's accounting.
+  private static long consumeReceiveOwnedMarkers(Collection<SinkRecord> records) {
     long count = 0;
     for (SinkRecord record : records) {
       if (Boolean.TRUE.equals(RECEIVE_OWNED_FIELD.get(record))) {
