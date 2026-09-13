@@ -33,6 +33,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false # we'll use a bot token for pushing changes
+          # full history is needed for the merge of origin/main below; a shallow clone has no
+          # merge base and git refuses to merge unrelated histories
+          fetch-depth: 0
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
