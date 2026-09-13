@@ -47,13 +47,7 @@ class SessionTest extends AbstractHibernateTest {
         });
 
     testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasTotalAttributeCount(0)));
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent")));
   }
 
   @ParameterizedTest

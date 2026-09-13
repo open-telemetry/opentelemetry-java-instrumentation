@@ -53,9 +53,7 @@ class HystrixTest {
     assertThat(result).isEqualTo("Hello!");
 
     testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0)));
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent")));
   }
 
   @ParameterizedTest

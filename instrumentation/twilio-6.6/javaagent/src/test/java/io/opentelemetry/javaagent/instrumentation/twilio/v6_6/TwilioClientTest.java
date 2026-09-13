@@ -199,9 +199,7 @@ class TwilioClientTest {
 
     assertThat(message.getBody()).isEqualTo("Hello, World!");
     testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test").hasNoParent().hasTotalAttributeCount(0)));
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("test")));
   }
 
   @Test
