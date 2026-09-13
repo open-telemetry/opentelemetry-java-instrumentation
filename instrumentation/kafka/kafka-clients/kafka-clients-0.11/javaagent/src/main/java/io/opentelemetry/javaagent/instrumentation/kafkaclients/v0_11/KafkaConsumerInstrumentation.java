@@ -20,7 +20,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
-import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerBatchState;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
@@ -73,13 +72,14 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      Context parentContext = KafkaConsumerContextUtil.withoutLeakedProcessSpan(currentContext());
+      Context parentContext =
+          KafkaConsumerContextUtil.withoutLeakedProcessSpan(
+              KafkaClientsConsumerProcessTracing.withoutFrameworkProcess(currentContext()));
       KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumer);
 
       // disable process tracing and store the receive span for each individual record too
       boolean previousValue = KafkaClientsConsumerProcessTracing.setWrappingEnabled(false);
       try {
-        KafkaConsumerBatchState.recordPoll(records, previousValue);
         Context receiveContext = null;
         boolean receiveOperationStarted = false;
         if (consumerReceiveInstrumenter().shouldStart(parentContext, request)) {
@@ -113,6 +113,7 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
             recordTelemetry().add(record, RECEIVE, CONSUMED_MESSAGES);
           }
         }
+        KafkaConsumerBatchStateUtil.recordPoll(records, previousValue);
       } finally {
         KafkaClientsConsumerProcessTracing.setWrappingEnabled(previousValue);
       }
