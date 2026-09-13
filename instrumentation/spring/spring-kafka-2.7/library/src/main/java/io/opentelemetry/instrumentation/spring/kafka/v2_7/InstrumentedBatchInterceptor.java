@@ -43,6 +43,7 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
     KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumer);
     if (batchProcessInstrumenter.shouldStart(parentContext, request) && !skipProcessing(records)) {
       Context context = batchProcessInstrumenter.start(parentContext, request);
+      context = KafkaConsumerContextUtil.withProcessParentSpan(context, parentContext);
       Scope scope = context.makeCurrent();
       BATCH_STATE.set(records, State.create(request, context, scope));
     }

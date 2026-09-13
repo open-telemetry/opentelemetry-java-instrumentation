@@ -32,6 +32,9 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -43,12 +46,19 @@ import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.AbstractSpringKafkaTest;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.Test;
@@ -171,6 +181,88 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             singleProcessAttributes("testSingleTopic", "testSingleListener", "10")),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
     assertSingleMetrics();
+  }
+
+  @Test
+  void shouldTraceRawConsumerInsideListener() {
+    Map<String, Object> consumerProperties = new HashMap<>();
+    consumerProperties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers());
+    consumerProperties.put(ConsumerConfig.GROUP_ID_CONFIG, "nested");
+    consumerProperties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+    consumerProperties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+    consumerProperties.put(
+        ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+
+    runOnNextNestedRecord(
+        () -> {
+          try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(consumerProperties)) {
+            List<TopicPartition> partitions =
+                singletonList(new TopicPartition("testNestedTopic", 0));
+            consumer.assign(partitions);
+            consumer.seekToBeginning(partitions);
+            ConsumerRecords<String, String> records;
+            long deadline = System.nanoTime() + Duration.ofSeconds(20).toNanos();
+            do {
+              records = consumer.poll(Duration.ofSeconds(1));
+            } while (records.isEmpty() && System.nanoTime() < deadline);
+            assertThat(records).hasSize(1);
+            Iterator<?> iterator = records.iterator();
+            Object record = iterator.next();
+            testing.runWithSpan("nested processing", () -> assertThat(record).isNotNull());
+            assertThat(iterator.hasNext()).isFalse();
+          }
+        });
+
+    kafkaTemplate.executeInTransaction(
+        operations -> {
+          send("testNestedTopic", "nested-key", "nested-value");
+          return null;
+        });
+    kafkaTemplate.executeInTransaction(
+        operations -> {
+          send("testSingleTopic", "10", "nested");
+          return null;
+        });
+
+    String nestedProcessName = spanName("testNestedTopic", "process", "process");
+    String nestedReceiveName = spanName("testNestedTopic", "receive", "poll");
+    await()
+        .atMost(Duration.ofSeconds(30))
+        .untilAsserted(
+            () -> {
+              assertThat(testing.spans())
+                  .filteredOn(span -> span.getName().equals(nestedReceiveName))
+                  .hasSize(1);
+              assertThat(testing.spans())
+                  .filteredOn(span -> span.getName().equals(nestedProcessName))
+                  .hasSize(1);
+              assertThat(testing.spans())
+                  .filteredOn(span -> span.getName().equals("nested processing"))
+                  .singleElement()
+                  .satisfies(
+                      span ->
+                          assertThat(span.getParentSpanId())
+                              .isEqualTo(
+                                  testing.spans().stream()
+                                      .filter(
+                                          candidate ->
+                                              candidate.getName().equals(nestedProcessName))
+                                      .findFirst()
+                                      .orElseThrow(AssertionError::new)
+                                      .getSpanId()));
+            });
+
+    assertReceiveMetrics(
+        testing,
+        "io.opentelemetry.kafka-clients-0.11",
+        "testNestedTopic",
+        "nested",
+        "0",
+        1,
+        1,
+        null);
+    assertProcessMetrics(
+        testing, "io.opentelemetry.kafka-clients-0.11", "testNestedTopic", "nested", "0", 1, null);
   }
 
   @Test

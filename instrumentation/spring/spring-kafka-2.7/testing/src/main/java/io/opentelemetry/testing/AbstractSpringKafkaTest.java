@@ -65,6 +65,7 @@ public abstract class AbstractSpringKafkaTest {
   @SuppressWarnings("unchecked")
   @BeforeEach
   void setUpApp() {
+    SingleRecordListener.runOnNextNestedRecord(null);
     Map<String, Object> props = new HashMap<>();
     props.put("spring.jmx.enabled", false);
     props.put("spring.main.web-application-type", "none");
@@ -126,6 +127,10 @@ public abstract class AbstractSpringKafkaTest {
     } catch (Throwable t) {
       throw new AssertionError(t);
     }
+  }
+
+  protected void runOnNextNestedRecord(Runnable callback) {
+    SingleRecordListener.runOnNextNestedRecord(callback);
   }
 
   protected void sendBatchMessages(Map<String, String> keyToData) throws InterruptedException {
