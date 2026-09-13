@@ -9,19 +9,22 @@ import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.util.Iterator;
+import java.util.function.BooleanSupplier;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 class KafkaConsumerBatchStateTest {
 
-  @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  @Test
+  void shouldTraceUnclaimedApplicationPoll() {
+    ConsumerRecords<String, String> records = records();
+    KafkaConsumerBatchStateUtil.recordPoll(records, true);
+
+    assertThat(KafkaConsumerBatchStateUtil.processSpanEnabled(records, () -> true).getAsBoolean())
+        .isTrue();
+  }
 
   @Test
   void shouldHonorClaimBeforeIteratorCreation() {
@@ -29,11 +32,9 @@ class KafkaConsumerBatchStateTest {
     KafkaConsumerBatchStateUtil.recordPoll(records, true);
     KafkaConsumerBatchStateUtil.claimProcessSpan(records);
 
-    Iterator<ConsumerRecord<String, String>> iterator = records.iterator();
-    iterator.next();
-    assertThat(iterator.hasNext()).isFalse();
-
-    assertThat(testing.spans()).isEmpty();
+    BooleanSupplier processSpanEnabled =
+        KafkaConsumerBatchStateUtil.processSpanEnabled(records, () -> true);
+    assertThat(processSpanEnabled.getAsBoolean()).isFalse();
   }
 
   @Test
@@ -41,12 +42,11 @@ class KafkaConsumerBatchStateTest {
     ConsumerRecords<String, String> records = records();
     KafkaConsumerBatchStateUtil.recordPoll(records, true);
 
-    Iterator<ConsumerRecord<String, String>> iterator = records.iterator();
+    BooleanSupplier processSpanEnabled =
+        KafkaConsumerBatchStateUtil.processSpanEnabled(records, () -> true);
     KafkaConsumerBatchStateUtil.claimProcessSpan(records);
-    iterator.next();
-    assertThat(iterator.hasNext()).isFalse();
 
-    assertThat(testing.spans()).isEmpty();
+    assertThat(processSpanEnabled.getAsBoolean()).isFalse();
   }
 
   @Test
@@ -54,11 +54,8 @@ class KafkaConsumerBatchStateTest {
     ConsumerRecords<String, String> records = records();
     KafkaConsumerBatchStateUtil.recordPoll(records, false);
 
-    Iterator<ConsumerRecord<String, String>> iterator = records.iterator();
-    iterator.next();
-    assertThat(iterator.hasNext()).isFalse();
-
-    assertThat(testing.spans()).isEmpty();
+    assertThat(KafkaConsumerBatchStateUtil.processSpanEnabled(records, () -> true).getAsBoolean())
+        .isFalse();
   }
 
   @Test
