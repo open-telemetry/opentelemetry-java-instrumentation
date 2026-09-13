@@ -71,7 +71,6 @@ class RocketMqInstrumenterFactory {
                     getter, operationType, SEND_OPERATION_NAME, headers))
             .addOperationMetrics(MessagingProducerMetrics.getForOperationType());
     if (emitStableMessagingSemconv()) {
-      instrumenterBuilder.addSpanLinksExtractor(new RocketMqBatchSendSpanLinksExtractor());
       instrumenterBuilder.addAttributesExtractor(producerAttributesExtractor());
     }
     if (captureExperimentalSpanAttributes) {
@@ -80,8 +79,32 @@ class RocketMqInstrumenterFactory {
     }
     setMessagingSendExceptionEventExtractor(instrumenterBuilder);
 
+    return instrumenterBuilder.buildProducerInstrumenter(new MapSetter());
+  }
+
+  static Instrumenter<SendMessageContext, Void> createBatchProducerInstrumenter(
+      OpenTelemetry openTelemetry,
+      IncludeExclude headers,
+      boolean captureExperimentalSpanAttributes) {
+    RocketMqProducerAttributeGetter getter = new RocketMqProducerAttributeGetter();
+    MessagingOperationType operationType = MessagingOperationType.SEND;
+    InstrumenterBuilder<SendMessageContext, Void> builder =
+        Instrumenter.<SendMessageContext, Void>builder(
+                openTelemetry,
+                INSTRUMENTATION_NAME,
+                MessagingSpanNameExtractor.create(getter, operationType, SEND_OPERATION_NAME))
+            .addAttributesExtractor(
+                buildMessagingAttributesExtractor(
+                    getter, operationType, SEND_OPERATION_NAME, headers))
+            .addSpanLinksExtractor(new RocketMqBatchSendSpanLinksExtractor())
+            .addAttributesExtractor(producerAttributesExtractor())
+            .addOperationMetrics(MessagingProducerMetrics.getForOperationType());
+    if (captureExperimentalSpanAttributes) {
+      builder.addAttributesExtractor(new RocketMqProducerExperimentalAttributeExtractor());
+    }
+    setMessagingSendExceptionEventExtractor(builder);
     return InstrumenterUtil.buildDownstreamInstrumenter(
-        instrumenterBuilder,
+        builder,
         new MapSetter(),
         MessagingSpanKindExtractor.create(
             operationType,

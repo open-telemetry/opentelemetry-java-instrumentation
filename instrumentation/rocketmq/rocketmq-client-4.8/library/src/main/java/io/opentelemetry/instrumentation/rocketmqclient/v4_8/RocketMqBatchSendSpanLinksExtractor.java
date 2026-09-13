@@ -27,6 +27,15 @@ final class RocketMqBatchSendSpanLinksExtractor implements SpanLinksExtractor<Se
     MESSAGE_CREATION_CONTEXTS.set(request, null);
   }
 
+  static boolean isBatchRequest(SendMessageContext request) {
+    return MESSAGE_CREATION_CONTEXTS.get(request) != null;
+  }
+
+  static long getBatchMessageCount(SendMessageContext request) {
+    MessageCreationContexts contexts = MESSAGE_CREATION_CONTEXTS.get(request);
+    return contexts == null ? 0 : contexts.contexts.size();
+  }
+
   static boolean allMessagesHaveCreationContext(SendMessageContext request) {
     MessageCreationContexts contexts = MESSAGE_CREATION_CONTEXTS.get(request);
     if (contexts == null || contexts.contexts.isEmpty()) {
