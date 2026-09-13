@@ -36,11 +36,12 @@ class ConsumerHandlerInstrumentation implements TypeInstrumentation {
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @SuppressWarnings({"rawtypes", "unchecked"}) // the instrumented method erases the element type
     public static Flux<?> onExit(@Advice.Return Flux<?> flux) {
-      if (flux instanceof TracingDisablingKafkaFlux) {
+      if (flux instanceof ProcessClaimingKafkaFlux) {
         return flux;
       }
-      return new TracingDisablingKafkaFlux<>(flux);
+      return new ProcessClaimingKafkaFlux((Flux) flux);
     }
   }
 }

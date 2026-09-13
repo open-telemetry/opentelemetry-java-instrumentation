@@ -21,7 +21,6 @@ public class VertxKafkaInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(
-        new KafkaReadStreamImplInstrumentation(), new KafkaConsumerRecordsImplInstrumentation());
+    return asList(new KafkaReadStreamImplInstrumentation());
   }
 }
