@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +60,7 @@ public class MetaDataCollector {
       Map<InstrumentationScopeInfo, Map<String, MetricData>> metricsByScope,
       Map<InstrumentationScopeInfo, Map<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>>>
           spansByScopeAndKind,
-      Map<InstrumentationScopeInfo, Map<String, CollectedEvent>> eventsByScope,
+      Map<InstrumentationScopeInfo, Map<CollectedEvent.Key, CollectedEvent>> eventsByScope,
       Set<InstrumentationScopeInfo> instrumentationScopes)
       throws IOException {
 
@@ -150,7 +151,7 @@ public class MetaDataCollector {
 
   private static void writeEventData(
       String instrumentationPath,
-      Map<InstrumentationScopeInfo, Map<String, CollectedEvent>> eventsByScope)
+      Map<InstrumentationScopeInfo, Map<CollectedEvent.Key, CollectedEvent>> eventsByScope)
       throws IOException {
 
     if (eventsByScope.isEmpty()) {
@@ -167,30 +168,32 @@ public class MetaDataCollector {
     eventsData.when = when;
     eventsData.eventsByScope = new ArrayList<>();
 
-    for (Map.Entry<InstrumentationScopeInfo, Map<String, CollectedEvent>> entry :
+    for (Map.Entry<InstrumentationScopeInfo, Map<CollectedEvent.Key, CollectedEvent>> entry :
         eventsByScope.entrySet()) {
       ScopeEvents scopeEvents = new ScopeEvents();
       scopeEvents.scope = entry.getKey().getName();
       scopeEvents.events = new ArrayList<>();
 
-      entry
-          .getValue()
-          .forEach(
-              (eventName, collectedEvent) -> {
-                Event event = new Event();
-                event.name = eventName;
-                event.severity = collectedEvent.getSeverity();
-                event.attributes = new ArrayList<>();
+      // Sorted so that the written file does not depend on hash iteration order.
+      List<CollectedEvent.Key> sortedKeys = new ArrayList<>(entry.getValue().keySet());
+      Collections.sort(sortedKeys);
 
-                for (InternalAttributeKeyImpl<?> key : collectedEvent.getAttributeKeys()) {
-                  AttributeInfo attr = new AttributeInfo();
-                  attr.name = key.getKey();
-                  attr.type = key.getType().toString();
-                  event.attributes.add(attr);
-                }
+      for (CollectedEvent.Key eventKey : sortedKeys) {
+        CollectedEvent collectedEvent = entry.getValue().get(eventKey);
+        Event event = new Event();
+        event.name = eventKey.getName();
+        event.severity = eventKey.getSeverity();
+        event.attributes = new ArrayList<>();
 
-                scopeEvents.events.add(event);
-              });
+        for (InternalAttributeKeyImpl<?> key : collectedEvent.getAttributeKeys()) {
+          AttributeInfo attr = new AttributeInfo();
+          attr.name = key.getKey();
+          attr.type = key.getType().toString();
+          event.attributes.add(attr);
+        }
+
+        scopeEvents.events.add(event);
+      }
 
       eventsData.eventsByScope.add(scopeEvents);
     }

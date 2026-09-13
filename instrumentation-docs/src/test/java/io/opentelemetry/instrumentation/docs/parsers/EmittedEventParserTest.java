@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.docs.parsers;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 import io.opentelemetry.instrumentation.docs.internal.EmittedEvents;
 import io.opentelemetry.instrumentation.docs.internal.TelemetryAttribute;
@@ -129,6 +130,64 @@ class EmittedEventParserTest {
         result.get("default").getEventsByScope().get(0).getEvents().get(0);
     assertThat(packageInfo.getName()).isEqualTo("package.info");
     assertThat(packageInfo.getSeverity()).isNull();
+  }
+
+  @Test
+  void getEventsFromFilesKeepsBothSeveritiesOfTheSameEvent(@TempDir Path tempDir)
+      throws IOException {
+    Path telemetryDir = Files.createDirectories(tempDir.resolve(".telemetry"));
+
+    // A single scope can emit the same event at two severities: ERROR for server and consumer
+    // operations, WARN for client and producer ones. sofa-rpc builds a client and a server
+    // instrumenter under one scope and keeps the default exception event, so it does exactly that.
+    String serverContent =
+        """
+        when: otel.semconv.exception.signal.preview=logs
+        events_by_scope:
+          - scope: io.opentelemetry.sofa-rpc-5.4
+            events:
+              - name: exception
+                severity: ERROR
+                attributes:
+                  - name: rpc.method
+                    type: STRING
+      """;
+
+    String clientContent =
+        """
+        when: otel.semconv.exception.signal.preview=logs
+        events_by_scope:
+          - scope: io.opentelemetry.sofa-rpc-5.4
+            events:
+              - name: exception
+                severity: WARN
+                attributes:
+                  - name: exception.type
+                    type: STRING
+      """;
+
+    Files.writeString(telemetryDir.resolve("events-1.yaml"), serverContent);
+    Files.writeString(telemetryDir.resolve("events-2.yaml"), clientContent);
+
+    Map<String, EmittedEvents> result = EmittedEventParser.getEventsByScopeFromFiles(tempDir, "");
+
+    List<EmittedEvents.Event> events =
+        result
+            .get("otel.semconv.exception.signal.preview=logs")
+            .getEventsByScope()
+            .get(0)
+            .getEvents();
+
+    // both shapes are kept, sorted by name then severity, and their attributes are not merged
+    assertThat(events)
+        .extracting(EmittedEvents.Event::getName, EmittedEvents.Event::getSeverity)
+        .containsExactly(tuple("exception", "ERROR"), tuple("exception", "WARN"));
+    assertThat(events.get(0).getAttributes())
+        .extracting(TelemetryAttribute::getName)
+        .containsExactly("rpc.method");
+    assertThat(events.get(1).getAttributes())
+        .extracting(TelemetryAttribute::getName)
+        .containsExactly("exception.type");
   }
 
   @Test

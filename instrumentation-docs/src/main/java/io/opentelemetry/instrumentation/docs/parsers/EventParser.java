@@ -9,14 +9,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import io.opentelemetry.instrumentation.docs.internal.EmittedEvents;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.TelemetryAttribute;
+import io.opentelemetry.instrumentation.docs.parsers.EmittedEventParser.AggregatedEvent;
+import io.opentelemetry.instrumentation.docs.parsers.EmittedEventParser.EventKey;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.annotation.Nullable;
 
 /**
  * This class is responsible for parsing event files from the `.telemetry` directory of an
@@ -45,7 +44,7 @@ public class EventParser {
   }
 
   /**
-   * Filters events by scope and aggregates attributes for each event name.
+   * Filters events by scope and aggregates attributes for each event name and severity.
    *
    * @param eventsByScope the map of events by scope
    * @param scopeName the name of the scope to filter events for
@@ -62,31 +61,23 @@ public class EventParser {
         continue;
       }
 
-      Map<String, AggregatedEvent> eventsByName = new HashMap<>();
+      Map<EventKey, AggregatedEvent> eventsByKey = new HashMap<>();
       for (EmittedEvents.EventsByScope scopeEvents : events.getEventsByScope()) {
         if (!TelemetryParser.scopeIsValid(scopeEvents.getScope(), scopeName)) {
           continue;
         }
         for (EmittedEvents.Event event : scopeEvents.getEvents()) {
           AggregatedEvent aggregated =
-              eventsByName.computeIfAbsent(event.getName(), n -> new AggregatedEvent());
-          aggregated.severityIfAbsent(event.getSeverity());
+              eventsByKey.computeIfAbsent(EventKey.of(event), k -> new AggregatedEvent());
           addEventAttributes(event, aggregated.attributes);
         }
       }
 
-      if (eventsByName.isEmpty()) {
+      if (eventsByKey.isEmpty()) {
         continue;
       }
 
-      List<EmittedEvents.Event> filteredEvents = new ArrayList<>();
-      for (Map.Entry<String, AggregatedEvent> eventEntry : eventsByName.entrySet()) {
-        AggregatedEvent aggregated = eventEntry.getValue();
-        filteredEvents.add(
-            new EmittedEvents.Event(
-                eventEntry.getKey(), aggregated.severity, new ArrayList<>(aggregated.attributes)));
-      }
-      result.put(events.getWhen(), filteredEvents);
+      result.put(events.getWhen(), EmittedEventParser.toEvents(eventsByKey));
     }
 
     return result;
@@ -101,18 +92,6 @@ public class EventParser {
     for (TelemetryAttribute attr : event.getAttributes()) {
       if (!TelemetryParser.isExcludedAttribute(attr.getName())) {
         attributes.add(new TelemetryAttribute(attr.getName(), attr.getType()));
-      }
-    }
-  }
-
-  /** Accumulates the severity and the union of attributes seen for one event name. */
-  private static class AggregatedEvent {
-    @Nullable String severity;
-    final Set<TelemetryAttribute> attributes = new HashSet<>();
-
-    void severityIfAbsent(@Nullable String severity) {
-      if (this.severity == null) {
-        this.severity = severity;
       }
     }
   }

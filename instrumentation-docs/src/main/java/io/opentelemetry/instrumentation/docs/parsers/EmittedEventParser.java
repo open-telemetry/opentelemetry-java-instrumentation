@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -76,7 +77,7 @@ public class EmittedEventParser {
   /**
    * Takes in a raw string representation of the aggregated EmittedEvents yaml map, separated by the
    * `when`, indicating the conditions under which the telemetry is emitted. deduplicates by name
-   * and then returns a new map.
+   * and severity and then returns a new map.
    *
    * @param input raw string representation of EmittedEvents yaml
    * @return {@code Map<String, EmittedEvents>} where the key is the `when` condition
@@ -94,17 +95,16 @@ public class EmittedEventParser {
         continue;
       }
 
-      Map<String, Map<String, AggregatedEvent>> eventsByScopeAndName = new HashMap<>();
+      Map<String, Map<EventKey, AggregatedEvent>> eventsByScopeAndKey = new HashMap<>();
 
       for (EmittedEvents.EventsByScope eventsByScopeEntry : events.getEventsByScope()) {
-        Map<String, AggregatedEvent> eventsByName =
-            eventsByScopeAndName.computeIfAbsent(
+        Map<EventKey, AggregatedEvent> eventsByKey =
+            eventsByScopeAndKey.computeIfAbsent(
                 eventsByScopeEntry.getScope(), s -> new HashMap<>());
 
         for (EmittedEvents.Event event : eventsByScopeEntry.getEvents()) {
           AggregatedEvent aggregated =
-              eventsByName.computeIfAbsent(event.getName(), n -> new AggregatedEvent());
-          aggregated.severityIfAbsent(event.getSeverity());
+              eventsByKey.computeIfAbsent(EventKey.of(event), k -> new AggregatedEvent());
 
           if (event.getAttributes() != null) {
             for (TelemetryAttribute attr : event.getAttributes()) {
@@ -114,52 +114,71 @@ public class EmittedEventParser {
         }
       }
 
-      result.put(when, getEmittedEvents(eventsByScopeAndName, when));
+      result.put(when, getEmittedEvents(eventsByScopeAndKey, when));
     }
 
     return result;
   }
 
   /**
-   * Takes in a map of aggregated events by scope and name, and returns an {@link EmittedEvents}
-   * object with deduplicated events.
+   * Takes in a map of aggregated events by scope and event identity, and returns an {@link
+   * EmittedEvents} object with deduplicated events.
    *
-   * @param eventsByScopeAndName the map of aggregated events by scope and event name
+   * @param eventsByScopeAndKey the map of aggregated events by scope and event identity
    * @param when the condition under which the telemetry is emitted
    * @return an {@link EmittedEvents} object with deduplicated events
    */
   private static EmittedEvents getEmittedEvents(
-      Map<String, Map<String, AggregatedEvent>> eventsByScopeAndName, String when) {
+      Map<String, Map<EventKey, AggregatedEvent>> eventsByScopeAndKey, String when) {
     List<EmittedEvents.EventsByScope> deduplicatedEventsByScope = new ArrayList<>();
 
-    for (Map.Entry<String, Map<String, AggregatedEvent>> scopeEntry :
-        eventsByScopeAndName.entrySet()) {
-      List<EmittedEvents.Event> deduplicatedEvents = new ArrayList<>();
-
-      for (Map.Entry<String, AggregatedEvent> eventEntry : scopeEntry.getValue().entrySet()) {
-        AggregatedEvent aggregated = eventEntry.getValue();
-        deduplicatedEvents.add(
-            new EmittedEvents.Event(
-                eventEntry.getKey(), aggregated.severity, new ArrayList<>(aggregated.attributes)));
-      }
-
+    for (Map.Entry<String, Map<EventKey, AggregatedEvent>> scopeEntry :
+        eventsByScopeAndKey.entrySet()) {
       deduplicatedEventsByScope.add(
-          new EmittedEvents.EventsByScope(scopeEntry.getKey(), deduplicatedEvents));
+          new EmittedEvents.EventsByScope(scopeEntry.getKey(), toEvents(scopeEntry.getValue())));
     }
 
     return new EmittedEvents(when, deduplicatedEventsByScope);
   }
 
-  /** Accumulates the severity and the union of attributes seen for one event name. */
-  private static class AggregatedEvent {
-    @Nullable String severity;
-    final Set<TelemetryAttribute> attributes = new LinkedHashSet<>();
+  /**
+   * Converts aggregated events into the {@link EmittedEvents.Event} representation, sorted by name
+   * and severity so that the result does not depend on hash iteration order.
+   */
+  static List<EmittedEvents.Event> toEvents(Map<EventKey, AggregatedEvent> eventsByKey) {
+    List<Map.Entry<EventKey, AggregatedEvent>> sortedEntries =
+        new ArrayList<>(eventsByKey.entrySet());
+    sortedEntries.sort(
+        Comparator.<Map.Entry<EventKey, AggregatedEvent>, String>comparing(e -> e.getKey().name())
+            .thenComparing(
+                e -> e.getKey().severity(), Comparator.nullsFirst(Comparator.naturalOrder())));
 
-    void severityIfAbsent(@Nullable String severity) {
-      if (this.severity == null) {
-        this.severity = severity;
-      }
+    List<EmittedEvents.Event> events = new ArrayList<>();
+    for (Map.Entry<EventKey, AggregatedEvent> event : sortedEntries) {
+      events.add(
+          new EmittedEvents.Event(
+              event.getKey().name(),
+              event.getKey().severity(),
+              new ArrayList<>(event.getValue().attributes)));
     }
+    return events;
+  }
+
+  /**
+   * The identity of an event: its name together with its severity. A single instrumentation scope
+   * can emit the same event name at more than one severity - the default {@code exception} event,
+   * for example, is {@code ERROR} for server and consumer operations and {@code WARN} for client
+   * and producer operations - and each of those is a distinct documented shape.
+   */
+  record EventKey(String name, @Nullable String severity) {
+    static EventKey of(EmittedEvents.Event event) {
+      return new EventKey(event.getName(), event.getSeverity());
+    }
+  }
+
+  /** Accumulates the union of attributes seen for one event identity. */
+  static class AggregatedEvent {
+    final Set<TelemetryAttribute> attributes = new LinkedHashSet<>();
   }
 
   private EmittedEventParser() {}

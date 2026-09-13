@@ -408,6 +408,17 @@ an event when it carries an event name, set either via `LogRecordBuilder.setEven
 `event.name` attribute; ordinary log records, such as those produced by the logging library bridges,
 are ignored.
 
+An event is keyed by its name together with its severity, so an instrumentation that emits the same
+event at two severities is documented as two shapes. The default `exception` event does exactly
+this: `ERROR` for server and consumer operations, `WARN` for client and producer ones.
+
+Telemetry only reaches the generated list for test tasks listed in
+`.github/scripts/instrumentations.sh`. A task that sets a non-default configuration must also set
+the `metadataConfig` system property to that configuration, otherwise its telemetry is recorded
+under `when: default`. The exception events, for example, are collected by the
+`testExceptionSignalLogs` tasks, which set
+`metadataConfig` to `otel.semconv.exception.signal.preview=logs`.
+
 #### Manual Telemetry Documentation
 
 In addition to auto-generated telemetry data from test runs, you can manually document telemetry

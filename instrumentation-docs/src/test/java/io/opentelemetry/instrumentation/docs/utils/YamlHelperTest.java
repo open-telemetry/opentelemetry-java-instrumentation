@@ -671,6 +671,43 @@ class YamlHelperTest {
   }
 
   @Test
+  void testSameEventNameWithDifferentSeveritiesGetsSeparateDefinitions() throws Exception {
+    // One scope can emit the same event at two severities - the default exception event is ERROR
+    // for server and consumer operations and WARN for client and producer ones - and each is a
+    // distinct shape that has to survive into the catalog.
+    EmittedEvents.Event serverException =
+        new EmittedEvents.Event(
+            "exception", "ERROR", List.of(new TelemetryAttribute("exception.type", "STRING")));
+    EmittedEvents.Event clientException =
+        new EmittedEvents.Event(
+            "exception", "WARN", List.of(new TelemetryAttribute("exception.type", "STRING")));
+
+    List<InstrumentationModule> modules =
+        List.of(
+            new InstrumentationModule.Builder("sofa-rpc-5.4")
+                .srcPath("instrumentation/sofa-rpc-5.4")
+                .events(
+                    Map.of(
+                        "otel.semconv.exception.signal.preview=logs",
+                        List.of(serverException, clientException)))
+                .build());
+
+    String result = generateInstrumentationYaml(modules);
+
+    long definitionCount =
+        result
+            .lines()
+            .filter(l -> l.trim().startsWith("exception-") && l.trim().endsWith(":"))
+            .count();
+    long refCount = result.lines().filter(l -> l.trim().startsWith("- exception-")).count();
+
+    assertThat(definitionCount).isEqualTo(2);
+    assertThat(refCount).isEqualTo(2);
+    assertThat(result).contains("severity: ERROR");
+    assertThat(result).contains("severity: WARN");
+  }
+
+  @Test
   void testTelemetryGroupsAreSorted() throws Exception {
     EmittedMetrics.Metric metric =
         new EmittedMetrics.Metric("a.metric", "description", "COUNTER", "1", emptyList());

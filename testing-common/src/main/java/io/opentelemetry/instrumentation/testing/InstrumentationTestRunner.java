@@ -77,10 +77,11 @@ public abstract class InstrumentationTestRunner {
       tracesByScope = new HashMap<>();
 
   /**
-   * Stores events by scope, where each scope contains a map of event names to the accumulated shape
-   * of that event. This is used to collect metadata about the events emitted during tests.
+   * Stores events by scope, where each scope contains a map of event identities (name and severity)
+   * to the accumulated shape of that event. This is used to collect metadata about the events
+   * emitted during tests.
    */
-  protected Map<InstrumentationScopeInfo, Map<String, CollectedEvent>> eventsByScope =
+  protected Map<InstrumentationScopeInfo, Map<CollectedEvent.Key, CollectedEvent>> eventsByScope =
       new HashMap<>();
 
   protected InstrumentationTestRunner(OpenTelemetry openTelemetry) {
@@ -311,15 +312,20 @@ public abstract class InstrumentationTestRunner {
         continue;
       }
 
-      Map<String, CollectedEvent> scopeMap =
+      Map<CollectedEvent.Key, CollectedEvent> scopeMap =
           this.eventsByScope.computeIfAbsent(
               logRecord.getInstrumentationScopeInfo(), s -> new HashMap<>());
-      CollectedEvent event = scopeMap.computeIfAbsent(eventName, e -> new CollectedEvent());
 
+      // The severity is part of the event's identity: the same event name can be emitted at more
+      // than one severity by a single scope, and each of those is a distinct documented shape.
       Severity severity = logRecord.getSeverity();
-      if (severity != null && severity != Severity.UNDEFINED_SEVERITY_NUMBER) {
-        event.setSeverityIfAbsent(severity.name());
-      }
+      String severityName =
+          (severity != null && severity != Severity.UNDEFINED_SEVERITY_NUMBER)
+              ? severity.name()
+              : null;
+      CollectedEvent event =
+          scopeMap.computeIfAbsent(
+              new CollectedEvent.Key(eventName, severityName), e -> new CollectedEvent());
 
       for (AttributeKey<?> key : logRecord.getAttributes().asMap().keySet()) {
         if (!(key instanceof InternalAttributeKeyImpl)) {
