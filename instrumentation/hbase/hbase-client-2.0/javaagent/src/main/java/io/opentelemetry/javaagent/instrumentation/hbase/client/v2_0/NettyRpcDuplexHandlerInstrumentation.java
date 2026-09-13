@@ -31,6 +31,6 @@ class NettyRpcDuplexHandlerInstrumentation implements TypeInstrumentation {
             .and(
                 takesArgument(
                     2, named("org.apache.hbase.thirdparty.io.netty.channel.ChannelPromise"))),
-        "org.apache.hadoop.hbase.ipc.HbaseCallAdvice$WriteAdvice");
+        "org.apache.hadoop.hbase.ipc.HbaseCall20Advice$WriteAdvice");
   }
 }

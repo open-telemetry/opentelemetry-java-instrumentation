@@ -16,7 +16,7 @@ import org.apache.hbase.thirdparty.io.netty.channel.ChannelHandlerContext;
 
 // Advice parameters remain Object because indy advice executes outside the HBase runtime package.
 @SuppressWarnings("unused")
-public final class HbaseCallAdvice {
+public final class HbaseCall20Advice {
 
   public static class SendRequestAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -64,5 +64,5 @@ public final class HbaseCallAdvice {
     }
   }
 
-  private HbaseCallAdvice() {}
+  private HbaseCall20Advice() {}
 }

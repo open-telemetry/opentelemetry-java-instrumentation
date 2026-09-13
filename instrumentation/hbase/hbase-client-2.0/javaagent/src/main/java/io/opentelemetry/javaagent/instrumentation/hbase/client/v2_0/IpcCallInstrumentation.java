@@ -22,8 +22,8 @@ class IpcCallInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("callComplete"), "org.apache.hadoop.hbase.ipc.HbaseCallAdvice$CallCompleteAdvice");
+        named("callComplete"), "org.apache.hadoop.hbase.ipc.HbaseCall20Advice$CallCompleteAdvice");
     transformer.applyAdviceToMethod(
-        named("setTimeout"), "org.apache.hadoop.hbase.ipc.HbaseCallAdvice$SetTimeoutAdvice");
+        named("setTimeout"), "org.apache.hadoop.hbase.ipc.HbaseCall20Advice$SetTimeoutAdvice");
   }
 }

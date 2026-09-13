@@ -31,6 +31,6 @@ class RpcConnectionInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("sendRequest").and(takesArgument(0, named("org.apache.hadoop.hbase.ipc.Call"))),
-        "org.apache.hadoop.hbase.ipc.HbaseCallAdvice$SendRequestAdvice");
+        "org.apache.hadoop.hbase.ipc.HbaseCall20Advice$SendRequestAdvice");
   }
 }
