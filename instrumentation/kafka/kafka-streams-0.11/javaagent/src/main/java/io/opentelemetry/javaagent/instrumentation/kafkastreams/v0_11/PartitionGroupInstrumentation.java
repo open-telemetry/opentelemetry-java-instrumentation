@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.markFrameworkProcess;
 import static io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11.KafkaStreamsSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11.StateHolder.holder;
 import static net.bytebuddy.matcher.ElementMatchers.isPackagePrivate;
@@ -67,6 +68,7 @@ class PartitionGroupInstrumentation implements TypeInstrumentation {
         return;
       }
       Context context = instrumenter().start(parentContext, request);
+      context = markFrameworkProcess(context, parentContext);
       stateHolder.set(request, context, context.makeCurrent());
     }
   }

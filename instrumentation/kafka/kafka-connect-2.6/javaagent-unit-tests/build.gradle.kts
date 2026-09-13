@@ -4,6 +4,9 @@ plugins {
 
 dependencies {
   testImplementation(project(":instrumentation:kafka:kafka-connect-2.6:javaagent"))
+  testImplementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
   testImplementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
+  testImplementation(project(":javaagent-bootstrap"))
+  testImplementation(project(":javaagent-extension-api"))
   testImplementation("org.apache.kafka:connect-api:2.6.0")
 }
