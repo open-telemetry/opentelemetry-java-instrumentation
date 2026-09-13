@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.vertx.core.Completable;
 import io.vertx.core.internal.pool.PoolWaiter;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -31,9 +32,10 @@ class PoolWaiterInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.This PoolWaiter<?> waiter) {
+    public static void onExit(
+        @Advice.This PoolWaiter<?> waiter, @Advice.Argument(3) Completable<?> handler) {
       // Acquire is constructed on the submitting thread before the combiner can move its work.
-      VertxSqlClientConnectionPoolState.attachWaiter(waiter);
+      VertxSqlClientConnectionPoolState.attachWaiter(waiter, handler);
     }
   }
 }

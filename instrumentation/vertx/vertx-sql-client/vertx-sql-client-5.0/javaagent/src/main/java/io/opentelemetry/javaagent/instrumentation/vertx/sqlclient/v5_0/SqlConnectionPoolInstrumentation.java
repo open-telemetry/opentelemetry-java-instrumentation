@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientConnectionPoolState.Submission;
 import io.vertx.core.internal.pool.ConnectionPool;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -51,13 +52,14 @@ class SqlConnectionPoolInstrumentation implements TypeInstrumentation {
   public static class ExecuteAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
-    public static VertxSqlClientQueryState onEnter(@Advice.Argument(0) Object command) {
-      return VertxSqlClientConnectionPoolState.enterQuery(command);
+    public static Submission onEnter(
+        @Advice.FieldValue("pool") ConnectionPool<?> pool, @Advice.Argument(0) Object command) {
+      return VertxSqlClientConnectionPoolState.enterSubmission(pool, command);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter @Nullable VertxSqlClientQueryState previous) {
-      VertxSqlClientConnectionPoolState.setQuery(previous);
+    public static void onExit(@Advice.Enter @Nullable Submission previous) {
+      VertxSqlClientConnectionPoolState.setSubmission(previous);
     }
   }
 }
