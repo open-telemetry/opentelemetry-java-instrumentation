@@ -31,9 +31,7 @@ class RocketMqProducerInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("start").and(takesArguments(0)), getClass().getName() + "$StartAdvice");
     transformer.applyAdviceToMethod(
-        named("send")
-            .and(isPublic())
-            .and(takesArgument(0, named("java.util.Collection"))),
+        named("send").and(isPublic()).and(takesArgument(0, named("java.util.Collection"))),
         getClass().getName() + "$BatchSendAdvice");
   }
 
@@ -55,8 +53,7 @@ class RocketMqProducerInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(
-        @Advice.Enter Object state, @Advice.Thrown Throwable throwable) {
+    public static void onExit(@Advice.Enter Object state, @Advice.Thrown Throwable throwable) {
       RocketMqSingletons.batchSendHelper().batchSendEnd(state, throwable);
     }
   }

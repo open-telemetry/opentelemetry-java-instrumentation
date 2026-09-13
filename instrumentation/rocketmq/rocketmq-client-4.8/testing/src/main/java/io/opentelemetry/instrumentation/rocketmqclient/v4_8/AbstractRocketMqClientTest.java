@@ -33,6 +33,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.TraceFlags;
+import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.instrumentation.rocketmqclient.v4_8.base.BaseConf;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -113,6 +115,14 @@ abstract class AbstractRocketMqClientTest {
   abstract void configureMqProducer(DefaultMQProducer producer);
 
   abstract void configureMqPushConsumer(DefaultMQPushConsumer consumer);
+
+  abstract boolean hasBatchCreateSpans();
+
+  abstract boolean isJavaagent();
+
+  DefaultMQProducer producer() {
+    return producer;
+  }
 
   @BeforeAll
   void setup() throws MQClientException, InterruptedException {
@@ -307,16 +317,29 @@ abstract class AbstractRocketMqClientTest {
 
   @Test
   void testRocketmqProduceAndBatchConsume() throws Exception {
-    runBatchConsumeTest(false);
+    runBatchConsumeTest(false, false, false);
+  }
+
+  @Test
+  void testRocketmqAsyncProduceAndBatchConsume() throws Exception {
+    Assumptions.assumeTrue(isJavaagent() && emitStableMessagingSemconv());
+    runBatchConsumeTest(false, false, true);
   }
 
   @Test
   void testBatchConsumeFailure() throws Exception {
     consumer.setMaxReconsumeTimes(0);
-    runBatchConsumeTest(true);
+    runBatchConsumeTest(true, false, false);
   }
 
-  private void runBatchConsumeTest(boolean failConsumption) throws Exception {
+  @Test
+  void testBatchSendPreservesExistingCreationContext() throws Exception {
+    Assumptions.assumeTrue(emitStableMessagingSemconv() && hasBatchCreateSpans());
+    runBatchConsumeTest(false, true, false);
+  }
+
+  private void runBatchConsumeTest(
+      boolean failConsumption, boolean existingCreationContext, boolean async) throws Exception {
     // context propagation doesn't work for batch messages in 5.3.4
     Assumptions.assumeFalse(testLatestDeps());
 
@@ -340,9 +363,37 @@ abstract class AbstractRocketMqClientTest {
               .fields()
               .forEach(message.getProperties()::remove);
         }
+        if (existingCreationContext) {
+          msgs.get(0)
+              .putUserProperty(
+                  "traceparent", "00-00000000000000000000000000000001-0000000000000001-01");
+        }
       }
 
-      testing().runWithSpan("parent", () -> producer.send(msgs));
+      CompletableFuture<SendResult> result = new CompletableFuture<>();
+      testing()
+          .runWithSpan(
+              "parent",
+              () -> {
+                if (async) {
+                  producer.send(
+                      msgs,
+                      new SendCallback() {
+                        @Override
+                        public void onSuccess(SendResult sendResult) {
+                          result.complete(sendResult);
+                        }
+
+                        @Override
+                        public void onException(Throwable throwable) {
+                          result.completeExceptionally(throwable);
+                        }
+                      });
+                } else {
+                  result.complete(producer.send(msgs));
+                }
+              });
+      assertThat(result.get(10, SECONDS).getSendStatus()).isEqualTo(SendStatus.SEND_OK);
 
       tracingMessageListener.waitForMessages();
       if (tracingMessageListener.getLastBatchSize() == 2) {
@@ -362,7 +413,8 @@ abstract class AbstractRocketMqClientTest {
         .waitAndAssertTraces(
             trace -> {
               messageCreationContexts.clear();
-              int size = emitStableMessagingSemconv() ? 4 : 2;
+              boolean hasBatchCreateSpans = emitStableMessagingSemconv() && hasBatchCreateSpans();
+              int size = hasBatchCreateSpans ? (existingCreationContext ? 3 : 4) : 2;
               trace.hasSize(size);
               SpanContext spanContext = spanNamed(trace, size, producerSpanName()).getSpanContext();
               producerSpanContext.set(
@@ -374,7 +426,15 @@ abstract class AbstractRocketMqClientTest {
 
               List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
               assertions.add(span -> span.hasName("parent").hasKind(SpanKind.INTERNAL));
-              if (emitStableMessagingSemconv()) {
+              if (hasBatchCreateSpans) {
+                if (existingCreationContext) {
+                  messageCreationContexts.add(
+                      SpanContext.createFromRemoteParent(
+                          "00000000000000000000000000000001",
+                          "0000000000000001",
+                          TraceFlags.getSampled(),
+                          TraceState.getDefault()));
+                }
                 for (SpanData creationSpan : spansNamed(trace, size, "create " + sharedTopic)) {
                   SpanContext creationContext = creationSpan.getSpanContext();
                   messageCreationContexts.add(
@@ -401,31 +461,35 @@ abstract class AbstractRocketMqClientTest {
                 }
               }
               assertions.add(
-                  span ->
-                      span.hasName(producerSpanName())
-                          .hasKind(
-                              emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.PRODUCER)
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                              namespace(),
-                              equalTo(MESSAGING_DESTINATION_NAME, producerDestination()),
-                              equalTo(
-                                  MESSAGING_BATCH_MESSAGE_COUNT,
-                                  emitStableMessagingSemconv() ? Long.valueOf(2) : null),
-                              oldOperation("publish"),
-                              operationName("send"),
-                              operationType("send"),
-                              emitStableMessagingSemconv()
-                                  ? equalTo(MESSAGING_MESSAGE_ID, null)
-                                  : satisfies(
-                                      MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
-                              satisfies(
-                                  stringKey("messaging.rocketmq.broker_address"),
-                                  val -> experimentalString(val)),
-                              equalTo(
-                                  stringKey("messaging.rocketmq.send_result"),
-                                  experimental("SEND_OK"))));
+                  span -> {
+                    span.hasName(producerSpanName())
+                        .hasKind(hasBatchCreateSpans ? SpanKind.CLIENT : SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                            namespace(),
+                            equalTo(MESSAGING_DESTINATION_NAME, producerDestination()),
+                            equalTo(
+                                MESSAGING_BATCH_MESSAGE_COUNT,
+                                emitStableMessagingSemconv() ? Long.valueOf(2) : null),
+                            oldOperation("publish"),
+                            operationName("send"),
+                            operationType("send"),
+                            emitStableMessagingSemconv()
+                                ? equalTo(MESSAGING_MESSAGE_ID, null)
+                                : satisfies(
+                                    MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
+                            satisfies(
+                                stringKey("messaging.rocketmq.broker_address"),
+                                val -> experimentalString(val)),
+                            equalTo(
+                                stringKey("messaging.rocketmq.send_result"),
+                                experimental("SEND_OK")));
+                    if (hasBatchCreateSpans) {
+                      span.hasLinksSatisfying(
+                          links(messageCreationContexts.toArray(new SpanContext[0])));
+                    }
+                  });
               trace.hasSpansSatisfyingExactlyInAnyOrder(assertions);
             },
             trace -> {
@@ -456,7 +520,9 @@ abstract class AbstractRocketMqClientTest {
                                   failConsumption ? ConsumeReturnType.FAILED.name() : null));
                       // one link per message the span accounts for
                       span.hasLinksSatisfying(
-                          links(messageCreationContexts.toArray(new SpanContext[0])));
+                          hasBatchCreateSpans()
+                              ? links(messageCreationContexts.toArray(new SpanContext[0]))
+                              : links(producerSpanContext.get(), producerSpanContext.get()));
                     });
               } else {
                 assertions.add(

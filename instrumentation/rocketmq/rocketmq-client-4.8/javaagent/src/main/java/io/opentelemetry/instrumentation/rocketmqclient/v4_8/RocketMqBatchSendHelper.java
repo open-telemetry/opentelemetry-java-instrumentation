@@ -11,6 +11,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
@@ -26,12 +27,12 @@ public final class RocketMqBatchSendHelper {
 
   private static final VirtualField<Message, BatchSendState> BATCH_SEND_STATE =
       VirtualField.find(Message.class, BatchSendState.class);
+  private static final ThreadLocal<BatchSendState> CURRENT_STATE = new ThreadLocal<>();
 
   private final Instrumenter<SendMessageContext, Void> sendInstrumenter;
   private final Instrumenter<SendMessageContext, Void> createInstrumenter;
   private final TextMapPropagator propagator;
   private final MessageExtractAdapter getter = new MessageExtractAdapter();
-  private final ThreadLocal<BatchSendState> currentState = new ThreadLocal<>();
 
   public RocketMqBatchSendHelper(
       OpenTelemetry openTelemetry,
@@ -54,13 +55,13 @@ public final class RocketMqBatchSendHelper {
     }
     BatchSendState state =
         new BatchSendState(
-            Context.current(), RocketMqNamespaceUtil.getNamespace(producer), currentState.get());
-    currentState.set(state);
+            Context.current(), RocketMqNamespaceUtil.getNamespace(producer), CURRENT_STATE.get());
+    CURRENT_STATE.set(state);
     return state;
   }
 
   public void beforeBatchEncode(Message batch) {
-    BatchSendState state = currentState.get();
+    BatchSendState state = CURRENT_STATE.get();
     if (state == null || state.prepared) {
       return;
     }
@@ -72,14 +73,14 @@ public final class RocketMqBatchSendHelper {
       return;
     }
     BatchSendState state = (BatchSendState) stateObject;
-    if (currentState.get() == state) {
+    if (CURRENT_STATE.get() == state) {
       if (state.previous == null) {
-        currentState.remove();
+        CURRENT_STATE.remove();
       } else {
-        currentState.set(state.previous);
+        CURRENT_STATE.set(state.previous);
       }
     }
-    if (!state.claimed) {
+    if (error != null || !state.claimed || state.isSynchronous()) {
       state.end(error);
     }
   }
@@ -110,9 +111,8 @@ public final class RocketMqBatchSendHelper {
           return;
         }
         state.copyFrom(context);
-        if (context.getSendResult() != null
-            || context.getException() != null
-            || CommunicationMode.ONEWAY == context.getCommunicationMode()) {
+        if ((context.getSendResult() != null || context.getException() != null)
+            && CommunicationMode.ASYNC == context.getCommunicationMode()) {
           state.end(context.getException());
         }
       }
@@ -139,9 +139,7 @@ public final class RocketMqBatchSendHelper {
     private boolean ended;
 
     private BatchSendState(
-        Context parentContext,
-        @Nullable String namespace,
-        @Nullable BatchSendState previous) {
+        Context parentContext, @Nullable String namespace, @Nullable BatchSendState previous) {
       this.parentContext = parentContext;
       this.namespace = namespace;
       this.previous = previous;
@@ -197,6 +195,10 @@ public final class RocketMqBatchSendHelper {
       request.setSendResult(context.getSendResult());
     }
 
+    private boolean isSynchronous() {
+      return request != null && CommunicationMode.ASYNC != request.getCommunicationMode();
+    }
+
     private void end(@Nullable Throwable error) {
       if (ended) {
         return;
@@ -235,8 +237,7 @@ public final class RocketMqBatchSendHelper {
     }
   }
 
-  private enum MessagePropertySetter
-      implements io.opentelemetry.context.propagation.TextMapSetter<Message> {
+  private enum MessagePropertySetter implements TextMapSetter<Message> {
     INSTANCE;
 
     @Override

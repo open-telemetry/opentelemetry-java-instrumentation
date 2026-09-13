@@ -19,8 +19,7 @@ public class RocketMqSingletons {
 
   private static final IncludeExclude headers = ExperimentalConfig.get().getMessagingHeaders();
   private static final boolean captureExperimentalSpanAttributes =
-      DeclarativeConfigUtil.getInstrumentationConfig(
-              GlobalOpenTelemetry.get(), "rocketmq_client")
+      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "rocketmq_client")
           .getBoolean("experimental_span_attributes/development", false);
 
   private static final RocketMqTelemetry telemetry =
