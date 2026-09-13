@@ -76,7 +76,6 @@ tasks {
 
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     jvmArgs("-Dotel.instrumentation.jdbc.enabled=false")
-    systemProperty("testDisabled", "true")
     systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
   }
 

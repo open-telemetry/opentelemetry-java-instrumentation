@@ -40,9 +40,7 @@ tasks {
     filter {
       includeTestsMatching("TwilioClientTest.disabledByDefault")
     }
-
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-    systemProperty("testDisabled", "true")
     systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
   }
 
