@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -13,28 +13,28 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 
-class KafkaFetchRecordsInstrumentation implements TypeInstrumentation {
+class KafkaConsumerRecordsInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("org.apache.camel.component.kafka.KafkaConsumer$KafkaFetchRecords");
+    return named("org.apache.kafka.clients.consumer.ConsumerRecords");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(named("doRun"), getClass().getName() + "$DoRunAdvice");
+    transformer.applyAdviceToMethod(
+        isPublic().and(named("records").or(named("iterator")).or(named("listIterator"))),
+        getClass().getName() + "$RecordsAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class DoRunAdvice {
+  public static class RecordsAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(@Advice.FieldValue("consumer") KafkaConsumer<?, ?> consumer) {
-      if (emitStableMessagingSemconv()) {
-        CamelKafkaBatchState.markConsumer(consumer);
-      }
+    public static void onEnter(@Advice.This ConsumerRecords<?, ?> records) {
+      CamelKafkaBatchState.claimProcessSpan(records);
     }
   }
 }
