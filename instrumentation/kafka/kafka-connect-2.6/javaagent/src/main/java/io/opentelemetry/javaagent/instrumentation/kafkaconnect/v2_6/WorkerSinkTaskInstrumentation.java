@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
@@ -16,14 +17,9 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.connect.sink.SinkRecord;
 
-/**
- * This instrumentation is responsible for suppressing the underlying Kafka client consumer spans to
- * avoid duplicate telemetry. Without this suppression, both high-level Kafka Connect spans (from
- * {@link SinkTaskInstrumentation}) and low-level kafka-clients spans would be created for the same
- * consumer operation. This ensures only the meaningful Kafka Connect spans are generated.
- */
 class WorkerSinkTaskInstrumentation implements TypeInstrumentation {
 
   @Override
@@ -33,8 +29,10 @@ class WorkerSinkTaskInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    // Instrument the execute method which contains the main polling loop
-    transformer.applyAdviceToMethod(named("execute"), getClass().getName() + "$ExecuteAdvice");
+    transformer.applyAdviceToMethod(
+        named("pollConsumer")
+            .and(returns(named("org.apache.kafka.clients.consumer.ConsumerRecords"))),
+        getClass().getName() + "$PollConsumerAdvice");
     transformer.applyAdviceToMethod(
         named("convertAndTransformRecord")
             .and(takesArgument(0, named("org.apache.kafka.clients.consumer.ConsumerRecord"))),
@@ -45,9 +43,8 @@ class WorkerSinkTaskInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$ConvertAndTransformRecordArgumentOneAdvice");
   }
 
-  // This advice suppresses the CONSUMER spans created by the kafka-clients instrumentation
   @SuppressWarnings("unused")
-  public static class ExecuteAdvice {
+  public static class PollConsumerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static boolean onEnter() {
@@ -55,8 +52,13 @@ class WorkerSinkTaskInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter boolean previousValue) {
+    public static void onExit(
+        @Advice.Enter boolean previousValue,
+        @Advice.Return @Nullable ConsumerRecords<?, ?> records) {
       KafkaClientsConsumerProcessTracing.setWrappingEnabled(previousValue);
+      if (records != null) {
+        KafkaConnectBatchState.claimProcessSpan(records);
+      }
     }
   }
 
