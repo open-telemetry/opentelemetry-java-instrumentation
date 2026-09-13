@@ -12,7 +12,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
-import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import io.vertx.core.Handler;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -38,20 +37,14 @@ public class InstrumentedBatchRecordsHandler<K, V> implements Handler<ConsumerRe
       return;
     }
 
-    // the instrumenter iterates over records when adding links, we need to suppress that
-    boolean previousWrappingEnabled = KafkaClientsConsumerProcessTracing.setWrappingEnabled(false);
-    try {
-      Context context = batchProcessInstrumenter().start(parentContext, request);
-      try (Scope ignored = context.makeCurrent()) {
-        callDelegateHandler(records);
-      } catch (Throwable t) {
-        batchProcessInstrumenter().end(context, request, null, t);
-        throw t;
-      }
-      batchProcessInstrumenter().end(context, request, null, null);
-    } finally {
-      KafkaClientsConsumerProcessTracing.setWrappingEnabled(previousWrappingEnabled);
+    Context context = batchProcessInstrumenter().start(parentContext, request);
+    try (Scope ignored = context.makeCurrent()) {
+      callDelegateHandler(records);
+    } catch (Throwable t) {
+      batchProcessInstrumenter().end(context, request, null, t);
+      throw t;
     }
+    batchProcessInstrumenter().end(context, request, null, null);
   }
 
   private void callDelegateHandler(ConsumerRecords<K, V> records) {
