@@ -11,7 +11,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfo;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.ConnectionAttempt;
-import io.vertx.core.Completable;
 import io.vertx.core.internal.pool.ConnectionPool;
 import io.vertx.core.internal.pool.PoolWaiter;
 import javax.annotation.Nullable;
@@ -21,8 +20,7 @@ public final class VertxSqlClientConnectionPoolState {
       VirtualField.find(ConnectionPool.class, VertxSqlClientInfo.class);
   private static final VirtualField<PoolWaiter<?>, VertxSqlClientQueryState> WAITER_QUERY =
       VirtualField.find(PoolWaiter.class, VertxSqlClientQueryState.class);
-  private static final ThreadLocal<Submission> submission = new ThreadLocal<>();
-  private static final ThreadLocal<Acquisition> acquisition = new ThreadLocal<>();
+  private static final ThreadLocal<VertxSqlClientQueryState> pendingQuery = new ThreadLocal<>();
   private static final ThreadLocal<ConnectionAttempt> connectionAttempt = new ThreadLocal<>();
 
   public static void attachSupplier(ConnectionPool<?> pool) {
@@ -33,48 +31,27 @@ public final class VertxSqlClientConnectionPoolState {
   }
 
   @Nullable
-  public static Submission enterSubmission(ConnectionPool<?> pool, Object command) {
-    Submission previous = submission.get();
+  public static VertxSqlClientQueryState enterQuery(Object command) {
+    VertxSqlClientQueryState previous = pendingQuery.get();
     Context context = VertxSqlClientSingletons.getCommandContext(command);
     VertxSqlClientQueryState query = context != null ? context.get(QUERY_STATE) : null;
-    setSubmission(query != null ? new Submission(pool, query) : null);
+    setQuery(query);
     return previous;
   }
 
-  public static void setSubmission(@Nullable Submission value) {
+  public static void setQuery(@Nullable VertxSqlClientQueryState value) {
     if (value == null) {
-      submission.remove();
+      pendingQuery.remove();
     } else {
-      submission.set(value);
+      pendingQuery.set(value);
     }
   }
 
-  @Nullable
-  public static Acquisition enterAcquisition(ConnectionPool<?> pool, Completable<?> handler) {
-    Acquisition previous = acquisition.get();
-    Submission current = submission.get();
-    if (current != null && current.pool == pool && !current.claimed) {
-      current.claimed = true;
-      acquisition.set(new Acquisition(handler, current.query));
-    } else {
-      acquisition.remove();
-    }
-    return previous;
-  }
-
-  public static void setAcquisition(@Nullable Acquisition value) {
-    if (value == null) {
-      acquisition.remove();
-    } else {
-      acquisition.set(value);
-    }
-  }
-
-  public static void attachWaiter(PoolWaiter<?> waiter, Completable<?> handler) {
-    Acquisition current = acquisition.get();
-    if (current != null && current.handler == handler) {
-      acquisition.remove();
-      WAITER_QUERY.set(waiter, current.query);
+  public static void attachWaiter(PoolWaiter<?> waiter) {
+    VertxSqlClientQueryState query = pendingQuery.get();
+    if (query != null) {
+      pendingQuery.remove();
+      WAITER_QUERY.set(waiter, query);
     }
   }
 
@@ -108,27 +85,6 @@ public final class VertxSqlClientConnectionPoolState {
     }
     if (current != null) {
       current.end(throwable);
-    }
-  }
-
-  public static final class Submission {
-    private final ConnectionPool<?> pool;
-    private final VertxSqlClientQueryState query;
-    private boolean claimed;
-
-    private Submission(ConnectionPool<?> pool, VertxSqlClientQueryState query) {
-      this.pool = pool;
-      this.query = query;
-    }
-  }
-
-  public static final class Acquisition {
-    private final Completable<?> handler;
-    private final VertxSqlClientQueryState query;
-
-    private Acquisition(Completable<?> handler, VertxSqlClientQueryState query) {
-      this.handler = handler;
-      this.query = query;
     }
   }
 
