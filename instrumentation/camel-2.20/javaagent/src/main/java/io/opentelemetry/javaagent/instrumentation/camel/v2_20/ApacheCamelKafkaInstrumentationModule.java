@@ -31,6 +31,11 @@ public class ApacheCamelKafkaInstrumentationModule extends InstrumentationModule
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new CamelMuzzleInstrumentation(), new KafkaEndpointInstrumentation());
+    return asList(
+        new CamelMuzzleInstrumentation(),
+        new KafkaConsumerInstrumentation(),
+        new KafkaConsumerRecordsInstrumentation(),
+        new KafkaEndpointInstrumentation(),
+        new KafkaFetchRecordsInstrumentation());
   }
 }
