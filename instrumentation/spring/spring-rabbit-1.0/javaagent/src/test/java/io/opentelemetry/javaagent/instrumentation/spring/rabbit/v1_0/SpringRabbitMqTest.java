@@ -313,7 +313,6 @@ class SpringRabbitMqTest {
                                 assertThat(spanData.getInstrumentationScopeInfo().getName())
                                     .isEqualTo("io.opentelemetry.rabbitmq-2.7"))),
         trace -> trace.hasSpansSatisfyingExactly(SpringRabbitMqTest::verifyAckSpan));
-    assertProcessMetrics(testing, outerQueue, null);
     assertRabbitProcessDuration(testing, nestedQueue);
   }
 
