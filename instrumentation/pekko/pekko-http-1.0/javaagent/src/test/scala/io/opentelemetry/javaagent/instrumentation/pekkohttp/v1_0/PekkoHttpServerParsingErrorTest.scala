@@ -32,7 +32,7 @@ import scala.concurrent.duration._
   * HttpRequest and never reaches the user handler, so it is traced through the
   * parsing error handler rather than through the regular server
   * instrumentation. Nothing of the rejected request is recovered, so the span
-  * carries the response status and reports the method as unknown.
+  * carries only the response status.
   */
 class PekkoHttpServerParsingErrorTest {
 
@@ -173,7 +173,6 @@ class PekkoHttpServerParsingErrorTest {
       .hasKind(SpanKind.SERVER)
       .hasNoParent()
       .hasAttributesSatisfyingExactly(
-        equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "_OTHER"),
         equalTo(
           HttpAttributes.HTTP_RESPONSE_STATUS_CODE,
           java.lang.Long.valueOf(statusCode)

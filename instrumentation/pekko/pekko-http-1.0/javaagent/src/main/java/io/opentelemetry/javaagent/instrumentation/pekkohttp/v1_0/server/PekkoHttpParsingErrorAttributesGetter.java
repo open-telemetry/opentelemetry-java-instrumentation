@@ -15,8 +15,8 @@ import org.apache.pekko.http.javadsl.model.HttpResponse;
 import org.apache.pekko.http.scaladsl.model.ErrorInfo;
 
 /**
- * The request failed to parse and nothing of it was recovered, so only the response side is
- * described.
+ * The parsing error handler does not expose the rejected request, so request attributes are
+ * unavailable.
  */
 class PekkoHttpParsingErrorAttributesGetter
     implements HttpServerAttributesGetter<ErrorInfo, HttpResponse> {

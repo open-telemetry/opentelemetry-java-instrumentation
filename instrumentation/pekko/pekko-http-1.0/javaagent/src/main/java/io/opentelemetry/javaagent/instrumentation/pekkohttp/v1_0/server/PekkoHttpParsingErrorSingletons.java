@@ -5,15 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server;
 
-import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER;
-import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static java.util.Collections.emptyList;
 
-import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
@@ -30,9 +26,10 @@ import org.apache.pekko.http.scaladsl.model.ErrorInfo;
  * reach the user handler, and never become an {@code HttpRequest}, so the regular server
  * instrumentation does not see them.
  *
- * <p>Nothing of the rejected request itself is described: pekko-http discards the request when it
- * turns the failure into a {@code ParserOutput.MessageStartError}, which carries only a status and
- * an {@code ErrorInfo}. The span carries the response, and the method is reported as unknown.
+ * <p>The handler overload instrumented here exposes only a status and an {@code ErrorInfo}, so
+ * these spans have partial HTTP attributes and describe only the response. <a
+ * href="https://github.com/apache/pekko-http/issues/1245">apache/pekko-http#1245</a> added rejected
+ * request context in Pekko HTTP 2.0 for richer version-specific instrumentation.
  */
 public class PekkoHttpParsingErrorSingletons {
 
@@ -48,8 +45,7 @@ public class PekkoHttpParsingErrorSingletons {
       JavaagentHttpServerInstrumenters.create(
           PekkoHttpUtil.instrumentationName(),
           new PekkoHttpParsingErrorAttributesGetter(),
-          new NoopTextMapGetter(),
-          builder -> builder.addAttributesExtractor(new UnknownMethodExtractor()));
+          new NoopTextMapGetter());
 
   /** Marks a rejection that was made before the request was delivered. */
   public static void markParsingError(ErrorInfo info) {
@@ -107,27 +103,6 @@ public class PekkoHttpParsingErrorSingletons {
     instrumenter.end(context, info, response, error);
 
     return response;
-  }
-
-  /**
-   * Reports the method as unknown. The common http extractor drops the attribute when the getter
-   * returns null, and semconv requires it to be present.
-   */
-  private static class UnknownMethodExtractor
-      implements AttributesExtractor<ErrorInfo, HttpResponse> {
-
-    @Override
-    public void onStart(AttributesBuilder attributes, Context parentContext, ErrorInfo request) {
-      attributes.put(HTTP_REQUEST_METHOD, _OTHER);
-    }
-
-    @Override
-    public void onEnd(
-        AttributesBuilder attributes,
-        Context context,
-        ErrorInfo request,
-        @Nullable HttpResponse response,
-        @Nullable Throwable error) {}
   }
 
   private static class NoopTextMapGetter implements TextMapGetter<ErrorInfo> {
