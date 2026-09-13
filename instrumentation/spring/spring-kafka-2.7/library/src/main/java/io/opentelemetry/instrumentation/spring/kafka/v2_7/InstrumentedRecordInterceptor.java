@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
-import java.util.function.BiFunction;
+import java.util.function.UnaryOperator;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -27,12 +27,12 @@ final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, 
 
   private final Instrumenter<KafkaProcessRequest, Void> processInstrumenter;
   @Nullable private final RecordInterceptor<K, V> decorated;
-  @Nullable private final BiFunction<Context, Context, Context> contextCustomizer;
+  @Nullable private final UnaryOperator<Context> contextCustomizer;
 
   InstrumentedRecordInterceptor(
       Instrumenter<KafkaProcessRequest, Void> processInstrumenter,
       @Nullable RecordInterceptor<K, V> decorated,
-      @Nullable BiFunction<Context, Context, Context> contextCustomizer) {
+      @Nullable UnaryOperator<Context> contextCustomizer) {
     this.processInstrumenter = processInstrumenter;
     this.decorated = decorated;
     this.contextCustomizer = contextCustomizer;
@@ -60,7 +60,7 @@ final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, 
     if (processInstrumenter.shouldStart(parentContext, request)) {
       Context context = processInstrumenter.start(parentContext, request);
       if (contextCustomizer != null) {
-        context = contextCustomizer.apply(context, parentContext);
+        context = contextCustomizer.apply(context);
       }
       Scope scope = context.makeCurrent();
       RECORD_STATE.set(record, State.create(request, context, scope));

@@ -205,7 +205,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
             do {
               records = consumer.poll(Duration.ofSeconds(1));
             } while (records.isEmpty() && System.nanoTime() < deadline);
-            assertThat(records).hasSize(1);
+            assertThat(records.count()).isEqualTo(1);
             Iterator<?> iterator = records.iterator();
             Object record = iterator.next();
             testing.runWithSpan("nested processing", () -> assertThat(record).isNotNull());
