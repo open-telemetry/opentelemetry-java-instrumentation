@@ -88,6 +88,7 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("SpringKafkaTest.shouldCreateSpansForSingleRecordProcess")
+      includeTestsMatching("SpringKafkaTest.shouldTraceRawConsumerInsideListener")
       includeTestsMatching("SpringKafkaTest.shouldHandleFailureInKafkaListener")
       includeTestsMatching("SpringKafkaTest.shouldCreateSpansForBatchReceiveAndProcess")
       includeTestsMatching("SpringKafkaTest.shouldHandleFailureInKafkaBatchListener")
@@ -102,6 +103,7 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("SpringKafkaTest.shouldCreateSpansForSingleRecordProcess")
+      includeTestsMatching("SpringKafkaTest.shouldTraceRawConsumerInsideListener")
       includeTestsMatching("SpringKafkaTest.shouldHandleFailureInKafkaListener")
       includeTestsMatching("SpringKafkaTest.shouldCreateSpansForBatchReceiveAndProcess")
       includeTestsMatching("SpringKafkaTest.shouldHandleFailureInKafkaBatchListener")

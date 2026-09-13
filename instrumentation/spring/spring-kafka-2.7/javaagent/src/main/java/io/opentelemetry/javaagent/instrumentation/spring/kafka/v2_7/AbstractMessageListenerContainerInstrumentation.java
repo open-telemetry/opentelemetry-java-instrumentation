@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -55,7 +56,10 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
               .getName()
               .equals(
                   "io.opentelemetry.instrumentation.spring.kafka.v2_7.InstrumentedRecordInterceptor")) {
-        interceptor = telemetry().createRecordInterceptor(interceptor);
+        interceptor =
+            telemetry()
+                .createRecordInterceptor(
+                    interceptor, KafkaClientsConsumerProcessTracing::markFrameworkProcess);
       }
       return interceptor;
     }

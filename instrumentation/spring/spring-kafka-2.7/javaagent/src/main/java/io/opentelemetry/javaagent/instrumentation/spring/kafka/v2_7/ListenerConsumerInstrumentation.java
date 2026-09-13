@@ -12,7 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerBatchState;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
@@ -63,7 +62,7 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
         @Advice.Return @Nullable ConsumerRecords<?, ?> records) {
       KafkaClientsConsumerProcessTracing.setWrappingEnabled(previousValue);
       if (records != null) {
-        KafkaConsumerBatchState.claimProcessSpan(records);
+        SpringKafkaBatchState.claimProcessSpan(records);
       }
     }
   }
@@ -88,7 +87,7 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) ConsumerRecords<?, ?> records) {
-      KafkaConsumerBatchState.claimProcessSpan(records);
+      SpringKafkaBatchState.claimProcessSpan(records);
     }
   }
 
@@ -108,7 +107,7 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
 
       @Nullable
       public static AdviceScope start(ConsumerRecords<?, ?> records, Consumer<?, ?> consumer) {
-        KafkaConsumerBatchState.claimProcessSpan(records);
+        SpringKafkaBatchState.claimProcessSpan(records);
         KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(records);
         Context receiveContext = consumerContext.getContext();
 
@@ -120,6 +119,7 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
           return null;
         }
         Context context = batchProcessInstrumenter().start(parentContext, request);
+        context = KafkaClientsConsumerProcessTracing.markFrameworkProcess(context, parentContext);
         return new AdviceScope(request, context, context.makeCurrent());
       }
 

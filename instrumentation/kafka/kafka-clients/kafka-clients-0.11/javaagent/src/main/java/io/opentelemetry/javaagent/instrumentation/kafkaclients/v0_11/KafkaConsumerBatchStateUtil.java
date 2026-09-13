@@ -3,25 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
+package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.bootstrap.kafka.KafkaConsumerBatchState;
 import java.util.function.BooleanSupplier;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
-/**
- * Tracks process telemetry ownership for one {@link ConsumerRecords} delivery.
- *
- * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
- * at any time.
- */
-public final class KafkaConsumerBatchState implements BooleanSupplier {
+public final class KafkaConsumerBatchStateUtil {
 
   private static final VirtualField<ConsumerRecords<?, ?>, KafkaConsumerBatchState> BATCH_STATE =
       VirtualField.find(ConsumerRecords.class, KafkaConsumerBatchState.class);
-
-  private final boolean applicationPoll;
-  private volatile boolean processSpanClaimed;
 
   public static void recordPoll(ConsumerRecords<?, ?> records, boolean applicationPoll) {
     if (!records.isEmpty()) {
@@ -39,7 +31,7 @@ public final class KafkaConsumerBatchState implements BooleanSupplier {
       state = new KafkaConsumerBatchState(false);
       BATCH_STATE.set(records, state);
     }
-    state.processSpanClaimed = true;
+    state.claimProcessSpan();
   }
 
   public static BooleanSupplier processSpanEnabled(
@@ -48,12 +40,5 @@ public final class KafkaConsumerBatchState implements BooleanSupplier {
     return state != null ? state : defaultValue;
   }
 
-  private KafkaConsumerBatchState(boolean applicationPoll) {
-    this.applicationPoll = applicationPoll;
-  }
-
-  @Override
-  public boolean getAsBoolean() {
-    return applicationPoll && !processSpanClaimed;
-  }
+  private KafkaConsumerBatchStateUtil() {}
 }
