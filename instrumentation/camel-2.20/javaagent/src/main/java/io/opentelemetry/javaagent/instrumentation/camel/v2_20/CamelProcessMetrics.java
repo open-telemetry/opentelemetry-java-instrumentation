@@ -56,7 +56,7 @@ class CamelProcessMetrics {
     long startNanos = System.nanoTime();
     Context metricsContext = enable(parentContext);
     metricsContext =
-        !request.shouldRecordConsumedMessages()
+        !request.claimConsumedMessages()
             ? add(metricsContext, RECEIVE, CONSUMED_MESSAGES)
             : metricsContext;
     metricsContext = consumedMessages.onStart(metricsContext, startAttributes, startNanos);

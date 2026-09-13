@@ -97,7 +97,7 @@ class CamelSingletons {
       builder.addOperationMetrics(MessagingProcessMetrics.get());
       builder.addContextCustomizer(
           (context, request, startAttributes) ->
-              !request.shouldRecordConsumedMessages()
+              !request.claimConsumedMessages()
                   ? add(context, RECEIVE, CONSUMED_MESSAGES)
                   : context);
       builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());

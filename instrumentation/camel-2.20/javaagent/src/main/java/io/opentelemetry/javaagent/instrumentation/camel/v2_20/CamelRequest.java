@@ -28,18 +28,12 @@ abstract class CamelRequest {
       Endpoint endpoint,
       CamelDirection camelDirection,
       SpanKind spanKind) {
-    return build(spanDecorator, exchange, endpoint, camelDirection, spanKind, false);
+    return build(spanDecorator, exchange, endpoint, camelDirection, spanKind);
   }
 
   static CamelRequest createInbound(
       SpanDecorator spanDecorator, Exchange exchange, Endpoint endpoint, SpanKind spanKind) {
-    return build(
-        spanDecorator,
-        exchange,
-        endpoint,
-        CamelDirection.INBOUND,
-        spanKind,
-        claimConsumedMessages(exchange));
+    return build(spanDecorator, exchange, endpoint, CamelDirection.INBOUND, spanKind);
   }
 
   private static CamelRequest build(
@@ -47,8 +41,7 @@ abstract class CamelRequest {
       Exchange exchange,
       Endpoint endpoint,
       CamelDirection camelDirection,
-      SpanKind spanKind,
-      boolean recordConsumedMessages) {
+      SpanKind spanKind) {
     String messagingSystem = null;
     String messagingDestination = null;
     String messagingDestinationPartitionId = null;
@@ -82,11 +75,10 @@ abstract class CamelRequest {
         messagingDestinationPartitionId,
         messagingSendOperationName,
         messagingDestinationTemporary,
-        messagingSpanContextPropagated,
-        recordConsumedMessages);
+        messagingSpanContextPropagated);
   }
 
-  private static boolean claimConsumedMessages(Exchange exchange) {
+  private static boolean tryClaimConsumedMessages(Exchange exchange) {
     if (!emitStableMessagingSemconv()) {
       return false;
     }
@@ -161,5 +153,7 @@ abstract class CamelRequest {
 
   abstract boolean isMessagingSpanContextPropagated();
 
-  abstract boolean shouldRecordConsumedMessages();
+  boolean claimConsumedMessages() {
+    return tryClaimConsumedMessages(getExchange());
+  }
 }
