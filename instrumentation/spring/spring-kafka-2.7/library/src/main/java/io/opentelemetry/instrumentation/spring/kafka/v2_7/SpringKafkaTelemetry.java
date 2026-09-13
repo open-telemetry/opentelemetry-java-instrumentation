@@ -11,7 +11,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
-import java.util.function.BiFunction;
+import java.util.function.UnaryOperator;
 import javax.annotation.Nullable;
 import org.springframework.kafka.listener.AbstractMessageListenerContainer;
 import org.springframework.kafka.listener.BatchInterceptor;
@@ -65,7 +65,7 @@ public final class SpringKafkaTelemetry {
 
   public <K, V> RecordInterceptor<K, V> createRecordInterceptor(
       @Nullable RecordInterceptor<K, V> decoratedInterceptor,
-      BiFunction<Context, Context, Context> contextCustomizer) {
+      UnaryOperator<Context> contextCustomizer) {
     return new InstrumentedRecordInterceptor<>(
         processInstrumenter, decoratedInterceptor, contextCustomizer);
   }

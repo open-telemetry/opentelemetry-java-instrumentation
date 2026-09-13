@@ -61,6 +61,15 @@ class KafkaConsumerBatchStateTest {
     assertThat(testing.spans()).isEmpty();
   }
 
+  @Test
+  void shouldHonorFrameworkSuppressionAfterApplicationPoll() {
+    ConsumerRecords<String, String> records = records();
+    KafkaConsumerBatchStateUtil.recordPoll(records, true);
+
+    assertThat(KafkaConsumerBatchStateUtil.processSpanEnabled(records, () -> false).getAsBoolean())
+        .isFalse();
+  }
+
   private static ConsumerRecords<String, String> records() {
     TopicPartition partition = new TopicPartition("test", 0);
     return new ConsumerRecords<>(singletonMap(partition, singletonList(record())));
