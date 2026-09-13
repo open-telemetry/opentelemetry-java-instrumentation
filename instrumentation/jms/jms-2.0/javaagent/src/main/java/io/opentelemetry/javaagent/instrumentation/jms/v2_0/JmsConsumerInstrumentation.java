@@ -109,7 +109,7 @@ class JmsConsumerInstrumentation implements TypeInstrumentation {
       return AdviceScope.enter();
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Enter AdviceScope adviceScope, @Advice.Return @Nullable Message message) {
       adviceScope.exit(message);
