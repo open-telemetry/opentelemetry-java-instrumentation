@@ -14,7 +14,8 @@ import reactor.core.publisher.FluxOperator;
 import reactor.core.publisher.Operators;
 import reactor.util.context.Context;
 
-public class ProcessClaimingKafkaFlux extends FluxOperator<ConsumerRecords<?, ?>, ConsumerRecords<?, ?>> {
+public class ProcessClaimingKafkaFlux
+    extends FluxOperator<ConsumerRecords<?, ?>, ConsumerRecords<?, ?>> {
 
   public ProcessClaimingKafkaFlux(Flux<? extends ConsumerRecords<?, ?>> source) {
     super(source);
