@@ -46,7 +46,7 @@ class TransformationTrackingWiringTest {
   }
 
   @Test
-  void aClassFirstLoadedFromABridgedLogDuringATransformationStillGetsTransformed()
+  void theClassFirstLoadedFromABridgedLogDuringATransformationStillGetsTransformed()
       throws Exception {
     ByteBuddyAgent.install();
     AgentInstaller.installBytebuddyAgent(
