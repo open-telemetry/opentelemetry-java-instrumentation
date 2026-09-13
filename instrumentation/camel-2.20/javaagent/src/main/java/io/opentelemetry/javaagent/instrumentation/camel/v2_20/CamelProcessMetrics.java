@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.add;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.enable;
 
@@ -55,12 +57,7 @@ class CamelProcessMetrics {
     Context metricsContext = enable(parentContext);
     metricsContext =
         !request.shouldRecordConsumedMessages()
-            ? add(
-                metricsContext,
-                io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType
-                    .RECEIVE,
-                io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal
-                    .MessagingTelemetrySignal.CONSUMED_MESSAGES)
+            ? add(metricsContext, RECEIVE, CONSUMED_MESSAGES)
             : metricsContext;
     metricsContext = consumedMessages.onStart(metricsContext, startAttributes, startNanos);
     metricsContext = processDuration.onStart(metricsContext, startAttributes, startNanos);

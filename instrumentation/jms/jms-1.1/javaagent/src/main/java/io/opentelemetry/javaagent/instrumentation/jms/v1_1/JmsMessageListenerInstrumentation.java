@@ -79,7 +79,18 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
             MessageWithDestination.create(
                 messageAdapter, null, JmsSubscriptionNames.get(message));
 
-        Context parentContext = Context.current();
+        Context currentContext = Context.current();
+        if (!consumerProcessInstrumenter(true)
+            .shouldStart(currentContext, messageWithDestination)) {
+          return new AdviceScope(
+              consumerProcessInstrumenter(true),
+              messageWithDestination,
+              null,
+              null,
+              messageWithListenerSubscriptionName);
+        }
+
+        Context parentContext = currentContext;
         if (!emitStableMessagingSemconv()) {
           Context receiveContext = messageAdapter.getReceiveContext();
           if (receiveContext != null) {

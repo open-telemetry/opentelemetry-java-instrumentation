@@ -74,18 +74,23 @@ class SpringJmsMessageListenerInstrumentation implements TypeInstrumentation {
 
       @Nullable
       public static AdviceScope start(Message message) {
-        Context parentContext = Context.current();
         MessageAdapter messageAdapter = JakartaMessageAdapter.create(message);
+        MessageWithDestination request =
+            MessageWithDestination.create(
+                messageAdapter, null, JmsSubscriptionNames.get(message));
+
+        Context currentContext = Context.current();
+        if (!listenerInstrumenter(true).shouldStart(currentContext, request)) {
+          return null;
+        }
+
+        Context parentContext = currentContext;
         if (!emitStableMessagingSemconv()) {
           Context receiveContext = messageAdapter.getReceiveContext();
           if (receiveContext != null) {
             parentContext = receiveContext;
           }
         }
-        MessageWithDestination request =
-            MessageWithDestination.create(
-                messageAdapter, null, JmsSubscriptionNames.get(message));
-
         Instrumenter<MessageWithDestination, Void> instrumenter =
             listenerInstrumenter(!messageAdapter.claimConsumedMessages());
         if (!instrumenter.shouldStart(parentContext, request)) {

@@ -14,6 +14,7 @@ import io.opentelemetry.javaagent.bootstrap.jms.JmsMessageDeliveryState;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.jms.Message;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -47,7 +48,11 @@ class JmsMessageInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This org.apache.camel.Message camelMessage,
-        @Advice.Argument(0) Message jmsMessage) {
+        @Advice.Argument(0) @Nullable Message jmsMessage) {
+      if (jmsMessage == null) {
+        CAMEL_DELIVERY_STATE.set(camelMessage, null);
+        return;
+      }
       JmsMessageDeliveryState state = JMS_DELIVERY_STATE.get(jmsMessage);
       if (state == null) {
         synchronized (jmsMessage) {

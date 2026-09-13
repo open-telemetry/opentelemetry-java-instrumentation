@@ -473,6 +473,36 @@ abstract class AbstractJms1Test {
         messagingMetricAttributes("receive", "metricsReceiveAndDispatchQueue"));
   }
 
+  @Test
+  void shouldSuppressNestedSynchronousMessageProcessing() throws Exception {
+    Destination destination = session.createQueue("nestedProcessingQueue");
+    MessageProducer producer = session.createProducer(destination);
+    cleanup.deferCleanup(producer::close);
+    MessageConsumer consumer = session.createConsumer(destination);
+    cleanup.deferCleanup(consumer::close);
+
+    producer.send(session.createTextMessage("outer"));
+    producer.send(session.createTextMessage("inner"));
+    Message outerMessage = consumer.receive();
+    Message innerMessage = consumer.receive();
+
+    MessageListener innerListener = message -> {};
+    MessageListener outerListener = message -> innerListener.onMessage(innerMessage);
+    outerListener.onMessage(outerMessage);
+
+    testing.waitForTraces(4);
+    assertThat(testing.spans()).hasSize(5);
+    assertThat(testing.spans())
+        .filteredOn(
+            span ->
+                span.getName()
+                    .equals(
+                        emitStableMessagingSemconv()
+                            ? "process nestedProcessingQueue"
+                            : "nestedProcessingQueue process"))
+        .hasSize(1);
+  }
+
   private static Attributes messagingMetricAttributes(String operationName, String destination) {
     return Attributes.of(
         MESSAGING_OPERATION_NAME,
