@@ -26,6 +26,8 @@ import javax.jms.Message;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.Route;
+import org.apache.camel.component.jms.JmsBinding;
+import org.apache.camel.component.jms.JmsMessage;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.DefaultExchange;
 import org.junit.jupiter.api.BeforeEach;
@@ -64,14 +66,7 @@ class CamelProcessMetricsTest {
     Route route = mock(Route.class);
     when(route.getEndpoint()).thenReturn(endpoint);
 
-    Class<?> adviceClass =
-        camelHelperClass("JmsMessageInstrumentation$StoreReceiveTelemetryAdvice");
-    invokeStatic(
-        adviceClass,
-        "onExit",
-        new Class<?>[] {org.apache.camel.Message.class, Message.class},
-        exchange.getIn(),
-        mock(Message.class));
+    exchange.setIn(new JmsMessage(mock(Message.class), null, mock(JmsBinding.class)));
     Class<?> messageTelemetryClass = camelHelperClass("CamelMessageTelemetry");
     Object deliveryState =
         invokeStatic(
