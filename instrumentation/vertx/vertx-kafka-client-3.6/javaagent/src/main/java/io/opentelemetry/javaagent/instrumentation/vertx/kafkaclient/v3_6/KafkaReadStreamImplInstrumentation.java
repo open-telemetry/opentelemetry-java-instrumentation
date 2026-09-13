@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.vertx.kafkaclient.v3_6;
 
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.isSynthetic;
-import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
+import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -49,7 +49,9 @@ class KafkaReadStreamImplInstrumentation implements TypeInstrumentation {
             .and(isSynthetic())
             .and(
                 takesArgument(0, named("org.apache.kafka.clients.consumer.ConsumerRecords"))
-                    .or(takesArgument(2, named("org.apache.kafka.clients.consumer.ConsumerRecords")))),
+                    .or(
+                        takesArgument(
+                            2, named("org.apache.kafka.clients.consumer.ConsumerRecords")))),
         getClass().getName() + "$DispatchAdvice");
   }
 
