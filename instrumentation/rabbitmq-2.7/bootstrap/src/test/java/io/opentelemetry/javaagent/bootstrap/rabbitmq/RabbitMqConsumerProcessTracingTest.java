@@ -6,34 +6,49 @@
 package io.opentelemetry.javaagent.bootstrap.rabbitmq;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 
 class RabbitMqConsumerProcessTracingTest {
 
   @Test
-  void shouldRestorePreviousWrappingState() {
-    boolean previous = RabbitMqConsumerProcessTracing.setWrappingEnabled(false);
+  void shouldScopeSpringProcessTelemetryOwnership() {
+    assertThat(RabbitMqConsumerProcessTracing.shouldTraceProcess()).isTrue();
 
-    assertThat(previous).isTrue();
-    assertThat(RabbitMqConsumerProcessTracing.isWrappingEnabled()).isFalse();
+    try (RabbitMqConsumerProcessTracing.Registration ignored =
+        RabbitMqConsumerProcessTracing.startSpringProcessTelemetry()) {
+      assertThat(RabbitMqConsumerProcessTracing.shouldTraceProcess()).isFalse();
+    }
 
-    RabbitMqConsumerProcessTracing.setWrappingEnabled(previous);
-    assertThat(RabbitMqConsumerProcessTracing.isWrappingEnabled()).isTrue();
+    assertThat(RabbitMqConsumerProcessTracing.shouldTraceProcess()).isTrue();
   }
 
   @Test
-  void shouldReturnDisabledPreviousState() {
-    boolean outerPrevious = RabbitMqConsumerProcessTracing.setWrappingEnabled(false);
-    boolean innerPrevious = RabbitMqConsumerProcessTracing.setWrappingEnabled(false);
+  void shouldRestoreNestedRegistration() {
+    try (RabbitMqConsumerProcessTracing.Registration ignored =
+        RabbitMqConsumerProcessTracing.startSpringProcessTelemetry()) {
+      try (RabbitMqConsumerProcessTracing.Registration nested =
+          RabbitMqConsumerProcessTracing.startSpringProcessTelemetry()) {
+        assertThat(RabbitMqConsumerProcessTracing.shouldTraceProcess()).isFalse();
+      }
+      assertThat(RabbitMqConsumerProcessTracing.shouldTraceProcess()).isFalse();
+    }
 
-    assertThat(outerPrevious).isTrue();
-    assertThat(innerPrevious).isFalse();
+    assertThat(RabbitMqConsumerProcessTracing.shouldTraceProcess()).isTrue();
+  }
 
-    RabbitMqConsumerProcessTracing.setWrappingEnabled(innerPrevious);
-    assertThat(RabbitMqConsumerProcessTracing.isWrappingEnabled()).isFalse();
+  @Test
+  void shouldCleanUpAfterException() {
+    assertThatThrownBy(
+            () -> {
+              try (RabbitMqConsumerProcessTracing.Registration ignored =
+                  RabbitMqConsumerProcessTracing.startSpringProcessTelemetry()) {
+                throw new IllegalStateException("test");
+              }
+            })
+        .isInstanceOf(IllegalStateException.class);
 
-    RabbitMqConsumerProcessTracing.setWrappingEnabled(outerPrevious);
-    assertThat(RabbitMqConsumerProcessTracing.isWrappingEnabled()).isTrue();
+    assertThat(RabbitMqConsumerProcessTracing.shouldTraceProcess()).isTrue();
   }
 }
