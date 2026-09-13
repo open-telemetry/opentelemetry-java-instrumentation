@@ -15,6 +15,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -41,6 +42,7 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
     kafkaConsumer.batchHandler(BatchRecordsHandler.INSTANCE);
     kafkaConsumer.handler(
         record -> {
+          assertThat(KafkaClientsConsumerProcessTracing.isWrappingEnabled()).isTrue();
           testing().runWithSpan("process " + record.value(), () -> {});
           if (BatchRecordsHandler.recordProcessed()) {
             kafkaConsumer.pause();
