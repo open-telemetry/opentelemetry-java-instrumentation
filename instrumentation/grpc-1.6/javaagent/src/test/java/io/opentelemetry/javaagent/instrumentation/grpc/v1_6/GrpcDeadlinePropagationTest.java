@@ -95,8 +95,9 @@ class GrpcDeadlinePropagationTest {
         GreeterGrpc.newBlockingStub(channel).withDeadlineAfter(30, SECONDS);
     client.sayHello(Helloworld.Request.newBuilder().setName("test").build());
 
-    checkedDeadline.await(10, SECONDS);
-
+    assertThat(checkedDeadline.await(10, SECONDS))
+        .as("executor task ran within the timeout")
+        .isTrue();
     assertThat(deadlineSeenOnHoppedThread.get()).isEqualTo(PROPAGATE_GRPC_DEADLINE);
   }
 }
