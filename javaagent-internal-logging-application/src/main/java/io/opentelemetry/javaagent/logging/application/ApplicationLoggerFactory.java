@@ -40,26 +40,31 @@ final class ApplicationLoggerFactory extends ApplicationLoggerBridge
       return;
     }
 
+    // the agent must not call into the application logging system while a class file
+    // transformation is in progress - see TransformSafeApplicationLoggerFactory
+    InternalLogger.Factory transformSafeFactory =
+        new TransformSafeApplicationLoggerFactory(applicationLoggerFactory);
+
     // flushing may cause additional classes to be loaded (e.g. slf4j loads logback, which we
     // instrument), so we're doing this repeatedly to clear the in-memory store and preserve the
     // log ordering
     while (inMemoryLogStore.currentSize() > 0) {
-      inMemoryLogStore.flush(applicationLoggerFactory);
+      inMemoryLogStore.flush(transformSafeFactory);
     }
-    inMemoryLogStore.setApplicationLoggerFactory(applicationLoggerFactory);
+    inMemoryLogStore.setApplicationLoggerFactory(transformSafeFactory);
 
     // actually install the application logger - from this point, everything will be logged
     // directly through the application logging system
     inMemoryLoggers
         .values()
         .forEach(
-            logger -> logger.replaceByActualLogger(applicationLoggerFactory.create(logger.name())));
-    this.actual = applicationLoggerFactory;
+            logger -> logger.replaceByActualLogger(transformSafeFactory.create(logger.name())));
+    this.actual = transformSafeFactory;
 
     // if there are any leftover logs left in the memory store, flush them - this will cause some
     // logs to go out of order, but at least we'll not lose any of them
     if (inMemoryLogStore.currentSize() > 0) {
-      inMemoryLogStore.flush(applicationLoggerFactory);
+      inMemoryLogStore.flush(transformSafeFactory);
     }
 
     // finally, free the memory

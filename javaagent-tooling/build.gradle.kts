@@ -160,6 +160,25 @@ tasks {
   }
 }
 
+testing {
+  suites {
+    // installs a real javaagent in-process and must not share a JVM with any other test that
+    // does the same (e.g. HelperInjectionTest, in the main test source set) - a second,
+    // independent CircularityLock instance would mask the very bug it exists to catch. A
+    // dedicated suite gets its own JVM, and keeps the AgentExtension SPI registration file out of
+    // the main test source set's classpath entirely.
+    register<JvmTestSuite>("circularityLockWiringTest") {
+      dependencies {
+        implementation(project())
+        // javaagent-tooling's own dependency on these is implementation-scoped, so it isn't
+        // exposed transitively via implementation(project()) above
+        implementation(project(":javaagent-extension-api"))
+        implementation("io.opentelemetry:opentelemetry-api")
+      }
+    }
+  }
+}
+
 // Mockito inline mocking uses byte-buddy but agent tooling currently uses byte-buddy-dep, which cannot be on the same
 // classpath. Disable inline mocking to prevent conflicts.
 // TODO: Find a better solution
