@@ -158,12 +158,12 @@ class KafkaConnectBatchRecordAttributesTest {
     SinkRecord notOwned = record("topic", 0, 2, "key");
     receiveOwnedField.set(owned, true);
 
-    KafkaConnectTask task = new KafkaConnectTask(asList(owned, notOwned));
+    List<SinkRecord> records = asList(owned, notOwned);
 
     // First put(): the receive-owned record is not counted; the marker is cleared for the retry.
-    assertThat(task.countUnmarkedRecords()).isEqualTo(1);
+    assertThat(new KafkaConnectTask(records).countUnmarkedRecords()).isEqualTo(1);
     // Retry put(): the marker was cleared, so both records are counted.
-    assertThat(task.countUnmarkedRecords()).isEqualTo(2);
+    assertThat(new KafkaConnectTask(records).countUnmarkedRecords()).isEqualTo(2);
   }
 
   private static SinkRecord record(String topic, int partition, long offset, String key) {
