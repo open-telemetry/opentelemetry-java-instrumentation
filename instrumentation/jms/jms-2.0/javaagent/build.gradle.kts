@@ -13,6 +13,7 @@ muzzle {
     group.set("jakarta.jms")
     module.set("jakarta.jms-api")
     versions.set("[2.0,3)")
+    assertInverse.set(true)
   }
 }
 
