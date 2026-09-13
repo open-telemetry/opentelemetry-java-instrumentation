@@ -57,18 +57,11 @@ class TransformationTrackingWiringTest {
     // the probe class accordingly
     Class.forName(WiringTestAgentExtension.TRIGGER_CLASS, true, getClass().getClassLoader());
 
-    assertThat(WiringTestAgentExtension.inTransformationDuringTrigger.get())
-        .withFailMessage(
-            "InTransformation.get() was false while the trigger class was being transformed")
-        .isTrue();
+    assertThat(WiringTestAgentExtension.inTransformationDuringTrigger.get()).isTrue();
 
-    assertThat(WiringTestAgentExtension.probeLoaded.await(10, SECONDS))
-        .withFailMessage("the probe class was never loaded")
-        .isTrue();
-    assertThat(WiringTestAgentExtension.probeTransformed.get())
-        .withFailMessage(
-            "the probe class, first loaded from inside the trigger's transformation, was not"
-                + " transformed - it was silently skipped by the circularity lock instead")
-        .isTrue();
+    assertThat(WiringTestAgentExtension.probeLoaded.await(10, SECONDS)).isTrue();
+    // first loaded from inside the trigger's transformation - without the circularity lock
+    // wiring this is where it gets silently skipped
+    assertThat(WiringTestAgentExtension.probeTransformed.get()).isTrue();
   }
 }
