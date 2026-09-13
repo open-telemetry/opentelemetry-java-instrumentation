@@ -26,6 +26,3 @@ The repository also maintains instrumentation for:
 - Collection of logging framework events as OpenTelemetry logs
 - Injection of trace context into logging framework context
 - Spring Boot starters
-
-Proposals outside these areas are considered based on their maintenance cost, signal quality,
-cardinality, overlap with existing instrumentation, and value to users.
