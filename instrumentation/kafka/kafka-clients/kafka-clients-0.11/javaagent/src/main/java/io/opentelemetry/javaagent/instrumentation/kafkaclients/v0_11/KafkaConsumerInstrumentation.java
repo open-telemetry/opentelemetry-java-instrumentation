@@ -72,10 +72,9 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      Context parentContext =
-          KafkaConsumerContextUtil.withoutLeakedProcessSpan(
-              KafkaClientsConsumerProcessTracing.withoutFrameworkProcessSuppression(
-                  currentContext()));
+      Context parentContext = KafkaConsumerContextUtil.withoutLeakedProcessSpan(currentContext());
+      Context spanSuppressionContext =
+          KafkaClientsConsumerProcessTracing.withoutFrameworkProcessSuppression(parentContext);
       KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumer);
 
       // disable process tracing and store the receive span for each individual record too
@@ -83,7 +82,7 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
       try {
         Context receiveContext = null;
         boolean receiveOperationStarted = false;
-        if (consumerReceiveInstrumenter().shouldStart(parentContext, request)) {
+        if (consumerReceiveInstrumenter().shouldStart(spanSuppressionContext, request)) {
           receiveContext =
               InstrumenterUtil.startAndEnd(
                   consumerReceiveInstrumenter(),

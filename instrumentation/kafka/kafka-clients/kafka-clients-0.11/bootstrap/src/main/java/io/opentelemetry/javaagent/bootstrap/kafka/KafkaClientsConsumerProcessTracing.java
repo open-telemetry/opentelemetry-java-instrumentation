@@ -10,7 +10,6 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.i
 
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
@@ -23,7 +22,7 @@ import java.util.function.BooleanSupplier;
 // have separate copies of helper classes.
 public final class KafkaClientsConsumerProcessTracing {
 
-  private static final ContextKey<SpanContext> FRAMEWORK_PROCESS_SPAN_KEY =
+  private static final ContextKey<Boolean> FRAMEWORK_PROCESS_KEY =
       ContextKey.named("opentelemetry-kafka-framework-process-span");
 
   // This holder is the coordination key, so its suppressed signals stay invisible to every other
@@ -46,16 +45,15 @@ public final class KafkaClientsConsumerProcessTracing {
   }
 
   public static Context markFrameworkProcess(Context context) {
-    return context.with(FRAMEWORK_PROCESS_SPAN_KEY, Span.fromContext(context).getSpanContext());
+    return context.with(FRAMEWORK_PROCESS_KEY, true);
   }
 
   public static Context withoutFrameworkProcessSuppression(Context context) {
-    SpanContext processSpan = context.get(FRAMEWORK_PROCESS_SPAN_KEY);
-    if (processSpan == null || !Span.fromContext(context).getSpanContext().equals(processSpan)) {
+    if (!Boolean.TRUE.equals(context.get(FRAMEWORK_PROCESS_KEY))) {
       return context;
     }
 
-    Context parentContext = Context.root().with(Span.wrap(processSpan));
+    Context parentContext = Context.root().with(Span.fromContext(context));
     return Baggage.fromContext(context).storeInContext(parentContext);
   }
 
