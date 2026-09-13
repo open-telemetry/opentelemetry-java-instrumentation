@@ -94,6 +94,10 @@ public final class SemconvStability {
     return databaseSchemaUrl(emitStableDatabaseSemconv);
   }
 
+  public static String databaseSchemaUrl(OpenTelemetry openTelemetry) {
+    return databaseSchemaUrl(emitStableDatabaseSemconv(openTelemetry));
+  }
+
   public static String databaseSchemaUrl(boolean emitStableSemconv) {
     return emitStableSemconv ? SchemaUrls.V1_44_0 : SchemaUrls.V1_24_0;
   }
@@ -151,6 +155,12 @@ public final class SemconvStability {
     return emitStableRpcSemconv ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0;
   }
 
+  public static String rpcSchemaUrl(OpenTelemetry openTelemetry) {
+    return emitStable(semconvSelection(openTelemetry, v3Preview(openTelemetry)).rpc())
+        ? SchemaUrls.V1_44_0
+        : SchemaUrls.V1_37_0;
+  }
+
   private static final Map<String, String> rpcSystemNameMap = new HashMap<>();
 
   static {
@@ -203,6 +213,14 @@ public final class SemconvStability {
 
   public static String messagingSchemaUrl(boolean supportsStableSemconv) {
     return supportsStableSemconv && emitStableMessagingSemconv
+        ? SchemaUrls.V1_43_0
+        : SchemaUrls.V1_24_0;
+  }
+
+  public static String messagingSchemaUrl(
+      OpenTelemetry openTelemetry, boolean supportsStableSemconv) {
+    return supportsStableSemconv
+            && emitStable(semconvSelection(openTelemetry, v3Preview(openTelemetry)).messaging())
         ? SchemaUrls.V1_43_0
         : SchemaUrls.V1_24_0;
   }

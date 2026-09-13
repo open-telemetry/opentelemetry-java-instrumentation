@@ -30,6 +30,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.entry;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -58,7 +59,7 @@ class MessagingAttributesExtractorTest {
         MessagingAttributesExtractor.create(
             TestGetter.INSTANCE, MessagingOperationType.SEND, "send");
 
-    assertThat(((SchemaUrlProvider) extractor).internalGetSchemaUrl())
+    assertThat(((SchemaUrlProvider) extractor).internalGetSchemaUrl(OpenTelemetry.noop()))
         .isEqualTo(emitStableMessagingSemconv() ? SchemaUrls.V1_43_0 : SchemaUrls.V1_24_0);
   }
 
@@ -68,7 +69,7 @@ class MessagingAttributesExtractorTest {
     AttributesExtractor<Map<String, String>, String> extractor =
         MessagingAttributesExtractor.create(TestGetter.INSTANCE, MessageOperation.PUBLISH);
 
-    assertThat(((SchemaUrlProvider) extractor).internalGetSchemaUrl())
+    assertThat(((SchemaUrlProvider) extractor).internalGetSchemaUrl(OpenTelemetry.noop()))
         .isEqualTo(SchemaUrls.V1_24_0);
   }
 

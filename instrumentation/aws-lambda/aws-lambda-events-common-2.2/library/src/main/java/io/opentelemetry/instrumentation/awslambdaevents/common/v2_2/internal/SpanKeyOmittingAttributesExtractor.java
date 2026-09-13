@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -47,6 +48,14 @@ final class SpanKeyOmittingAttributesExtractor<REQUEST, RESPONSE>
   public String internalGetSchemaUrl() {
     return delegate instanceof SchemaUrlProvider
         ? ((SchemaUrlProvider) delegate).internalGetSchemaUrl()
+        : null;
+  }
+
+  @Nullable
+  @Override
+  public String internalGetSchemaUrl(OpenTelemetry openTelemetry) {
+    return delegate instanceof SchemaUrlProvider
+        ? ((SchemaUrlProvider) delegate).internalGetSchemaUrl(openTelemetry)
         : null;
   }
 }

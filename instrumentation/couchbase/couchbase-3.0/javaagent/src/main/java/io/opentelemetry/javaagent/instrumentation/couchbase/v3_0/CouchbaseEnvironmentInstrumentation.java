@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.couchbase.client.core.env.CoreEnvironment;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -35,15 +36,16 @@ class CouchbaseEnvironmentInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This CoreEnvironment.Builder<?> builder) {
+      OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
       String instrumentationName =
           SemconvStability.v3Preview()
               ? "io.opentelemetry.couchbase-3.0"
               : "io.opentelemetry.javaagent.couchbase-3.0";
       builder.requestTracer(
           CouchbaseRequestTracer.create(
-              GlobalOpenTelemetry.get()
+              openTelemetry
                   .tracerBuilder(instrumentationName)
-                  .setSchemaUrl(databaseSchemaUrl())
+                  .setSchemaUrl(databaseSchemaUrl(openTelemetry))
                   .build()));
     }
   }

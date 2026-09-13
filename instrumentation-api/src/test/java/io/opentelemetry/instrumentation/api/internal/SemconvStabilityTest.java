@@ -10,9 +10,14 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.common.ComponentLoader;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,6 +33,25 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class SemconvStabilityTest {
+
+  @ParameterizedTest
+  @ValueSource(ints = {0, 1})
+  void schemaUrlsUseOpenTelemetryInstance(int semconvVersion) {
+    ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class, RETURNS_DEEP_STUBS);
+    DeclarativeConfigProperties general =
+        general(
+            domainSemconv("db", semconvVersion),
+            domainSemconv("rpc", semconvVersion, true, false),
+            domainSemconv("messaging", semconvVersion, true, false));
+    when(openTelemetry.getGeneralInstrumentationConfig()).thenReturn(general);
+
+    assertThat(SemconvStability.databaseSchemaUrl(openTelemetry))
+        .isEqualTo(semconvVersion == 1 ? SchemaUrls.V1_44_0 : SchemaUrls.V1_24_0);
+    assertThat(SemconvStability.rpcSchemaUrl(openTelemetry))
+        .isEqualTo(semconvVersion == 1 ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0);
+    assertThat(SemconvStability.messagingSchemaUrl(openTelemetry, true))
+        .isEqualTo(semconvVersion == 1 ? SchemaUrls.V1_43_0 : SchemaUrls.V1_24_0);
+  }
 
   @Test
   void resolveGeneralStableFlags_parsesCommaSeparatedList() {

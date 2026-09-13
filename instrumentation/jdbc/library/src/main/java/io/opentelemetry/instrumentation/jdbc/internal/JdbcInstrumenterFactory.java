@@ -68,7 +68,7 @@ public final class JdbcInstrumenterFactory {
             openTelemetry, INSTRUMENTATION_NAME, CodeSpanNameExtractor.create(getter))
         .addAttributesExtractor(CodeAttributesExtractor.create(getter))
         .addAttributesExtractor(new DataSourceDbAttributesExtractor())
-        .setSchemaUrl(databaseSchemaUrl())
+        .setSchemaUrl(databaseSchemaUrl(openTelemetry))
         .setEnabled(enabled)
         .buildInstrumenter();
   }

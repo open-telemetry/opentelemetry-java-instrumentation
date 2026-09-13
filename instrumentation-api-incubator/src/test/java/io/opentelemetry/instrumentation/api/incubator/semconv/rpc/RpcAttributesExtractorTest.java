@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SY
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 import static org.assertj.core.api.Assertions.entry;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -91,7 +92,7 @@ class RpcAttributesExtractorTest {
   }
 
   private static void testExtractor(AttributesExtractor<Map<String, String>, Void> extractor) {
-    assertThat(((SchemaUrlProvider) extractor).internalGetSchemaUrl())
+    assertThat(((SchemaUrlProvider) extractor).internalGetSchemaUrl(OpenTelemetry.noop()))
         .isEqualTo(emitStableRpcSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0);
 
     Map<String, String> request = new HashMap<>();

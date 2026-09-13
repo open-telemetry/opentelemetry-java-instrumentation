@@ -13,6 +13,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -291,5 +292,10 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public String internalGetSchemaUrl() {
     return messagingSchemaUrl(supportsStableSemconv);
+  }
+
+  @Override
+  public String internalGetSchemaUrl(OpenTelemetry openTelemetry) {
+    return messagingSchemaUrl(openTelemetry, supportsStableSemconv);
   }
 }

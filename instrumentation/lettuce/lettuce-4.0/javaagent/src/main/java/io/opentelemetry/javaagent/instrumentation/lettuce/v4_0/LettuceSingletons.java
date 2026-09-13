@@ -112,7 +112,7 @@ public class LettuceSingletons {
                 ServicePeerAttributesExtractor.create(
                     netAttributesGetter, GlobalOpenTelemetry.get()))
             .addAttributesExtractor(new LettuceConnectAttributesExtractor())
-            .setSchemaUrl(databaseSchemaUrl())
+            .setSchemaUrl(databaseSchemaUrl(GlobalOpenTelemetry.get()))
             .setEnabled(
                 DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "lettuce")
                     .get("connection_telemetry")

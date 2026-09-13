@@ -111,7 +111,7 @@ class RocketMqInstrumenterFactory {
                 openTelemetry, INSTRUMENTATION_NAME, request -> "multiple_sources receive")
             .addAttributesExtractor(constant(MESSAGING_SYSTEM, "rocketmq"))
             .addAttributesExtractor(constant(MESSAGING_OPERATION, "receive"))
-            .setSchemaUrl(messagingSchemaUrl(false))
+            .setSchemaUrl(messagingSchemaUrl(openTelemetry, false))
             .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
 
     return new RocketMqConsumerInstrumenter(

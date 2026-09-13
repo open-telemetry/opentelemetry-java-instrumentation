@@ -18,6 +18,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_STORED_PROCEDURE_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -222,5 +223,10 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public String internalGetSchemaUrl() {
     return databaseSchemaUrl();
+  }
+
+  @Override
+  public String internalGetSchemaUrl(OpenTelemetry openTelemetry) {
+    return databaseSchemaUrl(openTelemetry);
   }
 }
