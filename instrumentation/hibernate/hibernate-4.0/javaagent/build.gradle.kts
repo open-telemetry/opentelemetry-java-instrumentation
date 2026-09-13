@@ -92,6 +92,46 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
   }
 
+  val v3PreviewSuites = testing.suites.withType(JvmTestSuite::class)
+    .map { suite ->
+      register<Test>("${suite.name}V3Preview") {
+        val sourceTask = named<Test>(suite.name).get()
+        setJvmArgs(sourceTask.jvmArgs)
+        setSystemProperties(sourceTask.systemProperties)
+
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
+
+        val v3PreviewConfig = "otel.instrumentation.common.v3-preview=true"
+        val hibernateConfig = "otel.instrumentation.hibernate.enabled=true"
+        jvmArgs("-D$v3PreviewConfig")
+        jvmArgs("-D$hibernateConfig")
+        systemProperty(
+          "metadataConfig",
+          listOfNotNull(
+            sourceTask.systemProperties["metadataConfig"],
+            v3PreviewConfig,
+            hibernateConfig,
+          )
+            .joinToString(","),
+        )
+        isEnabled = sourceTask.enabled
+      }
+    }
+
+  val testV3PreviewDisabled = register<Test>("testV3PreviewDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("SessionTest.v3PreviewDisablesHibernateByDefault")
+    }
+
+    jvmArgs("-DtestV3PreviewDisabled=true")
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    jvmArgs("-Dotel.instrumentation.jdbc.enabled=false")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+  }
+
   val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
     .map { suite ->
       register<Test>("${suite.name}StableSemconv") {
@@ -104,6 +144,12 @@ tasks {
     }
 
   check {
-    dependsOn(testing.suites, testExperimental, stableSemconvSuites)
+    dependsOn(
+      testing.suites,
+      testExperimental,
+      v3PreviewSuites,
+      testV3PreviewDisabled,
+      stableSemconvSuites,
+    )
   }
 }

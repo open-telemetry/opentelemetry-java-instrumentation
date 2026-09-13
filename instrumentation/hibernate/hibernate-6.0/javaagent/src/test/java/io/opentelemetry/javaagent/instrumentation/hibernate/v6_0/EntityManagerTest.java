@@ -45,6 +45,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -52,6 +53,30 @@ import org.junit.jupiter.params.provider.MethodSource;
 class EntityManagerTest extends AbstractHibernateTest {
   private static final EntityManagerFactory entityManagerFactory =
       Persistence.createEntityManagerFactory("test-pu");
+
+  @Test
+  @EnabledIfSystemProperty(named = "testV3PreviewDisabled", matches = "true")
+  void v3PreviewDisablesHibernateByDefault() {
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          EntityManager entityManager = entityManagerFactory.createEntityManager();
+          try {
+            entityManager.find(Value.class, prepopulated.get(0).getId());
+          } finally {
+            entityManager.close();
+          }
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("parent")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasTotalAttributeCount(0)));
+  }
 
   @AfterAll
   static void closeEntityManagerFactory() {

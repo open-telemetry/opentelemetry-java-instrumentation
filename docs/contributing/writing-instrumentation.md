@@ -32,6 +32,8 @@ for libraries where library instrumentation is not possible, such as `URLConnect
 intercept even the JDK's classes. Such libraries will not have library instrumentation but will have
 agent instrumentation.
 
+Before proposing new instrumentation, review the repository's [instrumentation scope](../scope.md).
+
 ## Folder Structure
 
 Refer to some of our existing instrumentations for examples of the folder structure, for example:
