@@ -16,6 +16,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -103,12 +104,7 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
         @Advice.Return @Nullable Message<?> message,
         @Advice.Thrown @Nullable Throwable throwable) {
       Context parent = Context.current();
-      Context current = startAndEndConsumerReceive(parent, message, timer, consumer, throwable);
-      if (current != null && throwable == null) {
-        // ConsumerBase#internalReceive(long,TimeUnit) will be called before
-        // ConsumerListener#receive(Consumer,Message), so, need to inject Context into Message.
-        VirtualFieldStore.inject(message, current);
-      }
+      startAndEndConsumerReceive(parent, message, timer, consumer, throwable);
     }
   }
 
@@ -172,15 +168,15 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
   public static class SuppressInstrumentationAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void before() {
+    public static MessagingTelemetrySignals before() {
       // MultiTopicsConsumerImpl#receiveMessageFromConsumer is called from a background thread, we
       // don't want to create a span for it.
-      PulsarSingletons.startSuppressingReceive();
+      return PulsarSingletons.startSuppressingReceive();
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
-    public static void after() {
-      PulsarSingletons.endSuppressingReceive();
+    public static void after(@Advice.Enter MessagingTelemetrySignals previous) {
+      PulsarSingletons.endSuppressingReceive(previous);
     }
   }
 }

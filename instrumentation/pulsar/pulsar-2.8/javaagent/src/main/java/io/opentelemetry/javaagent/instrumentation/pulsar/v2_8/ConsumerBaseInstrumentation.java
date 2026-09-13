@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.MessageListenerContext;
@@ -42,13 +43,13 @@ class ConsumerBaseInstrumentation implements TypeInstrumentation {
   public static class TriggerListenerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter() {
-      MessageListenerContext.startProcessing();
+    public static MessagingTelemetrySignals onEnter() {
+      return MessageListenerContext.startProcessing();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit() {
-      MessageListenerContext.endProcessing();
+    public static void onExit(@Advice.Enter MessagingTelemetrySignals previous) {
+      MessageListenerContext.endProcessing(previous);
     }
   }
 }
