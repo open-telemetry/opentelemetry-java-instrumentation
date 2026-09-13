@@ -29,10 +29,11 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
-import rx.Subscriber;
 
 public class LettuceSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.lettuce-4.0";
+  private static final ContextKey<LettuceCommandPeer> COMMAND_PEER_CONTEXT_KEY =
+      ContextKey.named("opentelemetry-lettuce-v4_0-command-peer");
 
   private static final Instrumenter<RedisCommand<?, ?, ?>, Void> instrumenter;
   private static final Instrumenter<LettuceBatchRequest, Void> batchInstrumenter;
@@ -53,9 +54,6 @@ public class LettuceSingletons {
 
   public static final VirtualField<RedisCommand<?, ?, ?>, LettuceCommandPeer> COMMAND_PEER =
       VirtualField.find(RedisCommand.class, LettuceCommandPeer.class);
-
-  public static final VirtualField<Subscriber<?>, LettuceCommandPeer> SUBSCRIBER_PEER =
-      VirtualField.find(Subscriber.class, LettuceCommandPeer.class);
 
   public static final VirtualField<RedisCommand<?, ?, ?>, InetSocketAddress> COMMAND_ADDRESS =
       VirtualField.find(RedisCommand.class, InetSocketAddress.class);
@@ -159,25 +157,22 @@ public class LettuceSingletons {
     COMMAND_PEER.set(command, new LettuceCommandPeer());
   }
 
+  public static Context initializeCommandPeer(Context context, RedisCommand<?, ?, ?> command) {
+    LettuceCommandPeer peer = new LettuceCommandPeer();
+    COMMAND_PEER.set(command, peer);
+    return context.with(COMMAND_PEER_CONTEXT_KEY, peer);
+  }
+
   public static void linkCommandPeer(RedisCommand<?, ?, ?> wrapper, RedisCommand<?, ?, ?> command) {
     COMMAND_PEER.set(wrapper, COMMAND_PEER.get(command));
   }
 
-  public static void captureSubscriberPeer(
-      Subscriber<?> subscriber, RedisCommand<?, ?, ?> command) {
-    SUBSCRIBER_PEER.set(subscriber, COMMAND_PEER.get(command));
-  }
-
-  public static void applySubscriberPeer(RedisCommand<?, ?, ?> command, Subscriber<?> subscriber) {
-    COMMAND_PEER.set(command, SUBSCRIBER_PEER.get(subscriber));
+  public static void applyCommandPeer(RedisCommand<?, ?, ?> command, Context context) {
+    COMMAND_PEER.set(command, context.get(COMMAND_PEER_CONTEXT_KEY));
   }
 
   public static void clearCommandPeer(RedisCommand<?, ?, ?> command) {
     COMMAND_PEER.set(command, null);
-  }
-
-  public static void clearSubscriberPeer(Subscriber<?> subscriber) {
-    SUBSCRIBER_PEER.set(subscriber, null);
   }
 
   public static void finishCommandPeer(RedisCommand<?, ?, ?> command) {
