@@ -14,8 +14,7 @@ needs to run again.
 Use a filtered test task when v3 preview changes one isolated behavior, such as:
 
 - disabling an instrumentation by default
-- ignoring or changing one configuration property
-- selecting one implementation
+- changing how one configuration property is interpreted
 
 Run the full test suite under v3 preview only when the mode changes expectations throughout the
 suite, such as span names, attributes, or suppression behavior used by most tests.
