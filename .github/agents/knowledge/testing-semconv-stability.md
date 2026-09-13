@@ -39,9 +39,10 @@ A `testBothSemconv` task (testing the `/dup` mode) is **only required for the RP
 Database, code, and service-peer domains do not need a `testBothSemconv` task — only
 `testStableSemconv` (and the default `test` task for the legacy/unset mode).
 
-Do not add another instrumentation test task when v3 preview selects a semconv mode already covered
-here. Keep the existing semconv task and test the v3-preview-to-mode mapping in the shared
-configuration component. See
+If an instrumentation's existing `testStableSemconv` task already verifies the semconv mode that
+v3 preview selects, do not add a `testV3Preview` task that repeats the same assertions. Keep the
+existing semconv task and test the v3-preview-to-mode mapping in the shared configuration
+component. See
 [v3-preview test coverage](testing-v3-preview.md#modes-reached-through-multiple-settings).
 
 See [gradle-conventions.md](gradle-conventions.md) for `testClassesDirs`, `classpath`,
