@@ -38,14 +38,15 @@ public class IbmMqJmsQmid {
     if (!IbmMqQmidSupport.enabled()) {
       return;
     }
-    // Every caller reaches this method only for an object the type matcher already confirmed is a
-    // genuine IBM MQ client type, so the system value is known even when the QMID property below
-    // is unavailable.
-    IbmMqQmidSupport.stampMessagingSystem();
+    // Read the QMID first: this method now also runs for listeners re-associated after a
+    // transient read failure, which may be re-invoked for a non-IBM-MQ consumer too. Only stamp
+    // messaging.system once a genuine QMID was actually read, never before.
     String qmid = readQmid(jmsObject);
-    if (qmid != null) {
-      IbmMqQmidSupport.stampMessagingSpan(qmid);
+    if (qmid == null) {
+      return;
     }
+    IbmMqQmidSupport.stampMessagingSystem();
+    IbmMqQmidSupport.stampMessagingSpan(qmid);
   }
 
   private IbmMqJmsQmid() {}

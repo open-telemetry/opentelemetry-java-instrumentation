@@ -12,10 +12,8 @@ import javax.annotation.Nullable;
 
 public class IbmMqJakartaJmsListenerQmid {
 
-  private static final Object NOT_AVAILABLE = new Object();
-
-  private static final VirtualField<MessageListener, Object> CONSUMER =
-      VirtualField.find(MessageListener.class, Object.class);
+  private static final VirtualField<MessageListener, IbmMqConsumerHolder> CONSUMER =
+      VirtualField.find(MessageListener.class, IbmMqConsumerHolder.class);
 
   // Dedicated value type, not String: the generic JMS instrumentation already owns the
   // (Message, String) virtual-field pair, and pairs are shared across modules.
@@ -26,8 +24,11 @@ public class IbmMqJakartaJmsListenerQmid {
     if (!IbmMqQmidSupport.enabled() || listener == null) {
       return;
     }
-    String qmid = IbmMqJakartaJmsQmid.readQmid(consumer);
-    CONSUMER.set(listener, qmid == null ? NOT_AVAILABLE : consumer);
+    // Stored unconditionally, even when the QMID cannot be read right now: overwriting replaces
+    // a stale association from a previous registration, and a weak reference to the consumer
+    // costs nothing to hold, so a later delivery can retry the read instead of being permanently
+    // short-circuited by one failed attempt at registration time.
+    CONSUMER.set(listener, new IbmMqConsumerHolder(consumer));
   }
 
   public static void captureFromReceive(Object consumer, @Nullable Message message) {
@@ -44,10 +45,8 @@ public class IbmMqJakartaJmsListenerQmid {
     if (!IbmMqQmidSupport.enabled() || listener == null) {
       return;
     }
-    Object consumer = CONSUMER.get(listener);
-    if (consumer == NOT_AVAILABLE) {
-      return;
-    }
+    IbmMqConsumerHolder holder = CONSUMER.get(listener);
+    Object consumer = holder == null ? null : holder.consumer();
     if (consumer != null) {
       IbmMqJakartaJmsQmid.stampMessagingSpan(consumer);
       return;

@@ -22,9 +22,11 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.Message;
@@ -58,8 +60,8 @@ class IbmMqJmsTest {
   private static final String MESSAGE_KEYED_QUEUE = "DEV.QUEUE.2";
   private static final String PASSWORD = "passw0rd";
 
-  // Whether the module's opt_in attribute is enabled for this test task.
-  private static final boolean EXPERIMENTAL =
+  // Whether the module's experimental attributes are enabled for this test task.
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.ibmmq.experimental-span-attributes");
 
   @RegisterExtension
@@ -196,20 +198,50 @@ class IbmMqJmsTest {
     assertMessagingSystem(span);
   }
 
+  @Test
+  void listenerAssociationRetriesAfterUnavailableFirstRead() {
+    // A unit-level check (no broker span involved): proves that a listener whose first
+    // stamp()-time readQmid() attempt comes up empty is not permanently locked out -- a later
+    // delivery must retry the read and can still succeed. Do not collapse this back to a single
+    // stamp() call asserting reads() == 1: that only proves a read happens once, never that a
+    // failed read is retried on the NEXT delivery instead of caching the failure.
+    FlakyPropertyContext consumer = new FlakyPropertyContext(expectedQmid);
+    CountingListener listener = new CountingListener(new CountDownLatch(1));
+
+    // associate() only stores the (weak) consumer reference; it must never itself read the QMID.
+    IbmMqJmsListenerQmid.associate(consumer, listener);
+    assertThat(consumer.reads()).isZero();
+
+    // First delivery: the fake's first read returns null, simulating an unavailable QMID.
+    IbmMqJmsListenerQmid.stamp(listener, null);
+    assertThat(consumer.reads()).isEqualTo(EXPERIMENTAL_ATTRIBUTES ? 1 : 0);
+
+    // Second delivery: the fake now returns the real QMID. Load-bearing assertion: the listener
+    // is enriched on this later delivery even though its first read failed, proving the retry.
+    IbmMqJmsListenerQmid.stamp(listener, null);
+
+    if (EXPERIMENTAL_ATTRIBUTES) {
+      assertThat(consumer.reads()).isEqualTo(2);
+    } else {
+      // Flag off: associate()/stamp() must no-op without ever touching the property context.
+      assertThat(consumer.reads()).isZero();
+    }
+  }
+
   private static void assertQmid(SpanData span) {
-    if (EXPERIMENTAL) {
+    if (EXPERIMENTAL_ATTRIBUTES) {
       assertThat(span.getAttributes().get(QUEUE_MANAGER_ID)).isEqualTo(expectedQmid);
     } else {
-      // opt_in: must not be emitted unless explicitly enabled.
+      // Flag off: must not be emitted unless explicitly enabled.
       assertThat(span.getAttributes().get(QUEUE_MANAGER_ID)).isNull();
     }
   }
 
   private static void assertMessagingSystem(SpanData span) {
-    if (EXPERIMENTAL) {
+    if (EXPERIMENTAL_ATTRIBUTES) {
       assertThat(span.getAttributes().get(MESSAGING_SYSTEM)).isEqualTo("ibmmq");
     } else {
-      // opt_in: the generic JMS instrumentation's "jms" value must be untouched by default.
+      // Flag off: the generic JMS instrumentation's "jms" value must be untouched.
       assertThat(span.getAttributes().get(MESSAGING_SYSTEM)).isEqualTo("jms");
     }
   }
@@ -274,6 +306,90 @@ class IbmMqJmsTest {
     @Override
     public void onMessage(Message message) {
       latch.countDown();
+    }
+  }
+
+  /**
+   * A minimal {@link JmsReadablePropertyContext} fake: returns {@code null} (simulating an
+   * unavailable QMID) on its first read and the real broker's QMID on every read after, so a caller
+   * that keeps retrying eventually gets the real value and one that gives up after the first
+   * attempt never does.
+   */
+  private static class FlakyPropertyContext implements JmsReadablePropertyContext {
+    private final String qmid;
+    private final AtomicInteger reads = new AtomicInteger();
+
+    FlakyPropertyContext(String qmid) {
+      this.qmid = qmid;
+    }
+
+    int reads() {
+      return reads.get();
+    }
+
+    @Override
+    public String getStringProperty(String name) {
+      return reads.getAndIncrement() == 0 ? null : qmid;
+    }
+
+    @Override
+    public boolean propertyExists(String name) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public char getCharProperty(String name) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean getBooleanProperty(String name) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public byte getByteProperty(String name) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public short getShortProperty(String name) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int getIntProperty(String name) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public long getLongProperty(String name) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public float getFloatProperty(String name) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public double getDoubleProperty(String name) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Object getObjectProperty(String name) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public byte[] getBytesProperty(String name) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Enumeration<String> getPropertyNames() {
+      throw new UnsupportedOperationException();
     }
   }
 }
