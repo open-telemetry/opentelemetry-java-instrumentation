@@ -34,18 +34,19 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.twilio.experimental-span-attributes=true")
   }
 
-  val testV3Preview = register<Test>("testV3Preview") {
+  val testDisabled = register<Test>("testDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
-      includeTestsMatching("TwilioClientTest.v3PreviewDisablesTwilioByDefault")
+      includeTestsMatching("TwilioClientTest.disabledByDefault")
     }
 
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    systemProperty("testDisabled", "true")
     systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
   }
 
   check {
-    dependsOn(testExperimental, testV3Preview)
+    dependsOn(testDisabled, testExperimental)
   }
 }

@@ -180,8 +180,8 @@ class TwilioClientTest {
   }
 
   @Test
-  @EnabledIfSystemProperty(named = "otel.instrumentation.common.v3-preview", matches = "true")
-  void v3PreviewDisablesTwilioByDefault() {
+  @EnabledIfSystemProperty(named = "testDisabled", matches = "true")
+  void disabledByDefault() {
     when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
     when(twilioRestClient.request(any()))
         .thenReturn(

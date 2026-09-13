@@ -40,19 +40,20 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.hystrix.experimental-span-attributes=true")
   }
 
-  val testV3Preview = register<Test>("testV3Preview") {
+  val testDisabled = register<Test>("testDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
-      includeTestsMatching("HystrixTest.v3PreviewDisablesHystrixByDefault")
+      includeTestsMatching("HystrixTest.disabledByDefault")
     }
 
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    systemProperty("testDisabled", "true")
     systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
   }
 
   check {
-    dependsOn(testExperimental, testV3Preview)
+    dependsOn(testDisabled, testExperimental)
   }
 
   if (otelProps.denyUnsafe) {

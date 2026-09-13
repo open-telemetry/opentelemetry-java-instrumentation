@@ -67,15 +67,16 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
   }
 
-  val testV3Preview = register<Test>("testV3Preview") {
+  val testDisabled = register<Test>("testDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
-      includeTestsMatching("SessionTest.v3PreviewDisablesHibernateByDefault")
+      includeTestsMatching("SessionTest.disabledByDefault")
     }
 
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     jvmArgs("-Dotel.instrumentation.jdbc.enabled=false")
+    systemProperty("testDisabled", "true")
     systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
   }
 
@@ -93,8 +94,8 @@ tasks {
   check {
     dependsOn(
       testing.suites,
+      testDisabled,
       testExperimental,
-      testV3Preview,
       stableSemconvSuites,
     )
   }

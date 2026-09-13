@@ -33,8 +33,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 class SessionTest extends AbstractHibernateTest {
 
   @Test
-  @EnabledIfSystemProperty(named = "otel.instrumentation.common.v3-preview", matches = "true")
-  void v3PreviewDisablesHibernateByDefault() {
+  @EnabledIfSystemProperty(named = "testDisabled", matches = "true")
+  void disabledByDefault() {
     testing.runWithSpan(
         "parent",
         () -> {
