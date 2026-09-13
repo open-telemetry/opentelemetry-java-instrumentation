@@ -60,8 +60,9 @@ class KafkaConnectOwnershipTest {
     SinkRecord record = new SinkRecord("topic", 0, null, null, null, null, 0);
     RECEIVE_OWNED.set(record, true);
 
-    new KafkaConnectTask(singletonList(record));
+    KafkaConnectTask firstAttempt = new KafkaConnectTask(singletonList(record));
 
+    assertThat(firstAttempt.countUnmarkedRecords()).isZero();
     assertThat(new KafkaConnectTask(singletonList(record)).countUnmarkedRecords()).isEqualTo(1);
   }
 

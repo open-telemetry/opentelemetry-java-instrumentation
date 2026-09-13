@@ -66,9 +66,8 @@ public class KafkaConnectTask {
     return unownedRecordCount;
   }
 
-  // Consumes receive ownership at the start of each put() attempt, independently of whether a
-  // process span starts. Kafka Connect may redeliver the same SinkRecord object after a failure, and
-  // that retry is a new delivery attempt that must not inherit the prior attempt's accounting.
+  // Consume receive ownership at the start of each put() attempt even when no process span starts.
+  // A retry can reuse the same SinkRecord object and is a new delivery attempt.
   private static long consumeReceiveOwnedMarkers(Collection<SinkRecord> records) {
     long count = 0;
     for (SinkRecord record : records) {

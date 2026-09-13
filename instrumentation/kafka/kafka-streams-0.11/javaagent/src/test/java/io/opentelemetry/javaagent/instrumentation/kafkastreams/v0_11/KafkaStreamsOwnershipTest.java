@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
@@ -18,7 +20,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -36,8 +37,7 @@ class KafkaStreamsOwnershipTest extends KafkaStreamsBaseTest {
     KafkaStreamsReflectionUtil.StreamBuilder streamBuilder =
         KafkaStreamsReflectionUtil.createBuilder();
     KStream<Integer, String> values =
-        streamBuilder
-            .stream(STREAM_PENDING)
+        streamBuilder.stream(STREAM_PENDING)
             .mapValues(
                 value -> {
                   ConsumerRecords<Integer, String> nestedRecords =
@@ -75,8 +75,7 @@ class KafkaStreamsOwnershipTest extends KafkaStreamsBaseTest {
     KafkaStreamsReflectionUtil.StreamBuilder streamBuilder =
         KafkaStreamsReflectionUtil.createBuilder();
     KStream<Integer, String> values =
-        streamBuilder
-            .stream(STREAM_PENDING)
+        streamBuilder.stream(STREAM_PENDING)
             .mapValues(
                 value -> {
                   invoked.countDown();
@@ -90,13 +89,14 @@ class KafkaStreamsOwnershipTest extends KafkaStreamsBaseTest {
     testing.clearData();
 
     producer.send(new ProducerRecord<>(STREAM_PENDING, 11, "VALUE"));
-    assertThat(invoked.await(30, TimeUnit.SECONDS)).isTrue();
+    assertThat(invoked.await(30, SECONDS)).isTrue();
 
     await()
         .atMost(Duration.ofSeconds(30))
         .untilAsserted(
             () ->
-                assertThat(onlySpan("io.opentelemetry.kafka-streams-0.11", STREAM_PENDING).getStatus())
+                assertThat(
+                        onlySpan("io.opentelemetry.kafka-streams-0.11", STREAM_PENDING).getStatus())
                     .extracting(status -> status.getStatusCode())
                     .isEqualTo(StatusCode.ERROR));
   }
@@ -118,13 +118,13 @@ class KafkaStreamsOwnershipTest extends KafkaStreamsBaseTest {
   }
 
   private static SpanData onlySpan(String instrumentationName, String topic) {
-    String spanName =
-        emitStableMessagingSemconv() ? "process " + topic : topic + " process";
+    String spanName = emitStableMessagingSemconv() ? "process " + topic : topic + " process";
     List<SpanData> spans =
         testing.spans().stream()
-            .filter(span -> span.getInstrumentationScopeInfo().getName().equals(instrumentationName))
+            .filter(
+                span -> span.getInstrumentationScopeInfo().getName().equals(instrumentationName))
             .filter(span -> span.getName().equals(spanName))
-            .toList();
+            .collect(toList());
     assertThat(spans).hasSize(1);
     return spans.get(0);
   }
