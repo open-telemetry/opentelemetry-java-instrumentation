@@ -44,8 +44,7 @@ class JmsMessageInstrumentationTest {
   @Test
   void clearsDeliveryStateWhenCamelMessageIsCleared() {
     org.apache.camel.Message camelMessage = mock(org.apache.camel.Message.class);
-    JmsMessageInstrumentation.StoreReceiveTelemetryAdvice.onExit(
-        camelMessage, mock(Message.class));
+    JmsMessageInstrumentation.StoreReceiveTelemetryAdvice.onExit(camelMessage, mock(Message.class));
 
     JmsMessageInstrumentation.StoreReceiveTelemetryAdvice.onExit(camelMessage, null);
 

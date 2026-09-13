@@ -13,8 +13,8 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.jms.JmsMessageDeliveryState;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import javax.jms.Message;
 import javax.annotation.Nullable;
+import javax.jms.Message;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -45,27 +45,36 @@ class JmsMessageInstrumentation implements TypeInstrumentation {
         CAMEL_DELIVERY_STATE =
             VirtualField.find(org.apache.camel.Message.class, JmsMessageDeliveryState.class);
 
+    public static VirtualField<Message, JmsMessageDeliveryState> jmsDeliveryState() {
+      return JMS_DELIVERY_STATE;
+    }
+
+    public static VirtualField<org.apache.camel.Message, JmsMessageDeliveryState>
+        camelDeliveryState() {
+      return CAMEL_DELIVERY_STATE;
+    }
+
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This org.apache.camel.Message camelMessage,
         @Advice.Argument(0) @Nullable Message jmsMessage) {
       if (jmsMessage == null) {
-        CAMEL_DELIVERY_STATE.set(camelMessage, null);
+        camelDeliveryState().set(camelMessage, null);
         return;
       }
-      JmsMessageDeliveryState state = JMS_DELIVERY_STATE.get(jmsMessage);
+      JmsMessageDeliveryState state = jmsDeliveryState().get(jmsMessage);
       if (state == null) {
         synchronized (jmsMessage) {
-          state = JMS_DELIVERY_STATE.get(jmsMessage);
+          state = jmsDeliveryState().get(jmsMessage);
           if (state == null) {
             state = new JmsMessageDeliveryState();
-            JMS_DELIVERY_STATE.set(jmsMessage, state);
+            jmsDeliveryState().set(jmsMessage, state);
           }
         }
       }
       // A Camel message is refilled when its JMS message is swapped. Replace the delivery state,
       // without copying the receive context or retaining the previous message's accounting.
-      CAMEL_DELIVERY_STATE.set(camelMessage, state);
+      camelDeliveryState().set(camelMessage, state);
     }
   }
 }

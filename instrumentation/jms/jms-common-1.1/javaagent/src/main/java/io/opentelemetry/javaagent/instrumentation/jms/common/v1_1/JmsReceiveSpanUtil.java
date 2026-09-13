@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveContext;
 import javax.annotation.Nullable;
 
 public class JmsReceiveSpanUtil {
@@ -47,7 +48,7 @@ public class JmsReceiveSpanUtil {
               throwable,
               timer.startTime(),
               timer.now());
-      request.message().setReceiveContext(receiveContext);
+      request.message().setReceiveContext(new JmsReceiveContext(receiveContext));
       // the consumed messages counter only exists under the stable conventions, and counts nothing
       // for a receive that failed, so a process operation further down still has to count this
       // message in those cases

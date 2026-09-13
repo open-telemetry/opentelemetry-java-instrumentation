@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.instrumentation.jms.v3_0.JmsSingletons.consumerProcessInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -16,6 +16,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageAdapter;
@@ -76,8 +77,7 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
             attachListenerSubscriptionName(messageListener, message);
         MessageAdapter messageAdapter = JakartaMessageAdapter.create(message);
         MessageWithDestination messageWithDestination =
-            MessageWithDestination.create(
-                messageAdapter, null, JmsSubscriptionNames.get(message));
+            MessageWithDestination.create(messageAdapter, null, JmsSubscriptionNames.get(message));
 
         Context currentContext = Context.current();
         if (!consumerProcessInstrumenter(true)
@@ -92,9 +92,9 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
 
         Context parentContext = currentContext;
         if (!emitStableMessagingSemconv()) {
-          Context receiveContext = messageAdapter.getReceiveContext();
+          JmsReceiveContext receiveContext = messageAdapter.getReceiveContext();
           if (receiveContext != null) {
-            parentContext = receiveContext;
+            parentContext = receiveContext.context();
           }
         }
         Instrumenter<MessageWithDestination, Void> instrumenter =

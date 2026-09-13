@@ -17,6 +17,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageAdapter;
@@ -76,8 +77,7 @@ class SpringJmsMessageListenerInstrumentation implements TypeInstrumentation {
       public static AdviceScope enter(Message message) {
         MessageAdapter messageAdapter = JavaxMessageAdapter.create(message);
         MessageWithDestination request =
-            MessageWithDestination.create(
-                messageAdapter, null, JmsSubscriptionNames.get(message));
+            MessageWithDestination.create(messageAdapter, null, JmsSubscriptionNames.get(message));
 
         Context currentContext = Context.current();
         if (!listenerInstrumenter(true).shouldStart(currentContext, request)) {
@@ -86,9 +86,9 @@ class SpringJmsMessageListenerInstrumentation implements TypeInstrumentation {
 
         Context parentContext = currentContext;
         if (!emitStableMessagingSemconv()) {
-          Context receiveContext = messageAdapter.getReceiveContext();
+          JmsReceiveContext receiveContext = messageAdapter.getReceiveContext();
           if (receiveContext != null) {
-            parentContext = receiveContext;
+            parentContext = receiveContext.context();
           }
         }
 

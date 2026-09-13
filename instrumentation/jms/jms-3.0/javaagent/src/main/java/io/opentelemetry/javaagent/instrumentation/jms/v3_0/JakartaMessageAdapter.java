@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms.v3_0;
 
-import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.jms.JmsMessageDeliveryState;
 import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveContext;
@@ -87,15 +86,14 @@ public class JakartaMessageAdapter implements MessageAdapter {
   }
 
   @Override
-  public void setReceiveContext(Context context) {
-    RECEIVE_CONTEXT.set(message, new JmsReceiveContext(context));
+  public void setReceiveContext(JmsReceiveContext context) {
+    RECEIVE_CONTEXT.set(message, context);
   }
 
   @Nullable
   @Override
-  public Context getReceiveContext() {
-    JmsReceiveContext receiveContext = RECEIVE_CONTEXT.get(message);
-    return receiveContext == null ? null : receiveContext.context();
+  public JmsReceiveContext getReceiveContext() {
+    return RECEIVE_CONTEXT.get(message);
   }
 
   @Override

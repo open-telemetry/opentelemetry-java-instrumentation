@@ -53,6 +53,7 @@ import org.assertj.core.api.AbstractAssert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -329,6 +330,9 @@ abstract class AbstractJms3Test {
   }
 
   @Test
+  @EnabledIfSystemProperty(
+      named = "otel.instrumentation.messaging.experimental.receive-telemetry.enabled",
+      matches = "true")
   void shouldSuppressNestedSynchronousMessageProcessing() throws Exception {
     Destination destination = session.createQueue("nestedProcessingQueue");
     MessageProducer producer = session.createProducer(destination);

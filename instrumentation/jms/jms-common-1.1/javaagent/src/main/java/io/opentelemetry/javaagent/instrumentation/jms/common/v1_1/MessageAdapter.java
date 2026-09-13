@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms.common.v1_1;
 
-import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveContext;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -34,11 +34,11 @@ public interface MessageAdapter {
   void prepareForReceive();
 
   /** Attaches the context created for the receive operation to this message. */
-  void setReceiveContext(Context context);
+  void setReceiveContext(JmsReceiveContext context);
 
   /** Returns the context created for this message's receive operation, if there was one. */
   @Nullable
-  Context getReceiveContext();
+  JmsReceiveContext getReceiveContext();
 
   /** Claims responsibility for recording the consumed messages metric for this delivery. */
   boolean claimConsumedMessages();
