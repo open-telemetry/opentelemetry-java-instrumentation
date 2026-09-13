@@ -16,15 +16,31 @@ public final class VertxSqlClientQueryBaseHelper {
   private static final String QUERY_BASE_CLASS = "io.vertx.sqlclient.impl.QueryBase";
   private static final String QUERY_EXECUTOR_CLASS = "io.vertx.sqlclient.impl.QueryExecutor";
 
-  @Nullable private static final Field builderField = findBuilderField();
-  @Nullable private static final VirtualField<Object, Object> DATA = findDataVirtualField();
+  private static final ClassValue<Field> builderFields =
+      new ClassValue<Field>() {
+        @Nullable
+        @Override
+        protected Field computeValue(Class<?> type) {
+          return findBuilderField(type);
+        }
+      };
+  @Nullable private static final Method findVirtualFieldMethod = findVirtualFieldMethod();
+  private static final ClassValue<VirtualField<Object, Object>> dataFields =
+      new ClassValue<VirtualField<Object, Object>>() {
+        @Nullable
+        @Override
+        protected VirtualField<Object, Object> computeValue(Class<?> type) {
+          return findDataVirtualField(type);
+        }
+      };
 
   @Nullable
-  private static Field findBuilderField() {
+  private static Field findBuilderField(Class<?> queryClass) {
+    Class<?> queryBaseClass = findClass(queryClass, QUERY_BASE_CLASS);
+    if (queryBaseClass == null) {
+      return null;
+    }
     try {
-      Class<?> queryBaseClass =
-          Class.forName(
-              QUERY_BASE_CLASS, false, VertxSqlClientQueryBaseHelper.class.getClassLoader());
       Field field = queryBaseClass.getDeclaredField("builder");
       field.setAccessible(true);
       return field;
@@ -33,26 +49,32 @@ public final class VertxSqlClientQueryBaseHelper {
     }
   }
 
+  @Nullable
+  private static Method findVirtualFieldMethod() {
+    try {
+      return VirtualField.class.getMethod("find", Class.class, Class.class);
+    } catch (Throwable ignored) {
+      return null;
+    }
+  }
+
   @SuppressWarnings("unchecked") // VirtualField key type is resolved by name at runtime
   @Nullable
-  private static VirtualField<Object, Object> findDataVirtualField() {
+  private static VirtualField<Object, Object> findDataVirtualField(Class<?> type) {
+    Class<?> queryExecutorClass = findClass(type, QUERY_EXECUTOR_CLASS);
+    Method method = findVirtualFieldMethod;
+    if (queryExecutorClass == null || method == null) {
+      return null;
+    }
     try {
-      Class<Object> queryExecutorClass =
-          (Class<Object>)
-              Class.forName(
-                  QUERY_EXECUTOR_CLASS,
-                  false,
-                  VertxSqlClientQueryBaseHelper.class.getClassLoader());
-      Method findMethod = VirtualField.class.getMethod("find", Class.class, Class.class);
-      return (VirtualField<Object, Object>)
-          findMethod.invoke(null, queryExecutorClass, Object.class);
+      return (VirtualField<Object, Object>) method.invoke(null, queryExecutorClass, Object.class);
     } catch (Throwable ignored) {
       return null;
     }
   }
 
   public static void setData(Object queryExecutor, @Nullable Object data) {
-    VirtualField<Object, Object> virtualField = DATA;
+    VirtualField<Object, Object> virtualField = dataFields.get(queryExecutor.getClass());
     if (virtualField != null) {
       virtualField.set(queryExecutor, data);
     }
@@ -60,7 +82,7 @@ public final class VertxSqlClientQueryBaseHelper {
 
   @Nullable
   public static Object getData(Object queryExecutor) {
-    VirtualField<Object, Object> virtualField = DATA;
+    VirtualField<Object, Object> virtualField = dataFields.get(queryExecutor.getClass());
     return virtualField != null ? virtualField.get(queryExecutor) : null;
   }
 
@@ -77,7 +99,7 @@ public final class VertxSqlClientQueryBaseHelper {
 
   @Nullable
   public static Object getQueryExecutor(Object query) {
-    Field field = builderField;
+    Field field = builderFields.get(query.getClass());
     if (field == null) {
       return null;
     }
@@ -86,6 +108,16 @@ public final class VertxSqlClientQueryBaseHelper {
     } catch (Throwable ignored) {
       return null;
     }
+  }
+
+  @Nullable
+  private static Class<?> findClass(Class<?> type, String className) {
+    for (Class<?> current = type; current != null; current = current.getSuperclass()) {
+      if (className.equals(current.getName())) {
+        return current;
+      }
+    }
+    return null;
   }
 
   private VertxSqlClientQueryBaseHelper() {}
