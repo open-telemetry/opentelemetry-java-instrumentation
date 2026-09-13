@@ -10,7 +10,6 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.rpcSchemaUrl;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -80,10 +79,5 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public final String internalGetSchemaUrl() {
     return rpcSchemaUrl();
-  }
-
-  @Override
-  public final String internalGetSchemaUrl(OpenTelemetry openTelemetry) {
-    return rpcSchemaUrl(openTelemetry);
   }
 }

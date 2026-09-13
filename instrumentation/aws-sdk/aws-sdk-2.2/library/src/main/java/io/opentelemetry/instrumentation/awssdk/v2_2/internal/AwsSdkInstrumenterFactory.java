@@ -207,7 +207,7 @@ public final class AwsSdkInstrumenterFactory {
         singletonList(messagingAttributeExtractor),
         builder -> {
           builder.addOperationMetrics(MessagingConsumerMetrics.getForOperationType());
-          builder.setSchemaUrl(messagingSchemaUrl(openTelemetry, true));
+          builder.setSchemaUrl(messagingSchemaUrl(true));
           setMessagingReceiveExceptionEventExtractor(builder);
           if (emitStableMessagingSemconv()) {
             builder.addSpanLinksExtractor(
@@ -238,7 +238,7 @@ public final class AwsSdkInstrumenterFactory {
             .addAttributesExtractor(
                 messagingAttributesExtractor(getter, operationType, PROCESS_OPERATION_NAME))
             .addOperationMetrics(MessagingProcessMetrics.get())
-            .setSchemaUrl(messagingSchemaUrl(openTelemetry, true));
+            .setSchemaUrl(messagingSchemaUrl(true));
     if (!messagingReceiveInstrumentationEnabled && emitStableMessagingSemconv()) {
       builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
     }
@@ -329,7 +329,7 @@ public final class AwsSdkInstrumenterFactory {
         singletonList(messagingAttributeExtractor),
         builder -> {
           builder.addOperationMetrics(MessagingProducerMetrics.getForOperationType());
-          builder.setSchemaUrl(messagingSchemaUrl(openTelemetry, true));
+          builder.setSchemaUrl(messagingSchemaUrl(true));
           setMessagingSendExceptionEventExtractor(builder);
           if (emitStableMessagingSemconv()) {
             builder.addSpanLinksExtractor(
@@ -356,7 +356,7 @@ public final class AwsSdkInstrumenterFactory {
             MessagingSpanNameExtractor.create(getter, operationType, CREATE_OPERATION_NAME))
         .addAttributesExtractor(
             messagingAttributesExtractor(getter, operationType, CREATE_OPERATION_NAME))
-        .setSchemaUrl(messagingSchemaUrl(openTelemetry, true))
+        .setSchemaUrl(messagingSchemaUrl(true))
         .buildInstrumenter(MessagingSpanKindExtractor.create(operationType));
   }
 
@@ -374,7 +374,7 @@ public final class AwsSdkInstrumenterFactory {
         singletonList(messagingAttributeExtractor),
         builder -> {
           builder.addOperationMetrics(MessagingConsumerMetrics.getForOperationType());
-          builder.setSchemaUrl(messagingSchemaUrl(openTelemetry, true));
+          builder.setSchemaUrl(messagingSchemaUrl(true));
           setMessagingSettleExceptionEventExtractor(builder);
         },
         true);
@@ -390,7 +390,7 @@ public final class AwsSdkInstrumenterFactory {
           builder
               .addAttributesExtractor(new DynamoDbAttributesExtractor())
               .addOperationMetrics(DbClientMetrics.get())
-              .setSchemaUrl(databaseSchemaUrl(openTelemetry));
+              .setSchemaUrl(databaseSchemaUrl());
           setDbClientExceptionEventExtractor(builder);
         },
         true);
@@ -411,7 +411,7 @@ public final class AwsSdkInstrumenterFactory {
           builder
               .addAttributesExtractor(SqlClientAttributesExtractor.create(getter))
               .addOperationMetrics(DbClientMetrics.get())
-              .setSchemaUrl(databaseSchemaUrl(openTelemetry));
+              .setSchemaUrl(databaseSchemaUrl());
           setDbClientExceptionEventExtractor(builder);
         },
         true);

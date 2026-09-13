@@ -16,7 +16,6 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.mes
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessageTelemetry.messageTelemetry;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
@@ -84,8 +83,7 @@ class CamelSingletons {
             ? MessagingSpanNameExtractor.create(getter, operationType, operationName)
             : legacySpanNameExtractor;
     InstrumenterBuilder<CamelRequest, Void> builder =
-        instrumenterBuilder(spanNameExtractor)
-            .setSchemaUrl(messagingSchemaUrl(GlobalOpenTelemetry.get(), true));
+        instrumenterBuilder(spanNameExtractor).setSchemaUrl(messagingSchemaUrl(true));
     if (emitStableMessagingSemconv()) {
       AttributesExtractor<CamelRequest, Void> attributesExtractor =
           MessagingAttributesExtractor.create(getter, operationType, operationName);
@@ -214,14 +212,6 @@ class CamelSingletons {
     public String internalGetSchemaUrl() {
       return delegate instanceof SchemaUrlProvider
           ? ((SchemaUrlProvider) delegate).internalGetSchemaUrl()
-          : null;
-    }
-
-    @Nullable
-    @Override
-    public String internalGetSchemaUrl(OpenTelemetry openTelemetry) {
-      return delegate instanceof SchemaUrlProvider
-          ? ((SchemaUrlProvider) delegate).internalGetSchemaUrl(openTelemetry)
           : null;
     }
   }

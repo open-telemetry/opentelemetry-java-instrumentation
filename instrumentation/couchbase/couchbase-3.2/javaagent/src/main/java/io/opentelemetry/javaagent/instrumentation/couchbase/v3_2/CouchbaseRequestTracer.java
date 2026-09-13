@@ -37,7 +37,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
         new CouchbaseTracer(
             openTelemetry
                 .tracerBuilder("com.couchbase.client.jvm")
-                .setSchemaUrl(databaseSchemaUrl(openTelemetry))
+                .setSchemaUrl(databaseSchemaUrl())
                 .build(),
             true,
             clientSpans ? CLIENT : INTERNAL,

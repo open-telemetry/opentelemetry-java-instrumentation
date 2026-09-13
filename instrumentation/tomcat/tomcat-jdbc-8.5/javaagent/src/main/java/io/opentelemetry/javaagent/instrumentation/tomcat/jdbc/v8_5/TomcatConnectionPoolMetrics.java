@@ -106,7 +106,7 @@ public class TomcatConnectionPoolMetrics {
     if (version != null) {
       meterBuilder.setInstrumentationVersion(version);
     }
-    meterBuilder.setSchemaUrl(databaseSchemaUrl(openTelemetry));
+    meterBuilder.setSchemaUrl(databaseSchemaUrl());
     return meterBuilder.build();
   }
 

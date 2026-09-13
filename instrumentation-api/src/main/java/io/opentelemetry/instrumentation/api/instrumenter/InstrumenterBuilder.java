@@ -382,7 +382,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
             .map(SchemaUrlProvider.class::cast)
             .flatMap(
                 provider -> {
-                  String url = provider.internalGetSchemaUrl(openTelemetry);
+                  String url = provider.internalGetSchemaUrl();
                   return url == null ? Stream.of() : Stream.of(url);
                 })
             .collect(toSet());

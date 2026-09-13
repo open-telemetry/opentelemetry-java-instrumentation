@@ -32,7 +32,6 @@ import static java.util.Collections.singleton;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.entry;
 
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -53,7 +52,7 @@ class SqlClientAttributesExtractorTest {
     AttributesExtractor<Map<String, Object>, Void> extractor =
         SqlClientAttributesExtractor.create(new TestAttributesGetter());
 
-    assertThat(((SchemaUrlProvider) extractor).internalGetSchemaUrl(OpenTelemetry.noop()))
+    assertThat(((SchemaUrlProvider) extractor).internalGetSchemaUrl())
         .isEqualTo(emitStableDatabaseSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_24_0);
   }
 

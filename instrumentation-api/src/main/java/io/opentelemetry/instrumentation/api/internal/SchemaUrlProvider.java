@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 
@@ -20,9 +19,4 @@ public interface SchemaUrlProvider {
 
   @Nullable
   String internalGetSchemaUrl();
-
-  @Nullable
-  default String internalGetSchemaUrl(OpenTelemetry openTelemetry) {
-    return internalGetSchemaUrl();
-  }
 }

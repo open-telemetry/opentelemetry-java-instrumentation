@@ -51,7 +51,7 @@ class CouchbaseEnvironmentInstrumentation implements TypeInstrumentation {
           CouchbaseRequestTracer.create(
               openTelemetry
                   .tracerBuilder(instrumentationName)
-                  .setSchemaUrl(databaseSchemaUrl(openTelemetry))
+                  .setSchemaUrl(databaseSchemaUrl())
                   .build(),
               legacyBridge));
     }

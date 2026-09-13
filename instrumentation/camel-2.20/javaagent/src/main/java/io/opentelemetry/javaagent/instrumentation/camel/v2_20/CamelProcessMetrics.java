@@ -14,7 +14,6 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.mes
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessageTelemetry.messageTelemetry;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.Meter;
@@ -43,13 +42,13 @@ class CamelProcessMetrics {
       MessagingProcessMetrics.get().create(meter);
 
   private static Meter createMeter() {
-    OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
-    MeterBuilder meterBuilder = openTelemetry.getMeterProvider().meterBuilder(INSTRUMENTATION_NAME);
+    MeterBuilder meterBuilder =
+        GlobalOpenTelemetry.get().getMeterProvider().meterBuilder(INSTRUMENTATION_NAME);
     String version = EmbeddedInstrumentationProperties.findVersion(INSTRUMENTATION_NAME);
     if (version != null) {
       meterBuilder.setInstrumentationVersion(version);
     }
-    meterBuilder.setSchemaUrl(messagingSchemaUrl(openTelemetry, true));
+    meterBuilder.setSchemaUrl(messagingSchemaUrl(true));
     return meterBuilder.build();
   }
 
