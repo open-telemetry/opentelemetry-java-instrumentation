@@ -286,6 +286,8 @@ expected:
   [testing-experimental-flags.md](testing-experimental-flags.md).
 - Semconv stability (`-Dotel.semconv-stability.opt-in=...`) — see
   [testing-semconv-stability.md](testing-semconv-stability.md).
+- V3 preview (`-Dotel.instrumentation.common.v3-preview=true`) — see
+  [testing-v3-preview.md](testing-v3-preview.md).
 - `testLatestDeps` Gradle property — runs against the newest supported library versions
   instead of the pinned earliest-supported ones.
 

@@ -26,6 +26,7 @@ Load only files relevant to the current scope to reduce noise and avoid over-con
 | `testing-general-patterns.md`      | Test files in scope — assertion style, test method signatures and throws clauses, resource cleanup patterns, abstract test base class state shape, attribute assertion patterns, `satisfies()` lambda usage |
 | `testing-experimental-flags.md`    | `testExperimental` task or experimental span-attribute assertions                                                                                                                                           |
 | `testing-semconv-stability.md`     | Semconv opt-in modes, `emitOld*`/`emitStable*`, `maybeStable`, Semconv test tasks                                                                                                                           |
+| `testing-v3-preview.md`            | `otel.instrumentation.common.v3-preview` behavior, preview test task scope, or equivalent runtime modes                                                                                                     |
 
 ## Naming Conventions
 
