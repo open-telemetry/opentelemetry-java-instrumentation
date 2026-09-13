@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.bootstrap.kafka;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.SPAN;
 
+import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
@@ -45,17 +46,17 @@ public final class KafkaClientsConsumerProcessTracing {
   }
 
   public static Context markFrameworkProcess(Context context) {
-    return context.with(
-        FRAMEWORK_PROCESS_SPAN_KEY, Span.fromContext(context).getSpanContext());
+    return context.with(FRAMEWORK_PROCESS_SPAN_KEY, Span.fromContext(context).getSpanContext());
   }
 
-  public static Context withoutFrameworkProcess(Context context) {
+  public static Context withoutFrameworkProcessSuppression(Context context) {
     SpanContext processSpan = context.get(FRAMEWORK_PROCESS_SPAN_KEY);
     if (processSpan == null || !Span.fromContext(context).getSpanContext().equals(processSpan)) {
       return context;
     }
 
-    return Context.root().with(Span.wrap(processSpan));
+    Context parentContext = Context.root().with(Span.wrap(processSpan));
+    return Baggage.fromContext(context).storeInContext(parentContext);
   }
 
   private KafkaClientsConsumerProcessTracing() {}
