@@ -114,9 +114,9 @@ class JmsSimplifiedApiTest {
     TextMessage sentMessage = session.createTextMessage("hello there");
 
     JMSContext context = connectionFactory.createContext();
-    cleanup.deferCleanup(context::close);
+    cleanup.deferCleanup(context);
     JMSConsumer consumer = context.createConsumer(destination);
-    cleanup.deferCleanup(consumer::close);
+    cleanup.deferCleanup(consumer);
 
     testing.runWithSpan(
         "producer parent", () -> context.createProducer().send(destination, sentMessage));
@@ -147,9 +147,9 @@ class JmsSimplifiedApiTest {
     Destination destination = session.createTopic("someTopic");
 
     JMSContext context = connectionFactory.createContext();
-    cleanup.deferCleanup(context::close);
+    cleanup.deferCleanup(context);
     JMSConsumer consumer = context.createConsumer(destination);
-    cleanup.deferCleanup(consumer::close);
+    cleanup.deferCleanup(consumer);
 
     assertThat(consumer.receive(100)).isNull();
     assertThat(consumer.receiveNoWait()).isNull();
