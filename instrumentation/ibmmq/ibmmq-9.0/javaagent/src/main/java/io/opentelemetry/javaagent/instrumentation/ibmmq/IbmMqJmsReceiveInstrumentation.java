@@ -40,7 +40,7 @@ public class IbmMqJmsReceiveInstrumentation implements TypeInstrumentation {
             .or(named("receiveNoWait"))
             .and(returns(named("javax.jms.Message")))
             .and(isPublic()),
-        this.getClass().getName() + "$ReceiveAdvice");
+        getClass().getName() + "$ReceiveAdvice");
   }
 
   @SuppressWarnings("unused")

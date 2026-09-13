@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.ibmmq;
 
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
@@ -13,11 +14,14 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 // Shared by the javax and jakarta variants; references neither client type. Muzzle collects
 // references per class, and the two MQ client jars are disjoint, so a leaked reference would fail.
 public class IbmMqQmidSupport {
+
+  private static final Logger logger = Logger.getLogger(IbmMqQmidSupport.class.getName());
 
   // Proposed for the OpenTelemetry semantic conventions messaging registry; not yet merged.
   private static final AttributeKey<String> MESSAGING_IBMMQ_QUEUE_MANAGER_ID =
@@ -40,7 +44,7 @@ public class IbmMqQmidSupport {
         span.setAttribute(MESSAGING_IBMMQ_QUEUE_MANAGER_ID, qmid);
       }
     } catch (Throwable t) {
-      // best-effort
+      logger.log(FINE, "Failed to stamp queue manager id on messaging span", t);
     }
   }
 
@@ -56,7 +60,7 @@ public class IbmMqQmidSupport {
         span.setAttribute(MESSAGING_SYSTEM, "ibmmq");
       }
     } catch (Throwable t) {
-      // best-effort
+      logger.log(FINE, "Failed to stamp messaging system on messaging span", t);
     }
   }
 

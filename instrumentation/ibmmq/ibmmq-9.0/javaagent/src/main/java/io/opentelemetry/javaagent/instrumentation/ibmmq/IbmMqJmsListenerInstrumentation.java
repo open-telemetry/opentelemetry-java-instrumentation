@@ -35,7 +35,7 @@ public class IbmMqJmsListenerInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("onMessage").and(takesArgument(0, named("javax.jms.Message"))).and(isPublic()),
-        this.getClass().getName() + "$OnMessageAdvice");
+        getClass().getName() + "$OnMessageAdvice");
   }
 
   @SuppressWarnings("unused")

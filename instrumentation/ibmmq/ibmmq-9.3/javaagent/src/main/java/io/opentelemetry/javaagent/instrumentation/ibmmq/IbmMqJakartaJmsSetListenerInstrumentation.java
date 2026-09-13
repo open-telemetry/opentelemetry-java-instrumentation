@@ -37,7 +37,7 @@ public class IbmMqJakartaJmsSetListenerInstrumentation implements TypeInstrument
         named("setMessageListener")
             .and(takesArgument(0, named("jakarta.jms.MessageListener")))
             .and(isPublic()),
-        this.getClass().getName() + "$SetListenerAdvice");
+        getClass().getName() + "$SetListenerAdvice");
   }
 
   @SuppressWarnings("unused")

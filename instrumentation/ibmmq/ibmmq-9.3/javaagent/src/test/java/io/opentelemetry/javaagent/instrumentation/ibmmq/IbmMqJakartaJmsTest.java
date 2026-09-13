@@ -278,7 +278,7 @@ class IbmMqJakartaJmsTest {
             + seen.stream().map(s -> s.getKind() + "/" + s.getName()).collect(toList()));
   }
 
-  private static final class CountingListener implements MessageListener {
+  private static class CountingListener implements MessageListener {
     private final CountDownLatch latch;
 
     CountingListener(CountDownLatch latch) {

@@ -31,7 +31,7 @@ public class IbmMqJakartaJmsProducerInstrumentation implements TypeInstrumentati
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("send").and(isPublic()), this.getClass().getName() + "$SendAdvice");
+        named("send").and(isPublic()), getClass().getName() + "$SendAdvice");
   }
 
   @SuppressWarnings("unused")
