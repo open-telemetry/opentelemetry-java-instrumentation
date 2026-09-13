@@ -83,7 +83,7 @@ class CamelSingletons {
             ? MessagingSpanNameExtractor.create(getter, operationType, operationName)
             : legacySpanNameExtractor;
     InstrumenterBuilder<CamelRequest, Void> builder =
-        instrumenterBuilder(spanNameExtractor).setSchemaUrl(messagingSchemaUrl(true));
+        instrumenterBuilder(spanNameExtractor).setSchemaUrl(messagingSchemaUrl());
     if (emitStableMessagingSemconv()) {
       AttributesExtractor<CamelRequest, Void> attributesExtractor =
           MessagingAttributesExtractor.create(getter, operationType, operationName);

@@ -9,7 +9,6 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.i
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor.constant;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.messagingSchemaUrl;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
@@ -30,6 +29,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
+import io.opentelemetry.semconv.SchemaUrls;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.hook.ConsumeMessageContext;
 import org.apache.rocketmq.client.hook.SendMessageContext;
@@ -111,7 +111,7 @@ class RocketMqInstrumenterFactory {
                 openTelemetry, INSTRUMENTATION_NAME, request -> "multiple_sources receive")
             .addAttributesExtractor(constant(MESSAGING_SYSTEM, "rocketmq"))
             .addAttributesExtractor(constant(MESSAGING_OPERATION, "receive"))
-            .setSchemaUrl(messagingSchemaUrl(false))
+            .setSchemaUrl(SchemaUrls.V1_24_0)
             .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
 
     return new RocketMqConsumerInstrumenter(

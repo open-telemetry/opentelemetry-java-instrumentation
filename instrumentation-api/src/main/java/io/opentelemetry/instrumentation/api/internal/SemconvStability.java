@@ -189,10 +189,8 @@ public final class SemconvStability {
     return emitStableMessagingSemconv;
   }
 
-  public static String messagingSchemaUrl(boolean supportsStableSemconv) {
-    return supportsStableSemconv && emitStableMessagingSemconv
-        ? SchemaUrls.V1_43_0
-        : SchemaUrls.V1_24_0;
+  public static String messagingSchemaUrl() {
+    return emitStableMessagingSemconv ? SchemaUrls.V1_43_0 : SchemaUrls.V1_24_0;
   }
 
   private SemconvStability() {}

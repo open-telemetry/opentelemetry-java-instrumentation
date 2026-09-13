@@ -207,7 +207,7 @@ public final class AwsSdkInstrumenterFactory {
         singletonList(messagingAttributeExtractor),
         builder -> {
           builder.addOperationMetrics(MessagingConsumerMetrics.getForOperationType());
-          builder.setSchemaUrl(messagingSchemaUrl(true));
+          builder.setSchemaUrl(messagingSchemaUrl());
           setMessagingReceiveExceptionEventExtractor(builder);
           if (emitStableMessagingSemconv()) {
             builder.addSpanLinksExtractor(
@@ -238,7 +238,7 @@ public final class AwsSdkInstrumenterFactory {
             .addAttributesExtractor(
                 messagingAttributesExtractor(getter, operationType, PROCESS_OPERATION_NAME))
             .addOperationMetrics(MessagingProcessMetrics.get())
-            .setSchemaUrl(messagingSchemaUrl(true));
+            .setSchemaUrl(messagingSchemaUrl());
     if (!messagingReceiveInstrumentationEnabled && emitStableMessagingSemconv()) {
       builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
     }
@@ -329,7 +329,7 @@ public final class AwsSdkInstrumenterFactory {
         singletonList(messagingAttributeExtractor),
         builder -> {
           builder.addOperationMetrics(MessagingProducerMetrics.getForOperationType());
-          builder.setSchemaUrl(messagingSchemaUrl(true));
+          builder.setSchemaUrl(messagingSchemaUrl());
           setMessagingSendExceptionEventExtractor(builder);
           if (emitStableMessagingSemconv()) {
             builder.addSpanLinksExtractor(
@@ -356,7 +356,7 @@ public final class AwsSdkInstrumenterFactory {
             MessagingSpanNameExtractor.create(getter, operationType, CREATE_OPERATION_NAME))
         .addAttributesExtractor(
             messagingAttributesExtractor(getter, operationType, CREATE_OPERATION_NAME))
-        .setSchemaUrl(messagingSchemaUrl(true))
+        .setSchemaUrl(messagingSchemaUrl())
         .buildInstrumenter(MessagingSpanKindExtractor.create(operationType));
   }
 
@@ -374,7 +374,7 @@ public final class AwsSdkInstrumenterFactory {
         singletonList(messagingAttributeExtractor),
         builder -> {
           builder.addOperationMetrics(MessagingConsumerMetrics.getForOperationType());
-          builder.setSchemaUrl(messagingSchemaUrl(true));
+          builder.setSchemaUrl(messagingSchemaUrl());
           setMessagingSettleExceptionEventExtractor(builder);
         },
         true);

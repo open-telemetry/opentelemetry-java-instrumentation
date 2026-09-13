@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -290,6 +291,6 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   public String internalGetSchemaUrl() {
-    return messagingSchemaUrl(supportsStableSemconv);
+    return supportsStableSemconv ? messagingSchemaUrl() : SchemaUrls.V1_24_0;
   }
 }

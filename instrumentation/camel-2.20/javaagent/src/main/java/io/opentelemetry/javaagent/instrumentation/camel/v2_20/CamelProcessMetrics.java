@@ -48,7 +48,7 @@ class CamelProcessMetrics {
     if (version != null) {
       meterBuilder.setInstrumentationVersion(version);
     }
-    meterBuilder.setSchemaUrl(messagingSchemaUrl(true));
+    meterBuilder.setSchemaUrl(messagingSchemaUrl());
     return meterBuilder.build();
   }
 
