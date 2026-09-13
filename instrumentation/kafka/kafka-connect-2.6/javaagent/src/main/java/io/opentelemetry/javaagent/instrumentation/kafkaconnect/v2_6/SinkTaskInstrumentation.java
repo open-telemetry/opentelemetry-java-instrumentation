@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.markFrameworkProcess;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6.KafkaConnectSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
@@ -75,6 +76,7 @@ class SinkTaskInstrumentation implements TypeInstrumentation {
         }
 
         Context context = instrumenter().start(parentContext, task);
+        context = markFrameworkProcess(context, parentContext);
         return new AdviceScope(task, context, context.makeCurrent());
       }
 
