@@ -59,6 +59,7 @@ class GrpcDeadlinePropagationTest {
   }
 
   @Test
+  @SuppressWarnings("PreferJavaTimeOverload") // long/TimeUnit overload is all grpc 1.6.0 has
   void deadlinePropagationAcrossExecutorHopMatchesConfiguredFlag() throws Exception {
     hopExecutor = Executors.newSingleThreadExecutor();
 
