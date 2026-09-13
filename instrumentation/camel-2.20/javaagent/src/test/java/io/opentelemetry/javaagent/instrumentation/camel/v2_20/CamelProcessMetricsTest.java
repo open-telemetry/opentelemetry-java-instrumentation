@@ -66,7 +66,7 @@ class CamelProcessMetricsTest {
     Route route = mock(Route.class);
     when(route.getEndpoint()).thenReturn(endpoint);
 
-    JmsMessage camelMessage = new JmsMessage(mock(Message.class), mock(JmsBinding.class));
+    JmsMessage camelMessage = new JmsMessage(mock(Message.class), null, mock(JmsBinding.class));
     exchange.setIn(camelMessage);
     Class<?> messageTelemetryClass = camelHelperClass("CamelMessageTelemetry");
     Object deliveryState =
