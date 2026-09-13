@@ -364,6 +364,9 @@ unit tests, and metadata collection should not run there.
 
 When already present, verify:
 
+- Every test task that participates in metadata collection is listed in the
+  [metadata task inventory](../../scripts/instrumentations.sh). Setting `collectMetadata` or
+  `metadataConfig` does not cause metadata CI to discover a task automatically.
 - `metadataConfig` is only used in files that also configure `collectMetadata`. A lone
   `metadataConfig` does not enable collection and should be removed, not added as a partial
   metadata migration.
