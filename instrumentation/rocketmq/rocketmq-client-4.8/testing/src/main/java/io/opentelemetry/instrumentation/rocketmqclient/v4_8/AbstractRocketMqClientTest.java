@@ -37,6 +37,7 @@ import io.opentelemetry.instrumentation.rocketmqclient.v4_8.base.BaseConf;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -330,6 +331,16 @@ abstract class AbstractRocketMqClientTest {
       if (failConsumption) {
         tracingMessageListener.failNextMessage();
       }
+      if (emitStableMessagingSemconv()) {
+        for (Message message : msgs) {
+          testing()
+              .getOpenTelemetry()
+              .getPropagators()
+              .getTextMapPropagator()
+              .fields()
+              .forEach(message.getProperties()::remove);
+        }
+      }
 
       testing().runWithSpan("parent", () -> producer.send(msgs));
 
@@ -346,10 +357,14 @@ abstract class AbstractRocketMqClientTest {
     }
 
     AtomicReference<SpanContext> producerSpanContext = new AtomicReference<>();
+    List<SpanContext> messageCreationContexts = new ArrayList<>();
     testing()
         .waitAndAssertTraces(
             trace -> {
-              SpanContext spanContext = trace.getSpan(1).getSpanContext();
+              messageCreationContexts.clear();
+              int size = emitStableMessagingSemconv() ? 4 : 2;
+              trace.hasSize(size);
+              SpanContext spanContext = spanNamed(trace, size, producerSpanName()).getSpanContext();
               producerSpanContext.set(
                   SpanContext.createFromRemoteParent(
                       spanContext.getTraceId(),
@@ -357,11 +372,39 @@ abstract class AbstractRocketMqClientTest {
                       spanContext.getTraceFlags(),
                       spanContext.getTraceState()));
 
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+              List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
+              assertions.add(span -> span.hasName("parent").hasKind(SpanKind.INTERNAL));
+              if (emitStableMessagingSemconv()) {
+                for (SpanData creationSpan : spansNamed(trace, size, "create " + sharedTopic)) {
+                  SpanContext creationContext = creationSpan.getSpanContext();
+                  messageCreationContexts.add(
+                      SpanContext.createFromRemoteParent(
+                          creationContext.getTraceId(),
+                          creationContext.getSpanId(),
+                          creationContext.getTraceFlags(),
+                          creationContext.getTraceState()));
+                  assertions.add(
+                      span ->
+                          span.hasName("create " + sharedTopic)
+                              .hasKind(SpanKind.PRODUCER)
+                              .hasParent(trace.getSpan(0))
+                              .hasAttributesSatisfyingExactly(
+                                  equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                  equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
+                                  namespace(),
+                                  oldOperation("create"),
+                                  operationName("create"),
+                                  operationType("create"),
+                                  satisfies(
+                                      MESSAGING_MESSAGE_ID,
+                                      val -> val.isInstanceOf(String.class))));
+                }
+              }
+              assertions.add(
                   span ->
                       span.hasName(producerSpanName())
-                          .hasKind(SpanKind.PRODUCER)
+                          .hasKind(
+                              emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.PRODUCER)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
                               equalTo(MESSAGING_SYSTEM, "rocketmq"),
@@ -383,6 +426,7 @@ abstract class AbstractRocketMqClientTest {
                               equalTo(
                                   stringKey("messaging.rocketmq.send_result"),
                                   experimental("SEND_OK"))));
+              trace.hasSpansSatisfyingExactlyInAnyOrder(assertions);
             },
             trace -> {
               List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
@@ -412,7 +456,7 @@ abstract class AbstractRocketMqClientTest {
                                   failConsumption ? ConsumeReturnType.FAILED.name() : null));
                       // one link per message the span accounts for
                       span.hasLinksSatisfying(
-                          links(producerSpanContext.get(), producerSpanContext.get()));
+                          links(messageCreationContexts.toArray(new SpanContext[0])));
                     });
               } else {
                 assertions.add(
@@ -612,6 +656,23 @@ abstract class AbstractRocketMqClientTest {
                         span.hasName("messageListener")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(2))));
+  }
+
+  private static SpanData spanNamed(TraceAssert trace, int size, String name) {
+    List<SpanData> spans = spansNamed(trace, size, name);
+    assertThat(spans).hasSize(1);
+    return spans.get(0);
+  }
+
+  private static List<SpanData> spansNamed(TraceAssert trace, int size, String name) {
+    List<SpanData> spans = new ArrayList<>();
+    for (int i = 0; i < size; i++) {
+      SpanData span = trace.getSpan(i);
+      if (name.equals(span.getName())) {
+        spans.add(span);
+      }
+    }
+    return spans;
   }
 
   private static Consumer<List<? extends LinkData>> links(SpanContext... spanContexts) {

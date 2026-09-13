@@ -18,6 +18,7 @@ public final class RocketMqTelemetryBuilder {
 
   private IncludeExclude headers = IncludeExclude.builder().build();
   private boolean captureExperimentalSpanAttributes;
+  private boolean batchSendMessageCreationSpansEnabled = true;
 
   RocketMqTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -32,6 +33,19 @@ public final class RocketMqTelemetryBuilder {
   public RocketMqTelemetryBuilder setCaptureExperimentalSpanAttributes(
       boolean captureExperimentalSpanAttributes) {
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+    return this;
+  }
+
+  /**
+   * Sets whether to create a span for each message without an existing creation context in a batch
+   * send. Enabled by default. Only applies when the stable messaging semantic conventions are
+   * enabled. Disabling this leaves send spans and context propagation enabled and does not affect
+   * single-message sends.
+   */
+  @CanIgnoreReturnValue
+  public RocketMqTelemetryBuilder setBatchSendMessageCreationSpansEnabled(
+      boolean batchSendMessageCreationSpansEnabled) {
+    this.batchSendMessageCreationSpansEnabled = batchSendMessageCreationSpansEnabled;
     return this;
   }
 
@@ -79,6 +93,10 @@ public final class RocketMqTelemetryBuilder {
    * RocketMqTelemetryBuilder}.
    */
   public RocketMqTelemetry build() {
-    return new RocketMqTelemetry(openTelemetry, headers, captureExperimentalSpanAttributes);
+    return new RocketMqTelemetry(
+        openTelemetry,
+        headers,
+        captureExperimentalSpanAttributes,
+        batchSendMessageCreationSpansEnabled);
   }
 }

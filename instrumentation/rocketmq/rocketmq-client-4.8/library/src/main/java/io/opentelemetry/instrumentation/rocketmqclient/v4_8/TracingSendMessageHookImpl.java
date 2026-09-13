@@ -5,22 +5,42 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static java.util.Collections.emptyList;
+
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+import javax.annotation.Nullable;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 import org.apache.rocketmq.client.hook.SendMessageHook;
 import org.apache.rocketmq.client.impl.CommunicationMode;
+import org.apache.rocketmq.common.message.Message;
 
 final class TracingSendMessageHookImpl implements SendMessageHook {
 
   private static final VirtualField<SendMessageContext, Context> CONTEXT_FIELD =
       VirtualField.find(SendMessageContext.class, Context.class);
 
-  private final Instrumenter<SendMessageContext, Void> instrumenter;
+  @Nullable private static final Method batchEncoder = findBatchEncoder();
 
-  TracingSendMessageHookImpl(Instrumenter<SendMessageContext, Void> instrumenter) {
+  private final Instrumenter<SendMessageContext, Void> instrumenter;
+  private final Instrumenter<SendMessageContext, Void> messageCreateInstrumenter;
+  private final TextMapPropagator propagator;
+  private final MessageExtractAdapter getter = new MessageExtractAdapter();
+
+  TracingSendMessageHookImpl(
+      Instrumenter<SendMessageContext, Void> instrumenter,
+      Instrumenter<SendMessageContext, Void> messageCreateInstrumenter,
+      TextMapPropagator propagator) {
     this.instrumenter = instrumenter;
+    this.messageCreateInstrumenter = messageCreateInstrumenter;
+    this.propagator = propagator;
   }
 
   @Override
@@ -34,10 +54,70 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
       return;
     }
     Context parentContext = Context.current();
+    Message batch =
+        emitStableMessagingSemconv() && RocketMqMessageUtil.isBatch(context.getMessage())
+            ? context.getMessage()
+            : null;
+    List<Message> messagesWithoutCreationContext = emptyList();
+    boolean batchNeedsEncoding = false;
+    if (batch != null) {
+      List<Context> creationContexts = new ArrayList<>();
+      messagesWithoutCreationContext = new ArrayList<>();
+      Context propagationContext = parentContext.with(Span.getInvalid());
+      for (Object item : (Iterable<?>) batch) {
+        Message message = (Message) item;
+        Context creationContext = propagator.extract(propagationContext, message, getter);
+        boolean hasCreationContext = Span.fromContext(creationContext).getSpanContext().isValid();
+        if (!hasCreationContext) {
+          SendMessageContext request =
+              new MessageCreateContext(message, RocketMqNamespaceUtil.getNamespace(context));
+          if (messageCreateInstrumenter.shouldStart(parentContext, request)) {
+            Context createdContext = messageCreateInstrumenter.start(parentContext, request);
+            messageCreateInstrumenter.end(createdContext, request, null, null);
+            creationContext = creationContext.with(Span.fromContext(createdContext));
+            hasCreationContext = Span.fromContext(creationContext).getSpanContext().isValid();
+            if (hasCreationContext) {
+              propagator.inject(
+                  creationContext,
+                  message,
+                  (carrier, key, value) -> carrier.getProperties().put(key, value));
+              batchNeedsEncoding = true;
+            }
+          }
+        }
+        if (!hasCreationContext) {
+          messagesWithoutCreationContext.add(message);
+        }
+        creationContexts.add(creationContext);
+      }
+      RocketMqBatchSendSpanLinksExtractor.setContexts(context, creationContexts);
+    }
     if (!instrumenter.shouldStart(parentContext, context)) {
+      if (batch != null && batchNeedsEncoding) {
+        try {
+          encodeBatch(batch);
+        } catch (ReflectiveOperationException ignored) {
+          // The original body remains valid when re-encoding fails.
+        }
+      }
+      RocketMqBatchSendSpanLinksExtractor.clearContexts(context);
       return;
     }
-    CONTEXT_FIELD.set(context, instrumenter.start(parentContext, context));
+    Context sendContext = instrumenter.start(parentContext, context);
+    CONTEXT_FIELD.set(context, sendContext);
+    if (batch != null) {
+      for (Message message : messagesWithoutCreationContext) {
+        propagator.inject(
+            sendContext, message, (carrier, key, value) -> carrier.getProperties().put(key, value));
+      }
+      try {
+        encodeBatch(batch);
+      } catch (ReflectiveOperationException e) {
+        instrumenter.end(sendContext, context, null, e);
+        CONTEXT_FIELD.set(context, null);
+        RocketMqBatchSendSpanLinksExtractor.clearContexts(context);
+      }
+    }
   }
 
   @Override
@@ -51,6 +131,49 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
             || context.getException() != null
             || CommunicationMode.ONEWAY == context.getCommunicationMode())) {
       instrumenter.end(otelContext, context, null, context.getException());
+      CONTEXT_FIELD.set(context, null);
+      RocketMqBatchSendSpanLinksExtractor.clearContexts(context);
+    }
+  }
+
+  private void encodeBatch(Message batch) throws ReflectiveOperationException {
+    if (batchEncoder == null) {
+      throw new NoSuchMethodException("MessageBatch.encode()");
+    }
+    // DefaultMQProducer encodes batches before invoking the send hook.
+    byte[] body = (byte[]) batchEncoder.invoke(batch);
+    // The broker appends batch-level properties after per-message properties, so propagation
+    // headers on the envelope would overwrite the individual creation contexts.
+    propagator.fields().forEach(batch.getProperties()::remove);
+    batch.setBody(body);
+  }
+
+  @Nullable
+  private static Method findBatchEncoder() {
+    try {
+      Class<?> messageBatchClass =
+          Class.forName(
+              "org.apache.rocketmq.common.message.MessageBatch",
+              false,
+              TracingSendMessageHookImpl.class.getClassLoader());
+      return messageBatchClass.getMethod("encode");
+    } catch (ReflectiveOperationException | LinkageError | SecurityException ignored) {
+      return null;
+    }
+  }
+
+  static final class MessageCreateContext extends SendMessageContext {
+    @Nullable private final String namespace;
+
+    MessageCreateContext(Message message, @Nullable String namespace) {
+      setMessage(message);
+      this.namespace = namespace;
+    }
+
+    @Nullable
+    @Override
+    public String getNamespace() {
+      return namespace;
     }
   }
 }

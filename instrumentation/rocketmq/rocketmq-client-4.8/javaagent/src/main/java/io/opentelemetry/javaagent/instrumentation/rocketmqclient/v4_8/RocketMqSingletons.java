@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v4_8;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingConfig;
 import io.opentelemetry.instrumentation.rocketmqclient.v4_8.RocketMqTelemetry;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import org.apache.rocketmq.client.hook.ConsumeMessageHook;
@@ -21,6 +22,9 @@ public class RocketMqSingletons {
               DeclarativeConfigUtil.getInstrumentationConfig(
                       GlobalOpenTelemetry.get(), "rocketmq_client")
                   .getBoolean("experimental_span_attributes/development", false))
+          .setBatchSendMessageCreationSpansEnabled(
+              MessagingConfig.isBatchSendMessageCreationSpansEnabled(
+                  GlobalOpenTelemetry.get(), "rocketmq_client"))
           .build();
 
   private static final ConsumeMessageHook consumeMessageHook = telemetry.createConsumeMessageHook();
