@@ -14,6 +14,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -39,7 +40,11 @@ public abstract class AbstractBatchRecordsNoReceiveTelemetryVertxKafkaTest
     // in Vertx, a batch handler is something that runs in addition to the regular single record
     // handler -- the KafkaConsumer won't start polling unless you set the regular handler
     kafkaConsumer.batchHandler(BatchRecordsHandler.INSTANCE);
-    kafkaConsumer.handler(record -> testing().runWithSpan("process " + record.value(), () -> {}));
+    kafkaConsumer.handler(
+        record -> {
+          assertThat(KafkaClientsConsumerProcessTracing.isWrappingEnabled()).isTrue();
+          testing().runWithSpan("process " + record.value(), () -> {});
+        });
 
     kafkaConsumer.partitionsAssignedHandler(partitions -> consumerReady.countDown());
     subscribe("testBatchTopic");
