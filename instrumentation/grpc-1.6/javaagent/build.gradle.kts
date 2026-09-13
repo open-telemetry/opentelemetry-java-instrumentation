@@ -37,6 +37,17 @@ tasks {
     jvmArgs("-Dotel.instrumentation.grpc.experimental-span-attributes=true")
   }
 
+  val testPropagateGrpcDeadline = register<Test>("testPropagateGrpcDeadline") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("GrpcDeadlinePropagationTest")
+    }
+    systemProperty("metadataConfig", "otel.instrumentation.grpc.propagate-grpc-deadline=true")
+    jvmArgs("-Dotel.instrumentation.grpc.propagate-grpc-deadline=true")
+  }
+
   val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -84,7 +95,13 @@ tasks {
   }
 
   check {
-    dependsOn(testExperimental, testStableSemconv, testBothSemconv, testExceptionSignalLogs)
+    dependsOn(
+      testExperimental,
+      testPropagateGrpcDeadline,
+      testStableSemconv,
+      testBothSemconv,
+      testExceptionSignalLogs,
+    )
   }
 }
 
