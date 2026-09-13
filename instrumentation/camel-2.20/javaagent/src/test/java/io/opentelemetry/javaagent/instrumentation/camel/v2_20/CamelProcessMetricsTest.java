@@ -26,6 +26,8 @@ import javax.jms.Message;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.Route;
+import org.apache.camel.component.jms.JmsBinding;
+import org.apache.camel.component.jms.JmsMessage;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.DefaultExchange;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,6 +59,7 @@ class CamelProcessMetricsTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation")
   void explicitSuppressionDoesNotRecordFallbackMetrics() throws ReflectiveOperationException {
     Exchange exchange = new DefaultExchange(new DefaultCamelContext());
     Endpoint endpoint = mock(Endpoint.class);
@@ -64,14 +67,8 @@ class CamelProcessMetricsTest {
     Route route = mock(Route.class);
     when(route.getEndpoint()).thenReturn(endpoint);
 
-    Class<?> adviceClass =
-        camelHelperClass("JmsMessageInstrumentation$StoreReceiveTelemetryAdvice");
-    invokeStatic(
-        adviceClass,
-        "onExit",
-        new Class<?>[] {org.apache.camel.Message.class, Message.class},
-        exchange.getIn(),
-        mock(Message.class));
+    JmsMessage camelMessage = new JmsMessage(mock(Message.class), mock(JmsBinding.class));
+    exchange.setIn(camelMessage);
     Class<?> messageTelemetryClass = camelHelperClass("CamelMessageTelemetry");
     Object deliveryState =
         invokeStatic(
