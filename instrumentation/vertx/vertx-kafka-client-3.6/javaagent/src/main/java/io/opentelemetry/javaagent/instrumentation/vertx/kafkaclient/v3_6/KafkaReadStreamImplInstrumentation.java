@@ -5,9 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.kafkaclient.v3_6;
 
-import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanSuppression;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
+import static net.bytebuddy.matcher.ElementMatchers.isSynthetic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -43,7 +44,13 @@ class KafkaReadStreamImplInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("io.vertx.core.Handler"))),
         getClass().getName() + "$BatchHandlerAdvice");
     transformer.applyAdviceToMethod(
-        named("run").and(isPrivate()), getClass().getName() + "$RunAdvice");
+        nameStartsWith("lambda$run$")
+            .and(isPrivate())
+            .and(isSynthetic())
+            .and(
+                takesArgument(0, named("org.apache.kafka.clients.consumer.ConsumerRecords"))
+                    .or(takesArgument(2, named("org.apache.kafka.clients.consumer.ConsumerRecords")))),
+        getClass().getName() + "$DispatchAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -78,19 +85,16 @@ class KafkaReadStreamImplInstrumentation implements TypeInstrumentation {
     }
   }
 
-  // this advice suppresses the CONSUMER spans created by the kafka-clients instrumentation
   @SuppressWarnings("unused")
-  public static class RunAdvice {
+  public static class DispatchAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static boolean onEnter() {
-      return processSpanSuppression().tryAcquire();
-    }
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter boolean suppressionAcquired) {
-      if (suppressionAcquired) {
-        processSpanSuppression().release();
+    public static void onEnter(@Advice.AllArguments Object[] arguments) {
+      for (Object argument : arguments) {
+        if (argument instanceof ConsumerRecords) {
+          VertxKafkaBatchState.claimProcessSpan((ConsumerRecords<?, ?>) argument);
+          return;
+        }
       }
     }
   }
