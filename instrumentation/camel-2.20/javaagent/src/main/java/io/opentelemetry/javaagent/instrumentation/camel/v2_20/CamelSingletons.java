@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.M
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.add;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.enable;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.databaseSchemaUrl;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.messagingSchemaUrl;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessageTelemetry.messageTelemetry;
@@ -45,6 +46,8 @@ class CamelSingletons {
 
   private static final DecoratorRegistry registry = new DecoratorRegistry();
   private static final Instrumenter<CamelRequest, Void> instrumenter = createInstrumenter();
+  private static final Instrumenter<CamelRequest, Void> databaseInstrumenter =
+      createInstrumenter(databaseSchemaUrl());
   private static final Instrumenter<CamelRequest, Void> messagingSendInstrumenter =
       createMessagingInstrumenter(SEND, "send", true);
   private static final Instrumenter<CamelRequest, Void> messagingPublishInstrumenter =
@@ -57,6 +60,10 @@ class CamelSingletons {
       createMessagingInstrumenter(PROCESS, "process", true);
 
   private static Instrumenter<CamelRequest, Void> createInstrumenter() {
+    return createInstrumenter(null);
+  }
+
+  private static Instrumenter<CamelRequest, Void> createInstrumenter(@Nullable String schemaUrl) {
     SpanNameExtractor<CamelRequest> spanNameExtractor =
         camelRequest ->
             camelRequest
@@ -66,7 +73,11 @@ class CamelSingletons {
                     camelRequest.getEndpoint(),
                     camelRequest.getCamelDirection());
 
-    return instrumenterBuilder(spanNameExtractor).buildInstrumenter(CamelRequest::getSpanKind);
+    InstrumenterBuilder<CamelRequest, Void> builder = instrumenterBuilder(spanNameExtractor);
+    if (schemaUrl != null) {
+      builder.setSchemaUrl(schemaUrl);
+    }
+    return builder.buildInstrumenter(CamelRequest::getSpanKind);
   }
 
   private static Instrumenter<CamelRequest, Void> createMessagingInstrumenter(
@@ -144,6 +155,9 @@ class CamelSingletons {
             : messagingSendInstrumenter;
       }
       return messagingProcessInstrumenter;
+    }
+    if (request.isDatabase()) {
+      return databaseInstrumenter;
     }
     return instrumenter;
   }
