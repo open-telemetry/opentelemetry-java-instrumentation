@@ -32,31 +32,7 @@ for libraries where library instrumentation is not possible, such as `URLConnect
 intercept even the JDK's classes. Such libraries will not have library instrumentation but will have
 agent instrumentation.
 
-## What instrumentation is enabled by default
-
-The repository generally accepts Java agent instrumentation as enabled by default when it produces
-one of these established forms of telemetry:
-
-- HTTP client or server spans and metrics, including route-only enrichment
-- RPC client or server spans and metrics
-- Messaging spans
-- Database client spans and metrics, database pool metrics, and Elasticsearch client telemetry
-- JVM runtime and system metrics
-- GraphQL server spans
-- FaaS server spans
-- GenAI client spans and metrics
-- Code attributes for function or method spans
-- Resource attributes from resource detectors
-
-The repository also accepts context propagation, scheduled and batch job execution, and logging
-appenders or bridges, including MDC or equivalent trace correlation.
-
-Other useful instrumentation may be considered based on its maintenance cost, signal quality,
-cardinality, overlap with existing instrumentation, and value to users. New Java agent telemetry
-outside the areas above should normally be disabled by default.
-
-Standalone library instrumentation requires users to initialize it explicitly, so Java agent
-default enablement does not govern it.
+Before proposing new instrumentation, review the repository's [instrumentation scope](../scope.md).
 
 ## Folder Structure
 
