@@ -6,9 +6,14 @@
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessageTelemetry.getJmsDeliveryState;
+import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessageTelemetry.messageTelemetry;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.javaagent.bootstrap.jms.JmsMessageDeliveryState;
 import io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators.MessagingSpanDecorator;
 import javax.annotation.Nullable;
 import org.apache.camel.Endpoint;
@@ -29,6 +34,7 @@ abstract class CamelRequest {
     String messagingSendOperationName = null;
     boolean messagingDestinationTemporary = false;
     boolean messagingSpanContextPropagated = false;
+    boolean recordConsumedMessages = false;
     if (spanDecorator instanceof MessagingSpanDecorator) {
       MessagingSpanDecorator messagingSpanDecorator = (MessagingSpanDecorator) spanDecorator;
       messagingSystem = messagingSpanDecorator.getSystem();
@@ -44,6 +50,14 @@ abstract class CamelRequest {
       }
       messagingSendOperationName = messagingSpanDecorator.getSendOperationName();
       messagingSpanContextPropagated = messagingSpanDecorator.isSpanContextPropagated(endpoint);
+      if (emitStableMessagingSemconv() && camelDirection == CamelDirection.INBOUND) {
+        JmsMessageDeliveryState jmsDeliveryState = getJmsDeliveryState(exchange.getIn());
+        recordConsumedMessages =
+            jmsDeliveryState != null
+                ? jmsDeliveryState.claimConsumedMessages()
+                : !messageTelemetry()
+                    .contains(exchange.getIn(), RECEIVE, CONSUMED_MESSAGES);
+      }
     }
     return new AutoValue_CamelRequest(
         spanDecorator,
@@ -56,7 +70,8 @@ abstract class CamelRequest {
         messagingDestinationPartitionId,
         messagingSendOperationName,
         messagingDestinationTemporary,
-        messagingSpanContextPropagated);
+        messagingSpanContextPropagated,
+        recordConsumedMessages);
   }
 
   @Nullable
@@ -123,4 +138,6 @@ abstract class CamelRequest {
   abstract boolean isMessagingDestinationTemporary();
 
   abstract boolean isMessagingSpanContextPropagated();
+
+  abstract boolean shouldRecordConsumedMessages();
 }

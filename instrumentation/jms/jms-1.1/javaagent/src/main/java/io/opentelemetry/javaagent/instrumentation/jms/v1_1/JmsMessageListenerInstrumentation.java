@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jms.v1_1;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.instrumentation.jms.v1_1.JmsSingletons.consumerProcessInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -17,6 +18,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageAdapter;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageWithDestination;
 import javax.annotation.Nullable;
 import javax.jms.Message;
@@ -72,14 +74,20 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
       public static AdviceScope start(MessageListener messageListener, Message message) {
         Message messageWithListenerSubscriptionName =
             attachListenerSubscriptionName(messageListener, message);
+        MessageAdapter messageAdapter = JavaxMessageAdapter.create(message);
         MessageWithDestination messageWithDestination =
             MessageWithDestination.create(
-                JavaxMessageAdapter.create(message), null, JmsSubscriptionNames.get(message));
+                messageAdapter, null, JmsSubscriptionNames.get(message));
 
         Context parentContext = Context.current();
+        if (!emitStableMessagingSemconv()) {
+          Context receiveContext = messageAdapter.getReceiveContext();
+          if (receiveContext != null) {
+            parentContext = receiveContext;
+          }
+        }
         Instrumenter<MessageWithDestination, Void> instrumenter =
-            consumerProcessInstrumenter(
-                messageWithDestination.message().wereConsumedMessagesRecorded());
+            consumerProcessInstrumenter(!messageAdapter.claimConsumedMessages());
         if (!instrumenter.shouldStart(parentContext, messageWithDestination)) {
           // an advice scope is still needed, to clear the listener's subscription name on exit
           return new AdviceScope(

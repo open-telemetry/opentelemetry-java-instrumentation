@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms.common.v1_1;
 
+import io.opentelemetry.context.Context;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -29,12 +30,16 @@ public interface MessageAdapter {
   @Nullable
   String getJmsMessageId() throws Exception;
 
-  /** Tells whether the consumed messages metric was already recorded for this message. */
-  boolean wereConsumedMessagesRecorded();
+  /** Clears stale receive state before recording a new delivery of this physical message. */
+  void prepareForReceive();
 
-  /** Remembers that a receive span was recorded for this message. */
-  void markReceiveSpanRecorded();
+  /** Attaches the context created for the receive operation to this message. */
+  void setReceiveContext(Context context);
 
-  /** Remembers that the consumed messages metric was recorded for this message. */
-  void markConsumedMessagesRecorded();
+  /** Returns the context created for this message's receive operation, if there was one. */
+  @Nullable
+  Context getReceiveContext();
+
+  /** Claims responsibility for recording the consumed messages metric for this delivery. */
+  boolean claimConsumedMessages();
 }

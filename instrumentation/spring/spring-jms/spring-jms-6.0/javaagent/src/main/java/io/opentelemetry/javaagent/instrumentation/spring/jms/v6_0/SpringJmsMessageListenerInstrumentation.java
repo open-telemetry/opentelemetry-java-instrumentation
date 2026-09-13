@@ -17,9 +17,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveContextHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageAdapter;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageWithDestination;
 import io.opentelemetry.javaagent.instrumentation.jms.v3_0.JakartaMessageAdapter;
 import io.opentelemetry.javaagent.instrumentation.jms.v3_0.JmsSubscriptionNames;
@@ -75,18 +75,19 @@ class SpringJmsMessageListenerInstrumentation implements TypeInstrumentation {
       @Nullable
       public static AdviceScope start(Message message) {
         Context parentContext = Context.current();
+        MessageAdapter messageAdapter = JakartaMessageAdapter.create(message);
         if (!emitStableMessagingSemconv()) {
-          Context receiveContext = JmsReceiveContextHolder.getReceiveContext(parentContext);
+          Context receiveContext = messageAdapter.getReceiveContext();
           if (receiveContext != null) {
             parentContext = receiveContext;
           }
         }
         MessageWithDestination request =
             MessageWithDestination.create(
-                JakartaMessageAdapter.create(message), null, JmsSubscriptionNames.get(message));
+                messageAdapter, null, JmsSubscriptionNames.get(message));
 
         Instrumenter<MessageWithDestination, Void> instrumenter =
-            listenerInstrumenter(request.message().wereConsumedMessagesRecorded());
+            listenerInstrumenter(!messageAdapter.claimConsumedMessages());
         if (!instrumenter.shouldStart(parentContext, request)) {
           return null;
         }

@@ -32,7 +32,6 @@ public class SpringJmsInstrumentationModule extends InstrumentationModule {
     return asList(
         new SpringJmsMessageListenerInstrumentation(),
         new SpringJmsSubscriptionNameInstrumentation(),
-        new JmsDestinationAccessorInstrumentation(),
-        new AbstractPollingMessageListenerContainerInstrumentation());
+        new JmsDestinationAccessorInstrumentation());
   }
 }

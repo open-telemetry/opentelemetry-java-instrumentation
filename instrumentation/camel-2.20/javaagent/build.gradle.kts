@@ -24,6 +24,7 @@ dependencies {
   implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
 
   bootstrap(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
+  bootstrap(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
 
   // without adding this dependency, javadoc fails:
   //   warning: unknown enum constant XmlAccessType.PROPERTY
