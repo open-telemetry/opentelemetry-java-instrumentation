@@ -43,7 +43,7 @@ public final class CouchbaseTracer {
   }
 
   public CouchbaseSpan startSpan(String name, @Nullable CouchbaseSpan parent) {
-    boolean sdkDetailSpan = isSdkDetailSpan(name);
+    boolean sdkDetailSpan = isKnownSdkDetailSpan(name);
     if (v3Preview() && sdkDetailSpan && !CouchbaseSpan.emitExperimentalTelemetry()) {
       return new CouchbaseSpan(Span.getInvalid(), makeCurrentOnEnd, mapLegacyNetworkPeerAttributes);
     }
@@ -61,7 +61,9 @@ public final class CouchbaseTracer {
         spanBuilder.startSpan(), makeCurrentOnEnd, mapLegacyNetworkPeerAttributes);
   }
 
-  private static boolean isSdkDetailSpan(String name) {
+  // The Couchbase tracing API does not identify SDK detail spans separately. Add new SDK detail
+  // span names here; unknown names are emitted to avoid dropping new database operation spans.
+  private static boolean isKnownSdkDetailSpan(String name) {
     return "request_encoding".equals(name)
         || "cb.request_encoding".equals(name)
         || "dispatch_to_server".equals(name)
