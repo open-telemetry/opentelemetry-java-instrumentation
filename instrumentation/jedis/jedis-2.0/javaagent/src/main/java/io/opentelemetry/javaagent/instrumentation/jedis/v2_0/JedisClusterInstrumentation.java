@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -78,7 +79,8 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) @Nullable Set<?> nodes) {
       RedisServerTarget target = JedisServerTargets.ofNodes(nodes);
       JedisClusterTargetAccessor.setTarget(handler, target);
-      return JedisSingletons.openConfiguredTargetScope(target);
+      Context context = JedisSingletons.configuredTargetContext(target);
+      return context != null ? context.makeCurrent() : null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -103,7 +105,9 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @NoMuzzle
     public static Scope onEnter(@Advice.This JedisClusterConnectionHandler handler) {
-      return JedisClusterTargetAccessor.openTargetScope(handler);
+      Context context =
+          JedisSingletons.configuredTargetContext(JedisClusterTargetAccessor.getTarget(handler));
+      return context != null ? context.makeCurrent() : null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -121,7 +125,9 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @NoMuzzle
     public static Scope onEnter(@Advice.This JedisClusterConnectionHandler handler) {
-      return JedisClusterTargetAccessor.openTargetScope(handler);
+      Context context =
+          JedisSingletons.configuredTargetContext(JedisClusterTargetAccessor.getTarget(handler));
+      return context != null ? context.makeCurrent() : null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

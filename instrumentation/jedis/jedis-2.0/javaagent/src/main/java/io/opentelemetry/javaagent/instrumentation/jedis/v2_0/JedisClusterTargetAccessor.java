@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
@@ -25,8 +24,8 @@ public final class JedisClusterTargetAccessor {
 
   @Nullable
   @NoMuzzle
-  public static Scope openTargetScope(JedisClusterConnectionHandler handler) {
-    return JedisSingletons.openConfiguredTargetScope(CLUSTER_TARGET.get(handler));
+  public static RedisServerTarget getTarget(JedisClusterConnectionHandler handler) {
+    return CLUSTER_TARGET.get(handler);
   }
 
   @NoMuzzle

@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -72,7 +73,8 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
       // open scope on this thread
       RedisServerTarget target = JedisServerTargets.ofSentinels(masterName, sentinels);
       JedisSingletons.setPoolTarget(pool, target);
-      return JedisSingletons.openConfiguredTargetScope(target);
+      Context context = JedisSingletons.configuredTargetContext(target);
+      return context != null ? context.makeCurrent() : null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -95,7 +97,9 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.FieldValue("this$0") Pool<?> pool) {
-      return JedisSingletons.openPoolTargetScope(pool);
+      Context context =
+          JedisSingletons.configuredTargetContext(JedisSingletons.getPoolTarget(pool));
+      return context != null ? context.makeCurrent() : null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
