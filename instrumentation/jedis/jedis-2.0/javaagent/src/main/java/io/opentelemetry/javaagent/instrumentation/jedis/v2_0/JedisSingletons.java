@@ -31,10 +31,10 @@ public class JedisSingletons {
   private static final VirtualField<Connection, RedisServerTarget> CONNECTION_TARGET =
       VirtualField.find(Connection.class, RedisServerTarget.class);
 
-  private static final VirtualField<Pool<?>, RedisServerTarget> POOL_TARGET =
-      VirtualField.find(Pool.class, RedisServerTarget.class);
+  private static final VirtualField<Pool<?>, ConfiguredTarget> POOL_TARGET =
+      VirtualField.find(Pool.class, ConfiguredTarget.class);
 
-  private static final ContextKey<RedisServerTarget> CURRENT_CONFIGURED_TARGET =
+  private static final ContextKey<ConfiguredTarget> CURRENT_CONFIGURED_TARGET =
       ContextKey.named("opentelemetry-jedis-configured-target");
 
   static {
@@ -70,42 +70,57 @@ public class JedisSingletons {
   }
 
   public static void captureConnectionTarget(Connection connection) {
-    RedisServerTarget target = Context.current().get(CURRENT_CONFIGURED_TARGET);
-    if (target == null) {
-      target = RedisServerTarget.ofHostAndPort(connection.getHost(), connection.getPort());
-    }
+    ConfiguredTarget configuredTarget = Context.current().get(CURRENT_CONFIGURED_TARGET);
+    RedisServerTarget target =
+        configuredTarget == null
+            ? RedisServerTarget.ofHostAndPort(connection.getHost(), connection.getPort())
+            : configuredTarget.target;
     CONNECTION_TARGET.set(connection, target);
   }
 
   public static void capturePoolTarget(Pool<?> pool) {
-    RedisServerTarget target = Context.current().get(CURRENT_CONFIGURED_TARGET);
-    if (target != null) {
-      POOL_TARGET.set(pool, target);
+    ConfiguredTarget configuredTarget = Context.current().get(CURRENT_CONFIGURED_TARGET);
+    if (configuredTarget != null) {
+      POOL_TARGET.set(pool, configuredTarget);
     }
   }
 
   public static void setPoolTarget(Pool<?> pool, @Nullable RedisServerTarget target) {
-    POOL_TARGET.set(pool, target);
+    POOL_TARGET.set(pool, new ConfiguredTarget(target));
   }
 
-  @Nullable
-  public static RedisServerTarget getPoolTarget(Pool<?> pool) {
-    return POOL_TARGET.get(pool);
+  public static void clearPoolTarget(Pool<?> pool) {
+    POOL_TARGET.set(pool, null);
   }
 
-  @Nullable
   public static Context configuredTargetContext(@Nullable RedisServerTarget target) {
-    return target != null ? Context.current().with(CURRENT_CONFIGURED_TARGET, target) : null;
+    return Context.current().with(CURRENT_CONFIGURED_TARGET, new ConfiguredTarget(target));
+  }
+
+  @Nullable
+  public static Context configuredPoolTargetContext(Pool<?> pool) {
+    ConfiguredTarget configuredTarget = POOL_TARGET.get(pool);
+    return configuredTarget == null
+        ? null
+        : Context.current().with(CURRENT_CONFIGURED_TARGET, configuredTarget);
   }
 
   @Nullable
   static RedisServerTarget connectionTarget(Connection connection) {
-    RedisServerTarget target = Context.current().get(CURRENT_CONFIGURED_TARGET);
-    if (target != null) {
-      return target;
+    ConfiguredTarget configuredTarget = Context.current().get(CURRENT_CONFIGURED_TARGET);
+    if (configuredTarget != null) {
+      return configuredTarget.target;
     }
     return CONNECTION_TARGET.get(connection);
   }
 
   private JedisSingletons() {}
+
+  private static final class ConfiguredTarget {
+    @Nullable private final RedisServerTarget target;
+
+    private ConfiguredTarget(@Nullable RedisServerTarget target) {
+      this.target = target;
+    }
+  }
 }
