@@ -47,7 +47,7 @@ class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
       // get the context that submitted this command and attach it, it will be used to run callbacks
       context = context.get(COMMAND_CONTEXT_KEY);
       CONTEXT.set(asyncCommand, context);
-      LettuceSingletons.initializeCommandPeer(asyncCommand);
+      LettuceCommandPeer.initialize(asyncCommand);
     }
   }
 
