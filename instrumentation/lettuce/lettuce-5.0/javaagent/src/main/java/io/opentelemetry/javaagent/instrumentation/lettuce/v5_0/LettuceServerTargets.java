@@ -19,14 +19,6 @@ public class LettuceServerTargets {
   private static final VirtualField<RedisClusterClient, RedisServerTarget> CLUSTER_CLIENT_TARGET =
       VirtualField.find(RedisClusterClient.class, RedisServerTarget.class);
 
-  // The tracing SPI marks 5.1+, where this module only runs under v3-preview compatibility mode.
-  private static final boolean CONFIGURED_TARGETS_SUPPORTED =
-      RedisURI.class.getClassLoader().getResource("io/lettuce/core/tracing/Tracing.class") == null;
-
-  public static boolean configuredTargetsSupported() {
-    return CONFIGURED_TARGETS_SUPPORTED;
-  }
-
   public static void capture(
       RedisClusterClient client, @Nullable Iterable<RedisURI> configuredUris) {
     CLUSTER_CLIENT_TARGET.set(client, ofUris(configuredUris));

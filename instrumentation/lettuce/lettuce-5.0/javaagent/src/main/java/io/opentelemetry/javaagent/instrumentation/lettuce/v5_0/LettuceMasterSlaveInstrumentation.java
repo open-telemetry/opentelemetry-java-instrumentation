@@ -28,7 +28,10 @@ class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("io.lettuce.core.masterslave.MasterSlave");
+    // These entry points delegate to each other in different Lettuce versions. Exit advice updates
+    // only the inner RedisChannelHandler, so instrumenting both names is idempotent.
+    return named("io.lettuce.core.masterslave.MasterSlave")
+        .or(named("io.lettuce.core.masterreplica.MasterReplica"));
   }
 
   @Override
@@ -50,9 +53,6 @@ class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
     @Advice.AssignReturned.ToArguments(@ToArgument(value = 2, index = 1))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(@Advice.Argument(2) Object targetSource) {
-      if (!LettuceServerTargets.configuredTargetsSupported()) {
-        return new Object[] {null, targetSource};
-      }
       if (targetSource instanceof RedisURI) {
         return new Object[] {LettuceServerTargets.of((RedisURI) targetSource), targetSource};
       }
@@ -67,7 +67,7 @@ class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Enter Object[] enter, @Advice.Return @Nullable Object connection) {
       RedisServerTarget target = (RedisServerTarget) enter[0];
-      if (target == null || !(connection instanceof RedisChannelHandler)) {
+      if (!(connection instanceof RedisChannelHandler)) {
         return;
       }
       RedisChannelHandler<?, ?> connectionHandler = (RedisChannelHandler<?, ?>) connection;
