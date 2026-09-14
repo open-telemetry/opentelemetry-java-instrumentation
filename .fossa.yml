@@ -105,16 +105,16 @@ targets:
       target: ':instrumentation:camel-2.20:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:executor-metrics:bootstrap'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:executor-metrics:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:executors:bootstrap'
     - type: gradle
       path: ./
       target: ':instrumentation:executors:javaagent'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:executors-metrics:bootstrap'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:executors-metrics:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:external-annotations:javaagent'
