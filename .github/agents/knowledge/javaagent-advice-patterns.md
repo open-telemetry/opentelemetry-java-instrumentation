@@ -206,6 +206,28 @@ contains a helper call.
 Review new code against these patterns instead of treating every existing variation as equally
 canonical.
 
+### Close `Scope` before fallible completion work
+
+Method-exit advice and `AdviceScope` completion should close an entered `Scope` at the first safe
+point, before other fallible completion or cleanup work. Otherwise, a later failure suppressed by
+the advice can leave the context attached to the thread. Closing early also keeps the scope
+lifetime as short as possible.
+
+Keep the scope open only when subsequent exit work intentionally requires that context to remain
+current. If later completion or cleanup steps must still run when another step throws, preserve
+that guarantee with `try`/`finally` after closing the scope:
+
+```java
+public void end(@Nullable Throwable throwable) {
+  scope.close();
+  try {
+    instrumenter().end(context, request, null, throwable);
+  } finally {
+    cleanup();
+  }
+}
+```
+
 ### Pattern 1 — Nullable `AdviceScope` for ordinary advice
 
 Use this by default when enter advice may decide not to start instrumentation.
