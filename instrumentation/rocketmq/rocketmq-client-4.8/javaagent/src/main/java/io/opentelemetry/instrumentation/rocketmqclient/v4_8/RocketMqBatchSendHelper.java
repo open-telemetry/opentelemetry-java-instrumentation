@@ -21,6 +21,8 @@ import javax.annotation.Nullable;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 import org.apache.rocketmq.client.hook.SendMessageHook;
 import org.apache.rocketmq.client.impl.CommunicationMode;
+import org.apache.rocketmq.client.producer.SendCallback;
+import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.common.message.Message;
 
 public final class RocketMqBatchSendHelper {
@@ -49,13 +51,16 @@ public final class RocketMqBatchSendHelper {
   }
 
   @Nullable
-  public Object batchSendStart(Object producer) {
+  public Object batchSendStart(Object producer, boolean asynchronous) {
     if (!emitStableMessagingSemconv()) {
       return null;
     }
     BatchSendState state =
         new BatchSendState(
-            Context.current(), RocketMqNamespaceUtil.getNamespace(producer), CURRENT_STATE.get());
+            Context.current(),
+            RocketMqNamespaceUtil.getNamespace(producer),
+            CURRENT_STATE.get(),
+            asynchronous);
     CURRENT_STATE.set(state);
     return state;
   }
@@ -80,9 +85,30 @@ public final class RocketMqBatchSendHelper {
         CURRENT_STATE.set(state.previous);
       }
     }
-    if (error != null || !state.claimed || state.isSynchronous()) {
+    if (error != null || (!state.asynchronous && (!state.claimed || state.isSynchronous()))) {
       state.end(error);
     }
+  }
+
+  @Nullable
+  public SendCallback wrap(@Nullable SendCallback delegate, @Nullable Object stateObject) {
+    if (delegate == null || stateObject == null) {
+      return delegate;
+    }
+    BatchSendState state = (BatchSendState) stateObject;
+    return new SendCallback() {
+      @Override
+      public void onSuccess(SendResult sendResult) {
+        state.end(null);
+        delegate.onSuccess(sendResult);
+      }
+
+      @Override
+      public void onException(Throwable e) {
+        state.end(e);
+        delegate.onException(e);
+      }
+    };
   }
 
   public SendMessageHook wrap(SendMessageHook delegate) {
@@ -130,6 +156,7 @@ public final class RocketMqBatchSendHelper {
     private final Context parentContext;
     @Nullable private final String namespace;
     @Nullable private final BatchSendState previous;
+    private final boolean asynchronous;
 
     @Nullable private BatchSendContext request;
     @Nullable private Context sendContext;
@@ -139,10 +166,14 @@ public final class RocketMqBatchSendHelper {
     private boolean ended;
 
     private BatchSendState(
-        Context parentContext, @Nullable String namespace, @Nullable BatchSendState previous) {
+        Context parentContext,
+        @Nullable String namespace,
+        @Nullable BatchSendState previous,
+        boolean asynchronous) {
       this.parentContext = parentContext;
       this.namespace = namespace;
       this.previous = previous;
+      this.asynchronous = asynchronous;
     }
 
     private void prepare(Message batch) {
