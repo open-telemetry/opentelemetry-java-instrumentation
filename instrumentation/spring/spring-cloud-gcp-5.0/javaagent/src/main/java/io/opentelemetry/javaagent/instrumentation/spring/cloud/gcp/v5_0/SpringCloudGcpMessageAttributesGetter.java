@@ -37,6 +37,14 @@ final class SpringCloudGcpMessageAttributesGetter
   }
 
   @Override
+  @Nullable
+  public String getDestinationSubscriptionName(
+      ConvertedBasicAcknowledgeablePubsubMessage<?> message) {
+    ProjectSubscriptionName subscriptionName = message.getProjectSubscriptionName();
+    return subscriptionName != null ? subscriptionName.getSubscription() : null;
+  }
+
+  @Override
   public boolean isTemporaryDestination(ConvertedBasicAcknowledgeablePubsubMessage<?> message) {
     return false;
   }

@@ -11,6 +11,7 @@ import com.google.cloud.spring.pubsub.support.converter.ConvertedBasicAcknowledg
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
@@ -40,7 +41,8 @@ public final class SpringCloudGcpSingletons {
                 MessagingAttributesExtractor.builder(getter, operationType, PROCESS_OPERATION_NAME)
                     .setHeaders(ExperimentalConfig.get().getMessagingHeaders())
                     .build())
-            .addOperationMetrics(MessagingProcessMetrics.get());
+            .addOperationMetrics(MessagingProcessMetrics.get())
+            .addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
     setMessagingProcessExceptionEventExtractor(builder);
     return MessagingProcessInstrumenterFactory.create(
         builder,

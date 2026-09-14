@@ -13,7 +13,9 @@ import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.or
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
@@ -21,7 +23,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.GCP_PUBSUB;
-import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.google.api.gax.core.NoCredentialsProvider;
@@ -46,7 +47,6 @@ import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.time.Duration;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
@@ -72,6 +72,7 @@ class SpringCloudGcpTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-cloud-gcp-5.0";
   private static final String PROJECT_ID = "otel-test-project";
   private static final String TOPIC = "test-topic";
   private static final String SUBSCRIPTION = "test-subscription";
@@ -168,31 +169,66 @@ class SpringCloudGcpTest {
         // grpc instrumentation is disabled, so publishing does not produce a client span
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent").hasNoParent()),
         trace -> {
-          if (emitStableMessagingSemconv()) {
-            trace.hasSpansSatisfyingExactly(
-                span -> {
-                  span.hasName("process " + SUBSCRIPTION)
-                      .hasKind(CONSUMER)
-                      .hasNoParent()
-                      .hasAttributesSatisfyingExactly(processAttributes());
-                  processSpan.set(trace.getSpan(0));
-                },
-                span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(0)));
-          } else {
-            trace.hasSpansSatisfyingExactly(
-                span -> {
-                  span.hasName(SUBSCRIPTION + " process")
-                      .hasKind(CONSUMER)
-                      .hasNoParent()
-                      .hasAttributesSatisfyingExactly(processAttributes());
-                  processSpan.set(trace.getSpan(0));
-                },
-                span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(0)));
-          }
+          String processSpanName =
+              emitStableMessagingSemconv() ? "process " + SUBSCRIPTION : SUBSCRIPTION + " process";
+          trace.hasSpansSatisfyingExactly(
+              span -> {
+                span.hasName(processSpanName)
+                    .hasKind(CONSUMER)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(MESSAGING_SYSTEM, GCP_PUBSUB),
+                        oldOperation("process"),
+                        operationName("process"),
+                        operationType("process"),
+                        equalTo(MESSAGING_DESTINATION_NAME, SUBSCRIPTION),
+                        subscriptionName(SUBSCRIPTION),
+                        satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
+                        bodySize());
+                processSpan.set(trace.getSpan(0));
+              },
+              span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(0)));
         });
 
     // the message carries no propagation attributes, so the process span has no links
     assertThat(processSpan.get().getLinks()).isEmpty();
+
+    if (emitStableMessagingSemconv()) {
+      testing.waitAndAssertMetrics(
+          INSTRUMENTATION_NAME,
+          "messaging.client.consumed.messages",
+          metrics ->
+              metrics.satisfiesExactly(
+                  metric ->
+                      assertThat(metric)
+                          .hasUnit("{message}")
+                          .hasDescription(
+                              "Number of messages that were delivered to the application.")
+                          .hasLongSumSatisfying(
+                              sum ->
+                                  sum.satisfies(data -> assertThat(data.getPoints()).hasSize(1))
+                                      .hasPointsSatisfying(
+                                          point ->
+                                              point
+                                                  .hasValue(1)
+                                                  .hasAttributesSatisfyingExactly(
+                                                      equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                                      equalTo(MESSAGING_SYSTEM, GCP_PUBSUB),
+                                                      equalTo(ERROR_TYPE, null),
+                                                      equalTo(
+                                                          MESSAGING_DESTINATION_NAME, SUBSCRIPTION),
+                                                      equalTo(
+                                                          MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                                          SUBSCRIPTION))))));
+    } else {
+      // old messaging semconv does not emit any stable messaging metrics
+      assertThat(testing.metrics())
+          .filteredOn(
+              metric ->
+                  metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME)
+                      && metric.getName().startsWith("messaging."))
+          .isEmpty();
+    }
   }
 
   @Test
@@ -227,6 +263,9 @@ class SpringCloudGcpTest {
     String result = messageFuture.get(30, SECONDS);
     assertThat(result).isEqualTo(messageContent);
 
+    String processSpanName =
+        emitStableMessagingSemconv() ? "process " + SUBSCRIPTION : SUBSCRIPTION + " process";
+
     if (emitStableMessagingSemconv()) {
       // the propagated creation context is both the parent of the process span and its link
       testing.waitAndAssertTraces(
@@ -234,7 +273,7 @@ class SpringCloudGcpTest {
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("propagation-parent").hasNoParent(),
                   span ->
-                      span.hasName("process " + SUBSCRIPTION)
+                      span.hasName(processSpanName)
                           .hasKind(CONSUMER)
                           .hasParent(trace.getSpan(0))
                           .hasLinks(
@@ -246,7 +285,15 @@ class SpringCloudGcpTest {
                                       producerContext.get().getSpanId(),
                                       TraceFlags.getSampled(),
                                       TraceState.getDefault())))
-                          .hasAttributesSatisfyingExactly(processAttributes()),
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(MESSAGING_SYSTEM, GCP_PUBSUB),
+                              oldOperation("process"),
+                              operationName("process"),
+                              operationType("process"),
+                              equalTo(MESSAGING_DESTINATION_NAME, SUBSCRIPTION),
+                              subscriptionName(SUBSCRIPTION),
+                              satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
+                              bodySize()),
                   span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(1))));
     } else {
       // the propagated context becomes the parent of the process span
@@ -255,23 +302,20 @@ class SpringCloudGcpTest {
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("propagation-parent").hasNoParent(),
                   span ->
-                      span.hasName(SUBSCRIPTION + " process")
+                      span.hasName(processSpanName)
                           .hasKind(CONSUMER)
                           .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(processAttributes()),
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(MESSAGING_SYSTEM, GCP_PUBSUB),
+                              oldOperation("process"),
+                              operationName("process"),
+                              operationType("process"),
+                              equalTo(MESSAGING_DESTINATION_NAME, SUBSCRIPTION),
+                              subscriptionName(SUBSCRIPTION),
+                              satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
+                              bodySize()),
                   span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(1))));
     }
-  }
-
-  private static List<AttributeAssertion> processAttributes() {
-    return asList(
-        equalTo(MESSAGING_SYSTEM, GCP_PUBSUB),
-        oldOperation("process"),
-        operationName("process"),
-        operationType("process"),
-        equalTo(MESSAGING_DESTINATION_NAME, SUBSCRIPTION),
-        satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
-        bodySize());
   }
 
   private static AttributeAssertion oldOperation(String operation) {
@@ -284,6 +328,12 @@ class SpringCloudGcpTest {
 
   private static AttributeAssertion operationType(String operation) {
     return equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operation : null);
+  }
+
+  private static AttributeAssertion subscriptionName(String subscriptionName) {
+    return equalTo(
+        MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+        emitStableMessagingSemconv() ? subscriptionName : null);
   }
 
   // messaging.message.body.size is opt-in in the v1.43 messaging semantic conventions
