@@ -37,9 +37,29 @@ class KafkaCamelOwnershipTest {
   void claimsCamelBatchBeforeIteration() {
     KafkaConsumer<?, ?> consumer = mock(KafkaConsumer.class);
     ConsumerRecords<?, ?> records = consumerRecords();
+    BATCH_STATE.set(records, new KafkaConsumerBatchState(true));
 
     CamelKafkaBatchState.markConsumer(consumer);
     KafkaConsumerInstrumentation.PollAdvice.onExit(consumer, records);
+    KafkaConsumerRecordsInstrumentation.RecordsAdvice.onEnter(records);
+
+    KafkaConsumerBatchState state = BATCH_STATE.get(records);
+    assertThat(state).isNotNull();
+    assertThat(state.getAsBoolean()).isFalse();
+  }
+
+  @Test
+  void defersClaimUntilKafkaPollStateIsRecorded() {
+    KafkaConsumer<?, ?> consumer = mock(KafkaConsumer.class);
+    ConsumerRecords<?, ?> records = consumerRecords();
+
+    CamelKafkaBatchState.markConsumer(consumer);
+    KafkaConsumerInstrumentation.PollAdvice.onExit(consumer, records);
+    KafkaConsumerRecordsInstrumentation.RecordsAdvice.onEnter(records);
+
+    assertThat(BATCH_STATE.get(records)).isNull();
+
+    BATCH_STATE.set(records, new KafkaConsumerBatchState(true));
     KafkaConsumerRecordsInstrumentation.RecordsAdvice.onEnter(records);
 
     KafkaConsumerBatchState state = BATCH_STATE.get(records);
