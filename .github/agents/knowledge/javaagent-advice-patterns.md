@@ -202,6 +202,47 @@ contains a helper call.
 
 ## AdviceScope Patterns
 
+### Make scope ownership visible
+
+Scope acquisition and closure must make ownership visually obvious. In ordinary code, call
+`makeCurrent()` at the call site and use try-with-resources:
+
+```java
+try (Scope ignored = context.makeCurrent()) {
+  doWork();
+}
+```
+
+When method advice passes a raw `Scope` through `@Advice.Enter`, call `makeCurrent()` directly in
+`@Advice.OnMethodEnter` and close that same returned scope in the paired
+`@Advice.OnMethodExit`:
+
+```java
+@Advice.OnMethodEnter(suppress = Throwable.class)
+public static @Nullable Scope onEnter(Request request) {
+  Context context = startContext(request);
+  if (context == null) {
+    return null;
+  }
+  return context.makeCurrent();
+}
+
+@Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+public static void onExit(@Advice.Enter @Nullable Scope scope) {
+  if (scope != null) {
+    scope.close();
+  }
+}
+```
+
+Do not hide `makeCurrent()` in a general helper that returns an open raw `Scope` for its caller to
+close. That pattern obscures ownership and makes leaks easy. A helper may instead return a
+`Context`, target, or other state, leaving the enter advice to call `makeCurrent()`.
+
+Opening the scope must be the last fallible action before suppressed enter advice returns. A
+dedicated `AdviceScope` remains valid when it clearly owns both acquisition and closure through the
+established `start()` / `end()` pattern below.
+
 `AdviceScope` usage in this repository falls into **two justified state patterns**.
 Review new code against these patterns instead of treating every existing variation as equally
 canonical.
