@@ -36,6 +36,11 @@ class ConsumerConfig {
   }
 
   @Bean
+  NewTopic nestedBatchTopic() {
+    return TopicBuilder.name("testNestedBatchTopic").partitions(1).replicas(1).build();
+  }
+
+  @Bean
   BatchRecordListener batchRecordListener() {
     return new BatchRecordListener();
   }
