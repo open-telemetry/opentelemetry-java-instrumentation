@@ -50,11 +50,11 @@ class LettuceCommandEncoderInstrumentation implements TypeInstrumentation {
 
     public static void recordCommandPeers(Object message, SocketAddress remoteAddress) {
       if (message instanceof RedisCommand) {
-        LettuceSingletons.recordCommandPeer((RedisCommand<?, ?, ?>) message, remoteAddress);
+        LettuceCommandPeer.record((RedisCommand<?, ?, ?>) message, remoteAddress);
       } else if (message instanceof Collection) {
         for (Object item : (Collection<?>) message) {
           if (item instanceof RedisCommand) {
-            LettuceSingletons.recordCommandPeer((RedisCommand<?, ?, ?>) item, remoteAddress);
+            LettuceCommandPeer.record((RedisCommand<?, ?, ?>) item, remoteAddress);
           }
         }
       }
