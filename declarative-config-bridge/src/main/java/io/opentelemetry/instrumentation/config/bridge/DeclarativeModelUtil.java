@@ -22,26 +22,51 @@ import javax.annotation.Nullable;
  */
 final class DeclarativeModelUtil {
 
+  private static final ClassValue<ModelMetadata> modelMetadata =
+      new ClassValue<ModelMetadata>() {
+        @Override
+        protected ModelMetadata computeValue(Class<?> type) {
+          List<ModelProperty> properties = new ArrayList<>();
+          for (Method getter : type.getMethods()) {
+            if (!getter.getName().startsWith("get") || getter.getParameterCount() != 0) {
+              continue;
+            }
+            String propertyName = getter.getName().substring("get".length());
+            try {
+              Method setter = type.getMethod("set" + propertyName, getter.getReturnType());
+              properties.add(new ModelProperty(getter, setter, toSnakeCase(propertyName)));
+            } catch (NoSuchMethodException ignored) {
+              // Not a generated model property.
+            }
+          }
+          Constructor<?> constructor = null;
+          if (!properties.isEmpty()) {
+            try {
+              constructor = type.getConstructor();
+            } catch (NoSuchMethodException ignored) {
+              // Model values without a public no-arg constructor are treated as leaf values.
+            }
+          }
+          return new ModelMetadata(properties, constructor);
+        }
+      };
+
   static void mergeDefaults(Object target, Object defaults) {
-    for (Method getter : defaults.getClass().getMethods()) {
-      Method setter = findSetter(defaults.getClass(), getter);
-      if (setter == null) {
-        continue;
-      }
-      Object defaultValue = invoke(getter, defaults);
+    for (ModelProperty property : modelMetadata.get(defaults.getClass()).properties) {
+      Object defaultValue = invoke(property.getter, defaults);
       if (defaultValue == null) {
         continue;
       }
-      Object existingValue = invoke(getter, target);
+      Object existingValue = invoke(property.getter, target);
       if (existingValue == null) {
         if (isModel(defaultValue)) {
           Object child = newModel(defaultValue.getClass());
-          invoke(setter, target, child);
+          invoke(property.setter, target, child);
           mergeDefaults(child, defaultValue);
         } else if (defaultValue instanceof List) {
-          invoke(setter, target, new ArrayList<>((List<?>) defaultValue));
+          invoke(property.setter, target, new ArrayList<>((List<?>) defaultValue));
         } else {
-          invoke(setter, target, defaultValue);
+          invoke(property.setter, target, defaultValue);
         }
       } else if (isModel(existingValue) && isModel(defaultValue)) {
         mergeDefaults(existingValue, defaultValue);
@@ -55,15 +80,12 @@ final class DeclarativeModelUtil {
 
   private static void forEachLeaf(
       Object model, String prefix, BiConsumer<String, Object> consumer) {
-    for (Method getter : model.getClass().getMethods()) {
-      if (findSetter(model.getClass(), getter) == null) {
-        continue;
-      }
-      Object value = invoke(getter, model);
+    for (ModelProperty property : modelMetadata.get(model.getClass()).properties) {
+      Object value = invoke(property.getter, model);
       if (value == null) {
         continue;
       }
-      String path = prefix + toSnakeCase(getter.getName().substring("get".length()));
+      String path = prefix + property.name;
       if (isModel(value)) {
         forEachLeaf(value, path + ".", consumer);
       } else {
@@ -72,31 +94,17 @@ final class DeclarativeModelUtil {
     }
   }
 
-  @Nullable
-  private static Method findSetter(Class<?> modelClass, Method getter) {
-    if (!getter.getName().startsWith("get") || getter.getParameterCount() != 0) {
-      return null;
-    }
-    String setterName = "set" + getter.getName().substring("get".length());
-    try {
-      return modelClass.getMethod(setterName, getter.getReturnType());
-    } catch (NoSuchMethodException ignored) {
-      return null;
-    }
-  }
-
   private static boolean isModel(Object value) {
-    for (Method method : value.getClass().getMethods()) {
-      if (findSetter(value.getClass(), method) != null) {
-        return true;
-      }
-    }
-    return false;
+    ModelMetadata metadata = modelMetadata.get(value.getClass());
+    return !metadata.properties.isEmpty() && metadata.constructor != null;
   }
 
   private static Object newModel(Class<?> modelClass) {
+    Constructor<?> constructor = modelMetadata.get(modelClass).constructor;
+    if (constructor == null) {
+      throw new IllegalStateException("declarative config model has no public constructor");
+    }
     try {
-      Constructor<?> constructor = modelClass.getConstructor();
       return constructor.newInstance();
     } catch (ReflectiveOperationException e) {
       throw new IllegalStateException("could not create declarative config model", e);
@@ -121,6 +129,28 @@ final class DeclarativeModelUtil {
       result.append(Character.toString(character).toLowerCase(Locale.ROOT));
     }
     return result.toString();
+  }
+
+  private static final class ModelMetadata {
+    private final List<ModelProperty> properties;
+    @Nullable private final Constructor<?> constructor;
+
+    private ModelMetadata(List<ModelProperty> properties, @Nullable Constructor<?> constructor) {
+      this.properties = properties;
+      this.constructor = constructor;
+    }
+  }
+
+  private static final class ModelProperty {
+    private final Method getter;
+    private final Method setter;
+    private final String name;
+
+    private ModelProperty(Method getter, Method setter, String name) {
+      this.getter = getter;
+      this.setter = setter;
+      this.name = name;
+    }
   }
 
   private DeclarativeModelUtil() {}

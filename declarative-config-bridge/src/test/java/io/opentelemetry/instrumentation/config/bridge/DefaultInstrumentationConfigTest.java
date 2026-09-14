@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.config.bridge;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -168,6 +169,40 @@ class DefaultInstrumentationConfigTest {
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage(
             "structured list default has no traditional config serialization: acme.structured");
+  }
+
+  private static Stream<Arguments> emptyListDefaults() {
+    return Stream.of(
+        argumentSet(
+            "java instrumentation scalar list",
+            (Consumer<DefaultInstrumentationConfig>)
+                defaults ->
+                    defaults.get("common").get("http").setDefault("known_methods", emptyList()),
+            "common.http.known_methods"),
+        argumentSet(
+            "general instrumentation scalar list",
+            (Consumer<DefaultInstrumentationConfig>)
+                defaults ->
+                    defaults.customizeGeneral(
+                        general ->
+                            general.setHttp(
+                                new ExperimentalHttpInstrumentationModel()
+                                    .setClient(
+                                        new ExperimentalHttpClientInstrumentationModel()
+                                            .setRequestCapturedHeaders(emptyList())))),
+            "general.http.client.request_captured_headers"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("emptyListDefaults")
+  void toConfigPropertiesRejectsEmptyListDefaults(
+      Consumer<DefaultInstrumentationConfig> customizer, String path) {
+    DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+    customizer.accept(defaults);
+
+    assertThatThrownBy(defaults::toConfigProperties)
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("list default must not be empty: " + path);
   }
 
   @Test

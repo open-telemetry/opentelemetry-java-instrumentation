@@ -143,7 +143,9 @@ public final class DefaultInstrumentationConfig {
    * Sets a list-valued default. Scalar lists are preserved when applying defaults to the
    * declarative model and serialized as comma-separated values for traditional configuration
    * properties. The structured {@code common.service_peer_mapping} list is also supported; other
-   * structured lists cannot be converted to traditional configuration properties.
+   * structured lists cannot be converted to traditional configuration properties. Empty lists
+   * cannot be exported as equivalent traditional configuration defaults and are rejected by {@link
+   * #toConfigProperties()}.
    */
   @CanIgnoreReturnValue
   public DefaultInstrumentationConfig setDefault(String key, List<?> value) {
@@ -173,11 +175,7 @@ public final class DefaultInstrumentationConfig {
               throw new IllegalArgumentException(
                   "general instrumentation default has no config property mapping: " + path);
             }
-            map.put(
-                propertyKey,
-                value instanceof List
-                    ? ((List<?>) value).stream().map(String::valueOf).collect(joining(","))
-                    : String.valueOf(value));
+            map.put(propertyKey, toConfigPropertyValue("general." + path, value));
           });
     }
     return map;
@@ -262,6 +260,9 @@ public final class DefaultInstrumentationConfig {
       return String.valueOf(value);
     }
     List<?> list = (List<?>) value;
+    if (list.isEmpty()) {
+      throw new IllegalArgumentException("list default must not be empty: " + declarativePath);
+    }
     if (declarativePath.equals("common.service_peer_mapping")) {
       return serializeServicePeerMapping(list);
     }

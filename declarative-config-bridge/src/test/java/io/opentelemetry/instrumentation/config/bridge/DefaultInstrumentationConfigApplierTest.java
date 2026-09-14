@@ -19,6 +19,7 @@ import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.Exper
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalHttpInstrumentationModel;
 import io.opentelemetry.sdk.internal.SdkConfigProvider;
 import java.io.ByteArrayInputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -99,19 +100,30 @@ class DefaultInstrumentationConfigApplierTest {
   void applyToModelCopiesListDefaults() {
     DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
     defaults.get("common").get("http").setDefault("known_methods", asList("GET", "POST"));
+    Map<String, String> servicePeerMapping = new HashMap<>();
+    servicePeerMapping.put("peer", "example.com");
+    servicePeerMapping.put("service_name", "checkout");
+    defaults.get("common").setDefault("service_peer_mapping", singletonList(servicePeerMapping));
 
     OpenTelemetryConfigurationModel firstModel = newModel();
+    DefaultInstrumentationConfig seed = new DefaultInstrumentationConfig();
+    seed.get("seed").setDefault("enabled", true);
+    seed.applyToModel(firstModel);
     defaults.applyToModel(firstModel);
-    Object firstValue =
+    Map<String, Object> firstCommon =
         getInstrumentation(firstModel)
             .getJava()
             .getAdditionalProperties()
             .get("common")
-            .getAdditionalProperties()
-            .get("http");
+            .getAdditionalProperties();
+    Object firstHttpValue = firstCommon.get("http");
     @SuppressWarnings("unchecked")
-    Map<String, Object> firstHttp = (Map<String, Object>) firstValue;
+    Map<String, Object> firstHttp = (Map<String, Object>) firstHttpValue;
     ((List<?>) firstHttp.get("known_methods")).clear();
+    Object firstMappingsValue = firstCommon.get("service_peer_mapping");
+    @SuppressWarnings("unchecked")
+    List<Map<String, Object>> firstMappings = (List<Map<String, Object>>) firstMappingsValue;
+    firstMappings.get(0).put("service_name", "mutated");
 
     OpenTelemetryConfigurationModel secondModel = newModel();
     defaults.applyToModel(secondModel);
@@ -126,8 +138,36 @@ class DefaultInstrumentationConfigApplierTest {
                 .get("http")
                 .getScalarList("known_methods", String.class))
         .containsExactly("GET", "POST");
+    List<DeclarativeConfigProperties> secondMappings =
+        secondConfig.get("java").get("common").getStructuredList("service_peer_mapping");
+    assertThat(secondMappings).hasSize(1);
+    assertThat(secondMappings.get(0).getString("service_name")).isEqualTo("checkout");
     assertThat(defaults.toConfigProperties())
-        .containsEntry("otel.instrumentation.http.known-methods", "GET,POST");
+        .containsEntry("otel.instrumentation.http.known-methods", "GET,POST")
+        .containsEntry("otel.instrumentation.common.peer-service-mapping", "example.com=checkout");
+  }
+
+  @Test
+  void applyToModelPreservesExistingListDefaults() {
+    DefaultInstrumentationConfig seed = new DefaultInstrumentationConfig();
+    seed.get("common").get("http").setDefault("known_methods", singletonList("GET"));
+
+    OpenTelemetryConfigurationModel model = newModel();
+    seed.applyToModel(model);
+    DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+    defaults.get("common").get("http").setDefault("known_methods", singletonList("POST"));
+    defaults.applyToModel(model);
+
+    DeclarativeConfigProperties config =
+        SdkConfigProvider.create(DeclarativeConfiguration.toConfigProperties(model))
+            .getInstrumentationConfig();
+    assertThat(
+            config
+                .get("java")
+                .get("common")
+                .get("http")
+                .getScalarList("known_methods", String.class))
+        .containsExactly("GET");
   }
 
   @Test

@@ -92,9 +92,23 @@ final class DefaultInstrumentationConfigApplier {
       Map<String, Object> nested = (Map<String, Object>) child;
       target = nested;
     }
-    target.putIfAbsent(
-        segments[segments.length - 1],
-        value instanceof List ? new ArrayList<>((List<?>) value) : value);
+    target.putIfAbsent(segments[segments.length - 1], copyValue(value));
+  }
+
+  private static Object copyValue(Object value) {
+    if (value instanceof List) {
+      List<Object> copy = new ArrayList<>();
+      for (Object item : (List<?>) value) {
+        copy.add(copyValue(item));
+      }
+      return copy;
+    }
+    if (value instanceof Map) {
+      Map<Object, Object> copy = new HashMap<>();
+      ((Map<?, ?>) value).forEach((key, item) -> copy.put(key, copyValue(item)));
+      return copy;
+    }
+    return value;
   }
 
   private DefaultInstrumentationConfigApplier() {}
