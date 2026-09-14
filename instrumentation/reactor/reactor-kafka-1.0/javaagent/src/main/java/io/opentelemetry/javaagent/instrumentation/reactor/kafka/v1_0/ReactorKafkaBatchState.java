@@ -9,12 +9,12 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaConsumerBatchState;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
-public final class ReactorKafkaBatchState {
+final class ReactorKafkaBatchState {
 
   private static final VirtualField<ConsumerRecords<?, ?>, KafkaConsumerBatchState> BATCH_STATE =
       VirtualField.find(ConsumerRecords.class, KafkaConsumerBatchState.class);
 
-  public static void claimProcessSpan(ConsumerRecords<?, ?> records) {
+  static void claimProcessSpan(ConsumerRecords<?, ?> records) {
     if (records.isEmpty()) {
       return;
     }
