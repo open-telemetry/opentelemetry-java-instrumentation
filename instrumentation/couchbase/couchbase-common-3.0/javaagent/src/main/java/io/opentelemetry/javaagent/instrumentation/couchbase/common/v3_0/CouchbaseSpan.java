@@ -27,9 +27,12 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import java.time.Instant;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 public final class CouchbaseSpan {
+
+  private static final Logger logger = Logger.getLogger(CouchbaseSpan.class.getName());
 
   private static final String DB_COUCHBASE_COLLECTION = "db.couchbase.collection";
   private static final String NET_PEER_NAME = "net.peer.name";
@@ -41,12 +44,7 @@ public final class CouchbaseSpan {
   static {
     DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "couchbase");
-    captureExperimentalTelemetry =
-        config.getBoolean(
-            v3Preview
-                ? "emit_experimental_telemetry/development"
-                : "experimental_span_attributes/development",
-            false);
+    captureExperimentalTelemetry = captureExperimentalTelemetry(config, v3Preview);
   }
 
   private final Span span;
@@ -187,5 +185,27 @@ public final class CouchbaseSpan {
 
   static boolean emitExperimentalTelemetry() {
     return captureExperimentalTelemetry;
+  }
+
+  // visible for testing
+  static boolean captureExperimentalTelemetry(
+      DeclarativeConfigProperties config, boolean v3Preview) {
+    if (v3Preview) {
+      return config.getBoolean("emit_experimental_telemetry/development", false);
+    }
+
+    // Deprecated for Couchbase 3.x; remains active outside v3 preview until 3.0.
+    Boolean configured = config.getBoolean("experimental_span_attributes/development");
+    if (configured == null) {
+      return false;
+    }
+
+    logger.warning(
+        "The otel.instrumentation.couchbase.experimental-span-attributes setting and the"
+            + " equivalent declarative configuration property are deprecated for Couchbase 3.x"
+            + " and will be removed in 3.0. Under v3 preview, use"
+            + " otel.instrumentation.couchbase.emit-experimental-telemetry or equivalent"
+            + " declarative configuration instead.");
+    return configured;
   }
 }
