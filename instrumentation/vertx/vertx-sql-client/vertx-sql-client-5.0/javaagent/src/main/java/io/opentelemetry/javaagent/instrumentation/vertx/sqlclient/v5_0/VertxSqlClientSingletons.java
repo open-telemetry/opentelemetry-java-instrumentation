@@ -26,6 +26,7 @@ import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.impl.ClientBuilderBase;
 import io.vertx.sqlclient.impl.QueryExecutorUtil;
 import io.vertx.sqlclient.internal.SqlClientBase;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -51,6 +52,18 @@ public class VertxSqlClientSingletons {
       BUILDER_DATABASES = VirtualField.find(ClientBuilderBase.class, List.class);
 
   private static final Logger logger = Logger.getLogger(VertxSqlClientSingletons.class.getName());
+  private static final ClassValue<Method> unwrapMethodCache =
+      new ClassValue<Method>() {
+        @Nullable
+        @Override
+        protected Method computeValue(Class<?> type) {
+          try {
+            return type.getMethod("unwrap");
+          } catch (NoSuchMethodException ignored) {
+            return null;
+          }
+        }
+      };
 
   @Nullable
   private static final VirtualField<Object, Context> COMMAND_CONTEXT =
@@ -320,8 +333,12 @@ public class VertxSqlClientSingletons {
 
   @Nullable
   private static Object unwrap(Object candidate) {
+    Method unwrapMethod = unwrapMethodCache.get(candidate.getClass());
+    if (unwrapMethod == null) {
+      return null;
+    }
     try {
-      Object unwrapped = candidate.getClass().getMethod("unwrap").invoke(candidate);
+      Object unwrapped = unwrapMethod.invoke(candidate);
       return unwrapped != candidate ? unwrapped : null;
     } catch (ReflectiveOperationException ignored) {
       return null;
