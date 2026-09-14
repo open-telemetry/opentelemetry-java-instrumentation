@@ -30,6 +30,7 @@ import redis.clients.jedis.DefaultJedisClientConfig;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisClientConfig;
+import redis.clients.jedis.JedisSentinelPool;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class JedisSentinel40ClientTest {
@@ -49,8 +50,6 @@ class JedisSentinel40ClientTest {
 
   @BeforeAll
   static void setup() throws Exception {
-    assumeTrue(classPresent("redis.clients.jedis.JedisSentinelPool"));
-
     int masterPort = PortUtils.findOpenPort();
     replicaPort = PortUtils.findOpenPort();
     sentinelPort = PortUtils.findOpenPort();
@@ -94,13 +93,9 @@ class JedisSentinel40ClientTest {
 
   @Test
   void configuredTargetSurvivesMasterFailover() throws Exception {
-    Class<?> poolClass = Class.forName("redis.clients.jedis.JedisSentinelPool");
-    Object pool =
-        poolClass
-            .getConstructor(String.class, Set.class)
-            .newInstance(MASTER_NAME, singleton(sentinelEndpoint));
+    JedisSentinelPool pool = new JedisSentinelPool(MASTER_NAME, singleton(sentinelEndpoint));
     try {
-      set(poolClass, pool, "before-failover");
+      set(pool, "before-failover");
       await()
           .untilAsserted(
               () ->
@@ -147,9 +142,9 @@ class JedisSentinel40ClientTest {
         throw new IllegalStateException("Sentinel did not promote the replica");
       }
 
-      await().untilAsserted(() -> set(poolClass, pool, "after-failover"));
+      await().untilAsserted(() -> set(pool, "after-failover"));
     } finally {
-      poolClass.getMethod("destroy").invoke(pool);
+      pool.destroy();
     }
 
     await()
@@ -235,12 +230,9 @@ class JedisSentinel40ClientTest {
                         }));
   }
 
-  private static void set(Class<?> poolClass, Object pool, String key) throws Exception {
-    Object jedis = poolClass.getMethod("getResource").invoke(pool);
-    try {
-      jedis.getClass().getMethod("set", String.class, String.class).invoke(jedis, key, "value");
-    } finally {
-      jedis.getClass().getMethod("close").invoke(jedis);
+  private static void set(JedisSentinelPool pool, String key) {
+    try (Jedis jedis = pool.getResource()) {
+      jedis.set(key, "value");
     }
   }
 

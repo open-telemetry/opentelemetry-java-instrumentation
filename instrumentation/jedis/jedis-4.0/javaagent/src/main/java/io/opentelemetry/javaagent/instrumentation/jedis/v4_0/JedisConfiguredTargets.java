@@ -9,12 +9,12 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import java.util.Collection;
 import javax.annotation.Nullable;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisClusterInfoCache;
 import redis.clients.jedis.JedisSocketFactory;
+import redis.clients.jedis.providers.ConnectionProvider;
 import redis.clients.jedis.util.Pool;
 
 public class JedisConfiguredTargets {
@@ -25,9 +25,9 @@ public class JedisConfiguredTargets {
   private static final VirtualField<Pool<?>, ConfiguredTarget> SENTINEL_POOL_CONFIGURED_TARGET =
       VirtualField.find(Pool.class, ConfiguredTarget.class);
 
-  @Nullable
-  private static final VirtualField<Object, ConfiguredTarget> PROVIDER_CONFIGURED_TARGET =
-      createProviderConfiguredTargetField();
+  private static final VirtualField<ConnectionProvider, ConfiguredTarget>
+      PROVIDER_CONFIGURED_TARGET =
+          VirtualField.find(ConnectionProvider.class, ConfiguredTarget.class);
 
   private static final VirtualField<JedisClusterInfoCache, ConfiguredTarget>
       TOPOLOGY_CONFIGURED_TARGET =
@@ -53,10 +53,9 @@ public class JedisConfiguredTargets {
     SENTINEL_POOL_CONFIGURED_TARGET.set(pool, ConfiguredTarget.create(target));
   }
 
-  public static void setProviderTarget(Object provider, @Nullable RedisServerTarget target) {
-    if (PROVIDER_CONFIGURED_TARGET != null) {
-      PROVIDER_CONFIGURED_TARGET.set(provider, ConfiguredTarget.create(target));
-    }
+  public static void setProviderTarget(
+      ConnectionProvider provider, @Nullable RedisServerTarget target) {
+    PROVIDER_CONFIGURED_TARGET.set(provider, ConfiguredTarget.create(target));
   }
 
   public static void setTopologyTarget(
@@ -73,7 +72,7 @@ public class JedisConfiguredTargets {
   }
 
   @Nullable
-  public static Context providerTargetContext(Object provider) {
+  public static Context providerTargetContext(ConnectionProvider provider) {
     ConfiguredTarget configuredTarget = getProviderTarget(provider);
     return configuredTarget != null ? configuredTargetContext(configuredTarget) : null;
   }
@@ -99,33 +98,8 @@ public class JedisConfiguredTargets {
   }
 
   @Nullable
-  private static ConfiguredTarget getProviderTarget(Object provider) {
-    return PROVIDER_CONFIGURED_TARGET == null ? null : PROVIDER_CONFIGURED_TARGET.get(provider);
-  }
-
-  @Nullable
-  private static VirtualField<Object, ConfiguredTarget> createProviderConfiguredTargetField() {
-    ClassLoader classLoader = JedisConfiguredTargets.class.getClassLoader();
-    try {
-      return providerConfiguredTargetField(
-          Class.forName("redis.clients.jedis.providers.ConnectionProvider", false, classLoader));
-    } catch (ClassNotFoundException ignored) {
-      try {
-        return providerConfiguredTargetField(
-            Class.forName(
-                "redis.clients.jedis.providers.JedisConnectionProvider", false, classLoader));
-      } catch (ClassNotFoundException ignore) {
-        return null;
-      }
-    }
-  }
-
-  @NoMuzzle // the carrier interface was renamed after the beta release
-  @SuppressWarnings("unchecked") // the carrier type is not known at compile time
-  private static VirtualField<Object, ConfiguredTarget> providerConfiguredTargetField(
-      Class<?> providerClass) {
-    return (VirtualField<Object, ConfiguredTarget>)
-        VirtualField.find(providerClass, ConfiguredTarget.class);
+  private static ConfiguredTarget getProviderTarget(ConnectionProvider provider) {
+    return PROVIDER_CONFIGURED_TARGET.get(provider);
   }
 
   @Nullable

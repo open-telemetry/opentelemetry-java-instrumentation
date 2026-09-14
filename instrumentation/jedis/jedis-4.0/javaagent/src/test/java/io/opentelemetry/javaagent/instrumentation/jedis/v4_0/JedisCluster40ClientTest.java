@@ -50,6 +50,7 @@ import redis.clients.jedis.DefaultJedisClientConfig;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisClientConfig;
+import redis.clients.jedis.providers.ClusterConnectionProvider;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class JedisCluster40ClientTest {
@@ -64,7 +65,7 @@ class JedisCluster40ClientTest {
       new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
 
   private static Jedis jedis;
-  private static AutoCloseable provider;
+  private static ClusterConnectionProvider provider;
   private static boolean connectionSendsHello;
   private static Set<HostAndPort> configuredNodes;
   private static String configuredTarget;
@@ -103,11 +104,7 @@ class JedisCluster40ClientTest {
     configuredNodes = new LinkedHashSet<>(asList(selectedNode, unavailableNode));
     configuredTarget = host + ":1," + host + ":" + port;
 
-    Class<? extends AutoCloseable> providerClass = providerClass();
-    provider =
-        providerClass
-            .getConstructor(Set.class, JedisClientConfig.class)
-            .newInstance(configuredNodes, clientConfig());
+    provider = new ClusterConnectionProvider(configuredNodes, clientConfig());
     cleanup.deferAfterAll(provider);
 
     Connection connection = getConnection(selectedNode);
@@ -116,8 +113,7 @@ class JedisCluster40ClientTest {
   }
 
   @Test
-  void internalHealthCheckUsesConfiguredClusterNodesAsServerTarget()
-      throws ReflectiveOperationException {
+  void internalHealthCheckUsesConfiguredClusterNodesAsServerTarget() {
     try (Connection ignored = getConnection()) {
       if (connectionSendsHello) {
         testing.waitAndAssertTraces(
@@ -163,7 +159,7 @@ class JedisCluster40ClientTest {
     assumeTrue(testLatestDeps());
 
     AutoCloseable refreshingProvider =
-        providerClass()
+        ClusterConnectionProvider.class
             .getConstructor(
                 Set.class, JedisClientConfig.class, GenericObjectPoolConfig.class, Duration.class)
             .newInstance(
@@ -193,11 +189,12 @@ class JedisCluster40ClientTest {
                         }));
   }
 
-  private static Connection getConnection(Object... arguments) throws ReflectiveOperationException {
-    Class<?>[] parameterTypes =
-        arguments.length == 0 ? new Class<?>[0] : new Class<?>[] {HostAndPort.class};
-    return (Connection)
-        provider.getClass().getMethod("getConnection", parameterTypes).invoke(provider, arguments);
+  private static Connection getConnection() {
+    return provider.getConnection();
+  }
+
+  private static Connection getConnection(HostAndPort hostAndPort) {
+    return provider.getConnection(hostAndPort);
   }
 
   private static void assertPingTrace(TraceAssert trace) {
@@ -243,15 +240,5 @@ class JedisCluster40ClientTest {
       // Older Jedis versions do not send client metadata.
     }
     return builder.build();
-  }
-
-  private static Class<? extends AutoCloseable> providerClass() throws ClassNotFoundException {
-    try {
-      return Class.forName("redis.clients.jedis.providers.JedisClusterConnectionProvider")
-          .asSubclass(AutoCloseable.class);
-    } catch (ClassNotFoundException ignored) {
-      return Class.forName("redis.clients.jedis.providers.ClusterConnectionProvider")
-          .asSubclass(AutoCloseable.class);
-    }
   }
 }

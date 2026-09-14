@@ -6,15 +6,14 @@ muzzle {
   pass {
     group.set("redis.clients")
     module.set("jedis")
-    versions.set("[4.0.0-beta1,)")
+    versions.set("[4.0.0,)")
     assertInverse.set(true)
   }
 }
 
 dependencies {
-  library("redis.clients:jedis:4.0.0-beta1")
+  library("redis.clients:jedis:4.0.0")
 
-  compileOnly(project(":muzzle")) // For @NoMuzzle
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 

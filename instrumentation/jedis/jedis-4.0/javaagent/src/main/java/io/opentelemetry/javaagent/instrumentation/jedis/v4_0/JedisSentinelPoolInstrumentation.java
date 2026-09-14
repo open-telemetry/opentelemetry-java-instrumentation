@@ -26,7 +26,6 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    // reintroduced in Jedis 4.0.0 after the 4.0.0 beta
     return namedOneOf(
         "redis.clients.jedis.JedisSentinelPool",
         "redis.clients.jedis.JedisSentinelPool$MasterListener");

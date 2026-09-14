@@ -12,14 +12,11 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
-import java.util.function.BiConsumer;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class JedisInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class JedisInstrumentationModule extends InstrumentationModule {
 
   public JedisInstrumentationModule() {
     super("jedis", "jedis-4.0");
@@ -29,15 +26,6 @@ public class JedisInstrumentationModule extends InstrumentationModule
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // added in 4.0
     return hasClassesNamed("redis.clients.jedis.CommandArguments");
-  }
-
-  @Override
-  public void registerVirtualFields(BiConsumer<String, String> virtualFieldRegistrar) {
-    String configuredTarget = JedisConfiguredTargets.ConfiguredTarget.class.getName();
-    virtualFieldRegistrar.accept(
-        "redis.clients.jedis.providers.JedisConnectionProvider", configuredTarget);
-    virtualFieldRegistrar.accept(
-        "redis.clients.jedis.providers.ConnectionProvider", configuredTarget);
   }
 
   @Override

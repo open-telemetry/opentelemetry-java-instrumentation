@@ -25,7 +25,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -50,6 +49,7 @@ import redis.clients.jedis.DefaultJedisClientConfig;
 import redis.clients.jedis.DefaultJedisSocketFactory;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisSocketFactory;
 import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Transaction;
@@ -237,18 +237,10 @@ class Jedis40ClientTest {
   }
 
   @Test
-  void pooledCommand() throws Exception {
-    Class<?> poolClass;
-    try {
-      poolClass = Class.forName("redis.clients.jedis.JedisPool");
-    } catch (ClassNotFoundException ignored) {
-      assumeTrue(false, "JedisPool was reintroduced after 4.0.0-beta1");
-      return;
-    }
-
-    Object pool = poolClass.getConstructor(String.class, int.class).newInstance(host, port);
-    cleanup.deferCleanup((AutoCloseable) pool);
-    try (Jedis pooled = (Jedis) poolClass.getMethod("getResource").invoke(pool)) {
+  void pooledCommand() {
+    JedisPool pool = new JedisPool(host, port);
+    cleanup.deferCleanup(pool);
+    try (Jedis pooled = pool.getResource()) {
       testing.clearData();
       pooled.set("pooled", "value");
     }

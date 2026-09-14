@@ -37,15 +37,13 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisClusterInfoCache;
+import redis.clients.jedis.providers.ConnectionProvider;
 
 class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return namedOneOf(
-        // 4.0.0-beta1
-        "redis.clients.jedis.providers.JedisClusterConnectionProvider",
-        // 4.0.0 and later
         "redis.clients.jedis.providers.ClusterConnectionProvider",
         "redis.clients.jedis.providers.ShardedConnectionProvider",
         // 4.4 and later
@@ -102,7 +100,7 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(
-        @Advice.This Object provider,
+        @Advice.This ConnectionProvider provider,
         @Advice.FieldValue("cache") @Nullable JedisClusterInfoCache cache,
         @Advice.Argument(0) @Nullable Set<HostAndPort> nodes) {
       RedisServerTarget target = JedisServerTarget.ofNodes(nodes);
@@ -124,7 +122,8 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(
-        @Advice.This Object provider, @Advice.Argument(0) @Nullable List<HostAndPort> shards) {
+        @Advice.This ConnectionProvider provider,
+        @Advice.Argument(0) @Nullable List<HostAndPort> shards) {
       RedisServerTarget target = JedisServerTarget.ofShards(shards);
       JedisConfiguredTargets.setProviderTarget(provider, target);
       return JedisConfiguredTargets.configuredTargetContext(target).makeCurrent();
@@ -143,7 +142,7 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(
-        @Advice.This Object provider,
+        @Advice.This ConnectionProvider provider,
         @Advice.FieldValue("masterName") @Nullable String masterName,
         @Advice.Argument(0) @Nullable Set<HostAndPort> sentinels) {
       RedisServerTarget target = JedisServerTarget.ofSentinels(masterName, sentinels);
@@ -164,7 +163,7 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Scope onEnter(@Advice.FieldValue("this$0") Object provider) {
+    public static Scope onEnter(@Advice.FieldValue("this$0") ConnectionProvider provider) {
       Context context = JedisConfiguredTargets.providerTargetContext(provider);
       return context != null ? context.makeCurrent() : null;
     }
@@ -200,7 +199,7 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Scope onEnter(@Advice.This Object provider) {
+    public static Scope onEnter(@Advice.This ConnectionProvider provider) {
       Context context = JedisConfiguredTargets.providerTargetContext(provider);
       return context != null ? context.makeCurrent() : null;
     }
