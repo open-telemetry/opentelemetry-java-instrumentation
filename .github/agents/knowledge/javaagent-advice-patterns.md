@@ -247,6 +247,18 @@ established `start()` / `end()` pattern below.
 Review new code against these patterns instead of treating every existing variation as equally
 canonical.
 
+### Close `Scope` before fallible completion work
+
+Method-exit advice and `AdviceScope` completion should close an entered `Scope` at the first safe
+point, before other fallible completion or cleanup work. Otherwise, a later failure suppressed by
+the advice can leave the context attached to the thread. Closing early also keeps the scope
+lifetime as short as possible.
+
+Close the scope directly before fallible work rather than deferring it to a `finally` block.
+Closing it in `finally` also avoids a leak, but unnecessarily keeps the context current during the
+preceding work. Defer the close only when that exit work intentionally requires the context to
+remain current.
+
 ### Pattern 1 — Nullable `AdviceScope` for ordinary advice
 
 Use this by default when enter advice may decide not to start instrumentation.
