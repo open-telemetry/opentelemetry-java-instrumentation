@@ -55,7 +55,7 @@ class LettuceBatchAttributesGetter implements DbClientAttributesGetter<LettuceBa
   @Nullable
   @Override
   public String getServerAddress(LettuceBatchRequest request) {
-    if (emitStableDatabaseSemconv() && LettuceServerTargets.configuredTargetsSupported()) {
+    if (emitStableDatabaseSemconv()) {
       RedisServerTarget serverTarget = request.getServerTarget();
       return serverTarget != null ? serverTarget.getAddress() : null;
     }
@@ -66,7 +66,7 @@ class LettuceBatchAttributesGetter implements DbClientAttributesGetter<LettuceBa
   @Nullable
   @Override
   public Integer getServerPort(LettuceBatchRequest request) {
-    if (emitStableDatabaseSemconv() && LettuceServerTargets.configuredTargetsSupported()) {
+    if (emitStableDatabaseSemconv()) {
       RedisServerTarget serverTarget = request.getServerTarget();
       return serverTarget != null ? serverTarget.getPort() : null;
     }

@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceVersionSupport.configuredTargetsSupported;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
@@ -121,51 +120,36 @@ class LettuceClusterClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv() && configuredTargetsSupported()
-                                ? "SET " + configuredTarget
-                                : "SET")
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 SERVER_ADDRESS,
-                                emitStableDatabaseSemconv()
-                                    ? (configuredTargetsSupported() ? configuredTarget : null)
-                                    : host),
+                                emitStableDatabaseSemconv() ? configuredTarget : host),
                             equalTo(
                                 SERVER_PORT,
                                 emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(
-                                DB_NAMESPACE,
-                                emitStableDatabaseSemconv() && configuredTargetsSupported()
-                                    ? "0"
-                                    : null),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "SET CLUSTER_COMMAND_KEY ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName(
-                            emitStableDatabaseSemconv() && configuredTargetsSupported()
+                            emitStableDatabaseSemconv()
                                 ? "PIPELINE SET " + configuredTarget
                                 : "PIPELINE SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 SERVER_ADDRESS,
-                                emitStableDatabaseSemconv()
-                                    ? (configuredTargetsSupported() ? configuredTarget : null)
-                                    : host),
+                                emitStableDatabaseSemconv() ? configuredTarget : host),
                             equalTo(
                                 SERVER_PORT,
                                 emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(
-                                DB_NAMESPACE,
-                                emitStableDatabaseSemconv() && configuredTargetsSupported()
-                                    ? "0"
-                                    : null),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 emitStableDatabaseSemconv()
@@ -178,17 +162,12 @@ class LettuceClusterClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv() && configuredTargetsSupported()
-                                ? "SET " + configuredTarget
-                                : "SET")
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() && configuredTargetsSupported()
-                                    ? configuredTarget
-                                    : null),
+                                emitStableDatabaseSemconv() ? configuredTarget : null),
                             equalTo(SERVER_PORT, null),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, null),
@@ -197,17 +176,12 @@ class LettuceClusterClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv() && configuredTargetsSupported()
-                                ? "SET " + configuredTarget
-                                : "SET")
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() && configuredTargetsSupported()
-                                    ? configuredTarget
-                                    : null),
+                                emitStableDatabaseSemconv() ? configuredTarget : null),
                             equalTo(SERVER_PORT, null),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, null),
@@ -217,16 +191,12 @@ class LettuceClusterClientTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName(
-                            emitStableDatabaseSemconv() && configuredTargetsSupported()
-                                ? "PUBLISH " + configuredTarget
-                                : "PUBLISH")
+                            emitStableDatabaseSemconv() ? "PUBLISH " + configuredTarget : "PUBLISH")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() && configuredTargetsSupported()
-                                    ? configuredTarget
-                                    : null),
+                                emitStableDatabaseSemconv() ? configuredTarget : null),
                             equalTo(SERVER_PORT, null),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, null),
