@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -65,7 +66,8 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.Argument(0) @Nullable Set<HostAndPort> nodes) {
-      return JedisConfiguredTargets.openConfiguredTargetScope(JedisServerTarget.ofNodes(nodes));
+      return JedisConfiguredTargets.configuredTargetContext(JedisServerTarget.ofNodes(nodes))
+          .makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -82,7 +84,8 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.This JedisClusterConnectionHandler handler) {
-      return JedisConfiguredTargets.openClusterTargetScope(handler);
+      Context context = JedisConfiguredTargets.clusterTargetContext(handler);
+      return context == null ? null : context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

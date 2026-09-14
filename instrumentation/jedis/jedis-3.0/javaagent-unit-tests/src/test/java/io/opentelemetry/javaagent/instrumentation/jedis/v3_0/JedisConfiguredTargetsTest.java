@@ -53,8 +53,9 @@ class JedisConfiguredTargetsTest {
         connection, RedisServerTarget.ofEndpoint("direct:6379"));
 
     try (Scope scope =
-        JedisConfiguredTargets.openConfiguredTargetScope(
-            RedisServerTarget.ofEndpoints(asList("configured-one:6379", "configured-two:6380")))) {
+        JedisConfiguredTargets.configuredTargetContext(
+                RedisServerTarget.ofEndpoints(asList("configured-one:6379", "configured-two:6380")))
+            .makeCurrent()) {
       assertThat(JedisConfiguredTargets.connectionTarget(connection))
           .extracting(RedisServerTarget::getAddress)
           .isEqualTo("configured-one:6379,configured-two:6380");

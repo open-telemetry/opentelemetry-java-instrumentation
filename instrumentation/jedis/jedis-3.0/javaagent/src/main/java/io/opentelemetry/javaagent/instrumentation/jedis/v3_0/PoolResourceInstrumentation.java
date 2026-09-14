@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -49,7 +50,8 @@ class PoolResourceInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.This Pool<?> pool) {
-      return JedisConfiguredTargets.openPoolTargetScope(pool);
+      Context context = JedisConfiguredTargets.poolTargetContext(pool);
+      return context == null ? null : context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

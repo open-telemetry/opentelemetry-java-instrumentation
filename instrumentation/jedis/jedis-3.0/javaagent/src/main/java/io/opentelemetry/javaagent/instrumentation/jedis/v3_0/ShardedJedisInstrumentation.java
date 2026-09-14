@@ -37,7 +37,8 @@ class ShardedJedisInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.Argument(0) @Nullable List<JedisShardInfo> shards) {
-      return JedisConfiguredTargets.openConfiguredTargetScope(JedisServerTarget.ofShards(shards));
+      return JedisConfiguredTargets.configuredTargetContext(JedisServerTarget.ofShards(shards))
+          .makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

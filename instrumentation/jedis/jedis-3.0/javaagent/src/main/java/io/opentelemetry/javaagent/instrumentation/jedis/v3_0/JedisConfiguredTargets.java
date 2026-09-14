@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.ArrayList;
@@ -106,27 +105,25 @@ public class JedisConfiguredTargets {
   }
 
   @Nullable
-  public static Scope openClusterTargetScope(JedisClusterConnectionHandler handler) {
+  public static Context clusterTargetContext(JedisClusterConnectionHandler handler) {
     ConfiguredTarget configuredTarget = CLUSTER_TARGET.get(handler);
-    return configuredTarget != null ? openConfiguredTargetScope(configuredTarget.target) : null;
+    return configuredTarget != null ? configuredTargetContext(configuredTarget.target) : null;
   }
 
   @Nullable
-  public static Scope openPoolTargetScope(Pool<?> pool) {
+  public static Context poolTargetContext(Pool<?> pool) {
     ConfiguredTarget configuredTarget = POOL_TARGET.get(pool);
-    return configuredTarget != null ? openConfiguredTargetScope(configuredTarget.target) : null;
+    return configuredTarget != null ? configuredTargetContext(configuredTarget.target) : null;
   }
 
   @Nullable
-  public static Scope openFactoryTargetScope(PooledObjectFactory<?> factory) {
+  public static Context factoryTargetContext(PooledObjectFactory<?> factory) {
     ConfiguredTarget configuredTarget = FACTORY_TARGET.get(factory);
-    return configuredTarget != null ? openConfiguredTargetScope(configuredTarget.target) : null;
+    return configuredTarget != null ? configuredTargetContext(configuredTarget.target) : null;
   }
 
-  public static Scope openConfiguredTargetScope(@Nullable RedisServerTarget target) {
-    return Context.current()
-        .with(CURRENT_CONFIGURED_TARGET, ConfiguredTarget.create(target))
-        .makeCurrent();
+  public static Context configuredTargetContext(@Nullable RedisServerTarget target) {
+    return Context.current().with(CURRENT_CONFIGURED_TARGET, ConfiguredTarget.create(target));
   }
 
   public static void capturePooledConnectionTarget(Pool<?> pool, @Nullable Object resource) {
