@@ -10,7 +10,6 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
@@ -92,15 +91,13 @@ public class JedisSingletons {
   }
 
   @Nullable
-  public static Scope openPoolTargetScope(Pool<?> pool) {
-    return openConfiguredTargetScope(POOL_TARGET.get(pool));
+  public static RedisServerTarget getPoolTarget(Pool<?> pool) {
+    return POOL_TARGET.get(pool);
   }
 
   @Nullable
-  public static Scope openConfiguredTargetScope(@Nullable RedisServerTarget target) {
-    return target != null
-        ? Context.current().with(CURRENT_CONFIGURED_TARGET, target).makeCurrent()
-        : null;
+  public static Context configuredTargetContext(@Nullable RedisServerTarget target) {
+    return target != null ? Context.current().with(CURRENT_CONFIGURED_TARGET, target) : null;
   }
 
   @Nullable
