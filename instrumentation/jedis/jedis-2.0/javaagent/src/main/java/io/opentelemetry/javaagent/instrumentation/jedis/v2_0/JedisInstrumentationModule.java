@@ -23,9 +23,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class JedisInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
-  private static final String CLUSTER_TARGET_ACCESSOR =
-      "io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisClusterTargetAccessor";
-
   public JedisInstrumentationModule() {
     super("jedis", "jedis-2.0");
   }
@@ -40,7 +37,8 @@ public class JedisInstrumentationModule extends InstrumentationModule
 
   @Override
   public List<String> getAdditionalHelperClassNames() {
-    return singletonList(CLUSTER_TARGET_ACCESSOR);
+    return singletonList(
+        "io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisClusterTargetAccessor");
   }
 
   @Override
