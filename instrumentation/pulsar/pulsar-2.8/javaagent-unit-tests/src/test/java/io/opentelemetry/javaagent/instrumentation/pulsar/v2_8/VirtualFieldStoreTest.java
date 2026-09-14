@@ -50,7 +50,7 @@ class VirtualFieldStoreTest {
   }
 
   @Test
-  void carriesStateAcrossAsynchronousHandoff() throws Exception {
+  void carriesStateAcrossAsynchronousHandoff() {
     Message<?> message = mock(Message.class);
     Context processParent = Context.root().with(TEST_KEY, "parent");
     VirtualFieldStore.setReceiveState(message, processParent, true);
@@ -61,6 +61,6 @@ class VirtualFieldStoreTest {
                 VirtualFieldStore.extract(message) == processParent
                     && VirtualFieldStore.wereConsumedMessagesRecorded(message));
 
-    assertThat(consumedMessagesRecorded.get()).isTrue();
+    assertThat(consumedMessagesRecorded.join()).isTrue();
   }
 }
