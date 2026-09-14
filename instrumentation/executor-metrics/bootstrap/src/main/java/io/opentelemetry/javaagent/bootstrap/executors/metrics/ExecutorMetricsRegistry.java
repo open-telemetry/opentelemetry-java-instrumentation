@@ -10,7 +10,6 @@ import static java.util.Collections.emptySet;
 import io.opentelemetry.api.metrics.BatchCallback;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import java.lang.ref.WeakReference;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadFactory;
@@ -73,7 +72,7 @@ public final class ExecutorMetricsRegistry {
       MetricsRegistrar metricsRegistrar) {
     Registration registration = registrations.get(executor);
     if (registration != null) {
-      registration.reregister(executor, ownerName, threadNameNormalization, metricsRegistrar);
+      registration.reregister(ownerName, threadNameNormalization);
     }
   }
 
@@ -146,7 +145,6 @@ public final class ExecutorMetricsRegistry {
     private final LongAdder rejectedTaskCount = new LongAdder();
     @Nullable private String ownerName;
     private String threadNameNormalization;
-    @Nullable private String threadName;
     @Nullable private String executorName;
     @Nullable private BatchCallback callback;
     private volatile boolean awaitingWorkerThread = true;
@@ -182,7 +180,6 @@ public final class ExecutorMetricsRegistry {
         previous = callback;
         callback = newCallback;
         executorName = newExecutorName;
-        this.threadName = threadName;
         awaitingWorkerThread = false;
       }
 
@@ -191,41 +188,14 @@ public final class ExecutorMetricsRegistry {
       }
     }
 
-    private void reregister(
-        Executor executor,
-        @Nullable String newOwnerName,
-        String newThreadNameNormalization,
-        MetricsRegistrar metricsRegistrar) {
-      @Nullable BatchCallback previous;
-      synchronized (this) {
-        if (closed) {
-          return;
-        }
-
-        String newExecutorName = executorName(threadName, newThreadNameNormalization);
-        boolean metricsUnchanged =
-            Objects.equals(ownerName, newOwnerName) && newExecutorName.equals(executorName);
-
-        Set<Thread> threads = threadsRef.get();
-        if (callback == null || threads == null || metricsUnchanged) {
-          ownerName = newOwnerName;
-          threadNameNormalization = newThreadNameNormalization;
-          return;
-        }
-
-        BatchCallback newCallback =
-            metricsRegistrar.registerMetrics(
-                executor, threads, newExecutorName, newOwnerName, queueCapacity, rejectedTaskCount);
-        previous = callback;
-        callback = newCallback;
-        ownerName = newOwnerName;
-        threadNameNormalization = newThreadNameNormalization;
-        executorName = newExecutorName;
+    private synchronized void reregister(
+        @Nullable String newOwnerName, String newThreadNameNormalization) {
+      if (closed || callback != null) {
+        return;
       }
 
-      if (previous != null) {
-        previous.close();
-      }
+      ownerName = newOwnerName;
+      threadNameNormalization = newThreadNameNormalization;
     }
 
     private void recordRejectedTask() {

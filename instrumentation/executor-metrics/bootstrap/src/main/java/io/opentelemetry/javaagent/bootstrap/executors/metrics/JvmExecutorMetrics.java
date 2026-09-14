@@ -117,7 +117,7 @@ final class JvmExecutorMetrics {
     return meter
         .counterBuilder("jvm.executor.task.rejected")
         .setUnit("{task}")
-        .setDescription("The number of tasks rejected by the executor.")
+        .setDescription("The number of task submissions rejected by the executor.")
         .buildObserver();
   }
 

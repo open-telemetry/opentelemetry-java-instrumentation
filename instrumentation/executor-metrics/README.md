@@ -9,8 +9,9 @@ be aggregated. Users requiring per-executor metric series should configure disti
 the executor's `ThreadFactory`.
 
 The optional `jvm.executor.owner.name` attribute is omitted by default. Instrumentations that know
-the logical component owning an executor can provide or update it through
-`JdkExecutorMetrics.reregister`; passing a null owner removes the attribute.
+the logical component owning an executor SHOULD configure it before the first worker is registered.
+Once executor metrics are registered, `jvm.executor.name` and `jvm.executor.owner.name` remain fixed
+for that registration; later `reregister` calls do not create a new metric identity.
 
 | System property                                                          | Type    | Default    | Description                                                                                                                                   |
 | ------------------------------------------------------------------------ | ------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------- |

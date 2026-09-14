@@ -29,6 +29,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -430,6 +431,127 @@ class ThreadPoolExecutorMetricsTest {
   }
 
   @Test
+  void countsCallerRunsAsRejectedSubmission() throws Exception {
+    ThreadPoolExecutor executor =
+        new ThreadPoolExecutor(
+            1,
+            1,
+            0,
+            MILLISECONDS,
+            new ArrayBlockingQueue<>(1),
+            new NamedThreadFactory("caller-runs-pool"),
+            new ThreadPoolExecutor.CallerRunsPolicy());
+    CountDownLatch started = new CountDownLatch(1);
+    CountDownLatch release = new CountDownLatch(1);
+    AtomicBoolean ranInCaller = new AtomicBoolean();
+
+    try {
+      executor.execute(
+          () -> {
+            started.countDown();
+            awaitLatch(release);
+          });
+      assertThat(started.await(10, SECONDS)).isTrue();
+      executor.execute(() -> {});
+
+      Thread caller = Thread.currentThread();
+      executor.execute(() -> ranInCaller.set(Thread.currentThread() == caller));
+
+      assertThat(ranInCaller).isTrue();
+      JvmExecutorMetricsAssertions.create(
+              testing, INSTRUMENTATION_NAME, "caller-runs-pool-*", THREAD_POOL_EXECUTOR_TYPE)
+          .withRejectedTasks(1)
+          .assertExecutorEmitsMetrics();
+    } finally {
+      release.countDown();
+      executor.shutdown();
+      assertThat(executor.awaitTermination(10, SECONDS)).isTrue();
+    }
+  }
+
+  @Test
+  void countsDiscardOldestAsRejectedSubmission() throws Exception {
+    ThreadPoolExecutor executor =
+        new ThreadPoolExecutor(
+            1,
+            1,
+            0,
+            MILLISECONDS,
+            new ArrayBlockingQueue<>(1),
+            new NamedThreadFactory("discard-oldest-pool"),
+            new ThreadPoolExecutor.DiscardOldestPolicy());
+    CountDownLatch started = new CountDownLatch(1);
+    CountDownLatch release = new CountDownLatch(1);
+    CountDownLatch replacementCompleted = new CountDownLatch(1);
+    AtomicBoolean oldestRan = new AtomicBoolean();
+
+    try {
+      executor.execute(
+          () -> {
+            started.countDown();
+            awaitLatch(release);
+          });
+      assertThat(started.await(10, SECONDS)).isTrue();
+      executor.execute(() -> oldestRan.set(true));
+      executor.execute(replacementCompleted::countDown);
+
+      release.countDown();
+      assertThat(replacementCompleted.await(10, SECONDS)).isTrue();
+      assertThat(oldestRan).isFalse();
+      JvmExecutorMetricsAssertions.create(
+              testing, INSTRUMENTATION_NAME, "discard-oldest-pool-*", THREAD_POOL_EXECUTOR_TYPE)
+          .withCompletedTasks(2)
+          .withRejectedTasks(1)
+          .assertExecutorEmitsMetrics();
+    } finally {
+      release.countDown();
+      executor.shutdown();
+      assertThat(executor.awaitTermination(10, SECONDS)).isTrue();
+    }
+  }
+
+  @Test
+  void countsDiscardAsRejectedSubmission() throws Exception {
+    ThreadPoolExecutor executor =
+        new ThreadPoolExecutor(
+            1,
+            1,
+            0,
+            MILLISECONDS,
+            new ArrayBlockingQueue<>(1),
+            new NamedThreadFactory("discard-pool"),
+            new ThreadPoolExecutor.DiscardPolicy());
+    CountDownLatch started = new CountDownLatch(1);
+    CountDownLatch release = new CountDownLatch(1);
+    CountDownLatch queuedCompleted = new CountDownLatch(1);
+    AtomicBoolean discardedRan = new AtomicBoolean();
+
+    try {
+      executor.execute(
+          () -> {
+            started.countDown();
+            awaitLatch(release);
+          });
+      assertThat(started.await(10, SECONDS)).isTrue();
+      executor.execute(queuedCompleted::countDown);
+      executor.execute(() -> discardedRan.set(true));
+
+      release.countDown();
+      assertThat(queuedCompleted.await(10, SECONDS)).isTrue();
+      assertThat(discardedRan).isFalse();
+      JvmExecutorMetricsAssertions.create(
+              testing, INSTRUMENTATION_NAME, "discard-pool-*", THREAD_POOL_EXECUTOR_TYPE)
+          .withCompletedTasks(2)
+          .withRejectedTasks(1)
+          .assertExecutorEmitsMetrics();
+    } finally {
+      release.countDown();
+      executor.shutdown();
+      assertThat(executor.awaitTermination(10, SECONDS)).isTrue();
+    }
+  }
+
+  @Test
   void doesNotRecordMetricsWhenUnclosedExecutorIsCollected() throws Exception {
     WeakReference<ThreadPoolExecutor> executorRef = createCollectableThreadPoolExecutor();
 
@@ -528,14 +650,11 @@ class ThreadPoolExecutorMetricsTest {
 
       testing.clearData();
       JvmExecutorMetricsAssertions.create(
-              testing,
-              INSTRUMENTATION_NAME,
-              "original-pool-42-worker-*",
-              "tomcat",
-              THREAD_POOL_EXECUTOR_TYPE)
+              testing, INSTRUMENTATION_NAME, originalExecutorName, THREAD_POOL_EXECUTOR_TYPE)
           .withCoreThreads(0)
           .assertExecutorEmitsMetrics();
-      assertNoExecutorMetricsWithOwner(testing, INSTRUMENTATION_NAME, originalExecutorName, null);
+      assertNoExecutorMetricsWithOwner(
+          testing, INSTRUMENTATION_NAME, originalExecutorName, "tomcat");
 
       NamedThreadFactory replacementThreadFactory =
           new NamedThreadFactory("replacement-pool-43-worker");
@@ -544,11 +663,7 @@ class ThreadPoolExecutorMetricsTest {
 
       testing.clearData();
       JvmExecutorMetricsAssertions.create(
-              testing,
-              INSTRUMENTATION_NAME,
-              "original-pool-42-worker-*",
-              "tomcat",
-              THREAD_POOL_EXECUTOR_TYPE)
+              testing, INSTRUMENTATION_NAME, originalExecutorName, THREAD_POOL_EXECUTOR_TYPE)
           .withCoreThreads(0)
           .assertExecutorEmitsMetrics();
 
@@ -560,11 +675,7 @@ class ThreadPoolExecutorMetricsTest {
       testing.clearData();
 
       JvmExecutorMetricsAssertions.create(
-              testing,
-              INSTRUMENTATION_NAME,
-              "original-pool-42-worker-*",
-              "tomcat",
-              THREAD_POOL_EXECUTOR_TYPE)
+              testing, INSTRUMENTATION_NAME, originalExecutorName, THREAD_POOL_EXECUTOR_TYPE)
           .withCoreThreads(0)
           .assertExecutorEmitsMetrics();
       assertThat(replacementThreadFactory.createdThreadCount()).isEqualTo(1);
@@ -574,11 +685,11 @@ class ThreadPoolExecutorMetricsTest {
 
       testing.clearData();
       JvmExecutorMetricsAssertions.create(
-              testing, INSTRUMENTATION_NAME, "original-pool-42-worker-*", THREAD_POOL_EXECUTOR_TYPE)
+              testing, INSTRUMENTATION_NAME, originalExecutorName, THREAD_POOL_EXECUTOR_TYPE)
           .withCoreThreads(0)
           .assertExecutorEmitsMetrics();
       assertNoExecutorMetricsWithOwner(
-          testing, INSTRUMENTATION_NAME, "original-pool-42-worker-*", "tomcat");
+          testing, INSTRUMENTATION_NAME, originalExecutorName, "tomcat");
     } finally {
       releaseOriginalWorker.countDown();
       executor.shutdown();

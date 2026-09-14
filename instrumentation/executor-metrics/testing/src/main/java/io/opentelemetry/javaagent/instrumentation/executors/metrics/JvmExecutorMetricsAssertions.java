@@ -341,7 +341,7 @@ public class JvmExecutorMetricsAssertions {
                     verifyExecutorMetric(
                         metric,
                         "{task}",
-                        "The number of tasks rejected by the executor.",
+                        "The number of task submissions rejected by the executor.",
                         true,
                         expectedValue)));
   }

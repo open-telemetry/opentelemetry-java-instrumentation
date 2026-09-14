@@ -220,7 +220,7 @@ class ExecutorMetricsRegistryTest {
   }
 
   @Test
-  void reregistersActiveMetricsAndRemovesOwner() {
+  void ignoresReregisterAfterMetricsRegistered() {
     TestMetricsRegistrar metrics = new TestMetricsRegistrar();
     ThreadPoolExecutor executor = newExecutor();
     try {
@@ -230,29 +230,12 @@ class ExecutorMetricsRegistryTest {
       LongAdder rejectedTaskCount = metrics.rejectedTaskCounts.get(0);
 
       ExecutorMetricsRegistry.reregister(executor, "tomcat", "trailing", metrics);
-
-      assertThat(metrics.executorNames).containsExactly("pool-*-thread-*", "pool-12-thread-*");
-      assertThat(metrics.ownerNames).containsExactly(NO_OWNER, "tomcat");
-      assertThat(metrics.callbacks).hasSize(2);
-      assertThat(originalCallback.closeCount).hasValue(1);
-      assertThat(metrics.rejectedTaskCounts)
-          .allSatisfy(count -> assertThat(count).isSameAs(rejectedTaskCount));
-      assertThat(metrics.queueCapacities).containsExactly(TEST_QUEUE_CAPACITY, TEST_QUEUE_CAPACITY);
-
-      ExecutorMetricsRegistry.reregister(executor, "tomcat", "trailing", metrics);
-
-      assertThat(metrics.executorNames).hasSize(2);
-      assertThat(metrics.callbacks).hasSize(2);
-
-      TestCallback ownerCallback = metrics.callbacks.get(1);
       ExecutorMetricsRegistry.reregister(executor, null, "trailing", metrics);
 
-      assertThat(metrics.executorNames)
-          .containsExactly("pool-*-thread-*", "pool-12-thread-*", "pool-12-thread-*");
-      assertThat(metrics.ownerNames).containsExactly(NO_OWNER, "tomcat", NO_OWNER);
-      assertThat(metrics.callbacks).hasSize(3);
-      assertThat(ownerCallback.closeCount).hasValue(1);
-      assertThat(metrics.callbacks.get(2).closeCount).hasValue(0);
+      assertThat(metrics.executorNames).containsExactly("pool-*-thread-*");
+      assertThat(metrics.ownerNames).containsExactly(NO_OWNER);
+      assertThat(metrics.callbacks).containsExactly(originalCallback);
+      assertThat(originalCallback.closeCount).hasValue(0);
       assertThat(metrics.rejectedTaskCounts)
           .allSatisfy(count -> assertThat(count).isSameAs(rejectedTaskCount));
     } finally {
@@ -262,7 +245,7 @@ class ExecutorMetricsRegistryTest {
   }
 
   @Test
-  void keepsExistingCallbackAndRetriesReregistrationAfterFailure() {
+  void doesNotCallRegistrarForActiveReregister() {
     TestMetricsRegistrar metrics = new TestMetricsRegistrar();
     ThreadPoolExecutor executor = newExecutor();
     try {
@@ -271,21 +254,10 @@ class ExecutorMetricsRegistryTest {
       TestCallback originalCallback = metrics.callbacks.get(0);
 
       metrics.failuresRemaining = 1;
-      assertThatThrownBy(
-              () -> ExecutorMetricsRegistry.reregister(executor, "tomcat", "trailing", metrics))
-          .isInstanceOf(IllegalStateException.class)
-          .hasMessage("registration failed");
+      ExecutorMetricsRegistry.reregister(executor, "tomcat", "trailing", metrics);
 
       assertThat(metrics.callbacks).containsExactly(originalCallback);
       assertThat(originalCallback.closeCount).hasValue(0);
-
-      ExecutorMetricsRegistry.reregister(executor, "tomcat", "trailing", metrics);
-
-      assertThat(metrics.executorNames)
-          .containsExactly("pool-*-thread-*", "pool-12-thread-*", "pool-12-thread-*");
-      assertThat(metrics.ownerNames).containsExactly(NO_OWNER, "tomcat", "tomcat");
-      assertThat(metrics.callbacks).hasSize(2);
-      assertThat(originalCallback.closeCount).hasValue(1);
     } finally {
       ExecutorMetricsRegistry.unregister(executor);
       executor.shutdownNow();
