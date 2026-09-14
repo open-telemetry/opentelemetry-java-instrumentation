@@ -75,7 +75,7 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
       if (asyncCommand == null) {
         return;
       }
-      if (emitStableDatabaseSemconv() && !LettuceSingletons.markCommandSpanStarted(asyncCommand)) {
+      if (emitStableDatabaseSemconv() && !LettuceCommandPeer.markSpanStarted(asyncCommand)) {
         return;
       }
 
