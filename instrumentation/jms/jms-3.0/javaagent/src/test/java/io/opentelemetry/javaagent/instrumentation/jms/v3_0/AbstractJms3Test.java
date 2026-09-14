@@ -37,6 +37,8 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import jakarta.jms.Connection;
 import jakarta.jms.Destination;
+import jakarta.jms.JMSConsumer;
+import jakarta.jms.JMSContext;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
 import jakarta.jms.MessageConsumer;
@@ -183,6 +185,45 @@ abstract class AbstractJms3Test {
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
 
+  @Test
+  void testJmsProducerSend() throws JMSException {
+
+    // given
+    Destination destination = session.createQueue("jmsProducerQueue");
+    TextMessage sentMessage = session.createTextMessage("hello there");
+
+    JMSContext context = connectionFactory.createContext("test", "test");
+    cleanup.deferCleanup(context);
+
+    String actualDestinationName = ((ActiveMQDestination) destination).getName();
+
+    // when
+    testing.runWithSpan("parent", () -> context.createProducer().send(destination, sentMessage));
+
+    // then
+    String messageId = sentMessage.getJMSMessageID();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                span ->
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "send " + actualDestinationName
+                                : actualDestinationName + " publish")
+                        .hasKind(PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
+                            oldOperation("publish"),
+                            operationName("send"),
+                            operationType("send"),
+                            equalTo(MESSAGING_MESSAGE_ID, messageId),
+                            messagingTempDestination(false))));
+  }
+
   @ParameterizedTest
   @MethodSource("emptyReceiveArguments")
   void shouldNotEmitTelemetryOnEmptyReceive(
@@ -192,6 +233,28 @@ abstract class AbstractJms3Test {
     Destination destination = destinationFactory.create(session);
 
     MessageConsumer consumer = session.createConsumer(destination);
+    cleanup.deferCleanup(consumer);
+
+    // when
+    Message message = receiver.receive(consumer);
+
+    // then
+    assertThat(message).isNull();
+
+    testing.waitForTraces(0);
+  }
+
+  @ParameterizedTest
+  @MethodSource("jmsConsumerEmptyReceiveArguments")
+  void shouldNotEmitTelemetryOnEmptyReceiveForJmsConsumer(
+      DestinationFactory destinationFactory, JmsConsumerReceiver receiver) throws JMSException {
+
+    // given
+    Destination destination = destinationFactory.create(session);
+
+    JMSContext context = connectionFactory.createContext("test", "test");
+    cleanup.deferCleanup(context);
+    JMSConsumer consumer = context.createConsumer(destination);
     cleanup.deferCleanup(consumer);
 
     // when
@@ -470,6 +533,19 @@ abstract class AbstractJms3Test {
         arguments(queue, receiveNoWait));
   }
 
+  private static Stream<Arguments> jmsConsumerEmptyReceiveArguments() {
+    DestinationFactory topic = session -> session.createTopic("someTopic");
+    DestinationFactory queue = session -> session.createQueue("someQueue");
+    JmsConsumerReceiver receive = consumer -> consumer.receive(100);
+    JmsConsumerReceiver receiveNoWait = JMSConsumer::receiveNoWait;
+
+    return Stream.of(
+        arguments(topic, receive),
+        arguments(queue, receive),
+        arguments(topic, receiveNoWait),
+        arguments(queue, receiveNoWait));
+  }
+
   private static Stream<Arguments> destinationArguments() {
     DestinationFactory topic = session -> session.createTopic("someTopic");
     DestinationFactory queue = session -> session.createQueue("someQueue");
@@ -493,5 +569,11 @@ abstract class AbstractJms3Test {
   interface MessageReceiver {
 
     Message receive(MessageConsumer consumer) throws JMSException;
+  }
+
+  @FunctionalInterface
+  interface JmsConsumerReceiver {
+
+    Message receive(JMSConsumer consumer);
   }
 }

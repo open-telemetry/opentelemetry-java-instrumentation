@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jms.v3_0;
+package io.opentelemetry.javaagent.instrumentation.jms.v2_0;
 
 import static java.util.Arrays.asList;
 
@@ -15,17 +15,11 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class JmsInstrumentationModule extends InstrumentationModule {
   public JmsInstrumentationModule() {
-    super("jms", "jms-3.0");
+    super("jms", "jms-2.0");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(
-        new JmsSessionInstrumentation(),
-        new JmsMessageConsumerInstrumentation(),
-        new JmsMessageListenerInstrumentation(),
-        new JmsMessageProducerInstrumentation(),
-        new JmsProducerInstrumentation(),
-        new JmsConsumerInstrumentation());
+    return asList(new JmsProducerInstrumentation(), new JmsConsumerInstrumentation());
   }
 }
