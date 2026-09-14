@@ -44,7 +44,7 @@ public final class CouchbaseSpan {
   static {
     DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "couchbase");
-    captureExperimentalTelemetry = captureExperimentalTelemetry(config, v3Preview);
+    captureExperimentalTelemetry = captureExperimentalTelemetry(config);
   }
 
   private final Span span;
@@ -188,24 +188,24 @@ public final class CouchbaseSpan {
   }
 
   // visible for testing
-  static boolean captureExperimentalTelemetry(
-      DeclarativeConfigProperties config, boolean v3Preview) {
-    if (v3Preview) {
-      return config.getBoolean("emit_experimental_telemetry/development", false);
+  static boolean captureExperimentalTelemetry(DeclarativeConfigProperties config) {
+    Boolean configured = config.getBoolean("emit_experimental_telemetry/development");
+    if (configured != null) {
+      return configured;
     }
 
-    // Deprecated for Couchbase 3.x; remains active outside v3 preview until the next minor release.
-    Boolean configured = config.getBoolean("experimental_span_attributes/development");
-    if (configured == null) {
+    // Deprecated for Couchbase 3.x; remains active until the next minor release.
+    Boolean deprecated = config.getBoolean("experimental_span_attributes/development");
+    if (deprecated == null) {
       return false;
     }
 
     logger.warning(
         "The otel.instrumentation.couchbase.experimental-span-attributes setting and the"
             + " equivalent declarative configuration property are deprecated for Couchbase 3.x"
-            + " and will be removed in the next minor release. Under v3 preview, use"
-            + " otel.instrumentation.couchbase.emit-experimental-telemetry or equivalent"
+            + " and will be removed in the next minor release. Use"
+            + " otel.instrumentation.couchbase.emit-experimental-telemetry or the equivalent"
             + " declarative configuration instead.");
-    return configured;
+    return deprecated;
   }
 }

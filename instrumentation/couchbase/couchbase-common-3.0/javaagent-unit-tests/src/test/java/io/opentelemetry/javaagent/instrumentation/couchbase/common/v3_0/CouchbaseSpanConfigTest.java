@@ -25,22 +25,40 @@ class CouchbaseSpanConfigTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
+  void replacementConfigIsAppliedWithoutWarning(boolean enabled) {
+    DeclarativeConfigProperties config = mock(DeclarativeConfigProperties.class);
+    when(config.getBoolean("emit_experimental_telemetry/development")).thenReturn(enabled);
+    Logger logger = Logger.getLogger(CouchbaseSpan.class.getName());
+    TestHandler handler = new TestHandler();
+    logger.addHandler(handler);
+    try {
+      assertThat(CouchbaseSpan.captureExperimentalTelemetry(config)).isEqualTo(enabled);
+      verify(config, never()).getBoolean("experimental_span_attributes/development");
+      assertThat(handler.records).isEmpty();
+    } finally {
+      logger.removeHandler(handler);
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
   void deprecatedConfigIsAppliedAndWarns(boolean enabled) {
     DeclarativeConfigProperties config = mock(DeclarativeConfigProperties.class);
+    when(config.getBoolean("emit_experimental_telemetry/development")).thenReturn(null);
     when(config.getBoolean("experimental_span_attributes/development")).thenReturn(enabled);
     Logger logger = Logger.getLogger(CouchbaseSpan.class.getName());
     TestHandler handler = new TestHandler();
     logger.addHandler(handler);
     try {
-      assertThat(CouchbaseSpan.captureExperimentalTelemetry(config, false)).isEqualTo(enabled);
+      assertThat(CouchbaseSpan.captureExperimentalTelemetry(config)).isEqualTo(enabled);
       assertThat(handler.records)
           .singleElement()
           .extracting(LogRecord::getMessage)
           .isEqualTo(
               "The otel.instrumentation.couchbase.experimental-span-attributes setting and the"
                   + " equivalent declarative configuration property are deprecated for Couchbase"
-                  + " 3.x and will be removed in the next minor release. Under v3 preview, use"
-                  + " otel.instrumentation.couchbase.emit-experimental-telemetry or equivalent"
+                  + " 3.x and will be removed in the next minor release. Use"
+                  + " otel.instrumentation.couchbase.emit-experimental-telemetry or the equivalent"
                   + " declarative configuration instead.");
     } finally {
       logger.removeHandler(handler);
@@ -48,30 +66,15 @@ class CouchbaseSpanConfigTest {
   }
 
   @Test
-  void absentDeprecatedConfigPreservesDefaultWithoutWarning() {
+  void absentConfigPreservesDefaultWithoutWarning() {
     DeclarativeConfigProperties config = mock(DeclarativeConfigProperties.class);
+    when(config.getBoolean("emit_experimental_telemetry/development")).thenReturn(null);
     when(config.getBoolean("experimental_span_attributes/development")).thenReturn(null);
     Logger logger = Logger.getLogger(CouchbaseSpan.class.getName());
     TestHandler handler = new TestHandler();
     logger.addHandler(handler);
     try {
-      assertThat(CouchbaseSpan.captureExperimentalTelemetry(config, false)).isFalse();
-      assertThat(handler.records).isEmpty();
-    } finally {
-      logger.removeHandler(handler);
-    }
-  }
-
-  @Test
-  void v3PreviewIgnoresDeprecatedConfigWithoutWarning() {
-    DeclarativeConfigProperties config = mock(DeclarativeConfigProperties.class);
-    when(config.getBoolean("emit_experimental_telemetry/development", false)).thenReturn(true);
-    Logger logger = Logger.getLogger(CouchbaseSpan.class.getName());
-    TestHandler handler = new TestHandler();
-    logger.addHandler(handler);
-    try {
-      assertThat(CouchbaseSpan.captureExperimentalTelemetry(config, true)).isTrue();
-      verify(config, never()).getBoolean("experimental_span_attributes/development");
+      assertThat(CouchbaseSpan.captureExperimentalTelemetry(config)).isFalse();
       assertThat(handler.records).isEmpty();
     } finally {
       logger.removeHandler(handler);

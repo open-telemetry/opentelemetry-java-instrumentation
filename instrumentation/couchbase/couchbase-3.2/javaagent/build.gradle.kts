@@ -46,11 +46,11 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs(
       "-Dotel.semconv-stability.opt-in=database",
-      "-Dotel.instrumentation.couchbase.experimental-span-attributes=true",
+      "-Dotel.instrumentation.couchbase.emit-experimental-telemetry=true",
     )
     systemProperty(
       "metadataConfig",
-      "otel.semconv-stability.opt-in=database,otel.instrumentation.couchbase.experimental-span-attributes=true",
+      "otel.semconv-stability.opt-in=database,otel.instrumentation.couchbase.emit-experimental-telemetry=true",
     )
   }
 

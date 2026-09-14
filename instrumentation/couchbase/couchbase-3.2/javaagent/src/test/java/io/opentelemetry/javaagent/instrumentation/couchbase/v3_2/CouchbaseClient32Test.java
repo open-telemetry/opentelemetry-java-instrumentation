@@ -172,12 +172,11 @@ class CouchbaseClient32Test {
   }
 
   private static boolean emitSdkDetailSpans() {
-    return !v3Preview() || EXPERIMENTAL_TELEMETRY;
+    return !v3Preview() || EXPERIMENTAL_TELEMETRY || LEGACY_EXPERIMENTAL_ATTRIBUTES;
   }
 
   private static boolean emitExperimentalAttributes() {
-    return emitOldDatabaseSemconv()
-        || (v3Preview() ? EXPERIMENTAL_TELEMETRY : LEGACY_EXPERIMENTAL_ATTRIBUTES);
+    return emitOldDatabaseSemconv() || EXPERIMENTAL_TELEMETRY || LEGACY_EXPERIMENTAL_ATTRIBUTES;
   }
 
   private static <T> T experimental(T value) {
