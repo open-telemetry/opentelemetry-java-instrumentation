@@ -91,7 +91,7 @@ class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisCommand
   @Override
   public String getNetworkPeerAddress(RedisCommand<?, ?, ?> request, @Nullable Void unused) {
     return emitStableDatabaseSemconv()
-        ? LettuceCommandPeer.getNetworkPeerAddress(LettuceSingletons.commandPeerAddress(request))
+        ? LettuceCommandPeer.getNetworkPeerAddress(LettuceCommandPeer.address(request))
         : null;
   }
 
@@ -99,7 +99,7 @@ class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisCommand
   @Override
   public Integer getNetworkPeerPort(RedisCommand<?, ?, ?> request, @Nullable Void unused) {
     return emitStableDatabaseSemconv()
-        ? LettuceCommandPeer.getNetworkPeerPort(LettuceSingletons.commandPeerAddress(request))
+        ? LettuceCommandPeer.getNetworkPeerPort(LettuceCommandPeer.address(request))
         : null;
   }
 }
