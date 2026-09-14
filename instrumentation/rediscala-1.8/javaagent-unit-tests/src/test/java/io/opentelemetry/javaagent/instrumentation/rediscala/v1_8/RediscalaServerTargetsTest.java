@@ -9,6 +9,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static scala.collection.JavaConverters.asScalaBufferConverter;
 
@@ -33,6 +34,58 @@ class RediscalaServerTargetsTest {
     when(client.port()).thenReturn(6380);
 
     assertTarget(RediscalaServerTargets.of(client), "host", 6380);
+  }
+
+  @Test
+  void actorClientTargetIsReusedByCommandsAndTransactions() {
+    RedisClientActorLike client = mock(RedisClientActorLike.class);
+    when(client.host()).thenReturn("host");
+    when(client.port()).thenReturn(6380);
+
+    RediscalaServerTargets.captureClientTarget(client);
+
+    RedisServerTarget firstCommandTarget = RediscalaServerTargets.get(client);
+    RedisServerTarget secondCommandTarget = RediscalaServerTargets.get(client);
+    RedisServerTarget transactionTarget = RediscalaServerTargets.get(client);
+
+    assertThat(secondCommandTarget).isSameAs(firstCommandTarget);
+    assertThat(transactionTarget).isSameAs(firstCommandTarget);
+    verify(client).host();
+    verify(client).port();
+  }
+
+  @Test
+  void successfulReconnectRefreshesActorClientTarget() {
+    RedisClientActorLike client = mock(RedisClientActorLike.class);
+    when(client.host()).thenReturn("host");
+    when(client.port()).thenReturn(6380);
+    RediscalaServerTargets.captureClientTarget(client);
+    RedisServerTarget initialTarget = RediscalaServerTargets.get(client);
+
+    boolean configurationChanged =
+        RediscalaServerTargets.clientConfigurationChanged(client, "other-host", 6381);
+    assertThat(configurationChanged).isTrue();
+    RediscalaServerTargets.updateClientTarget(client, "other-host", 6381);
+
+    RedisServerTarget refreshedTarget = RediscalaServerTargets.get(client);
+    assertThat(refreshedTarget).isNotSameAs(initialTarget);
+    assertTarget(refreshedTarget, "other-host", 6381);
+    assertThat(RediscalaServerTargets.get(client)).isSameAs(refreshedTarget);
+  }
+
+  @Test
+  void unchangedReconnectReusesActorClientTarget() {
+    RedisClientActorLike client = mock(RedisClientActorLike.class);
+    when(client.host()).thenReturn("host");
+    when(client.port()).thenReturn(6380);
+    RediscalaServerTargets.captureClientTarget(client);
+    RedisServerTarget initialTarget = RediscalaServerTargets.get(client);
+
+    boolean configurationChanged =
+        RediscalaServerTargets.clientConfigurationChanged(client, "host", 6380);
+
+    assertThat(configurationChanged).isFalse();
+    assertThat(RediscalaServerTargets.get(client)).isSameAs(initialTarget);
   }
 
   @Test
