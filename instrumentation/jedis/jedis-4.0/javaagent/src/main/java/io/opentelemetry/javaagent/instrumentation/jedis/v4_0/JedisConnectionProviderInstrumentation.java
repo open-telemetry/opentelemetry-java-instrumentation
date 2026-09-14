@@ -69,6 +69,7 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$InitializeSentinelsAdvice");
     transformer.applyAdviceToMethod(
         named("run")
+            // TopologyRefreshTask has the same run() signature; keep this advice on the listener.
             .and(
                 isDeclaredBy(
                     named(
