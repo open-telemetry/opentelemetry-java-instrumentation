@@ -11,7 +11,8 @@ import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSin
 import io.lettuce.core.api.StatefulConnection;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons;
+import io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceCommandPeer;
+import io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceConnectionState;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -34,8 +35,8 @@ public abstract class LettuceReactiveCommandHandler {
   public final void onCommand(RedisCommand<?, ?, ?> command) {
     this.command = command;
     expectsResponse = expectsResponse(command);
-    LettuceSingletons.initializeCommandPeerForSubscription(command);
-    LettuceSingletons.attachConnectionState(command, connection);
+    LettuceCommandPeer.initializeForSubscription(command);
+    LettuceConnectionState.copy(connection, command);
     context = instrumenter().start(Context.current(), command);
     if (!expectsResponse) {
       instrumenter().end(context, command, null, null);
