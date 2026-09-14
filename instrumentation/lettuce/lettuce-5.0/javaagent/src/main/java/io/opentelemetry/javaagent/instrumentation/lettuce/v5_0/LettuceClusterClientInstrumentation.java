@@ -39,7 +39,7 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor().and(takesArgument(1, named("java.lang.Iterable"))),
+        isConstructor().and(takesArgument(1, Iterable.class)),
         getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
         nameStartsWith("connectStateful")
