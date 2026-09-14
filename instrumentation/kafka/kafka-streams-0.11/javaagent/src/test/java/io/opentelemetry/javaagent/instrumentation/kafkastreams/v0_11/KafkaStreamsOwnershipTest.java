@@ -50,7 +50,7 @@ class KafkaStreamsOwnershipTest extends KafkaStreamsBaseTest {
 
     KafkaStreams streams =
         streamBuilder.createStreams(values, streamsConfig("ownership-success"), STREAM_PROCESSED);
-    cleanup.deferCleanup(streams::close);
+    cleanup.deferCleanup(streams);
     streams.start();
     testing.clearData();
 
@@ -84,7 +84,7 @@ class KafkaStreamsOwnershipTest extends KafkaStreamsBaseTest {
 
     KafkaStreams streams =
         streamBuilder.createStreams(values, streamsConfig("ownership-failure"), STREAM_PROCESSED);
-    cleanup.deferCleanup(streams::close);
+    cleanup.deferCleanup(streams);
     streams.start();
     testing.clearData();
 
