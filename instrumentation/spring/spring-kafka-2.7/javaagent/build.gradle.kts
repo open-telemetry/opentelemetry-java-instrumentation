@@ -89,6 +89,7 @@ tasks {
     filter {
       includeTestsMatching("SpringKafkaTest.shouldCreateSpansForSingleRecordProcess")
       includeTestsMatching("SpringKafkaTest.shouldTraceRawConsumerInsideListener")
+      includeTestsMatching("SpringKafkaTest.shouldTraceRawConsumerInsideBatchListener")
       includeTestsMatching("SpringKafkaTest.shouldHandleFailureInKafkaListener")
       includeTestsMatching("SpringKafkaTest.shouldCreateSpansForBatchReceiveAndProcess")
       includeTestsMatching("SpringKafkaTest.shouldHandleFailureInKafkaBatchListener")
@@ -104,6 +105,7 @@ tasks {
     filter {
       includeTestsMatching("SpringKafkaTest.shouldCreateSpansForSingleRecordProcess")
       includeTestsMatching("SpringKafkaTest.shouldTraceRawConsumerInsideListener")
+      includeTestsMatching("SpringKafkaTest.shouldTraceRawConsumerInsideBatchListener")
       includeTestsMatching("SpringKafkaTest.shouldHandleFailureInKafkaListener")
       includeTestsMatching("SpringKafkaTest.shouldCreateSpansForBatchReceiveAndProcess")
       includeTestsMatching("SpringKafkaTest.shouldHandleFailureInKafkaBatchListener")

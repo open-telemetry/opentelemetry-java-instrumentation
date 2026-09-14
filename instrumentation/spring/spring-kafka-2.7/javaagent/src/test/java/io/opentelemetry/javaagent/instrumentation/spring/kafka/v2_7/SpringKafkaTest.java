@@ -185,19 +185,33 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
 
   @Test
   void shouldTraceRawConsumerInsideListener() {
+    assertRawConsumerInsideListener(
+        "testNestedTopic", "nested", this::runOnNextNestedRecord, "testSingleTopic");
+  }
+
+  @Test
+  void shouldTraceRawConsumerInsideBatchListener() {
+    assertRawConsumerInsideListener(
+        "testNestedBatchTopic", "nested-batch", this::runOnNextNestedBatch, "testBatchTopic");
+  }
+
+  private void assertRawConsumerInsideListener(
+      String nestedTopic,
+      String groupId,
+      Consumer<Runnable> callbackRegistrar,
+      String listenerTopic) {
     Map<String, Object> consumerProperties = new HashMap<>();
     consumerProperties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers());
-    consumerProperties.put(ConsumerConfig.GROUP_ID_CONFIG, "nested");
+    consumerProperties.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
     consumerProperties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
     consumerProperties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
     consumerProperties.put(
         ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
 
-    runOnNextNestedRecord(
+    callbackRegistrar.accept(
         () -> {
           try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(consumerProperties)) {
-            List<TopicPartition> partitions =
-                singletonList(new TopicPartition("testNestedTopic", 0));
+            List<TopicPartition> partitions = singletonList(new TopicPartition(nestedTopic, 0));
             consumer.assign(partitions);
             consumer.seekToBeginning(partitions);
             ConsumerRecords<String, String> records;
@@ -215,17 +229,17 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
 
     kafkaTemplate.executeInTransaction(
         operations -> {
-          send("testNestedTopic", "nested-key", "nested-value");
+          send(nestedTopic, "nested-key", "nested-value");
           return null;
         });
     kafkaTemplate.executeInTransaction(
         operations -> {
-          send("testSingleTopic", "10", "nested");
+          send(listenerTopic, "10", "nested");
           return null;
         });
 
-    String nestedProcessName = spanName("testNestedTopic", "process", "process");
-    String nestedReceiveName = spanName("testNestedTopic", "receive", "poll");
+    String nestedProcessName = spanName(nestedTopic, "process", "process");
+    String nestedReceiveName = spanName(nestedTopic, "receive", "poll");
     await()
         .atMost(Duration.ofSeconds(30))
         .untilAsserted(
@@ -253,16 +267,9 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
             });
 
     assertReceiveMetrics(
-        testing,
-        "io.opentelemetry.kafka-clients-0.11",
-        "testNestedTopic",
-        "nested",
-        "0",
-        1,
-        1,
-        null);
+        testing, "io.opentelemetry.kafka-clients-0.11", nestedTopic, groupId, "0", 1, 1, null);
     assertProcessMetrics(
-        testing, "io.opentelemetry.kafka-clients-0.11", "testNestedTopic", "nested", "0", 1, null);
+        testing, "io.opentelemetry.kafka-clients-0.11", nestedTopic, groupId, "0", 1, null);
   }
 
   @Test
