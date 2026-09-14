@@ -29,7 +29,7 @@ class ShardedJedisInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("initialize").and(takesArgument(0, named("java.util.List"))),
+        named("initialize").and(takesArgument(0, List.class)),
         getClass().getName() + "$InitializeAdvice");
   }
 
