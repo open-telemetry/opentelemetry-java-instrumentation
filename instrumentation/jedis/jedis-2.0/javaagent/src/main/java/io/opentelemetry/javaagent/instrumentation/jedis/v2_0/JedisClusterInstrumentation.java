@@ -5,10 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
+import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -46,7 +48,7 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$InitializeAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf("getConnection", "getConnectionFromSlot")
-            .and(isDeclaredBy(named("redis.clients.jedis.JedisSlotBasedConnectionHandler")))
+            .and(not(isAbstract()))
             .and(returns(named("redis.clients.jedis.Jedis"))),
         getClass().getName() + "$GetConnectionAdvice");
     transformer.applyAdviceToMethod(
