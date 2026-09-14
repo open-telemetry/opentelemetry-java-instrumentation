@@ -53,6 +53,7 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
     public static class AdviceScope {
       private final Instrumenter<MessageWithDestination, Void> instrumenter;
       private final MessageWithDestination messageWithDestination;
+      private final MessageAdapter messageAdapter;
       @Nullable private final Context context;
       @Nullable private final Scope scope;
       // the message that this callback attached the listener's subscription name to, and that has
@@ -62,11 +63,13 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
       private AdviceScope(
           Instrumenter<MessageWithDestination, Void> instrumenter,
           MessageWithDestination messageWithDestination,
+          MessageAdapter messageAdapter,
           @Nullable Context context,
           @Nullable Scope scope,
           @Nullable Message messageWithListenerSubscriptionName) {
         this.instrumenter = instrumenter;
         this.messageWithDestination = messageWithDestination;
+        this.messageAdapter = messageAdapter;
         this.context = context;
         this.scope = scope;
         this.messageWithListenerSubscriptionName = messageWithListenerSubscriptionName;
@@ -78,6 +81,7 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
         MessageAdapter messageAdapter = JavaxMessageAdapter.create(message);
         MessageWithDestination messageWithDestination =
             MessageWithDestination.create(messageAdapter, null, JmsSubscriptionNames.get(message));
+        messageAdapter.beginProcessing();
 
         Context currentContext = Context.current();
         if (!consumerProcessInstrumenter(true)
@@ -85,6 +89,7 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
           return new AdviceScope(
               consumerProcessInstrumenter(true),
               messageWithDestination,
+              messageAdapter,
               null,
               null,
               messageWithListenerSubscriptionName);
@@ -104,6 +109,7 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
           return new AdviceScope(
               instrumenter,
               messageWithDestination,
+              messageAdapter,
               null,
               null,
               messageWithListenerSubscriptionName);
@@ -113,6 +119,7 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
         return new AdviceScope(
             instrumenter,
             messageWithDestination,
+            messageAdapter,
             context,
             context.makeCurrent(),
             messageWithListenerSubscriptionName);
@@ -144,8 +151,12 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
             instrumenter.end(context, messageWithDestination, null, throwable);
           }
         } finally {
-          if (messageWithListenerSubscriptionName != null) {
-            JmsSubscriptionNames.set(messageWithListenerSubscriptionName, null);
+          try {
+            messageAdapter.endProcessing();
+          } finally {
+            if (messageWithListenerSubscriptionName != null) {
+              JmsSubscriptionNames.set(messageWithListenerSubscriptionName, null);
+            }
           }
         }
       }

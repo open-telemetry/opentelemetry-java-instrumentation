@@ -40,6 +40,12 @@ public interface MessageAdapter {
   @Nullable
   JmsReceiveContext getReceiveContext();
 
+  /** Starts a possibly nested processing callback for this message. */
+  void beginProcessing();
+
+  /** Ends a processing callback for this message. */
+  void endProcessing();
+
   /** Claims responsibility for recording the consumed messages metric for this delivery. */
   boolean claimConsumedMessages();
 }

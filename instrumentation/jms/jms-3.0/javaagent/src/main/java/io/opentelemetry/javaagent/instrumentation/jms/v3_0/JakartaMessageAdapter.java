@@ -82,7 +82,9 @@ public class JakartaMessageAdapter implements MessageAdapter {
   @Override
   public void prepareForReceive() {
     RECEIVE_CONTEXT.set(message, null);
-    DELIVERY_STATE.set(message, new JmsMessageDeliveryState());
+    JmsMessageDeliveryState state = new JmsMessageDeliveryState();
+    state.prepareForReceive();
+    DELIVERY_STATE.set(message, state);
   }
 
   @Override
@@ -97,17 +99,37 @@ public class JakartaMessageAdapter implements MessageAdapter {
   }
 
   @Override
-  public boolean claimConsumedMessages() {
-    JmsMessageDeliveryState state = DELIVERY_STATE.get(message);
-    if (state == null) {
-      synchronized (message) {
-        state = DELIVERY_STATE.get(message);
-        if (state == null) {
-          state = new JmsMessageDeliveryState();
-          DELIVERY_STATE.set(message, state);
-        }
-      }
+  public void beginProcessing() {
+    if (!getOrCreateDeliveryState().beginProcessing()) {
+      RECEIVE_CONTEXT.set(message, null);
     }
-    return state.claimConsumedMessages();
+  }
+
+  @Override
+  public void endProcessing() {
+    JmsMessageDeliveryState state = DELIVERY_STATE.get(message);
+    if (state != null && state.endProcessing()) {
+      RECEIVE_CONTEXT.set(message, null);
+    }
+  }
+
+  @Override
+  public boolean claimConsumedMessages() {
+    return getOrCreateDeliveryState().claimConsumedMessages();
+  }
+
+  private JmsMessageDeliveryState getOrCreateDeliveryState() {
+    JmsMessageDeliveryState state = DELIVERY_STATE.get(message);
+    if (state != null) {
+      return state;
+    }
+    synchronized (message) {
+      state = DELIVERY_STATE.get(message);
+      if (state == null) {
+        state = new JmsMessageDeliveryState();
+        DELIVERY_STATE.set(message, state);
+      }
+      return state;
+    }
   }
 }

@@ -330,6 +330,27 @@ abstract class AbstractJms3Test {
   }
 
   @Test
+  void shouldCountEachListenerDeliveryWhenMessageIsReused() throws Exception {
+    Destination destination = session.createQueue("reusedListenerMessageQueue");
+    TextMessage message = session.createTextMessage("a message");
+    message.setJMSDestination(destination);
+    MessageListener listener = ignored -> {};
+
+    listener.onMessage(message);
+    listener.onMessage(message);
+
+    testing.waitForTraces(2);
+    if (emitStableMessagingSemconv()) {
+      assertCounter(
+          testing,
+          INSTRUMENTATION_NAME,
+          "messaging.client.consumed.messages",
+          2,
+          messagingMetricAttributes("process", "reusedListenerMessageQueue"));
+    }
+  }
+
+  @Test
   @EnabledIfSystemProperty(
       named = "otel.instrumentation.messaging.experimental.receive-telemetry.enabled",
       matches = "true")

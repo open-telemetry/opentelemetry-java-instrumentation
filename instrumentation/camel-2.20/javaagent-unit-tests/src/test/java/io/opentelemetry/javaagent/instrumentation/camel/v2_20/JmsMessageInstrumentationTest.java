@@ -22,6 +22,7 @@ class JmsMessageInstrumentationTest {
   void replacesDeliveryStateWhenCamelMessageIsRefilled() {
     Message firstJmsMessage = mock(Message.class);
     JmsMessageDeliveryState firstState = new JmsMessageDeliveryState();
+    firstState.prepareForReceive();
     assertThat(firstState.claimConsumedMessages()).isTrue();
     JMS_DELIVERY_STATE.set(firstJmsMessage, firstState);
 
@@ -49,5 +50,20 @@ class JmsMessageInstrumentationTest {
     JmsMessageInstrumentation.StoreReceiveTelemetryAdvice.onExit(camelMessage, null);
 
     assertThat(CamelMessageTelemetry.getJmsDeliveryState(camelMessage)).isNull();
+  }
+
+  @Test
+  void startsNewDeliveryWhenJmsMessageIsWrappedAgain() {
+    Message jmsMessage = mock(Message.class);
+    org.apache.camel.Message firstCamelMessage = mock(org.apache.camel.Message.class);
+    JmsMessageInstrumentation.StoreReceiveTelemetryAdvice.onExit(firstCamelMessage, jmsMessage);
+    JmsMessageDeliveryState state = CamelMessageTelemetry.getJmsDeliveryState(firstCamelMessage);
+    assertThat(state.claimConsumedMessages()).isTrue();
+
+    org.apache.camel.Message secondCamelMessage = mock(org.apache.camel.Message.class);
+    JmsMessageInstrumentation.StoreReceiveTelemetryAdvice.onExit(secondCamelMessage, jmsMessage);
+
+    assertThat(CamelMessageTelemetry.getJmsDeliveryState(secondCamelMessage)).isSameAs(state);
+    assertThat(state.claimConsumedMessages()).isTrue();
   }
 }

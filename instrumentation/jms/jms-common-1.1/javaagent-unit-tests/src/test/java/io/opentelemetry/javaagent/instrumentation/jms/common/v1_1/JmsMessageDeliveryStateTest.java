@@ -40,4 +40,31 @@ class JmsMessageDeliveryStateTest {
       executor.shutdownNow();
     }
   }
+
+  @Test
+  void startsNewOwnershipForEachTopLevelProcessingCallback() {
+    JmsMessageDeliveryState state = new JmsMessageDeliveryState();
+
+    assertThat(state.beginProcessing()).isFalse();
+    assertThat(state.claimConsumedMessages()).isTrue();
+    assertThat(state.endProcessing()).isTrue();
+
+    assertThat(state.beginProcessing()).isFalse();
+    assertThat(state.claimConsumedMessages()).isTrue();
+    assertThat(state.endProcessing()).isTrue();
+  }
+
+  @Test
+  void preservesReceiveOwnershipThroughNestedProcessingCallbacks() {
+    JmsMessageDeliveryState state = new JmsMessageDeliveryState();
+    state.prepareForReceive();
+    assertThat(state.claimConsumedMessages()).isTrue();
+
+    assertThat(state.beginProcessing()).isTrue();
+    assertThat(state.claimConsumedMessages()).isFalse();
+    assertThat(state.beginProcessing()).isTrue();
+    assertThat(state.claimConsumedMessages()).isFalse();
+    assertThat(state.endProcessing()).isFalse();
+    assertThat(state.endProcessing()).isTrue();
+  }
 }

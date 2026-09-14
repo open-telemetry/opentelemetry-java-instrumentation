@@ -72,6 +72,7 @@ class JmsMessageInstrumentation implements TypeInstrumentation {
           }
         }
       }
+      state.prepareForWrapping();
       // A Camel message is refilled when its JMS message is swapped. Replace the delivery state,
       // without copying the receive context or retaining the previous message's accounting.
       camelDeliveryState().set(camelMessage, state);

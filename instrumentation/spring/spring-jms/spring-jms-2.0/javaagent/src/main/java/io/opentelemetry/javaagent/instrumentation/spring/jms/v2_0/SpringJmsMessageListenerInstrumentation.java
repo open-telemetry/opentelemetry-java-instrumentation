@@ -59,16 +59,19 @@ class SpringJmsMessageListenerInstrumentation implements TypeInstrumentation {
     public static class AdviceScope {
       private final Instrumenter<MessageWithDestination, Void> instrumenter;
       private final MessageWithDestination request;
-      private final Context context;
-      private final Scope scope;
+      private final MessageAdapter messageAdapter;
+      @Nullable private final Context context;
+      @Nullable private final Scope scope;
 
       private AdviceScope(
           Instrumenter<MessageWithDestination, Void> instrumenter,
           MessageWithDestination request,
-          Context context,
-          Scope scope) {
+          MessageAdapter messageAdapter,
+          @Nullable Context context,
+          @Nullable Scope scope) {
         this.instrumenter = instrumenter;
         this.request = request;
+        this.messageAdapter = messageAdapter;
         this.context = context;
         this.scope = scope;
       }
@@ -78,10 +81,11 @@ class SpringJmsMessageListenerInstrumentation implements TypeInstrumentation {
         MessageAdapter messageAdapter = JavaxMessageAdapter.create(message);
         MessageWithDestination request =
             MessageWithDestination.create(messageAdapter, null, JmsSubscriptionNames.get(message));
+        messageAdapter.beginProcessing();
 
         Context currentContext = Context.current();
         if (!listenerInstrumenter(true).shouldStart(currentContext, request)) {
-          return null;
+          return new AdviceScope(listenerInstrumenter(true), request, messageAdapter, null, null);
         }
 
         Context parentContext = currentContext;
@@ -95,15 +99,22 @@ class SpringJmsMessageListenerInstrumentation implements TypeInstrumentation {
         Instrumenter<MessageWithDestination, Void> instrumenter =
             listenerInstrumenter(!messageAdapter.claimConsumedMessages());
         if (!instrumenter.shouldStart(parentContext, request)) {
-          return null;
+          return new AdviceScope(instrumenter, request, messageAdapter, null, null);
         }
         Context context = instrumenter.start(parentContext, request);
-        return new AdviceScope(instrumenter, request, context, context.makeCurrent());
+        return new AdviceScope(
+            instrumenter, request, messageAdapter, context, context.makeCurrent());
       }
 
       public void exit(@Nullable Throwable throwable) {
-        scope.close();
-        instrumenter.end(context, request, null, throwable);
+        try {
+          if (context != null && scope != null) {
+            scope.close();
+            instrumenter.end(context, request, null, throwable);
+          }
+        } finally {
+          messageAdapter.endProcessing();
+        }
       }
     }
 
