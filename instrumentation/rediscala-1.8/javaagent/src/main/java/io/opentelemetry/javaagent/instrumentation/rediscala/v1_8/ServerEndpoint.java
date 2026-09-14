@@ -34,12 +34,12 @@ public class ServerEndpoint {
   }
 
   @Nullable
-  public static ServerEndpoint create(@Nullable Object client) {
+  static ServerEndpoint create(@Nullable Object client) {
     return create(client, true);
   }
 
   @Nullable
-  public static ServerEndpoint create(@Nullable Object client, boolean useMasterClient) {
+  static ServerEndpoint create(@Nullable Object client, boolean useMasterClient) {
     if (client instanceof RedisClientActorLike) {
       return create((RedisClientActorLike) client);
     }

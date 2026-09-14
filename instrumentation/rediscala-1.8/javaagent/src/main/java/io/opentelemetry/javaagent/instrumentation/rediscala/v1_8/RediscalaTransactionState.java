@@ -17,12 +17,12 @@ public final class RediscalaTransactionState {
     this.endpoint = endpoint;
   }
 
-  public Object getClient() {
+  Object getClient() {
     return client;
   }
 
   @Nullable
-  public ServerEndpoint getEndpoint() {
+  ServerEndpoint getEndpoint() {
     return endpoint;
   }
 }

@@ -111,7 +111,7 @@ public class RediscalaServerTargets {
   }
 
   @Nullable
-  public static RedisServerTarget get(@Nullable Object client) {
+  static RedisServerTarget get(@Nullable Object client) {
     if (MUTABLE_POOL_CLASS != null && MUTABLE_POOL_CLASS.isInstance(client)) {
       return ofMutablePool(client);
     }
