@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -19,11 +18,6 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 class RediscalaMutablePoolInstrumentation implements TypeInstrumentation {
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("redis.RedisClientMutablePool");
-  }
-
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("redis.RedisClientMutablePool");

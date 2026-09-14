@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -21,11 +20,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 import redis.RedisClientActorLike;
 
 class RediscalaClientActorLikeInstrumentation implements TypeInstrumentation {
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("redis.RedisClientActorLike");
-  }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
