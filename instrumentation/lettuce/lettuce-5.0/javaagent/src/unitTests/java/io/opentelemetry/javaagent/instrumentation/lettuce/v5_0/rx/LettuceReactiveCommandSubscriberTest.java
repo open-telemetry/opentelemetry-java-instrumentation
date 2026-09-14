@@ -10,7 +10,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.lettuce.core.protocol.RedisCommand;
+import io.lettuce.core.api.StatefulConnection;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.reactivestreams.Subscription;
@@ -25,10 +25,7 @@ class LettuceReactiveCommandSubscriberTest {
     when(actual.currentContext()).thenReturn(Context.empty());
     Subscription upstream = mock(Subscription.class);
     LettuceReactiveCommandHandler handler =
-        new LettuceReactiveCommandHandler() {
-          @Override
-          public void onCommand(RedisCommand<?, ?, ?> command) {}
-
+        new LettuceReactiveCommandHandler(mock(StatefulConnection.class)) {
           @Override
           public void onCancel() {
             throw new IllegalStateException("test");
