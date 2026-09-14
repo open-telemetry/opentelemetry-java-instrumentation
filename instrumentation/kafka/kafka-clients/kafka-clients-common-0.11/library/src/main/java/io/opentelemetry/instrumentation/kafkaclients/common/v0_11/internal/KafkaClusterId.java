@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.opentelemetry.api.common.AttributeKey;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.Metadata;
@@ -26,7 +27,8 @@ import org.apache.kafka.clients.Metadata;
  * <p>A client gets {@link #UNAVAILABLE} if reflection cannot reach its {@code Metadata}, which is
  * terminal, or {@link #of(Metadata)} if it can. The latter carries no id until the broker reports
  * one, and those reads are rate limited rather than capped: a slow broker must not permanently
- * suppress the attribute.
+ * suppress the attribute. The first span gets two reads, because the broker's first response
+ * usually arrives between its start and its end.
  */
 final class KafkaClusterId {
 
@@ -37,14 +39,16 @@ final class KafkaClusterId {
   // Prevents retrying reflection on clients that can't provide a cluster id.
   static final KafkaClusterId UNAVAILABLE = new KafkaClusterId(null);
 
-  // Smallest gap between two metadata reads for one client: Metadata.fetch() locks the instance
-  // shared with the Kafka network thread, so its cost must not scale with span rate.
-  // Package-private so the test can wait out one interval.
+  // Smallest gap between metadata reads for one client once its first read has been spent:
+  // Metadata.fetch() locks the instance shared with the Kafka network thread, so its cost must not
+  // scale with span rate. Package-private so the test can wait out one interval.
   static final long RETRY_INTERVAL_NANOS = MILLISECONDS.toNanos(100);
 
   @Nullable private final Metadata metadata;
   // Non-null only when a Metadata is present: nanoTime before which no further read is allowed.
   @Nullable private final AtomicLong nextReadNanos;
+  // The first read does not spend the interval's slot; see shouldReadMetadataNow().
+  private final AtomicBoolean firstReadPending = new AtomicBoolean(true);
   @Nullable private volatile String clusterId;
 
   private KafkaClusterId(@Nullable Metadata metadata) {
@@ -79,6 +83,12 @@ final class KafkaClusterId {
   boolean shouldReadMetadataNow() {
     if (nextReadNanos == null || clusterId != null) {
       return false;
+    }
+    // The broker's first metadata response lands between a span's start and its end, and the
+    // producer re-reads at end for that reason. Leaving the interval's slot unspent on the first
+    // read is what lets that second read through.
+    if (firstReadPending.compareAndSet(true, false)) {
+      return true;
     }
     long now = System.nanoTime();
     long next = nextReadNanos.get();

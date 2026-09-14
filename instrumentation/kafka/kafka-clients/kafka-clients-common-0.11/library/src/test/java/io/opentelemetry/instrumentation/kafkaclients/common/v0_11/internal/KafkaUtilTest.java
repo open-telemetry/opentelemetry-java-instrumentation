@@ -22,6 +22,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import org.apache.kafka.clients.Metadata;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.common.Cluster;
@@ -61,10 +62,12 @@ class KafkaUtilTest {
 
   @Test
   void pendingClusterId_throttlesMetadataReads() {
-    // Metadata.fetch() locks the instance shared with the Kafka network thread, so only one span
-    // per interval may read it; the spans queued behind it must be turned away.
+    // Metadata.fetch() locks the instance shared with the Kafka network thread, so once the first
+    // span has had its pair of reads, the spans queued behind it must be turned away.
     KafkaClusterId pending = KafkaClusterId.of(new Metadata(0, Long.MAX_VALUE, false));
 
+    // The first span reads at its start and again at its end.
+    assertThat(pending.shouldReadMetadataNow()).isTrue();
     assertThat(pending.shouldReadMetadataNow()).isTrue();
     for (int i = 0; i < 100; i++) {
       assertThat(pending.shouldReadMetadataNow()).isFalse();
@@ -136,16 +139,62 @@ class KafkaUtilTest {
   }
 
   @Test
-  void concurrentFirstReads_shareOneMetadataThrottle() throws InterruptedException {
-    // A burst of first sends all find an empty VirtualField. Metadata.fetch() locks the instance
-    // shared with the Kafka network thread, so the number of reads must not scale with the burst.
-    // It is not pinned to one: VirtualField has no compare-and-set, so a set/get interleaving can
-    // publish more than one holder before the burst converges.
+  void secondReadIsAllowedImmediately_soOnEndCanSeeALateClusterId() {
+    // The broker's first metadata response lands between a producer span's start and its end, which
+    // is why KafkaProducerAttributesExtractor.onEnd re-reads. Throttling that second read away
+    // drops the attribute from every span created before the response.
+    AtomicInteger fetches = new AtomicInteger();
+    AtomicReference<Cluster> reported = new AtomicReference<>(Cluster.empty());
+    Metadata metadata = mock(Metadata.class);
+    when(metadata.fetch())
+        .thenAnswer(
+            invocation -> {
+              fetches.incrementAndGet();
+              return reported.get();
+            });
+    Consumer<?, ?> client = stubConsumer();
+
+    KafkaClusterId holder =
+        KafkaUtil.initializeClusterId(client, clusterIdField(), new HolderWithMetadata(metadata));
+
+    // Span start: the broker has not reported a cluster id yet.
+    assertThat(KafkaUtil.readClusterId(holder)).isNull();
+
+    reported.set(new Cluster("test-cluster", emptyList(), emptyList(), emptySet(), emptySet()));
+
+    // Span end, well inside the retry interval: the read must still happen.
+    assertThat(KafkaUtil.readClusterId(holder)).isEqualTo("test-cluster");
+    assertThat(fetches.get()).isEqualTo(2);
+  }
+
+  @Test
+  void furtherReadsWithinTheIntervalAreThrottled() {
+    // The pair above is the whole allowance: a client whose broker never reports an id must not
+    // enter Metadata.fetch() once per span.
     AtomicInteger fetches = new AtomicInteger();
     Metadata metadata = countingMetadata(fetches, Cluster.empty());
     Consumer<?, ?> client = stubConsumer();
-    VirtualField<Consumer<?, ?>, KafkaClusterId> field = clusterIdField();
-    HolderWithMetadata holder = new HolderWithMetadata(metadata);
+
+    KafkaClusterId holder =
+        KafkaUtil.initializeClusterId(client, clusterIdField(), new HolderWithMetadata(metadata));
+
+    for (int i = 0; i < 20; i++) {
+      assertThat(KafkaUtil.readClusterId(holder)).isNull();
+    }
+
+    assertThat(fetches.get()).isEqualTo(2);
+  }
+
+  @Test
+  void concurrentReadsShareOneThrottle() throws InterruptedException {
+    // Metadata.fetch() locks the instance shared with the Kafka network thread, so the throttle is
+    // what a burst of sends has to contend on. It lives in the holder, so the read count is set by
+    // the client, not by how many threads arrive.
+    AtomicInteger fetches = new AtomicInteger();
+    Metadata metadata = countingMetadata(fetches, Cluster.empty());
+    Consumer<?, ?> client = stubConsumer();
+    KafkaClusterId holder =
+        KafkaUtil.initializeClusterId(client, clusterIdField(), new HolderWithMetadata(metadata));
 
     int threads = 32;
     CountDownLatch start = new CountDownLatch(1);
@@ -157,11 +206,7 @@ class KafkaUtilTest {
             () -> {
               try {
                 start.await();
-                KafkaClusterId cached = field.get(client);
-                if (cached == null) {
-                  cached = KafkaUtil.initializeClusterId(client, field, holder);
-                }
-                KafkaUtil.readClusterId(cached);
+                KafkaUtil.readClusterId(holder);
               } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
               } finally {
@@ -175,7 +220,8 @@ class KafkaUtilTest {
       pool.shutdownNow();
     }
 
-    assertThat(fetches.get()).isLessThanOrEqualTo(threads / 4);
+    // The first span's two reads, and nothing more, for any number of threads.
+    assertThat(fetches.get()).isEqualTo(2);
   }
 
   @Test
