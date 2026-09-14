@@ -5,29 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.rx;
 
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceInstrumentationUtil.expectsResponse;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.instrumenter;
-
 import io.lettuce.core.api.StatefulConnection;
-import io.lettuce.core.protocol.RedisCommand;
-import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Logger;
-import javax.annotation.Nullable;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Mono;
 
-public class LettuceMonoTerminationHandler<T> implements LettuceReactiveCommandHandler {
-
-  private static final Logger logger =
-      Logger.getLogger(LettuceMonoTerminationHandler.class.getName());
-
-  private final StatefulConnection<?, ?> connection;
-  private final AtomicBoolean spanEnded = new AtomicBoolean();
-  @Nullable private RedisCommand<?, ?, ?> command;
-  @Nullable private Context context;
-  private boolean expectsResponse;
+public class LettuceMonoTerminationHandler<T> extends LettuceReactiveCommandHandler {
 
   public static <T> Mono<T> monitor(Mono<T> publisher, StatefulConnection<?, ?> connection) {
     return new Mono<T>() {
@@ -42,35 +24,7 @@ public class LettuceMonoTerminationHandler<T> implements LettuceReactiveCommandH
   }
 
   private LettuceMonoTerminationHandler(StatefulConnection<?, ?> connection) {
-    this.connection = connection;
-  }
-
-  @Override
-  public void onCommand(RedisCommand<?, ?, ?> subscriptionCommand) {
-    command = subscriptionCommand;
-    expectsResponse = expectsResponse(subscriptionCommand);
-    LettuceSingletons.initializeCommandPeerForSubscription(subscriptionCommand);
-    LettuceSingletons.attachConnectionState(subscriptionCommand, connection);
-    context = instrumenter().start(Context.current(), subscriptionCommand);
-    if (!expectsResponse) {
-      instrumenter().end(context, subscriptionCommand, null, null);
-    }
-  }
-
-  private void endSpan(@Nullable Throwable throwable) {
-    if (!expectsResponse || !spanEnded.compareAndSet(false, true)) {
-      return;
-    }
-    if (context != null && command != null) {
-      instrumenter().end(context, command, null, throwable);
-    } else {
-      logger.fine("Failed to finish this.span because it probably wasn't started.");
-    }
-  }
-
-  @Override
-  public void onCancel() {
-    endSpan(null);
+    super(connection);
   }
 
   /**
@@ -82,6 +36,8 @@ public class LettuceMonoTerminationHandler<T> implements LettuceReactiveCommandH
    * access).
    */
   private Mono<T> finishSpanOnTerminal(Mono<T> publisher) {
-    return publisher.doOnSuccess(value -> endSpan(null)).doOnError(this::endSpan);
+    return publisher
+        .doOnSuccess(value -> finishSpan(/* isCommandCancelled= */ false, null))
+        .doOnError(error -> finishSpan(/* isCommandCancelled= */ false, error));
   }
 }
