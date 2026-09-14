@@ -7,9 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceInstrumentationUtil.expectsResponse;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.COMMAND_STATE;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONTEXT;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_STATE;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -62,12 +60,7 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
         @Advice.This DefaultEndpoint endpoint, @Advice.Argument(0) RedisCommand<?, ?, ?> command) {
       AsyncCommand<?, ?, ?> asyncCommand = asAsyncCommand(command);
       RedisServerTarget commandTarget = commandTarget(command);
-      LettuceConnectionState endpointState = ENDPOINT_STATE.get(endpoint);
-      COMMAND_STATE.set(
-          command,
-          commandTarget == null
-              ? endpointState
-              : LettuceConnectionState.withServerTarget(endpointState, commandTarget));
+      LettuceConnectionState.copy(endpoint, command, commandTarget);
 
       if (LettuceBatchContext.isBatching(endpoint)) {
         LettuceBatchContext.capture(endpoint, command, asyncCommand);
@@ -101,9 +94,9 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
     public static RedisServerTarget commandTarget(RedisCommand<?, ?, ?> command) {
       RedisCommand<?, ?, ?> current = command;
       while (current != null) {
-        LettuceConnectionState state = COMMAND_STATE.get(current);
-        if (state != null && state.serverTarget != null) {
-          return state.serverTarget;
+        RedisServerTarget target = LettuceConnectionState.serverTarget(current);
+        if (target != null) {
+          return target;
         }
         if (current instanceof AsyncCommand) {
           current = ((AsyncCommand<?, ?, ?>) current).getDelegate();

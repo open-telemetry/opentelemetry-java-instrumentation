@@ -5,9 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.COMMAND_STATE;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONTEXT;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_STATE;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.batchInstrumenter;
 
 import io.lettuce.core.protocol.AsyncCommand;
@@ -69,7 +67,7 @@ public final class LettuceBatchContext {
         state.commands,
         state.asyncCommands,
         state.parentContext,
-        state.getConnectionState(ENDPOINT_STATE.get(endpoint)));
+        state.getConnectionState(LettuceConnectionState.get(endpoint)));
   }
 
   private LettuceBatchContext() {}
@@ -143,8 +141,7 @@ public final class LettuceBatchContext {
 
     private void add(RedisCommand<?, ?, ?> command, @Nullable AsyncCommand<?, ?, ?> asyncCommand) {
       commands.add(command);
-      LettuceConnectionState commandState = COMMAND_STATE.get(command);
-      RedisServerTarget commandTarget = commandState == null ? null : commandState.serverTarget;
+      RedisServerTarget commandTarget = LettuceConnectionState.serverTarget(command);
       if (commandTarget != null && !serverTargetVaries) {
         if (serverTarget == null) {
           serverTarget = commandTarget;

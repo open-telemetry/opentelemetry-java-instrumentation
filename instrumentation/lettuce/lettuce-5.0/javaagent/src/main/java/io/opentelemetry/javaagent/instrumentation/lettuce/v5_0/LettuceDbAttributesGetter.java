@@ -36,8 +36,7 @@ class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisCommand
   public String getDbNamespace(RedisCommand<?, ?, ?> request) {
     // Lettuce does not expose database changes made through SELECT, so report the index established
     // when the connection was created.
-    LettuceConnectionState state = LettuceSingletons.COMMAND_STATE.get(request);
-    Integer databaseIndex = state == null ? null : state.databaseIndex;
+    Integer databaseIndex = LettuceConnectionState.databaseIndex(request);
     return databaseIndex != null ? String.valueOf(databaseIndex) : null;
   }
 
@@ -70,12 +69,10 @@ class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisCommand
   @Override
   public String getServerAddress(RedisCommand<?, ?, ?> request) {
     if (emitStableDatabaseSemconv() && LettuceServerTargets.configuredTargetsSupported()) {
-      LettuceConnectionState state = LettuceSingletons.COMMAND_STATE.get(request);
-      RedisServerTarget target = state == null ? null : state.serverTarget;
+      RedisServerTarget target = LettuceConnectionState.serverTarget(request);
       return target != null ? target.getAddress() : null;
     }
-    LettuceConnectionState state = LettuceSingletons.COMMAND_STATE.get(request);
-    InetSocketAddress serverAddress = state == null ? null : state.serverAddress;
+    InetSocketAddress serverAddress = LettuceConnectionState.serverAddress(request);
     return serverAddress != null ? serverAddress.getHostString() : null;
   }
 
@@ -83,12 +80,10 @@ class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisCommand
   @Override
   public Integer getServerPort(RedisCommand<?, ?, ?> request) {
     if (emitStableDatabaseSemconv() && LettuceServerTargets.configuredTargetsSupported()) {
-      LettuceConnectionState state = LettuceSingletons.COMMAND_STATE.get(request);
-      RedisServerTarget target = state == null ? null : state.serverTarget;
+      RedisServerTarget target = LettuceConnectionState.serverTarget(request);
       return target != null ? target.getPort() : null;
     }
-    LettuceConnectionState state = LettuceSingletons.COMMAND_STATE.get(request);
-    InetSocketAddress serverAddress = state == null ? null : state.serverAddress;
+    InetSocketAddress serverAddress = LettuceConnectionState.serverAddress(request);
     return serverAddress != null ? serverAddress.getPort() : null;
   }
 }

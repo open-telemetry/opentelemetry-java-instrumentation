@@ -7,12 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
 
-import io.lettuce.core.RedisChannelHandler;
 import io.lettuce.core.RedisURI;
-import io.lettuce.core.api.StatefulConnection;
-import io.lettuce.core.cluster.RedisClusterClient;
 import io.lettuce.core.protocol.AsyncCommand;
-import io.lettuce.core.protocol.DefaultEndpoint;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
@@ -21,7 +17,6 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -42,18 +37,6 @@ public class LettuceSingletons {
 
   public static final VirtualField<AsyncCommand<?, ?, ?>, Context> CONTEXT =
       VirtualField.find(AsyncCommand.class, Context.class);
-
-  public static final VirtualField<DefaultEndpoint, LettuceConnectionState> ENDPOINT_STATE =
-      VirtualField.find(DefaultEndpoint.class, LettuceConnectionState.class);
-
-  public static final VirtualField<RedisChannelHandler<?, ?>, LettuceConnectionState>
-      CONNECTION_STATE = VirtualField.find(RedisChannelHandler.class, LettuceConnectionState.class);
-
-  public static final VirtualField<RedisCommand<?, ?, ?>, LettuceConnectionState> COMMAND_STATE =
-      VirtualField.find(RedisCommand.class, LettuceConnectionState.class);
-
-  public static final VirtualField<RedisClusterClient, RedisServerTarget> CLUSTER_CLIENT_TARGET =
-      VirtualField.find(RedisClusterClient.class, RedisServerTarget.class);
 
   static {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
@@ -127,23 +110,6 @@ public class LettuceSingletons {
 
   public static Instrumenter<RedisURI, Void> connectInstrumenter() {
     return connectInstrumenter;
-  }
-
-  public static void attachConnectionState(
-      RedisCommand<?, ?, ?> command, StatefulConnection<?, ?> connection) {
-    if (!(connection instanceof RedisChannelHandler)) {
-      return;
-    }
-
-    RedisChannelHandler<?, ?> connectionHandler = (RedisChannelHandler<?, ?>) connection;
-    LettuceConnectionState commandState = COMMAND_STATE.get(command);
-    RedisServerTarget commandTarget = commandState == null ? null : commandState.serverTarget;
-    LettuceConnectionState connectionState = CONNECTION_STATE.get(connectionHandler);
-    COMMAND_STATE.set(
-        command,
-        commandTarget == null
-            ? connectionState
-            : LettuceConnectionState.withServerTarget(connectionState, commandTarget));
   }
 
   private LettuceSingletons() {}
