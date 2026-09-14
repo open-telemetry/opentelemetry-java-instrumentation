@@ -36,16 +36,16 @@ class ShardedJedisInstrumentation implements TypeInstrumentation {
   public static class InitializeAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(@Advice.Argument(0) @Nullable List<JedisShardInfo> shards) {
+    @Nullable
+    public static RedisServerTarget onEnter(
+        @Advice.Argument(0) @Nullable List<JedisShardInfo> shards) {
       RedisServerTarget target = JedisSingletons.createServerTarget(shards);
-      if (target != null) {
-        JedisSingletons.setConfiguredTarget(target);
-      }
+      return JedisSingletons.setConfiguredTarget(target);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit() {
-      JedisSingletons.removeConfiguredTarget();
+    public static void onExit(@Advice.Enter @Nullable RedisServerTarget previousConfiguredTarget) {
+      JedisSingletons.restoreConfiguredTarget(previousConfiguredTarget);
     }
   }
 }

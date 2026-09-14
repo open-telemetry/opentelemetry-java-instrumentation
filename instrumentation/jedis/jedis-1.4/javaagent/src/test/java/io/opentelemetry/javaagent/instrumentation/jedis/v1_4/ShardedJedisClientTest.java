@@ -18,6 +18,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -182,5 +183,69 @@ class ShardedJedisClientTest {
                             equalTo(
                                 SERVER_PORT,
                                 emitStableDatabaseSemconv() ? null : (long) selectedPort))));
+  }
+
+  @Test
+  void nestedInitializationRestoresConfiguredTarget() {
+    JedisShardInfo nestedShard = new JedisShardInfo("nested", 6380);
+    ReentrantJedisShardInfo outerShard =
+        new ReentrantJedisShardInfo(
+            firstServer.getHost(), firstServer.getMappedPort(6379), nestedShard);
+    JedisShardInfo secondOuterShard =
+        new JedisShardInfo(secondServer.getHost(), secondServer.getMappedPort(6379));
+    new ShardedJedis(asList(outerShard, secondOuterShard));
+
+    cleanup.deferCleanup(outerShard.getResource().getClient()::disconnect);
+    cleanup.deferCleanup(secondOuterShard.getResource().getClient()::disconnect);
+    cleanup.deferCleanup(nestedShard.getResource().getClient()::disconnect);
+
+    outerShard.getResource().set("reentrant", "bar");
+
+    String outerTarget =
+        outerShard.getHost()
+            + ":"
+            + outerShard.getPort()
+            + ","
+            + secondOuterShard.getHost()
+            + ":"
+            + secondOuterShard.getPort();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + outerTarget : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "SET reentrant ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(
+                                maybeStablePeerService(),
+                                emitStableDatabaseSemconv() ? null : "test-peer-service"),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv() ? outerTarget : outerShard.getHost()),
+                            equalTo(
+                                SERVER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? null
+                                    : (long) outerShard.getPort()))));
+  }
+
+  private static class ReentrantJedisShardInfo extends JedisShardInfo {
+
+    private final JedisShardInfo nestedShard;
+
+    private ReentrantJedisShardInfo(String host, int port, JedisShardInfo nestedShard) {
+      super(host, port);
+      this.nestedShard = nestedShard;
+    }
+
+    @Override
+    public Jedis createResource() {
+      // Jedis calls this while the outer Sharded.initialize() advice is active.
+      new ShardedJedis(singletonList(nestedShard));
+      return super.createResource();
+    }
   }
 }

@@ -74,31 +74,13 @@ class JedisSingletonsTest {
     Connection connection = new Connection("direct", 6379);
     RedisServerTarget configuredTarget = RedisServerTarget.ofHostAndPort("configured", 6380);
 
-    JedisSingletons.setConfiguredTarget(configuredTarget);
+    RedisServerTarget previousTarget = JedisSingletons.setConfiguredTarget(configuredTarget);
     try {
       JedisSingletons.captureConnectionTarget(connection);
     } finally {
-      JedisSingletons.removeConfiguredTarget();
+      JedisSingletons.restoreConfiguredTarget(previousTarget);
     }
 
     assertThat(JedisSingletons.connectionTarget(connection)).isSameAs(configuredTarget);
-  }
-
-  @Test
-  void configuredTargetIsVisibleUntilRemoved() {
-    Connection connection = new Connection("direct", 6379);
-    JedisSingletons.captureConnectionTarget(connection);
-    RedisServerTarget attachedTarget = JedisSingletons.connectionTarget(connection);
-    assertThat(JedisSingletons.connectionTarget(connection)).isSameAs(attachedTarget);
-
-    RedisServerTarget configuredTarget = RedisServerTarget.ofHostAndPort("configured", 6381);
-    JedisSingletons.setConfiguredTarget(configuredTarget);
-    try {
-      assertThat(JedisSingletons.connectionTarget(connection)).isSameAs(configuredTarget);
-    } finally {
-      JedisSingletons.removeConfiguredTarget();
-    }
-
-    assertThat(JedisSingletons.connectionTarget(connection)).isSameAs(attachedTarget);
   }
 }

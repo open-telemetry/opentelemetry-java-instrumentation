@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.bootstrap.internal.ScopedThreadLocal;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -30,7 +31,8 @@ public class JedisSingletons {
 
   private static final VirtualField<Connection, RedisServerTarget> CONNECTION_TARGET =
       VirtualField.find(Connection.class, RedisServerTarget.class);
-  private static final ThreadLocal<RedisServerTarget> configuredTarget = new ThreadLocal<>();
+  private static final ScopedThreadLocal<RedisServerTarget> configuredTarget =
+      new ScopedThreadLocal<>();
 
   static {
     JedisDbAttributesGetter dbAttributesGetter = new JedisDbAttributesGetter();
@@ -62,12 +64,13 @@ public class JedisSingletons {
     CONNECTION_TARGET.set(connection, target);
   }
 
-  public static void setConfiguredTarget(RedisServerTarget target) {
-    configuredTarget.set(target);
+  @Nullable
+  public static RedisServerTarget setConfiguredTarget(@Nullable RedisServerTarget target) {
+    return configuredTarget.set(target);
   }
 
-  public static void removeConfiguredTarget() {
-    configuredTarget.remove();
+  public static void restoreConfiguredTarget(@Nullable RedisServerTarget previousTarget) {
+    configuredTarget.restore(previousTarget);
   }
 
   @Nullable
