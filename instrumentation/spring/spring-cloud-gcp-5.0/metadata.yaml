@@ -6,3 +6,14 @@ description: >
 library_link: https://spring.io/projects/spring-cloud-gcp
 semantic_conventions:
   - MESSAGING_SPANS
+configurations:
+  - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+    declarative_name: java.common.messaging.receive_telemetry/development.enabled
+    description: >
+      Enables experimental receive telemetry, which will cause consumers to start a new trace, with
+      only a span link connecting it to the producer trace.
+    type: boolean
+    default: false
+  - ref: messaging.headers.included
+  - ref: messaging.headers.excluded
+  - ref: messaging.capture-headers
