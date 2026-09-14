@@ -67,6 +67,9 @@ public class RediscalaServerTargets {
   private static final VirtualField<RedisClientPoolLike, MutablePoolState> MUTABLE_POOL_STATE =
       VirtualField.find(RedisClientPoolLike.class, MutablePoolState.class);
 
+  private static final VirtualField<RedisClientActorLike, RedisServerTarget> CLIENT_TARGET =
+      VirtualField.find(RedisClientActorLike.class, RedisServerTarget.class);
+
   @Nullable
   static final Class<?> SENTINEL_MASTER_SLAVES_CLASS = findClass(SENTINEL_MASTER_SLAVES_CLASS_NAME);
 
@@ -113,12 +116,32 @@ public class RediscalaServerTargets {
       return ofMutablePool(client);
     }
     if (client instanceof RedisClientActorLike) {
-      return of(client);
+      return getClientTarget((RedisClientActorLike) client);
     }
     if (client instanceof Request) {
       return RediscalaSingletons.getServerTarget(REQUEST_TARGET, (Request) client);
     }
     return of(client);
+  }
+
+  public static void captureClientTarget(RedisClientActorLike client) {
+    updateClientTarget(client, client.host(), client.port());
+  }
+
+  @Nullable
+  static RedisServerTarget getClientTarget(RedisClientActorLike client) {
+    return CLIENT_TARGET.get(client);
+  }
+
+  public static boolean clientConfigurationChanged(
+      RedisClientActorLike client, String host, int port) {
+    String currentHost = client.host();
+    return !(currentHost == null ? host == null : currentHost.equals(host))
+        || client.port() != port;
+  }
+
+  public static void updateClientTarget(RedisClientActorLike client, String host, int port) {
+    CLIENT_TARGET.set(client, RedisServerTarget.ofHostAndPort(host, port));
   }
 
   @Nullable

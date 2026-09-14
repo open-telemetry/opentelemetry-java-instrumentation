@@ -27,7 +27,9 @@ import io.opentelemetry.semconv.NetworkAttributes.{
   NETWORK_PEER_PORT
 }
 import io.opentelemetry.semconv.ServerAttributes.{SERVER_ADDRESS, SERVER_PORT}
-import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.{assertThat, assertThatThrownBy}
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.{AfterAll, BeforeAll, Test, TestInstance}
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.params.ParameterizedTest
@@ -197,6 +199,30 @@ class RediscalaClientTest {
 
       Await.result(result, Duration("3 second"))
       assertCommandSpan("SET", reconnectHost, port)
+    } finally {
+      client.stop()
+    }
+  }
+
+  @Test def testFailedReconnectRetainsServerTarget(): Unit = {
+    assumeTrue(emitStableDatabaseSemconv())
+    val client = createClient(None)
+    try {
+      val reconnectHost = alternateHost(host)
+      assertThatThrownBy(new ThrowingCallable {
+        override def call(): Unit = client.reconnect(reconnectHost, -1)
+      }).isInstanceOf(classOf[IllegalArgumentException])
+
+      val result = testing.runWithSpan(
+        "parent",
+        new ThrowingSupplier[Future[_], Exception] {
+          override def get(): Future[_] =
+            client.set("failed-reconnect-retains-target", "value")
+        }
+      )
+
+      Await.result(result, Duration("3 second"))
+      assertCommandSpan("SET", host, port)
     } finally {
       client.stop()
     }
