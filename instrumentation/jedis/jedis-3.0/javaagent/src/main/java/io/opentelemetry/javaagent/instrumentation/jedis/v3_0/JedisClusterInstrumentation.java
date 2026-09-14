@@ -38,10 +38,10 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isConstructor()
             .and(isDeclaredBy(named("redis.clients.jedis.JedisClusterConnectionHandler")))
-            .and(takesArgument(0, named("java.util.Set"))),
+            .and(takesArgument(0, Set.class)),
         getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
-        named("initializeSlotsCache").and(takesArgument(0, named("java.util.Set"))),
+        named("initializeSlotsCache").and(takesArgument(0, Set.class)),
         getClass().getName() + "$InitializeAdvice");
     transformer.applyAdviceToMethod(
         named("getConnectionFromNode").and(returns(named("redis.clients.jedis.Jedis"))),
