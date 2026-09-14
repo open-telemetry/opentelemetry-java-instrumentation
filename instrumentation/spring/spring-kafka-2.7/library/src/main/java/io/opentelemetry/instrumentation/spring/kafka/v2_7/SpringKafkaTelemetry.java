@@ -63,7 +63,7 @@ public final class SpringKafkaTelemetry {
     return new InstrumentedRecordInterceptor<>(processInstrumenter, decoratedInterceptor, null);
   }
 
-  public <K, V> RecordInterceptor<K, V> createRecordInterceptor(
+  <K, V> RecordInterceptor<K, V> createRecordInterceptor(
       @Nullable RecordInterceptor<K, V> decoratedInterceptor,
       UnaryOperator<Context> contextCustomizer) {
     return new InstrumentedRecordInterceptor<>(

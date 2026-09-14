@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.kafka.v2_7;
 
+import static io.opentelemetry.instrumentation.spring.kafka.v2_7.SpringKafkaTelemetryAccess.createRecordInterceptor;
 import static io.opentelemetry.javaagent.instrumentation.spring.kafka.v2_7.SpringKafkaSingletons.telemetry;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -57,9 +58,8 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
               .equals(
                   "io.opentelemetry.instrumentation.spring.kafka.v2_7.InstrumentedRecordInterceptor")) {
         interceptor =
-            telemetry()
-                .createRecordInterceptor(
-                    interceptor, KafkaClientsConsumerProcessTracing::markFrameworkProcess);
+            createRecordInterceptor(
+                telemetry(), interceptor, KafkaClientsConsumerProcessTracing::markFrameworkProcess);
       }
       return interceptor;
     }
