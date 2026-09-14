@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
-import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -156,7 +155,7 @@ class JedisCluster40ClientTest {
   @Test
   void periodicTopologyRefreshUsesConfiguredClusterNodesAsServerTarget()
       throws ReflectiveOperationException {
-    assumeTrue(testLatestDeps());
+    assumeTrue(Boolean.getBoolean("testPeriodicTopologyRefresh"));
 
     AutoCloseable refreshingProvider =
         ClusterConnectionProvider.class

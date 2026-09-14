@@ -18,6 +18,9 @@ import redis.clients.jedis.providers.ConnectionProvider;
 import redis.clients.jedis.util.Pool;
 
 public class JedisConfiguredTargets {
+  // The cache constructor records nodes before its refresh-task constructor receives the cache.
+  private static final ThreadLocal<Collection<?>> PENDING_TOPOLOGY_NODES = new ThreadLocal<>();
+
   private static final VirtualField<JedisSocketFactory, ConfiguredTarget>
       SOCKET_FACTORY_CONFIGURED_TARGET =
           VirtualField.find(JedisSocketFactory.class, ConfiguredTarget.class);
@@ -69,6 +72,25 @@ public class JedisConfiguredTargets {
   public static void setTopologyTargetFromNodes(
       JedisClusterInfoCache topologyOwner, Collection<?> startNodes) {
     setTopologyTarget(topologyOwner, JedisServerTarget.ofNodes(startNodes));
+  }
+
+  public static void beginTopologyTargetInitialization(Collection<?> startNodes) {
+    PENDING_TOPOLOGY_NODES.set(startNodes);
+  }
+
+  public static void initializePendingTopologyTarget(JedisClusterInfoCache topologyOwner) {
+    try {
+      Collection<?> startNodes = PENDING_TOPOLOGY_NODES.get();
+      if (startNodes != null) {
+        setTopologyTargetFromNodes(topologyOwner, startNodes);
+      }
+    } finally {
+      endTopologyTargetInitialization();
+    }
+  }
+
+  public static void endTopologyTargetInitialization() {
+    PENDING_TOPOLOGY_NODES.remove();
   }
 
   @Nullable
