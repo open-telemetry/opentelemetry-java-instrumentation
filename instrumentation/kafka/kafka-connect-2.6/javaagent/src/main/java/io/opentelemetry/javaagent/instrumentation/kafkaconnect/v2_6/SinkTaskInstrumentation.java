@@ -76,7 +76,7 @@ class SinkTaskInstrumentation implements TypeInstrumentation {
         }
 
         Context context = instrumenter().start(parentContext, task);
-        context = markFrameworkProcess(context, parentContext);
+        context = markFrameworkProcess(context);
         return new AdviceScope(task, context, context.makeCurrent());
       }
 
