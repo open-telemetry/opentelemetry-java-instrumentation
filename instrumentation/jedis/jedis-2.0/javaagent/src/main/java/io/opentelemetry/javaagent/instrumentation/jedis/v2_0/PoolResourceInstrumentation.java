@@ -48,8 +48,7 @@ class PoolResourceInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.This Pool<?> pool) {
-      Context context =
-          JedisSingletons.configuredTargetContext(JedisSingletons.getPoolTarget(pool));
+      Context context = JedisSingletons.configuredPoolTargetContext(pool);
       return context != null ? context.makeCurrent() : null;
     }
 

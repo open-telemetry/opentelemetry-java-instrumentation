@@ -82,7 +82,7 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
         scope.close();
       }
       if (throwable != null) {
-        JedisSingletons.setPoolTarget(pool, null);
+        JedisSingletons.clearPoolTarget(pool);
       }
     }
   }
@@ -93,8 +93,7 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.FieldValue("this$0") Pool<?> pool) {
-      Context context =
-          JedisSingletons.configuredTargetContext(JedisSingletons.getPoolTarget(pool));
+      Context context = JedisSingletons.configuredPoolTargetContext(pool);
       return context != null ? context.makeCurrent() : null;
     }
 
