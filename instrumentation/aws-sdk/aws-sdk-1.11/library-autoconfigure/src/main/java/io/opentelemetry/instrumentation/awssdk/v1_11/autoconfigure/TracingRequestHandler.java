@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingConfig;
 import io.opentelemetry.instrumentation.api.internal.SystemProperty;
 import io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTelemetry;
+import io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTelemetryBuilder;
 
 /**
  * A {@link RequestHandler2} for use as an SPI by the AWS SDK to automatically trace all requests.
@@ -27,16 +28,21 @@ public final class TracingRequestHandler extends RequestHandler2 {
   private static RequestHandler2 buildDelegate(OpenTelemetry openTelemetry) {
     DeclarativeConfigProperties messaging =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common").get("messaging");
-    return AwsSdkTelemetry.builder(openTelemetry)
-        .setCaptureExperimentalSpanAttributes(
-            DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "aws_sdk")
-                .getBoolean(
+    DeclarativeConfigProperties awsSdk =
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "aws_sdk");
+    AwsSdkTelemetryBuilder builder =
+        AwsSdkTelemetry.builder(openTelemetry)
+            .setCaptureExperimentalSpanAttributes(
+                awsSdk.getBoolean(
                     "experimental_span_attributes/development",
                     // The library-autoconfigure module has no programmatic configuration API,
                     // and declarative instrumentation configuration is not stable, so it is
                     // necessary to support configuration via system properties.
                     SystemProperty.getBoolean(
-                        "otel.instrumentation.aws-sdk.experimental-span-attributes", false)))
+                        "otel.instrumentation.aws-sdk.experimental-span-attributes", false)));
+    return builder
+        .setBatchSendMessageCreationSpansEnabled(
+            MessagingConfig.isBatchSendMessageCreationSpansEnabled(openTelemetry, "aws_sdk", true))
         .setMessagingReceiveTelemetryEnabled(
             messaging
                 .get("receive_telemetry/development")

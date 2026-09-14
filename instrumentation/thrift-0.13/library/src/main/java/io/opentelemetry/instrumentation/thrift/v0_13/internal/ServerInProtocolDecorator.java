@@ -20,6 +20,7 @@ import org.apache.thrift.protocol.TMessageType;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.protocol.TProtocolDecorator;
 import org.apache.thrift.protocol.TProtocolFactory;
+import org.apache.thrift.protocol.TProtocolUtil;
 import org.apache.thrift.protocol.TStruct;
 import org.apache.thrift.protocol.TType;
 import org.apache.thrift.transport.TTransport;
@@ -77,6 +78,11 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
 
   @Override
   public TField readFieldBegin() throws TException {
+    // ignore context propagation fields when the span has already been started
+    if (currentRequest != null) {
+      return readNextField();
+    }
+
     TField field = super.readFieldBegin();
     // start span when context propagation field is read, if the message doesn't include context
     // propagation field, span will be started in readMessageEnd()
@@ -87,14 +93,23 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
       ThriftRequest request = new ThriftRequest(methodName, serviceName, getSocket(), headers);
       Context parentContext = Context.current();
       if (!instrumenter.shouldStart(parentContext, request)) {
-        // proceed to the next field
-        return this.readFieldBegin();
+        return readNextField();
       }
       currentRequest = request;
       currentContext = instrumenter.start(parentContext, request);
 
-      // proceed to the next field
-      return this.readFieldBegin();
+      return readNextField();
+    }
+    return field;
+  }
+
+  private TField readNextField() throws TException {
+    TField field = super.readFieldBegin();
+    // skip over context propagation fields
+    while (isContextPropagationField(field)) {
+      TProtocolUtil.skip(this, field.type);
+      super.readFieldEnd();
+      field = super.readFieldBegin();
     }
     return field;
   }
@@ -127,19 +142,22 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
     return socket;
   }
 
+  public void closeScope() {
+    if (currentScope != null) {
+      currentScope.close();
+    }
+    currentScope = null;
+  }
+
   public void endSpan(@Nullable Throwable throwable, boolean failed) {
     if (currentContext == null || currentRequest == null) {
       return;
-    }
-    if (currentScope != null) {
-      currentScope.close();
     }
     instrumenter.end(
         currentContext, currentRequest, failed ? ThriftResponse.FAILED : null, throwable);
     // Avoid duplicate end invocations from exceptions in asynchronous workflows
     currentContext = null;
     currentRequest = null;
-    currentScope = null;
   }
 
   private boolean isContextPropagationField(TField field) {

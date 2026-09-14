@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
@@ -27,6 +28,9 @@ class OpenSearchSingletons {
   private static final Instrumenter<OpenSearchRequest, Void> instrumenter = createInstrumenter();
 
   public static final boolean CAPTURE_SEARCH_QUERY = getCaptureSearchQuery();
+
+  public static final boolean SANITIZE_SEARCH_QUERY =
+      DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "opensearch");
 
   public static Instrumenter<OpenSearchRequest, Void> instrumenter() {
     return instrumenter;

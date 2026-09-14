@@ -53,7 +53,9 @@ class CouchbaseNetworkInstrumentation implements TypeInstrumentation {
 
       CouchbaseRequestInfo requestInfo = COUCHBASE_REQUEST_INFO.get(request);
       if (requestInfo != null) {
-        requestInfo.setEndpoint(
+        // The socket and the address the driver opened this endpoint to describe the same node, and
+        // only stay consistent with each other when they are recorded together
+        requestInfo.setNode(
             channelHandlerContext.channel().remoteAddress(), endpoint.remoteAddress());
         requestInfo.setLocalAddress(localSocket);
       }
