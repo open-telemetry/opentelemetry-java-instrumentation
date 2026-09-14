@@ -33,9 +33,7 @@ class RedisConnectionManagerInstrumentation implements TypeInstrumentation {
             .and(takesArgument(3, named("io.vertx.redis.client.RedisConnectOptions"))),
         getClass().getName() + "$ConstructorWithOptionsAdvice");
     transformer.applyAdviceToMethod(
-        isConstructor()
-            .and(takesArguments(5))
-            .and(takesArgument(3, named("java.util.function.Supplier"))),
+        isConstructor().and(takesArguments(5)).and(takesArgument(3, Supplier.class)),
         getClass().getName() + "$ConstructorWithSupplierAdvice");
   }
 
