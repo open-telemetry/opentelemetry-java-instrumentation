@@ -62,15 +62,12 @@ public class JedisSingletons {
     CONNECTION_TARGET.set(connection, target);
   }
 
-  @Nullable
-  public static ConfiguredTargetScope openConfiguredTargetScope(
-      @Nullable RedisServerTarget target) {
-    if (target == null) {
-      return null;
-    }
-    RedisServerTarget previous = configuredTarget.get();
+  public static void setConfiguredTarget(RedisServerTarget target) {
     configuredTarget.set(target);
-    return new ConfiguredTargetScope(previous);
+  }
+
+  public static void removeConfiguredTarget() {
+    configuredTarget.remove();
   }
 
   @Nullable
@@ -93,24 +90,6 @@ public class JedisSingletons {
           shard == null ? null : RedisServerTarget.endpoint(shard.getHost(), shard.getPort()));
     }
     return RedisServerTarget.ofEndpoints(endpoints);
-  }
-
-  public static class ConfiguredTargetScope implements AutoCloseable {
-
-    @Nullable private final RedisServerTarget previous;
-
-    private ConfiguredTargetScope(@Nullable RedisServerTarget previous) {
-      this.previous = previous;
-    }
-
-    @Override
-    public void close() {
-      if (previous == null) {
-        configuredTarget.remove();
-      } else {
-        configuredTarget.set(previous);
-      }
-    }
   }
 
   private JedisSingletons() {}

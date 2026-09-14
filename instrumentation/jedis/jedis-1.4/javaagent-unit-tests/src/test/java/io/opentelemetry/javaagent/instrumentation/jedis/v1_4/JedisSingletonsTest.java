@@ -11,7 +11,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
-import io.opentelemetry.javaagent.instrumentation.jedis.v1_4.JedisSingletons.ConfiguredTargetScope;
 import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -60,7 +59,7 @@ class JedisSingletonsTest {
   }
 
   @Test
-  void captureConnectionTargetFallsBackToHostAndPortWhenNoScopeIsActive() {
+  void captureConnectionTargetFallsBackToHostAndPortWhenNoConfiguredTargetExists() {
     Connection connection = new Connection("direct", 6380);
 
     JedisSingletons.captureConnectionTarget(connection);
@@ -71,39 +70,33 @@ class JedisSingletonsTest {
   }
 
   @Test
-  void captureConnectionTargetUsesActiveScopeInsteadOfHostAndPort() {
+  void captureConnectionTargetUsesConfiguredTargetInsteadOfHostAndPort() {
     Connection connection = new Connection("direct", 6379);
     RedisServerTarget configuredTarget = RedisServerTarget.ofHostAndPort("configured", 6380);
 
-    try (ConfiguredTargetScope ignored =
-        JedisSingletons.openConfiguredTargetScope(configuredTarget)) {
+    JedisSingletons.setConfiguredTarget(configuredTarget);
+    try {
       JedisSingletons.captureConnectionTarget(connection);
+    } finally {
+      JedisSingletons.removeConfiguredTarget();
     }
 
     assertThat(JedisSingletons.connectionTarget(connection)).isSameAs(configuredTarget);
   }
 
   @Test
-  void connectionTargetPrefersActiveScopeOverAttachedTargetThenFallsBackOnClose() {
+  void configuredTargetIsVisibleUntilRemoved() {
     Connection connection = new Connection("direct", 6379);
-    RedisServerTarget attachedTarget = RedisServerTarget.ofHostAndPort("attached", 6380);
-    RedisServerTarget scopedTarget = RedisServerTarget.ofHostAndPort("scoped", 6381);
-
-    try (ConfiguredTargetScope ignored =
-        JedisSingletons.openConfiguredTargetScope(attachedTarget)) {
-      JedisSingletons.captureConnectionTarget(connection);
-    }
+    JedisSingletons.captureConnectionTarget(connection);
+    RedisServerTarget attachedTarget = JedisSingletons.connectionTarget(connection);
     assertThat(JedisSingletons.connectionTarget(connection)).isSameAs(attachedTarget);
 
-    try (ConfiguredTargetScope ignored = JedisSingletons.openConfiguredTargetScope(scopedTarget)) {
-      assertThat(JedisSingletons.connectionTarget(connection)).isSameAs(scopedTarget);
-
-      RedisServerTarget nestedTarget = RedisServerTarget.ofHostAndPort("nested", 6382);
-      try (ConfiguredTargetScope nested = JedisSingletons.openConfiguredTargetScope(nestedTarget)) {
-        assertThat(JedisSingletons.connectionTarget(connection)).isSameAs(nestedTarget);
-      }
-
-      assertThat(JedisSingletons.connectionTarget(connection)).isSameAs(scopedTarget);
+    RedisServerTarget configuredTarget = RedisServerTarget.ofHostAndPort("configured", 6381);
+    JedisSingletons.setConfiguredTarget(configuredTarget);
+    try {
+      assertThat(JedisSingletons.connectionTarget(connection)).isSameAs(configuredTarget);
+    } finally {
+      JedisSingletons.removeConfiguredTarget();
     }
 
     assertThat(JedisSingletons.connectionTarget(connection)).isSameAs(attachedTarget);

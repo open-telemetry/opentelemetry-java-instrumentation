@@ -8,9 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.jedis.v1_4.JedisSingletons.ConfiguredTargetScope;
 import java.util.List;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -28,25 +28,24 @@ class ShardedJedisInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("initialize").and(takesArgument(0, named("java.util.List"))),
+        named("initialize").and(takesArgument(0, List.class)),
         getClass().getName() + "$InitializeAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class InitializeAdvice {
 
-    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static ConfiguredTargetScope onEnter(
-        @Advice.Argument(0) @Nullable List<JedisShardInfo> shards) {
-      return JedisSingletons.openConfiguredTargetScope(JedisSingletons.createServerTarget(shards));
+    public static void onEnter(@Advice.Argument(0) @Nullable List<JedisShardInfo> shards) {
+      RedisServerTarget target = JedisSingletons.createServerTarget(shards);
+      if (target != null) {
+        JedisSingletons.setConfiguredTarget(target);
+      }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter @Nullable ConfiguredTargetScope scope) {
-      if (scope != null) {
-        scope.close();
-      }
+    public static void onExit() {
+      JedisSingletons.removeConfiguredTarget();
     }
   }
 }
