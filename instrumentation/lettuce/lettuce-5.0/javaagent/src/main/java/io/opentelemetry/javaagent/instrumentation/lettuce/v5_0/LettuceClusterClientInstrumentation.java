@@ -11,7 +11,6 @@ import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSin
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.lettuce.core.RedisChannelHandler;
@@ -40,18 +39,8 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor().and(takesArgument(1, named("java.lang.Iterable"))),
+        isConstructor().and(takesArgument(1, Iterable.class)),
         getClass().getName() + "$ConstructorAdvice");
-    transformer.applyAdviceToMethod(
-        named("connectClusterImpl")
-            .and(returns(named("io.lettuce.core.cluster.StatefulRedisClusterConnectionImpl"))),
-        getClass().getName() + "$AttachConnectionAdvice");
-    transformer.applyAdviceToMethod(
-        named("connectClusterPubSubImpl")
-            .and(
-                returns(
-                    named("io.lettuce.core.cluster.pubsub.StatefulRedisClusterPubSubConnection"))),
-        getClass().getName() + "$AttachConnectionAdvice");
     transformer.applyAdviceToMethod(
         nameStartsWith("connectStateful")
             .and(takesArgument(1, named("io.lettuce.core.protocol.DefaultEndpoint")))
@@ -68,26 +57,6 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) @Nullable Iterable<RedisURI> initialUris) {
       if (LettuceServerTargets.configuredTargetsSupported()) {
         CLUSTER_CLIENT_TARGET.set(client, LettuceServerTargets.ofUris(initialUris));
-      }
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class AttachConnectionAdvice {
-
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(
-        @Advice.This RedisClusterClient client, @Advice.Return @Nullable Object connection) {
-      if (!LettuceServerTargets.configuredTargetsSupported()) {
-        return;
-      }
-      RedisServerTarget target = CLUSTER_CLIENT_TARGET.get(client);
-      if (target != null && connection instanceof RedisChannelHandler) {
-        RedisChannelHandler<?, ?> connectionHandler = (RedisChannelHandler<?, ?>) connection;
-        CONNECTION_STATE.set(
-            connectionHandler,
-            LettuceConnectionState.withServerTarget(
-                CONNECTION_STATE.get(connectionHandler), target));
       }
     }
   }
