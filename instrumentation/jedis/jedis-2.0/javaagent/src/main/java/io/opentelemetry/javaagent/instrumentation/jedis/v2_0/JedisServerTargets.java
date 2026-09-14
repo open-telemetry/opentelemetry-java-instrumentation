@@ -30,8 +30,11 @@ public class JedisServerTargets {
   @Nullable
   public static RedisServerTarget ofSentinels(
       @Nullable String masterName, @Nullable Collection<?> sentinels) {
-    return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(
-        endpointStrings(sentinels), masterName);
+    List<String> endpoints = endpointStrings(sentinels);
+    if (RedisServerTarget.ofUnorderedEndpoints(endpoints) == null) {
+      return null;
+    }
+    return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(endpoints, masterName);
   }
 
   @Nullable
