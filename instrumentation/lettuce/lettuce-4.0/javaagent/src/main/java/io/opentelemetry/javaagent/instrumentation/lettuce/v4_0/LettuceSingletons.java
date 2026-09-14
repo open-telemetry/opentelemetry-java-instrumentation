@@ -52,7 +52,7 @@ public class LettuceSingletons {
   public static final VirtualField<RedisChannelHandler<?, ?>, InetSocketAddress>
       CONNECTION_ADDRESS = VirtualField.find(RedisChannelHandler.class, InetSocketAddress.class);
 
-  public static final VirtualField<RedisCommand<?, ?, ?>, LettuceCommandPeer> COMMAND_PEER =
+  private static final VirtualField<RedisCommand<?, ?, ?>, LettuceCommandPeer> COMMAND_PEER =
       VirtualField.find(RedisCommand.class, LettuceCommandPeer.class);
 
   public static final VirtualField<RedisCommand<?, ?, ?>, InetSocketAddress> COMMAND_ADDRESS =
@@ -173,6 +173,10 @@ public class LettuceSingletons {
 
   public static void clearCommandPeer(RedisCommand<?, ?, ?> command) {
     COMMAND_PEER.set(command, null);
+  }
+
+  static boolean hasCommandPeer(RedisCommand<?, ?, ?> command) {
+    return COMMAND_PEER.get(command) != null;
   }
 
   public static void finishCommandPeer(RedisCommand<?, ?, ?> command) {
