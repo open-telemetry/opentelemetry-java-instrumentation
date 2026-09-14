@@ -15,6 +15,8 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalHttpClientInstrumentationModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalHttpInstrumentationModel;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -136,6 +138,39 @@ class DefaultInstrumentationConfigTest {
   }
 
   @Test
+  void toConfigPropertiesRoundTripsServicePeerMappingThroughBridge() {
+    Map<String, String> servicePeerMapping = new HashMap<>();
+    servicePeerMapping.put("peer", "example.com");
+    servicePeerMapping.put("service_name", "checkout");
+    DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+    defaults.get("common").setDefault("service_peer_mapping", singletonList(servicePeerMapping));
+
+    Map<String, String> properties = defaults.toConfigProperties();
+
+    assertThat(properties)
+        .containsEntry("otel.instrumentation.common.peer-service-mapping", "example.com=checkout");
+    DeclarativeConfigProperties config =
+        ConfigPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig(
+            DefaultConfigProperties.createFromMap(properties));
+    List<DeclarativeConfigProperties> roundTripped =
+        config.get("java").get("common").getStructuredList("service_peer_mapping");
+    assertThat(roundTripped).hasSize(1);
+    assertThat(roundTripped.get(0).getString("peer")).isEqualTo("example.com");
+    assertThat(roundTripped.get(0).getString("service_name")).isEqualTo("checkout");
+  }
+
+  @Test
+  void toConfigPropertiesRejectsUnsupportedStructuredList() {
+    DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+    defaults.get("acme").setDefault("structured", singletonList(singletonList("value")));
+
+    assertThatThrownBy(defaults::toConfigProperties)
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage(
+            "structured list default has no traditional config serialization: acme.structured");
+  }
+
+  @Test
   void toConfigPropertiesRoundTripsGeneralDefaultThroughBridge() {
     DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
     setGeneralClientRequestHeaders(defaults, "X-Request-Id");
@@ -182,6 +217,34 @@ class DefaultInstrumentationConfigTest {
     defaults.get("acme").get("full_name").setDefault("preserved", "true");
 
     assertThat(defaults.toConfigProperties()).containsEntry("acme.preserved", "true").hasSize(1);
+  }
+
+  private static Stream<Arguments> conflictingDefaults() {
+    return Stream.of(
+        argumentSet(
+            "parent then child",
+            (Consumer<DefaultInstrumentationConfig>)
+                defaults -> {
+                  defaults.get("acme").setDefault("name", "parent");
+                  defaults.get("acme").get("name").setDefault("first", "child");
+                }),
+        argumentSet(
+            "child then parent",
+            (Consumer<DefaultInstrumentationConfig>)
+                defaults -> {
+                  defaults.get("acme").get("name").setDefault("first", "child");
+                  defaults.get("acme").setDefault("name", "parent");
+                }));
+  }
+
+  @ParameterizedTest
+  @MethodSource("conflictingDefaults")
+  void setDefaultRejectsPrefixCollisions(Consumer<DefaultInstrumentationConfig> customizer) {
+    assertThatThrownBy(() -> customizer.accept(new DefaultInstrumentationConfig()))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("default path conflicts with existing default:")
+        .hasMessageContaining("acme.name")
+        .hasMessageContaining("acme.name.first");
   }
 
   private static void setGeneralClientRequestHeaders(

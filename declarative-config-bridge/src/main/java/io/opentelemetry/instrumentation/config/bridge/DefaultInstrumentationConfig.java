@@ -75,7 +75,13 @@ public final class DefaultInstrumentationConfig {
     return new DefaultInstrumentationConfig(defaults, newPath, propertyMappings, generalDefaults);
   }
 
-  /** Customizes general instrumentation defaults using the type-safe declarative model. */
+  /**
+   * Customizes general instrumentation defaults using the type-safe declarative model.
+   *
+   * <p>Only model properties with a corresponding traditional config property can be used when
+   * {@link #toConfigProperties()} is called. Declarative-only properties cause that method to throw
+   * an {@link IllegalArgumentException}.
+   */
   @CanIgnoreReturnValue
   public DefaultInstrumentationConfig customizeGeneral(
       Consumer<ExperimentalGeneralInstrumentationModel> customizer) {
@@ -134,8 +140,10 @@ public final class DefaultInstrumentationConfig {
   }
 
   /**
-   * Sets a list-valued default. The list is preserved when applying defaults to the declarative
-   * model and serialized as a comma-separated value for traditional configuration properties.
+   * Sets a list-valued default. Scalar lists are preserved when applying defaults to the
+   * declarative model and serialized as comma-separated values for traditional configuration
+   * properties. The structured {@code common.service_peer_mapping} list is also supported; other
+   * structured lists cannot be converted to traditional configuration properties.
    */
   @CanIgnoreReturnValue
   public DefaultInstrumentationConfig setDefault(String key, List<?> value) {
@@ -153,10 +161,7 @@ public final class DefaultInstrumentationConfig {
     defaults.forEach(
         (declarativePath, value) ->
             map.put(
-                toConfigProperty(declarativePath),
-                value instanceof List
-                    ? ((List<?>) value).stream().map(String::valueOf).collect(joining(","))
-                    : String.valueOf(value)));
+                toConfigProperty(declarativePath), toConfigPropertyValue(declarativePath, value)));
     ExperimentalGeneralInstrumentationModel general = generalDefaults.model;
     if (general != null) {
       DeclarativeModelUtil.forEachLeaf(
@@ -240,8 +245,61 @@ public final class DefaultInstrumentationConfig {
       throw new IllegalArgumentException(
           "defaults must be set below an instrumentation node, e.g. get(\"micrometer\")");
     }
-    defaults.put(pathWithName(key), value);
+    String newPath = pathWithName(key);
+    for (String existingPath : defaults.keySet()) {
+      if (!existingPath.equals(newPath)
+          && (matchesPrefix(existingPath, newPath) || matchesPrefix(newPath, existingPath))) {
+        throw new IllegalArgumentException(
+            "default path conflicts with existing default: " + newPath + " and " + existingPath);
+      }
+    }
+    defaults.put(newPath, value);
     return this;
+  }
+
+  private static String toConfigPropertyValue(String declarativePath, Object value) {
+    if (!(value instanceof List)) {
+      return String.valueOf(value);
+    }
+    List<?> list = (List<?>) value;
+    if (declarativePath.equals("common.service_peer_mapping")) {
+      return serializeServicePeerMapping(list);
+    }
+    for (Object item : list) {
+      if (!(item instanceof String)
+          && !(item instanceof Boolean)
+          && !(item instanceof Integer)
+          && !(item instanceof Long)
+          && !(item instanceof Double)) {
+        throw new IllegalArgumentException(
+            "structured list default has no traditional config serialization: " + declarativePath);
+      }
+    }
+    return list.stream().map(String::valueOf).collect(joining(","));
+  }
+
+  private static String serializeServicePeerMapping(List<?> mappings) {
+    return mappings.stream()
+        .map(
+            mapping -> {
+              if (!(mapping instanceof Map)) {
+                throw new IllegalArgumentException(
+                    "common.service_peer_mapping entries must be maps");
+              }
+              Map<?, ?> fields = (Map<?, ?>) mapping;
+              Object peer = fields.get("peer");
+              Object serviceName = fields.get("service_name");
+              if (!(peer instanceof String) || !(serviceName instanceof String)) {
+                throw new IllegalArgumentException(
+                    "common.service_peer_mapping entries require string peer and service_name fields");
+              }
+              if (fields.get("service_namespace") != null) {
+                throw new IllegalArgumentException(
+                    "common.service_peer_mapping service_namespace is not supported by traditional configuration");
+              }
+              return peer + "=" + serviceName;
+            })
+        .collect(joining(","));
   }
 
   private static boolean matchesPrefix(String path, String prefix) {

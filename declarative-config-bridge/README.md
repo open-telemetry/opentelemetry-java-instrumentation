@@ -108,7 +108,9 @@ Navigation mirrors `DeclarativeConfigProperties` — reading uses
 `defaults.get("micrometer").setDefault("base_time_unit", "s")`, and deeper nested paths can chain
 `get(...)` the same way. General instrumentation configuration uses `customizeGeneral(...)`, which
 provides the type-safe declarative model to the customizer, leaving `get("general")` available for a
-Java instrumentation named `general`.
+Java instrumentation named `general`. When the defaults are also exported with
+`toConfigProperties()`, only general model properties that have corresponding traditional config
+properties can be used. Calling `toConfigProperties()` rejects declarative-only general properties.
 
 Keys use the same declarative config shape as `DeclarativeConfigProperties`. When producing system
 property keys, underscores are translated to hyphens, and keys ending in `/development` are

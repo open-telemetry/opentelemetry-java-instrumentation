@@ -83,6 +83,8 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
     SPECIAL_MAPPINGS.put(
         "java.common.gen_ai.capture_message_content",
         "otel.instrumentation.genai.capture-message-content");
+    SPECIAL_MAPPINGS.put(
+        JAVA_COMMON_SERVICE_PEER_MAPPING, "otel.instrumentation.common.peer-service-mapping");
     // top-level common configs
     SPECIAL_MAPPINGS.put(
         "java.common.span_suppression_strategy/development",

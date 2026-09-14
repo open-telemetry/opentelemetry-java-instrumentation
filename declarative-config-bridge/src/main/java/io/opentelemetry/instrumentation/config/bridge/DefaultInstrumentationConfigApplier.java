@@ -11,7 +11,9 @@ import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.Exper
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalInstrumentationModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalLanguageSpecificInstrumentationModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalLanguageSpecificInstrumentationPropertyModel;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /** Utility that applies {@link DefaultInstrumentationConfig} defaults to the declarative model. */
@@ -23,7 +25,7 @@ final class DefaultInstrumentationConfigApplier {
    * set for properties not already present.
    */
   @CanIgnoreReturnValue
-  public static OpenTelemetryConfigurationModel applyToModel(
+  static OpenTelemetryConfigurationModel applyToModel(
       DefaultInstrumentationConfig defaults, OpenTelemetryConfigurationModel model) {
     if (defaults.getDefaults().isEmpty() && defaults.getGeneralDefaults() == null) {
       return model;
@@ -85,7 +87,9 @@ final class DefaultInstrumentationConfigApplier {
       Map<String, Object> nested = (Map<String, Object>) child;
       target = nested;
     }
-    target.putIfAbsent(segments[segments.length - 1], value);
+    target.putIfAbsent(
+        segments[segments.length - 1],
+        value instanceof List ? new ArrayList<>((List<?>) value) : value);
   }
 
   private DefaultInstrumentationConfigApplier() {}

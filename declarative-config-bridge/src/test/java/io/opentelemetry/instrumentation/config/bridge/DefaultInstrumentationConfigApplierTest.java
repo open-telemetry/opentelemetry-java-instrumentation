@@ -18,6 +18,8 @@ import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.Exper
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalHttpInstrumentationModel;
 import io.opentelemetry.sdk.internal.SdkConfigProvider;
 import java.io.ByteArrayInputStream;
+import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class DefaultInstrumentationConfigApplierTest {
@@ -92,6 +94,42 @@ class DefaultInstrumentationConfigApplierTest {
                 .get("http")
                 .getScalarList("known_methods", String.class))
         .containsExactly("GET", "POST");
+  }
+
+  @Test
+  void applyToModelCopiesListDefaults() {
+    DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+    defaults.get("common").get("http").setDefault("known_methods", asList("GET", "POST"));
+
+    OpenTelemetryConfigurationModel firstModel = newModel();
+    defaults.applyToModel(firstModel);
+    Object firstValue =
+        firstModel
+            .getInstrumentationDevelopment()
+            .getJava()
+            .getAdditionalProperties()
+            .get("common")
+            .getAdditionalProperties()
+            .get("http");
+    @SuppressWarnings("unchecked")
+    Map<String, Object> firstHttp = (Map<String, Object>) firstValue;
+    ((List<?>) firstHttp.get("known_methods")).clear();
+
+    OpenTelemetryConfigurationModel secondModel = newModel();
+    defaults.applyToModel(secondModel);
+    DeclarativeConfigProperties secondConfig =
+        SdkConfigProvider.create(DeclarativeConfiguration.toConfigProperties(secondModel))
+            .getInstrumentationConfig();
+
+    assertThat(
+            secondConfig
+                .get("java")
+                .get("common")
+                .get("http")
+                .getScalarList("known_methods", String.class))
+        .containsExactly("GET", "POST");
+    assertThat(defaults.toConfigProperties())
+        .containsEntry("otel.instrumentation.http.known-methods", "GET,POST");
   }
 
   @Test
