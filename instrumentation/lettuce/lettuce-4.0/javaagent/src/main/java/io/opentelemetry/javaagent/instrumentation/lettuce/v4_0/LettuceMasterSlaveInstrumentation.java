@@ -40,7 +40,7 @@ class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
             .and(takesArguments(3))
             .and(
                 takesArgument(2, named("com.lambdaworks.redis.RedisURI"))
-                    .or(takesArgument(2, named("java.lang.Iterable")))),
+                    .or(takesArgument(2, Iterable.class))),
         getClass().getName() + "$ConnectAdvice");
   }
 
