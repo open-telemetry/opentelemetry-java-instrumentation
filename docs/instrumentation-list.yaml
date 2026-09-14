@@ -11164,7 +11164,7 @@ libraries:
     name: io.opentelemetry.jedis-4.0
   has_javaagent: true
   javaagent_target_versions:
-  - redis.clients:jedis:[4.0.0,)
+  - redis.clients:jedis:[4.0.0-beta1,)
   configuration_refs:
   - common.db.query-sanitization.enabled
   telemetry:
