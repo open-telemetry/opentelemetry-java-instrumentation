@@ -266,24 +266,17 @@ class LettuceClusterClientTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName(
-                            emitStableDatabaseSemconv() && configuredTargetsSupported()
+                            emitStableDatabaseSemconv()
                                 ? "SET " + source.getHost() + ":" + source.getPort()
                                 : "SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv()
-                                    ? (configuredTargetsSupported() ? source.getHost() : null)
-                                    : source.getHost()),
+                            equalTo(SERVER_ADDRESS, source.getHost()),
                             satisfies(
                                 SERVER_PORT,
                                 val -> {
                                   if (emitStableDatabaseSemconv()) {
-                                    val.isEqualTo(
-                                        configuredTargetsSupported()
-                                            ? Long.valueOf(source.getPort())
-                                            : null);
+                                    val.isEqualTo(Long.valueOf(source.getPort()));
                                   } else {
                                     val.isIn(
                                         Long.valueOf(source.getPort()),
@@ -299,11 +292,7 @@ class LettuceClusterClientTest {
                                     ? Long.valueOf(target.getPort())
                                     : null),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(
-                                DB_NAMESPACE,
-                                emitStableDatabaseSemconv() && configuredTargetsSupported()
-                                    ? "0"
-                                    : null),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "SET REDIRECT_KEY ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET")));
     List<Consumer<TraceAssert>> traceAssertions = new ArrayList<>();
