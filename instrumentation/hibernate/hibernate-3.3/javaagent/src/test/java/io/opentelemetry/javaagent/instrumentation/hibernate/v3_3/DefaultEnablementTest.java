@@ -28,23 +28,25 @@ class DefaultEnablementTest extends AbstractHibernateTest {
           }
         });
 
-    testing.waitAndAssertTraces(
-        trace -> {
-          if (V3_PREVIEW) {
-            trace.hasSpansSatisfyingExactly(span -> span.hasName("parent"));
-          } else {
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span ->
-                    assertSessionSpan(
-                        span,
-                        trace.getSpan(0),
-                        "Session.get "
-                            + "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"),
-                span ->
-                    assertClientSpan(
-                        span, trace.getSpan(1), emitStableDatabaseSemconv() ? "select" : "SELECT"));
-          }
-        });
+    if (V3_PREVIEW) {
+      testing.waitAndAssertTraces(
+          trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent")));
+    } else {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("parent"),
+                  span ->
+                      assertSessionSpan(
+                          span,
+                          trace.getSpan(0),
+                          "Session.get "
+                              + "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"),
+                  span ->
+                      assertClientSpan(
+                          span,
+                          trace.getSpan(1),
+                          emitStableDatabaseSemconv() ? "select" : "SELECT")));
+    }
   }
 }

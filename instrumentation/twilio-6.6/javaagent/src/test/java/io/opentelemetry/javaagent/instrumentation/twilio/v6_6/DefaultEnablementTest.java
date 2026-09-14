@@ -52,14 +52,14 @@ class DefaultEnablementTest {
                     .create(twilioRestClient));
 
     assertThat(message.getBody()).isEqualTo("Hello, World!");
-    testing.waitAndAssertTraces(
-        trace -> {
-          if (V3_PREVIEW) {
-            trace.hasSpansSatisfyingExactly(span -> span.hasName("parent"));
-          } else {
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"), span -> span.hasName("MessageCreator.create"));
-          }
-        });
+    if (V3_PREVIEW) {
+      testing.waitAndAssertTraces(
+          trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent")));
+    } else {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("parent"), span -> span.hasName("MessageCreator.create")));
+    }
   }
 }

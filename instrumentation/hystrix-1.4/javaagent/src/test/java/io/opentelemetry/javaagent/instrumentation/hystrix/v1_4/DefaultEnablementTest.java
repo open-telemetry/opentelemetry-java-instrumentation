@@ -39,16 +39,16 @@ class DefaultEnablementTest {
     String result = testing.runWithSpan("parent", () -> new TestCommand().execute());
     assertThat(result).isEqualTo("Hello!");
 
-    testing.waitAndAssertTraces(
-        trace -> {
-          if (V3_PREVIEW) {
-            trace.hasSpansSatisfyingExactly(span -> span.hasName("parent"));
-          } else {
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span -> span.hasName("ExampleGroup.TestCommand.execute"));
-          }
-        });
+    if (V3_PREVIEW) {
+      testing.waitAndAssertTraces(
+          trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent")));
+    } else {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("parent"),
+                  span -> span.hasName("ExampleGroup.TestCommand.execute")));
+    }
   }
 
   private static HystrixCommand.Setter setter() {
