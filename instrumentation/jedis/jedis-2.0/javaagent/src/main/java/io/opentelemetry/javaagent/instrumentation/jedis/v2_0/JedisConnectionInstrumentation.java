@@ -134,14 +134,14 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
     }
 
     public void end(@Nullable Throwable throwable) {
+      Context context = this.context;
+      if (scope != null) {
+        scope.close();
+      }
       try {
         request.capturePeerAddress();
         JedisPipelineContext.captureTransactionFramingPeer(request);
       } finally {
-        Context context = this.context;
-        if (scope != null) {
-          scope.close();
-        }
         if (clusterCommandContext != null) {
           clusterCommandContext.capture(context, request);
         } else if (context != null) {

@@ -117,11 +117,11 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Scope scope) {
       try {
-        JedisClusterCommandContext.exitConnectionAcquisition();
-      } finally {
         if (scope != null) {
           scope.close();
         }
+      } finally {
+        JedisClusterCommandContext.exitConnectionAcquisition();
       }
     }
   }
