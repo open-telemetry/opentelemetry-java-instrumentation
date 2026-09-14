@@ -216,28 +216,11 @@ public final class KafkaUtil {
       return null;
     }
     KafkaClusterId cached = CONSUMER_CLUSTER_ID_FIELD.get(consumer);
-    if (cached != null) {
-      if (cached == KafkaClusterId.UNAVAILABLE) {
-        return null;
-      }
-      if (cached.clusterId != null) {
-        return cached.clusterId;
-      }
-      // Pending state: the broker has not reported a cluster id yet. Re-read the metadata, but at
-      // most once per interval, so Metadata.fetch() -- which locks the instance shared with the
-      // Kafka network thread -- is not entered on every span. Deliberately never terminal: this
-      // client may be one metadata response away, and each span can arrive here twice (at start and
-      // again at end), so any fixed attempt budget would be spent before a slow broker replies.
-      if (!cached.shouldReadMetadataNow()) {
-        return null;
-      }
-      String id = clusterIdFromMetadata(cached.metadata);
-      if (id != null) {
-        CONSUMER_CLUSTER_ID_FIELD.set(consumer, KafkaClusterId.resolved(id));
-      }
-      return id;
+    if (cached == null) {
+      cached =
+          initializeClusterId(consumer, CONSUMER_CLUSTER_ID_FIELD, resolveMetadataHolder(consumer));
     }
-    return resolveAndCache(consumer, CONSUMER_CLUSTER_ID_FIELD, resolveMetadataHolder(consumer));
+    return readClusterId(cached);
   }
 
   @Nullable
@@ -246,40 +229,46 @@ public final class KafkaUtil {
       return null;
     }
     KafkaClusterId cached = PRODUCER_CLUSTER_ID_FIELD.get(producer);
-    if (cached != null) {
-      if (cached == KafkaClusterId.UNAVAILABLE) {
-        return null;
-      }
-      if (cached.clusterId != null) {
-        return cached.clusterId;
-      }
-      // Pending state: the broker has not reported a cluster id yet. Re-read the metadata, but at
-      // most once per interval, so Metadata.fetch() -- which locks the instance shared with the
-      // Kafka network thread -- is not entered on every span. Deliberately never terminal: this
-      // client may be one metadata response away, and each span can arrive here twice (at start and
-      // again at end), so any fixed attempt budget would be spent before a slow broker replies.
-      if (!cached.shouldReadMetadataNow()) {
-        return null;
-      }
-      String id = clusterIdFromMetadata(cached.metadata);
-      if (id != null) {
-        PRODUCER_CLUSTER_ID_FIELD.set(producer, KafkaClusterId.resolved(id));
-      }
-      return id;
+    if (cached == null) {
+      cached = initializeClusterId(producer, PRODUCER_CLUSTER_ID_FIELD, producer);
     }
-    return resolveAndCache(producer, PRODUCER_CLUSTER_ID_FIELD, producer);
+    return readClusterId(cached);
+  }
+
+  /**
+   * Publishes this client's holder before any metadata is read, so concurrent first sends throttle
+   * against one holder rather than each entering {@code Metadata.fetch()}.
+   */
+  static <T> KafkaClusterId initializeClusterId(
+      T client, VirtualField<T, KafkaClusterId> field, @Nullable Object holder) {
+    Metadata metadata = extractMetadataFromHolder(holder);
+    KafkaClusterId created =
+        metadata == null ? KafkaClusterId.UNAVAILABLE : KafkaClusterId.of(metadata);
+    field.set(client, created);
+    // VirtualField has no compare-and-set: read back and defer to the holder that was published.
+    KafkaClusterId published = field.get(client);
+    return published != null ? published : created;
   }
 
   @Nullable
-  private static <T> String resolveAndCache(
-      T client, VirtualField<T, KafkaClusterId> field, @Nullable Object holder) {
-    Metadata metadata = extractMetadataFromHolder(holder);
-    if (metadata == null) {
-      field.set(client, KafkaClusterId.UNAVAILABLE);
+  static String readClusterId(KafkaClusterId cached) {
+    String id = cached.clusterId();
+    if (id != null) {
+      return id;
+    }
+    // The broker has not reported a cluster id yet. Re-read the metadata, but at most once per
+    // interval, so Metadata.fetch() -- which locks the instance shared with the Kafka network
+    // thread -- is not entered on every span. Deliberately never terminal: this client may be one
+    // metadata response away, and each span can arrive here twice (at start and again at end), so
+    // any fixed attempt budget would be spent before a slow broker replies.
+    if (!cached.shouldReadMetadataNow()) {
       return null;
     }
-    String id = clusterIdFromMetadata(metadata);
-    field.set(client, id != null ? KafkaClusterId.resolved(id) : KafkaClusterId.of(metadata));
+    id = clusterIdFromMetadata(cached.metadata());
+    if (id != null) {
+      // In place, so a racing write can no longer replace a resolved id with a pending one.
+      cached.resolve(id);
+    }
     return id;
   }
 

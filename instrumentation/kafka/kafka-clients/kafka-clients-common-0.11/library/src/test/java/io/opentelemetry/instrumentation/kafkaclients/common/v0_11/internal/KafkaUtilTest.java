@@ -8,12 +8,22 @@ package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Proxy;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.kafka.clients.Metadata;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.common.Cluster;
 import org.junit.jupiter.api.Test;
 
@@ -79,9 +89,93 @@ class KafkaUtilTest {
 
   @Test
   void resolvedAndUnavailableClusterId_neverReadMetadata() {
-    // Terminal states hold no Metadata reference, so they must never ask to read one.
-    assertThat(KafkaClusterId.resolved("test-cluster").shouldReadMetadataNow()).isFalse();
+    // Once the id is known there is nothing left to read, and UNAVAILABLE holds no Metadata at all.
+    KafkaClusterId resolved = KafkaClusterId.of(new Metadata(0, Long.MAX_VALUE, false));
+    resolved.resolve("test-cluster");
+
+    assertThat(resolved.shouldReadMetadataNow()).isFalse();
     assertThat(KafkaClusterId.UNAVAILABLE.shouldReadMetadataNow()).isFalse();
+  }
+
+  @Test
+  void initializeClusterId_publishesTheHolderWithoutReadingMetadata() {
+    // The throttle lives in the holder, so the holder has to reach the VirtualField before anything
+    // reads Metadata -- otherwise the very first reads are unguarded.
+    AtomicInteger fetches = new AtomicInteger();
+    Metadata metadata = countingMetadata(fetches, Cluster.empty());
+    Consumer<?, ?> client = stubConsumer();
+    VirtualField<Consumer<?, ?>, KafkaClusterId> field = clusterIdField();
+
+    KafkaClusterId published =
+        KafkaUtil.initializeClusterId(client, field, new HolderWithMetadata(metadata));
+
+    assertThat(fetches.get()).isZero();
+    assertThat(field.get(client)).isSameAs(published);
+  }
+
+  @Test
+  void resolvingClusterId_leavesThePublishedHolderInPlace() {
+    // VirtualField has no compare-and-set, so resolution must not write it again: a concurrent
+    // pending write would otherwise clobber the id and send later spans back to reading metadata.
+    AtomicInteger fetches = new AtomicInteger();
+    Metadata metadata =
+        countingMetadata(
+            fetches, new Cluster("test-cluster", emptyList(), emptyList(), emptySet(), emptySet()));
+    Consumer<?, ?> client = stubConsumer();
+    VirtualField<Consumer<?, ?>, KafkaClusterId> field = clusterIdField();
+
+    KafkaClusterId published =
+        KafkaUtil.initializeClusterId(client, field, new HolderWithMetadata(metadata));
+
+    assertThat(KafkaUtil.readClusterId(published)).isEqualTo("test-cluster");
+    assertThat(field.get(client)).isSameAs(published);
+    assertThat(published.clusterId()).isEqualTo("test-cluster");
+    // The resolved id is served from the holder, without another metadata read.
+    assertThat(KafkaUtil.readClusterId(published)).isEqualTo("test-cluster");
+    assertThat(fetches.get()).isEqualTo(1);
+  }
+
+  @Test
+  void concurrentFirstReads_shareOneMetadataThrottle() throws InterruptedException {
+    // A burst of first sends all find an empty VirtualField. Metadata.fetch() locks the instance
+    // shared with the Kafka network thread, so the number of reads must not scale with the burst.
+    // It is not pinned to one: VirtualField has no compare-and-set, so a set/get interleaving can
+    // publish more than one holder before the burst converges.
+    AtomicInteger fetches = new AtomicInteger();
+    Metadata metadata = countingMetadata(fetches, Cluster.empty());
+    Consumer<?, ?> client = stubConsumer();
+    VirtualField<Consumer<?, ?>, KafkaClusterId> field = clusterIdField();
+    HolderWithMetadata holder = new HolderWithMetadata(metadata);
+
+    int threads = 32;
+    CountDownLatch start = new CountDownLatch(1);
+    CountDownLatch done = new CountDownLatch(threads);
+    ExecutorService pool = Executors.newFixedThreadPool(threads);
+    try {
+      for (int i = 0; i < threads; i++) {
+        pool.execute(
+            () -> {
+              try {
+                start.await();
+                KafkaClusterId cached = field.get(client);
+                if (cached == null) {
+                  cached = KafkaUtil.initializeClusterId(client, field, holder);
+                }
+                KafkaUtil.readClusterId(cached);
+              } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+              } finally {
+                done.countDown();
+              }
+            });
+      }
+      start.countDown();
+      assertThat(done.await(30, SECONDS)).isTrue();
+    } finally {
+      pool.shutdownNow();
+    }
+
+    assertThat(fetches.get()).isLessThanOrEqualTo(threads / 4);
   }
 
   @Test
@@ -196,6 +290,42 @@ class KafkaUtilTest {
         throw new ClassNotFoundException(className, e);
       }
     }
+  }
+
+  private static Metadata countingMetadata(AtomicInteger fetches, Cluster cluster) {
+    // Metadata is final, so counting fetch() needs the inline mock maker.
+    Metadata metadata = mock(Metadata.class);
+    when(metadata.fetch())
+        .thenAnswer(
+            invocation -> {
+              fetches.incrementAndGet();
+              return cluster;
+            });
+    return metadata;
+  }
+
+  private static VirtualField<Consumer<?, ?>, KafkaClusterId> clusterIdField() {
+    return VirtualField.find(Consumer.class, KafkaClusterId.class);
+  }
+
+  /** Enough of a {@code Consumer} to be a distinct {@code VirtualField} key. */
+  private static Consumer<?, ?> stubConsumer() {
+    return (Consumer<?, ?>)
+        Proxy.newProxyInstance(
+            Consumer.class.getClassLoader(),
+            new Class<?>[] {Consumer.class},
+            (proxy, method, args) -> {
+              switch (method.getName()) {
+                case "hashCode":
+                  return System.identityHashCode(proxy);
+                case "equals":
+                  return proxy == args[0];
+                case "toString":
+                  return "stubConsumer";
+                default:
+                  return null;
+              }
+            });
   }
 
   private static class HolderWithMetadata {
