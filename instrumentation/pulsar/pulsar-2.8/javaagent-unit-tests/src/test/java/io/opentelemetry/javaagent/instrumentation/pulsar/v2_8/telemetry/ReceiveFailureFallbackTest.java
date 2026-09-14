@@ -25,6 +25,8 @@ import org.apache.pulsar.client.api.Message;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledForJreRange;
+import org.junit.jupiter.api.condition.JRE;
 
 class ReceiveFailureFallbackTest {
   private static InMemoryMetricReader metricReader;
@@ -46,6 +48,7 @@ class ReceiveFailureFallbackTest {
   }
 
   @Test
+  @EnabledForJreRange(min = JRE.JAVA_17)
   void springPulsarCountsMessageAfterFailedReceive() {
     Message<?> message = mock(Message.class);
     when(message.getTopicName()).thenReturn("test-topic");
