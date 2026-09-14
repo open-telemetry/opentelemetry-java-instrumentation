@@ -30,6 +30,8 @@ class StreamThreadInstrumentation implements TypeInstrumentation {
         named("pollRequests")
             .and(returns(named("org.apache.kafka.clients.consumer.ConsumerRecords"))),
         getClass().getName() + "$PollRequestsAdvice");
+    transformer.applyAdviceToMethod(
+        named("maybeUpdateStandbyTasks"), getClass().getName() + "$StandbyTaskUpdateAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -49,6 +51,19 @@ class StreamThreadInstrumentation implements TypeInstrumentation {
       if (records != null) {
         KafkaStreamsBatchState.claimProcessSpan(records);
       }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class StandbyTaskUpdateAdvice {
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static boolean onEnter() {
+      return KafkaClientsConsumerProcessTracing.setWrappingEnabled(false);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter boolean previousValue) {
+      KafkaClientsConsumerProcessTracing.setWrappingEnabled(previousValue);
     }
   }
 }
