@@ -213,20 +213,10 @@ point, before other fallible completion or cleanup work. Otherwise, a later fail
 the advice can leave the context attached to the thread. Closing early also keeps the scope
 lifetime as short as possible.
 
-Keep the scope open only when subsequent exit work intentionally requires that context to remain
-current. If later completion or cleanup steps must still run when another step throws, preserve
-that guarantee with `try`/`finally` after closing the scope:
-
-```java
-public void end(@Nullable Throwable throwable) {
-  scope.close();
-  try {
-    instrumenter().end(context, request, null, throwable);
-  } finally {
-    cleanup();
-  }
-}
-```
+Close the scope directly before fallible work rather than deferring it to a `finally` block.
+Closing it in `finally` also avoids a leak, but unnecessarily keeps the context current during the
+preceding work. Defer the close only when that exit work intentionally requires the context to
+remain current.
 
 ### Pattern 1 — Nullable `AdviceScope` for ordinary advice
 
