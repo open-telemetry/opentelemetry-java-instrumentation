@@ -80,14 +80,11 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
         @Advice.This Pool<?> pool,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable Scope scope) {
-      try {
-        if (throwable != null) {
-          JedisSingletons.setPoolTarget(pool, null);
-        }
-      } finally {
-        if (scope != null) {
-          scope.close();
-        }
+      if (scope != null) {
+        scope.close();
+      }
+      if (throwable != null) {
+        JedisSingletons.setPoolTarget(pool, null);
       }
     }
   }
