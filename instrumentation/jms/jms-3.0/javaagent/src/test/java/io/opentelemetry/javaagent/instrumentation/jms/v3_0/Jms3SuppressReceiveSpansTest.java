@@ -10,19 +10,24 @@ import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import jakarta.jms.Destination;
+import jakarta.jms.JMSConsumer;
+import jakarta.jms.JMSContext;
 import jakarta.jms.JMSException;
 import jakarta.jms.MessageConsumer;
 import jakarta.jms.MessageProducer;
 import jakarta.jms.TextMessage;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.activemq.artemis.jms.client.ActiveMQDestination;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -128,6 +133,106 @@ class Jms3SuppressReceiveSpansTest extends AbstractJms3Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName(actualDestinationName, actualDestinationName),
+                            oldOperation("receive"),
+                            operationName("receive"),
+                            operationType("receive"),
+                            equalTo(MESSAGING_MESSAGE_ID, messageId))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(span -> span.hasName("consumer parent").hasNoParent()));
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  @Test
+  void testJmsConsumerReceive() throws JMSException {
+
+    // given
+    Destination destination = session.createQueue("jmsConsumerQueue");
+    TextMessage sentMessage = session.createTextMessage("hello there");
+
+    MessageProducer producer = session.createProducer(destination);
+    cleanup.deferCleanup(producer);
+
+    JMSContext context = connectionFactory.createContext("test", "test");
+    cleanup.deferCleanup(context);
+    JMSConsumer consumer = context.createConsumer(destination);
+    cleanup.deferCleanup(consumer);
+
+    String actualDestinationName = ((ActiveMQDestination) destination).getName();
+
+    // when
+    testing.runWithSpan("producer parent", () -> producer.send(sentMessage));
+    TextMessage receivedMessage =
+        (TextMessage)
+            testing.runWithSpan("consumer parent", () -> consumer.receive(SECONDS.toMillis(10)));
+
+    // then
+    assertThat(receivedMessage.getText()).isEqualTo(sentMessage.getText());
+    String messageId = receivedMessage.getJMSMessageID();
+
+    if (emitStableMessagingSemconv()) {
+      AtomicReference<SpanData> publishSpan = new AtomicReference<>();
+      testing.waitAndAssertTraces(
+          trace -> {
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("producer parent").hasNoParent(),
+                span ->
+                    span.hasName("send " + actualDestinationName)
+                        .hasKind(PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
+                            oldOperation("publish"),
+                            operationName("send"),
+                            operationType("send"),
+                            equalTo(MESSAGING_MESSAGE_ID, messageId),
+                            messagingTempDestination(false)));
+            publishSpan.set(trace.getSpan(1));
+          },
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("consumer parent").hasNoParent(),
+                  span ->
+                      span.hasName("receive " + actualDestinationName)
+                          .hasKind(CLIENT)
+                          .hasParent(trace.getSpan(0))
+                          .hasLinks(LinkData.create(publishSpan.get().getSpanContext()))
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(MESSAGING_SYSTEM, "jms"),
+                              equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
+                              oldOperation("receive"),
+                              operationName("receive"),
+                              operationType("receive"),
+                              equalTo(MESSAGING_MESSAGE_ID, messageId))));
+      return;
+    }
+
+    // with receive spans suppressed the receive stays in the producer's trace, parented to the
+    // publish span, and carries no link
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("producer parent").hasNoParent(),
+                span ->
+                    span.hasName(actualDestinationName + " publish")
+                        .hasKind(PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
+                            oldOperation("publish"),
+                            operationName("send"),
+                            operationType("send"),
+                            equalTo(MESSAGING_MESSAGE_ID, messageId),
+                            messagingTempDestination(false)),
+                span ->
+                    span.hasName(actualDestinationName + " receive")
+                        .hasKind(CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasTotalRecordedLinks(0)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
                             oldOperation("receive"),
                             operationName("receive"),
                             operationType("receive"),

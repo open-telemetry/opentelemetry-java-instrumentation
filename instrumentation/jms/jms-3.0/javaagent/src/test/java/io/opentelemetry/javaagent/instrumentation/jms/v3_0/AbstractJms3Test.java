@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.jms.v3_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
-import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
@@ -36,8 +35,6 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import io.opentelemetry.sdk.trace.data.LinkData;
-import io.opentelemetry.sdk.trace.data.SpanData;
 import jakarta.jms.Connection;
 import jakarta.jms.Destination;
 import jakarta.jms.JMSConsumer;
@@ -51,7 +48,6 @@ import jakarta.jms.Session;
 import jakarta.jms.TextMessage;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.apache.activemq.artemis.jms.client.ActiveMQDestination;
@@ -226,76 +222,6 @@ abstract class AbstractJms3Test {
                             operationType("send"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(false))));
-  }
-
-  @Test
-  void testJmsConsumerReceive() throws JMSException {
-
-    // given
-    Destination destination = session.createQueue("jmsConsumerQueue");
-    TextMessage sentMessage = session.createTextMessage("hello there");
-
-    MessageProducer producer = session.createProducer(destination);
-    cleanup.deferCleanup(producer);
-
-    JMSContext context = connectionFactory.createContext("test", "test");
-    cleanup.deferCleanup(context);
-    JMSConsumer consumer = context.createConsumer(destination);
-    cleanup.deferCleanup(consumer);
-
-    String actualDestinationName = ((ActiveMQDestination) destination).getName();
-
-    // when
-    testing.runWithSpan("producer parent", () -> producer.send(sentMessage));
-    TextMessage receivedMessage =
-        (TextMessage)
-            testing.runWithSpan("consumer parent", () -> consumer.receive(SECONDS.toMillis(10)));
-
-    // then
-    assertThat(receivedMessage.getText()).isEqualTo(sentMessage.getText());
-    String messageId = receivedMessage.getJMSMessageID();
-
-    AtomicReference<SpanData> producerSpan = new AtomicReference<>();
-    testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasName("producer parent").hasNoParent(),
-              span ->
-                  span.hasName(
-                          emitStableMessagingSemconv()
-                              ? "send " + actualDestinationName
-                              : actualDestinationName + " publish")
-                      .hasKind(PRODUCER)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(MESSAGING_SYSTEM, "jms"),
-                          equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
-                          oldOperation("publish"),
-                          operationName("send"),
-                          operationType("send"),
-                          equalTo(MESSAGING_MESSAGE_ID, messageId),
-                          messagingTempDestination(false)));
-
-          producerSpan.set(trace.getSpan(1));
-        },
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("consumer parent").hasNoParent(),
-                span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "receive " + actualDestinationName
-                                : actualDestinationName + " receive")
-                        .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
-                        .hasParent(trace.getSpan(0))
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
-                            equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
-                            oldOperation("receive"),
-                            operationName("receive"),
-                            operationType("receive"),
-                            equalTo(MESSAGING_MESSAGE_ID, messageId))));
   }
 
   @ParameterizedTest

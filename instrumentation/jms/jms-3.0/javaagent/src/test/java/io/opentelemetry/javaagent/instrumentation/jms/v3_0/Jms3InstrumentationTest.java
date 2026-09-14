@@ -10,6 +10,7 @@ import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -19,6 +20,8 @@ import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import jakarta.jms.Destination;
+import jakarta.jms.JMSConsumer;
+import jakarta.jms.JMSContext;
 import jakarta.jms.JMSException;
 import jakarta.jms.MessageConsumer;
 import jakarta.jms.MessageListener;
@@ -505,6 +508,76 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
 
     MessageConsumer create(Session session, Topic topic, String subscriptionName)
         throws JMSException;
+  }
+
+  @Test
+  void testJmsConsumerReceive() throws JMSException {
+
+    // given
+    Destination destination = session.createQueue("jmsConsumerQueue");
+    TextMessage sentMessage = session.createTextMessage("hello there");
+
+    MessageProducer producer = session.createProducer(destination);
+    cleanup.deferCleanup(producer);
+
+    JMSContext context = connectionFactory.createContext("test", "test");
+    cleanup.deferCleanup(context);
+    JMSConsumer consumer = context.createConsumer(destination);
+    cleanup.deferCleanup(consumer);
+
+    String actualDestinationName = ((ActiveMQDestination) destination).getName();
+
+    // when
+    testing.runWithSpan("producer parent", () -> producer.send(sentMessage));
+    TextMessage receivedMessage =
+        (TextMessage)
+            testing.runWithSpan("consumer parent", () -> consumer.receive(SECONDS.toMillis(10)));
+
+    // then
+    assertThat(receivedMessage.getText()).isEqualTo(sentMessage.getText());
+    String messageId = receivedMessage.getJMSMessageID();
+
+    AtomicReference<SpanData> producerSpan = new AtomicReference<>();
+    testing.waitAndAssertTraces(
+        trace -> {
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("producer parent").hasNoParent(),
+              span ->
+                  span.hasName(
+                          emitStableMessagingSemconv()
+                              ? "send " + actualDestinationName
+                              : actualDestinationName + " publish")
+                      .hasKind(PRODUCER)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(MESSAGING_SYSTEM, "jms"),
+                          equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
+                          oldOperation("publish"),
+                          operationName("send"),
+                          operationType("send"),
+                          equalTo(MESSAGING_MESSAGE_ID, messageId),
+                          messagingTempDestination(false)));
+
+          producerSpan.set(trace.getSpan(1));
+        },
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("consumer parent").hasNoParent(),
+                span ->
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "receive " + actualDestinationName
+                                : actualDestinationName + " receive")
+                        .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
+                        .hasParent(trace.getSpan(0))
+                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
+                            oldOperation("receive"),
+                            operationName("receive"),
+                            operationType("receive"),
+                            equalTo(MESSAGING_MESSAGE_ID, messageId))));
   }
 
   // These interfaces are package-private so that the agent instruments the generated proxy classes.
