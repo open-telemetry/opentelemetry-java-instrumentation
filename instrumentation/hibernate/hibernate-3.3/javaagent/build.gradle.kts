@@ -71,7 +71,7 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
-      includeTestsMatching("SessionTest.disabledByDefault")
+      includeTestsMatching("*DefaultEnablementTest")
     }
 
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")

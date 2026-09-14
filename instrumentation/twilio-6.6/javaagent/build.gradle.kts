@@ -38,7 +38,7 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
-      includeTestsMatching("TwilioClientTest.disabledByDefault")
+      includeTestsMatching("*DefaultEnablementTest")
     }
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
   }

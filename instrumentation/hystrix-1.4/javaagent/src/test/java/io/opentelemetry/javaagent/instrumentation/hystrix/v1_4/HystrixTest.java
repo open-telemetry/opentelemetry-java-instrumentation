@@ -23,8 +23,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Function;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -34,27 +32,6 @@ class HystrixTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
-
-  @Test
-  @EnabledIfSystemProperty(named = "otel.instrumentation.common.v3-preview", matches = "true")
-  void disabledByDefault() {
-    class TestCommand extends HystrixCommand<String> {
-      TestCommand() {
-        super(setter());
-      }
-
-      @Override
-      protected String run() {
-        return "Hello!";
-      }
-    }
-
-    String result = testing.runWithSpan("parent", () -> new TestCommand().execute());
-    assertThat(result).isEqualTo("Hello!");
-
-    testing.waitAndAssertTraces(
-        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent")));
-  }
 
   @ParameterizedTest
   @MethodSource("provideCommandActionArguments")

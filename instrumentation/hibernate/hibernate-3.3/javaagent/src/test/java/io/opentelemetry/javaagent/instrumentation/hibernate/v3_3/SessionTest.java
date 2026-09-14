@@ -25,30 +25,11 @@ import org.hibernate.ReplicationMode;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class SessionTest extends AbstractHibernateTest {
-
-  @Test
-  @EnabledIfSystemProperty(named = "otel.instrumentation.common.v3-preview", matches = "true")
-  void disabledByDefault() {
-    testing.runWithSpan(
-        "parent",
-        () -> {
-          Session session = sessionFactory.openSession();
-          try {
-            session.get(Value.class, prepopulated.get(0).getId());
-          } finally {
-            session.close();
-          }
-        });
-
-    testing.waitAndAssertTraces(
-        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent")));
-  }
 
   @ParameterizedTest
   @MethodSource("provideArguments")
