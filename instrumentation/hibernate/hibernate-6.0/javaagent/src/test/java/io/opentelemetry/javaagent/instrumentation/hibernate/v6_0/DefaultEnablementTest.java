@@ -21,7 +21,7 @@ class DefaultEnablementTest extends AbstractHibernateTest {
         "parent",
         () -> {
           try (Session session = sessionFactory.openSession()) {
-            session.get(Value.class, prepopulated.get(0).getId());
+            session.find(Value.class, prepopulated.get(0).getId());
           }
         });
 
@@ -34,7 +34,7 @@ class DefaultEnablementTest extends AbstractHibernateTest {
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("parent"),
                   span ->
-                      span.hasName("Session.get " + Value.class.getName())
+                      span.hasName("Session.find " + Value.class.getName())
                           .hasParent(trace.getSpan(0)),
                   span -> span.hasKind(CLIENT).hasParent(trace.getSpan(1))));
     }
