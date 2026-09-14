@@ -58,11 +58,8 @@ class PoolResourceInstrumentation implements TypeInstrumentation {
         @Advice.Return @Nullable Object resource,
         @Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
-        try {
-          JedisConfiguredTargets.capturePooledConnectionTarget(pool, resource);
-        } finally {
-          scope.close();
-        }
+        scope.close();
+        JedisConfiguredTargets.capturePooledConnectionTarget(pool, resource);
       }
     }
   }
