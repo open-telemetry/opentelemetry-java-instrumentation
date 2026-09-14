@@ -9,6 +9,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.lang.ref.WeakReference;
 import java.util.Collection;
 import javax.annotation.Nullable;
 import redis.clients.jedis.HostAndPort;
@@ -19,7 +20,9 @@ import redis.clients.jedis.util.Pool;
 
 public class JedisConfiguredTargets {
   // The cache constructor records nodes before its refresh-task constructor receives the cache.
-  private static final ThreadLocal<Collection<?>> PENDING_TOPOLOGY_NODES = new ThreadLocal<>();
+  // Constructor exit advice cannot run after constructor failure, so do not retain failed input.
+  private static final ThreadLocal<WeakReference<Collection<?>>> PENDING_TOPOLOGY_NODES =
+      new ThreadLocal<>();
 
   private static final VirtualField<JedisSocketFactory, ConfiguredTarget>
       SOCKET_FACTORY_CONFIGURED_TARGET =
@@ -75,12 +78,13 @@ public class JedisConfiguredTargets {
   }
 
   public static void beginTopologyTargetInitialization(Collection<?> startNodes) {
-    PENDING_TOPOLOGY_NODES.set(startNodes);
+    PENDING_TOPOLOGY_NODES.set(new WeakReference<>(startNodes));
   }
 
   public static void initializePendingTopologyTarget(JedisClusterInfoCache topologyOwner) {
     try {
-      Collection<?> startNodes = PENDING_TOPOLOGY_NODES.get();
+      WeakReference<Collection<?>> startNodesReference = PENDING_TOPOLOGY_NODES.get();
+      Collection<?> startNodes = startNodesReference == null ? null : startNodesReference.get();
       if (startNodes != null) {
         setTopologyTargetFromNodes(topologyOwner, startNodes);
       }
