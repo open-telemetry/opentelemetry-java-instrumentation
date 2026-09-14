@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.config.bridge;
 
+import static io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.OpenTelemetryConfigurationModelAccessor.getInstrumentation;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -39,16 +40,14 @@ class DefaultInstrumentationConfigApplierTest {
     defaults.applyToModel(model);
 
     assertThat(
-            model
-                .getInstrumentationDevelopment()
+            getInstrumentation(model)
                 .getJava()
                 .getAdditionalProperties()
                 .get("micrometer")
                 .getAdditionalProperties())
         .containsEntry("base_time_unit", "s");
     assertThat(
-            model
-                .getInstrumentationDevelopment()
+            getInstrumentation(model)
                 .getJava()
                 .getAdditionalProperties()
                 .get("log4j_appender")
@@ -104,8 +103,7 @@ class DefaultInstrumentationConfigApplierTest {
     OpenTelemetryConfigurationModel firstModel = newModel();
     defaults.applyToModel(firstModel);
     Object firstValue =
-        firstModel
-            .getInstrumentationDevelopment()
+        getInstrumentation(firstModel)
             .getJava()
             .getAdditionalProperties()
             .get("common")
@@ -141,14 +139,13 @@ class DefaultInstrumentationConfigApplierTest {
     defaults.applyToModel(model);
 
     assertThat(
-            model
-                .getInstrumentationDevelopment()
+            getInstrumentation(model)
                 .getGeneral()
                 .getHttp()
                 .getClient()
                 .getRequestCapturedHeaders())
         .containsExactly("X-Request-Id");
-    assertThat(model.getInstrumentationDevelopment().getJava()).isNull();
+    assertThat(getInstrumentation(model).getJava()).isNull();
   }
 
   @Test
@@ -162,20 +159,18 @@ class DefaultInstrumentationConfigApplierTest {
     setGeneralClientRequestHeaders(defaults, "Default");
     defaults.customizeGeneral(
         general ->
-            general.getHttp().getClient().withResponseCapturedHeaders(asList("Default-Response")));
+            general.getHttp().getClient().setResponseCapturedHeaders(asList("Default-Response")));
     defaults.applyToModel(model);
 
     assertThat(
-            model
-                .getInstrumentationDevelopment()
+            getInstrumentation(model)
                 .getGeneral()
                 .getHttp()
                 .getClient()
                 .getRequestCapturedHeaders())
         .containsExactly("Existing");
     assertThat(
-            model
-                .getInstrumentationDevelopment()
+            getInstrumentation(model)
                 .getGeneral()
                 .getHttp()
                 .getClient()
@@ -191,10 +186,9 @@ class DefaultInstrumentationConfigApplierTest {
     OpenTelemetryConfigurationModel model = newModel();
     defaults.applyToModel(model);
 
-    assertThat(model.getInstrumentationDevelopment().getGeneral()).isNull();
+    assertThat(getInstrumentation(model).getGeneral()).isNull();
     assertThat(
-            model
-                .getInstrumentationDevelopment()
+            getInstrumentation(model)
                 .getJava()
                 .getAdditionalProperties()
                 .get("general")
@@ -211,8 +205,7 @@ class DefaultInstrumentationConfigApplierTest {
     DefaultInstrumentationConfigApplier.applyToModel(defaults, model);
 
     assertThat(
-            model
-                .getInstrumentationDevelopment()
+            getInstrumentation(model)
                 .getJava()
                 .getAdditionalProperties()
                 .get("acme")
@@ -232,8 +225,7 @@ class DefaultInstrumentationConfigApplierTest {
     DefaultInstrumentationConfigApplier.applyToModel(defaults, model);
 
     assertThat(
-            model
-                .getInstrumentationDevelopment()
+            getInstrumentation(model)
                 .getJava()
                 .getAdditionalProperties()
                 .get("micrometer")
@@ -253,8 +245,7 @@ class DefaultInstrumentationConfigApplierTest {
     DefaultInstrumentationConfigApplier.applyToModel(defaults, model);
 
     assertThat(
-            model
-                .getInstrumentationDevelopment()
+            getInstrumentation(model)
                 .getJava()
                 .getAdditionalProperties()
                 .get("acme")
@@ -266,10 +257,10 @@ class DefaultInstrumentationConfigApplierTest {
       DefaultInstrumentationConfig defaults, String header) {
     defaults.customizeGeneral(
         general ->
-            general.withHttp(
+            general.setHttp(
                 new ExperimentalHttpInstrumentationModel()
-                    .withClient(
+                    .setClient(
                         new ExperimentalHttpClientInstrumentationModel()
-                            .withRequestCapturedHeaders(singletonList(header)))));
+                            .setRequestCapturedHeaders(singletonList(header)))));
   }
 }

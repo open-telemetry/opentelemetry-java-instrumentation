@@ -87,7 +87,7 @@ class DefaultInstrumentationConfigTest {
             "semconv stability opt-in default",
             (Consumer<DefaultInstrumentationConfig>)
                 defaults ->
-                    defaults.customizeGeneral(general -> general.withStabilityOptInList("http")),
+                    defaults.customizeGeneral(general -> general.setStabilityOptInList("http")),
             "otel.semconv-stability.opt-in",
             "http"));
   }
@@ -191,7 +191,7 @@ class DefaultInstrumentationConfigTest {
   @Test
   void toConfigPropertiesRoundTripsSemconvStabilityOptInThroughBridge() {
     DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
-    defaults.customizeGeneral(general -> general.withStabilityOptInList("http"));
+    defaults.customizeGeneral(general -> general.setStabilityOptInList("http"));
 
     DeclarativeConfigProperties config =
         ConfigPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig(
@@ -251,10 +251,10 @@ class DefaultInstrumentationConfigTest {
       DefaultInstrumentationConfig defaults, String header) {
     defaults.customizeGeneral(
         general ->
-            general.withHttp(
+            general.setHttp(
                 new ExperimentalHttpInstrumentationModel()
-                    .withClient(
+                    .setClient(
                         new ExperimentalHttpClientInstrumentationModel()
-                            .withRequestCapturedHeaders(singletonList(header)))));
+                            .setRequestCapturedHeaders(singletonList(header)))));
   }
 }

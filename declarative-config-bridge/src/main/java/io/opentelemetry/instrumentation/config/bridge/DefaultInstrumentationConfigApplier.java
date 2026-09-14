@@ -11,6 +11,7 @@ import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.Exper
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalInstrumentationModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalLanguageSpecificInstrumentationModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalLanguageSpecificInstrumentationPropertyModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.OpenTelemetryConfigurationModelAccessor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,10 +32,11 @@ final class DefaultInstrumentationConfigApplier {
       return model;
     }
 
-    ExperimentalInstrumentationModel instrumentation = model.getInstrumentationDevelopment();
+    ExperimentalInstrumentationModel instrumentation =
+        OpenTelemetryConfigurationModelAccessor.getInstrumentation(model);
+    boolean newInstrumentation = instrumentation == null;
     if (instrumentation == null) {
       instrumentation = new ExperimentalInstrumentationModel();
-      model.withInstrumentationDevelopment(instrumentation);
     }
     for (Map.Entry<String, Object> entry : defaults.getDefaults().entrySet()) {
       applyJavaDefault(instrumentation, entry.getKey(), entry.getValue());
@@ -44,9 +46,12 @@ final class DefaultInstrumentationConfigApplier {
       ExperimentalGeneralInstrumentationModel general = instrumentation.getGeneral();
       if (general == null) {
         general = new ExperimentalGeneralInstrumentationModel();
-        instrumentation.withGeneral(general);
+        instrumentation.setGeneral(general);
       }
       DeclarativeModelUtil.mergeDefaults(general, generalDefaults);
+    }
+    if (newInstrumentation) {
+      OpenTelemetryConfigurationModelAccessor.setInstrumentation(model, instrumentation);
     }
 
     return model;
@@ -57,7 +62,7 @@ final class DefaultInstrumentationConfigApplier {
     ExperimentalLanguageSpecificInstrumentationModel java = instrumentation.getJava();
     if (java == null) {
       java = new ExperimentalLanguageSpecificInstrumentationModel();
-      instrumentation.withJava(java);
+      instrumentation.setJava(java);
     }
     applyDefault(java.getAdditionalProperties(), declarativePath, value);
   }

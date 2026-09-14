@@ -95,10 +95,10 @@ First, there is a single defaults object that is unaware of the source of the co
 DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
 defaults.get("micrometer").setDefault("base_time_unit", "s");
 defaults.get("log4j_appender").setDefault("experimental_log_attributes/development", true);
-defaults.customizeGeneral(general -> general.withHttp(
-    new ExperimentalHttpInstrumentationModel().withClient(
+defaults.customizeGeneral(general -> general.setHttp(
+    new ExperimentalHttpInstrumentationModel().setClient(
         new ExperimentalHttpClientInstrumentationModel()
-            .withRequestCapturedHeaders(List.of("X-Request-Id")))));
+            .setRequestCapturedHeaders(List.of("X-Request-Id")))));
 defaults.addMapping("acme", "acme.full_name");
 defaults.get("acme").get("full_name").setDefault("preserved", "true");
 ```
@@ -134,10 +134,10 @@ public class MyDistroAutoConfig implements AutoConfigurationCustomizerProvider {
     DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
     defaults.get("micrometer").setDefault("base_time_unit", "s");
     defaults.get("log4j_appender").setDefault("experimental_log_attributes/development", true);
-    defaults.customizeGeneral(general -> general.withHttp(
-        new ExperimentalHttpInstrumentationModel().withClient(
+    defaults.customizeGeneral(general -> general.setHttp(
+        new ExperimentalHttpInstrumentationModel().setClient(
             new ExperimentalHttpClientInstrumentationModel()
-                .withRequestCapturedHeaders(List.of("X-Request-Id")))));
+                .setRequestCapturedHeaders(List.of("X-Request-Id")))));
     defaults.addMapping("acme", "acme.full_name");
     defaults.get("acme").get("full_name").setDefault("preserved", "true");
     return defaults;
@@ -194,10 +194,10 @@ public class MyDistroDeclarativeConfig implements DeclarativeConfigurationCustom
     DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
     defaults.get("micrometer").setDefault("base_time_unit", "s");
     defaults.get("log4j_appender").setDefault("experimental_log_attributes/development", true);
-    defaults.customizeGeneral(general -> general.withHttp(
-        new ExperimentalHttpInstrumentationModel().withClient(
+    defaults.customizeGeneral(general -> general.setHttp(
+        new ExperimentalHttpInstrumentationModel().setClient(
             new ExperimentalHttpClientInstrumentationModel()
-                .withRequestCapturedHeaders(List.of("X-Request-Id")))));
+                .setRequestCapturedHeaders(List.of("X-Request-Id")))));
     defaults.addMapping("acme", "acme.full_name");
     defaults.get("acme").get("full_name").setDefault("preserved", "true");
     return defaults;

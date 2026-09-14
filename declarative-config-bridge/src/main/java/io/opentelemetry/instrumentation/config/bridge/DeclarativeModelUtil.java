@@ -17,15 +17,15 @@ import javax.annotation.Nullable;
 /**
  * Utilities for working with generated declarative configuration model types.
  *
- * <p>These use the generated getter / wither conventions so newly generated model nodes are handled
+ * <p>These use the generated getter / setter conventions so newly generated model nodes are handled
  * without adding node-specific bridge code.
  */
 final class DeclarativeModelUtil {
 
   static void mergeDefaults(Object target, Object defaults) {
     for (Method getter : defaults.getClass().getMethods()) {
-      Method wither = findWither(defaults.getClass(), getter);
-      if (wither == null) {
+      Method setter = findSetter(defaults.getClass(), getter);
+      if (setter == null) {
         continue;
       }
       Object defaultValue = invoke(getter, defaults);
@@ -36,12 +36,12 @@ final class DeclarativeModelUtil {
       if (existingValue == null) {
         if (isModel(defaultValue)) {
           Object child = newModel(defaultValue.getClass());
-          invoke(wither, target, child);
+          invoke(setter, target, child);
           mergeDefaults(child, defaultValue);
         } else if (defaultValue instanceof List) {
-          invoke(wither, target, new ArrayList<>((List<?>) defaultValue));
+          invoke(setter, target, new ArrayList<>((List<?>) defaultValue));
         } else {
-          invoke(wither, target, defaultValue);
+          invoke(setter, target, defaultValue);
         }
       } else if (isModel(existingValue) && isModel(defaultValue)) {
         mergeDefaults(existingValue, defaultValue);
@@ -56,7 +56,7 @@ final class DeclarativeModelUtil {
   private static void forEachLeaf(
       Object model, String prefix, BiConsumer<String, Object> consumer) {
     for (Method getter : model.getClass().getMethods()) {
-      if (findWither(model.getClass(), getter) == null) {
+      if (findSetter(model.getClass(), getter) == null) {
         continue;
       }
       Object value = invoke(getter, model);
@@ -73,13 +73,13 @@ final class DeclarativeModelUtil {
   }
 
   @Nullable
-  private static Method findWither(Class<?> modelClass, Method getter) {
+  private static Method findSetter(Class<?> modelClass, Method getter) {
     if (!getter.getName().startsWith("get") || getter.getParameterCount() != 0) {
       return null;
     }
-    String witherName = "with" + getter.getName().substring("get".length());
+    String setterName = "set" + getter.getName().substring("get".length());
     try {
-      return modelClass.getMethod(witherName, getter.getReturnType());
+      return modelClass.getMethod(setterName, getter.getReturnType());
     } catch (NoSuchMethodException ignored) {
       return null;
     }
@@ -87,7 +87,7 @@ final class DeclarativeModelUtil {
 
   private static boolean isModel(Object value) {
     for (Method method : value.getClass().getMethods()) {
-      if (findWither(value.getClass(), method) != null) {
+      if (findSetter(value.getClass(), method) != null) {
         return true;
       }
     }
