@@ -48,6 +48,13 @@ public class JmsReceiveSpanUtil {
               timer.startTime(),
               timer.now());
       JmsReceiveContextHolder.set(receiveContext);
+      request.message().markReceiveSpanRecorded();
+      // the consumed messages counter only exists under the stable conventions, and counts nothing
+      // for a receive that failed, so a process operation further down still has to count this
+      // message in those cases
+      if (emitStableMessagingSemconv() && throwable == null) {
+        request.message().markConsumedMessagesRecorded();
+      }
     }
   }
 

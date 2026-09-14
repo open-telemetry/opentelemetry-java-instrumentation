@@ -31,12 +31,14 @@ as a JSON object matching the schema above (markdown code fences tolerated).
 Model is overridable via $CLASSIFY_MODEL (default: gpt-5.4-mini).
 
 Run with --jobs N for parallelism (default 4).
-Idempotent: skips PRs whose decision.json already exists unless --force.
+Idempotent: reuses decisions whose classifier fingerprint still matches unless
+--force is supplied.
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -49,13 +51,16 @@ from pathlib import Path
 BUNDLE_ROOT = Path("build/changelog-bundle/prs")
 RULES_PATH = Path(__file__).resolve().parent / "rules.md"
 # Initial diff cap. The build_prompt() function further trims the diff if the
-# full prompt would exceed MAX_PROMPT_CHARS.
+# full prompt would exceed MAX_PROMPT_UTF16_UNITS.
 MAX_DIFF_CHARS = 20_000
 # Hard cap on total prompt length. Windows CreateProcess rejects command
-# lines longer than 32767 wide chars, and copilot has no stdin/@file prompt
-# input, so the entire prompt must fit in a single argv token. We leave
-# headroom for the copilot.exe path, flags, and argv quoting overhead.
-MAX_PROMPT_CHARS = 24_000
+# lines longer than 32767 UTF-16 code units, and copilot has no stdin/@file
+# prompt input. This leaves headroom for flags, quoting, and retry guidance.
+MAX_PROMPT_UTF16_UNITS = 24_000
+WINDOWS_COMMAND_LINE_UTF16_LIMIT = 32_767
+MAX_LLM_ATTEMPTS = 2
+IMPORTANT_EXCERPT_CONTEXT = 8
+CLASSIFIER_VERSION = 1
 
 
 VALID_SECTIONS = {
@@ -85,6 +90,9 @@ Title (for link bookkeeping only, not evidence): {title}
 Changed files:
 {files_summary}
 
+Release context:
+{release_context}
+
 ---BEGIN DIFF---
 {diff}
 ---END DIFF---
@@ -104,6 +112,17 @@ class PrBundle:
     dir: Path
     meta: dict
     diff: str
+
+
+def classifier_fingerprint(bundle: PrBundle, rules: str) -> str:
+    digest = hashlib.sha256()
+    digest.update(str(CLASSIFIER_VERSION).encode("ascii"))
+    digest.update(effective_model().encode("utf-8"))
+    digest.update(build_prompt(bundle, rules).encode("utf-8"))
+    digest.update(
+        json.dumps(bundle.meta, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    )
+    return digest.hexdigest()
 
 
 def iter_bundles() -> list[PrBundle]:
@@ -126,6 +145,18 @@ def iter_bundles() -> list[PrBundle]:
 # --- preclassifier ---------------------------------------------------------
 
 
+def changed_paths(bundle: PrBundle) -> list[str]:
+    paths = []
+    for item in bundle.meta.get("files", []):
+        if isinstance(item, dict):
+            path = item.get("path")
+        else:
+            path = item
+        if isinstance(path, str):
+            paths.append(path)
+    return paths
+
+
 def preclassify(bundle: PrBundle) -> dict | None:
     """Return a decision dict if we can decide without the LLM, else None."""
     labels = bundle.meta.get("labels") or []
@@ -139,8 +170,8 @@ def preclassify(bundle: PrBundle) -> dict | None:
             "evidence": "PR labeled 'module cleanup'",
             "source": "preclassify",
         }
+    files = changed_paths(bundle)
     if not bundle.meta.get("touches_src_main"):
-        files = [f["path"] for f in bundle.meta.get("files", [])]
         return {
             "decision": "omit",
             "section": None,
@@ -158,42 +189,163 @@ def preclassify(bundle: PrBundle) -> dict | None:
 # --- prompt + invocation ---------------------------------------------------
 
 def build_prompt(bundle: PrBundle, rules: str) -> str:
-    diff = bundle.diff
-    truncated = False
-    if len(diff) > MAX_DIFF_CHARS:
-        diff = diff[:MAX_DIFF_CHARS] + "\n...[diff truncated for length]...\n"
-        truncated = True
+    diff = strip_changelog_diff(bundle.diff)
     files = bundle.meta.get("files", [])
-    files_summary = "\n".join(
-        f"  - {f['path']} (+{f.get('additions', 0)}/-{f.get('deletions', 0)})"
-        for f in files[:50]
-    )
+    file_lines = []
+    for item in files[:50]:
+        if isinstance(item, dict):
+            path = item.get("path")
+            if isinstance(path, str):
+                file_lines.append(
+                    f"  - {path} (+{item.get('additions', 0)}/-{item.get('deletions', 0)})"
+                )
+        elif isinstance(item, str):
+            file_lines.append(f"  - {item}")
+    files_summary = "\n".join(file_lines)
     if len(files) > 50:
         files_summary += f"\n  ... and {len(files) - 50} more"
-    if truncated:
-        files_summary += "\n  (diff truncated; changed files list above is authoritative)"
-    prompt = PROMPT_TEMPLATE.format(
+    release_context = release_context_for(diff, bundle.meta.get("deprecated_added", False))
+    prompt_without_diff = PROMPT_TEMPLATE.format(
         rules=rules,
         pr=bundle.pr,
         title=bundle.meta.get("title", ""),
         files_summary=files_summary,
-        diff=diff,
+        release_context=release_context,
+        diff="",
     )
-    # Enforce hard total cap. Oversized prompts come almost entirely from
-    # pathological diffs (e.g. generated files, large snapshots); trim the
-    # diff further and rebuild.
-    if len(prompt) > MAX_PROMPT_CHARS:
-        overshoot = len(prompt) - MAX_PROMPT_CHARS
-        new_diff_len = max(1000, len(diff) - overshoot - 200)
-        diff = diff[:new_diff_len] + "\n...[diff truncated for length]...\n"
+    base_units = utf16_units(prompt_without_diff)
+    diff_budget = min(MAX_DIFF_CHARS, MAX_PROMPT_UTF16_UNITS - base_units - 200)
+    if diff_budget < 0:
+        raise RuntimeError("classification rules and PR metadata exceed the prompt size limit")
+    while diff_budget >= 0:
+        compacted_diff = compact_diff(diff, diff_budget)
         prompt = PROMPT_TEMPLATE.format(
             rules=rules,
             pr=bundle.pr,
             title=bundle.meta.get("title", ""),
             files_summary=files_summary,
-            diff=diff,
+            release_context=release_context,
+            diff=compacted_diff,
         )
-    return prompt
+        excess = utf16_units(prompt) - MAX_PROMPT_UTF16_UNITS
+        if excess <= 0:
+            return prompt
+        diff_budget -= excess + 100
+    raise RuntimeError("classification prompt exceeds the prompt size limit")
+
+
+def strip_changelog_diff(diff: str) -> str:
+    sections = re.split(r"(?=^diff --git )", diff, flags=re.MULTILINE)
+    return "".join(
+        section
+        for section in sections
+        if section.startswith("diff --git ")
+        and not section.startswith("diff --git a/CHANGELOG.md b/CHANGELOG.md")
+    )
+
+
+def compact_diff(diff: str, max_chars: int) -> str:
+    if max_chars <= 0:
+        return ""
+    if len(diff) <= max_chars:
+        return diff
+
+    lines = diff.splitlines()
+    priority_patterns = (
+        re.compile(r"^\+.*(?:@Deprecated\b|@deprecated\b)", re.IGNORECASE),
+        re.compile(r"^[+-]\s*\+\+\+\s+NEW (?:METHOD|CLASS):"),
+        re.compile(r"^\+.*\bdeprecated\b", re.IGNORECASE),
+    )
+    indexes = []
+    seen = set()
+    for pattern in priority_patterns:
+        for index, line in enumerate(lines):
+            if index not in seen and pattern.search(line):
+                indexes.append(index)
+                seen.add(index)
+
+    excerpt_lines = []
+    covered = set()
+    excerpt_budget = max_chars // 2
+    for index in indexes:
+        start = max(0, index - IMPORTANT_EXCERPT_CONTEXT)
+        end = min(len(lines), index + IMPORTANT_EXCERPT_CONTEXT + 1)
+        chunk = [
+            lines[line_index]
+            for line_index in range(start, end)
+            if line_index not in covered
+        ]
+        if not chunk:
+            continue
+        rendered = "\n".join(chunk) + "\n"
+        if len("\n".join(excerpt_lines)) + len(rendered) > excerpt_budget:
+            break
+        excerpt_lines.extend(chunk)
+        covered.update(range(start, end))
+
+    excerpt = "\n".join(excerpt_lines)
+    marker = "\n...[diff truncated; important excerpts follow]...\n"
+    if max_chars <= len(marker):
+        return diff[:max_chars]
+    head_budget = max(0, max_chars - len(marker) - len(excerpt))
+    return diff[:head_budget] + marker + excerpt
+
+
+def release_context_for(diff: str, deprecated_added: bool = False) -> str:
+    context = []
+    removed_new_api = re.search(
+        r"^-\s*\+\+\+\s+NEW (?:METHOD|CLASS):",
+        diff,
+        re.MULTILINE,
+    )
+    added_new_api = re.search(
+        r"^\+\s*\+\+\+\s+NEW (?:METHOD|CLASS):",
+        diff,
+        re.MULTILINE,
+    )
+    if removed_new_api and added_new_api:
+        context.append(
+            "The API-diff snapshot marks both the old and new signatures as NEW relative to the "
+            "previous release. If changing that unreleased API is the PR's only user-visible effect, "
+            "omit the PR."
+        )
+    if deprecated_added or adds_deprecation_notice(diff):
+        context.append(
+            "The source or documentation diff adds a deprecation declaration or notice. If it "
+            "introduces a user-facing deprecation, use the Deprecations section even when the PR "
+            "also adds its replacement. Do not treat references to an already-deprecated surface "
+            "or internal compatibility helpers as a new deprecation."
+        )
+    experimental_methods = deprecated_experimental_methods(diff)
+    if experimental_methods:
+        context.append(
+            "The PR newly deprecates these published Experimental helper methods, which must be "
+            "named in the deprecation bullet: "
+            + ", ".join(f"`{method}(...)`" for method in experimental_methods)
+            + "."
+        )
+        property_migrations = deprecated_property_migrations(diff)
+        if property_migrations:
+            context.append(
+                "The same bullet must also name these configuration migrations: "
+                + ", ".join(
+                    f"`{old}` to `{new}`" for old, new in property_migrations
+                )
+                + "."
+            )
+    return " ".join(context) or "No additional release-baseline facts."
+
+
+def utf16_units(text: str) -> int:
+    return len(text.encode("utf-16-le")) // 2
+
+
+def effective_model() -> str:
+    return os.environ.get("CLASSIFY_MODEL", "gpt-5.4-mini")
+
+
+def command_line_utf16_units(argv: list[str]) -> int:
+    return utf16_units(subprocess.list2cmdline(argv))
 
 
 def invoke_cli(prompt_text: str, timeout: int) -> tuple[int, str, str]:
@@ -204,14 +356,15 @@ def invoke_cli(prompt_text: str, timeout: int) -> tuple[int, str, str]:
     --allow-all-tools is required in non-interactive mode.
     Model is overridable via $CLASSIFY_MODEL.
     """
-    model = os.environ.get("CLASSIFY_MODEL", "gpt-5.4-mini")
     argv = [
         "copilot",
         "-p", prompt_text,
         "--output-format", "json",
         "--allow-all-tools",
-        "--model", model,
+        "--model", effective_model(),
     ]
+    if command_line_utf16_units(argv) >= WINDOWS_COMMAND_LINE_UTF16_LIMIT:
+        return 1, "", "command line exceeds the Windows CreateProcess limit"
     proc = subprocess.run(
         argv,
         capture_output=True,
@@ -285,20 +438,141 @@ def parse_response(s: str) -> dict:
     return objects[-1]
 
 
-def validate(decision: dict) -> list[str]:
+def adds_deprecation_notice(diff: str) -> bool:
+    current_path = ""
+    for line in diff.splitlines():
+        path_match = re.match(r"^diff --git a/(.+) b/(.+)$", line)
+        if path_match is not None:
+            current_path = path_match.group(2)
+            continue
+        if (
+            current_path == "CHANGELOG.md"
+            or "/src/test" in current_path
+            or not line.startswith("+")
+            or line.startswith("+++")
+        ):
+            continue
+        added_line = line[1:]
+        if re.search(
+            r"@Deprecated\b|@deprecated\b|\bis deprecated\b|"
+            r"\bdeprecated (?:and|in|property|option)\b|Deprecated:",
+            added_line,
+            re.IGNORECASE,
+        ):
+            return True
+    return False
+
+
+def deprecated_experimental_methods(diff: str) -> list[str]:
+    lines = diff.splitlines()
+    current_path = ""
+    methods = []
+    for index, line in enumerate(lines):
+        path_match = re.match(r"^diff --git a/(.+) b/(.+)$", line)
+        if path_match is not None:
+            current_path = path_match.group(2)
+            continue
+        if not current_path.endswith("/internal/Experimental.java"):
+            continue
+        if not line.startswith("+") or not re.search(
+            r"@Deprecated\b|@deprecated\b", line, re.IGNORECASE
+        ):
+            continue
+        for candidate in lines[index + 1 : index + 16]:
+            declaration = re.search(
+                r"\b(?:public|protected)\s+(?:static\s+)?[\w<>, ?.@\[\]]+\s+(\w+)\s*\(",
+                candidate,
+            )
+            if declaration is not None:
+                method = declaration.group(1)
+                if method not in methods:
+                    methods.append(method)
+                break
+    return methods
+
+
+def deprecated_property_migrations(diff: str) -> list[tuple[str, str]]:
+    lines = diff.splitlines()
+    migrations = []
+    property_pattern = re.compile(r"(otel\.[a-z0-9_.-]+)")
+    for index, line in enumerate(lines):
+        if not line.startswith("+") or "Deprecated: use `" not in line:
+            continue
+        replacement_match = re.search(r"Deprecated: use `(otel\.[a-z0-9_.-]+)`", line)
+        if replacement_match is None:
+            continue
+        old_property = None
+        for previous in reversed(lines[max(0, index - 10) : index]):
+            candidates = property_pattern.findall(previous)
+            if candidates:
+                old_property = candidates[-1]
+                break
+        if old_property is not None:
+            migration = (old_property, replacement_match.group(1))
+            if migration not in migrations:
+                migrations.append(migration)
+    return migrations
+
+
+def validate(decision: dict, bundle: PrBundle | None = None) -> list[str]:
     errors = []
-    if decision.get("decision") not in ("include", "omit"):
+    decision_value = decision.get("decision")
+    section = decision.get("section")
+    bullet_value = decision.get("bullet")
+    evidence = decision.get("evidence")
+    if not isinstance(decision_value, str) or decision_value not in ("include", "omit"):
         errors.append("decision must be include or omit")
-    if decision.get("decision") == "include":
-        if decision.get("section") not in VALID_SECTIONS - {None}:
+    if decision_value == "include":
+        if not isinstance(section, str) or section not in VALID_SECTIONS - {None}:
             errors.append("section required for include")
-        if not decision.get("bullet"):
+        if not isinstance(bullet_value, str) or not bullet_value.strip():
             errors.append("bullet required for include")
     else:
-        if decision.get("section") not in (None, "", "null"):
+        if section not in (None, "", "null"):
             errors.append("section must be null for omit")
-    if not decision.get("evidence"):
+        if bullet_value is not None:
+            errors.append("bullet must be null for omit")
+    for field in ("surface", "user_visible_effect"):
+        if not isinstance(decision.get(field), str):
+            errors.append(f"{field} must be a string")
+    if not isinstance(evidence, str) or not evidence.strip():
         errors.append("evidence required")
+    bullet = bullet_value if isinstance(bullet_value, str) else ""
+    if "\n" in bullet:
+        errors.append("bullet must be a single line without a PR link")
+    if re.search(r"https://github\.com/.+/pull/\d+", bullet):
+        errors.append("bullet must not include a PR link")
+    if bundle is not None and decision_value == "include":
+        diff = strip_changelog_diff(bundle.diff)
+        experimental_methods = deprecated_experimental_methods(diff)
+        for method in experimental_methods:
+            if method not in bullet:
+                errors.append(f"deprecation bullet must name `{method}(...)`")
+        if experimental_methods:
+            for old_property, replacement in deprecated_property_migrations(diff):
+                for property_name in (old_property, replacement):
+                    if property_name not in bullet:
+                        errors.append(
+                            f"deprecation bullet must name `{property_name}`"
+                        )
+    if "otel.semconv-stability.preview" in bullet:
+        errors.append("bullet must use the public otel.semconv-stability.opt-in property")
+    if decision_value == "include" and section == "deprecations":
+        if not bullet.startswith("Deprecate "):
+            errors.append("deprecation bullet must start with 'Deprecate '")
+        if " in favor of " not in bullet:
+            errors.append("deprecation bullet must use 'in favor of'")
+        lower_bullet = bullet.lower()
+        forbidden = (
+            "declarative instrumentation configuration",
+            "the deprecated ",
+            "may be removed",
+            "removable in",
+            "the new ",
+        )
+        for phrase in forbidden:
+            if phrase in lower_bullet:
+                errors.append(f'deprecation bullet must omit "{phrase}"')
     return errors
 
 
@@ -334,14 +608,24 @@ def process_one(bundle: PrBundle, args) -> tuple[str, str | None, dict | None]:
     decision_path = bundle.dir / "decision.json"
     md_path = bundle.dir / "decision.md"
     prompt_path = bundle.dir / "prompt.md"
+    fingerprint = classifier_fingerprint(bundle, args.rules)
 
     if decision_path.exists() and not args.force:
-        return "skip", None, None
+        try:
+            existing = json.loads(decision_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            existing = {}
+        if (
+            existing.get("classifier_fingerprint") == fingerprint
+            and not validate(existing, bundle)
+        ):
+            return "skip", None, None
 
     # Preclassify first. Deterministic: path-pattern and metadata rules only.
     pre = preclassify(bundle)
     if pre is not None:
         pre["pr"] = bundle.pr
+        pre["classifier_fingerprint"] = fingerprint
         decision_path.write_text(json.dumps(pre, indent=2), encoding="utf-8")
         md_path.write_text(render_markdown(bundle.pr, pre), encoding="utf-8")
         return f"pre:{pre['decision']}", None, pre
@@ -353,31 +637,54 @@ def process_one(bundle: PrBundle, args) -> tuple[str, str | None, dict | None]:
     prompt = build_prompt(bundle, args.rules)
     prompt_path.write_text(prompt, encoding="utf-8")
 
-    try:
-        rc, out, err = invoke_cli(prompt, args.timeout)
-    except subprocess.TimeoutExpired:
-        return "error", f"timeout after {args.timeout}s", None
-    if rc != 0:
-        return "error", f"cli rc={rc}: {err.strip()[:500]}", None
-    # Always persist the raw CLI stdout for forensic inspection, regardless
-    # of format or success/failure. File extension reflects the content
-    # format the copilot CLI returned.
-    is_jsonl = out.lstrip().startswith('{"type":')
-    raw_path = bundle.dir / ("cli-response.jsonl" if is_jsonl else "cli-response.txt")
-    raw_path.write_text(out, encoding="utf-8")
+    retry_prompt = prompt
+    premium_requests = 0
+    decision: dict | None = None
     usage: dict | None = None
-    response_text = out
-    if is_jsonl:
-        response_text, usage = parse_copilot_jsonl(out)
-    try:
-        decision = parse_response(response_text)
-    except (json.JSONDecodeError, ValueError) as e:
-        return "error", f"parse failure ({e}); raw saved to {raw_path}", None
-    errs = validate(decision)
-    if errs:
-        return "error", "validation: " + "; ".join(errs) + f"; raw saved to {raw_path}", None
+    last_error = ""
+    raw_path = bundle.dir / "cli-response.txt"
+    for attempt in range(1, MAX_LLM_ATTEMPTS + 1):
+        try:
+            rc, out, err = invoke_cli(retry_prompt, args.timeout)
+        except subprocess.TimeoutExpired:
+            last_error = f"timeout after {args.timeout}s"
+            continue
+        if rc != 0:
+            last_error = f"cli rc={rc}: {err.strip()[:500]}"
+            continue
+        is_jsonl = out.lstrip().startswith('{"type":')
+        suffix = "jsonl" if is_jsonl else "txt"
+        name = f"cli-response.{suffix}" if attempt == 1 else f"cli-response-retry-{attempt}.{suffix}"
+        raw_path = bundle.dir / name
+        raw_path.write_text(out, encoding="utf-8")
+        response_text = out
+        if is_jsonl:
+            response_text, attempt_usage = parse_copilot_jsonl(out)
+            value = attempt_usage.get("premium_requests")
+            if isinstance(value, int):
+                premium_requests += value
+        try:
+            candidate = parse_response(response_text)
+        except (json.JSONDecodeError, ValueError) as e:
+            last_error = f"parse failure ({e})"
+        else:
+            errs = validate(candidate, bundle)
+            if not errs:
+                decision = candidate
+                usage = {"premium_requests": premium_requests}
+                break
+            last_error = "validation: " + "; ".join(errs)
+        retry_prompt = (
+            prompt
+            + "\n\nThe previous response failed validation: "
+            + last_error
+            + "\nReturn a corrected single JSON object that follows every rule."
+        )
+    if decision is None:
+        return "error", f"{last_error}; raw saved to {raw_path}", None
     decision["pr"] = bundle.pr
     decision.setdefault("source", "llm")
+    decision["classifier_fingerprint"] = fingerprint
     if usage is not None:
         decision["usage"] = usage
     decision_path.write_text(json.dumps(decision, indent=2), encoding="utf-8")

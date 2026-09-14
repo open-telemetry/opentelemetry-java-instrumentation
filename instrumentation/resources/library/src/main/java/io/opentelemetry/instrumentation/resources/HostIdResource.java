@@ -58,14 +58,6 @@ public final class HostIdResource {
   // copied from HostIncubatingAttributes
   private static final AttributeKey<String> HOST_ID = AttributeKey.stringKey("host.id");
 
-  /**
-   * @deprecated This constant is no longer used and will be removed in a future release. The
-   *     Windows registry is now queried using an absolute path to {@code reg.exe}.
-   */
-  @Deprecated
-  public static final String REGISTRY_QUERY =
-      "reg query HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Cryptography /v MachineGuid";
-
   // Non-privileged machine-id sources per the semantic conventions. Commands are invoked with
   // absolute paths to avoid resolving them through a potentially attacker controlled PATH, see
   // https://github.com/open-telemetry/semantic-conventions/pull/3896

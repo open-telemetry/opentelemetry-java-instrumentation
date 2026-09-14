@@ -92,6 +92,11 @@ class HttpRequestInstrumentation implements TypeInstrumentation {
 
       @Nullable
       public static AdviceScope start(HttpClientRequest request) {
+        // Skip if this request has already been instrumented.
+        Contexts contexts = CONTEXTS.get(request);
+        if (contexts != null) {
+          return null;
+        }
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;

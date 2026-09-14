@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.kafka;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveMetrics;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -75,7 +77,6 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
                             .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
                             .hasAttributesSatisfyingExactly(processAttributes(record)),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(2)));
-
                 producer.set(trace.getSpan(1));
               },
               trace ->
@@ -87,6 +88,7 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
                               .hasLinks(batchRecordLink(producer.get()))
                               .hasAttributesSatisfyingExactly(
                                   receiveAttributes("testSingleTopic"))));
+      assertSingleMetrics(null);
       return;
     }
 
@@ -118,6 +120,7 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
                             .hasLinks(LinkData.create(producer.get().getSpanContext()))
                             .hasAttributesSatisfyingExactly(processAttributes(record)),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
+    assertSingleMetrics(null);
   }
 
   @Test
@@ -152,7 +155,6 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
                             .hasAttributesSatisfyingExactly(
                                 withErrorType(processAttributes(record))),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(2)));
-
                 producer.set(trace.getSpan(1));
               },
               trace ->
@@ -164,6 +166,7 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
                               .hasLinks(batchRecordLink(producer.get()))
                               .hasAttributesSatisfyingExactly(
                                   receiveAttributes("testSingleTopic"))));
+      assertSingleMetrics(IllegalArgumentException.class.getName());
       return;
     }
 
@@ -198,6 +201,30 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
                             .hasAttributesSatisfyingExactly(
                                 withErrorType(processAttributes(record))),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
+    assertSingleMetrics(IllegalArgumentException.class.getName());
+  }
+
+  private void assertSingleMetrics(String errorType) {
+    String group = hasConsumerGroup() ? "test" : null;
+    // the receive operation records poll duration and consumed messages under stable semconv,
+    // whether or not it produced a receive span
+    assertReceiveMetrics(
+        testing(),
+        "io.opentelemetry.kafka-clients-0.11",
+        "testSingleTopic",
+        group,
+        "0",
+        1,
+        1,
+        null);
+    assertProcessMetrics(
+        testing(),
+        "io.opentelemetry.vertx-kafka-client-3.6",
+        "testSingleTopic",
+        group,
+        "0",
+        1,
+        errorType);
   }
 
   private void sendSingleRecord(KafkaProducerRecord<String, String> record)

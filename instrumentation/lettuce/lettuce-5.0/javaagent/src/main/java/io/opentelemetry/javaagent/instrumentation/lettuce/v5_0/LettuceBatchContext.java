@@ -6,10 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONTEXT;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_URI;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_ADDRESS;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_DATABASE_INDEX;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.batchInstrumenter;
 
-import io.lettuce.core.RedisURI;
 import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.DefaultEndpoint;
 import io.lettuce.core.protocol.RedisCommand;
@@ -18,6 +18,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CancellationException;
@@ -65,7 +66,11 @@ public final class LettuceBatchContext {
     // flushCommands() does not re-enable auto-flush, so keep batching active with a fresh buffer
     BATCH_STATE.set(endpoint, new BatchState());
     return BatchScope.start(
-        state.commands, state.asyncCommands, state.parentContext, ENDPOINT_URI.get(endpoint));
+        state.commands,
+        state.asyncCommands,
+        state.parentContext,
+        ENDPOINT_ADDRESS.get(endpoint),
+        ENDPOINT_DATABASE_INDEX.get(endpoint));
   }
 
   private LettuceBatchContext() {}
@@ -87,8 +92,10 @@ public final class LettuceBatchContext {
         List<RedisCommand<?, ?, ?>> commands,
         List<AsyncCommand<?, ?, ?>> asyncCommands,
         @Nullable Context capturedParentContext,
-        @Nullable RedisURI redisUri) {
-      LettuceBatchRequest request = LettuceBatchRequest.create(commands, redisUri);
+        @Nullable InetSocketAddress serverAddress,
+        @Nullable Integer databaseIndex) {
+      LettuceBatchRequest request =
+          LettuceBatchRequest.create(commands, serverAddress, databaseIndex);
       Context parentContext =
           capturedParentContext == null ? Context.current() : capturedParentContext;
       if (!batchInstrumenter().shouldStart(parentContext, request)) {

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
@@ -17,6 +19,8 @@ public class JmsSingletons {
   private static final Instrumenter<MessageWithDestination, Void> producerInstrumenter;
   private static final Instrumenter<MessageWithDestination, Void> consumerReceiveInstrumenter;
   private static final Instrumenter<MessageWithDestination, Void> consumerProcessInstrumenter;
+  private static final Instrumenter<MessageWithDestination, Void>
+      consumerProcessInstrumenterWithConsumedMessages;
 
   static {
     JmsInstrumenterFactory factory =
@@ -27,7 +31,11 @@ public class JmsSingletons {
 
     producerInstrumenter = factory.createProducerInstrumenter();
     consumerReceiveInstrumenter = factory.createConsumerReceiveInstrumenter();
-    consumerProcessInstrumenter = factory.createConsumerProcessInstrumenter(false);
+    consumerProcessInstrumenter = factory.createConsumerProcessInstrumenter(false, false);
+    consumerProcessInstrumenterWithConsumedMessages =
+        emitStableMessagingSemconv()
+            ? factory.createConsumerProcessInstrumenter(false, true)
+            : consumerProcessInstrumenter;
   }
 
   public static Instrumenter<MessageWithDestination, Void> producerInstrumenter() {
@@ -38,8 +46,11 @@ public class JmsSingletons {
     return consumerReceiveInstrumenter;
   }
 
-  public static Instrumenter<MessageWithDestination, Void> consumerProcessInstrumenter() {
-    return consumerProcessInstrumenter;
+  public static Instrumenter<MessageWithDestination, Void> consumerProcessInstrumenter(
+      boolean consumedMessagesRecorded) {
+    return consumedMessagesRecorded
+        ? consumerProcessInstrumenter
+        : consumerProcessInstrumenterWithConsumedMessages;
   }
 
   private JmsSingletons() {}

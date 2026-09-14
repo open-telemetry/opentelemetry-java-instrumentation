@@ -192,6 +192,88 @@ check {
 }
 ```
 
+### Variant tasks in modules with custom `JvmTestSuite`s
+
+`testing.suites` includes the built-in `test` suite alongside any suite the module registers
+with `register<JvmTestSuite>(...)`. A variant task bound to `sourceSets.test` covers only the
+default source set.
+
+Derive one variant task per suite only when every suite exercises behavior affected by the
+variant and the same task configuration applies to all of them:
+
+```kotlin
+val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+  .map { suite ->
+    register<Test>("${suite.name}StableSemconv") {
+      testClassesDirs = suite.sources.output.classesDirs
+      classpath = suite.sources.runtimeClasspath
+
+      jvmArgs("-Dotel.semconv-stability.opt-in=database")
+      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+    }
+  }
+
+check {
+  dependsOn(testing.suites, stableSemconvSuites)
+}
+```
+
+The map produces `testStableSemconv` for the built-in suite, so the conventional task name is
+preserved. Declare a separate map per variant when a module has more than one, for example
+`${suite.name}StableSemconv` and `${suite.name}BothSemconv` for RPC modules.
+
+#### Preserving source suite JVM settings
+
+When source suite tasks have different JVM arguments or system properties, copy those values into
+the variant before adding its own configuration. This avoids rebuilding source settings with
+suite-name checks. When metadata collection is already active, append the variant setting to the
+inherited `metadataConfig`:
+
+```kotlin
+val experimentalSuites = testing.suites.withType(JvmTestSuite::class)
+  .map { suite ->
+    register<Test>("${suite.name}Experimental") {
+      val sourceTask = named<Test>(suite.name).get()
+      setJvmArgs(sourceTask.jvmArgs)
+      setSystemProperties(sourceTask.systemProperties)
+
+      testClassesDirs = suite.sources.output.classesDirs
+      classpath = suite.sources.runtimeClasspath
+
+      val experimentalConfig = "otel.instrumentation.example.experimental-span-attributes=true"
+      jvmArgs("-D$experimentalConfig")
+      systemProperty(
+        "metadataConfig",
+        listOfNotNull(sourceTask.systemProperties["metadataConfig"], experimentalConfig)
+          .joinToString(","),
+      )
+      isEnabled = sourceTask.enabled
+    }
+  }
+```
+
+Use `setJvmArgs` and `setSystemProperties`, not `sourceTask.copyTo(this)`. Gradle's
+`JavaForkOptions.copyTo` evaluates the source task's `jvmArgumentProviders` and turns their output
+into ordinary JVM arguments. Repository conventions later attach providers to the variant itself.
+This can add the javaagent twice and drop the copied providers' input tracking. The variant gets its
+own argument providers from the repository conventions.
+
+Points to watch:
+
+- Do not fan a variant out merely because custom suites exist. Keep it bound to
+  `sourceSets.test` when the custom suites do not exercise the affected behavior.
+- Prefer the uniform map above when every suite is relevant. If only a few custom suites are
+  relevant, select those suites explicitly. Per-suite repair blocks are justified only when
+  the extra coverage is worth the additional build-script complexity.
+- The `testing { suites { … } }` block must appear **before** the `tasks { }` block that maps
+  over it. `.map` realizes the container, so suites registered afterwards are silently missed.
+- When a source suite task is conditionally disabled, inherit its state in the derived task with
+  `isEnabled = sourceTask.enabled` instead of repeating the condition in a separate `named(...)`
+  block.
+- Keep a variant task bound to a single source set when it is deliberately narrow — one bound
+  to a specific suite, or narrowed with `includeTestsMatching(...)`. Fanning such a task across
+  every suite fails the build, because Gradle fails a `Test` task whose filter matches nothing.
+
 ## `testcontainersBuildService` for Testcontainers Tests
 
 The convention plugin (`otel.java-conventions`) registers a shared build service called

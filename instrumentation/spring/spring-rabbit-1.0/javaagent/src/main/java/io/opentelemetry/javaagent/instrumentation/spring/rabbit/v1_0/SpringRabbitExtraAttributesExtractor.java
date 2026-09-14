@@ -15,11 +15,14 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 import org.springframework.amqp.core.Message;
 
-class SpringRabbitExtraAttributesExtractor implements AttributesExtractor<Message, Void> {
+class SpringRabbitExtraAttributesExtractor
+    implements AttributesExtractor<SpringRabbitRequest, Void> {
 
   @Override
-  public void onStart(AttributesBuilder attributes, Context parentContext, Message message) {
+  public void onStart(
+      AttributesBuilder attributes, Context parentContext, SpringRabbitRequest request) {
     if (emitStableMessagingSemconv()) {
+      Message message = request.getMessage();
       String routingKey = message.getMessageProperties().getReceivedRoutingKey();
       if (routingKey != null && !routingKey.isEmpty()) {
         attributes.put(MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, routingKey);
@@ -33,7 +36,7 @@ class SpringRabbitExtraAttributesExtractor implements AttributesExtractor<Messag
   public void onEnd(
       AttributesBuilder attributes,
       Context context,
-      Message message,
+      SpringRabbitRequest request,
       @Nullable Void unused,
       @Nullable Throwable error) {}
 }

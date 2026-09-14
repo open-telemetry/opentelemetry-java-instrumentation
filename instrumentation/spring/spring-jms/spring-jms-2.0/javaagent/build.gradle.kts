@@ -64,6 +64,24 @@ tasks {
   withType<Test>().configureEach {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
+
+  val testMessagingPreviewReceiveSpansDisabled =
+    register<Test>("testMessagingPreviewReceiveSpansDisabled") {
+      testClassesDirs = sourceSets["testReceiveSpansDisabled"].output.classesDirs
+      classpath = sourceSets["testReceiveSpansDisabled"].runtimeClasspath
+      jvmArgs("-Dotel.semconv-stability.preview=messaging")
+      systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+    }
+
+  val testBothSemconvReceiveSpansDisabled =
+    register<Test>("testBothSemconvReceiveSpansDisabled") {
+      testClassesDirs = sourceSets["testReceiveSpansDisabled"].output.classesDirs
+      classpath = sourceSets["testReceiveSpansDisabled"].runtimeClasspath
+      isEnabled = project.tasks.named("testReceiveSpansDisabled").get().enabled
+      jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
+      systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
+    }
+
   // this does not apply to testReceiveSpansDisabled
   test {
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
@@ -90,6 +108,9 @@ tasks {
       )
     }
     jvmArgs("-Dotel.instrumentation.jms.enabled=false")
+    // receive telemetry is enabled here because the jms instrumentation that would create the
+    // receive operation is disabled, so the process operation has to count the consumed message
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
     systemProperty("testJmsDisabled", "true")
   }
@@ -103,6 +124,13 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, testMessagingPreview, testJmsDisabled, testBothSemconv)
+    dependsOn(
+      testing.suites,
+      testMessagingPreview,
+      testMessagingPreviewReceiveSpansDisabled,
+      testBothSemconvReceiveSpansDisabled,
+      testJmsDisabled,
+      testBothSemconv,
+    )
   }
 }

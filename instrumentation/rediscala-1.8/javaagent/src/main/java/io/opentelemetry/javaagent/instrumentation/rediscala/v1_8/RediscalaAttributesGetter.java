@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
 
-final class RediscalaAttributesGetter implements DbClientAttributesGetter<RediscalaRequest, Void> {
+class RediscalaAttributesGetter implements DbClientAttributesGetter<RediscalaRequest, Void> {
 
   @Override
   public String getDbSystemName(RediscalaRequest request) {
@@ -19,6 +19,17 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<Redisc
   @Override
   @Nullable
   public String getDbNamespace(RediscalaRequest request) {
+    // Rediscala only selects the database when the connection is established, so a SELECT sent
+    // later by application code is not reflected here.
+    Integer databaseIndex = request.getDatabaseIndex();
+    return databaseIndex != null ? String.valueOf(databaseIndex) : null;
+  }
+
+  @Deprecated // to be removed in 3.0
+  @Override
+  @Nullable
+  public String getDbName(RediscalaRequest request) {
+    // old semconv reports the redis database index as db.redis.database_index, not db.name
     return null;
   }
 
@@ -30,6 +41,12 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<Redisc
 
   @Override
   public String getDbOperationName(RediscalaRequest request) {
+    return request.getStableOperationName();
+  }
+
+  @Override
+  @SuppressWarnings("deprecation") // old database semconv still use db.operation
+  public String getDbOperation(RediscalaRequest request) {
     return request.getOperationName();
   }
 

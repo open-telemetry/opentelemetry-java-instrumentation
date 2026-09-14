@@ -10,6 +10,11 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertClientOperationDurationMetricAbsent;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertConsumedMessagesMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertSentMessagesMetrics;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -66,6 +71,10 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
 
   protected abstract boolean captureExperimentalSpanAttributes();
 
+  protected boolean receiveTelemetryEnabled() {
+    return true;
+  }
+
   @Override
   public Map<String, Object> producerProps() {
     Map<String, Object> props = super.producerProps();
@@ -120,6 +129,17 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
     }
 
     assertTraces();
+    String instrumentationName = "io.opentelemetry.kafka-clients-2.6";
+    assertSentMessagesMetrics(testing, instrumentationName, SHARED_TOPIC, null, 1, null);
+    assertClientOperationDurationMetricAbsent(testing, instrumentationName);
+    if (receiveTelemetryEnabled()) {
+      assertConsumedMessagesMetrics(
+          testing, instrumentationName, SHARED_TOPIC, "test", "0", 1, null);
+      assertProcessMetrics(testing, instrumentationName, SHARED_TOPIC, "test", "0", 1, null);
+    } else {
+      assertProcessMetricsWithConsumedMessages(
+          testing, instrumentationName, SHARED_TOPIC, "test", "0", 1, 1, null);
+    }
   }
 
   void assertTraces() {

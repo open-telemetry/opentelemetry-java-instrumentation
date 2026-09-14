@@ -5,13 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
-import io.lettuce.core.RedisURI;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
+import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
-final class LettuceBatchAttributesGetter
-    implements DbClientAttributesGetter<LettuceBatchRequest, Void> {
+class LettuceBatchAttributesGetter implements DbClientAttributesGetter<LettuceBatchRequest, Void> {
 
   @Override
   public String getDbSystemName(LettuceBatchRequest request) {
@@ -21,6 +20,15 @@ final class LettuceBatchAttributesGetter
   @Override
   @Nullable
   public String getDbNamespace(LettuceBatchRequest request) {
+    Integer databaseIndex = request.getDatabaseIndex();
+    return databaseIndex != null ? String.valueOf(databaseIndex) : null;
+  }
+
+  @Deprecated // to be removed in 3.0
+  @Override
+  @Nullable
+  public String getDbName(LettuceBatchRequest request) {
+    // old semconv reports the redis database index as db.redis.database_index, not db.name
     return null;
   }
 
@@ -44,14 +52,14 @@ final class LettuceBatchAttributesGetter
   @Nullable
   @Override
   public String getServerAddress(LettuceBatchRequest request) {
-    RedisURI redisUri = request.getRedisUri();
-    return redisUri != null ? redisUri.getHost() : null;
+    InetSocketAddress serverAddress = request.getServerAddress();
+    return serverAddress != null ? serverAddress.getHostString() : null;
   }
 
   @Nullable
   @Override
   public Integer getServerPort(LettuceBatchRequest request) {
-    RedisURI redisUri = request.getRedisUri();
-    return redisUri != null ? redisUri.getPort() : null;
+    InetSocketAddress serverAddress = request.getServerAddress();
+    return serverAddress != null ? serverAddress.getPort() : null;
   }
 }

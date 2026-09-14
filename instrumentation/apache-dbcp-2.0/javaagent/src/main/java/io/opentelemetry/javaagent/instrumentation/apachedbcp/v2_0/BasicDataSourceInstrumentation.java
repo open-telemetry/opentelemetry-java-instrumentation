@@ -5,14 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0;
 
+import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0.ApacheDbcpSingletons.getDataSourceName;
 import static io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0.ApacheDbcpSingletons.telemetry;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.bootstrap.apachecommonspool.CommonsPoolMetricsSuppression;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import javax.management.ObjectName;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -29,6 +33,10 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer typeTransformer) {
     typeTransformer.applyAdviceToMethod(
+        named("createConnectionPool").and(takesArguments(1)),
+        getClass().getName() + "$CreateConnectionPoolAdvice");
+
+    typeTransformer.applyAdviceToMethod(
         named("startPoolMaintenance").and(takesArguments(0)),
         getClass().getName() + "$StartPoolMaintenanceAdvice");
 
@@ -39,6 +47,22 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
     typeTransformer.applyAdviceToMethod(
         isPublic().and(named("preRegister")).and(takesArguments(2)),
         getClass().getName() + "$PreRegisterAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class CreateConnectionPoolAdvice {
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Scope onEnter() {
+      return CommonsPoolMetricsSuppression.suppress(currentContext()).makeCurrent();
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
+      }
+    }
   }
 
   @SuppressWarnings("unused")

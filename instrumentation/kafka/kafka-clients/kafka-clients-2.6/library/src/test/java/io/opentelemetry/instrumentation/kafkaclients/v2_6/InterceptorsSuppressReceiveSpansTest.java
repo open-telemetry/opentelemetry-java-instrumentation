@@ -51,6 +51,11 @@ class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
   }
 
   @Override
+  protected boolean receiveTelemetryEnabled() {
+    return false;
+  }
+
+  @Override
   void assertTraces() {
     testing.waitAndAssertTraces(
         trace ->

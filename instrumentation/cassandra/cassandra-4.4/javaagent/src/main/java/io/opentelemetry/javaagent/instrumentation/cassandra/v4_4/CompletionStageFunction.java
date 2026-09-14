@@ -5,12 +5,23 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_4;
 
-import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_4.CassandraSingletons.telemetry;
-
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.metadata.EndPoint;
+import io.opentelemetry.instrumentation.cassandra.v4_4.CassandraTelemetry;
+import io.opentelemetry.instrumentation.cassandra.v4_4.internal.CassandraTelemetryUtil;
+import java.util.Set;
 import java.util.function.Function;
 
 public class CompletionStageFunction implements Function<Object, Object> {
+
+  private final CassandraTelemetry telemetry;
+  private final Set<EndPoint> programmaticContactPoints;
+
+  public CompletionStageFunction(
+      CassandraTelemetry telemetry, Set<EndPoint> programmaticContactPoints) {
+    this.telemetry = telemetry;
+    this.programmaticContactPoints = programmaticContactPoints;
+  }
 
   @Override
   public Object apply(Object session) {
@@ -21,6 +32,6 @@ public class CompletionStageFunction implements Function<Object, Object> {
     if (session.getClass().getName().endsWith("cassandra4.TracingCqlSession")) {
       return session;
     }
-    return telemetry().wrap((CqlSession) session);
+    return CassandraTelemetryUtil.wrap(telemetry, (CqlSession) session, programmaticContactPoints);
   }
 }
