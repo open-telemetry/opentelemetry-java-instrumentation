@@ -202,8 +202,8 @@ public final class CouchbaseSpan {
 
     logger.warning(
         "The otel.instrumentation.couchbase.experimental-span-attributes setting and the"
-            + " equivalent declarative configuration property are deprecated for Couchbase 3.x"
-            + " and will be removed in the next minor release. Use"
+            + " equivalent declarative configuration property are deprecated and will be removed"
+            + " in the next minor release. Use"
             + " otel.instrumentation.couchbase.emit-experimental-telemetry or the equivalent"
             + " declarative configuration instead.");
     return deprecated;
