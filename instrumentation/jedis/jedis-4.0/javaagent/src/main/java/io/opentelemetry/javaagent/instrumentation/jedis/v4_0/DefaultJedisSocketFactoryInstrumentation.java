@@ -29,6 +29,9 @@ class DefaultJedisSocketFactoryInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
+        isConstructor().and(takesArguments(0)),
+        getClass().getName() + "$InitializedHostAndPortAdvice");
+    transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(0, String.class)).and(takesArgument(1, int.class)),
         getClass().getName() + "$HostAndPortPartsAdvice");
     transformer.applyAdviceToMethod(
@@ -39,6 +42,19 @@ class DefaultJedisSocketFactoryInstrumentation implements TypeInstrumentation {
             .and(takesArguments(1))
             .and(takesArgument(0, named("redis.clients.jedis.HostAndPort"))),
         getClass().getName() + "$HostAndPortAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class InitializedHostAndPortAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This JedisSocketFactory socketFactory,
+        @Advice.FieldValue("hostAndPort") @Nullable HostAndPort initializedHostAndPort) {
+      if (initializedHostAndPort != null) {
+        JedisConfiguredTargets.setSocketFactoryTarget(socketFactory, initializedHostAndPort);
+      }
+    }
   }
 
   @SuppressWarnings("unused")

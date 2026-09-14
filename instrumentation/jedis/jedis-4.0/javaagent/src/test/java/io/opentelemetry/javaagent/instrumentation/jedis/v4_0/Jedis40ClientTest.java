@@ -34,6 +34,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.net.InetAddress;
+import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -160,6 +161,39 @@ class Jedis40ClientTest {
                                 emitStableDatabaseSemconv() ? configuredHost : host),
                             equalTo(
                                 SERVER_PORT, emitStableDatabaseSemconv() ? configuredPort : port),
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip))));
+  }
+
+  @Test
+  void defaultSocketFactoryUsesDefaultConfiguredTarget() {
+    DefaultJedisSocketFactory delegate = new DefaultJedisSocketFactory(new HostAndPort(host, port));
+    DefaultJedisSocketFactory socketFactory =
+        new DefaultJedisSocketFactory() {
+          @Override
+          public Socket createSocket() {
+            return delegate.createSocket();
+          }
+        };
+    try (Jedis direct = new Jedis(socketFactory)) {
+      testing.clearData();
+      direct.set("default-factory", "value");
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET 127.0.0.1" : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "SET default-factory ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : 6379L),
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, ip))));
