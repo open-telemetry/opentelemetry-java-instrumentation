@@ -24,7 +24,7 @@ public final class SpringCloudGcpSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-cloud-gcp-5.0";
   private static final String PROCESS_OPERATION_NAME = "process";
 
-  public static final Instrumenter<ConvertedBasicAcknowledgeablePubsubMessage<?>, Void>
+  private static final Instrumenter<ConvertedBasicAcknowledgeablePubsubMessage<?>, Void>
       instrumenter = createInstrumenter(GlobalOpenTelemetry.get());
 
   private static Instrumenter<ConvertedBasicAcknowledgeablePubsubMessage<?>, Void>
@@ -47,6 +47,10 @@ public final class SpringCloudGcpSingletons {
         openTelemetry.getPropagators().getTextMapPropagator(),
         new MessageHeaderGetter(),
         ExperimentalConfig.get().messagingReceiveInstrumentationEnabled());
+  }
+
+  public static Instrumenter<ConvertedBasicAcknowledgeablePubsubMessage<?>, Void> instrumenter() {
+    return instrumenter;
   }
 
   private SpringCloudGcpSingletons() {}

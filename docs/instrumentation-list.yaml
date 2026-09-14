@@ -16859,18 +16859,6 @@ libraries:
   has_javaagent: true
   javaagent_target_versions:
   - io.awspring.cloud:spring-cloud-aws-sqs:[3.0.0,)
-- name: spring-cloud-gcp-5.0
-  display_name: Spring Cloud GCP
-  description: |
-    This instrumentation creates messaging process spans for messages consumed through Spring Cloud GCP Pub/Sub. It coordinates with the gRPC instrumentation to create spans at the appropriate points in Spring Cloud GCP message handling.
-  library_link: https://spring.io/projects/spring-cloud-gcp
-  source_path: instrumentation/spring/spring-cloud-gcp-5.0
-  minimum_java_version: 17
-  scope:
-    name: io.opentelemetry.spring-cloud-gcp-5.0
-  has_javaagent: true
-  javaagent_target_versions:
-  - com.google.cloud:spring-cloud-gcp-pubsub:[5.0.0,)
 - name: spring-cloud-gateway-2.0
   display_name: Spring Cloud Gateway
   description: |

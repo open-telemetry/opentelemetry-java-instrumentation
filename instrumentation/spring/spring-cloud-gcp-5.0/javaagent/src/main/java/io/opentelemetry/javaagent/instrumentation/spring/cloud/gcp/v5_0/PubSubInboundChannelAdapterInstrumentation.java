@@ -51,11 +51,11 @@ class PubSubInboundChannelAdapterInstrumentation implements TypeInstrumentation 
       // context is extracted from the PubsubMessage attributes by the instrumenter, so there is no
       // ambient parent to use here
       Context parentContext = Context.root();
-      if (!instrumenter.shouldStart(parentContext, message)) {
+      if (!instrumenter().shouldStart(parentContext, message)) {
         return null;
       }
-      Context context = instrumenter.start(parentContext, message);
-      return new AdviceScope(instrumenter, context, message, context.makeCurrent());
+      Context context = instrumenter().start(parentContext, message);
+      return new AdviceScope(instrumenter(), context, message, context.makeCurrent());
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)

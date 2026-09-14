@@ -30,15 +30,24 @@ import com.google.cloud.pubsub.v1.SubscriptionAdminSettings;
 import com.google.cloud.pubsub.v1.TopicAdminClient;
 import com.google.cloud.pubsub.v1.TopicAdminSettings;
 import com.google.cloud.spring.pubsub.core.PubSubTemplate;
+import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.ProjectTopicName;
+import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.PushConfig;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.TraceFlags;
+import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import org.assertj.core.api.AbstractLongAssert;
@@ -182,8 +191,76 @@ class SpringCloudGcpTest {
           }
         });
 
-    // the producer does not inject trace context yet, so the process span has no links
+    // the message carries no propagation attributes, so the process span has no links
     assertThat(processSpan.get().getLinks()).isEmpty();
+  }
+
+  @Test
+  void pubsubConsumerSpanWithPropagation() throws Exception {
+    testing.clearData();
+
+    String messageContent = "propagated";
+    AtomicReference<SpanContext> producerContext = new AtomicReference<>();
+    Map<String, String> attributes = new HashMap<>();
+    CompletableFuture<String> messageFuture = new CompletableFuture<>();
+    SpringCloudGcpTestApplication.messageHandler =
+        payload ->
+            testing.runWithSpan(
+                "callback", () -> assertThat(messageFuture.complete(payload)).isTrue());
+
+    testing.runWithSpan(
+        "propagation-parent",
+        () -> {
+          SpanContext spanContext = Span.current().getSpanContext();
+          producerContext.set(spanContext);
+          attributes.put(
+              "traceparent",
+              "00-" + spanContext.getTraceId() + "-" + spanContext.getSpanId() + "-01");
+          pubSubTemplate.publish(
+              TOPIC,
+              PubsubMessage.newBuilder()
+                  .setData(ByteString.copyFromUtf8(messageContent))
+                  .putAllAttributes(attributes)
+                  .build());
+        });
+
+    String result = messageFuture.get(30, SECONDS);
+    assertThat(result).isEqualTo(messageContent);
+
+    if (emitStableMessagingSemconv()) {
+      // the propagated creation context is both the parent of the process span and its link
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("propagation-parent").hasNoParent(),
+                  span ->
+                      span.hasName("process " + SUBSCRIPTION)
+                          .hasKind(CONSUMER)
+                          .hasParent(trace.getSpan(0))
+                          .hasLinks(
+                              LinkData.create(
+                                  // the link points to the creation context extracted from the
+                                  // traceparent attribute
+                                  SpanContext.create(
+                                      producerContext.get().getTraceId(),
+                                      producerContext.get().getSpanId(),
+                                      TraceFlags.getSampled(),
+                                      TraceState.getDefault())))
+                          .hasAttributesSatisfyingExactly(processAttributes()),
+                  span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(1))));
+    } else {
+      // the propagated context becomes the parent of the process span
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("propagation-parent").hasNoParent(),
+                  span ->
+                      span.hasName(SUBSCRIPTION + " process")
+                          .hasKind(CONSUMER)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(processAttributes()),
+                  span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(1))));
+    }
   }
 
   private static List<AttributeAssertion> processAttributes() {
