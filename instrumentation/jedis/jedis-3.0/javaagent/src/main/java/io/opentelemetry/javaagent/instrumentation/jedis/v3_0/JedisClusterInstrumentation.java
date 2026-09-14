@@ -43,14 +43,10 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
         named("initializeSlotsCache").and(takesArgument(0, named("java.util.Set"))),
         getClass().getName() + "$InitializeAdvice");
     transformer.applyAdviceToMethod(
-        named("getConnectionFromNode")
-            .and(isDeclaredBy(named("redis.clients.jedis.JedisClusterConnectionHandler")))
-            .and(returns(named("redis.clients.jedis.Jedis"))),
+        named("getConnectionFromNode").and(returns(named("redis.clients.jedis.Jedis"))),
         getClass().getName() + "$ClusterTargetScopeAdvice");
     transformer.applyAdviceToMethod(
-        named("renewSlotCache")
-            .and(isDeclaredBy(named("redis.clients.jedis.JedisClusterConnectionHandler"))),
-        getClass().getName() + "$ClusterTargetScopeAdvice");
+        named("renewSlotCache"), getClass().getName() + "$ClusterTargetScopeAdvice");
   }
 
   @SuppressWarnings("unused")
