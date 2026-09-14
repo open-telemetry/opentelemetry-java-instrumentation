@@ -34,12 +34,11 @@ public final class CamelKafkaBatchState {
     if (CAMEL_BATCHES.get(records) == null) {
       return;
     }
-    CAMEL_BATCHES.set(records, null);
     KafkaConsumerBatchState state = BATCH_STATE.get(records);
     if (state == null) {
-      state = new KafkaConsumerBatchState(false);
-      BATCH_STATE.set(records, state);
+      return;
     }
+    CAMEL_BATCHES.set(records, null);
     state.claimProcessSpan();
   }
 
