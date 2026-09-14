@@ -15,11 +15,9 @@ import javax.annotation.Nullable;
  * Remembers the subscription name that a durable or shared consumer was created with, so that it
  * can be reported on the spans for the messages that the consumer delivers.
  *
- * <p>The name is copied from the consumer to the message listener once the listener has been
- * registered, because providers dispatch messages to the listener without exposing the consumer
- * they came from. Registering the same listener instance on several consumers reports the name of
- * the most recently registered consumer, and closing a consumer doesn't restore the name of an
- * earlier one, because the listener is shared and there is no owner to hand it back to.
+ * <p>The name is copied from the consumer to the message listener before registering the listener,
+ * because providers may dispatch messages before registration returns without exposing the consumer
+ * they came from. A listener is expected to be registered with only one consumer.
  */
 public class JmsSubscriptionNames {
 

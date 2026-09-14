@@ -156,7 +156,7 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
           // underlying netty instrumentation does not provide these
           attributes.remove(SERVER_ADDRESS);
           attributes.remove(SERVER_PORT);
-        } else if (!capturesProtocolVersion() || uri.getPath().equals("/read-timeout")) {
+        } else if (!capturesProtocolVersion()) {
           attributes.remove(NETWORK_PROTOCOL_VERSION);
         }
         return attributes;

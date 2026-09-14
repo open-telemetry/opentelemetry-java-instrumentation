@@ -68,6 +68,7 @@ class ThriftTBaseProcessorInstrumentation implements TypeInstrumentation {
       ServerInProtocolDecorator serverInProtocolDecorator = (ServerInProtocolDecorator) enter[0];
       ServerOutProtocolDecorator serverOutProtocolDecorator = (ServerOutProtocolDecorator) enter[1];
 
+      serverInProtocolDecorator.closeScope();
       serverInProtocolDecorator.endSpan(throwable, serverOutProtocolDecorator.hasException());
     }
   }

@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.kafkaclients.v2_6.internal;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import java.util.Map;
@@ -45,10 +44,8 @@ public class OpenTelemetryConsumerInterceptor<K, V>
     if (consumerTelemetry == null) {
       return records;
     }
-    // timer should be started before fetching ConsumerRecords, but there is no callback for that
-    Timer timer = Timer.start();
     Context receiveContext =
-        consumerTelemetry.buildAndFinishSpan(records, consumerGroup, clientId, clusterId, timer);
+        consumerTelemetry.buildAndFinishSpan(records, consumerGroup, clientId, clusterId);
     if (receiveContext == null) {
       receiveContext = Context.current();
     }

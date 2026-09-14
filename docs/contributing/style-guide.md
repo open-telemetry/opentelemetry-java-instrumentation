@@ -59,6 +59,12 @@ still allows the code to function correctly.
 Static fields should be `private`, except for constant-like static fields with an
 uppercase (`SCREAMING_SNAKE_CASE`) name.
 
+### Public API
+
+Public API consists of Java types that published artifacts intentionally expose for use by external
+code. A `public` modifier alone does not make a class public API. Determine API status from the
+artifact's published contract and intended use, not source path or visibility alone.
+
 ### Internal packages
 
 Classes in `.internal` packages are not considered public API and may change without notice. These
@@ -96,16 +102,7 @@ methods.
 
 ### `final` keyword usage
 
-**Classes**: Declare public classes `final` where possible, but only in public API code.
-
-The following are **not** public API — do not add `final` to classes there:
-
-- `javaagent/src/main/` — internal implementation detail, even when classes are `public` for
-  service loading or cross-package access
-- `.internal` packages
-- Test code — `src/test/` directories and modules whose directory name starts or ends with
-  `testing` or `tests` (e.g., `testing/`, `testing-common/`, `quarkus-2.0-testing/`,
-  `smoke-tests/`)
+**Classes**: Declare public API classes `final` where possible.
 
 **Methods**: Declare `final` only in non-final public API classes.
 

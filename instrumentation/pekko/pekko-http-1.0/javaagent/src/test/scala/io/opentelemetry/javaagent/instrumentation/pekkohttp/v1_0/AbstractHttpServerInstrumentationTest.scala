@@ -39,8 +39,6 @@ abstract class AbstractHttpServerInstrumentationTest
       options: HttpServerTestOptions
   ): Unit = {
     options.setTestCaptureHttpHeaders(false)
-    // TODO: client.address is missing socket-peer fallback: https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19841
-    options.setTestClientAddressFromSocketPeer(false)
     options.setHttpAttributes(
       new Function[ServerEndpoint, util.Set[AttributeKey[_]]] {
         override def apply(v1: ServerEndpoint): util.Set[AttributeKey[_]] = {

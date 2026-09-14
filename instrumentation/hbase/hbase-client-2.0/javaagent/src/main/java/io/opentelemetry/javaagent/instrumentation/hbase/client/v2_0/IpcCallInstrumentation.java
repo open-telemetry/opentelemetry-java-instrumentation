@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0;
 
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0.HbaseSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -29,18 +28,17 @@ class IpcCallInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        namedOneOf("callComplete", "setTimeout"), getClass().getName() + "$CallAdvice");
+        named("callComplete"), getClass().getName() + "$CallCompleteAdvice");
+    transformer.applyAdviceToMethod(
+        named("setTimeout"), getClass().getName() + "$SetTimeoutAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class CallAdvice {
+  public static class CallCompleteAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.This Object call,
-        @Advice.Origin("#m") String methodName,
-        @Advice.Argument(value = 0, optional = true) @Nullable IOException timeoutError,
         @Advice.FieldValue(value = "error") @Nullable IOException callError) {
-      IOException error = methodName.equals("setTimeout") ? timeoutError : callError;
       RequestAndContext requestAndContext =
           OpenTelemetryCallUtil.getAndClearRequestAndContext(call);
       if (requestAndContext == null) {
@@ -48,7 +46,25 @@ class IpcCallInstrumentation implements TypeInstrumentation {
       }
 
       instrumenter()
-          .end(requestAndContext.getContext(), requestAndContext.getRequest(), null, error);
+          .end(requestAndContext.getContext(), requestAndContext.getRequest(), null, callError);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class SetTimeoutAdvice {
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void onExit(
+        @Advice.This Object call,
+        @Advice.Argument(0) IOException timeoutError,
+        @Advice.FieldValue(value = "error") @Nullable IOException callError) {
+      RequestAndContext requestAndContext =
+          OpenTelemetryCallUtil.getAndClearRequestAndContextIfError(call, callError, timeoutError);
+      if (requestAndContext == null) {
+        return;
+      }
+
+      instrumenter()
+          .end(requestAndContext.getContext(), requestAndContext.getRequest(), null, timeoutError);
     }
   }
 }

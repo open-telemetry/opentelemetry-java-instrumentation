@@ -12,6 +12,8 @@ muzzle {
 }
 
 dependencies {
+  bootstrap(project(":instrumentation:rabbitmq-2.7:bootstrap"))
+
   library("org.springframework.amqp:spring-rabbit:1.0.0.RELEASE")
 
   testInstrumentation(project(":instrumentation:rabbitmq-2.7:javaagent"))
@@ -25,6 +27,27 @@ dependencies {
 
   if (otelProps.testLatestDeps) {
     testLibrary("org.springframework.boot:spring-boot-starter-amqp:latest.release")
+  }
+}
+
+testing {
+  suites {
+    register<JvmTestSuite>("version20Test") {
+      dependencies {
+        implementation("io.opentelemetry:opentelemetry-sdk-testing")
+        implementation("org.testcontainers:testcontainers")
+        implementation("org.springframework.amqp:spring-rabbit:2.0.1.RELEASE")
+      }
+
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.semconv-stability.preview=messaging")
+            systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+          }
+        }
+      }
+    }
   }
 }
 
@@ -57,7 +80,7 @@ tasks {
   }
 
   check {
-    dependsOn(testMessagingPreview, testBothSemconv, testV3Preview)
+    dependsOn(testing.suites, testMessagingPreview, testBothSemconv, testV3Preview)
   }
 }
 
