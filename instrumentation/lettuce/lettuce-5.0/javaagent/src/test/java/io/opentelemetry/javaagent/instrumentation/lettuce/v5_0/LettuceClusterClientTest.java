@@ -89,6 +89,8 @@ class LettuceClusterClientTest {
     cleanup.deferAfterAll(connection);
     pubSubConnection = client.connectPubSub();
     cleanup.deferAfterAll(pubSubConnection);
+
+    testing.waitForTraces(2);
   }
 
   @Test
