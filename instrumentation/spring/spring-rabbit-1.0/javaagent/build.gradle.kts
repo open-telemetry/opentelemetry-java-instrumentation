@@ -32,6 +32,23 @@ dependencies {
 
 testing {
   suites {
+    register<JvmTestSuite>("version11Test") {
+      dependencies {
+        implementation("io.opentelemetry:opentelemetry-sdk-testing")
+        implementation("org.testcontainers:testcontainers")
+        implementation("org.springframework.amqp:spring-rabbit:1.1.0.RELEASE")
+      }
+
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.semconv-stability.preview=messaging")
+            systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+          }
+        }
+      }
+    }
+
     register<JvmTestSuite>("version20Test") {
       dependencies {
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
