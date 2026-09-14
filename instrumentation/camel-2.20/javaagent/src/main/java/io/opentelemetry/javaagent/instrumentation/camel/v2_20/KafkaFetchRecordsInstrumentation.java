@@ -7,9 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -24,15 +26,17 @@ class KafkaFetchRecordsInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(named("doRun"), getClass().getName() + "$DoRunAdvice");
+    transformer.applyAdviceToMethod(
+        namedOneOf("doRun", "run"), getClass().getName() + "$MarkConsumerAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class DoRunAdvice {
+  public static class MarkConsumerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(@Advice.FieldValue("consumer") KafkaConsumer<?, ?> consumer) {
-      if (emitStableMessagingSemconv()) {
+    public static void onEnter(
+        @Advice.FieldValue("consumer") @Nullable KafkaConsumer<?, ?> consumer) {
+      if (emitStableMessagingSemconv() && consumer != null) {
         CamelKafkaBatchState.markConsumer(consumer);
       }
     }
