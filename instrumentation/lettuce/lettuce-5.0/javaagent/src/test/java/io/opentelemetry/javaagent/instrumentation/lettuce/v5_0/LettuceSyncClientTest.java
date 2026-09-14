@@ -208,7 +208,7 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
     StatefulRedisConnection<String, String> masterSlaveConnection = connectMasterReplica(redisUris);
     cleanup.deferCleanup(masterSlaveConnection);
 
-    testing.waitForTraces(2);
+    testing.waitForTraces(5);
     testing.clearData();
 
     assertThat(masterSlaveConnection.sync().set("MASTER_SLAVE_COMMAND_KEY", "value"))
