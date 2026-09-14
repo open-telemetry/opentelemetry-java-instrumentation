@@ -5,9 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CLUSTER_CLIENT_TARGET;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONNECTION_STATE;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_STATE;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -56,7 +53,7 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
         @Advice.This RedisClusterClient client,
         @Advice.Argument(1) @Nullable Iterable<RedisURI> initialUris) {
       if (LettuceServerTargets.configuredTargetsSupported()) {
-        CLUSTER_CLIENT_TARGET.set(client, LettuceServerTargets.ofUris(initialUris));
+        LettuceServerTargets.capture(client, initialUris);
       }
     }
   }
@@ -75,15 +72,11 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
       if (!LettuceServerTargets.configuredTargetsSupported()) {
         return socketAddressSource;
       }
-      RedisServerTarget target = CLUSTER_CLIENT_TARGET.get(client);
-      ENDPOINT_STATE.set(
-          endpoint, new LettuceConnectionState(null, redisUri.getDatabase(), target));
+      RedisServerTarget target = LettuceServerTargets.get(client);
+      LettuceConnectionState.captureEndpoint(endpoint, null, redisUri.getDatabase(), target);
       if (connection instanceof RedisChannelHandler) {
         RedisChannelHandler<?, ?> connectionHandler = (RedisChannelHandler<?, ?>) connection;
-        CONNECTION_STATE.set(
-            connectionHandler,
-            LettuceConnectionState.withServerTarget(
-                CONNECTION_STATE.get(connectionHandler), target));
+        LettuceServerTargets.copy(client, connectionHandler);
       }
       if (socketAddressSource instanceof Supplier) {
         Supplier<?> socketAddressSupplier = (Supplier<?>) socketAddressSource;
@@ -108,10 +101,7 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
     public SocketAddress get() {
       Object address = delegate.get();
       if (address instanceof InetSocketAddress) {
-        ENDPOINT_STATE.set(
-            endpoint,
-            LettuceConnectionState.withServerAddress(
-                ENDPOINT_STATE.get(endpoint), (InetSocketAddress) address));
+        LettuceConnectionState.updateServerAddress(endpoint, (InetSocketAddress) address);
       }
       return (SocketAddress) address;
     }

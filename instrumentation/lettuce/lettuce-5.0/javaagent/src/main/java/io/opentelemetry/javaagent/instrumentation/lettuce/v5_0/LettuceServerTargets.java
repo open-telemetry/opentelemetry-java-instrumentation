@@ -5,13 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import io.lettuce.core.RedisChannelHandler;
 import io.lettuce.core.RedisURI;
+import io.lettuce.core.cluster.RedisClusterClient;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 
 public class LettuceServerTargets {
+
+  private static final VirtualField<RedisClusterClient, RedisServerTarget> CLUSTER_CLIENT_TARGET =
+      VirtualField.find(RedisClusterClient.class, RedisServerTarget.class);
 
   // The tracing SPI marks 5.1+, where this module only runs under v3-preview compatibility mode.
   private static final boolean CONFIGURED_TARGETS_SUPPORTED =
@@ -19,6 +25,20 @@ public class LettuceServerTargets {
 
   public static boolean configuredTargetsSupported() {
     return CONFIGURED_TARGETS_SUPPORTED;
+  }
+
+  public static void capture(
+      RedisClusterClient client, @Nullable Iterable<RedisURI> configuredUris) {
+    CLUSTER_CLIENT_TARGET.set(client, ofUris(configuredUris));
+  }
+
+  public static void copy(RedisClusterClient client, RedisChannelHandler<?, ?> connection) {
+    LettuceConnectionState.updateServerTarget(connection, get(client));
+  }
+
+  @Nullable
+  public static RedisServerTarget get(RedisClusterClient client) {
+    return CLUSTER_CLIENT_TARGET.get(client);
   }
 
   @Nullable
