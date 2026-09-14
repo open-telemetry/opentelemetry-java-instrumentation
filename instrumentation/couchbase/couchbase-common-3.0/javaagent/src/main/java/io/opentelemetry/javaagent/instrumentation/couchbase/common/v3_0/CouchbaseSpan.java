@@ -194,7 +194,7 @@ public final class CouchbaseSpan {
       return config.getBoolean("emit_experimental_telemetry/development", false);
     }
 
-    // Deprecated for Couchbase 3.x; remains active outside v3 preview until 3.0.
+    // Deprecated for Couchbase 3.x; remains active outside v3 preview until the next minor release.
     Boolean configured = config.getBoolean("experimental_span_attributes/development");
     if (configured == null) {
       return false;
@@ -203,7 +203,7 @@ public final class CouchbaseSpan {
     logger.warning(
         "The otel.instrumentation.couchbase.experimental-span-attributes setting and the"
             + " equivalent declarative configuration property are deprecated for Couchbase 3.x"
-            + " and will be removed in 3.0. Under v3 preview, use"
+            + " and will be removed in the next minor release. Under v3 preview, use"
             + " otel.instrumentation.couchbase.emit-experimental-telemetry or equivalent"
             + " declarative configuration instead.");
     return configured;

@@ -39,7 +39,7 @@ class CouchbaseSpanConfigTest {
           .isEqualTo(
               "The otel.instrumentation.couchbase.experimental-span-attributes setting and the"
                   + " equivalent declarative configuration property are deprecated for Couchbase"
-                  + " 3.x and will be removed in 3.0. Under v3 preview, use"
+                  + " 3.x and will be removed in the next minor release. Under v3 preview, use"
                   + " otel.instrumentation.couchbase.emit-experimental-telemetry or equivalent"
                   + " declarative configuration instead.");
     } finally {

@@ -18,8 +18,8 @@
 ### 🚫 Deprecations
 
 - Deprecate `otel.instrumentation.couchbase.experimental-span-attributes` for Couchbase 3.x in favor
-  of `otel.instrumentation.couchbase.emit-experimental-telemetry` under v3 preview. It will be
-  removed in 3.0.
+  of `otel.instrumentation.couchbase.emit-experimental-telemetry` under v3 preview. It will be removed
+  in the next minor release.
   ([#20117](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20117))
 - Deprecate the Elasticsearch REST library artifacts and their public entrypoints. Elasticsearch
   Java API Client users should use its [native OpenTelemetry
