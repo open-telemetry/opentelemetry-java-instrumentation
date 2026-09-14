@@ -86,10 +86,7 @@ class LettuceClientInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      RedisServerTarget target =
-          LettuceServerTargets.configuredTargetsSupported()
-              ? LettuceServerTargets.of(redisUri)
-              : null;
+      RedisServerTarget target = LettuceServerTargets.of(redisUri);
       String host = redisUri.getHost();
       InetSocketAddress address =
           host == null ? null : InetSocketAddress.createUnresolved(host, redisUri.getPort());

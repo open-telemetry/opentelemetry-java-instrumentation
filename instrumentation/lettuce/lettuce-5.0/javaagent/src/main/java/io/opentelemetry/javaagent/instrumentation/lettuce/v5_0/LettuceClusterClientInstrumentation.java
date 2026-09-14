@@ -38,11 +38,18 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(1, Iterable.class)),
         getClass().getName() + "$ConstructorAdvice");
+    // Lettuce 5.0 and 6.0+ place DefaultEndpoint and RedisURI at indexes 1 and 2.
     transformer.applyAdviceToMethod(
         nameStartsWith("connectStateful")
             .and(takesArgument(1, named("io.lettuce.core.protocol.DefaultEndpoint")))
             .and(takesArgument(2, named("io.lettuce.core.RedisURI"))),
         getClass().getName() + "$AttachEndpointAdvice");
+    // Lettuce 5.1-5.3 insert a codec before DefaultEndpoint.
+    transformer.applyAdviceToMethod(
+        nameStartsWith("connectStateful")
+            .and(takesArgument(2, named("io.lettuce.core.protocol.DefaultEndpoint")))
+            .and(takesArgument(3, named("io.lettuce.core.RedisURI"))),
+        getClass().getName() + "$AttachEndpointWithCodecAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -52,9 +59,7 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.This RedisClusterClient client,
         @Advice.Argument(1) @Nullable Iterable<RedisURI> initialUris) {
-      if (LettuceServerTargets.configuredTargetsSupported()) {
-        LettuceServerTargets.capture(client, initialUris);
-      }
+      LettuceServerTargets.capture(client, initialUris);
     }
   }
 
@@ -69,9 +74,6 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) DefaultEndpoint endpoint,
         @Advice.Argument(2) RedisURI redisUri,
         @Advice.Argument(3) Object socketAddressSource) {
-      if (!LettuceServerTargets.configuredTargetsSupported()) {
-        return socketAddressSource;
-      }
       RedisServerTarget target = LettuceServerTargets.get(client);
       LettuceConnectionState.captureEndpoint(endpoint, null, redisUri.getDatabase(), target);
       if (connection instanceof RedisChannelHandler) {
@@ -85,6 +87,23 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
             : new EndpointAddressSupplier(socketAddressSupplier, endpoint);
       }
       return socketAddressSource;
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class AttachEndpointWithCodecAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static void onEnter(
+        @Advice.This RedisClusterClient client,
+        @Advice.Argument(0) Object connection,
+        @Advice.Argument(2) DefaultEndpoint endpoint,
+        @Advice.Argument(3) RedisURI redisUri) {
+      RedisServerTarget target = LettuceServerTargets.get(client);
+      LettuceConnectionState.captureEndpoint(endpoint, null, redisUri.getDatabase(), target);
+      if (connection instanceof RedisChannelHandler) {
+        LettuceServerTargets.copy(client, (RedisChannelHandler<?, ?>) connection);
+      }
     }
   }
 

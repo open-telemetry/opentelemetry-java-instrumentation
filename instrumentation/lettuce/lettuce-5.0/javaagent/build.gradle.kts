@@ -46,8 +46,14 @@ testing {
 
       targets.all {
         testTask.configure {
-          jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-          systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+          jvmArgs(
+            "-Dotel.instrumentation.common.v3-preview=true",
+            "-Dotel.semconv-stability.opt-in=database,service.peer"
+          )
+          systemProperty(
+            "metadataConfig",
+            "otel.instrumentation.common.v3-preview=true,otel.semconv-stability.opt-in=database,service.peer"
+          )
         }
       }
     }
@@ -68,8 +74,14 @@ testing {
 
       targets.all {
         testTask.configure {
-          jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-          systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+          jvmArgs(
+            "-Dotel.instrumentation.common.v3-preview=true",
+            "-Dotel.semconv-stability.opt-in=database,service.peer"
+          )
+          systemProperty(
+            "metadataConfig",
+            "otel.instrumentation.common.v3-preview=true,otel.semconv-stability.opt-in=database,service.peer"
+          )
         }
       }
     }
@@ -90,8 +102,14 @@ testing {
 
       targets.all {
         testTask.configure {
-          jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-          systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+          jvmArgs(
+            "-Dotel.instrumentation.common.v3-preview=true",
+            "-Dotel.semconv-stability.opt-in=database,service.peer"
+          )
+          systemProperty(
+            "metadataConfig",
+            "otel.instrumentation.common.v3-preview=true,otel.semconv-stability.opt-in=database,service.peer"
+          )
         }
       }
     }
@@ -154,8 +172,14 @@ tasks {
   val testV3Preview = register<Test>("testV3Preview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+    jvmArgs(
+      "-Dotel.instrumentation.common.v3-preview=true",
+      "-Dotel.semconv-stability.opt-in=database,service.peer"
+    )
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.v3-preview=true,otel.semconv-stability.opt-in=database,service.peer"
+    )
   }
 
   check {
