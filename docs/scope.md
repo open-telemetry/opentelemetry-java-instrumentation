@@ -26,3 +26,8 @@ The repository also maintains instrumentation for:
 - Collection of logging framework events as OpenTelemetry logs
 - Injection of trace context into logging framework context
 - Spring Boot starters
+
+Java agent instrumentation in these areas is generally enabled by default. New Java agent
+instrumentation outside these areas should normally be disabled by default. Standalone library
+instrumentation requires users to initialize it explicitly, so this default-enablement policy does
+not apply to it.
