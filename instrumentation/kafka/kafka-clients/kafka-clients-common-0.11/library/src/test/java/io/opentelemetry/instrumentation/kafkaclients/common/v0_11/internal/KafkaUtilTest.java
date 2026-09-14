@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
-import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -61,88 +60,11 @@ class KafkaUtilTest {
   }
 
   @Test
-  void pendingClusterId_throttlesMetadataReads() {
-    // Metadata.fetch() locks the instance shared with the Kafka network thread, so once the first
-    // span has had its pair of reads, the spans queued behind it must be turned away.
-    KafkaClusterId pending = KafkaClusterId.of(new Metadata(0, Long.MAX_VALUE, false));
-
-    // The first span reads at its start and again at its end.
-    assertThat(pending.shouldReadMetadataNow()).isTrue();
-    assertThat(pending.shouldReadMetadataNow()).isTrue();
-    for (int i = 0; i < 100; i++) {
-      assertThat(pending.shouldReadMetadataNow()).isFalse();
-    }
-  }
-
-  @Test
-  void pendingClusterId_neverBecomesTerminal() throws InterruptedException {
-    // A burst of concurrent sends at startup asks far more often than any fixed attempt budget
-    // would allow, and each producer span asks twice (at span start and again at span end). None of
-    // that may latch the entry closed, or a client whose broker is merely slow would lose the
-    // attribute for its whole lifetime.
-    KafkaClusterId pending = KafkaClusterId.of(new Metadata(0, Long.MAX_VALUE, false));
-    for (int i = 0; i < 1000; i++) {
-      pending.shouldReadMetadataNow();
-    }
-
-    Thread.sleep(NANOSECONDS.toMillis(KafkaClusterId.RETRY_INTERVAL_NANOS) + 50);
-
-    assertThat(pending.shouldReadMetadataNow()).isTrue();
-  }
-
-  @Test
-  void resolvedAndUnavailableClusterId_neverReadMetadata() {
-    // Once the id is known there is nothing left to read, and UNAVAILABLE holds no Metadata at all.
-    KafkaClusterId resolved = KafkaClusterId.of(new Metadata(0, Long.MAX_VALUE, false));
-    resolved.resolve("test-cluster");
-
-    assertThat(resolved.shouldReadMetadataNow()).isFalse();
-    assertThat(KafkaClusterId.UNAVAILABLE.shouldReadMetadataNow()).isFalse();
-  }
-
-  @Test
-  void initializeClusterId_publishesTheHolderWithoutReadingMetadata() {
-    // The throttle lives in the holder, so the holder has to reach the VirtualField before anything
-    // reads Metadata -- otherwise the very first reads are unguarded.
-    AtomicInteger fetches = new AtomicInteger();
-    Metadata metadata = countingMetadata(fetches, Cluster.empty());
-    Consumer<?, ?> client = stubConsumer();
-    VirtualField<Consumer<?, ?>, KafkaClusterId> field = clusterIdField();
-
-    KafkaClusterId published =
-        KafkaUtil.initializeClusterId(client, field, new HolderWithMetadata(metadata));
-
-    assertThat(fetches.get()).isZero();
-    assertThat(field.get(client)).isSameAs(published);
-  }
-
-  @Test
-  void resolvingClusterId_leavesThePublishedHolderInPlace() {
-    // VirtualField has no compare-and-set, so resolution must not write it again: a concurrent
-    // pending write would otherwise clobber the id and send later spans back to reading metadata.
-    AtomicInteger fetches = new AtomicInteger();
-    Metadata metadata =
-        countingMetadata(
-            fetches, new Cluster("test-cluster", emptyList(), emptyList(), emptySet(), emptySet()));
-    Consumer<?, ?> client = stubConsumer();
-    VirtualField<Consumer<?, ?>, KafkaClusterId> field = clusterIdField();
-
-    KafkaClusterId published =
-        KafkaUtil.initializeClusterId(client, field, new HolderWithMetadata(metadata));
-
-    assertThat(KafkaUtil.readClusterId(published)).isEqualTo("test-cluster");
-    assertThat(field.get(client)).isSameAs(published);
-    assertThat(published.clusterId()).isEqualTo("test-cluster");
-    // The resolved id is served from the holder, without another metadata read.
-    assertThat(KafkaUtil.readClusterId(published)).isEqualTo("test-cluster");
-    assertThat(fetches.get()).isEqualTo(1);
-  }
-
-  @Test
-  void secondReadIsAllowedImmediately_soOnEndCanSeeALateClusterId() {
-    // The broker's first metadata response lands between a producer span's start and its end, which
-    // is why KafkaProducerAttributesExtractor.onEnd re-reads. Throttling that second read away
-    // drops the attribute from every span created before the response.
+  void unresolvedClusterId_keepsReadingUntilTheBrokerReports() {
+    // Never terminal and never rate limited per client: a span reads at its start and again at its
+    // end, and only the second read can see the broker's first metadata response. Turning either
+    // read away -- on a budget or on a timer a neighbouring span could spend -- drops the
+    // attribute.
     AtomicInteger fetches = new AtomicInteger();
     AtomicReference<Cluster> reported = new AtomicReference<>(Cluster.empty());
     Metadata metadata = mock(Metadata.class);
@@ -153,48 +75,101 @@ class KafkaUtilTest {
               return reported.get();
             });
     Consumer<?, ?> client = stubConsumer();
+    VirtualField<Consumer<?, ?>, KafkaClusterId> field = clusterIdField();
 
-    KafkaClusterId holder =
-        KafkaUtil.initializeClusterId(client, clusterIdField(), new HolderWithMetadata(metadata));
-
-    // Span start: the broker has not reported a cluster id yet.
-    assertThat(KafkaUtil.readClusterId(holder)).isNull();
+    assertThat(KafkaUtil.initializeClusterId(client, field, new HolderWithMetadata(metadata)))
+        .isNull();
+    KafkaClusterId published = field.get(client);
+    for (int i = 0; i < 20; i++) {
+      assertThat(KafkaUtil.readClusterId(published)).isNull();
+    }
+    assertThat(fetches.get()).isEqualTo(21);
 
     reported.set(new Cluster("test-cluster", emptyList(), emptyList(), emptySet(), emptySet()));
 
-    // Span end, well inside the retry interval: the read must still happen.
-    assertThat(KafkaUtil.readClusterId(holder)).isEqualTo("test-cluster");
-    assertThat(fetches.get()).isEqualTo(2);
+    assertThat(KafkaUtil.readClusterId(published)).isEqualTo("test-cluster");
   }
 
   @Test
-  void furtherReadsWithinTheIntervalAreThrottled() {
-    // The pair above is the whole allowance: a client whose broker never reports an id must not
-    // enter Metadata.fetch() once per span.
+  void resolvedAndUnavailableClusterId_neverReadMetadata() {
+    // Once the id is known there is nothing left to read, and UNAVAILABLE holds no Metadata at all.
     AtomicInteger fetches = new AtomicInteger();
-    Metadata metadata = countingMetadata(fetches, Cluster.empty());
-    Consumer<?, ?> client = stubConsumer();
+    KafkaClusterId resolved = KafkaClusterId.of(countingMetadata(fetches, Cluster.empty()));
+    resolved.resolve("test-cluster");
 
-    KafkaClusterId holder =
-        KafkaUtil.initializeClusterId(client, clusterIdField(), new HolderWithMetadata(metadata));
-
-    for (int i = 0; i < 20; i++) {
-      assertThat(KafkaUtil.readClusterId(holder)).isNull();
-    }
-
-    assertThat(fetches.get()).isEqualTo(2);
+    assertThat(KafkaUtil.readClusterId(resolved)).isEqualTo("test-cluster");
+    assertThat(KafkaUtil.readClusterId(KafkaClusterId.UNAVAILABLE)).isNull();
+    assertThat(fetches.get()).isZero();
+    // The shared UNAVAILABLE singleton must never pick up another client's id.
+    assertThat(KafkaClusterId.UNAVAILABLE.clusterId()).isNull();
   }
 
   @Test
-  void concurrentReadsShareOneThrottle() throws InterruptedException {
-    // Metadata.fetch() locks the instance shared with the Kafka network thread, so the throttle is
-    // what a burst of sends has to contend on. It lives in the holder, so the read count is set by
-    // the client, not by how many threads arrive.
-    AtomicInteger fetches = new AtomicInteger();
-    Metadata metadata = countingMetadata(fetches, Cluster.empty());
+  void initializeClusterId_publishesTheHolderBeforeReadingMetadata() {
+    // A concurrent send has to find the holder, so it must reach the VirtualField before anything
+    // touches Metadata.
     Consumer<?, ?> client = stubConsumer();
-    KafkaClusterId holder =
-        KafkaUtil.initializeClusterId(client, clusterIdField(), new HolderWithMetadata(metadata));
+    VirtualField<Consumer<?, ?>, KafkaClusterId> field = clusterIdField();
+    AtomicReference<KafkaClusterId> publishedWhenRead = new AtomicReference<>();
+    Metadata metadata = mock(Metadata.class);
+    when(metadata.fetch())
+        .thenAnswer(
+            invocation -> {
+              publishedWhenRead.set(field.get(client));
+              return Cluster.empty();
+            });
+
+    assertThat(KafkaUtil.initializeClusterId(client, field, new HolderWithMetadata(metadata)))
+        .isNull();
+
+    assertThat(publishedWhenRead.get()).isNotNull().isSameAs(field.get(client));
+  }
+
+  @Test
+  void initializeClusterId_noMetadata_isTerminal() {
+    Consumer<?, ?> client = stubConsumer();
+    VirtualField<Consumer<?, ?>, KafkaClusterId> field = clusterIdField();
+
+    assertThat(KafkaUtil.initializeClusterId(client, field, new Object())).isNull();
+
+    assertThat(field.get(client)).isSameAs(KafkaClusterId.UNAVAILABLE);
+  }
+
+  @Test
+  void resolvedClusterIdIsServedWithoutReadingMetadataAgain() {
+    AtomicInteger fetches = new AtomicInteger();
+    Metadata metadata =
+        countingMetadata(
+            fetches, new Cluster("test-cluster", emptyList(), emptyList(), emptySet(), emptySet()));
+    Consumer<?, ?> client = stubConsumer();
+    VirtualField<Consumer<?, ?>, KafkaClusterId> field = clusterIdField();
+
+    assertThat(KafkaUtil.initializeClusterId(client, field, new HolderWithMetadata(metadata)))
+        .isEqualTo("test-cluster");
+
+    KafkaClusterId published = field.get(client);
+    assertThat(published.clusterId()).isEqualTo("test-cluster");
+    assertThat(KafkaUtil.readClusterId(published)).isEqualTo("test-cluster");
+    assertThat(fetches.get()).isEqualTo(1);
+  }
+
+  @Test
+  void racingSendsStillResolveTheClusterId() throws InterruptedException {
+    // VirtualField has no compare-and-set, so a burst of first sends publishes more than one holder
+    // and a late one can land on a holder another thread already resolved. Whichever holder ends up
+    // in the field must still resolve, or every later span loses the attribute.
+    AtomicInteger fetches = new AtomicInteger();
+    AtomicReference<Cluster> reported = new AtomicReference<>(Cluster.empty());
+    Metadata metadata = mock(Metadata.class);
+    when(metadata.fetch())
+        .thenAnswer(
+            invocation -> {
+              fetches.incrementAndGet();
+              return reported.get();
+            });
+    Consumer<?, ?> client = stubConsumer();
+    VirtualField<Consumer<?, ?>, KafkaClusterId> field = clusterIdField();
+    HolderWithMetadata holder = new HolderWithMetadata(metadata);
 
     int threads = 32;
     CountDownLatch start = new CountDownLatch(1);
@@ -206,7 +181,13 @@ class KafkaUtilTest {
             () -> {
               try {
                 start.await();
-                KafkaUtil.readClusterId(holder);
+                // The getClusterId() path, while the broker is still silent.
+                KafkaClusterId cached = field.get(client);
+                if (cached == null) {
+                  KafkaUtil.initializeClusterId(client, field, holder);
+                } else {
+                  KafkaUtil.readClusterId(cached);
+                }
               } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
               } finally {
@@ -220,8 +201,15 @@ class KafkaUtilTest {
       pool.shutdownNow();
     }
 
-    // The first span's two reads, and nothing more, for any number of threads.
-    assertThat(fetches.get()).isEqualTo(2);
+    // No thread can have invented an id while the broker reported none.
+    assertThat(field.get(client).clusterId()).isNull();
+    // One read per send at most, never a retry loop.
+    assertThat(fetches.get()).isLessThanOrEqualTo(threads);
+
+    reported.set(new Cluster("test-cluster", emptyList(), emptyList(), emptySet(), emptySet()));
+
+    assertThat(KafkaUtil.readClusterId(field.get(client))).isEqualTo("test-cluster");
+    assertThat(field.get(client).clusterId()).isEqualTo("test-cluster");
   }
 
   @Test
