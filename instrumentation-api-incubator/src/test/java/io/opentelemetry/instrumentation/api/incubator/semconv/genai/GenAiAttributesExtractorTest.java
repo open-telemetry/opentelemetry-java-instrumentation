@@ -15,6 +15,7 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAi
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static java.util.Collections.emptyList;
+import static org.mockito.Mockito.mock;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
@@ -22,8 +23,11 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import java.util.List;
@@ -41,16 +45,23 @@ class GenAiAttributesExtractorTest {
   private static final AttributeKey<List<String>> GEN_AI_REQUEST_STOP_SEQUENCES =
       stringArrayKey("gen_ai.request.stop_sequences");
 
-  @Test
-  void suppressesNestedGenAiInstrumenters() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void suppressesNestedGenAiInstrumenters(boolean mixedSpanKeys) {
     Instrumenter<Request, Response> outer =
         Instrumenter.<Request, Response>builder(OpenTelemetry.noop(), "outer", request -> "chat")
             .addAttributesExtractor(GenAiAttributesExtractor.create(new TestGetter()))
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
-    Instrumenter<Request, Response> inner =
+    InstrumenterBuilder<Request, Response> innerBuilder =
         Instrumenter.<Request, Response>builder(OpenTelemetry.noop(), "inner", request -> "chat")
-            .addAttributesExtractor(GenAiAttributesExtractor.create(new TestGetter()))
-            .buildInstrumenter(SpanKindExtractor.alwaysClient());
+            .addAttributesExtractor(GenAiAttributesExtractor.create(new TestGetter()));
+    if (mixedSpanKeys) {
+      @SuppressWarnings("unchecked")
+      RpcAttributesGetter<Request, Response> rpcGetter = mock(RpcAttributesGetter.class);
+      innerBuilder.addAttributesExtractor(RpcClientAttributesExtractor.create(rpcGetter));
+    }
+    Instrumenter<Request, Response> inner =
+        innerBuilder.buildInstrumenter(SpanKindExtractor.alwaysClient());
     Request request = new Request(false);
     Context context = outer.start(Context.root(), request);
 
@@ -60,6 +71,10 @@ class GenAiAttributesExtractorTest {
     assertThat(
             inner.shouldStart(
                 SpanKey.HTTP_CLIENT.storeInContext(Context.root(), Span.getInvalid()), request))
+        .isTrue();
+    assertThat(
+            inner.shouldStart(
+                SpanKey.RPC_CLIENT.storeInContext(Context.root(), Span.getInvalid()), request))
         .isTrue();
 
     outer.end(context, request, null, null);

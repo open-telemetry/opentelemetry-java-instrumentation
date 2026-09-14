@@ -154,6 +154,29 @@ class ChatModelTest {
   }
 
   @Test
+  void streamSetupFailurePreservesPublisherAndSubsequentInstrumentation() {
+    ChatResponse response = new ChatResponse(singletonList(generation(RESPONSE, "stop")));
+    chatModel.setStreamPublisher(Flux.just(response));
+    chatModel.setDefaultOptionsFailure(new IllegalStateException("default options failed"));
+
+    testing.runWithSpan(
+        "failed setup",
+        () -> assertThat(chatModel.stream(prompt()).blockLast()).isSameAs(response));
+
+    chatModel.setDefaultOptionsFailure(null);
+    testing.runWithSpan("stream parent", () -> chatModel.stream(prompt()).blockLast());
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("failed setup").hasKind(INTERNAL).hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("stream parent").hasKind(INTERNAL).hasNoParent(),
+                span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0))));
+  }
+
+  @Test
   void optionalResponseProcessingFailureStillEndsSpan() {
     ChatResponse response =
         response(

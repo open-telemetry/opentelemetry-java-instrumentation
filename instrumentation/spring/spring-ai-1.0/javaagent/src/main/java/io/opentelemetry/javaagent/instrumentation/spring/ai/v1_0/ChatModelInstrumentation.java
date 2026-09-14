@@ -122,6 +122,7 @@ class ChatModelInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class StreamAdvice {
     public static class StreamAdviceScope {
+      private static final Logger logger = Logger.getLogger(StreamAdviceScope.class.getName());
       private final CallDepth callDepth;
       private final boolean suppressed;
 
@@ -138,6 +139,18 @@ class ChatModelInstrumentation implements TypeInstrumentation {
 
       public boolean shouldSuppress() {
         return callDepth.decrementAndGet() > 0 || suppressed;
+      }
+
+      public static Flux<ChatResponse> wrap(
+          Flux<ChatResponse> publisher, Object chatModel, Prompt prompt) {
+        try {
+          return SpringAiStreamTracing.wrap(
+              publisher, SpringAiRequest.create(prompt, chatModel, true));
+        } catch (Throwable t) {
+          // Request setup calls application-provided getDefaultOptions(), which can fail.
+          logger.log(FINE, "Failed to wrap Spring AI stream publisher", t);
+          return publisher;
+        }
       }
     }
 
@@ -168,7 +181,7 @@ class ChatModelInstrumentation implements TypeInstrumentation {
       if (publisher == null) {
         return publisher;
       }
-      return SpringAiStreamTracing.wrap(publisher, SpringAiRequest.create(prompt, chatModel, true));
+      return StreamAdviceScope.wrap(publisher, chatModel, prompt);
     }
   }
 }
