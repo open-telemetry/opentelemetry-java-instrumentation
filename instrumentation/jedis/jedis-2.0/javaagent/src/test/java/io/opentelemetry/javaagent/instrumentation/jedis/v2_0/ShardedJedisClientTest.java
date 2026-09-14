@@ -159,5 +159,17 @@ class ShardedJedisClientTest {
                             equalTo(
                                 SERVER_PORT,
                                 emitStableDatabaseSemconv() ? null : (long) selectedPort))));
+
+    if (emitStableDatabaseSemconv()) {
+      testing.waitAndAssertMetrics(
+          "io.opentelemetry.jedis-2.0",
+          metric ->
+              metric
+                  .hasName("db.client.operation.duration")
+                  .hasHistogramSatisfying(
+                      histogram ->
+                          histogram.hasPointsSatisfying(
+                              point -> point.hasAttribute(SERVER_ADDRESS, configuredTarget))));
+    }
   }
 }
