@@ -17,9 +17,7 @@ import redis.clients.jedis.Transaction;
 
 public final class JedisPipelineContext {
   private static final ThreadLocal<Queable> currentBatch = new ThreadLocal<>();
-  private static final ThreadLocal<Boolean> inTransactionFraming = new ThreadLocal<>();
-  private static final ThreadLocal<JedisRequest> currentTransactionRequest = new ThreadLocal<>();
-  private static final ThreadLocal<JedisRequest> currentTransactionFramingRequest =
+  private static final ThreadLocal<TransactionFraming> currentTransactionFraming =
       new ThreadLocal<>();
   private static final VirtualField<Queable, BatchState> BATCH_STATE =
       VirtualField.find(Queable.class, BatchState.class);
@@ -38,19 +36,18 @@ public final class JedisPipelineContext {
   }
 
   public static void enterTransactionFraming() {
-    inTransactionFraming.set(Boolean.TRUE);
+    currentTransactionFraming.set(new TransactionFraming(null));
   }
 
   public static void enterTransactionFraming(JedisRequest request) {
-    enterTransactionFraming();
-    currentTransactionRequest.set(request);
+    currentTransactionFraming.set(new TransactionFraming(request));
   }
 
   public static void exitTransactionFraming(@Nullable Object transaction) {
     try {
-      JedisRequest request = currentTransactionFramingRequest.get();
-      if (request != null && transaction instanceof Queable) {
-        batchState((Queable) transaction).transactionFramingRequest = request;
+      TransactionFraming framing = currentTransactionFraming.get();
+      if (framing != null && framing.framingRequest != null && transaction instanceof Queable) {
+        batchState((Queable) transaction).transactionFramingRequest = framing.framingRequest;
       }
     } finally {
       clearTransactionFraming();
@@ -62,21 +59,22 @@ public final class JedisPipelineContext {
   }
 
   private static void clearTransactionFraming() {
-    inTransactionFraming.remove();
-    currentTransactionRequest.remove();
-    currentTransactionFramingRequest.remove();
+    currentTransactionFraming.remove();
   }
 
   public static boolean inTransactionFraming() {
-    return Boolean.TRUE.equals(inTransactionFraming.get());
+    return currentTransactionFraming.get() != null;
   }
 
   public static void captureTransactionFramingPeer(JedisRequest request) {
-    JedisRequest transactionRequest = currentTransactionRequest.get();
-    if (transactionRequest != null) {
-      transactionRequest.useLaterPeerAddress(request);
-    } else if (inTransactionFraming()) {
-      currentTransactionFramingRequest.set(request);
+    TransactionFraming framing = currentTransactionFraming.get();
+    if (framing == null) {
+      return;
+    }
+    if (framing.transactionRequest != null) {
+      framing.transactionRequest.useLaterPeerAddress(request);
+    } else {
+      framing.framingRequest = request;
     }
   }
 
@@ -142,6 +140,15 @@ public final class JedisPipelineContext {
   }
 
   private JedisPipelineContext() {}
+
+  private static final class TransactionFraming {
+    @Nullable private final JedisRequest transactionRequest;
+    @Nullable private JedisRequest framingRequest;
+
+    private TransactionFraming(@Nullable JedisRequest transactionRequest) {
+      this.transactionRequest = transactionRequest;
+    }
+  }
 
   private static final class BatchState {
     private List<JedisRequest> requests = new ArrayList<>();
