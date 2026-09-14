@@ -28,7 +28,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.List;
-import java.util.Optional;
 import java.util.logging.Logger;
 
 /** An {@link AgentListener} that enables JMX metrics during agent startup. */
@@ -132,9 +131,11 @@ public class JmxMetricInsightInstaller implements AgentListener {
     }
 
     // include/exclude metrics by name
-    Optional.ofNullable(
-            SelectorConfig.resolve(config, INSTRUMENTATION_NAME, "metrics", STABLE, true))
-        .ifPresent(jmx::setMetrics);
+    IncludeExclude metrics =
+        SelectorConfig.resolve(config, INSTRUMENTATION_NAME, "metrics", STABLE);
+    if (metrics != null) {
+      jmx.setMetrics(metrics);
+    }
 
     jmx.build().start();
   }

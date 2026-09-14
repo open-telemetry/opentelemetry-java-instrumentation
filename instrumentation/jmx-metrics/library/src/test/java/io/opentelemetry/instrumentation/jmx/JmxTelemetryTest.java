@@ -14,6 +14,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.jmx.internal.InternalMetricsDefinitions;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -22,9 +25,15 @@ import java.time.Duration;
 import java.util.Collection;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
 class JmxTelemetryTest {
+
+  @RegisterExtension
+  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @Test
   void createDefault() {

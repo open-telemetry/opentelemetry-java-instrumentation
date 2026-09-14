@@ -15,6 +15,7 @@ import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
@@ -66,11 +67,20 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
 
   private final boolean querySanitizationEnabled;
   private final int maxNormalizedQueryLength;
+  @Nullable private final MongoConnectionPeerResolver connectionPeerResolver;
   @Nullable private final JsonWriterSettings jsonWriterSettings;
 
   MongoDbAttributesGetter(boolean querySanitizationEnabled, int maxNormalizedQueryLength) {
+    this(querySanitizationEnabled, maxNormalizedQueryLength, null);
+  }
+
+  MongoDbAttributesGetter(
+      boolean querySanitizationEnabled,
+      int maxNormalizedQueryLength,
+      @Nullable MongoConnectionPeerResolver connectionPeerResolver) {
     this.querySanitizationEnabled = querySanitizationEnabled;
     this.maxNormalizedQueryLength = maxNormalizedQueryLength;
+    this.connectionPeerResolver = connectionPeerResolver;
     this.jsonWriterSettings = createJsonWriterSettings(maxNormalizedQueryLength);
   }
 
@@ -157,9 +167,43 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
   }
 
   @Nullable
+  @Override
+  public String getNetworkPeerAddress(CommandStartedEvent event, @Nullable Void response) {
+    MongoNetworkPeer peer = getNetworkPeer(event);
+    return peer == null ? null : peer.getAddress();
+  }
+
+  @Nullable
+  @Override
+  public Integer getNetworkPeerPort(CommandStartedEvent event, @Nullable Void response) {
+    MongoNetworkPeer peer = getNetworkPeer(event);
+    return peer == null ? null : peer.getPort();
+  }
+
+  @Nullable
   private static ServerAddress selectedServerAddress(CommandStartedEvent event) {
     ConnectionDescription connectionDescription = event.getConnectionDescription();
     return connectionDescription == null ? null : connectionDescription.getServerAddress();
+  }
+
+  @Nullable
+  @Override
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
+      CommandStartedEvent event, @Nullable Void unused) {
+    MongoNetworkPeer peer = getNetworkPeer(event);
+    return peer == null ? null : peer.getInetSocketAddress();
+  }
+
+  @Nullable
+  private MongoNetworkPeer getNetworkPeer(CommandStartedEvent event) {
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
+    ConnectionDescription connectionDescription = event.getConnectionDescription();
+    if (connectionDescription == null || connectionPeerResolver == null) {
+      return null;
+    }
+    return connectionPeerResolver.resolve(connectionDescription);
   }
 
   @Nullable

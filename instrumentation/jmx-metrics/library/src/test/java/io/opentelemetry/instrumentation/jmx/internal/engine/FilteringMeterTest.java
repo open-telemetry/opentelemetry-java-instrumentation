@@ -11,16 +11,20 @@ import io.opentelemetry.api.metrics.BatchCallback;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 class FilteringMeterTest {
 
   private static final IncludeExclude INCLUDE_EXCLUDE =
       IncludeExclude.builder().setExcluded("excluded*").build();
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private InMemoryMetricReader metricReader;
   private FilteringMeter meter;
@@ -30,6 +34,7 @@ class FilteringMeterTest {
     metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
     Meter sdkMeter = meterProvider.get("test");
     meter = new FilteringMeter(sdkMeter, INCLUDE_EXCLUDE);
   }

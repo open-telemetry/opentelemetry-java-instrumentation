@@ -13,6 +13,7 @@ muzzle {
 
 dependencies {
   implementation(project(":instrumentation:couchbase:couchbase-common-3.0:javaagent"))
+  implementation(project(":instrumentation:couchbase:couchbase-common-3.1:javaagent"))
   compileOnly(project(":muzzle")) // For @NoMuzzle
 
   // 3.1.4 (instead of 3.1.0) needed for test stability and for compatibility with server versions that run on M1 processors

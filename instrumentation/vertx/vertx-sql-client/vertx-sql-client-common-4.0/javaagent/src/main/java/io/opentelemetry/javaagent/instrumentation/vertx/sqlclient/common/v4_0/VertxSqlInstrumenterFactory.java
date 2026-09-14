@@ -16,19 +16,18 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.Servi
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 
 public class VertxSqlInstrumenterFactory {
 
   public static Instrumenter<VertxSqlClientRequest, Void> createInstrumenter(
       String instrumentationName) {
     VertxSqlClientAttributesGetter attributesGetter = new VertxSqlClientAttributesGetter();
-    SpanNameExtractor<VertxSqlClientRequest> spanNameExtractor =
-        DbClientSpanNameExtractor.create(attributesGetter);
 
     InstrumenterBuilder<VertxSqlClientRequest, Void> builder =
         Instrumenter.<VertxSqlClientRequest, Void>builder(
-                GlobalOpenTelemetry.get(), instrumentationName, spanNameExtractor)
+                GlobalOpenTelemetry.get(),
+                instrumentationName,
+                DbClientSpanNameExtractor.create(attributesGetter))
             .addAttributesExtractor(
                 SqlClientAttributesExtractor.builder(attributesGetter)
                     .setQuerySanitizationEnabled(
