@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -72,7 +73,8 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) @Nullable String masterName) {
       JedisConfiguredTargets.setSentinelPoolTarget(
           pool, JedisServerTarget.ofSentinels(masterName, sentinels));
-      return JedisConfiguredTargets.openSentinelPoolTargetScope(pool);
+      Context context = JedisConfiguredTargets.sentinelPoolTargetContext(pool);
+      return context != null ? context.makeCurrent() : null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -89,7 +91,8 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.This Pool<?> pool) {
-      return JedisConfiguredTargets.openSentinelPoolTargetScope(pool);
+      Context context = JedisConfiguredTargets.sentinelPoolTargetContext(pool);
+      return context != null ? context.makeCurrent() : null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -106,7 +109,8 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.FieldValue("this$0") Pool<?> pool) {
-      return JedisConfiguredTargets.openSentinelPoolTargetScope(pool);
+      Context context = JedisConfiguredTargets.sentinelPoolTargetContext(pool);
+      return context != null ? context.makeCurrent() : null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

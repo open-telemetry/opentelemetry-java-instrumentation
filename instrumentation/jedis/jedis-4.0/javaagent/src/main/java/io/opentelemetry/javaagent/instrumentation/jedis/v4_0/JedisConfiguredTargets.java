@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
@@ -74,29 +73,29 @@ public class JedisConfiguredTargets {
   }
 
   @Nullable
-  public static Scope openProviderTargetScope(Object provider) {
+  public static Context providerTargetContext(Object provider) {
     ConfiguredTarget configuredTarget = getProviderTarget(provider);
-    return configuredTarget != null ? openConfiguredTargetScope(configuredTarget.target) : null;
+    return configuredTarget != null ? configuredTargetContext(configuredTarget) : null;
   }
 
   @Nullable
-  public static Scope openTopologyTargetScope(JedisClusterInfoCache topologyOwner) {
+  public static Context topologyTargetContext(JedisClusterInfoCache topologyOwner) {
     ConfiguredTarget configuredTarget = TOPOLOGY_CONFIGURED_TARGET.get(topologyOwner);
-    return configuredTarget != null ? openConfiguredTargetScope(configuredTarget.target) : null;
+    return configuredTarget != null ? configuredTargetContext(configuredTarget) : null;
   }
 
   @Nullable
-  public static Scope openSentinelPoolTargetScope(Pool<?> pool) {
+  public static Context sentinelPoolTargetContext(Pool<?> pool) {
     ConfiguredTarget configuredTarget = SENTINEL_POOL_CONFIGURED_TARGET.get(pool);
-    return configuredTarget != null ? openConfiguredTargetScope(configuredTarget.target) : null;
+    return configuredTarget != null ? configuredTargetContext(configuredTarget) : null;
   }
 
-  public static Scope openConfiguredTargetScope(@Nullable RedisServerTarget target) {
-    return openConfiguredTargetScope(ConfiguredTarget.create(target));
+  public static Context configuredTargetContext(@Nullable RedisServerTarget target) {
+    return configuredTargetContext(ConfiguredTarget.create(target));
   }
 
-  private static Scope openConfiguredTargetScope(ConfiguredTarget configuredTarget) {
-    return Context.current().with(CURRENT_CONFIGURED_TARGET, configuredTarget).makeCurrent();
+  private static Context configuredTargetContext(ConfiguredTarget configuredTarget) {
+    return Context.current().with(CURRENT_CONFIGURED_TARGET, configuredTarget);
   }
 
   @Nullable
