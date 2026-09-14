@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
 import io.opentelemetry.context.Context;
 
-public final class PulsarMessageState {
+final class PulsarMessageState {
   private final Context processParentContext;
   private final boolean consumedMessagesRecorded;
 
