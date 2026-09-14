@@ -9,7 +9,6 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceVersionSupport.configuredTargetsSupported;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -41,12 +40,13 @@ import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.async.RedisAsyncCommands;
 import io.lettuce.core.api.sync.RedisCommands;
+import io.lettuce.core.codec.RedisCodec;
 import io.lettuce.core.codec.StringCodec;
 import io.lettuce.core.masterslave.MasterSlave;
-import io.lettuce.core.masterslave.StatefulRedisMasterSlaveConnection;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
@@ -224,11 +224,11 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
     List<RedisURI> redisUris =
         asList(RedisURI.create(embeddedDbUri), RedisURI.create(embeddedDbUri));
     String configuredTarget = host + ":" + port + "," + host + ":" + port;
-    StatefulRedisMasterSlaveConnection<String, String> masterSlaveConnection =
-        MasterSlave.connect(redisClient, StringCodec.UTF8, redisUris);
+    StatefulRedisConnection<String, String> masterSlaveConnection = connectMasterReplica(redisUris);
     cleanup.deferCleanup(masterSlaveConnection);
 
-    testing.waitForTraces(2);
+    testing.waitForTraces(
+        masterSlaveConnection.getClass().getName().contains(".masterreplica.") ? 5 : 4);
     testing.clearData();
 
     assertThat(masterSlaveConnection.sync().set("MASTER_SLAVE_COMMAND_KEY", "value"))
@@ -247,25 +247,15 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "SET "
-                                    + (configuredTargetsSupported()
-                                        ? configuredTarget
-                                        : host + ":" + port)
-                                : "SET")
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() && configuredTargetsSupported()
-                                    ? configuredTarget
-                                    : host),
+                                emitStableDatabaseSemconv() ? configuredTarget : host),
                             equalTo(
                                 SERVER_PORT,
-                                emitStableDatabaseSemconv() && configuredTargetsSupported()
-                                    ? null
-                                    : Long.valueOf(port)),
+                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
                             equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
                             equalTo(
                                 NETWORK_PEER_PORT,
@@ -279,23 +269,16 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "PIPELINE SET "
-                                    + (configuredTargetsSupported()
-                                        ? configuredTarget
-                                        : host + ":" + port)
+                                ? "PIPELINE SET " + configuredTarget
                                 : "PIPELINE SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() && configuredTargetsSupported()
-                                    ? configuredTarget
-                                    : host),
+                                emitStableDatabaseSemconv() ? configuredTarget : host),
                             equalTo(
                                 SERVER_PORT,
-                                emitStableDatabaseSemconv() && configuredTargetsSupported()
-                                    ? null
-                                    : Long.valueOf(port)),
+                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
                             equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
                             equalTo(
                                 NETWORK_PEER_PORT,
@@ -311,6 +294,23 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                             equalTo(
                                 DB_OPERATION_BATCH_SIZE,
                                 emitStableDatabaseSemconv() ? Long.valueOf(2) : null))));
+  }
+
+  @SuppressWarnings("unchecked")
+  private StatefulRedisConnection<String, String> connectMasterReplica(List<RedisURI> redisUris)
+      throws ReflectiveOperationException {
+    try {
+      // This shared test source compiles against 5.0, before the MasterReplica iterable API.
+      Class<?> masterReplica =
+          Class.forName(
+              "io.lettuce.core.masterreplica.MasterReplica", false, getClass().getClassLoader());
+      Method connect =
+          masterReplica.getMethod("connect", RedisClient.class, RedisCodec.class, Iterable.class);
+      return (StatefulRedisConnection<String, String>)
+          connect.invoke(null, redisClient, StringCodec.UTF8, redisUris);
+    } catch (ClassNotFoundException | NoSuchMethodException ignored) {
+      return MasterSlave.connect(redisClient, StringCodec.UTF8, redisUris);
+    }
   }
 
   @Test
