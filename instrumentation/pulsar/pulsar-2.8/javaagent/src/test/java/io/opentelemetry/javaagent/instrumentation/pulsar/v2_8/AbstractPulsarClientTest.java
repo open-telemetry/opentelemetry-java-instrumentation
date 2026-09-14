@@ -426,9 +426,9 @@ abstract class AbstractPulsarClientTest {
     consumer =
         client.newConsumer(Schema.STRING).subscriptionName("test_sub").topic(topic).subscribe();
 
+    consumer.close();
     CompletableFuture<Messages<String>> receive =
         testing.runWithSpan("receive-parent", consumer::batchReceiveAsync);
-    consumer.close();
 
     assertThatThrownBy(() -> receive.get(1, MINUTES))
         .hasCauseInstanceOf(PulsarClientException.class);
