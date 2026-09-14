@@ -97,6 +97,13 @@ class JedisServerTargetsTest {
   void noSentinels() {
     assertThat(JedisServerTargets.ofSentinels(null, null)).isNull();
     assertThat(JedisServerTargets.ofSentinels(null, sentinels())).isNull();
+    assertThat(JedisServerTargets.ofSentinels("mymaster", sentinels())).isNull();
+  }
+
+  @Test
+  void sentinelListWithOnlyUnrepresentableMembersFailsClosed() {
+    assertThat(JedisServerTargets.ofSentinels("mymaster", sentinels("redis://", "://sentinel")))
+        .isNull();
   }
 
   @Test
