@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.M
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.SPAN;
 
 import io.opentelemetry.api.baggage.Baggage;
+import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
@@ -49,7 +50,8 @@ public final class KafkaClientsConsumerProcessTracing {
   }
 
   public static Context withoutFrameworkProcessSuppression(Context context) {
-    if (!Boolean.TRUE.equals(context.get(FRAMEWORK_PROCESS_KEY))) {
+    if (!Boolean.TRUE.equals(context.get(FRAMEWORK_PROCESS_KEY))
+        || InstrumentationUtil.shouldSuppressInstrumentation(context)) {
       return context;
     }
 
