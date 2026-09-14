@@ -68,7 +68,7 @@ class PartitionGroupInstrumentation implements TypeInstrumentation {
         return;
       }
       Context context = instrumenter().start(parentContext, request);
-      context = markFrameworkProcess(context, parentContext);
+      context = markFrameworkProcess(context);
       stateHolder.set(request, context, context.makeCurrent());
     }
   }
