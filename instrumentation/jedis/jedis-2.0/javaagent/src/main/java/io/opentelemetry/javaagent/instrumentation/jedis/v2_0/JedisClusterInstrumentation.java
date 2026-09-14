@@ -87,14 +87,11 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
         @Advice.This JedisClusterConnectionHandler handler,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable Scope scope) {
-      try {
-        if (throwable != null) {
-          JedisClusterTargetAccessor.setTarget(handler, null);
-        }
-      } finally {
-        if (scope != null) {
-          scope.close();
-        }
+      if (scope != null) {
+        scope.close();
+      }
+      if (throwable != null) {
+        JedisClusterTargetAccessor.setTarget(handler, null);
       }
     }
   }
