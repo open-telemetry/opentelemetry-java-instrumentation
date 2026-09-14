@@ -12,8 +12,6 @@ concurrency:
 jobs:
   draft:
     if: github.repository == 'open-telemetry/opentelemetry-java-instrumentation'
-    permissions:
-      contents: write  # for git push to PR branch
     runs-on: ubuntu-latest
     environment: protected
     steps:
@@ -22,8 +20,7 @@ jobs:
           # need full history and tags so the release-notes script can resolve
           # the previous release tag (e.g. v2.27.0) when computing the commit range
           fetch-depth: 0
-          # zizmor: ignore[artipacked] Credentials are required by the branch push below.
-          persist-credentials: true
+          persist-credentials: false
 
       - name: Install Copilot CLI
         run: |
@@ -50,8 +47,9 @@ jobs:
       - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         id: otelbot-token
         with:
-          client-id: ${{ vars.OTELBOT_CLIENT_ID }}
-          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+          client-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_CLIENT_ID }}
+          private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
+          permission-contents: write
           permission-pull-requests: write
 
       - name: Create pull request against main
@@ -71,6 +69,7 @@ jobs:
           )
           branch="otelbot/draft-release-notes-${GITHUB_RUN_ID}"
 
+          gh auth setup-git
           git checkout -b $branch
           git add CHANGELOG.md
           git commit -m "$message"
