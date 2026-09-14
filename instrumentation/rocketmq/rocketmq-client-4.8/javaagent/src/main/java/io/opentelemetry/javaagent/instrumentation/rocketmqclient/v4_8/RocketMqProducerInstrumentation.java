@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v4_8;
 
+import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v4_8.RocketMqSingletons.batchSendHelper;
 import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v4_8.RocketMqSingletons.sendMessageHook;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -64,12 +65,12 @@ class RocketMqProducerInstrumentation implements TypeInstrumentation {
   public static class BatchSendAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object onEnter(@Advice.This Object producer) {
-      return RocketMqSingletons.batchSendHelper().batchSendStart(producer, false);
+      return batchSendHelper().batchSendStart(producer, false);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter Object state, @Advice.Thrown Throwable throwable) {
-      RocketMqSingletons.batchSendHelper().batchSendEnd(state, throwable);
+      batchSendHelper().batchSendEnd(state, throwable);
     }
   }
 
@@ -79,15 +80,14 @@ class RocketMqProducerInstrumentation implements TypeInstrumentation {
     public static Object onEnter(
         @Advice.This Object producer,
         @Advice.Argument(value = 1, readOnly = false) SendCallback callback) {
-      Object state =
-          RocketMqSingletons.batchSendHelper().batchSendStart(producer, callback != null);
-      callback = RocketMqSingletons.batchSendHelper().wrap(callback, state);
+      Object state = batchSendHelper().batchSendStart(producer, callback != null);
+      callback = batchSendHelper().wrap(callback, state);
       return state;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter Object state, @Advice.Thrown Throwable throwable) {
-      RocketMqSingletons.batchSendHelper().batchSendEnd(state, throwable);
+      batchSendHelper().batchSendEnd(state, throwable);
     }
   }
 
@@ -97,15 +97,14 @@ class RocketMqProducerInstrumentation implements TypeInstrumentation {
     public static Object onEnter(
         @Advice.This Object producer,
         @Advice.Argument(value = 2, readOnly = false) SendCallback callback) {
-      Object state =
-          RocketMqSingletons.batchSendHelper().batchSendStart(producer, callback != null);
-      callback = RocketMqSingletons.batchSendHelper().wrap(callback, state);
+      Object state = batchSendHelper().batchSendStart(producer, callback != null);
+      callback = batchSendHelper().wrap(callback, state);
       return state;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter Object state, @Advice.Thrown Throwable throwable) {
-      RocketMqSingletons.batchSendHelper().batchSendEnd(state, throwable);
+      batchSendHelper().batchSendEnd(state, throwable);
     }
   }
 }
