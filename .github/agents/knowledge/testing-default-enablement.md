@@ -69,6 +69,10 @@ testing.waitAndAssertTraces(
     trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent")));
 ```
 
+Wait for an asynchronous operation to finish inside the `runWithSpan(...)` callback. Otherwise, the
+parent can be exported first, and the exact assertion can pass before an unexpected instrumentation
+span arrives.
+
 Do not replace this with an immediate `testing.spans().isEmpty()` assertion. Export is asynchronous,
 so an unexpected instrumentation span could arrive after the assertion. The parent span gives
 `waitAndAssertTraces(...)` a completed trace to await, and `hasSpansSatisfyingExactly(...)` rejects
