@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
@@ -93,12 +94,19 @@ public class JedisSingletons {
     POOL_TARGET.set(pool, null);
   }
 
+  @Nullable
   public static Context configuredTargetContext(@Nullable RedisServerTarget target) {
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
     return Context.current().with(CURRENT_CONFIGURED_TARGET, new ConfiguredTarget(target));
   }
 
   @Nullable
   public static Context configuredPoolTargetContext(Pool<?> pool) {
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
     ConfiguredTarget configuredTarget = POOL_TARGET.get(pool);
     return configuredTarget == null
         ? null

@@ -7,3 +7,7 @@ dependencies {
   testImplementation(project(":instrumentation:jedis:jedis-2.0:javaagent"))
   testImplementation("redis.clients:jedis:2.0.0")
 }
+
+tasks.test {
+  jvmArgs("-Dotel.semconv-stability.opt-in=database")
+}
