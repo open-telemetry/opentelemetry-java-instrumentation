@@ -173,7 +173,7 @@ class JedisNetworkAttributesGetterTest {
   }
 
   @Test
-  void clusterContextIgnoresConnectionAcquisitionCommands() {
+  void clusterContextIgnoresCommandsOutsideExecute() {
     assumeTrue(emitStableDatabaseSemconv());
 
     JedisClusterCommandContext commandContext = JedisClusterCommandContext.start();
