@@ -6,8 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONNECTION_STATE;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_STATE;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.connectInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.nameEndsWith;
@@ -95,12 +93,8 @@ class LettuceClientInstrumentation implements TypeInstrumentation {
       String host = redisUri.getHost();
       InetSocketAddress address =
           host == null ? null : InetSocketAddress.createUnresolved(host, redisUri.getPort());
-      LettuceConnectionState state =
-          new LettuceConnectionState(address, redisUri.getDatabase(), target);
-      ENDPOINT_STATE.set(endpoint, state);
-      if (connection != null) {
-        CONNECTION_STATE.set(connection, state);
-      }
+      LettuceConnectionState.captureEndpointAndConnection(
+          endpoint, connection, address, redisUri.getDatabase(), target);
     }
   }
 

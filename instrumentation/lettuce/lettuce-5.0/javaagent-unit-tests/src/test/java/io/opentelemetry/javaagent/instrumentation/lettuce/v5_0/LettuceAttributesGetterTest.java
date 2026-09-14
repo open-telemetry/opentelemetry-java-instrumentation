@@ -34,14 +34,20 @@ class LettuceAttributesGetterTest {
   @Test
   void commandWithoutTargetUsesSelectedAddressOnlyForLegacySemconv() {
     RedisCommand<String, String, String> command = command();
-    LettuceSingletons.COMMAND_STATE.set(
-        command, new LettuceConnectionState(SELECTED_ADDRESS, null, null));
+    DefaultEndpoint endpoint = new DefaultEndpoint(ClientOptions.create());
+    try {
+      LettuceConnectionState.captureEndpoint(endpoint, SELECTED_ADDRESS, null, null);
+      LettuceConnectionState.copy(endpoint, command, null);
 
-    LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
+      LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
 
-    assertThat(getter.getServerAddress(command))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : "selected-node");
-    assertThat(getter.getServerPort(command)).isEqualTo(emitStableDatabaseSemconv() ? null : 6379);
+      assertThat(getter.getServerAddress(command))
+          .isEqualTo(emitStableDatabaseSemconv() ? null : "selected-node");
+      assertThat(getter.getServerPort(command))
+          .isEqualTo(emitStableDatabaseSemconv() ? null : 6379);
+    } finally {
+      endpoint.close();
+    }
   }
 
   @Test
@@ -100,11 +106,10 @@ class LettuceAttributesGetterTest {
           LettuceClusterClientInstrumentation.AttachEndpointAdvice.onEnter(
               client, new Object(), endpoint, selectedRedisUri, addressSupplier);
 
-      assertThat(LettuceSingletons.ENDPOINT_STATE.get(endpoint).serverTarget).isNull();
+      assertThat(LettuceConnectionState.serverTarget(endpoint)).isNull();
       assertThat(wrappedAddressSource).isInstanceOf(Supplier.class);
       assertThat(((Supplier<?>) wrappedAddressSource).get()).isEqualTo(SELECTED_ADDRESS);
-      assertThat(LettuceSingletons.ENDPOINT_STATE.get(endpoint).serverAddress)
-          .isEqualTo(SELECTED_ADDRESS);
+      assertThat(LettuceConnectionState.serverAddress(endpoint)).isEqualTo(SELECTED_ADDRESS);
     } finally {
       endpoint.close();
       client.shutdown(0, 15, SECONDS);
