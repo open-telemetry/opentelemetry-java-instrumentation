@@ -56,10 +56,9 @@ public class JedisSingletons {
 
   public static void captureConnectionTarget(Connection connection) {
     RedisServerTarget target = configuredTarget.get();
-    if (target == null) {
-      target = RedisServerTarget.ofHostAndPort(connection.getHost(), connection.getPort());
+    if (target != null) {
+      CONNECTION_TARGET.set(connection, target);
     }
-    CONNECTION_TARGET.set(connection, target);
   }
 
   @Nullable
@@ -79,7 +78,10 @@ public class JedisSingletons {
     if (target != null) {
       return target;
     }
-    return CONNECTION_TARGET.get(connection);
+    target = CONNECTION_TARGET.get(connection);
+    return target != null
+        ? target
+        : RedisServerTarget.ofHostAndPort(connection.getHost(), connection.getPort());
   }
 
   @Nullable

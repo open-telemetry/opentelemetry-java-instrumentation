@@ -60,14 +60,16 @@ class JedisSingletonsTest {
   }
 
   @Test
-  void captureConnectionTargetFallsBackToHostAndPortWhenNoScopeIsActive() {
+  void connectionTargetFallsBackToCurrentHostAndPortWhenNoScopeIsActive() {
     Connection connection = new Connection("direct", 6380);
 
     JedisSingletons.captureConnectionTarget(connection);
+    connection.setHost("reconfigured");
+    connection.setPort(6381);
 
     RedisServerTarget target = JedisSingletons.connectionTarget(connection);
-    assertThat(target.getAddress()).isEqualTo("direct");
-    assertThat(target.getPort()).isEqualTo(6380);
+    assertThat(target.getAddress()).isEqualTo("reconfigured");
+    assertThat(target.getPort()).isEqualTo(6381);
   }
 
   @Test
