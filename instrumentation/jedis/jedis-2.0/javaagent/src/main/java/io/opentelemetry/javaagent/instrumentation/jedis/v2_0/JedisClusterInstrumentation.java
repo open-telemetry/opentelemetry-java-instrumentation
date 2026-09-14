@@ -56,6 +56,7 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
         named("renewSlotCache"), getClass().getName() + "$RenewSlotCacheAdvice");
   }
 
+  // Cluster types are absent before Jedis 2.3, so their advice references are excluded from Muzzle.
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
