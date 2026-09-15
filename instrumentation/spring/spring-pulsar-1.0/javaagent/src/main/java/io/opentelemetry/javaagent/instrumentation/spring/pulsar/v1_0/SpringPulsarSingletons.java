@@ -69,8 +69,8 @@ public class SpringPulsarSingletons {
         messagingReceiveInstrumentationEnabled);
   }
 
-  public static Instrumenter<Message<?>, Void> instrumenter(boolean receiveTelemetryRecorded) {
-    return receiveTelemetryRecorded ? instrumenter : instrumenterWithConsumedMessages;
+  public static Instrumenter<Message<?>, Void> instrumenter(boolean consumedMessagesRecorded) {
+    return consumedMessagesRecorded ? instrumenter : instrumenterWithConsumedMessages;
   }
 
   private SpringPulsarSingletons() {}
