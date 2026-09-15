@@ -19,6 +19,8 @@ to be reentrant. Prefer the allocation-free `ScopedThreadLocal`, and carry the v
 `set` through `@Advice.Enter`:
 
 ```java
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadLocal;
+
 private static final ScopedThreadLocal<Request> currentRequestThreadLocal = new ScopedThreadLocal<>();
 
 @Advice.OnMethodEnter(suppress = Throwable.class)
