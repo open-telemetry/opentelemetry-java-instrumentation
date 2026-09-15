@@ -7,7 +7,8 @@ muzzle {
   pass {
     group.set("com.google.cloud")
     module.set("spring-cloud-gcp-pubsub")
-    versions.set("[5.0.0,)")
+    // the instrumented classes are present since the first com.google.cloud release (2.0.0)
+    versions.set("[2.0.0,)")
     assertInverse.set(true)
   }
 }
@@ -22,11 +23,11 @@ dependencies {
 
   testImplementation("org.testcontainers:testcontainers-gcloud")
 
-  latestDepTestLibrary("com.google.cloud:spring-cloud-gcp-pubsub:5.+")
-  latestDepTestLibrary("com.google.cloud:spring-cloud-gcp-starter-pubsub:5.+")
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter:3.+")
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:3.+")
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-integration:3.+")
+  latestDepTestLibrary("com.google.cloud:spring-cloud-gcp-pubsub:5.+") // documented limitation
+  latestDepTestLibrary("com.google.cloud:spring-cloud-gcp-starter-pubsub:5.+") // documented limitation
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter:3.+") // documented limitation
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:3.+") // documented limitation
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-integration:3.+") // documented limitation
 }
 
 otelJava {
@@ -60,5 +61,12 @@ tasks {
 
   check {
     dependsOn(testMessagingPreview, testBothSemconv)
+  }
+
+  if (otelProps.denyUnsafe) {
+    // the gRPC/GAX stack backing the Pub/Sub emulator used in the tests uses sun.misc.Unsafe
+    withType<Test>().configureEach {
+      enabled = false
+    }
   }
 }
