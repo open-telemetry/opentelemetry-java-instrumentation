@@ -37,7 +37,7 @@ jobs:
                              | sed 's/^v//')
 
           matches=$(gh pr list \
-                        --author app/otelbot \
+                        --head "otelbot/update-opentelemetry-sdk-to-${latest_version}" \
                         --state open \
                         --search "in:title \"Update the OpenTelemetry SDK version to $latest_version\"")
           if [ ! -z "$matches" ]
@@ -50,8 +50,6 @@ jobs:
           echo "already-opened=$already_opened" >> $GITHUB_OUTPUT
 
   update-otel-sdk:
-    permissions:
-      contents: write  # for git push to PR branch
     runs-on: ubuntu-latest
     if: |
       needs.check-versions.outputs.current-version != needs.check-versions.outputs.latest-version &&
@@ -61,8 +59,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # zizmor: ignore[artipacked] Credentials are required by the branch push below.
-          persist-credentials: true
+          persist-credentials: false
 
       - name: Update version
         env:
@@ -95,8 +92,9 @@ jobs:
       - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         id: otelbot-token
         with:
-          client-id: ${{ vars.OTELBOT_CLIENT_ID }}
-          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+          client-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_CLIENT_ID }}
+          private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
+          permission-contents: write
           permission-pull-requests: write
 
       - name: Create pull request against main
@@ -110,6 +108,7 @@ jobs:
           body="Update the OpenTelemetry SDK version to \`$VERSION\`."
           branch="otelbot/update-opentelemetry-sdk-to-${VERSION}"
 
+          gh auth setup-git
           git checkout -b $branch
           git add -u
           git add licenses
