@@ -12,7 +12,9 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.QueryInfoScope;
 import io.vertx.sqlclient.internal.SqlClientBase;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -48,26 +50,40 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class QueryAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static CallDepth onEnter(@Advice.This SqlClientBase sqlClientBase) {
+    public static QueryAdviceState onEnter(@Advice.This SqlClientBase sqlClientBase) {
       CallDepth callDepth = CallDepth.forClass(SqlClientBase.class);
       if (callDepth.getAndIncrement() > 0) {
-        return callDepth;
+        return new QueryAdviceState(callDepth, null);
       }
 
-      VertxSqlClientSingletons.setClientInfo(VertxSqlClientSingletons.getClientInfo(sqlClientBase));
-      VertxSqlClientSingletons.setQuerySupplier(
-          VertxSqlClientSingletons.getClientSupplier(sqlClientBase));
-      return callDepth;
+      QueryInfoScope scope =
+          VertxSqlClientSingletons.enterQueryInfo(
+              VertxSqlClientSingletons.getClientInfo(sqlClientBase),
+              VertxSqlClientSingletons.getClientSupplier(sqlClientBase));
+      return new QueryAdviceState(callDepth, scope);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter CallDepth callDepth) {
-      if (callDepth.decrementAndGet() > 0) {
-        return;
+    public static void onExit(@Advice.Enter @Nullable QueryAdviceState state) {
+      if (state != null) {
+        state.close();
+      }
+    }
+
+    public static final class QueryAdviceState {
+      private final CallDepth callDepth;
+      @Nullable private final QueryInfoScope scope;
+
+      public QueryAdviceState(CallDepth callDepth, @Nullable QueryInfoScope scope) {
+        this.callDepth = callDepth;
+        this.scope = scope;
       }
 
-      VertxSqlClientSingletons.setClientInfo(null);
-      VertxSqlClientSingletons.setQuerySupplier(null);
+      public void close() {
+        if (callDepth.decrementAndGet() == 0 && scope != null) {
+          scope.close();
+        }
+      }
     }
   }
 }
