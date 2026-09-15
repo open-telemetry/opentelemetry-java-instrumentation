@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import javax.annotation.Nullable;
 
 /**
@@ -18,7 +19,7 @@ import javax.annotation.Nullable;
  * under the legacy semantic conventions so that their pre-v1.43 suppression behavior is preserved.
  */
 final class SpanKeyOmittingAttributesExtractor<REQUEST, RESPONSE>
-    implements AttributesExtractor<REQUEST, RESPONSE> {
+    implements AttributesExtractor<REQUEST, RESPONSE>, SchemaUrlProvider {
 
   private final AttributesExtractor<REQUEST, RESPONSE> delegate;
 
@@ -39,5 +40,13 @@ final class SpanKeyOmittingAttributesExtractor<REQUEST, RESPONSE>
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
     delegate.onEnd(attributes, context, request, response, error);
+  }
+
+  @Nullable
+  @Override
+  public String internalGetSchemaUrl() {
+    return delegate instanceof SchemaUrlProvider
+        ? ((SchemaUrlProvider) delegate).internalGetSchemaUrl()
+        : null;
   }
 }
