@@ -1,0 +1,17 @@
+[
+  {
+    "command": "./gradlew :instrumentation:resilience4j-circuitbreaker-2.0:javaagent:check",
+    "status": "passed",
+    "detail": "The module check, including tests and formatting checks, completed successfully."
+  },
+  {
+    "command": "GitHub Actions run 35016476817: Gradle wrapper validation",
+    "status": "passed",
+    "detail": "The hosted workflow passed at fix commit 7f8a3828b97b862568c2b025cdb5208138575c52."
+  },
+  {
+    "command": "parallel_validation: CodeQL Security Scan",
+    "status": "passed",
+    "detail": "The trivial-change declaration was accepted and CodeQL correctly skipped the scan."
+  }
+]
