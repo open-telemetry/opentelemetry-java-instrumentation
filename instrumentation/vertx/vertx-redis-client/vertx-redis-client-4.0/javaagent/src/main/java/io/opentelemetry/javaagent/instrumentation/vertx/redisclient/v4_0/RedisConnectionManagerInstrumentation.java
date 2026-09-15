@@ -9,10 +9,12 @@ import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.vertx.redis.client.RedisOptions;
 import io.vertx.redis.client.impl.RedisConnectionManagerUtil;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -31,9 +33,9 @@ class RedisConnectionManagerInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(1, named("io.vertx.redis.client.RedisOptions"))),
         getClass().getName() + "$ConstructorAdvice");
-    // 4.0.3 and later build the connection provider here, out of reach of the manager, so the
-    // thread local carries the captured target to the constructor advice in this module's
-    // RedisConnectionProviderInstrumentation and in its 4.4.5 counterpart
+    // 4.0.3 and later build the connection provider here, out of reach of the manager, so a scoped
+    // thread local carries the captured target through the synchronous provider constructor advice
+    // in this module and its 4.4.5 counterpart
     transformer.applyAdviceToMethod(
         named("connectionEndpointProvider"),
         getClass().getName() + "$ConnectionEndpointProviderAdvice");
@@ -51,13 +53,14 @@ class RedisConnectionManagerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConnectionEndpointProviderAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(@Advice.This Object manager) {
-      RedisConnectionManagerUtil.setServerTargetThreadLocal(manager);
+    @Nullable
+    public static RedisServerTarget onEnter(@Advice.This Object manager) {
+      return RedisConnectionManagerUtil.setServerTargetThreadLocal(manager);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit() {
-      RedisConnectionManagerUtil.clearServerTargetThreadLocal();
+    public static void onExit(@Advice.Enter @Nullable RedisServerTarget previous) {
+      RedisConnectionManagerUtil.restoreServerTargetThreadLocal(previous);
     }
   }
 }
