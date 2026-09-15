@@ -130,7 +130,9 @@ class SpringIntegrationAndRabbitTest {
                             serverPort(),
                             equalTo(MESSAGING_SYSTEM, "rabbitmq"),
                             consumerDestinationName(),
-                            anonymousDestination(),
+                            equalTo(
+                                MESSAGING_DESTINATION_ANONYMOUS,
+                                emitStableMessagingSemconv() ? true : null),
                             equalTo(
                                 MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
                             equalTo(
@@ -241,9 +243,5 @@ class SpringIntegrationAndRabbitTest {
             val.isEqualTo("testTopic");
           }
         });
-  }
-
-  private static AttributeAssertion anonymousDestination() {
-    return equalTo(MESSAGING_DESTINATION_ANONYMOUS, emitStableMessagingSemconv() ? true : null);
   }
 }

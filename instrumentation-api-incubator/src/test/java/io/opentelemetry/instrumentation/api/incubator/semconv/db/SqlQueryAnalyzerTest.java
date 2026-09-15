@@ -293,6 +293,15 @@ class SqlQueryAnalyzerTest {
   }
 
   @Test
+  void queryTextTruncationDoesNotSplitSurrogatePair() {
+    String beforePair = repeat('A', AutoSqlSanitizer.LIMIT - 1);
+
+    SqlQuery result = analyze(beforePair + "😀");
+
+    assertThat(result.getQueryText()).isEqualTo(beforePair);
+  }
+
+  @Test
   void randomBytesDontCauseExceptionsOrTimeouts() {
     Random r = new Random(0);
     for (int i = 0; i < 1000; i++) {
@@ -365,6 +374,15 @@ class SqlQueryAnalyzerTest {
         .isEqualTo(
             "SELECT very_long_table_name_0 very_long_table_name_1 very_long_table_name_2 very_long_table_name_3 very_long_table_name_4 very_long_table_name_5 very_long_table_name_6 very_long_table_name_7 very_long_table_name_8 very_long_table_name_9");
     assertThat(result.length()).isEqualTo(236);
+  }
+
+  @Test
+  void querySummaryTruncationDoesNotSplitSurrogatePair() {
+    String beforePair = repeat('A', 254);
+
+    String summary = SqlQuery.createWithSummary(null, null, beforePair + "😀").getQuerySummary();
+
+    assertThat(summary).isEqualTo(beforePair);
   }
 
   @ParameterizedTest
@@ -1395,5 +1413,13 @@ class SqlQueryAnalyzerTest {
         Arguments.of(
             "merge into \"my table\"",
             expect("MERGE", "my table", "merge", "\"my table\"", "merge \"my table\"")));
+  }
+
+  private static String repeat(char value, int count) {
+    StringBuilder result = new StringBuilder(count);
+    for (int i = 0; i < count; i++) {
+      result.append(value);
+    }
+    return result.toString();
   }
 }
