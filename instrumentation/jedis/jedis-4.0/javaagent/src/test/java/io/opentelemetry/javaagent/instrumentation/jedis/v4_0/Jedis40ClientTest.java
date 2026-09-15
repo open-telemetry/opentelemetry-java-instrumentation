@@ -9,7 +9,6 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
-import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
@@ -188,6 +187,7 @@ class Jedis40ClientTest {
 
   @Test
   void shardedCommandUsesConfiguredTargets() {
+    boolean jedis51OrLater = Boolean.getBoolean("testJedis51OrLater");
     String firstShard = "redis-one.internal";
     int firstShardPort = 6380;
     String secondShard = "redis-two.internal";
@@ -206,7 +206,7 @@ class Jedis40ClientTest {
                     new HostAndPort(secondShard, secondShardPort)),
                 clientConfig))) {
       sharded.set("sharded", "warmup");
-      testing.waitForTraces(testLatestDeps() ? 3 : 1);
+      testing.waitForTraces(jedis51OrLater ? 3 : 1);
       testing.clearData();
       sharded.set("sharded", "value");
 
@@ -230,7 +230,7 @@ class Jedis40ClientTest {
                               equalTo(NETWORK_PEER_PORT, port),
                               equalTo(NETWORK_PEER_ADDRESS, ip))));
     }
-    testing.waitForTraces(testLatestDeps() ? 1 : 2);
+    testing.waitForTraces(jedis51OrLater ? 1 : 2);
     testing.clearData();
   }
 

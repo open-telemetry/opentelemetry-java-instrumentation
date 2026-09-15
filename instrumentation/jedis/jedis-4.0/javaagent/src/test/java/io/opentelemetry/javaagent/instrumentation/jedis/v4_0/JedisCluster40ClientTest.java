@@ -155,7 +155,7 @@ class JedisCluster40ClientTest {
   @Test
   void periodicTopologyRefreshUsesConfiguredClusterNodesAsServerTarget()
       throws ReflectiveOperationException {
-    assumeTrue(Boolean.getBoolean("testPeriodicTopologyRefresh"));
+    assumeTrue(Boolean.getBoolean("testJedis51OrLater"));
 
     AutoCloseable refreshingProvider =
         ClusterConnectionProvider.class
