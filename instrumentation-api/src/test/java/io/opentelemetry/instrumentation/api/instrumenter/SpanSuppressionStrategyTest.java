@@ -225,6 +225,30 @@ class SpanSuppressionStrategyTest {
   }
 
   @Test
+  void semconv_genAiKeyShouldSuppressMixedKeyGenAiInstrumenter() {
+    SpanSuppressor suppressor =
+        SpanSuppressionStrategy.SEMCONV.create(
+            new HashSet<>(asList(SpanKey.GEN_AI_CLIENT, SpanKey.RPC_CLIENT)));
+    Context context = SpanKey.GEN_AI_CLIENT.storeInContext(Context.root(), span);
+
+    assertThat(suppressor.shouldSuppress(context, SpanKind.CLIENT)).isTrue();
+    assertThat(suppressor.shouldSuppress(Context.root(), SpanKind.CLIENT)).isFalse();
+    assertThat(
+            suppressor.shouldSuppress(
+                SpanKey.RPC_CLIENT.storeInContext(Context.root(), span), SpanKind.CLIENT))
+        .isFalse();
+  }
+
+  @Test
+  void semconv_genAiKeyShouldNotSuppressNonGenAiInstrumenter() {
+    SpanSuppressor suppressor =
+        SpanSuppressionStrategy.SEMCONV.create(new HashSet<>(asList(SpanKey.RPC_CLIENT)));
+    Context context = SpanKey.GEN_AI_CLIENT.storeInContext(Context.root(), span);
+
+    assertThat(suppressor.shouldSuppress(context, SpanKind.CLIENT)).isFalse();
+  }
+
+  @Test
   void context_shouldSuppressWhenKeyIsAvailableAndTrue() {
     InstrumentationUtil.suppressInstrumentation(
         () -> {
