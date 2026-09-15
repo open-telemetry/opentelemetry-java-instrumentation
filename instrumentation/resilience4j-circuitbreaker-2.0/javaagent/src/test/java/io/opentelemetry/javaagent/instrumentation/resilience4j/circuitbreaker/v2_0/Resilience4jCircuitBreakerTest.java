@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.resilience4j.circuitbreaker.v
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -490,9 +492,9 @@ class Resilience4jCircuitBreakerTest {
                   .singleElement()
                   .satisfies(
                       event -> {
-                        assertThat(event.getAttributes().get(stringKey("exception.type")))
+                        assertThat(event.getAttributes().get(EXCEPTION_TYPE))
                             .isEqualTo(IllegalStateException.class.getName());
-                        assertThat(event.getAttributes().get(stringKey("exception.message")))
+                        assertThat(event.getAttributes().get(EXCEPTION_MESSAGE))
                             .isEqualTo("boom");
                       });
             });
@@ -829,9 +831,9 @@ class Resilience4jCircuitBreakerTest {
                   .singleElement()
                   .satisfies(
                       event -> {
-                        assertThat(event.getAttributes().get(stringKey("exception.type")))
+                        assertThat(event.getAttributes().get(EXCEPTION_TYPE))
                             .isEqualTo(outerException.getClass().getName());
-                        assertThat(event.getAttributes().get(stringKey("exception.message")))
+                        assertThat(event.getAttributes().get(EXCEPTION_MESSAGE))
                             .isEqualTo(outerException.getMessage());
                       });
             });
@@ -913,9 +915,9 @@ class Resilience4jCircuitBreakerTest {
                   .singleElement()
                   .satisfies(
                       event -> {
-                        assertThat(event.getAttributes().get(stringKey("exception.type")))
+                        assertThat(event.getAttributes().get(EXCEPTION_TYPE))
                             .isEqualTo(IllegalStateException.class.getName());
-                        assertThat(event.getAttributes().get(stringKey("exception.message")))
+                        assertThat(event.getAttributes().get(EXCEPTION_MESSAGE))
                             .isEqualTo("boom");
                       });
             });
@@ -981,9 +983,9 @@ class Resilience4jCircuitBreakerTest {
                   .singleElement()
                   .satisfies(
                       event -> {
-                        assertThat(event.getAttributes().get(stringKey("exception.type")))
+                        assertThat(event.getAttributes().get(EXCEPTION_TYPE))
                             .isEqualTo(IllegalStateException.class.getName());
-                        assertThat(event.getAttributes().get(stringKey("exception.message")))
+                        assertThat(event.getAttributes().get(EXCEPTION_MESSAGE))
                             .isEqualTo("boom");
                       });
             });
