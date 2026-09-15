@@ -101,7 +101,7 @@ jobs:
     needs:
       - publish
     if: always()
-    uses: ./.github/workflows/reusable-workflow-notification.yml
+    uses: $/.github/workflows/reusable-workflow-notification.yml
     with:
       success: ${{ needs.publish.result == 'success' }}
       failure-notification-after-attempts: 2

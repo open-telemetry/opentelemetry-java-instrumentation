@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   build:
-    uses: ./.github/workflows/reusable-pr-smoke-test-images.yml
+    uses: $/.github/workflows/reusable-pr-smoke-test-images.yml
     with:
       project: ":smoke-tests:images:play"
       cache-read-only: true
