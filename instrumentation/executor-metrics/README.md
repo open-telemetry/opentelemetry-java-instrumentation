@@ -13,7 +13,7 @@ the logical component owning an executor SHOULD configure it before the first wo
 Once executor metrics are registered, `jvm.executor.name` and `jvm.executor.owner.name` remain fixed
 for that registration; later `reregister` calls do not create a new metric identity.
 
-| System property                                                          | Type    | Default    | Description                                                                                                                                   |
-| ------------------------------------------------------------------------ | ------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| System property                                                         | Type    | Default    | Description                                                                                                                                   |
+| ----------------------------------------------------------------------- | ------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | `otel.instrumentation.executor-metrics.enabled`                         | Boolean | `false`    | Enables executor metrics instrumentation.                                                                                                     |
 | `otel.instrumentation.executor-metrics.experimental.name-normalization` | String  | `trailing` | Replaces trailing digits in executor thread names with `*` for `trailing`; `all` replaces every group of digits; other values use `trailing`. |
