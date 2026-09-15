@@ -57,9 +57,9 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$CheckedDecoratorAdvice");
   }
 
-  @SuppressWarnings("unused")
   public static class SupplierAdvice {
 
+    @SuppressWarnings("unused")
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static <T> Supplier<T> onExit(
@@ -68,9 +68,9 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
   public static class CallableAdvice {
 
+    @SuppressWarnings("unused")
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static <T> Callable<T> onExit(
@@ -79,9 +79,9 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
   public static class RunnableAdvice {
 
+    @SuppressWarnings("unused")
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static Runnable onExit(
@@ -112,9 +112,9 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
   public static class FutureSupplierAdvice {
 
+    @SuppressWarnings("unused")
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static <T> Supplier<Future<T>> onExit(
@@ -124,9 +124,9 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
   public static class FunctionAdvice {
 
+    @SuppressWarnings("unused")
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static <T, R> Function<T, R> onExit(
@@ -135,9 +135,9 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
   public static class ConsumerAdvice {
 
+    @SuppressWarnings("unused")
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static <T> Consumer<T> onExit(

@@ -94,9 +94,9 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
   public static class ReleasePermissionAdvice {
 
+    @SuppressWarnings("unused")
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit(@Advice.This CircuitBreaker circuitBreaker) {
       if (Resilience4jCircuitBreakerSpans.isCurrentCircuitBreakerCallback(circuitBreaker)) {
@@ -106,9 +106,9 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
   public static class OnSuccessAdvice {
 
+    @SuppressWarnings("unused")
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit(
         @Advice.This CircuitBreaker circuitBreaker, @Advice.Thrown @Nullable Throwable throwable) {
@@ -143,9 +143,9 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
   public static class PublishCircuitErrorEventAdvice {
 
+    @SuppressWarnings("unused")
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit(
         @Advice.This CircuitBreaker circuitBreaker,
