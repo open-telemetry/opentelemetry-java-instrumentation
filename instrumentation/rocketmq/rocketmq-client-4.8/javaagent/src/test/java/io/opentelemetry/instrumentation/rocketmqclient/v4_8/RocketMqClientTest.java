@@ -21,12 +21,15 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.rocketmqclient.v4_8.base.BaseConf;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.AbstractExecutorService;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.client.producer.SendCallback;
@@ -133,15 +136,20 @@ class RocketMqClientTest extends AbstractRocketMqClientTest {
 
     testing()
         .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactlyInAnyOrder(
-                    span -> span.hasName("parent"),
-                    span -> span.hasName("create " + topic).hasKind(PRODUCER),
-                    span -> span.hasName("create " + topic).hasKind(PRODUCER),
-                    span ->
-                        span.hasName("send " + topic)
-                            .hasKind(CLIENT)
-                            .hasStatus(StatusData.error())));
+            trace -> {
+              List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
+              assertions.add(span -> span.hasName("parent"));
+              if (hasBatchCreateSpans()) {
+                assertions.add(span -> span.hasName("create " + topic).hasKind(PRODUCER));
+                assertions.add(span -> span.hasName("create " + topic).hasKind(PRODUCER));
+              }
+              assertions.add(
+                  span ->
+                      span.hasName("send " + topic)
+                          .hasKind(hasBatchCreateSpans() ? CLIENT : PRODUCER)
+                          .hasStatus(StatusData.error()));
+              trace.hasSpansSatisfyingExactlyInAnyOrder(assertions);
+            });
   }
 
   private static final class CapturingExecutor extends AbstractExecutorService {
