@@ -76,10 +76,8 @@ val shouldDisableLocalBuildCache =
   isRemoteBuildCachePushEnabled && System.getenv("GITHUB_REF_NAME") == "main"
 
 develocity {
-  if (develocityAccessKey.isNotEmpty()) {
-    server = develocityServer
-    projectId = "OpenTelemetry"
-  }
+  server = develocityServer
+  projectId = "OpenTelemetry"
 
   buildScan {
     if (develocityAccessKey.isNotEmpty()) {
@@ -116,9 +114,7 @@ buildCache {
   local {
     isEnabled = !shouldDisableLocalBuildCache
   }
-
   remote(develocity.buildCache) {
-    server = develocityServer
     isPush = isRemoteBuildCachePushEnabled
   }
 }
@@ -262,6 +258,7 @@ include(":instrumentation:cassandra:cassandra-3.0:javaagent-unit-tests")
 include(":instrumentation:cassandra:cassandra-4.0:javaagent")
 include(":instrumentation:cassandra:cassandra-4.0:javaagent-unit-tests")
 include(":instrumentation:cassandra:cassandra-4.4:javaagent")
+include(":instrumentation:cassandra:cassandra-4.4:javaagent-unit-tests")
 include(":instrumentation:cassandra:cassandra-4.4:library")
 include(":instrumentation:cassandra:cassandra-4.4:testing")
 include(":instrumentation:cassandra:cassandra-common-4.0:testing")
@@ -275,6 +272,8 @@ include(":instrumentation:couchbase:couchbase-common-2.0:javaagent")
 include(":instrumentation:couchbase:couchbase-common-2.0:javaagent-unit-tests")
 include(":instrumentation:couchbase:couchbase-common-3.0:javaagent")
 include(":instrumentation:couchbase:couchbase-common-3.0:javaagent-unit-tests")
+include(":instrumentation:couchbase:couchbase-common-3.1:javaagent")
+include(":instrumentation:couchbase:couchbase-common-3.1:javaagent-unit-tests")
 include(":instrumentation:couchbase:couchbase-3.0:javaagent")
 include(":instrumentation:couchbase:couchbase-3.1:javaagent")
 include(":instrumentation:couchbase:couchbase-3.2:javaagent")
@@ -304,7 +303,6 @@ include(":instrumentation:executors:javaagent")
 include(":instrumentation:executors:jdk21-testing")
 include(":instrumentation:executors:testing")
 include(":instrumentation:external-annotations:javaagent")
-include(":instrumentation:external-annotations:javaagent-unit-tests")
 include(":instrumentation:failsafe-3.0:library")
 include(":instrumentation:finagle-http-23.11:compile-stub")
 include(":instrumentation:finagle-http-23.11:javaagent")
@@ -440,7 +438,6 @@ include(":instrumentation:jms:jms-1.1:javaagent")
 include(":instrumentation:jms:jms-3.0:javaagent")
 include(":instrumentation:jms:jms-common-1.1:bootstrap")
 include(":instrumentation:jms:jms-common-1.1:javaagent")
-include(":instrumentation:jms:jms-common-1.1:javaagent-unit-tests")
 include(":instrumentation:jmx-metrics:javaagent")
 include(":instrumentation:jmx-metrics:library")
 include(":instrumentation:jmx-metrics:testing-apps:camel-testing-app")
@@ -462,7 +459,6 @@ include(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:testing")
 include(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library")
 include(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library")
 include(":instrumentation:kafka:kafka-connect-2.6:javaagent")
-include(":instrumentation:kafka:kafka-connect-2.6:javaagent-unit-tests")
 include(":instrumentation:kafka:kafka-connect-2.6:testing")
 include(":instrumentation:kafka:kafka-streams-0.11:javaagent")
 include(":instrumentation:kotlinx-coroutines:kotlinx-coroutines-1.0:javaagent")
@@ -510,7 +506,9 @@ include(":instrumentation:mongo:mongo-3.1:javaagent")
 include(":instrumentation:mongo:mongo-3.1:library")
 include(":instrumentation:mongo:mongo-3.1:testing")
 include(":instrumentation:mongo:mongo-3.7:javaagent")
+include(":instrumentation:mongo:mongo-3.7:javaagent-unit-tests")
 include(":instrumentation:mongo:mongo-4.0:javaagent")
+include(":instrumentation:mongo:mongo-4.0:javaagent-unit-tests")
 include(":instrumentation:mongo:mongo-async-3.3:javaagent")
 include(":instrumentation:mongo:mongo-common:testing")
 include(":instrumentation:mybatis-3.2:javaagent")
@@ -764,8 +762,10 @@ include(":instrumentation:vertx:vertx-kafka-client-3.6:vertx-kafka-client-5-test
 include(":instrumentation:vertx:vertx-redis-client-4.0:javaagent")
 include(":instrumentation:vertx:vertx-rx-java-3.5:javaagent")
 include(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-4.0:javaagent")
+include(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-4.0:javaagent-unit-tests")
 include(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-5.0:javaagent")
 include(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-common-4.0:javaagent")
+include(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-common-4.0:javaagent-unit-tests")
 include(":instrumentation:vertx:vertx-web-3.0:javaagent")
 include(":instrumentation:vertx:vertx-web-3.0:testing")
 include(":instrumentation:vibur-dbcp-11.0:javaagent")

@@ -23,9 +23,10 @@ muzzle {
 dependencies {
   implementation(project(":instrumentation:mongo:mongo-3.1:library"))
 
-  // a couple of test attribute verifications don't pass until 3.8.0
-  library("org.mongodb:mongo-java-driver:3.8.0")
+  library("org.mongodb:mongo-java-driver:3.7.0")
+  latestDepTestLibrary("org.mongodb:mongo-java-driver:3.+") // see mongo-4.0 module
 
+  testImplementation(project(":instrumentation:mongo:mongo-3.1:testing"))
   testImplementation(project(":instrumentation:mongo:mongo-common:testing"))
   testImplementation("com.github.jnr:jnr-unixsocket:0.18")
 
@@ -38,6 +39,7 @@ tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("collectMetadata", otelProps.collectMetadata)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
   val testStableSemconv = register<Test>("testStableSemconv") {
