@@ -39,8 +39,8 @@ public final class JmxTelemetryBuilder {
   private final OpenTelemetry openTelemetry;
   private final List<MetricDef> userMetricDefs = new ArrayList<>();
   private long discoveryDelayMs;
-  private ClassLoader classLoader = JmxTelemetryBuilder.class.getClassLoader();
-  private ComponentLoader componentLoader = ComponentLoader.forClassLoader(classLoader);
+  private ComponentLoader componentLoader =
+      ComponentLoader.forClassLoader(JmxTelemetryBuilder.class.getClassLoader());
   private final Set<String> registeredMetrics = new HashSet<>();
   private final Set<String> registeredHandlers = new HashSet<>();
   private IncludeExclude metrics = IncludeExclude.builder().build();
@@ -161,7 +161,6 @@ public final class JmxTelemetryBuilder {
   public JmxTelemetryBuilder setServiceClassLoader(ClassLoader serviceClassLoader) {
     requireNonNull(serviceClassLoader, "serviceClassLoader");
     this.componentLoader = ComponentLoader.forClassLoader(serviceClassLoader);
-    this.classLoader = serviceClassLoader;
     return this;
   }
 
@@ -228,7 +227,7 @@ public final class JmxTelemetryBuilder {
   }
 
   public JmxTelemetry build() {
-    return build(new InternalMetricsDefinitions(classLoader));
+    return build(new InternalMetricsDefinitions(JmxTelemetryBuilder.class.getClassLoader()));
   }
 
   // package-private for testing
