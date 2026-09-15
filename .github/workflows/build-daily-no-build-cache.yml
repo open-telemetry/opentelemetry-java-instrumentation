@@ -11,14 +11,14 @@ permissions:
 
 jobs:
   common:
-    uses: ./.github/workflows/build-common.yml
+    uses: $/.github/workflows/build-common.yml
     with:
       no-build-cache: true
     secrets:
       DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
 
   test-latest-deps:
-    uses: ./.github/workflows/reusable-test-latest-deps.yml
+    uses: $/.github/workflows/reusable-test-latest-deps.yml
     with:
       no-build-cache: true
     secrets:
@@ -38,7 +38,7 @@ jobs:
       - common
       - test-latest-deps
     if: always()
-    uses: ./.github/workflows/reusable-workflow-notification.yml
+    uses: $/.github/workflows/reusable-workflow-notification.yml
     with:
       success: >-
         ${{
