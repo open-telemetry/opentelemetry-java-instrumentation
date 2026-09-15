@@ -11,6 +11,7 @@ import static java.util.logging.Level.FINE;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfo;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientRequest;
@@ -36,10 +37,11 @@ public class VertxSqlClientSingletons {
   private static final Instrumenter<VertxSqlClientRequest, Void> instrumenter =
       VertxSqlInstrumenterFactory.createInstrumenter(INSTRUMENTATION_NAME);
 
-  private static final ThreadLocal<VertxSqlClientInfo> clientInfo = new ThreadLocal<>();
-  private static final ThreadLocal<VertxSqlClientSupplierInfo> querySupplier = new ThreadLocal<>();
-  private static final ThreadLocal<VertxSqlClientConstructionState> constructionState =
-      new ThreadLocal<>();
+  private static final ScopedThreadValue<VertxSqlClientInfo> clientInfo = new ScopedThreadValue<>();
+  private static final ScopedThreadValue<VertxSqlClientSupplierInfo> querySupplier =
+      new ScopedThreadValue<>();
+  private static final ScopedThreadValue<VertxSqlClientConstructionState> constructionState =
+      new ScopedThreadValue<>();
   private static final VirtualField<PreparedStatement, VertxSqlClientInfo> PREPARED_STATEMENT_INFO =
       VirtualField.find(PreparedStatement.class, VertxSqlClientInfo.class);
   private static final VirtualField<Pool, VertxSqlClientInfo> POOL_CLIENT_INFO =
@@ -83,14 +85,6 @@ public class VertxSqlClientSingletons {
     return instrumenter;
   }
 
-  public static void setClientInfo(@Nullable VertxSqlClientInfo value) {
-    if (value == null) {
-      clientInfo.remove();
-    } else {
-      clientInfo.set(value);
-    }
-  }
-
   @Nullable
   public static VertxSqlClientInfo getClientInfo() {
     return clientInfo.get();
@@ -118,12 +112,11 @@ public class VertxSqlClientSingletons {
     return QueryExecutorUtil.getData(queryExecutor) instanceof VertxSqlClientSupplierInfo;
   }
 
-  public static void setQuerySupplier(@Nullable VertxSqlClientSupplierInfo supplier) {
-    if (supplier == null) {
-      querySupplier.remove();
-    } else {
-      querySupplier.set(supplier);
-    }
+  public static QueryInfoScope enterQueryInfo(
+      @Nullable VertxSqlClientInfo info, @Nullable VertxSqlClientSupplierInfo supplier) {
+    VertxSqlClientInfo previousInfo = clientInfo.set(info);
+    VertxSqlClientSupplierInfo previousSupplier = querySupplier.set(supplier);
+    return new QueryInfoScope(previousInfo, previousSupplier);
   }
 
   @Nullable
@@ -246,12 +239,14 @@ public class VertxSqlClientSingletons {
     };
   }
 
-  public static void setConstructionState(@Nullable VertxSqlClientConstructionState state) {
-    if (state == null) {
-      constructionState.remove();
-    } else {
-      constructionState.set(state);
-    }
+  @Nullable
+  public static VertxSqlClientConstructionState enterConstruction(
+      VertxSqlClientConstructionState state) {
+    return constructionState.set(state);
+  }
+
+  public static void exitConstruction(@Nullable VertxSqlClientConstructionState previous) {
+    constructionState.restore(previous);
   }
 
   @Nullable
@@ -389,6 +384,23 @@ public class VertxSqlClientSingletons {
       if (throwable != null && query != null) {
         query.end(throwable);
       }
+    }
+  }
+
+  public static final class QueryInfoScope {
+    @Nullable private final VertxSqlClientInfo previousInfo;
+    @Nullable private final VertxSqlClientSupplierInfo previousSupplier;
+
+    private QueryInfoScope(
+        @Nullable VertxSqlClientInfo previousInfo,
+        @Nullable VertxSqlClientSupplierInfo previousSupplier) {
+      this.previousInfo = previousInfo;
+      this.previousSupplier = previousSupplier;
+    }
+
+    public void close() {
+      querySupplier.restore(previousSupplier);
+      clientInfo.restore(previousInfo);
     }
   }
 

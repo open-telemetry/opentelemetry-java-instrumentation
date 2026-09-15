@@ -340,6 +340,38 @@ class VertxSqlClientTest {
   }
 
   @Test
+  void testNestedFailedBuilderRestoresOuterSupplierTarget() {
+    RuntimeException connectionFailure = new IllegalStateException("connection failed");
+    AtomicInteger nestedBuilds = new AtomicInteger();
+    Pool supplierPool =
+        ClientBuilder.pool(
+                TestPgDriver.createWithPoolConstructionHook(
+                    options -> Future.failedFuture(connectionFailure),
+                    () -> {
+                      nestedBuilds.incrementAndGet();
+                      assertThatThrownBy(
+                              () ->
+                                  PgBuilder.pool()
+                                      .using(vertx)
+                                      .connectingTo(connectOptions())
+                                      .with(new PoolOptions().setIdleTimeoutUnit(null))
+                                      .build())
+                          .isInstanceOf(NullPointerException.class);
+                    }))
+            .using(vertx)
+            .connectingTo(() -> Future.succeededFuture(connectOptions()))
+            .with(new PoolOptions().setMaxSize(1))
+            .build();
+    cleanup.deferCleanup(supplierPool::close);
+
+    assertThatThrownBy(() -> select(supplierPool)).hasCause(connectionFailure);
+
+    assertThat(nestedBuilds).hasValue(1);
+    testing.waitAndAssertTraces(
+        trace -> assertSupplierFailure(trace, connectionFailure, "other_sql", host));
+  }
+
+  @Test
   void testConnectingToGenericSupplierUsesDriverDbSystem() throws Exception {
     SqlConnectOptions suppliedOptions = new PgConnectOptions(connectOptions()) {};
     Pool supplierPool =

@@ -57,7 +57,7 @@ class ConnectionPoolInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Acquisition previous) {
-      VertxSqlClientConnectionPoolState.setAcquisition(previous);
+      VertxSqlClientConnectionPoolState.exitAcquisition(previous);
     }
   }
 
@@ -72,7 +72,7 @@ class ConnectionPoolInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Acquisition previous) {
-      VertxSqlClientConnectionPoolState.setAcquisition(previous);
+      VertxSqlClientConnectionPoolState.exitAcquisition(previous);
     }
   }
 
