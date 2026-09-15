@@ -30,9 +30,14 @@ class ConnectionPoolInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("acquire").and(takesArguments(3)), getClass().getName() + "$AcquireAdvice");
+        named("acquire")
+            .and(takesArguments(3))
+            .and(takesArgument(2, named("io.vertx.core.Completable"))),
+        getClass().getName() + "$AcquireAdvice");
     transformer.applyAdviceToMethod(
-        named("acquire").and(takesArguments(4)),
+        named("acquire")
+            .and(takesArguments(4))
+            .and(takesArgument(3, named("io.vertx.core.Completable"))),
         getClass().getName() + "$AcquireWithListenerAdvice");
     transformer.applyAdviceToMethod(
         named("connect")

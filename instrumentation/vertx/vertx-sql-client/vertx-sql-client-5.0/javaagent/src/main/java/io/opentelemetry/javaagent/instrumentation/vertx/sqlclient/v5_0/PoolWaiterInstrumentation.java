@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -26,7 +27,10 @@ class PoolWaiterInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor().and(takesArguments(4)), getClass().getName() + "$ConstructorAdvice");
+        isConstructor()
+            .and(takesArguments(4))
+            .and(takesArgument(3, named("io.vertx.core.Completable"))),
+        getClass().getName() + "$ConstructorAdvice");
   }
 
   @SuppressWarnings("unused")
