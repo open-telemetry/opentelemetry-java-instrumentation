@@ -15,22 +15,22 @@ constructor chaining, or overlapping advice from replacing an outer value.
 
 For temporary state installed on entry and cleaned up on exit, cleanup must restore the previous
 value rather than simply remove the entry. Follow this rule even when no current call path is known
-to be reentrant. Prefer the allocation-free `ScopedThreadLocal`, and carry the value returned by
+to be reentrant. Prefer the allocation-free `ScopedThreadValue`, and carry the value returned by
 `set` through `@Advice.Enter`:
 
 ```java
-import io.opentelemetry.instrumentation.api.internal.ScopedThreadLocal;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 
-private static final ScopedThreadLocal<Request> currentRequestThreadLocal = new ScopedThreadLocal<>();
+private static final ScopedThreadValue<Request> currentRequest = new ScopedThreadValue<>();
 
 @Advice.OnMethodEnter(suppress = Throwable.class)
 public static @Nullable Request onEnter(Request request) {
-  return currentRequestThreadLocal.set(request);
+  return currentRequest.set(request);
 }
 
 @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
 public static void onExit(@Advice.Enter @Nullable Request previous) {
-  currentRequestThreadLocal.restore(previous);
+  currentRequest.restore(previous);
 }
 ```
 

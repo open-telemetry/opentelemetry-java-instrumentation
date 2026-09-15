@@ -9,11 +9,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
-class ScopedThreadLocalTest {
+class ScopedThreadValueTest {
 
   @Test
   void restoresNestedValues() {
-    ScopedThreadLocal<String> scoped = new ScopedThreadLocal<>();
+    ScopedThreadValue<String> scoped = new ScopedThreadValue<>();
 
     String beforeOuter = scoped.set("outer");
     String beforeInner = scoped.set("inner");
@@ -29,7 +29,7 @@ class ScopedThreadLocalTest {
 
   @Test
   void nullTemporarilyClearsValue() {
-    ScopedThreadLocal<String> scoped = new ScopedThreadLocal<>();
+    ScopedThreadValue<String> scoped = new ScopedThreadValue<>();
     String beforeOuter = scoped.set("outer");
 
     String beforeClear = scoped.set(null);
