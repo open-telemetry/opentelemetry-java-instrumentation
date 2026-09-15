@@ -11,15 +11,28 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.util.ArrayList;
+import java.util.List;
+import javax.annotation.Nullable;
+import redis.clients.jedis.Connection;
+import redis.clients.jedis.JedisShardInfo;
 
-class JedisSingletons {
+public class JedisSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jedis-1.4";
 
   private static final Instrumenter<JedisRequest, Void> instrumenter;
+
+  private static final VirtualField<Connection, RedisServerTarget> CONNECTION_TARGET =
+      VirtualField.find(Connection.class, RedisServerTarget.class);
+  private static final ScopedThreadValue<RedisServerTarget> currentConfiguredTarget =
+      new ScopedThreadValue<>();
 
   static {
     JedisDbAttributesGetter dbAttributesGetter = new JedisDbAttributesGetter();
@@ -41,6 +54,40 @@ class JedisSingletons {
 
   static Instrumenter<JedisRequest, Void> instrumenter() {
     return instrumenter;
+  }
+
+  public static ScopedThreadValue<RedisServerTarget> currentConfiguredTarget() {
+    return currentConfiguredTarget;
+  }
+
+  public static void captureConnectionTarget(Connection connection) {
+    RedisServerTarget target = currentConfiguredTarget.get();
+    if (target == null) {
+      target = RedisServerTarget.ofHostAndPort(connection.getHost(), connection.getPort());
+    }
+    CONNECTION_TARGET.set(connection, target);
+  }
+
+  @Nullable
+  static RedisServerTarget connectionTarget(Connection connection) {
+    RedisServerTarget target = currentConfiguredTarget.get();
+    if (target != null) {
+      return target;
+    }
+    return CONNECTION_TARGET.get(connection);
+  }
+
+  @Nullable
+  public static RedisServerTarget createServerTarget(@Nullable List<JedisShardInfo> shards) {
+    if (shards == null) {
+      return null;
+    }
+    List<String> endpoints = new ArrayList<>(shards.size());
+    for (JedisShardInfo shard : shards) {
+      endpoints.add(
+          shard == null ? null : RedisServerTarget.endpoint(shard.getHost(), shard.getPort()));
+    }
+    return RedisServerTarget.ofEndpoints(endpoints);
   }
 
   private JedisSingletons() {}
