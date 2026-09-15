@@ -49,13 +49,17 @@ class KafkaEndpointInstrumentation implements TypeInstrumentation {
       return recordTelemetry;
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Argument(0) ConsumerRecord<?, ?> record,
         @Advice.Return @Nullable Exchange exchange) {
-      if (exchange != null) {
-        // the exchange is freshly created for this record, so nothing it could keep is stale
-        messageTelemetry().mergeFrom(recordTelemetry(), record, exchange.getIn());
+      try {
+        if (exchange != null) {
+          // the exchange is freshly created for this record, so nothing it could keep is stale
+          messageTelemetry().replaceFrom(recordTelemetry(), record, exchange.getIn());
+        }
+      } finally {
+        recordTelemetry().clear(record);
       }
     }
   }
