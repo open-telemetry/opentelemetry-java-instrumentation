@@ -685,8 +685,8 @@ class Resilience4jCircuitBreakerTest {
 
   @ParameterizedTest
   @MethodSource("futureGetFailures")
-  void decoratedFutureGetEndsSpan(Throwable exception, String outcome, Throwable expectedException)
-      throws Exception {
+  void decoratedFutureGetEndsSpan(
+      Throwable exception, String outcome, Throwable expectedException) {
     Future<String> decoratedFuture = decoratedFuture(new ThrowingFuture<>(exception));
 
     Throwable thrown = catchThrowable(decoratedFuture::get);
@@ -708,7 +708,7 @@ class Resilience4jCircuitBreakerTest {
 
   @ParameterizedTest
   @MethodSource("futureTimedGetFailures")
-  void decoratedFutureTimedGetEndsSpan(Throwable exception) throws Exception {
+  void decoratedFutureTimedGetEndsSpan(Throwable exception) {
     Future<String> decoratedFuture = decoratedFuture(new ThrowingFuture<>(exception));
 
     Throwable thrown = catchThrowable(() -> decoratedFuture.get(1, MILLISECONDS));
@@ -1129,7 +1129,7 @@ class Resilience4jCircuitBreakerTest {
     circuitBreaker.onError(1L, MILLISECONDS, throwable);
   }
 
-  private static <T> Future<T> decoratedFuture(Future<T> future) throws Exception {
+  private static <T> Future<T> decoratedFuture(Future<T> future) {
     CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
     Supplier<Future<T>> supplier = () -> future;
     Supplier<Future<T>> decoratedSupplier = CircuitBreaker.decorateFuture(circuitBreaker, supplier);
