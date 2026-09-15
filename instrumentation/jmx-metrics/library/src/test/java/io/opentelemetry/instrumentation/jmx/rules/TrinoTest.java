@@ -63,7 +63,7 @@ class TrinoTest extends TargetSystemTest {
     copyYamlFilesToTarget(target, yamlFiles);
 
     startWeaverValidation(
-        "experimental-trino.yaml",
+        "trino.yaml",
         result ->
             result
                 .checkNothingUnregisteredWithPrefix("trino.")
