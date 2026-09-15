@@ -11,7 +11,7 @@ import javax.annotation.Nullable;
 public class DefaultJedisSocketFactoryUtil {
 
   @Nullable
-  public static HostAndPort getHostAndPort(@Nullable JedisSocketFactory socketFactory) {
+  public static HostAndPort getSocketHostAndPort(@Nullable JedisSocketFactory socketFactory) {
     if (socketFactory instanceof DefaultJedisSocketFactory) {
       return ((DefaultJedisSocketFactory) socketFactory).getSocketHostAndPort();
     }
