@@ -17,7 +17,7 @@ public class VirtualFieldTestClasses {
       VirtualField.find(Key1.class, Context.class);
       Key2.class.getName();
       Key1.class.getName();
-      VirtualField.find(Key2.class, Context.class);
+      VirtualField.find("namedField", Key2.class, Context.class);
     }
   }
 
@@ -42,7 +42,7 @@ public class VirtualFieldTestClasses {
   public static class TwoVirtualFieldsInTheSameClassAdvice {
     public static void advice() {
       VirtualField.find(Key1.class, Context.class);
-      VirtualField.find(Key1.class, State.class);
+      VirtualField.find("namedField", Key1.class, State.class);
     }
   }
 

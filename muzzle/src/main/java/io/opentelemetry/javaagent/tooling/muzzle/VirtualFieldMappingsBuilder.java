@@ -29,4 +29,19 @@ public interface VirtualFieldMappingsBuilder {
    */
   @CanIgnoreReturnValue
   VirtualFieldMappingsBuilder register(String typeName, String fieldTypeName);
+
+  /**
+   * Register the association between the {@code typeName} and the {@code fieldTypeName}. Class
+   * pairs registered using this method will be available as {@link VirtualField}s in the runtime;
+   * obtainable by calling {@link VirtualField#find(String, Class, Class)}.
+   *
+   * @param fieldName The name of the virtual field.
+   * @param typeName The name of the type that will contain the virtual field of type named {@code
+   *     fieldTypeName}.
+   * @param fieldTypeName The name of the field type that will be added to {@code type}.
+   * @return {@code this}.
+   * @see VirtualField
+   */
+  @CanIgnoreReturnValue
+  VirtualFieldMappingsBuilder register(String fieldName, String typeName, String fieldTypeName);
 }

@@ -16,7 +16,7 @@ public class VirtualFieldTestHelper {
     VirtualFieldTestClass instance = new VirtualFieldTestClass();
     {
       VirtualField<VirtualFieldTestClass, String> field =
-          VirtualField.find(VirtualFieldTestClass.class, String.class);
+          VirtualField.find("name", VirtualFieldTestClass.class, String.class);
       field.set(instance, "test");
       field.get(instance);
     }

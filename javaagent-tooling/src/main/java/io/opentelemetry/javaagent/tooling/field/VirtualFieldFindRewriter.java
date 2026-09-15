@@ -6,8 +6,11 @@
 package io.opentelemetry.javaagent.tooling.field;
 
 import static java.util.logging.Level.FINEST;
+import static java.util.logging.Level.WARNING;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.instrumentation.api.internal.RuntimeVirtualFieldSupplier;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
@@ -33,11 +36,14 @@ final class VirtualFieldFindRewriter implements AsmVisitorWrapper {
       TransformSafeLogger.getLogger(VirtualFieldFindRewriter.class);
 
   private static final Method FIND_VIRTUAL_FIELD_METHOD;
+  private static final Method FIND_VIRTUAL_FIELD_WITH_NAME_METHOD;
   private static final Method FIND_VIRTUAL_FIELD_IMPL_METHOD;
 
   static {
     try {
       FIND_VIRTUAL_FIELD_METHOD = VirtualField.class.getMethod("find", Class.class, Class.class);
+      FIND_VIRTUAL_FIELD_WITH_NAME_METHOD =
+          VirtualField.class.getMethod("find", String.class, Class.class, Class.class);
       FIND_VIRTUAL_FIELD_IMPL_METHOD =
           VirtualFieldImplementationsGenerator.VirtualFieldImplementationTemplate.class.getMethod(
               "getVirtualField", Class.class, Class.class);
@@ -117,24 +123,25 @@ final class VirtualFieldFindRewriter implements AsmVisitorWrapper {
                 String fieldTypeName = ((Type) stack[0]).getClassName();
                 String typeName = ((Type) stack[1]).getClassName();
                 TypeDescription virtualFieldImplementationClass =
-                    virtualFieldImplementations.find(typeName, fieldTypeName);
+                    virtualFieldImplementations.find(
+                        RuntimeVirtualFieldSupplier.DEFAULT_FIELD_NAME, typeName, fieldTypeName);
                 if (logger.isLoggable(FINEST)) {
                   logger.log(
                       FINEST,
                       "Rewriting VirtualField#find() for instrumenter {0}: {1} -> {2}",
                       new Object[] {instrumentationModuleClass.getName(), typeName, fieldTypeName});
                 }
-                if (virtualFieldImplementationClass == null) {
-                  throw new IllegalStateException(
-                      String.format(
-                          "Incorrect VirtualField usage detected. Cannot find implementation for VirtualField<%s, %s>. Was that field registered in %s#registerMuzzleVirtualFields()?",
-                          typeName, fieldTypeName, instrumentationModuleClass.getName()));
-                }
                 if (!virtualFieldMappings.hasMapping(typeName, fieldTypeName)) {
                   throw new IllegalStateException(
                       String.format(
                           "Incorrect VirtualField usage detected. Cannot find mapping for VirtualField<%s, %s>. Was that field registered in %s#registerMuzzleVirtualFields()?",
                           typeName, fieldTypeName, instrumentationModuleClass.getName()));
+                }
+                if (SemconvStability.v3Preview()) {
+                  logger.log(
+                      WARNING,
+                      "Rewriting VirtualField#find(Class, Class) access in {0}. This rewriting is deprecated and may be removed in a future version.",
+                      instrumentationModuleClass.getName());
                 }
                 // stack: fieldType | type
                 mv.visitMethodInsn(
@@ -147,9 +154,19 @@ final class VirtualFieldFindRewriter implements AsmVisitorWrapper {
               }
               throw new IllegalStateException(
                   "Incorrect VirtualField usage detected. Type and field type must be class-literals. Example of correct usage: VirtualField.find(Runnable.class, RunnableContext.class)");
-            } else {
-              super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
             }
+            if (Type.getInternalName(FIND_VIRTUAL_FIELD_WITH_NAME_METHOD.getDeclaringClass())
+                    .equals(owner)
+                && FIND_VIRTUAL_FIELD_WITH_NAME_METHOD.getName().equals(name)
+                && Type.getMethodDescriptor(FIND_VIRTUAL_FIELD_WITH_NAME_METHOD)
+                    .equals(descriptor)) {
+              logger.log(
+                  WARNING,
+                  "Found VirtualField#find(String, Class, Class) access in {0}. Unlike calls to VirtualField#find(Class, Class) the call to this method is not rewritten and may have a performance impact.",
+                  instrumentationModuleClass.getName());
+            }
+
+            super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
           }
 
           // Tracking the most recently used opcodes to assert proper api usage.
