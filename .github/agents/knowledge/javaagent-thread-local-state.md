@@ -19,16 +19,16 @@ to be reentrant. Prefer the allocation-free `ScopedThreadLocal`, and carry the v
 `set` through `@Advice.Enter`:
 
 ```java
-private static final ScopedThreadLocal<Request> CURRENT_REQUEST = new ScopedThreadLocal<>();
+private static final ScopedThreadLocal<Request> currentRequestThreadLocal = new ScopedThreadLocal<>();
 
 @Advice.OnMethodEnter(suppress = Throwable.class)
 public static @Nullable Request onEnter(Request request) {
-  return CURRENT_REQUEST.set(request);
+  return currentRequestThreadLocal.set(request);
 }
 
 @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
 public static void onExit(@Advice.Enter @Nullable Request previous) {
-  CURRENT_REQUEST.restore(previous);
+  currentRequestThreadLocal.restore(previous);
 }
 ```
 
