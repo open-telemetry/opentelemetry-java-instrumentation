@@ -1,0 +1,25 @@
+{
+  "source_pull_request": {
+    "base_repository": "open-telemetry/opentelemetry-java-instrumentation",
+    "number": 20130,
+    "base_branch": "main",
+    "head_repository": "grahambarrgraham/opentelemetry-java-instrumentation",
+    "head_branch": "propagate-grpc-deadline-flag",
+    "head_sha": "fc375c2363c743c1f63370b1ac85f55f973e3943"
+  },
+  "candidate_report": "candidate-report.json",
+  "candidate_count": 0,
+  "validation": {
+    "report_is_utf8_json_object": true,
+    "reviewed_exact_open_pull_request": true,
+    "reviewed_complete_authoritative_diff": true,
+    "reviewed_every_changed_file": true,
+    "reviewed_applicable_repository_instructions": true,
+    "reviewed_existing_threads_comments_and_reviews": true,
+    "reviewed_linked_work": true,
+    "reviewed_focused_surrounding_context": true,
+    "completed_holistic_simplification_check": true,
+    "excluded_duplicate_and_preexisting_candidates": true,
+    "repository_changes_limited_to_required_artifacts": true
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "candidates": [],
+  "changed_files": [
+    "instrumentation/grpc-1.6/README.md",
+    "instrumentation/grpc-1.6/javaagent/build.gradle.kts",
+    "instrumentation/grpc-1.6/javaagent/src/main/java/io/opentelemetry/javaagent/instrumentation/grpc/v1_6/GrpcSingletons.java",
+    "instrumentation/grpc-1.6/javaagent/src/test/java/io/opentelemetry/javaagent/instrumentation/grpc/v1_6/GrpcDeadlinePropagationTest.java",
+    "instrumentation/grpc-1.6/library/src/main/java/io/opentelemetry/instrumentation/grpc/v1_6/internal/ContextStorageBridge.java",
+    "instrumentation/grpc-1.6/library/src/test/java/io/opentelemetry/instrumentation/grpc/v1_6/internal/ContextStorageBridgeTest.java",
+    "instrumentation/grpc-1.6/metadata.yaml",
+    "instrumentation/grpc-1.6/testing/src/main/java/io/opentelemetry/instrumentation/grpc/v1_6/AbstractGrpcTest.java"
+  ],
+  "validations": [
+    {
+      "name": "immutable_pr_identity",
+      "passed": true
+    },
+    {
+      "name": "authoritative_diff_complete",
+      "passed": true
+    },
+    {
+      "name": "changed_files_complete_and_ordered",
+      "passed": true
+    },
+    {
+      "name": "applicable_instructions_reviewed",
+      "passed": true
+    },
+    {
+      "name": "existing_feedback_reviewed",
+      "passed": true
+    },
+    {
+      "name": "linked_work_reviewed",
+      "passed": true
+    },
+    {
+      "name": "focused_context_reviewed",
+      "passed": true
+    },
+    {
+      "name": "holistic_simplification_checked",
+      "passed": true
+    },
+    {
+      "name": "duplicate_candidates_removed",
+      "passed": true
+    },
+    {
+      "name": "candidate_anchors_and_probes_validated",
+      "passed": true
+    }
+  ]
+}
