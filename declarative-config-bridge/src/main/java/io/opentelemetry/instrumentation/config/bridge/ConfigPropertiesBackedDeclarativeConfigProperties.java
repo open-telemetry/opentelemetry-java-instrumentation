@@ -86,6 +86,8 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
     SPECIAL_MAPPINGS.put(
         "java.common.gen_ai.capture_message_content",
         "otel.instrumentation.genai.capture-message-content");
+    SPECIAL_MAPPINGS.put(
+        JAVA_COMMON_SERVICE_PEER_MAPPING, "otel.instrumentation.common.peer-service-mapping");
     // top-level common configs
     SPECIAL_MAPPINGS.put(
         "java.common.span_suppression_strategy/development",
@@ -249,8 +251,19 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
   }
 
   private String resolvePropertyKey(String name) {
-    String fullPath = pathWithName(name);
+    return toPropertyKey(
+        pathWithName(name), declarativePrefix, configPropertyPrefix, instrumentationConfig);
+  }
 
+  static String toPropertyKey(String fullPath) {
+    return toPropertyKey(fullPath, JAVA_DECLARATIVE_PREFIX, INSTRUMENTATION_PROPERTY_PREFIX, true);
+  }
+
+  private static String toPropertyKey(
+      String fullPath,
+      String declarativePrefix,
+      String configPropertyPrefix,
+      boolean instrumentationConfig) {
     if (instrumentationConfig) {
       // Check explicit property mappings first
       String mappedKey = SPECIAL_MAPPINGS.get(fullPath);
