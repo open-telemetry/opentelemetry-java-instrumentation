@@ -14,6 +14,7 @@ testing {
     register<JvmTestSuite>("unitTests") {
       dependencies {
         implementation(project())
+        implementation(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
       }
     }
   }
