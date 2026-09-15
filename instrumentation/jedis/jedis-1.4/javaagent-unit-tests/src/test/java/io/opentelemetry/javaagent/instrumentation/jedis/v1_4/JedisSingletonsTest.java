@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 
+import static io.opentelemetry.javaagent.instrumentation.jedis.v1_4.JedisSingletons.currentConfiguredTarget;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -74,12 +75,11 @@ class JedisSingletonsTest {
     Connection connection = new Connection("direct", 6379);
     RedisServerTarget configuredTarget = RedisServerTarget.ofHostAndPort("configured", 6380);
 
-    RedisServerTarget previousTarget =
-        JedisSingletons.currentConfiguredTarget().set(configuredTarget);
+    RedisServerTarget previousTarget = currentConfiguredTarget().set(configuredTarget);
     try {
       JedisSingletons.captureConnectionTarget(connection);
     } finally {
-      JedisSingletons.currentConfiguredTarget().restore(previousTarget);
+      currentConfiguredTarget().restore(previousTarget);
     }
 
     assertThat(JedisSingletons.connectionTarget(connection)).isSameAs(configuredTarget);
