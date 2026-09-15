@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
 import static java.util.Collections.emptyList;
 
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,9 +17,9 @@ import redis.clients.jedis.Queable;
 import redis.clients.jedis.Transaction;
 
 public final class JedisPipelineContext {
-  private static final ThreadLocal<Queable> currentBatch = new ThreadLocal<>();
-  private static final ThreadLocal<TransactionFraming> currentTransactionFraming =
-      new ThreadLocal<>();
+  private static final ScopedThreadValue<Queable> currentBatch = new ScopedThreadValue<>();
+  private static final ScopedThreadValue<TransactionFraming> currentTransactionFraming =
+      new ScopedThreadValue<>();
   private static final VirtualField<Queable, BatchState> BATCH_STATE =
       VirtualField.find(Queable.class, BatchState.class);
 
@@ -29,31 +30,23 @@ public final class JedisPipelineContext {
     // here. Other Queable subtypes have no flush point, so leaving them uncaptured keeps their
     // per-command spans.
     if (batch instanceof Pipeline || batch instanceof Transaction) {
-      currentBatch.set((Queable) batch);
+      return currentBatch.set((Queable) batch);
     }
     return previous;
   }
 
   public static void exit(@Nullable Object previous) {
-    if (previous == null) {
-      currentBatch.remove();
-    } else {
-      currentBatch.set((Queable) previous);
-    }
+    currentBatch.restore((Queable) previous);
   }
 
   @Nullable
   public static Object enterTransactionFraming() {
-    TransactionFraming previous = currentTransactionFraming.get();
-    currentTransactionFraming.set(new TransactionFraming(null));
-    return previous;
+    return currentTransactionFraming.set(new TransactionFraming(null));
   }
 
   @Nullable
   public static Object enterTransactionFraming(JedisRequest request) {
-    TransactionFraming previous = currentTransactionFraming.get();
-    currentTransactionFraming.set(new TransactionFraming(request));
-    return previous;
+    return currentTransactionFraming.set(new TransactionFraming(request));
   }
 
   public static void exitTransactionFraming(
@@ -64,20 +57,12 @@ public final class JedisPipelineContext {
         batchState((Queable) transaction).transactionFramingRequest = framing.framingRequest;
       }
     } finally {
-      restoreTransactionFraming(previous);
+      currentTransactionFraming.restore((TransactionFraming) previous);
     }
   }
 
   public static void exitTransactionFraming(@Nullable Object previous) {
-    restoreTransactionFraming(previous);
-  }
-
-  private static void restoreTransactionFraming(@Nullable Object previous) {
-    if (previous == null) {
-      currentTransactionFraming.remove();
-    } else {
-      currentTransactionFraming.set((TransactionFraming) previous);
-    }
+    currentTransactionFraming.restore((TransactionFraming) previous);
   }
 
   public static boolean inTransactionFraming() {
