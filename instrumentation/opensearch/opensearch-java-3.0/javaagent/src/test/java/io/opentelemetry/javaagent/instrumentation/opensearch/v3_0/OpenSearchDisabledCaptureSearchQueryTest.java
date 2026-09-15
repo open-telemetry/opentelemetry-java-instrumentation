@@ -55,7 +55,7 @@ class OpenSearchDisabledCaptureSearchQueryTest extends AbstractOpenSearchQueryTe
         openSearchClient.search(searchRequest, TestDocument.class);
     assertThat(searchResponse.hits().total().value()).isGreaterThan(0);
 
-    // Verify trace does NOT include query body, only method + operation
+    // Verify trace does NOT include the query body
     getTesting()
         .waitAndAssertTraces(
             trace ->

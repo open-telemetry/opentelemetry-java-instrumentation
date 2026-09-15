@@ -12,10 +12,10 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServ
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.UrlParser;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPort;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseDbRequest;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseInstrumenterFactory;
+import java.lang.reflect.Method;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -25,8 +25,17 @@ public class ClickHouseClientV2Singletons {
   private static final Instrumenter<ClickHouseDbRequest, Void> instrumenter;
   private static final VirtualField<Client, DbServerTarget> CONFIGURED_SERVER_TARGET =
       VirtualField.find(Client.class, DbServerTarget.class);
-  private static final VirtualField<Client, AddressAndPort> ADDRESS_AND_PORT =
-      VirtualField.find(Client.class, AddressAndPort.class);
+  private static final VirtualField<Client, CurrentServerInfo> CURRENT_SERVER_INFO_FIELD =
+      VirtualField.find(Client.class, CurrentServerInfo.class);
+  // the selected node is a ClickHouseNode or a transport Endpoint depending on the library version,
+  // so its accessors are resolved reflectively once per class
+  private static final ClassValue<PeerAccessor> PEER_ACCESSOR =
+      new ClassValue<PeerAccessor>() {
+        @Override
+        protected PeerAccessor computeValue(Class<?> type) {
+          return PeerAccessor.create(type);
+        }
+      };
 
   static {
     instrumenter =
@@ -54,6 +63,15 @@ public class ClickHouseClientV2Singletons {
     return CONFIGURED_SERVER_TARGET.get(client);
   }
 
+  public static CurrentServerInfo currentServerInfo(Client client) {
+    CurrentServerInfo currentServerInfo = CURRENT_SERVER_INFO_FIELD.get(client);
+    if (currentServerInfo == null) {
+      currentServerInfo = CurrentServerInfo.of(client.getEndpoints());
+      CURRENT_SERVER_INFO_FIELD.set(client, currentServerInfo);
+    }
+    return currentServerInfo;
+  }
+
   @Nullable
   static DbServerTarget parseConfiguredServerTarget(Set<String> endpoints) {
     DbServerTargetBuilder builder = DbServerTarget.builder(-1).setSorted(true);
@@ -68,21 +86,86 @@ public class ClickHouseClientV2Singletons {
     return builder.build();
   }
 
-  @Nullable
-  public static AddressAndPort getAddressAndPort(Client client) {
-    return ADDRESS_AND_PORT.get(client);
+  public static void capturePeer(ClickHouseDbRequest request, Object selectedNode)
+      throws Exception {
+    PEER_ACCESSOR.get(selectedNode.getClass()).capture(request, selectedNode);
   }
 
-  public static AddressAndPort setAddressAndPort(Client client, @Nullable String endpoint) {
-    AddressAndPort addressAndPort = new AddressAndPort();
+  private static class PeerAccessor {
+    private static final PeerAccessor UNAVAILABLE = new PeerAccessor(null, null);
 
-    if (endpoint != null) {
-      addressAndPort.setAddress(UrlParser.getHost(endpoint));
-      addressAndPort.setPort(UrlParser.getPort(endpoint));
+    @Nullable private final Method getHost;
+    @Nullable private final Method getPort;
+
+    private PeerAccessor(@Nullable Method getHost, @Nullable Method getPort) {
+      this.getHost = getHost;
+      this.getPort = getPort;
     }
-    ADDRESS_AND_PORT.set(client, addressAndPort);
 
-    return addressAndPort;
+    private static PeerAccessor create(Class<?> selectedNodeClass) {
+      try {
+        return new PeerAccessor(
+            selectedNodeClass.getMethod("getHost"), selectedNodeClass.getMethod("getPort"));
+      } catch (NoSuchMethodException ignored) {
+        return UNAVAILABLE;
+      }
+    }
+
+    private void capture(ClickHouseDbRequest request, Object selectedNode) throws Exception {
+      if (getHost == null || getPort == null) {
+        return;
+      }
+      String host = (String) getHost.invoke(selectedNode);
+      int port = (Integer) getPort.invoke(selectedNode);
+      request.setPeer(DbServerTarget.builder(-1).addEndpoint(host, port).build());
+    }
+  }
+
+  public static class CurrentServerInfo {
+    private static final CurrentServerInfo EMPTY = new CurrentServerInfo(null, null, null);
+
+    @Nullable private final String address;
+    @Nullable private final Integer port;
+    @Nullable private final DbServerTarget peer;
+
+    private CurrentServerInfo(
+        @Nullable String address, @Nullable Integer port, @Nullable DbServerTarget peer) {
+      this.address = address;
+      this.port = port;
+      this.peer = peer;
+    }
+
+    private static CurrentServerInfo of(Set<String> endpoints) {
+      if (endpoints.isEmpty()) {
+        return EMPTY;
+      }
+      String endpoint = endpoints.iterator().next();
+      EndpointTarget extracted = EndpointTarget.parse(endpoint);
+      int peerPort =
+          extracted == null
+              ? -1
+              : extracted.port == null ? extracted.defaultPort() : extracted.port;
+      DbServerTarget peer =
+          extracted == null
+              ? null
+              : DbServerTarget.builder(-1).addEndpoint(extracted.address, peerPort).build();
+      return new CurrentServerInfo(UrlParser.getHost(endpoint), UrlParser.getPort(endpoint), peer);
+    }
+
+    @Nullable
+    public String getAddress() {
+      return address;
+    }
+
+    @Nullable
+    public Integer getPort() {
+      return port;
+    }
+
+    @Nullable
+    public DbServerTarget getPeer() {
+      return peer;
+    }
   }
 
   private static class EndpointTarget {

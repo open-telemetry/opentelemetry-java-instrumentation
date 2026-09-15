@@ -93,6 +93,24 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   }
 
   @Test
+  void testJmxMetricsIncludeExcludeMapping() {
+    Map<String, String> properties = new HashMap<>();
+    properties.put("otel.jmx.metrics.included", "jvm.*,kafka.*");
+    properties.put("otel.jmx.metrics.excluded", "kafka.connect.*");
+
+    DeclarativeConfigProperties metrics =
+        DeclarativeConfigBridge.createInstrumentationConfig(
+                DefaultConfigProperties.createFromMap(properties))
+            .getInstrumentationConfig()
+            .getStructured("java")
+            .getStructured("jmx")
+            .getStructured("metrics");
+
+    assertThat(metrics.getScalarList("included", String.class)).containsExactly("jvm.*", "kafka.*");
+    assertThat(metrics.getScalarList("excluded", String.class)).containsExactly("kafka.connect.*");
+  }
+
+  @Test
   void testGeneralHttpListMapping() {
     DeclarativeConfigProperties config =
         createConfig("otel.instrumentation.http.client.capture-request-headers", "header1,header2");

@@ -96,7 +96,9 @@ class OpenSearchRestClientTransportTest extends AbstractOpenSearchTest {
                     .hasAttributesSatisfyingExactly(
                         equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
                         equalTo(maybeStable(DB_OPERATION), "GET"),
-                        equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health"),
+                        equalTo(
+                            maybeStable(DB_STATEMENT),
+                            emitStableDatabaseSemconv() ? null : "GET /_cluster/health"),
                         equalTo(NETWORK_TYPE, null),
                         equalTo(
                             SERVER_ADDRESS,

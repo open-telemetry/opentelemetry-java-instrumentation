@@ -717,14 +717,16 @@ abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(keys)),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TYPE, NORMAL),
-                bodySize(body),
+                equalTo(
+                    MESSAGING_MESSAGE_BODY_SIZE,
+                    emitOldMessagingSemconv() ? (long) body.length : null),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                namespace(),
+                equalTo(MESSAGING_ROCKETMQ_NAMESPACE, emitStableMessagingSemconv() ? "" : null),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
-                oldOperation("publish"),
-                operationName("send"),
-                operationType("send")));
+                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
+                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
+                equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null)));
     attributeAssertions.addAll(asList(extraAttributes));
 
     return span.hasKind(SpanKind.PRODUCER)
@@ -749,14 +751,16 @@ abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(keys)),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_GROUP, messageGroup),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TYPE, FIFO),
-                bodySize(body),
+                equalTo(
+                    MESSAGING_MESSAGE_BODY_SIZE,
+                    emitOldMessagingSemconv() ? (long) body.length : null),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                namespace(),
+                equalTo(MESSAGING_ROCKETMQ_NAMESPACE, emitStableMessagingSemconv() ? "" : null),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
-                oldOperation("publish"),
-                operationName("send"),
-                operationType("send")));
+                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
+                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
+                equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null)));
     attributeAssertions.addAll(asList(extraAttributes));
 
     return span.hasKind(SpanKind.PRODUCER)
@@ -781,14 +785,16 @@ abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(keys)),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP, deliveryTimestamp),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TYPE, DELAY),
-                bodySize(body),
+                equalTo(
+                    MESSAGING_MESSAGE_BODY_SIZE,
+                    emitOldMessagingSemconv() ? (long) body.length : null),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                namespace(),
+                equalTo(MESSAGING_ROCKETMQ_NAMESPACE, emitStableMessagingSemconv() ? "" : null),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
-                oldOperation("publish"),
-                operationName("send"),
-                operationType("send")));
+                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
+                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
+                equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null)));
     attributeAssertions.addAll(asList(extraAttributes));
 
     return span.hasKind(SpanKind.PRODUCER)
@@ -818,11 +824,11 @@ abstract class AbstractRocketMqClientTest {
                     MESSAGING_ROCKETMQ_CLIENT_GROUP,
                     emitOldMessagingSemconv() ? consumerGroup : null),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                namespace(),
+                equalTo(MESSAGING_ROCKETMQ_NAMESPACE, emitStableMessagingSemconv() ? "" : null),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
-                oldOperation("receive"),
-                operationName("receive"),
-                operationType("receive"),
+                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null),
+                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "receive" : null),
+                equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "receive" : null),
                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1),
                 // receiving is a batching operation, so the message id is on the link instead
                 equalTo(MESSAGING_MESSAGE_ID, null),
@@ -915,14 +921,17 @@ abstract class AbstractRocketMqClientTest {
                     emitOldMessagingSemconv() ? consumerGroup : null),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(keys)),
-                bodySize(body),
+                equalTo(
+                    MESSAGING_MESSAGE_BODY_SIZE,
+                    emitOldMessagingSemconv() ? (long) body.length : null),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                namespace(),
+                equalTo(MESSAGING_ROCKETMQ_NAMESPACE, emitStableMessagingSemconv() ? "" : null),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
-                oldOperation("process"),
-                operationName("process"),
-                operationType("process")));
+                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
+                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null),
+                equalTo(
+                    MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null)));
     attributeAssertions.addAll(asList(extraAttributes));
 
     SpanDataAssert result =
@@ -956,14 +965,17 @@ abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(keys)),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_GROUP, messageGroup),
-                bodySize(body),
+                equalTo(
+                    MESSAGING_MESSAGE_BODY_SIZE,
+                    emitOldMessagingSemconv() ? (long) body.length : null),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                namespace(),
+                equalTo(MESSAGING_ROCKETMQ_NAMESPACE, emitStableMessagingSemconv() ? "" : null),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
-                oldOperation("process"),
-                operationName("process"),
-                operationType("process")));
+                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
+                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null),
+                equalTo(
+                    MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null)));
     attributeAssertions.addAll(asList(extraAttributes));
 
     SpanDataAssert result =
@@ -997,14 +1009,17 @@ abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(keys)),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP, deliveryTimestamp),
-                bodySize(body),
+                equalTo(
+                    MESSAGING_MESSAGE_BODY_SIZE,
+                    emitOldMessagingSemconv() ? (long) body.length : null),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                namespace(),
+                equalTo(MESSAGING_ROCKETMQ_NAMESPACE, emitStableMessagingSemconv() ? "" : null),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
-                oldOperation("process"),
-                operationName("process"),
-                operationType("process")));
+                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
+                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null),
+                equalTo(
+                    MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null)));
     attributeAssertions.addAll(asList(extraAttributes));
 
     SpanDataAssert result =
@@ -1175,26 +1190,5 @@ abstract class AbstractRocketMqClientTest {
                     && (metric.getName().equals("messaging.publish.duration")
                         || metric.getName().equals("messaging.receive.duration")
                         || metric.getName().equals("messaging.receive.messages")));
-  }
-
-  private static AttributeAssertion bodySize(byte[] body) {
-    return equalTo(
-        MESSAGING_MESSAGE_BODY_SIZE, emitOldMessagingSemconv() ? (long) body.length : null);
-  }
-
-  private static AttributeAssertion oldOperation(String operation) {
-    return equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? operation : null);
-  }
-
-  private static AttributeAssertion namespace() {
-    return equalTo(MESSAGING_ROCKETMQ_NAMESPACE, emitStableMessagingSemconv() ? "" : null);
-  }
-
-  private static AttributeAssertion operationName(String operation) {
-    return equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? operation : null);
-  }
-
-  private static AttributeAssertion operationType(String operation) {
-    return equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operation : null);
   }
 }

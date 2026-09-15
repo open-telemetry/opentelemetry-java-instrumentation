@@ -8,3 +8,19 @@ dependencies {
 
   bootstrap(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
 }
+
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+      }
+    }
+  }
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
+  }
+}

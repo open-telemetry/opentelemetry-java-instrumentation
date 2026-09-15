@@ -461,28 +461,27 @@ accessible from the instrumented application code.
 Ideally javaagent instrumentation is just a thin wrapper over library instrumentation, and so there
 is no need to write unit tests that directly access the javaagent instrumentation classes.
 
-If you still want to write a unit test against javaagent instrumentation, add another module
-named `javaagent-unit-tests`. Continuing with the example above:
-
-```
-instrumentation ->
-    ...
-    yarpc-1.0 ->
-        javaagent
-            build.gradle.kts
-        javaagent-unit-tests
-            build.gradle.kts
-        ...
-```
-
-Set up the unit tests project as a standard Java project:
+If you still want to write a unit test against javaagent instrumentation, add a JVM test suite
+whose name ends with `unitTests` to the `javaagent` module. These suites run without the javaagent
+and keep the instrumentation classes on the test classpath:
 
 ```kotlin
-plugins {
-  id("otel.java-conventions")
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+      }
+    }
+  }
 }
 
-dependencies {
-  testImplementation(project(":instrumentation:yarpc-1.0:javaagent"))
+tasks {
+  check {
+    dependsOn(testing.suites)
+  }
 }
 ```
+
+Place the tests under `src/unitTests`. Add any test-only dependencies to the suite's
+`dependencies` block.
