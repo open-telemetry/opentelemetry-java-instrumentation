@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.Servi
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.vertx.core.Future;
 import io.vertx.redis.client.Command;
@@ -29,7 +30,7 @@ public class VertxRedisClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vertx-redis-client-4.0";
   private static final Instrumenter<VertxRedisClientRequest, Void> instrumenter;
 
-  private static final ThreadLocal<RedisURI> redisUriThreadLocal = new ThreadLocal<>();
+  private static final ScopedThreadValue<RedisURI> redisUriThreadLocal = new ScopedThreadValue<>();
   private static final VirtualField<Command, String> COMMAND_NAME =
       VirtualField.find(Command.class, String.class);
   private static final VirtualField<RedisStandaloneConnection, RedisURI> REDIS_URI =
@@ -92,12 +93,13 @@ public class VertxRedisClientSingletons {
     return redisUriThreadLocal.get();
   }
 
-  public static void setRedisUriThreadLocal(RedisURI redisUri) {
-    redisUriThreadLocal.set(redisUri);
+  @Nullable
+  public static RedisURI setRedisUriThreadLocal(RedisURI redisUri) {
+    return redisUriThreadLocal.set(redisUri);
   }
 
-  public static void clearRedisUriThreadLocal() {
-    redisUriThreadLocal.remove();
+  public static void restoreRedisUriThreadLocal(@Nullable RedisURI previous) {
+    redisUriThreadLocal.restore(previous);
   }
 
   public static void setCommandName(Command command, String commandName) {
