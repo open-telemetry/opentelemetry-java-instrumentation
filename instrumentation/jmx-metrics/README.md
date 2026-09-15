@@ -24,7 +24,7 @@ $ java -javaagent:path/to/opentelemetry-javaagent.jar \
      -jar myapp.jar
 ```
 
-Starting with 3.0, the stable pre-defined metrics are always enabled by default, the non-stable metrics are opt-in using the `otel.jmx.metrics.experimental.included` property. For example:
+Starting with 3.0 (or with the `otel.instrumentation.common.v3-preview=true` option), the stable pre-defined metrics are always enabled by default, the non-stable metrics are opt-in using the `otel.jmx.metrics.experimental.included` property. For example:
 
 ```bash
 $ java -javaagent:path/to/opentelemetry-javaagent.jar \
