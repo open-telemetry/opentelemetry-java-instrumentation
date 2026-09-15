@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisS
 import io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -46,11 +47,12 @@ final class LettuceBatchRequest {
 
   static LettuceBatchRequest create(
       List<RedisCommand<?, ?, ?>> commands, @Nullable LettuceConnectionState connectionState) {
+    List<RedisCommand<?, ?, ?>> commandSnapshot = new ArrayList<>(commands);
     return new LettuceBatchRequest(
-        operationName(commands),
-        queryText(commands),
-        commands.size() != 1 ? (long) commands.size() : null,
-        commands,
+        operationName(commandSnapshot),
+        queryText(commandSnapshot),
+        commandSnapshot.size() != 1 ? (long) commandSnapshot.size() : null,
+        commandSnapshot,
         connectionState);
   }
 

@@ -31,6 +31,8 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -159,6 +161,19 @@ class LettuceNetworkAttributesGetterTest {
         .isEqualTo(emitStableDatabaseSemconv() ? "10.1.2.3" : null);
     assertThat(getter.getNetworkPeerPort(request, null))
         .isEqualTo(emitStableDatabaseSemconv() ? PORT : null);
+  }
+
+  @Test
+  void batchKeepsCommandSnapshotWhenSourceListChanges() throws UnknownHostException {
+    InetSocketAddress address =
+        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT);
+    List<RedisCommand<?, ?, ?>> commands = new ArrayList<>();
+    commands.add(commandWithPeer(address));
+    LettuceBatchRequest request = LettuceBatchRequest.create(commands, null);
+
+    commands.clear();
+
+    assertThat(request.getPeerAddress()).isEqualTo(address);
   }
 
   @Test
