@@ -34,6 +34,9 @@ public class MongoClusterSettings {
   private static final VirtualField<ClusterSettings, Configuration> SETTINGS_CONFIGURATION =
       VirtualField.find(ClusterSettings.class, Configuration.class);
 
+  // Mongo#createCluster advice produces this one-shot handoff for ClusterSettings.Builder#build
+  // advice, which consumes it in built(). If the build does not complete,
+  // LegacySrvTargetScope.close() removes it when createCluster exits.
   private static final ThreadLocal<MongoServerTarget> legacySrvTarget = new ThreadLocal<>();
 
   public static void initialize(ClusterSettings.Builder builder) {

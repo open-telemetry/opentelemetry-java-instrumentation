@@ -97,6 +97,20 @@ class MongoClusterSettingsTest {
     }
   }
 
+  @Test
+  void legacySrvTargetIsRemovedWhenBuildDoesNotComplete() {
+    LegacySrvTargetScope scope =
+        requireNonNull(
+            MongoClusterSettings.openLegacySrvTargetScope(
+                "mongodb+srv://failed.example.com/database"));
+
+    scope.close();
+
+    MongoServerTarget target = configuredTarget(directBuilder());
+    assertThat(target.getAddress()).isEqualTo("direct.example");
+    assertThat(target.getPort()).isEqualTo(27018);
+  }
+
   private static ClusterSettings.Builder directBuilder() {
     ClusterSettings.Builder builder = ClusterSettings.builder();
     List<ServerAddress> hosts = singletonList(new ServerAddress("direct.example", 27018));
