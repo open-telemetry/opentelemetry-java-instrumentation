@@ -127,7 +127,7 @@ public final class JmxTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public JmxTelemetryBuilder setMetrics(IncludeExclude metrics) {
-    this.metrics = metrics;
+    this.metrics = requireNonNull(metrics, "metrics");
     return this;
   }
 
@@ -139,7 +139,7 @@ public final class JmxTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public JmxTelemetryBuilder internalMetricsSystemFilter(IncludeExclude systemFilter) {
-    internalMetricsSystemFilter = systemFilter;
+    internalMetricsSystemFilter = requireNonNull(systemFilter, "systemFilter");
     return this;
   }
 
@@ -152,7 +152,7 @@ public final class JmxTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public JmxTelemetryBuilder internalMetricsUnstableMetricsFilter(IncludeExclude metricsFilter) {
-    internalMetricsUnstableMetricsFilter = metricsFilter;
+    internalMetricsUnstableMetricsFilter = requireNonNull(metricsFilter, "metricsFilter");
     return this;
   }
 
