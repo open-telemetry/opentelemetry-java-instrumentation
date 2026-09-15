@@ -16,6 +16,7 @@ import io.vertx.redis.client.RedisConnection;
 import io.vertx.redis.client.impl.RedisConnectionManagerUtil;
 import io.vertx.redis.client.impl.RedisStandaloneConnection;
 import io.vertx.redis.client.impl.RedisURI;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -51,16 +52,16 @@ class RedisConnectionProviderInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class InitAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(@Advice.FieldValue("redisURI") RedisURI redisUri) {
-      // for 4.1.0 and later we set RedisURI in a ThreadLocal that is used in advice added in
-      // RedisStandaloneConnectionInstrumentation that attaches RedisURI to
-      // RedisStandaloneConnection
-      VertxRedisClientSingletons.setRedisUriThreadLocal(redisUri);
+    @Nullable
+    public static RedisURI onEnter(@Advice.FieldValue("redisURI") RedisURI redisUri) {
+      // For 4.1.0 and later, init constructs RedisStandaloneConnection without passing RedisURI.
+      // Its constructor advice consumes RedisURI from this scoped thread local.
+      return VertxRedisClientSingletons.setRedisUriThreadLocal(redisUri);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit() {
-      VertxRedisClientSingletons.clearRedisUriThreadLocal();
+    public static void onExit(@Advice.Enter @Nullable RedisURI previous) {
+      VertxRedisClientSingletons.restoreRedisUriThreadLocal(previous);
     }
   }
 
