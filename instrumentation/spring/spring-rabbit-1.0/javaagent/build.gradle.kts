@@ -32,6 +32,15 @@ dependencies {
 
 testing {
   suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation:rabbitmq-2.7:bootstrap"))
+        implementation(project(":javaagent-extension-api"))
+        implementation("org.springframework.amqp:spring-rabbit:2.1.7.RELEASE")
+      }
+    }
+
     register<JvmTestSuite>("version11Test") {
       dependencies {
         implementation("io.opentelemetry:opentelemetry-sdk-testing")

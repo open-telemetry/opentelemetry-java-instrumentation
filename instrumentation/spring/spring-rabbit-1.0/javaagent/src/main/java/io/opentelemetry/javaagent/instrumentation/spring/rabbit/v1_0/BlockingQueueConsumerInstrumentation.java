@@ -5,14 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
-import static io.opentelemetry.javaagent.bootstrap.rabbitmq.RabbitMqConsumerProcessTracing.restoreSpringProcessTelemetry;
-import static io.opentelemetry.javaagent.bootstrap.rabbitmq.RabbitMqConsumerProcessTracing.setSpringProcessTelemetry;
+import static io.opentelemetry.javaagent.bootstrap.rabbitmq.RabbitMqConsumerProcessTracing.rabbitProcessTracingSuppression;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -36,14 +34,20 @@ class BlockingQueueConsumerInstrumentation implements TypeInstrumentation {
   public static class ConsumerRegistrationAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    @Nullable
-    public static Boolean onEnter(@Advice.This BlockingQueueConsumer consumer) {
-      return setSpringProcessTelemetry(SpringRabbitListenerUtil.isSpringListenerConsumer(consumer));
+    public static boolean onEnter(@Advice.This BlockingQueueConsumer consumer) {
+      if (!SpringRabbitListenerUtil.isSpringListenerConsumer(consumer)
+          || rabbitProcessTracingSuppression().get() != null) {
+        return false;
+      }
+      rabbitProcessTracingSuppression().set(Boolean.TRUE);
+      return true;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter @Nullable Boolean previous) {
-      restoreSpringProcessTelemetry(previous);
+    public static void onExit(@Advice.Enter boolean installed) {
+      if (installed) {
+        rabbitProcessTracingSuppression().restore(null);
+      }
     }
   }
 }
