@@ -11,6 +11,7 @@ import io.opentelemetry.javaagent.bootstrap.jms.JmsMessageDeliveryState;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -19,7 +20,7 @@ import org.junit.jupiter.api.Test;
 class JmsMessageDeliveryStateTest {
 
   @Test
-  void consumedMessagesCanOnlyBeClaimedOnce() throws Exception {
+  void consumedMessagesCanOnlyBeClaimedOnce() throws ExecutionException, InterruptedException {
     JmsMessageDeliveryState state = new JmsMessageDeliveryState();
     ExecutorService executor = Executors.newFixedThreadPool(8);
     try {
