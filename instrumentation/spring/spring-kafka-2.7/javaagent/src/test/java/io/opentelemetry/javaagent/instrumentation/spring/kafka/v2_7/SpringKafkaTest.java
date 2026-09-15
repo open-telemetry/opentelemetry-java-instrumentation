@@ -238,8 +238,10 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
           return null;
         });
 
-    String nestedProcessName = spanName(nestedTopic, "process", "process");
-    String nestedReceiveName = spanName(nestedTopic, "receive", "poll");
+    String nestedProcessName =
+        emitStableMessagingSemconv() ? "process " + nestedTopic : nestedTopic + " process";
+    String nestedReceiveName =
+        emitStableMessagingSemconv() ? "poll " + nestedTopic : nestedTopic + " receive";
     await()
         .atMost(Duration.ofSeconds(30))
         .untilAsserted(
