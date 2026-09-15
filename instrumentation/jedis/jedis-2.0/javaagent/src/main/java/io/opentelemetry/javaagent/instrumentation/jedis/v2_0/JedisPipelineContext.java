@@ -22,44 +22,62 @@ public final class JedisPipelineContext {
   private static final VirtualField<Queable, BatchState> BATCH_STATE =
       VirtualField.find(Queable.class, BatchState.class);
 
-  public static void enter(Object batch) {
+  @Nullable
+  public static Object enter(Object batch) {
+    Queable previous = currentBatch.get();
     // Pipeline aggregates at sync() and Transaction at exec(); both capture their queued commands
     // here. Other Queable subtypes have no flush point, so leaving them uncaptured keeps their
     // per-command spans.
     if (batch instanceof Pipeline || batch instanceof Transaction) {
       currentBatch.set((Queable) batch);
     }
+    return previous;
   }
 
-  public static void exit() {
-    currentBatch.remove();
+  public static void exit(@Nullable Object previous) {
+    if (previous == null) {
+      currentBatch.remove();
+    } else {
+      currentBatch.set((Queable) previous);
+    }
   }
 
-  public static void enterTransactionFraming() {
+  @Nullable
+  public static Object enterTransactionFraming() {
+    TransactionFraming previous = currentTransactionFraming.get();
     currentTransactionFraming.set(new TransactionFraming(null));
+    return previous;
   }
 
-  public static void enterTransactionFraming(JedisRequest request) {
+  @Nullable
+  public static Object enterTransactionFraming(JedisRequest request) {
+    TransactionFraming previous = currentTransactionFraming.get();
     currentTransactionFraming.set(new TransactionFraming(request));
+    return previous;
   }
 
-  public static void exitTransactionFraming(@Nullable Object transaction) {
+  public static void exitTransactionFraming(
+      @Nullable Object transaction, @Nullable Object previous) {
     try {
       TransactionFraming framing = currentTransactionFraming.get();
       if (framing != null && framing.framingRequest != null && transaction instanceof Queable) {
         batchState((Queable) transaction).transactionFramingRequest = framing.framingRequest;
       }
     } finally {
-      clearTransactionFraming();
+      restoreTransactionFraming(previous);
     }
   }
 
-  public static void exitTransactionFraming() {
-    clearTransactionFraming();
+  public static void exitTransactionFraming(@Nullable Object previous) {
+    restoreTransactionFraming(previous);
   }
 
-  private static void clearTransactionFraming() {
-    currentTransactionFraming.remove();
+  private static void restoreTransactionFraming(@Nullable Object previous) {
+    if (previous == null) {
+      currentTransactionFraming.remove();
+    } else {
+      currentTransactionFraming.set((TransactionFraming) previous);
+    }
   }
 
   public static boolean inTransactionFraming() {
