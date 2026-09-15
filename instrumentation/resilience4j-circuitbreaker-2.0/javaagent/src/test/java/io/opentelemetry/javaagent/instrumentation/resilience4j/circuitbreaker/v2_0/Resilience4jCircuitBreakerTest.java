@@ -1136,62 +1136,6 @@ class Resilience4jCircuitBreakerTest {
     return testing.runWithSpan("parent", decoratedSupplier::get);
   }
 
-  private static final class ThrowingFuture<T> implements Future<T> {
-
-    private final Throwable exception;
-
-    private ThrowingFuture(Throwable exception) {
-      this.exception = exception;
-    }
-
-    @Override
-    public boolean cancel(boolean mayInterruptIfRunning) {
-      return false;
-    }
-
-    @Override
-    public boolean isCancelled() {
-      return false;
-    }
-
-    @Override
-    public boolean isDone() {
-      return true;
-    }
-
-    @Override
-    public T get() throws InterruptedException, ExecutionException {
-      throwException();
-      return null;
-    }
-
-    @Override
-    public T get(long timeout, TimeUnit unit)
-        throws InterruptedException, ExecutionException, TimeoutException {
-      if (exception instanceof TimeoutException timeoutException) {
-        throw timeoutException;
-      }
-      throwException();
-      return null;
-    }
-
-    private void throwException() throws InterruptedException, ExecutionException {
-      if (exception instanceof InterruptedException interruptedException) {
-        throw interruptedException;
-      }
-      if (exception instanceof ExecutionException executionException) {
-        throw executionException;
-      }
-      if (exception instanceof RuntimeException runtimeException) {
-        throw runtimeException;
-      }
-      if (exception instanceof Error error) {
-        throw error;
-      }
-      throw new AssertionError(exception);
-    }
-  }
-
   private static void assertCircuitBreakerSpanIsParentOfProtectedOperation(String outcome) {
     testing.waitAndAssertTraces(
         trace ->
@@ -1252,5 +1196,61 @@ class Resilience4jCircuitBreakerTest {
 
   private static <T> T experimental(T value) {
     return EXPERIMENTAL_ATTRIBUTES ? value : null;
+  }
+
+  private static final class ThrowingFuture<T> implements Future<T> {
+
+    private final Throwable exception;
+
+    private ThrowingFuture(Throwable exception) {
+      this.exception = exception;
+    }
+
+    @Override
+    public boolean cancel(boolean mayInterruptIfRunning) {
+      return false;
+    }
+
+    @Override
+    public boolean isCancelled() {
+      return false;
+    }
+
+    @Override
+    public boolean isDone() {
+      return true;
+    }
+
+    @Override
+    public T get() throws InterruptedException, ExecutionException {
+      throwException();
+      return null;
+    }
+
+    @Override
+    public T get(long timeout, TimeUnit unit)
+        throws InterruptedException, ExecutionException, TimeoutException {
+      if (exception instanceof TimeoutException timeoutException) {
+        throw timeoutException;
+      }
+      throwException();
+      return null;
+    }
+
+    private void throwException() throws InterruptedException, ExecutionException {
+      if (exception instanceof InterruptedException interruptedException) {
+        throw interruptedException;
+      }
+      if (exception instanceof ExecutionException executionException) {
+        throw executionException;
+      }
+      if (exception instanceof RuntimeException runtimeException) {
+        throw runtimeException;
+      }
+      if (exception instanceof Error error) {
+        throw error;
+      }
+      throw new AssertionError(exception);
+    }
   }
 }
