@@ -30,6 +30,7 @@ import java.util.function.Supplier;
 
 final class TestPgDriver extends PgDriver {
   private final Function<PgConnectOptions, Future<?>> connectionProvider;
+  private final Runnable beforePoolConstruction;
   private final Runnable beforeSchedule;
   private final Consumer<Throwable> afterCompletion;
   private PoolImpl pool;
@@ -43,14 +44,21 @@ final class TestPgDriver extends PgDriver {
       Function<PgConnectOptions, Future<?>> connectionProvider,
       Runnable beforeSchedule,
       Consumer<Throwable> afterCompletion) {
-    return new TestPgDriver(connectionProvider, beforeSchedule, afterCompletion);
+    return new TestPgDriver(connectionProvider, () -> {}, beforeSchedule, afterCompletion);
+  }
+
+  static TestPgDriver createWithPoolConstructionHook(
+      Function<PgConnectOptions, Future<?>> connectionProvider, Runnable beforePoolConstruction) {
+    return new TestPgDriver(connectionProvider, beforePoolConstruction, () -> {}, ignored -> {});
   }
 
   private TestPgDriver(
       Function<PgConnectOptions, Future<?>> connectionProvider,
+      Runnable beforePoolConstruction,
       Runnable beforeSchedule,
       Consumer<Throwable> afterCompletion) {
     this.connectionProvider = connectionProvider;
+    this.beforePoolConstruction = beforePoolConstruction;
     this.beforeSchedule = beforeSchedule;
     this.afterCompletion = afterCompletion;
   }
@@ -63,6 +71,7 @@ final class TestPgDriver extends PgDriver {
       PoolOptions poolOptions,
       NetClientOptions transportOptions,
       CloseFuture closeFuture) {
+    beforePoolConstruction.run();
     ConnectionFactory<PgConnectOptions> factory = createConnectionFactory(vertx, transportOptions);
     PoolImpl pool =
         new PoolImpl(

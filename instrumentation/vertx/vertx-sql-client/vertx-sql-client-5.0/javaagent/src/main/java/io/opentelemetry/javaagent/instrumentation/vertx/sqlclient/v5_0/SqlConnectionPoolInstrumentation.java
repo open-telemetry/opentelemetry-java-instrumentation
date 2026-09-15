@@ -59,7 +59,7 @@ class SqlConnectionPoolInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Submission previous) {
-      VertxSqlClientConnectionPoolState.setSubmission(previous);
+      VertxSqlClientConnectionPoolState.exitSubmission(previous);
     }
   }
 }
