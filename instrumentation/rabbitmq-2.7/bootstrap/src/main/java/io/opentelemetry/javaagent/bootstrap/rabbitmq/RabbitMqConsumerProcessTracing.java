@@ -5,42 +5,27 @@
 
 package io.opentelemetry.javaagent.bootstrap.rabbitmq;
 
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
+import javax.annotation.Nullable;
+
 /** Coordinates process telemetry between Spring Rabbit and RabbitMQ instrumentations. */
 public final class RabbitMqConsumerProcessTracing {
 
-  private static final ThreadLocal<Registration> currentRegistration = new ThreadLocal<>();
+  private static final ScopedThreadValue<Boolean> springProcessTelemetry =
+      new ScopedThreadValue<>();
 
-  public static Registration startSpringProcessTelemetry() {
-    Registration registration = new Registration(currentRegistration.get());
-    currentRegistration.set(registration);
-    return registration;
+  @Nullable
+  public static Boolean setSpringProcessTelemetry(boolean enabled) {
+    Boolean previous = springProcessTelemetry.get();
+    return springProcessTelemetry.set(enabled ? Boolean.TRUE : previous);
+  }
+
+  public static void restoreSpringProcessTelemetry(@Nullable Boolean previous) {
+    springProcessTelemetry.restore(previous);
   }
 
   public static boolean shouldTraceProcess() {
-    return currentRegistration.get() == null;
-  }
-
-  public static final class Registration implements AutoCloseable {
-
-    private final Registration previous;
-    private boolean closed;
-
-    private Registration(Registration previous) {
-      this.previous = previous;
-    }
-
-    @Override
-    public void close() {
-      if (closed) {
-        return;
-      }
-      closed = true;
-      if (previous == null) {
-        currentRegistration.remove();
-      } else {
-        currentRegistration.set(previous);
-      }
-    }
+    return springProcessTelemetry.get() == null;
   }
 
   private RabbitMqConsumerProcessTracing() {}
