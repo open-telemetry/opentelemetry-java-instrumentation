@@ -168,9 +168,6 @@ targets:
       target: ':instrumentation:hystrix-1.4:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:ibmmq:ibmmq-9.0:javaagent'
-    - type: gradle
-      path: ./
       target: ':instrumentation:iceberg-1.8:library'
     - type: gradle
       path: ./
@@ -565,6 +562,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:hibernate:hibernate-reactive-1.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:ibmmq:ibmmq-9.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:ibmmq:ibmmq-9.3:javaagent'

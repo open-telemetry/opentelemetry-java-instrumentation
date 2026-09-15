@@ -5,14 +5,23 @@
 
 package io.opentelemetry.javaagent.instrumentation.ibmmq;
 
+import static java.util.logging.Level.FINE;
+
 import com.ibm.msg.client.jakarta.jms.JmsReadablePropertyContext;
 import com.ibm.msg.client.jakarta.wmq.common.CommonConstants;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 public class IbmMqJakartaJmsQmid {
 
+  private static final Logger logger = Logger.getLogger(IbmMqJakartaJmsQmid.class.getName());
+
+  // Never cached: the resolved properties are refreshed after an automatic client reconnect, which
+  // may land on a different queue manager.
   @Nullable
   public static String readQmid(Object jmsObject) {
+    // Not an IBM MQ object. That is an expected negative for other JMS providers rather than
+    // a failure, so this path stays silent.
     if (!(jmsObject instanceof JmsReadablePropertyContext)) {
       return null;
     }
@@ -27,7 +36,9 @@ public class IbmMqJakartaJmsQmid {
       qmid = qmid.trim();
       return qmid.isEmpty() ? null : qmid;
     } catch (Throwable t) {
-      // Enrichment is best-effort and must never affect the instrumented application.
+      // Unexpected, so it is logged, but enrichment stays best-effort and the failure never
+      // reaches the instrumented application.
+      logger.log(FINE, "Failed to read queue manager id from the JMS object", t);
       return null;
     }
   }
