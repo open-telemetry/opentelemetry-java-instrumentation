@@ -224,7 +224,8 @@ class RedisStandaloneConnectionInstrumentation implements TypeInstrumentation {
   public static class ConstructorAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This RedisStandaloneConnection connection) {
-      // used in 4.1.0, for 4.0.0 it is set in RedisConnectionProviderInstrumentation
+      // For 4.1.0 and later, InitAdvice exposes RedisURI during this synchronous constructor call.
+      // For 4.0.0, RedisConnectionProviderInstrumentation sets it directly.
       VertxRedisClientSingletons.setRedisUri(
           connection, VertxRedisClientSingletons.getRedisUriThreadLocal());
     }
