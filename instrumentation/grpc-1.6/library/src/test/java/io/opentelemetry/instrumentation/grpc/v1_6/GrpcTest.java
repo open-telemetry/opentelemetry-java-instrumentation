@@ -49,14 +49,17 @@ class GrpcTest extends AbstractGrpcTest {
 
   @Override
   protected ServerBuilder<?> configureServer(ServerBuilder<?> server) {
-    return server.intercept(
+    GrpcTelemetry telemetry =
         GrpcTelemetry.builder(testing.getOpenTelemetry())
             .setServerRequestMetadata(
                 IncludeExclude.builder()
                     .setIncluded(singletonList(SERVER_REQUEST_METADATA_KEY))
                     .build())
-            .build()
-            .createServerInterceptor());
+            .build();
+    telemetry.configureServerBuilder(server);
+    // A server can receive both application and Java agent configuration.
+    telemetry.configureServerBuilder(server);
+    return server;
   }
 
   @Override
@@ -207,17 +210,14 @@ class GrpcTest extends AbstractGrpcTest {
           }
         };
 
-    Server server =
-        ServerBuilder.forPort(0)
-            .addService(greeter)
-            .intercept(
-                GrpcTelemetry.builder(testing.getOpenTelemetry())
-                    .addAttributesExtractor(new CustomAttributesExtractor())
-                    .addServerAttributeExtractor(new CustomAttributesExtractorV2("serverSideValue"))
-                    .build()
-                    .createServerInterceptor())
-            .build()
-            .start();
+    GrpcTelemetry serverTelemetry =
+        GrpcTelemetry.builder(testing.getOpenTelemetry())
+            .addAttributesExtractor(new CustomAttributesExtractor())
+            .addServerAttributeExtractor(new CustomAttributesExtractorV2("serverSideValue"))
+            .build();
+    ServerBuilder<?> serverBuilder = ServerBuilder.forPort(0).addService(greeter);
+    serverTelemetry.configureServerBuilder(serverBuilder);
+    Server server = serverBuilder.build().start();
 
     ManagedChannel channel =
         createChannel(
