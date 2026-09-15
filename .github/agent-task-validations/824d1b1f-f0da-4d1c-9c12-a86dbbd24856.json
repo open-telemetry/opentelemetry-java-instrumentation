@@ -1,0 +1,17 @@
+[
+  {
+    "command": "runtime-tools-secret_scanning instrumentation/resilience4j-circuitbreaker-2.0/javaagent/src/test/java/io/opentelemetry/javaagent/instrumentation/resilience4j/circuitbreaker/v2_0/Resilience4jCircuitBreakerTest.java",
+    "status": "passed",
+    "detail": "Hosted secret scanning found no secrets in the changed file."
+  },
+  {
+    "command": "parallel_validation for the test-only member reorder",
+    "status": "passed",
+    "detail": "Hosted validation accepted the change and skipped CodeQL under the declared test-only triviality assessment."
+  },
+  {
+    "command": ".github/workflows/gradle-wrapper-validation.yml run 35011172323",
+    "status": "passed",
+    "detail": "GitHub Actions Gradle wrapper validation completed successfully for fix commit 259446eb2e8876612106befc64bfc57113da1563."
+  }
+]
