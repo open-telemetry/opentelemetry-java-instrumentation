@@ -6,10 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.resilience4j.circuitbreaker.v2_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
@@ -474,18 +474,33 @@ class Resilience4jCircuitBreakerTest {
         .singleElement()
         .satisfies(
             span ->
-                assertThat(
-                        span.getAttributes().get(stringKey("resilience4j.circuit_breaker.outcome")))
-                    .isEqualTo(experimental("success")));
+                assertThat(span)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            stringKey("resilience4j.circuit_breaker.name"),
+                            experimental("test-circuit-breaker")),
+                        equalTo(
+                            stringKey("resilience4j.circuit_breaker.state"),
+                            experimental("closed")),
+                        equalTo(
+                            stringKey("resilience4j.circuit_breaker.outcome"),
+                            experimental("success"))));
     assertThat(testing.spans())
         .filteredOn(span -> span.getName().equals("CircuitBreaker test-circuit-breaker"))
         .filteredOn(span -> span.getStatus().equals(StatusData.error()))
         .singleElement()
         .satisfies(
             span -> {
-              assertThat(
-                      span.getAttributes().get(stringKey("resilience4j.circuit_breaker.outcome")))
-                  .isEqualTo(experimental("failure"));
+              assertThat(span)
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(
+                          stringKey("resilience4j.circuit_breaker.name"),
+                          experimental("test-circuit-breaker")),
+                      equalTo(
+                          stringKey("resilience4j.circuit_breaker.state"), experimental("closed")),
+                      equalTo(
+                          stringKey("resilience4j.circuit_breaker.outcome"),
+                          experimental("failure")));
               assertThat(span.getEvents())
                   .singleElement()
                   .satisfies(
@@ -813,18 +828,33 @@ class Resilience4jCircuitBreakerTest {
         .singleElement()
         .satisfies(
             span ->
-                assertThat(
-                        span.getAttributes().get(stringKey("resilience4j.circuit_breaker.outcome")))
-                    .isEqualTo(experimental("cancelled")));
+                assertThat(span)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            stringKey("resilience4j.circuit_breaker.name"),
+                            experimental("test-circuit-breaker")),
+                        equalTo(
+                            stringKey("resilience4j.circuit_breaker.state"),
+                            experimental("closed")),
+                        equalTo(
+                            stringKey("resilience4j.circuit_breaker.outcome"),
+                            experimental("cancelled"))));
     assertThat(testing.spans())
         .filteredOn(span -> span.getName().equals("CircuitBreaker test-circuit-breaker"))
         .filteredOn(span -> span.getStatus().equals(StatusData.error()))
         .singleElement()
         .satisfies(
             span -> {
-              assertThat(
-                      span.getAttributes().get(stringKey("resilience4j.circuit_breaker.outcome")))
-                  .isEqualTo(experimental("failure"));
+              assertThat(span)
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(
+                          stringKey("resilience4j.circuit_breaker.name"),
+                          experimental("test-circuit-breaker")),
+                      equalTo(
+                          stringKey("resilience4j.circuit_breaker.state"), experimental("closed")),
+                      equalTo(
+                          stringKey("resilience4j.circuit_breaker.outcome"),
+                          experimental("failure")));
               assertThat(span.getEvents())
                   .singleElement()
                   .satisfies(
@@ -897,18 +927,33 @@ class Resilience4jCircuitBreakerTest {
         .singleElement()
         .satisfies(
             span ->
-                assertThat(
-                        span.getAttributes().get(stringKey("resilience4j.circuit_breaker.outcome")))
-                    .isEqualTo(experimental("success")));
+                assertThat(span)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            stringKey("resilience4j.circuit_breaker.name"),
+                            experimental("test-circuit-breaker")),
+                        equalTo(
+                            stringKey("resilience4j.circuit_breaker.state"),
+                            experimental("closed")),
+                        equalTo(
+                            stringKey("resilience4j.circuit_breaker.outcome"),
+                            experimental("success"))));
     assertThat(testing.spans())
         .filteredOn(span -> span.getName().equals("CircuitBreaker test-circuit-breaker"))
         .filteredOn(span -> span.getStatus().equals(StatusData.error()))
         .singleElement()
         .satisfies(
             span -> {
-              assertThat(
-                      span.getAttributes().get(stringKey("resilience4j.circuit_breaker.outcome")))
-                  .isEqualTo(experimental("failure"));
+              assertThat(span)
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(
+                          stringKey("resilience4j.circuit_breaker.name"),
+                          experimental("test-circuit-breaker")),
+                      equalTo(
+                          stringKey("resilience4j.circuit_breaker.state"), experimental("closed")),
+                      equalTo(
+                          stringKey("resilience4j.circuit_breaker.outcome"),
+                          experimental("failure")));
               assertThat(span.getEvents())
                   .singleElement()
                   .satisfies(
@@ -956,13 +1001,16 @@ class Resilience4jCircuitBreakerTest {
         .satisfies(
             span -> {
               assertThat(span.getEvents()).isEmpty();
-              assertThat(span.getAttributes().get(stringKey("resilience4j.circuit_breaker.name")))
-                  .isEqualTo(experimental("test-circuit-breaker"));
-              assertThat(span.getAttributes().get(stringKey("resilience4j.circuit_breaker.state")))
-                  .isEqualTo(experimental("closed"));
-              assertThat(
-                      span.getAttributes().get(stringKey("resilience4j.circuit_breaker.outcome")))
-                  .isEqualTo(experimental("success"));
+              assertThat(span)
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(
+                          stringKey("resilience4j.circuit_breaker.name"),
+                          experimental("test-circuit-breaker")),
+                      equalTo(
+                          stringKey("resilience4j.circuit_breaker.state"), experimental("closed")),
+                      equalTo(
+                          stringKey("resilience4j.circuit_breaker.outcome"),
+                          experimental("success")));
             });
     assertThat(testing.spans())
         .filteredOn(span -> span.getName().equals("CircuitBreaker test-circuit-breaker"))
@@ -970,13 +1018,16 @@ class Resilience4jCircuitBreakerTest {
         .singleElement()
         .satisfies(
             span -> {
-              assertThat(span.getAttributes().get(stringKey("resilience4j.circuit_breaker.name")))
-                  .isEqualTo(experimental("test-circuit-breaker"));
-              assertThat(span.getAttributes().get(stringKey("resilience4j.circuit_breaker.state")))
-                  .isEqualTo(experimental("closed"));
-              assertThat(
-                      span.getAttributes().get(stringKey("resilience4j.circuit_breaker.outcome")))
-                  .isEqualTo(experimental("failure"));
+              assertThat(span)
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(
+                          stringKey("resilience4j.circuit_breaker.name"),
+                          experimental("test-circuit-breaker")),
+                      equalTo(
+                          stringKey("resilience4j.circuit_breaker.state"), experimental("closed")),
+                      equalTo(
+                          stringKey("resilience4j.circuit_breaker.outcome"),
+                          experimental("failure")));
               assertThat(span.getEvents())
                   .singleElement()
                   .satisfies(
