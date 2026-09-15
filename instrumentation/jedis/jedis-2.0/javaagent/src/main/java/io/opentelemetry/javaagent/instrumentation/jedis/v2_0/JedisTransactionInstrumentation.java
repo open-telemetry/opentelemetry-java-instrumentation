@@ -41,12 +41,17 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
       @Nullable private final Context context;
       @Nullable private final Scope scope;
       @Nullable private final JedisRequest request;
+      @Nullable private final Object previousTransactionFraming;
 
       private AdviceScope(
-          @Nullable Context context, @Nullable Scope scope, @Nullable JedisRequest request) {
+          @Nullable Context context,
+          @Nullable Scope scope,
+          @Nullable JedisRequest request,
+          @Nullable Object previousTransactionFraming) {
         this.context = context;
         this.scope = scope;
         this.request = request;
+        this.previousTransactionFraming = previousTransactionFraming;
       }
 
       public static AdviceScope start(Object transaction) {
@@ -59,23 +64,23 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
           // An empty transaction sends nothing for the batch, and with no captured request there
           // is no connection to derive server attributes from, so it is not reported as a batch
           // span.
-          JedisPipelineContext.enterTransactionFraming();
-          return new AdviceScope(null, null, null);
+          Object previous = JedisPipelineContext.enterTransactionFraming();
+          return new AdviceScope(null, null, null, previous);
         }
         JedisRequest request = JedisRequest.createTransaction(requests, multiRequest);
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
-          JedisPipelineContext.enterTransactionFraming(request);
-          return new AdviceScope(null, null, null);
+          Object previous = JedisPipelineContext.enterTransactionFraming(request);
+          return new AdviceScope(null, null, null, previous);
         }
         Context context = instrumenter().start(parentContext, request);
         Scope scope = context.makeCurrent();
-        JedisPipelineContext.enterTransactionFraming(request);
-        return new AdviceScope(context, scope, request);
+        Object previous = JedisPipelineContext.enterTransactionFraming(request);
+        return new AdviceScope(context, scope, request, previous);
       }
 
       public void end(@Nullable Throwable throwable) {
-        JedisPipelineContext.exitTransactionFraming();
+        JedisPipelineContext.exitTransactionFraming(previousTransactionFraming);
         if (scope != null) {
           scope.close();
           instrumenter().end(context, request, null, throwable);
@@ -101,17 +106,18 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class DiscardAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(@Advice.This Object transaction) {
+    public static Object onEnter(@Advice.This Object transaction) {
       // A discarded transaction is abandoned, so drop its captured commands without reporting a
       // batch span, and suppress the DISCARD framing command's own span.
       JedisPipelineContext.clear(transaction);
-      JedisPipelineContext.enterTransactionFraming();
+      return JedisPipelineContext.enterTransactionFraming();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit() {
-      JedisPipelineContext.exitTransactionFraming();
+    public static void onExit(@Advice.Enter @Nullable Object previous) {
+      JedisPipelineContext.exitTransactionFraming(previous);
     }
   }
 }

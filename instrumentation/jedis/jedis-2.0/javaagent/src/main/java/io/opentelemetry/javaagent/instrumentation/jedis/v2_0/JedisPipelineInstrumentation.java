@@ -47,16 +47,17 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class QueueCommandAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(@Advice.This Object pipeline) {
+    public static Object onEnter(@Advice.This Object pipeline) {
       // Attaches a thread-local pipeline that the nested Connection.sendCommand advice uses to
       // collect captured requests; sync() then consumes them to build the batch span.
-      JedisPipelineContext.enter(pipeline);
+      return JedisPipelineContext.enter(pipeline);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void stopCollecting() {
-      JedisPipelineContext.exit();
+    public static void stopCollecting(@Advice.Enter @Nullable Object previous) {
+      JedisPipelineContext.exit(previous);
     }
   }
 
