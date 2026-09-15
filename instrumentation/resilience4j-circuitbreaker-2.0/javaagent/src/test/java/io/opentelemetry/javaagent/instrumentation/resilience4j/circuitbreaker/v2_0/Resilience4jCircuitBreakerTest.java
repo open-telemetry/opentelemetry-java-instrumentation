@@ -494,8 +494,7 @@ class Resilience4jCircuitBreakerTest {
                       event -> {
                         assertThat(event.getAttributes().get(EXCEPTION_TYPE))
                             .isEqualTo(IllegalStateException.class.getName());
-                        assertThat(event.getAttributes().get(EXCEPTION_MESSAGE))
-                            .isEqualTo("boom");
+                        assertThat(event.getAttributes().get(EXCEPTION_MESSAGE)).isEqualTo("boom");
                       });
             });
   }
@@ -917,8 +916,7 @@ class Resilience4jCircuitBreakerTest {
                       event -> {
                         assertThat(event.getAttributes().get(EXCEPTION_TYPE))
                             .isEqualTo(IllegalStateException.class.getName());
-                        assertThat(event.getAttributes().get(EXCEPTION_MESSAGE))
-                            .isEqualTo("boom");
+                        assertThat(event.getAttributes().get(EXCEPTION_MESSAGE)).isEqualTo("boom");
                       });
             });
   }
@@ -985,8 +983,7 @@ class Resilience4jCircuitBreakerTest {
                       event -> {
                         assertThat(event.getAttributes().get(EXCEPTION_TYPE))
                             .isEqualTo(IllegalStateException.class.getName());
-                        assertThat(event.getAttributes().get(EXCEPTION_MESSAGE))
-                            .isEqualTo("boom");
+                        assertThat(event.getAttributes().get(EXCEPTION_MESSAGE)).isEqualTo("boom");
                       });
             });
   }
