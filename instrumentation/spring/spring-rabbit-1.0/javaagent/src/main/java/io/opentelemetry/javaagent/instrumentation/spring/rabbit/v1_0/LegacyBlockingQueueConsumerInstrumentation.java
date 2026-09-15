@@ -6,7 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
 import static io.opentelemetry.javaagent.bootstrap.rabbitmq.RabbitMqConsumerProcessTracing.rabbitProcessTracingSuppression;
+import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -16,17 +18,18 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.amqp.rabbit.listener.BlockingQueueConsumer;
 
-class BlockingQueueConsumerInstrumentation implements TypeInstrumentation {
+class LegacyBlockingQueueConsumerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("org.springframework.amqp.rabbit.listener.BlockingQueueConsumer");
+    return named("org.springframework.amqp.rabbit.listener.BlockingQueueConsumer")
+        .and(not(declaresMethod(named("consumeFromQueue").and(takesArguments(String.class)))));
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("consumeFromQueue").and(takesArguments(String.class)),
+        named("start").and(takesArguments(0)),
         getClass().getName() + "$ConsumerRegistrationAdvice");
   }
 

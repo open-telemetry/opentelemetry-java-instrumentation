@@ -5,8 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
-import static io.opentelemetry.javaagent.bootstrap.rabbitmq.RabbitMqConsumerProcessTracing.isWrappingEnabled;
-import static io.opentelemetry.javaagent.bootstrap.rabbitmq.RabbitMqConsumerProcessTracing.setWrappingEnabled;
+import static io.opentelemetry.javaagent.bootstrap.rabbitmq.RabbitMqConsumerProcessTracing.rabbitProcessTracingSuppression;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -37,16 +36,19 @@ class DirectMessageListenerContainerInstrumentation implements TypeInstrumentati
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static boolean onEnter(@Advice.This AbstractMessageListenerContainer container) {
-      boolean previous = isWrappingEnabled();
-      if (SpringRabbitListenerUtil.shouldTraceListenerProcess(container)) {
-        setWrappingEnabled(false);
+      if (!SpringRabbitListenerUtil.shouldTraceListenerProcess(container)
+          || rabbitProcessTracingSuppression().get() != null) {
+        return false;
       }
-      return previous;
+      rabbitProcessTracingSuppression().set(Boolean.TRUE);
+      return true;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter boolean previous) {
-      setWrappingEnabled(previous);
+    public static void onExit(@Advice.Enter boolean installed) {
+      if (installed) {
+        rabbitProcessTracingSuppression().restore(null);
+      }
     }
   }
 }

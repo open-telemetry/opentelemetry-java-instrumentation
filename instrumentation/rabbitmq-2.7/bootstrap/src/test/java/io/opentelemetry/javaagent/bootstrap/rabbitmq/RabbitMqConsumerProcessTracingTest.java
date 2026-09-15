@@ -5,35 +5,59 @@
 
 package io.opentelemetry.javaagent.bootstrap.rabbitmq;
 
+import static io.opentelemetry.javaagent.bootstrap.rabbitmq.RabbitMqConsumerProcessTracing.rabbitProcessTracingSuppression;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 
 class RabbitMqConsumerProcessTracingTest {
 
   @Test
-  void shouldRestorePreviousWrappingState() {
-    boolean previous = RabbitMqConsumerProcessTracing.setWrappingEnabled(false);
+  void shouldScopeSpringProcessTelemetryOwnership() {
+    assertThat(RabbitMqConsumerProcessTracing.shouldTraceProcess()).isTrue();
 
-    assertThat(previous).isTrue();
-    assertThat(RabbitMqConsumerProcessTracing.isWrappingEnabled()).isFalse();
+    Boolean previous = rabbitProcessTracingSuppression().set(Boolean.TRUE);
+    try {
+      assertThat(RabbitMqConsumerProcessTracing.shouldTraceProcess()).isFalse();
+    } finally {
+      rabbitProcessTracingSuppression().restore(previous);
+    }
 
-    RabbitMqConsumerProcessTracing.setWrappingEnabled(previous);
-    assertThat(RabbitMqConsumerProcessTracing.isWrappingEnabled()).isTrue();
+    assertThat(RabbitMqConsumerProcessTracing.shouldTraceProcess()).isTrue();
   }
 
   @Test
-  void shouldReturnDisabledPreviousState() {
-    boolean outerPrevious = RabbitMqConsumerProcessTracing.setWrappingEnabled(false);
-    boolean innerPrevious = RabbitMqConsumerProcessTracing.setWrappingEnabled(false);
+  void shouldRestoreNestedRegistration() {
+    Boolean outerPrevious = rabbitProcessTracingSuppression().set(Boolean.TRUE);
+    try {
+      Boolean innerPrevious = rabbitProcessTracingSuppression().set(Boolean.TRUE);
+      try {
+        assertThat(RabbitMqConsumerProcessTracing.shouldTraceProcess()).isFalse();
+      } finally {
+        rabbitProcessTracingSuppression().restore(innerPrevious);
+      }
+      assertThat(RabbitMqConsumerProcessTracing.shouldTraceProcess()).isFalse();
+    } finally {
+      rabbitProcessTracingSuppression().restore(outerPrevious);
+    }
 
-    assertThat(outerPrevious).isTrue();
-    assertThat(innerPrevious).isFalse();
+    assertThat(RabbitMqConsumerProcessTracing.shouldTraceProcess()).isTrue();
+  }
 
-    RabbitMqConsumerProcessTracing.setWrappingEnabled(innerPrevious);
-    assertThat(RabbitMqConsumerProcessTracing.isWrappingEnabled()).isFalse();
+  @Test
+  void shouldCleanUpAfterException() {
+    assertThatThrownBy(
+            () -> {
+              Boolean previous = rabbitProcessTracingSuppression().set(Boolean.TRUE);
+              try {
+                throw new IllegalStateException("test");
+              } finally {
+                rabbitProcessTracingSuppression().restore(previous);
+              }
+            })
+        .isInstanceOf(IllegalStateException.class);
 
-    RabbitMqConsumerProcessTracing.setWrappingEnabled(outerPrevious);
-    assertThat(RabbitMqConsumerProcessTracing.isWrappingEnabled()).isTrue();
+    assertThat(RabbitMqConsumerProcessTracing.shouldTraceProcess()).isTrue();
   }
 }
