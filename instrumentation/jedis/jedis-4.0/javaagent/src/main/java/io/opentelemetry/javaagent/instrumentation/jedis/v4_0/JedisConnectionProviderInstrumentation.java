@@ -5,25 +5,36 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
-import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.AsmVisitorWrapper;
+import net.bytebuddy.description.field.FieldDescription;
+import net.bytebuddy.description.field.FieldList;
+import net.bytebuddy.description.method.MethodList;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.matcher.ElementMatcher;
+import net.bytebuddy.pool.TypePool;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisClusterInfoCache;
 import redis.clients.jedis.providers.ConnectionProvider;
@@ -44,31 +55,9 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isConstructor()
-            .and(takesArguments(4))
-            .and(takesArgument(0, named("redis.clients.jedis.JedisClientConfig")))
-            .and(takesArgument(1, named("org.apache.commons.pool2.impl.GenericObjectPoolConfig")))
-            .and(takesArgument(2, Set.class))
-            .and(takesArgument(3, named("java.time.Duration"))),
-        getClass().getName() + "$InitializeTopologyRefresh51Advice");
-    transformer.applyAdviceToMethod(
-        isConstructor()
-            .and(takesArguments(5))
-            .and(takesArgument(0, named("redis.clients.jedis.JedisClientConfig")))
-            .and(takesArgument(1, named("redis.clients.jedis.csc.Cache")))
-            .and(takesArgument(2, named("org.apache.commons.pool2.impl.GenericObjectPoolConfig")))
-            .and(takesArgument(3, Set.class))
-            .and(takesArgument(4, named("java.time.Duration"))),
-        getClass().getName() + "$InitializeTopologyRefresh52Advice");
-    transformer.applyAdviceToMethod(
-        isConstructor()
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("redis.clients.jedis.JedisClusterInfoCache")))
-            .and(
-                isDeclaredBy(
-                    named("redis.clients.jedis.JedisClusterInfoCache$TopologyRefreshTask"))),
-        getClass().getName() + "$InitializeTopologyRefreshTaskAdvice");
+    transformer.applyTransformer(
+        (builder, typeDescription, classLoader, javaModule, protectionDomain) ->
+            builder.visit(new TopologyRefreshTaskVisitor()));
     transformer.applyAdviceToMethod(
         named("initializeSlotsCache").and(takesArgument(0, Set.class)),
         getClass().getName() + "$InitializeClusterAdvice");
@@ -105,43 +94,6 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$ProviderTargetScopeAdvice");
     transformer.applyAdviceToMethod(
         named("renewSlotCache"), getClass().getName() + "$ProviderTargetScopeAdvice");
-  }
-
-  @SuppressWarnings("unused")
-  public static class InitializeTopologyRefresh51Advice {
-
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(@Advice.Argument(2) Set<HostAndPort> nodes) {
-      JedisConfiguredTargets.beginTopologyTargetInitialization(nodes);
-    }
-
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit() {
-      JedisConfiguredTargets.endTopologyTargetInitialization();
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class InitializeTopologyRefresh52Advice {
-
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(@Advice.Argument(3) Set<HostAndPort> nodes) {
-      JedisConfiguredTargets.beginTopologyTargetInitialization(nodes);
-    }
-
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit() {
-      JedisConfiguredTargets.endTopologyTargetInitialization();
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class InitializeTopologyRefreshTaskAdvice {
-
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Argument(0) JedisClusterInfoCache cache) {
-      JedisConfiguredTargets.initializePendingTopologyTarget(cache);
-    }
   }
 
   @SuppressWarnings("unused")
@@ -258,6 +210,67 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
       if (scope != null) {
         scope.close();
       }
+    }
+  }
+
+  private static final class TopologyRefreshTaskVisitor implements AsmVisitorWrapper {
+
+    private static final String CACHE_INTERNAL_NAME = "redis/clients/jedis/JedisClusterInfoCache";
+    private static final String TASK_INTERNAL_NAME = CACHE_INTERNAL_NAME + "$TopologyRefreshTask";
+
+    @Override
+    public int mergeWriter(int flags) {
+      return flags | ClassWriter.COMPUTE_MAXS;
+    }
+
+    @Override
+    @CanIgnoreReturnValue
+    public int mergeReader(int flags) {
+      return flags;
+    }
+
+    @Override
+    public ClassVisitor wrap(
+        TypeDescription instrumentedType,
+        ClassVisitor classVisitor,
+        Implementation.Context implementationContext,
+        TypePool typePool,
+        FieldList<FieldDescription.InDefinedShape> fields,
+        MethodList<?> methods,
+        int writerFlags,
+        int readerFlags) {
+      if (!instrumentedType.getInternalName().equals(CACHE_INTERNAL_NAME)) {
+        return classVisitor;
+      }
+      return new ClassVisitor(AsmApi.VERSION, classVisitor) {
+        @Override
+        public MethodVisitor visitMethod(
+            int access, String name, String descriptor, String signature, String[] exceptions) {
+          MethodVisitor methodVisitor =
+              super.visitMethod(access, name, descriptor, signature, exceptions);
+          if (!name.equals("<init>")) {
+            return methodVisitor;
+          }
+          return new MethodVisitor(api, methodVisitor) {
+            @Override
+            public void visitTypeInsn(int opcode, String type) {
+              if (opcode == Opcodes.NEW && type.equals(TASK_INTERNAL_NAME)) {
+                super.visitVarInsn(Opcodes.ALOAD, 0);
+                super.visitVarInsn(Opcodes.ALOAD, 0);
+                super.visitFieldInsn(
+                    Opcodes.GETFIELD, CACHE_INTERNAL_NAME, "startNodes", "Ljava/util/Set;");
+                super.visitMethodInsn(
+                    Opcodes.INVOKESTATIC,
+                    Type.getInternalName(JedisConfiguredTargets.class),
+                    "setTopologyTargetFromNodes",
+                    "(Lredis/clients/jedis/JedisClusterInfoCache;Ljava/util/Collection;)V",
+                    false);
+              }
+              super.visitTypeInsn(opcode, type);
+            }
+          };
+        }
+      };
     }
   }
 }
