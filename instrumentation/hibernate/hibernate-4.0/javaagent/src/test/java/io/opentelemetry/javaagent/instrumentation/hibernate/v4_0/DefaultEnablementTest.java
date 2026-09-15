@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v4_0;
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import org.hibernate.Session;
 import org.junit.jupiter.api.Test;
@@ -36,10 +36,10 @@ class DefaultEnablementTest extends AbstractHibernateTest {
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("parent"),
+                  span -> span.hasName("Session.get " + Value.class.getName()),
                   span ->
-                      span.hasName("Session.get " + Value.class.getName())
-                          .hasParent(trace.getSpan(0)),
-                  span -> span.hasKind(CLIENT).hasParent(trace.getSpan(1))));
+                      span.hasName(
+                          emitStableDatabaseSemconv() ? "select Value" : "SELECT db1.Value")));
     }
   }
 }

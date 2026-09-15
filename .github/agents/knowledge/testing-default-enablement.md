@@ -78,9 +78,9 @@ so an unexpected instrumentation span could arrive after the assertion. The pare
 `waitAndAssertTraces(...)` a completed trace to await, and `hasSpansSatisfyingExactly(...)` rejects
 any additional span.
 
-The enabled branch only needs enough detail to prove that the representative operation produced
-the expected instrumentation span. Leave full span and attribute coverage in the instrumentation's
-ordinary behavior tests.
+In both branches, assert only span names. The exact trace assertion still checks the number of
+spans, and the names are enough to prove the enablement contract. Leave span kinds, parentage,
+status, attributes, and other behavior coverage in the instrumentation's ordinary tests.
 
 ## Gradle task for a v3-preview default change
 

@@ -36,17 +36,10 @@ class DefaultEnablementTest extends AbstractHibernateTest {
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("parent"),
+                  span -> span.hasName("Session.get " + Value.class.getName()),
                   span ->
-                      assertSessionSpan(
-                          span,
-                          trace.getSpan(0),
-                          "Session.get "
-                              + "io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"),
-                  span ->
-                      assertClientSpan(
-                          span,
-                          trace.getSpan(1),
-                          emitStableDatabaseSemconv() ? "select" : "SELECT")));
+                      span.hasName(
+                          emitStableDatabaseSemconv() ? "select Value" : "SELECT db1.Value")));
     }
   }
 }
