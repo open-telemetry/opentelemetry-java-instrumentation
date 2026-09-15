@@ -43,7 +43,8 @@ class TomcatJdbcInstrumentationTest {
     DataSource dataSource = newDataSource();
     dataSource.setUrl("jdbc:postgresql://db.example:5432/orders");
 
-    assertConnectionPoolMetrics(dataSource, "db.example:5432/orders");
+    assertConnectionPoolMetrics(
+        dataSource, emitStableDatabaseSemconv() ? "orders" : "db.example:5432/orders");
   }
 
   @Test
@@ -51,7 +52,8 @@ class TomcatJdbcInstrumentationTest {
     DataSource dataSource = newDataSource();
     dataSource.setUrl("jdbc:postgresql://[2001:db8::1]:5432/orders");
 
-    assertConnectionPoolMetrics(dataSource, "[2001:db8::1]:5432/orders");
+    assertConnectionPoolMetrics(
+        dataSource, emitStableDatabaseSemconv() ? "orders" : "[2001:db8::1]:5432/orders");
   }
 
   @Test
@@ -61,7 +63,9 @@ class TomcatJdbcInstrumentationTest {
     dataSource.setConnectionProperties(
         "serverName=properties.example;portNumber=5433;databaseName=inventory");
 
-    assertConnectionPoolMetrics(dataSource, "properties.example:5433/inventory");
+    assertConnectionPoolMetrics(
+        dataSource,
+        emitStableDatabaseSemconv() ? "inventory" : "properties.example:5433/inventory");
   }
 
   @Test

@@ -34,11 +34,7 @@ final class AbstractPoolBackedDataSourceInstrumentation implements TypeInstrumen
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This AbstractPoolBackedDataSource dataSource) {
-      String dataSourceName = dataSource.getDataSourceName();
-      if (dataSourceName == null || dataSourceName.equals(dataSource.getIdentityToken())) {
-        dataSourceName = C3p0Singletons.getDataSourceName(dataSource);
-      }
-      telemetry().registerMetrics(dataSource, dataSourceName);
+      C3p0Singletons.registerMetrics(dataSource);
     }
   }
 
