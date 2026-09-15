@@ -7,8 +7,7 @@ muzzle {
   pass {
     group.set("com.google.cloud")
     module.set("spring-cloud-gcp-pubsub")
-    // the instrumented classes are present since the first com.google.cloud release (2.0.0)
-    versions.set("[2.0.0,)")
+versions.set("[5.0.0,)")
     assertInverse.set(true)
   }
 }
