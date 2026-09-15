@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
-import static io.opentelemetry.javaagent.bootstrap.rabbitmq.RabbitMqConsumerProcessTracing.startSpringProcessTelemetry;
+import static io.opentelemetry.javaagent.bootstrap.rabbitmq.RabbitMqConsumerProcessTracing.restoreSpringProcessTelemetry;
+import static io.opentelemetry.javaagent.bootstrap.rabbitmq.RabbitMqConsumerProcessTracing.setSpringProcessTelemetry;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.javaagent.bootstrap.rabbitmq.RabbitMqConsumerProcessTracing.Registration;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -38,18 +38,14 @@ class DirectMessageListenerContainerInstrumentation implements TypeInstrumentati
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
-    public static Registration onEnter(@Advice.This AbstractMessageListenerContainer container) {
-      if (SpringRabbitListenerUtil.shouldTraceListenerProcess(container)) {
-        return startSpringProcessTelemetry();
-      }
-      return null;
+    public static Boolean onEnter(@Advice.This AbstractMessageListenerContainer container) {
+      return setSpringProcessTelemetry(
+          SpringRabbitListenerUtil.shouldTraceListenerProcess(container));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter @Nullable Registration registration) {
-      if (registration != null) {
-        registration.close();
-      }
+    public static void onExit(@Advice.Enter @Nullable Boolean previous) {
+      restoreSpringProcessTelemetry(previous);
     }
   }
 }
