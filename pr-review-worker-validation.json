@@ -1,0 +1,16 @@
+{
+  "artifact": "pr-review-candidate-report.json",
+  "artifact_sha256": "d49d9fc656578735001dbde53a0108168ffb220843cc256b5dfc554240270501",
+  "candidate_count": 0,
+  "changed_file_count": 15,
+  "head_sha": "45467dbb552b43166b0b83bee2d4686c3d24f594",
+  "pull_request": 20120,
+  "validation": {
+    "candidate_anchors_valid": true,
+    "candidate_ids_unique": true,
+    "candidate_report_valid_json": true,
+    "changed_files_complete_and_ordered": true,
+    "only_review_artifacts_changed": true,
+    "source_identity_matches": true
+  }
+}

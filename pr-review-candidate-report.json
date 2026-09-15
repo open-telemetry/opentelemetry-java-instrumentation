@@ -1,0 +1,75 @@
+{
+  "candidates": [],
+  "changed_files": [
+    "javaagent-extension-api/src/main/java/io/opentelemetry/javaagent/bootstrap/internal/InTransformation.java",
+    "javaagent-internal-logging-application/build.gradle.kts",
+    "javaagent-internal-logging-application/src/main/java/io/opentelemetry/javaagent/logging/application/ApplicationLoggerFactory.java",
+    "javaagent-internal-logging-application/src/main/java/io/opentelemetry/javaagent/logging/application/TransformSafeApplicationLoggerFactory.java",
+    "javaagent-internal-logging-application/src/test/java/io/opentelemetry/javaagent/logging/application/ApplicationLoggerFactoryTest.java",
+    "javaagent-internal-logging-application/src/test/java/io/opentelemetry/javaagent/logging/application/TransformSafeApplicationLoggerFactoryTest.java",
+    "javaagent-tooling/build.gradle.kts",
+    "javaagent-tooling/src/circularityLockWiringTest/java/io/opentelemetry/javaagent/tooling/bytebuddy/TransformationTrackingWiringTest.java",
+    "javaagent-tooling/src/circularityLockWiringTest/java/io/opentelemetry/javaagent/tooling/bytebuddy/WiringTestAgentExtension.java",
+    "javaagent-tooling/src/circularityLockWiringTest/java/io/opentelemetry/javaagent/tooling/bytebuddy/WiringTestProbeClass.java",
+    "javaagent-tooling/src/circularityLockWiringTest/java/io/opentelemetry/javaagent/tooling/bytebuddy/WiringTestTriggerClass.java",
+    "javaagent-tooling/src/circularityLockWiringTest/resources/META-INF/services/io.opentelemetry.javaagent.tooling.AgentExtension",
+    "javaagent-tooling/src/main/java/io/opentelemetry/javaagent/tooling/AgentInstaller.java",
+    "javaagent-tooling/src/main/java/io/opentelemetry/javaagent/tooling/bytebuddy/TransformationTrackingCircularityLock.java",
+    "javaagent-tooling/src/test/java/io/opentelemetry/javaagent/tooling/bytebuddy/TransformationTrackingCircularityLockTest.java"
+  ],
+  "probe": {
+    "command": "none",
+    "status": "not_run",
+    "reason": "The complete diff, surrounding source, existing review history, linked issue, and successful PR checks provided sufficient static evidence; no candidate required an isolated runtime probe."
+  },
+  "ordered_validation": [
+    {
+      "name": "immutable_pr_identity",
+      "passed": true
+    },
+    {
+      "name": "authoritative_full_diff",
+      "passed": true
+    },
+    {
+      "name": "all_changed_files",
+      "passed": true
+    },
+    {
+      "name": "repository_instructions",
+      "passed": true
+    },
+    {
+      "name": "existing_reviews_and_comments",
+      "passed": true
+    },
+    {
+      "name": "linked_work",
+      "passed": true
+    },
+    {
+      "name": "focused_surrounding_context",
+      "passed": true
+    },
+    {
+      "name": "holistic_simplification",
+      "passed": true
+    },
+    {
+      "name": "changed_line_anchors",
+      "passed": true
+    },
+    {
+      "name": "duplicate_and_preexisting_filter",
+      "passed": true
+    }
+  ],
+  "source": {
+    "base_repository": "open-telemetry/opentelemetry-java-instrumentation",
+    "base_branch": "main",
+    "head_repository": "pavansai/opentelemetry-java-instrumentation",
+    "head_branch": "fix/application-logger-during-transformation",
+    "head_sha": "45467dbb552b43166b0b83bee2d4686c3d24f594",
+    "pull_request": 20120
+  }
+}
