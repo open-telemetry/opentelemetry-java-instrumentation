@@ -37,6 +37,7 @@ import java.lang.reflect.Proxy;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
@@ -51,12 +52,12 @@ import redis.clients.jedis.DefaultJedisClientConfig;
 import redis.clients.jedis.DefaultJedisSocketFactory;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisClientConfig;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisSocketFactory;
 import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Transaction;
 import redis.clients.jedis.UnifiedJedis;
-import redis.clients.jedis.providers.ShardedConnectionProvider;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class Jedis40ClientTest {
@@ -186,7 +187,16 @@ class Jedis40ClientTest {
   }
 
   @Test
-  void shardedCommandUsesConfiguredTargets() {
+  void shardedCommandUsesConfiguredTargets() throws ReflectiveOperationException {
+    Class<? extends UnifiedJedis> jedisShardingClass;
+    try {
+      jedisShardingClass =
+          Class.forName("redis.clients.jedis.JedisSharding").asSubclass(UnifiedJedis.class);
+    } catch (ClassNotFoundException ignored) {
+      assertThat(Boolean.getBoolean("testLatestDeps")).isTrue();
+      return;
+    }
+
     boolean jedis51OrLater = Boolean.getBoolean("testJedis51OrLater");
     String firstShard = "redis-one.internal";
     int firstShardPort = 6380;
@@ -199,12 +209,12 @@ class Jedis40ClientTest {
     String configuredTargets =
         firstShard + ":" + firstShardPort + "," + secondShard + ":" + secondShardPort;
     try (UnifiedJedis sharded =
-        new UnifiedJedis(
-            new ShardedConnectionProvider(
-                asList(
-                    new HostAndPort(firstShard, firstShardPort),
-                    new HostAndPort(secondShard, secondShardPort)),
-                clientConfig))) {
+        createShardedClient(
+            asList(
+                new HostAndPort(firstShard, firstShardPort),
+                new HostAndPort(secondShard, secondShardPort)),
+            clientConfig,
+            jedisShardingClass)) {
       sharded.set("sharded", "warmup");
       testing.waitForTraces(jedis51OrLater ? 3 : 1);
       testing.clearData();
@@ -232,6 +242,16 @@ class Jedis40ClientTest {
     }
     testing.waitForTraces(jedis51OrLater ? 1 : 2);
     testing.clearData();
+  }
+
+  private static UnifiedJedis createShardedClient(
+      List<HostAndPort> shards,
+      JedisClientConfig clientConfig,
+      Class<? extends UnifiedJedis> jedisShardingClass)
+      throws ReflectiveOperationException {
+    return jedisShardingClass
+        .getConstructor(List.class, JedisClientConfig.class)
+        .newInstance(shards, clientConfig);
   }
 
   @Test
