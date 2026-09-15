@@ -108,8 +108,8 @@ class OpenTelemetryConnectionTest {
         .dbUser("my_user")
         .dbName("my_name")
         .dbNamespace("my_name")
-        .serverAddress("my_host")
-        .serverPort(1234)
+        .legacyServerAddress("my_host")
+        .legacyServerPort(1234)
         .build();
   }
 

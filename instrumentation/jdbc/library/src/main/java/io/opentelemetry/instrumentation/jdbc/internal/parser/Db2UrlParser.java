@@ -37,7 +37,7 @@ public final class Db2UrlParser implements JdbcUrlParser {
   public void parse(String jdbcUrl, ParseContext ctx) {
     ctx.system(IBM_DB2);
     ctx.oldSemconvSystem(DB2);
-    ctx.port(DEFAULT_PORT);
+    ctx.defaultPort(DEFAULT_PORT);
 
     ctx.applyDataSourceProperties();
 

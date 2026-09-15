@@ -107,7 +107,7 @@ class OpenTelemetryDataSourceTest {
     assertThat(dbInfo.getDbUser()).isNull();
     assertThat(dbInfo.getDbName()).isEqualTo("dbname");
     assertThat(dbInfo.getDbNamespace()).isEqualTo("dbname");
-    assertThat(dbInfo.getServerAddress()).isEqualTo("127.0.0.1");
-    assertThat(dbInfo.getServerPort()).isEqualTo(5432);
+    assertThat(dbInfo.getLegacyServerAddress()).isEqualTo("127.0.0.1");
+    assertThat(dbInfo.getLegacyServerPort()).isEqualTo(5432);
   }
 }
