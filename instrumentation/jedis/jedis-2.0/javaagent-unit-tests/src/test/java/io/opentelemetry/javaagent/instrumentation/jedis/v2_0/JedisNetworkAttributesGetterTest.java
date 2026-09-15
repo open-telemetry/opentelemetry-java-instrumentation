@@ -222,6 +222,21 @@ class JedisNetworkAttributesGetterTest {
   }
 
   @Test
+  void clusterContextRejectsNestingWithoutClearingOuterContext() {
+    assumeTrue(emitStableDatabaseSemconv());
+
+    JedisClusterCommandContext outer = JedisClusterCommandContext.start();
+    try {
+      assertThat(JedisClusterCommandContext.start()).isNull();
+      assertThat(JedisClusterCommandContext.current()).isSameAs(outer);
+    } finally {
+      outer.end(null);
+    }
+
+    assertThat(JedisClusterCommandContext.current()).isNull();
+  }
+
+  @Test
   void connectionAcquisitionSuppressesOnlyHealthCheck() {
     assumeTrue(emitStableDatabaseSemconv());
 
@@ -289,7 +304,7 @@ class JedisNetworkAttributesGetterTest {
     MutableConnection connection = new MutableConnection(connectedSocket(first));
     Pipeline pipeline = new Pipeline();
 
-    JedisPipelineContext.enter(pipeline);
+    Object previous = JedisPipelineContext.enter(pipeline);
     try {
       JedisConnectionInstrumentation.AdviceScope firstScope =
           JedisConnectionInstrumentation.SendCommandNoArgsAdvice.onEnter(
@@ -303,11 +318,45 @@ class JedisNetworkAttributesGetterTest {
       JedisConnectionInstrumentation.SendCommandNoArgsAdvice.stopSpan(
           new RuntimeException("send failed"), failedScope);
     } finally {
-      JedisPipelineContext.exit();
+      JedisPipelineContext.exit(previous);
     }
 
     List<JedisRequest> requests = JedisPipelineContext.getAndClearCapturedRequests(pipeline);
     assertThat(JedisRequest.createPipeline(requests).getPeerAddress()).isEqualTo(second);
+  }
+
+  @Test
+  void nestedPipelineCaptureRestoresOuterBatch() {
+    Pipeline outer = new Pipeline();
+    Pipeline inner = new Pipeline();
+    JedisRequest outerFirst = JedisRequest.create(new Connection(), Protocol.Command.GET);
+    JedisRequest innerRequest = JedisRequest.create(new Connection(), Protocol.Command.SET);
+    JedisRequest outerSecond = JedisRequest.create(new Connection(), Protocol.Command.DEL);
+
+    Object outerPrevious = JedisPipelineContext.enter(outer);
+    try {
+      assertThat(JedisPipelineContext.capture(outerFirst)).isTrue();
+
+      Object innerPrevious = JedisPipelineContext.enter(inner);
+      try {
+        assertThat(JedisPipelineContext.capture(innerRequest)).isTrue();
+      } finally {
+        JedisPipelineContext.exit(innerPrevious);
+      }
+
+      assertThat(JedisPipelineContext.capture(outerSecond)).isTrue();
+    } finally {
+      JedisPipelineContext.exit(outerPrevious);
+    }
+
+    assertThat(JedisPipelineContext.getAndClearCapturedRequests(outer))
+        .containsExactly(outerFirst, outerSecond);
+    assertThat(JedisPipelineContext.getAndClearCapturedRequests(inner))
+        .containsExactly(innerRequest);
+    assertThat(
+            JedisPipelineContext.capture(
+                JedisRequest.create(new Connection(), Protocol.Command.GET)))
+        .isFalse();
   }
 
   @ParameterizedTest
@@ -320,7 +369,7 @@ class JedisNetworkAttributesGetterTest {
         JedisRequest.createTransaction(singletonList(queuedRequest), null);
     MutableConnection connection = new MutableConnection(unreliableSocket);
 
-    JedisPipelineContext.enterTransactionFraming(transactionRequest);
+    Object previous = JedisPipelineContext.enterTransactionFraming(transactionRequest);
     try {
       JedisConnectionInstrumentation.AdviceScope failedScope =
           JedisConnectionInstrumentation.SendCommandNoArgsAdvice.onEnter(
@@ -328,7 +377,7 @@ class JedisNetworkAttributesGetterTest {
       JedisConnectionInstrumentation.SendCommandNoArgsAdvice.stopSpan(
           new RuntimeException("send failed"), failedScope);
     } finally {
-      JedisPipelineContext.exitTransactionFraming();
+      JedisPipelineContext.exitTransactionFraming(previous);
     }
 
     assertThat(transactionRequest.getPeerAddress()).isEqualTo(first);
@@ -342,7 +391,7 @@ class JedisNetworkAttributesGetterTest {
     Transaction transaction = new Transaction();
 
     JedisPipelineContext.captureTransactionFramingPeer(request);
-    JedisPipelineContext.exitTransactionFraming(transaction);
+    JedisPipelineContext.exitTransactionFraming(transaction, null);
 
     assertThat(JedisPipelineContext.getAndClearTransactionFramingRequest(transaction)).isNull();
   }
@@ -387,15 +436,50 @@ class JedisNetworkAttributesGetterTest {
     InetSocketAddress execPeer = new InetSocketAddress(InetAddress.getLoopbackAddress(), 6380);
     JedisRequest execRequest = requestWithPeer(execPeer);
 
-    JedisPipelineContext.enterTransactionFraming(transactionRequest);
+    Object previous = JedisPipelineContext.enterTransactionFraming(transactionRequest);
     try {
       execRequest.capturePeerAddress();
       JedisPipelineContext.captureTransactionFramingPeer(execRequest);
     } finally {
-      JedisPipelineContext.exitTransactionFraming();
+      JedisPipelineContext.exitTransactionFraming(previous);
     }
 
     assertThat(transactionRequest.getPeerAddress()).isEqualTo(execPeer);
+  }
+
+  @Test
+  void nestedTransactionFramingRestoresOuterRequest() {
+    InetSocketAddress outerPeer = new InetSocketAddress(InetAddress.getLoopbackAddress(), 6379);
+    JedisRequest outerQueuedRequest = requestWithPeer(outerPeer);
+    JedisRequest outerTransactionRequest =
+        JedisRequest.createTransaction(singletonList(outerQueuedRequest), null);
+    JedisRequest outerExecRequest = requestWithPeer(outerPeer);
+    outerExecRequest.capturePeerAddress();
+
+    InetSocketAddress innerPeer = new InetSocketAddress(InetAddress.getLoopbackAddress(), 6380);
+    JedisRequest innerQueuedRequest = requestWithPeer(innerPeer);
+    JedisRequest innerTransactionRequest =
+        JedisRequest.createTransaction(singletonList(innerQueuedRequest), null);
+    JedisRequest innerExecRequest = requestWithPeer(innerPeer);
+    innerExecRequest.capturePeerAddress();
+
+    Object outerPrevious = JedisPipelineContext.enterTransactionFraming(outerTransactionRequest);
+    try {
+      Object innerPrevious = JedisPipelineContext.enterTransactionFraming(innerTransactionRequest);
+      try {
+        JedisPipelineContext.captureTransactionFramingPeer(innerExecRequest);
+      } finally {
+        JedisPipelineContext.exitTransactionFraming(innerPrevious);
+      }
+
+      JedisPipelineContext.captureTransactionFramingPeer(outerExecRequest);
+    } finally {
+      JedisPipelineContext.exitTransactionFraming(outerPrevious);
+    }
+
+    assertThat(outerTransactionRequest.getPeerAddress()).isEqualTo(outerPeer);
+    assertThat(innerTransactionRequest.getPeerAddress()).isEqualTo(innerPeer);
+    assertThat(JedisPipelineContext.inTransactionFraming()).isFalse();
   }
 
   @Test
@@ -410,11 +494,11 @@ class JedisNetworkAttributesGetterTest {
 
     JedisRequest execRequest = requestWithPeer(queuedPeer);
 
-    JedisPipelineContext.enterTransactionFraming(transactionRequest);
+    Object previous = JedisPipelineContext.enterTransactionFraming(transactionRequest);
     try {
       JedisPipelineContext.captureTransactionFramingPeer(execRequest);
     } finally {
-      JedisPipelineContext.exitTransactionFraming();
+      JedisPipelineContext.exitTransactionFraming(previous);
     }
 
     assertThat(transactionRequest.getPeerAddress()).isEqualTo(queuedPeer);

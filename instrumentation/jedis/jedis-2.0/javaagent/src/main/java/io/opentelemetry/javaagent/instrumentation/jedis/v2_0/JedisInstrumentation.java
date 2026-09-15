@@ -72,17 +72,19 @@ class JedisInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class MultiAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter() {
+    public static Object onEnter() {
       // The MULTI command frames a transaction that is reported as a single batch span at exec(),
       // so its own command span is suppressed.
-      JedisPipelineContext.enterTransactionFraming();
+      return JedisPipelineContext.enterTransactionFraming();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC) @Nullable Object transaction) {
-      JedisPipelineContext.exitTransactionFraming(transaction);
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC) @Nullable Object transaction,
+        @Advice.Enter @Nullable Object previous) {
+      JedisPipelineContext.exitTransactionFraming(transaction, previous);
     }
   }
 }
