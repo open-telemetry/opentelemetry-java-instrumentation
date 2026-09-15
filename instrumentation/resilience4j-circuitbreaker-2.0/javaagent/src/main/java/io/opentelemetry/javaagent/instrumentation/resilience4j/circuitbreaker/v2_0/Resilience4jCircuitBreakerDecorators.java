@@ -668,7 +668,7 @@ public class Resilience4jCircuitBreakerDecorators {
         return method.invoke(delegate, args);
       }
       Object[] invokedArgs = args;
-      if ("whenComplete".equals(method.getName())
+      if (method.getName().equals("whenComplete")
           && args != null
           && args.length == 1
           && args[0] instanceof BiConsumer) {

@@ -1240,7 +1240,7 @@ class Resilience4jCircuitBreakerTest {
                           equalTo(
                               stringKey("resilience4j.circuit_breaker.outcome"),
                               experimental(outcome)));
-                  if ("success".equals(outcome) || "cancelled".equals(outcome)) {
+                  if (outcome.equals("success") || outcome.equals("cancelled")) {
                     return;
                   }
                   span.hasStatus(StatusData.error());
