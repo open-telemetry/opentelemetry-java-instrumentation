@@ -17,7 +17,6 @@ import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAss
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
@@ -160,9 +159,14 @@ abstract class AbstractJms3Test {
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName(
                                 producerDestinationName, actualDestinationName),
-                            oldOperation("publish"),
-                            operationName("send"),
-                            operationType("send"),
+                            equalTo(
+                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_NAME,
+                                emitStableMessagingSemconv() ? "send" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_TYPE,
+                                emitStableMessagingSemconv() ? "send" : null),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary)),
                 span ->
@@ -177,9 +181,14 @@ abstract class AbstractJms3Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
-                            oldOperation("process"),
-                            operationName("process"),
-                            operationType("process"),
+                            equalTo(
+                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_NAME,
+                                emitStableMessagingSemconv() ? "process" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_TYPE,
+                                emitStableMessagingSemconv() ? "process" : null),
                             equalTo(MESSAGING_MESSAGE_ID, messageId)),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
@@ -445,9 +454,14 @@ abstract class AbstractJms3Test {
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName(
                                 producerDestinationName, actualDestinationName),
-                            oldOperation("publish"),
-                            operationName("send"),
-                            operationType("send"),
+                            equalTo(
+                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_NAME,
+                                emitStableMessagingSemconv() ? "send" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_TYPE,
+                                emitStableMessagingSemconv() ? "send" : null),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary),
                             equalTo(
@@ -468,9 +482,14 @@ abstract class AbstractJms3Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
-                            oldOperation("process"),
-                            operationName("process"),
-                            operationType("process"),
+                            equalTo(
+                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_NAME,
+                                emitStableMessagingSemconv() ? "process" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_TYPE,
+                                emitStableMessagingSemconv() ? "process" : null),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             equalTo(
                                 stringArrayKey("messaging.header.Test_Message_Header"),
@@ -492,24 +511,6 @@ abstract class AbstractJms3Test {
     return equalTo(
         MESSAGING_DESTINATION_NAME,
         emitStableMessagingSemconv() ? stableDestinationName : oldDestinationName);
-  }
-
-  static AttributeAssertion oldOperation(String operation) {
-    return equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? operation : null);
-  }
-
-  static AttributeAssertion operationName(String operation) {
-    return equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? operation : null);
-  }
-
-  static AttributeAssertion operationType(String operation) {
-    return equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operation : null);
-  }
-
-  static AttributeAssertion subscriptionName(String subscriptionName) {
-    return equalTo(
-        MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-        emitStableMessagingSemconv() ? subscriptionName : null);
   }
 
   private static Stream<Arguments> emptyReceiveArguments() {
