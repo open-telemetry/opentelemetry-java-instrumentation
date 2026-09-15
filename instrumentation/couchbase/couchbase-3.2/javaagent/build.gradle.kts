@@ -14,6 +14,7 @@ muzzle {
 dependencies {
   implementation(project(":instrumentation:couchbase:couchbase-common-3.0:javaagent"))
   implementation(project(":instrumentation:couchbase:couchbase-common-3.1:javaagent"))
+  compileOnly(project(":muzzle")) // For @NoMuzzle
 
   library("com.couchbase.client:java-client:3.2.0")
 
