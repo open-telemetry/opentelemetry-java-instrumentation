@@ -167,6 +167,22 @@ class Jedis40ClientTest {
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, ip))));
+
+    if (emitStableDatabaseSemconv()) {
+      testing.waitAndAssertMetrics(
+          "io.opentelemetry.jedis-4.0",
+          metric ->
+              metric
+                  .hasName("db.client.operation.duration")
+                  .hasHistogramSatisfying(
+                      histogram ->
+                          histogram.hasPointsSatisfying(
+                              point ->
+                                  point
+                                      .hasAttribute(DB_OPERATION_NAME, "SET")
+                                      .hasAttribute(SERVER_ADDRESS, configuredHost)
+                                      .hasAttribute(SERVER_PORT, (long) configuredPort))));
+    }
   }
 
   @Test
