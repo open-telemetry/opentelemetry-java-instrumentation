@@ -62,18 +62,5 @@ public class RediscalaSingletons {
     return instrumenter;
   }
 
-  @Nullable
-  static <T> RedisServerTarget getServerTarget(
-      VirtualField<T, RedisServerTarget> targetField, T client) {
-    RedisServerTarget target = targetField.get(client);
-    if (target == null) {
-      target = RediscalaServerTargets.of(client);
-      if (target != null) {
-        targetField.set(client, target);
-      }
-    }
-    return target;
-  }
-
   private RediscalaSingletons() {}
 }
