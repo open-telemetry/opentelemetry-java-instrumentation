@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcherGro
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.containers.GenericContainer;
@@ -32,9 +33,8 @@ class JvmTest extends TargetSystemTest {
         "tomcat:9.0"
       })
   void testJvmMetrics(String image) {
-    List<String> yamlFiles = singletonList("jvm.yaml");
-
-    yamlFiles.forEach(this::validateYamlSyntax);
+    // file-based setup for JVM metrics as embedded metrics are disabled for instrumentation
+    Set<String> yamlFiles = getAllRulesForSystem("jvm");
 
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());

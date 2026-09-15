@@ -68,20 +68,21 @@ class HandlerTest {
     Path spiFile = tempDir.resolve(ExperimentalJmxMetricHandler.class.getName());
     Files.write(spiFile, ThreadHandler.class.getName().getBytes(UTF_8));
 
-    JmxTelemetryBuilder builder = JmxTelemetry.builder(testing.getOpenTelemetry());
-    builder.addRules(getClass().getResourceAsStream("/jmx/rules/handler.yaml"));
-    builder.setServiceClassLoader(
-        new ClassLoader(this.getClass().getClassLoader()) {
-          @Override
-          public Enumeration<URL> getResources(String name) throws IOException {
-            if (("META-INF/services/" + ExperimentalJmxMetricHandler.class.getName())
-                .equals(name)) {
-              return enumeration(singletonList(spiFile.toUri().toURL()));
-            }
-            return super.getResources(name);
-          }
-        });
-    JmxTelemetry telemetry = builder.build();
+    JmxTelemetry telemetry =
+        getTestJmxTelemetryBuilder()
+            .addRules(getClass().getResourceAsStream("/jmx/rules/handler.yaml"))
+            .setServiceClassLoader(
+                new ClassLoader(this.getClass().getClassLoader()) {
+                  @Override
+                  public Enumeration<URL> getResources(String name) throws IOException {
+                    if (("META-INF/services/" + ExperimentalJmxMetricHandler.class.getName())
+                        .equals(name)) {
+                      return enumeration(singletonList(spiFile.toUri().toURL()));
+                    }
+                    return super.getResources(name);
+                  }
+                })
+            .build();
     cleanup.deferCleanup(telemetry.start());
 
     testing.waitAndAssertMetrics(
@@ -98,6 +99,12 @@ class HandlerTest {
     assertThat(BaseThreadHandler.createCount.get()).isEqualTo(1);
   }
 
+  private static JmxTelemetryBuilder getTestJmxTelemetryBuilder() {
+    return JmxTelemetry.builder(testing.getOpenTelemetry())
+        // disable internal metrics loading as they are enabled by default and interfere with test
+        .internalMetricsSystemFilter(IncludeExclude.builder().setExcluded("*").build());
+  }
+
   @Test
   void handlerList(@TempDir Path tempDir) throws IOException {
     Path spiFile = tempDir.resolve(ExperimentalJmxMetricHandler.class.getName());
@@ -106,7 +113,7 @@ class HandlerTest {
         String.join("\n", asList(ThreadHandler.class.getName(), ThreadHandler2.class.getName()))
             .getBytes(UTF_8));
 
-    JmxTelemetryBuilder builder = JmxTelemetry.builder(testing.getOpenTelemetry());
+    JmxTelemetryBuilder builder = getTestJmxTelemetryBuilder();
     builder.addRules(getClass().getResourceAsStream("/jmx/rules/handler-list.yaml"));
     builder.setServiceClassLoader(
         new ClassLoader(this.getClass().getClassLoader()) {
@@ -153,7 +160,7 @@ class HandlerTest {
         String.join("\n", asList(ThreadHandler.class.getName(), ThreadHandler2.class.getName()))
             .getBytes(UTF_8));
 
-    JmxTelemetryBuilder builder = JmxTelemetry.builder(testing.getOpenTelemetry());
+    JmxTelemetryBuilder builder = getTestJmxTelemetryBuilder();
     builder.addRules(getClass().getResourceAsStream("/jmx/rules/handler-list.yaml"));
     builder.setMetrics(IncludeExclude.builder().setIncluded("test.thread.count").build());
     builder.setServiceClassLoader(
@@ -194,7 +201,7 @@ class HandlerTest {
     Path spiFile = tempDir.resolve(ExperimentalJmxMetricHandler.class.getName());
     Files.write(spiFile, ThreadHandler.class.getName().getBytes(UTF_8));
 
-    JmxTelemetryBuilder builder = JmxTelemetry.builder(testing.getOpenTelemetry());
+    JmxTelemetryBuilder builder = getTestJmxTelemetryBuilder();
     builder.addRules(getClass().getResourceAsStream("/jmx/rules/handler-mixed.yaml"));
     builder.setServiceClassLoader(
         new ClassLoader(this.getClass().getClassLoader()) {

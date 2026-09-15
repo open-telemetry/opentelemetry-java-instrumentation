@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.jmx.rules.TargetSystemTest;
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcherGroup;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
@@ -34,9 +35,7 @@ class KafkaBrokerTest extends TargetSystemTest {
   }
 
   private void doTest(String image, String zookeeperImage) {
-    List<String> yamlFiles = singletonList("experimental-kafka-broker.yaml");
-
-    yamlFiles.forEach(this::validateYamlSyntax);
+    Collection<String> yamlFiles = getAllRulesForSystem("kafka-broker");
 
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());
