@@ -1,0 +1,37 @@
+{
+  "mode": "apply_with_report",
+  "policy": {
+    "id": "marketplace-agent-worker",
+    "sha256": "c87e380b050a2af8c275eb2413893304ca7b7ff28bd1ae074a07ae5e66c40189",
+    "version": 1
+  },
+  "pull_request_head_sha": "eb589d9422d0befaf8d0c2a67b7a09a8fcf344fa",
+  "repository": "open-telemetry/opentelemetry-java-instrumentation",
+  "request_id": "f2a55796-abb6-48ff-b51a-aed4296bdcbd",
+  "schema": {
+    "id": "github.copilot.agent-task-receipt",
+    "version": 1
+  },
+  "validation": [
+    {
+      "command": "GitHub MCP pull_request_read(get) for open-telemetry/opentelemetry-java-instrumentation#20062: verify head repository walleseve/opentelemetry-java-instrumentation, branch mcp-java-sdk-client-0.14, and SHA eb589d9422d0befaf8d0c2a67b7a09a8fcf344fa",
+      "result": "passed"
+    },
+    {
+      "command": "./gradlew :instrumentation:mcp:mcp-java-sdk-0.14:javaagent:compileJava",
+      "result": "passed"
+    },
+    {
+      "command": "./gradlew :instrumentation:mcp:mcp-java-sdk-0.14:javaagent:spotlessCheck",
+      "result": "passed"
+    },
+    {
+      "command": "runtime secret scan: instrumentation/mcp/mcp-java-sdk-0.14/javaagent/src/main/java/io/opentelemetry/javaagent/instrumentation/mcp/v0_14/McpProtocolVersionState.java",
+      "result": "passed"
+    },
+    {
+      "command": "git show --stat --oneline 4fd6e48ca86210e5c45cc89b703a23ce3b6b9966: verify only McpProtocolVersionState.java changed",
+      "result": "passed"
+    }
+  ]
+}
