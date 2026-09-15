@@ -24,6 +24,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
@@ -54,6 +55,8 @@ import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisSocketFactory;
 import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Transaction;
+import redis.clients.jedis.UnifiedJedis;
+import redis.clients.jedis.providers.ShardedConnectionProvider;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class Jedis40ClientTest {
@@ -161,6 +164,66 @@ class Jedis40ClientTest {
                                 emitStableDatabaseSemconv() ? configuredHost : host),
                             equalTo(
                                 SERVER_PORT, emitStableDatabaseSemconv() ? configuredPort : port),
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip))));
+  }
+
+  @Test
+  void shardedCommandUsesConfiguredTargets() {
+    String firstShard = "redis-one.internal";
+    int firstShardPort = 6380;
+    String secondShard = "redis-two.internal";
+    int secondShardPort = 6381;
+    DefaultJedisClientConfig clientConfig =
+        DefaultJedisClientConfig.builder()
+            .hostAndPortMapper(ignored -> new HostAndPort(host, port))
+            .build();
+    try (UnifiedJedis sharded =
+        new UnifiedJedis(
+            new ShardedConnectionProvider(
+                asList(
+                    new HostAndPort(firstShard, firstShardPort),
+                    new HostAndPort(secondShard, secondShardPort)),
+                clientConfig))) {
+      testing.clearData();
+      sharded.set("sharded", "value");
+    }
+
+    String configuredTargets =
+        firstShard + ":" + firstShardPort + "," + secondShard + ":" + secondShardPort;
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTargets : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "SET sharded ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv() ? configuredTargets : host),
+                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) port),
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "QUIT " + configuredTargets : "QUIT")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "QUIT"),
+                            equalTo(maybeStable(DB_OPERATION), "QUIT"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv() ? configuredTargets : host),
+                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) port),
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, ip))));
