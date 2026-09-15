@@ -16,6 +16,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -76,35 +78,35 @@ class RocketMqProducerInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class AsyncBatchSendArgumentOneAdvice {
+    @AssignReturned.ToArguments(@ToArgument(value = 1, index = 1))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Object onEnter(
-        @Advice.This Object producer,
-        @Advice.Argument(value = 1, readOnly = false) SendCallback callback) {
+    public static Object[] onEnter(
+        @Advice.This Object producer, @Advice.Argument(1) SendCallback callback) {
       Object state = batchSendHelper().batchSendStart(producer, callback != null);
-      callback = batchSendHelper().wrap(callback, state);
-      return state;
+      return new Object[] {state, batchSendHelper().wrap(callback, state)};
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter Object state, @Advice.Thrown Throwable throwable) {
-      batchSendHelper().batchSendEnd(state, throwable);
+    public static void onExit(
+        @Advice.Enter Object[] enterResult, @Advice.Thrown Throwable throwable) {
+      batchSendHelper().batchSendEnd(enterResult[0], throwable);
     }
   }
 
   @SuppressWarnings("unused")
   public static class AsyncBatchSendArgumentTwoAdvice {
+    @AssignReturned.ToArguments(@ToArgument(value = 2, index = 1))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Object onEnter(
-        @Advice.This Object producer,
-        @Advice.Argument(value = 2, readOnly = false) SendCallback callback) {
+    public static Object[] onEnter(
+        @Advice.This Object producer, @Advice.Argument(2) SendCallback callback) {
       Object state = batchSendHelper().batchSendStart(producer, callback != null);
-      callback = batchSendHelper().wrap(callback, state);
-      return state;
+      return new Object[] {state, batchSendHelper().wrap(callback, state)};
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter Object state, @Advice.Thrown Throwable throwable) {
-      batchSendHelper().batchSendEnd(state, throwable);
+    public static void onExit(
+        @Advice.Enter Object[] enterResult, @Advice.Thrown Throwable throwable) {
+      batchSendHelper().batchSendEnd(enterResult[0], throwable);
     }
   }
 }
