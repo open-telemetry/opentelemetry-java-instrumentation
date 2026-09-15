@@ -8,8 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -27,6 +30,7 @@ import io.lettuce.core.RedisFuture;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.cluster.RedisClusterClient;
+import io.lettuce.core.cluster.SlotHash;
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
 import io.lettuce.core.cluster.api.async.RedisAdvancedClusterAsyncCommands;
 import io.lettuce.core.cluster.api.reactive.RedisAdvancedClusterReactiveCommands;
@@ -37,6 +41,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -49,7 +54,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
@@ -60,6 +67,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
     matches = "true")
 class LettuceClusterClientTest {
   private static final String NODE_ID = "0000000000000000000000000000000000000000";
+  private static final String REDIRECT_NODE_ID = "1111111111111111111111111111111111111111";
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -131,6 +139,11 @@ class LettuceClusterClientTest {
                             equalTo(
                                 SERVER_PORT,
                                 emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "SET CLUSTER_COMMAND_KEY ?"),
@@ -150,6 +163,11 @@ class LettuceClusterClientTest {
                             equalTo(
                                 SERVER_PORT,
                                 emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(
@@ -171,6 +189,11 @@ class LettuceClusterClientTest {
                                 SERVER_ADDRESS,
                                 emitStableDatabaseSemconv() ? configuredTarget : null),
                             equalTo(SERVER_PORT, null),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, null),
                             equalTo(maybeStable(DB_STATEMENT), "SET CLUSTER_REACTIVE_KEY ?"),
@@ -185,6 +208,11 @@ class LettuceClusterClientTest {
                                 SERVER_ADDRESS,
                                 emitStableDatabaseSemconv() ? configuredTarget : null),
                             equalTo(SERVER_PORT, null),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, null),
                             equalTo(maybeStable(DB_STATEMENT), "SET NODE_REACTIVE_KEY ?"),
@@ -200,6 +228,11 @@ class LettuceClusterClientTest {
                                 SERVER_ADDRESS,
                                 emitStableDatabaseSemconv() ? configuredTarget : null),
                             equalTo(SERVER_PORT, null),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(DB_NAMESPACE, null),
                             equalTo(maybeStable(DB_STATEMENT), "PUBLISH CLUSTER_CHANNEL ?"),
@@ -208,18 +241,94 @@ class LettuceClusterClientTest {
     redisServer.assertNoFailure();
   }
 
+  @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  void movedRedirectUsesCompletingPeer() throws Exception {
+    TestRedisCluster target = new TestRedisCluster();
+    cleanup.deferCleanup(target);
+    TestRedisCluster source = new TestRedisCluster(target);
+    cleanup.deferCleanup(source);
+    RedisClusterClient client =
+        RedisClusterClient.create(
+            RedisURI.create("redis://" + source.getHost() + ":" + source.getPort()));
+    cleanup.deferCleanup(() -> client.shutdown(0, 15, SECONDS));
+    StatefulRedisClusterConnection<String, String> redirectConnection = client.connect();
+    cleanup.deferCleanup(redirectConnection);
+    assertThat(redirectConnection.sync().set("REDIRECT_WARMUP_KEY", "value")).isEqualTo("OK");
+    testing.waitForTraces(emitStableDatabaseSemconv() ? 1 : 2);
+    source.resetRedirect();
+    testing.clearData();
+
+    assertThat(redirectConnection.sync().set("REDIRECT_KEY", "value")).isEqualTo("OK");
+
+    Consumer<TraceAssert> traceAssertion =
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SET " + source.getHost() + ":" + source.getPort()
+                                : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, source.getHost()),
+                            satisfies(
+                                SERVER_PORT,
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isEqualTo(Long.valueOf(source.getPort()));
+                                  } else {
+                                    val.isIn(
+                                        Long.valueOf(source.getPort()),
+                                        Long.valueOf(target.getPort()));
+                                  }
+                                }),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                emitStableDatabaseSemconv() ? target.getHost() : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv()
+                                    ? Long.valueOf(target.getPort())
+                                    : null),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(maybeStable(DB_STATEMENT), "SET REDIRECT_KEY ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET")));
+    List<Consumer<TraceAssert>> traceAssertions = new ArrayList<>();
+    traceAssertions.add(traceAssertion);
+    if (!emitStableDatabaseSemconv()) {
+      traceAssertions.add(traceAssertion);
+    }
+    testing.waitAndAssertTraces(traceAssertions);
+
+    source.assertNoFailure();
+    target.assertNoFailure();
+  }
+
   private static class TestRedisCluster implements AutoCloseable {
     private final ServerSocket serverSocket;
     private final Set<Socket> connections = ConcurrentHashMap.newKeySet();
     private final AtomicReference<Throwable> failure = new AtomicReference<>();
+    private final AtomicBoolean redirectSent = new AtomicBoolean();
     private final Thread acceptThread;
+    private final TestRedisCluster redirectTarget;
     private volatile boolean closed;
 
     private TestRedisCluster() throws IOException {
+      this(null);
+    }
+
+    private TestRedisCluster(TestRedisCluster redirectTarget) throws IOException {
+      this.redirectTarget = redirectTarget;
       serverSocket = new ServerSocket(0, 50, InetAddress.getAllByName("127.0.0.1")[0]);
       acceptThread = new Thread(this::acceptConnections, "test-redis-cluster-accept");
       acceptThread.setDaemon(true);
       acceptThread.start();
+    }
+
+    private void resetRedirect() {
+      redirectSent.set(false);
     }
 
     private String getHost() {
@@ -290,12 +399,32 @@ class LettuceClusterClientTest {
                 + getHost()
                 + ":"
                 + getPort()
-                + " myself,master - 0 0 1 connected 0-16383\n";
+                + " myself,master - 0 0 1 connected 0-16383\n"
+                + (redirectTarget == null
+                    ? ""
+                    : REDIRECT_NODE_ID
+                        + " "
+                        + redirectTarget.getHost()
+                        + ":"
+                        + redirectTarget.getPort()
+                        + " master - 0 0 2 connected\n");
         write(output, "$" + nodes.getBytes(UTF_8).length + "\r\n" + nodes + "\r\n");
       } else if ("CLUSTER".equals(name)
           && command.size() > 1
           && "MYID".equals(command.get(1).toUpperCase(Locale.ROOT))) {
         write(output, "$" + NODE_ID.length() + "\r\n" + NODE_ID + "\r\n");
+      } else if ("SET".equals(name)
+          && redirectTarget != null
+          && redirectSent.compareAndSet(false, true)) {
+        write(
+            output,
+            "-MOVED "
+                + SlotHash.getSlot(command.get(1))
+                + " "
+                + redirectTarget.getHost()
+                + ":"
+                + redirectTarget.getPort()
+                + "\r\n");
       } else if ("SET".equals(name) || "CLIENT".equals(name)) {
         write(output, "+OK\r\n");
       } else if ("PUBLISH".equals(name)) {
