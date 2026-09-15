@@ -69,7 +69,11 @@ public class JmxMetricInsightInstaller implements AgentListener {
     if (!v3Preview) {
       systemsConfig = config.get("target").getScalarList("system", String.class, emptyList());
       if (!systemsConfig.isEmpty()) {
-        logger.log(WARNING, "'otel.jmx.target.system' is deprecated and will be removed in 3.x.");
+        logger.log(
+            WARNING,
+            "'otel.jmx.target.system' is deprecated and will be removed in 3.0."
+                + " Stable metrics are enabled automatically; use 'otel.jmx.metrics.experimental.included'"
+                + " to opt in to unstable metrics.");
       }
     }
 
