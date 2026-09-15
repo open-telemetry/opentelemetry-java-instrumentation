@@ -17,11 +17,11 @@ plugins {
   id("java")
 
   id("com.google.cloud.tools.jib")
-  id("io.quarkus") version "3.39.2"
+  id("io.quarkus") version "3.39.3"
 }
 
 dependencies {
-  implementation(enforcedPlatform("io.quarkus:quarkus-bom:3.39.2"))
+  implementation(enforcedPlatform("io.quarkus:quarkus-bom:3.39.3"))
   implementation("io.quarkus:quarkus-rest")
 }
 
