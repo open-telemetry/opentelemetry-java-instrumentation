@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
@@ -195,6 +196,8 @@ class Jedis40ClientTest {
         DefaultJedisClientConfig.builder()
             .hostAndPortMapper(ignored -> new HostAndPort(host, port))
             .build();
+    String configuredTargets =
+        firstShard + ":" + firstShardPort + "," + secondShard + ":" + secondShardPort;
     try (UnifiedJedis sharded =
         new UnifiedJedis(
             new ShardedConnectionProvider(
@@ -202,47 +205,33 @@ class Jedis40ClientTest {
                     new HostAndPort(firstShard, firstShardPort),
                     new HostAndPort(secondShard, secondShardPort)),
                 clientConfig))) {
+      sharded.set("sharded", "warmup");
+      testing.waitForTraces(testLatestDeps() ? 3 : 1);
       testing.clearData();
       sharded.set("sharded", "value");
-    }
 
-    String configuredTargets =
-        firstShard + ":" + firstShardPort + "," + secondShard + ":" + secondShardPort;
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTargets : "SET")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SET sharded ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? configuredTargets : host),
-                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) port),
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "QUIT " + configuredTargets : "QUIT")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "QUIT"),
-                            equalTo(maybeStable(DB_OPERATION), "QUIT"),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? configuredTargets : host),
-                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) port),
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip))));
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTargets : "SET")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(maybeStable(DB_SYSTEM), REDIS),
+                              equalTo(maybeStable(DB_STATEMENT), "SET sharded ?"),
+                              equalTo(maybeStable(DB_OPERATION), "SET"),
+                              equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                              equalTo(
+                                  SERVER_ADDRESS,
+                                  emitStableDatabaseSemconv() ? configuredTargets : host),
+                              equalTo(
+                                  SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) port),
+                              equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                              equalTo(NETWORK_PEER_PORT, port),
+                              equalTo(NETWORK_PEER_ADDRESS, ip))));
+    }
+    testing.waitForTraces(testLatestDeps() ? 1 : 2);
+    testing.clearData();
   }
 
   @Test
