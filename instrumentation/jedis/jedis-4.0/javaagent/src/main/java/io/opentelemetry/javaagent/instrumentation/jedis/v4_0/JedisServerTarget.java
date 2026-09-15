@@ -12,7 +12,6 @@ import java.util.List;
 import javax.annotation.Nullable;
 import redis.clients.jedis.HostAndPort;
 
-// visible for testing
 public class JedisServerTarget {
 
   @Nullable

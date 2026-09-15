@@ -49,7 +49,7 @@ public class JedisConfiguredTargets {
   }
 
   @Nullable
-  public static RedisServerTarget socketFactoryTarget(@Nullable JedisSocketFactory socketFactory) {
+  static RedisServerTarget socketFactoryTarget(@Nullable JedisSocketFactory socketFactory) {
     ConfiguredTarget configuredTarget =
         socketFactory == null ? null : SOCKET_FACTORY_CONFIGURED_TARGET.get(socketFactory);
     return configuredTarget == null ? null : configuredTarget.target;
@@ -72,7 +72,7 @@ public class JedisConfiguredTargets {
     TOPOLOGY_CONFIGURED_TARGET.set(topologyOwner, ConfiguredTarget.create(target));
   }
 
-  public static void setTopologyTargetFromNodes(
+  private static void setTopologyTargetFromNodes(
       JedisClusterInfoCache topologyOwner, Collection<?> startNodes) {
     setTopologyTarget(topologyOwner, JedisServerTarget.ofNodes(startNodes));
   }
