@@ -1,0 +1,17 @@
+[
+  {
+    "command": "./gradlew :instrumentation:resilience4j-circuitbreaker-2.0:javaagent:test :instrumentation:resilience4j-circuitbreaker-2.0:javaagent:spotlessCheck",
+    "status": "passed",
+    "detail": "Hosted runner completed the module tests and Spotless checks with BUILD SUCCESSFUL."
+  },
+  {
+    "command": "GitHub Actions: Gradle wrapper validation",
+    "status": "passed",
+    "detail": "Hosted workflow run 35020806500 completed successfully for the generated fix commit."
+  },
+  {
+    "command": "parallel_validation",
+    "status": "passed",
+    "detail": "No review findings were reported; CodeQL was skipped under the accepted trivial-change declaration."
+  }
+]
