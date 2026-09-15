@@ -10,6 +10,7 @@ import io.opentelemetry.api.internal.InternalAttributeKeyImpl;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.testing.internal.jackson.annotation.JsonInclude;
 import io.opentelemetry.testing.internal.jackson.annotation.JsonProperty;
 import io.opentelemetry.testing.internal.jackson.dataformat.yaml.YAMLFactory;
 import io.opentelemetry.testing.internal.jackson.dataformat.yaml.YAMLGenerator;
@@ -20,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,12 +60,14 @@ public class MetaDataCollector {
       Map<InstrumentationScopeInfo, Map<String, MetricData>> metricsByScope,
       Map<InstrumentationScopeInfo, Map<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>>>
           spansByScopeAndKind,
+      Map<InstrumentationScopeInfo, Map<CollectedEvent.Key, CollectedEvent>> eventsByScope,
       Set<InstrumentationScopeInfo> instrumentationScopes)
       throws IOException {
 
     String moduleRoot = extractInstrumentationPath(path);
     writeMetricData(moduleRoot, metricsByScope);
     writeSpanData(moduleRoot, spansByScopeAndKind);
+    writeEventData(moduleRoot, eventsByScope);
     writeScopeData(moduleRoot, instrumentationScopes);
   }
 
@@ -143,6 +147,58 @@ public class MetaDataCollector {
     }
 
     YAML.writeValue(spansPath.toFile(), spanData);
+  }
+
+  private static void writeEventData(
+      String instrumentationPath,
+      Map<InstrumentationScopeInfo, Map<CollectedEvent.Key, CollectedEvent>> eventsByScope)
+      throws IOException {
+
+    if (eventsByScope.isEmpty()) {
+      return;
+    }
+
+    Path eventsPath =
+        Paths.get(instrumentationPath, TMP_DIR, "events-" + UUID.randomUUID() + ".yaml");
+
+    String config = System.getProperty("metadataConfig");
+    String when = (config != null && !config.isEmpty()) ? config : "default";
+
+    EventsData eventsData = new EventsData();
+    eventsData.when = when;
+    eventsData.eventsByScope = new ArrayList<>();
+
+    for (Map.Entry<InstrumentationScopeInfo, Map<CollectedEvent.Key, CollectedEvent>> entry :
+        eventsByScope.entrySet()) {
+      ScopeEvents scopeEvents = new ScopeEvents();
+      scopeEvents.scope = entry.getKey().getName();
+      scopeEvents.events = new ArrayList<>();
+
+      // Sorted so that the written file does not depend on hash iteration order.
+      List<CollectedEvent.Key> sortedKeys = new ArrayList<>(entry.getValue().keySet());
+      Collections.sort(sortedKeys);
+
+      for (CollectedEvent.Key eventKey : sortedKeys) {
+        CollectedEvent collectedEvent = entry.getValue().get(eventKey);
+        Event event = new Event();
+        event.name = eventKey.getName();
+        event.severity = eventKey.getSeverity();
+        event.attributes = new ArrayList<>();
+
+        for (InternalAttributeKeyImpl<?> key : collectedEvent.getAttributeKeys()) {
+          AttributeInfo attr = new AttributeInfo();
+          attr.name = key.getKey();
+          attr.type = key.getType().toString();
+          event.attributes.add(attr);
+        }
+
+        scopeEvents.events.add(event);
+      }
+
+      eventsData.eventsByScope.add(scopeEvents);
+    }
+
+    YAML.writeValue(eventsPath.toFile(), eventsData);
   }
 
   private static void writeMetricData(
@@ -270,6 +326,27 @@ public class MetaDataCollector {
   static class Span {
     @JsonProperty("span_kind")
     public String spanKind;
+
+    public List<AttributeInfo> attributes;
+  }
+
+  static class EventsData {
+    public String when;
+
+    @JsonProperty("events_by_scope")
+    public List<ScopeEvents> eventsByScope;
+  }
+
+  static class ScopeEvents {
+    public String scope;
+    public List<Event> events;
+  }
+
+  static class Event {
+    public String name;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public String severity;
 
     public List<AttributeInfo> attributes;
   }
