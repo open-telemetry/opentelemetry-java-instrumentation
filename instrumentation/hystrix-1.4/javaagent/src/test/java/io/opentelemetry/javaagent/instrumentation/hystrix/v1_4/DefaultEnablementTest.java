@@ -21,7 +21,7 @@ class DefaultEnablementTest {
       Boolean.getBoolean("otel.instrumentation.common.v3-preview");
 
   @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Test
   void defaultEnablement() {
