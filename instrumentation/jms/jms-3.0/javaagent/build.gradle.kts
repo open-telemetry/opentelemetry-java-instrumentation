@@ -23,6 +23,7 @@ muzzle {
 
 dependencies {
   implementation(project(":instrumentation:jms:jms-common-1.1:javaagent"))
+  bootstrap(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
 
   library("jakarta.jms:jakarta.jms-api:3.0.0")
 

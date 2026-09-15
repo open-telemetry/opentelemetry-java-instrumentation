@@ -5,16 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
-import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessageTelemetry.messageTelemetry;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.bootstrap.messaging.MessagingTelemetryCarrier;
+import io.opentelemetry.javaagent.bootstrap.jms.JmsMessageDeliveryState;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import javax.jms.Message;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -40,21 +39,43 @@ class JmsMessageInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class StoreReceiveTelemetryAdvice {
 
-    private static final MessagingTelemetryCarrier<Message> jmsMessageTelemetry =
-        MessagingTelemetryCarrier.create(
-            VirtualField.find(Message.class, MessagingTelemetrySignals.class));
+    private static final VirtualField<Message, JmsMessageDeliveryState> JMS_DELIVERY_STATE =
+        VirtualField.find(Message.class, JmsMessageDeliveryState.class);
+    private static final VirtualField<org.apache.camel.Message, JmsMessageDeliveryState>
+        CAMEL_DELIVERY_STATE =
+            VirtualField.find(org.apache.camel.Message.class, JmsMessageDeliveryState.class);
 
-    public static MessagingTelemetryCarrier<Message> jmsMessageTelemetry() {
-      return jmsMessageTelemetry;
+    public static VirtualField<Message, JmsMessageDeliveryState> jmsDeliveryState() {
+      return JMS_DELIVERY_STATE;
+    }
+
+    public static VirtualField<org.apache.camel.Message, JmsMessageDeliveryState>
+        camelDeliveryState() {
+      return CAMEL_DELIVERY_STATE;
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This org.apache.camel.Message camelMessage,
-        @Advice.Argument(0) Message jmsMessage) {
-      // a Camel message is refilled when its JMS message is swapped, so what it carried before must
-      // not survive
-      messageTelemetry().replaceFrom(jmsMessageTelemetry(), jmsMessage, camelMessage);
+        @Advice.Argument(0) @Nullable Message jmsMessage) {
+      if (jmsMessage == null) {
+        camelDeliveryState().set(camelMessage, null);
+        return;
+      }
+      JmsMessageDeliveryState state = jmsDeliveryState().get(jmsMessage);
+      if (state == null) {
+        synchronized (jmsMessage) {
+          state = jmsDeliveryState().get(jmsMessage);
+          if (state == null) {
+            state = new JmsMessageDeliveryState();
+            jmsDeliveryState().set(jmsMessage, state);
+          }
+        }
+      }
+      state.prepareForWrapping();
+      // A Camel message is refilled when its JMS message is swapped. Replace the delivery state,
+      // without copying the receive context or retaining the previous message's accounting.
+      camelDeliveryState().set(camelMessage, state);
     }
   }
 }

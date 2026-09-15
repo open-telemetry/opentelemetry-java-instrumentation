@@ -22,9 +22,12 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
+import javax.jms.Message;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.Route;
+import org.apache.camel.component.jms.JmsBinding;
+import org.apache.camel.component.jms.JmsMessage;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.DefaultExchange;
 import org.junit.jupiter.api.BeforeEach;
@@ -62,6 +65,16 @@ class CamelProcessMetricsTest {
     when(endpoint.getEndpointUri()).thenReturn("jms:queue:testQueue");
     Route route = mock(Route.class);
     when(route.getEndpoint()).thenReturn(endpoint);
+
+    JmsMessage camelMessage = new JmsMessage(mock(Message.class), null, mock(JmsBinding.class));
+    exchange.setIn(camelMessage);
+    Class<?> messageTelemetryClass = camelHelperClass("CamelMessageTelemetry");
+    Object deliveryState =
+        invokeStatic(
+            messageTelemetryClass,
+            "getJmsDeliveryState",
+            new Class<?>[] {org.apache.camel.Message.class},
+            camelMessage);
 
     Class<?> contextClass =
         Class.forName("io.opentelemetry.javaagent.shaded.io.opentelemetry.context.Context");
@@ -105,6 +118,10 @@ class CamelProcessMetricsTest {
         .filteredOn(
             metric -> INSTRUMENTATION_NAME.equals(metric.getInstrumentationScopeInfo().getName()))
         .isEmpty();
+    assertThat(
+            (Boolean)
+                deliveryState.getClass().getMethod("claimConsumedMessages").invoke(deliveryState))
+        .isTrue();
   }
 
   @ParameterizedTest
