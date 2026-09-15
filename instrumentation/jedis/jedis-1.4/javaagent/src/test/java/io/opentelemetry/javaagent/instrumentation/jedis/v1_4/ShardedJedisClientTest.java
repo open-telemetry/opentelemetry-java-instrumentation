@@ -187,19 +187,19 @@ class ShardedJedisClientTest {
 
   @Test
   void nestedInitializationRestoresConfiguredTarget() {
-    JedisShardInfo nestedShard = new JedisShardInfo("nested", 6380);
+    CapturingJedisShardInfo nestedShard = new CapturingJedisShardInfo("nested", 6380);
     ReentrantJedisShardInfo outerShard =
         new ReentrantJedisShardInfo(
             firstServer.getHost(), firstServer.getMappedPort(6379), nestedShard);
-    JedisShardInfo secondOuterShard =
-        new JedisShardInfo(secondServer.getHost(), secondServer.getMappedPort(6379));
+    CapturingJedisShardInfo secondOuterShard =
+        new CapturingJedisShardInfo(secondServer.getHost(), secondServer.getMappedPort(6379));
     new ShardedJedis(asList(outerShard, secondOuterShard));
 
-    cleanup.deferCleanup(outerShard.getResource().getClient()::disconnect);
-    cleanup.deferCleanup(secondOuterShard.getResource().getClient()::disconnect);
-    cleanup.deferCleanup(nestedShard.getResource().getClient()::disconnect);
+    cleanup.deferCleanup(outerShard.createdResource().getClient()::disconnect);
+    cleanup.deferCleanup(secondOuterShard.createdResource().getClient()::disconnect);
+    cleanup.deferCleanup(nestedShard.createdResource().getClient()::disconnect);
 
-    outerShard.getResource().set("reentrant", "bar");
+    outerShard.createdResource().set("reentrant", "bar");
 
     String outerTarget =
         outerShard.getHost()
@@ -232,7 +232,26 @@ class ShardedJedisClientTest {
                                     : (long) outerShard.getPort()))));
   }
 
-  private static class ReentrantJedisShardInfo extends JedisShardInfo {
+  private static class CapturingJedisShardInfo extends JedisShardInfo {
+
+    private Jedis createdResource;
+
+    private CapturingJedisShardInfo(String host, int port) {
+      super(host, port);
+    }
+
+    @Override
+    public Jedis createResource() {
+      createdResource = super.createResource();
+      return createdResource;
+    }
+
+    final Jedis createdResource() {
+      return createdResource;
+    }
+  }
+
+  private static class ReentrantJedisShardInfo extends CapturingJedisShardInfo {
 
     private final JedisShardInfo nestedShard;
 
