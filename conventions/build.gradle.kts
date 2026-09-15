@@ -66,7 +66,7 @@ dependencies {
     exclude("org.codehaus.plexus", "plexus-xml")
   }
   implementation("org.apache.httpcomponents:httpclient:4.5.14")
-  implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:4.5.0")
+  implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:4.5.1")
   implementation("org.sonatype.gradle.plugins:scan-gradle-plugin:4.0.0")
   implementation("ru.vyarus:gradle-animalsniffer-plugin:2.0.1")
   implementation("org.spdx:spdx-gradle-plugin:0.12.0")
