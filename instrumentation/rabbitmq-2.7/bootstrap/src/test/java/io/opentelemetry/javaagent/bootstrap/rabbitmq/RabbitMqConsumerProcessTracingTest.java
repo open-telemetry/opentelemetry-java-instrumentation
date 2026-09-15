@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.bootstrap.rabbitmq;
 
+import static io.opentelemetry.javaagent.bootstrap.rabbitmq.RabbitMqConsumerProcessTracing.rabbitProcessTracingSuppression;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -16,11 +17,11 @@ class RabbitMqConsumerProcessTracingTest {
   void shouldScopeSpringProcessTelemetryOwnership() {
     assertThat(RabbitMqConsumerProcessTracing.shouldTraceProcess()).isTrue();
 
-    Boolean previous = RabbitMqConsumerProcessTracing.setSpringProcessTelemetry(true);
+    Boolean previous = rabbitProcessTracingSuppression().set(Boolean.TRUE);
     try {
       assertThat(RabbitMqConsumerProcessTracing.shouldTraceProcess()).isFalse();
     } finally {
-      RabbitMqConsumerProcessTracing.restoreSpringProcessTelemetry(previous);
+      rabbitProcessTracingSuppression().restore(previous);
     }
 
     assertThat(RabbitMqConsumerProcessTracing.shouldTraceProcess()).isTrue();
@@ -28,35 +29,17 @@ class RabbitMqConsumerProcessTracingTest {
 
   @Test
   void shouldRestoreNestedRegistration() {
-    Boolean outerPrevious = RabbitMqConsumerProcessTracing.setSpringProcessTelemetry(true);
+    Boolean outerPrevious = rabbitProcessTracingSuppression().set(Boolean.TRUE);
     try {
-      Boolean innerPrevious = RabbitMqConsumerProcessTracing.setSpringProcessTelemetry(true);
+      Boolean innerPrevious = rabbitProcessTracingSuppression().set(Boolean.TRUE);
       try {
         assertThat(RabbitMqConsumerProcessTracing.shouldTraceProcess()).isFalse();
       } finally {
-        RabbitMqConsumerProcessTracing.restoreSpringProcessTelemetry(innerPrevious);
+        rabbitProcessTracingSuppression().restore(innerPrevious);
       }
       assertThat(RabbitMqConsumerProcessTracing.shouldTraceProcess()).isFalse();
     } finally {
-      RabbitMqConsumerProcessTracing.restoreSpringProcessTelemetry(outerPrevious);
-    }
-
-    assertThat(RabbitMqConsumerProcessTracing.shouldTraceProcess()).isTrue();
-  }
-
-  @Test
-  void shouldPreserveOuterRegistrationWhenNestedRegistrationIsNotSpringOwned() {
-    Boolean outerPrevious = RabbitMqConsumerProcessTracing.setSpringProcessTelemetry(true);
-    try {
-      Boolean innerPrevious = RabbitMqConsumerProcessTracing.setSpringProcessTelemetry(false);
-      try {
-        assertThat(RabbitMqConsumerProcessTracing.shouldTraceProcess()).isFalse();
-      } finally {
-        RabbitMqConsumerProcessTracing.restoreSpringProcessTelemetry(innerPrevious);
-      }
-      assertThat(RabbitMqConsumerProcessTracing.shouldTraceProcess()).isFalse();
-    } finally {
-      RabbitMqConsumerProcessTracing.restoreSpringProcessTelemetry(outerPrevious);
+      rabbitProcessTracingSuppression().restore(outerPrevious);
     }
 
     assertThat(RabbitMqConsumerProcessTracing.shouldTraceProcess()).isTrue();
@@ -66,11 +49,11 @@ class RabbitMqConsumerProcessTracingTest {
   void shouldCleanUpAfterException() {
     assertThatThrownBy(
             () -> {
-              Boolean previous = RabbitMqConsumerProcessTracing.setSpringProcessTelemetry(true);
+              Boolean previous = rabbitProcessTracingSuppression().set(Boolean.TRUE);
               try {
                 throw new IllegalStateException("test");
               } finally {
-                RabbitMqConsumerProcessTracing.restoreSpringProcessTelemetry(previous);
+                rabbitProcessTracingSuppression().restore(previous);
               }
             })
         .isInstanceOf(IllegalStateException.class);
