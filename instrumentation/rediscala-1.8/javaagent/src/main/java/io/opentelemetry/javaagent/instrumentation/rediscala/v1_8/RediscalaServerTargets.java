@@ -119,9 +119,21 @@ public class RediscalaServerTargets {
       return getClientTarget((RedisClientActorLike) client);
     }
     if (client instanceof Request) {
-      return RediscalaSingletons.getServerTarget(REQUEST_TARGET, (Request) client);
+      return get((Request) client);
     }
     return of(client);
+  }
+
+  @Nullable
+  private static RedisServerTarget get(Request request) {
+    RedisServerTarget target = REQUEST_TARGET.get(request);
+    if (target == null) {
+      target = of(request);
+      if (target != null) {
+        REQUEST_TARGET.set(request, target);
+      }
+    }
+    return target;
   }
 
   public static void captureClientTarget(RedisClientActorLike client) {
@@ -204,22 +216,23 @@ public class RediscalaServerTargets {
       logger.log(FINE, "Failed to read the configured rediscala master-slaves servers", e);
       return null;
     }
-    if (!(master instanceof RedisServer) || !(slaves instanceof Iterable)) {
+    if (!(slaves instanceof Iterable)) {
+      return null;
+    }
+    String masterEndpoint = endpoint(master);
+    if (masterEndpoint == null) {
       return null;
     }
     List<String> slaveEndpoints = new ArrayList<>();
     Iterator<?> iterator = ((Iterable<?>) slaves).iterator();
     while (iterator.hasNext()) {
-      Object slave = iterator.next();
-      if (!(slave instanceof RedisServer)) {
+      String slaveEndpoint = endpoint(iterator.next());
+      if (slaveEndpoint == null) {
         return null;
       }
-      RedisServer redisServer = (RedisServer) slave;
-      slaveEndpoints.add(RedisServerTarget.endpoint(redisServer.host(), redisServer.port()));
+      slaveEndpoints.add(slaveEndpoint);
     }
-    RedisServer masterServer = (RedisServer) master;
-    return RedisServerTarget.ofEndpointAndUnorderedEndpoints(
-        RedisServerTarget.endpoint(masterServer.host(), masterServer.port()), slaveEndpoints);
+    return RedisServerTarget.ofEndpointAndUnorderedEndpoints(masterEndpoint, slaveEndpoints);
   }
 
   @Nullable
@@ -280,13 +293,7 @@ public class RediscalaServerTargets {
     List<String> endpoints = new ArrayList<>();
     Iterator<?> iterator = ((Iterable<?>) servers).iterator();
     while (iterator.hasNext()) {
-      Object server = iterator.next();
-      if (!(server instanceof RedisServer)) {
-        endpoints.add(null);
-        continue;
-      }
-      RedisServer redisServer = (RedisServer) server;
-      endpoints.add(RedisServerTarget.endpoint(redisServer.host(), redisServer.port()));
+      endpoints.add(endpoint(iterator.next()));
     }
     return RedisServerTarget.ofUnorderedEndpoints(endpoints);
   }
