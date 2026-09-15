@@ -68,14 +68,15 @@ class PoolInstrumentation implements TypeInstrumentation {
         @Advice.Origin("#t") String declaringTypeName) {
       CallDepth callDepth = CallDepth.forClass(Pool.class);
       if (callDepth.getAndIncrement() > 0) {
-        return new PoolConstructionState(callDepth, null);
+        return new PoolConstructionState(callDepth, null, null);
       }
 
       String dbSystemName = resolveDbSystemName(sqlConnectOptions, declaringTypeName);
       VertxSqlClientConstructionState constructionState =
           new VertxSqlClientConstructionState(singletonList(sqlConnectOptions), dbSystemName);
-      VertxSqlClientSingletons.setConstructionState(constructionState);
-      return new PoolConstructionState(callDepth, constructionState);
+      VertxSqlClientConstructionState previous =
+          VertxSqlClientSingletons.enterConstruction(constructionState);
+      return new PoolConstructionState(callDepth, constructionState, previous);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -86,7 +87,7 @@ class PoolInstrumentation implements TypeInstrumentation {
       }
 
       VertxSqlClientConstructionState constructionState = state.getConstructionState();
-      VertxSqlClientSingletons.setConstructionState(null);
+      VertxSqlClientSingletons.exitConstruction(state.getPreviousConstructionState());
       if (constructionState != null) {
         if (pool != null) {
           constructionState.setDbSystemName(getDbSystemNameFromClassName(pool));
@@ -98,11 +99,15 @@ class PoolInstrumentation implements TypeInstrumentation {
     public static final class PoolConstructionState {
       private final CallDepth callDepth;
       @Nullable private final VertxSqlClientConstructionState constructionState;
+      @Nullable private final VertxSqlClientConstructionState previousConstructionState;
 
       public PoolConstructionState(
-          CallDepth callDepth, @Nullable VertxSqlClientConstructionState constructionState) {
+          CallDepth callDepth,
+          @Nullable VertxSqlClientConstructionState constructionState,
+          @Nullable VertxSqlClientConstructionState previousConstructionState) {
         this.callDepth = callDepth;
         this.constructionState = constructionState;
+        this.previousConstructionState = previousConstructionState;
       }
 
       public boolean isNested() {
@@ -112,6 +117,11 @@ class PoolInstrumentation implements TypeInstrumentation {
       @Nullable
       public VertxSqlClientConstructionState getConstructionState() {
         return constructionState;
+      }
+
+      @Nullable
+      public VertxSqlClientConstructionState getPreviousConstructionState() {
+        return previousConstructionState;
       }
     }
   }

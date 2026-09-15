@@ -16,11 +16,13 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 public final class VertxSqlClientConstructionState {
-  private final List<SqlConnectOptions> databases;
+  @Nullable private final List<SqlConnectOptions> databases;
   private final List<SqlClientBase> clients = new ArrayList<>();
   @Nullable private VertxSqlClientInfo info;
+  @Nullable private VertxSqlClientSupplierInfo supplier;
 
-  public VertxSqlClientConstructionState(List<SqlConnectOptions> databases, String dbSystemName) {
+  public VertxSqlClientConstructionState(
+      @Nullable List<SqlConnectOptions> databases, String dbSystemName) {
     this.databases = databases;
     updateInfo(dbSystemName);
   }
@@ -30,6 +32,11 @@ public final class VertxSqlClientConstructionState {
     return info;
   }
 
+  @Nullable
+  public VertxSqlClientSupplierInfo getSupplier() {
+    return supplier;
+  }
+
   public void setDbSystemName(String dbSystemName) {
     if (info == null || !VertxSqlClientUtil.isKnownDbSystem(info.getDbSystemName())) {
       updateInfo(dbSystemName);
@@ -37,7 +44,12 @@ public final class VertxSqlClientConstructionState {
   }
 
   private void updateInfo(String dbSystemName) {
-    info = VertxSqlClientInfo.create(databases, dbSystemName);
+    if (databases == null) {
+      info = VertxSqlClientInfo.createUnknown(dbSystemName);
+      supplier = new VertxSqlClientSupplierInfo(info);
+    } else {
+      info = VertxSqlClientInfo.create(databases, dbSystemName);
+    }
   }
 
   public void attachClient(SqlClientBase client) {
@@ -58,5 +70,6 @@ public final class VertxSqlClientConstructionState {
 
   private void publish(SqlClientBase client) {
     VertxSqlClientSingletons.attachClientInfo(client, info);
+    VertxSqlClientSingletons.setClientSupplier(client, supplier);
   }
 }
