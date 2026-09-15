@@ -2,7 +2,7 @@
 # subset of jvm rules for testing without dependency on real jvm metrics evolution
 rules:
 
-  - bean: java.lang:type=Threading
+  - bean: java.lang:type=OperatingSystem
     prefix: jvm.
     mapping:
 
