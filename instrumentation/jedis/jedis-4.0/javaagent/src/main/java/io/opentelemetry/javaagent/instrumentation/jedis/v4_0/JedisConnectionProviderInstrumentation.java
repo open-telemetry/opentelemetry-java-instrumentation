@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.none;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -55,6 +56,7 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(none(), getClass().getName() + "$InitAdvice");
     transformer.applyTransformer(
         (builder, typeDescription, classLoader, javaModule, protectionDomain) ->
             builder.visit(new TopologyRefreshTaskVisitor()));
@@ -94,6 +96,15 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$ProviderTargetScopeAdvice");
     transformer.applyAdviceToMethod(
         named("renewSlotCache"), getClass().getName() + "$ProviderTargetScopeAdvice");
+  }
+
+  @SuppressWarnings({"ReturnValueIgnored", "unused"})
+  public static class InitAdvice {
+
+    @Advice.OnMethodEnter(inline = false)
+    public static void onEnter() {
+      JedisConfiguredTargets.class.getName();
+    }
   }
 
   @SuppressWarnings("unused")
