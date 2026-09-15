@@ -22,6 +22,10 @@ public final class McpProtocolVersionState {
 
   private final String protocolVersion;
 
+  private McpProtocolVersionState(String protocolVersion) {
+    this.protocolVersion = protocolVersion;
+  }
+
   @Nullable
   public static String get(McpClientSession session) {
     McpProtocolVersionState state = SESSION_PROTOCOL_VERSION.get(session);
@@ -46,9 +50,5 @@ public final class McpProtocolVersionState {
             logger.log(FINE, "Failed to capture MCP protocol version", t);
           }
         });
-  }
-
-  private McpProtocolVersionState(String protocolVersion) {
-    this.protocolVersion = protocolVersion;
   }
 }
