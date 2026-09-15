@@ -106,14 +106,14 @@ configurations:
     default: true
 
   messaging.headers.included:
-    name: otel.instrumentation.messaging.experimental.headers.included
+    name: otel.instrumentation.common.messaging.experimental.headers.included
     declarative_name: java.common.messaging.headers/development.included
     description: "A comma-separated list of message header name patterns to capture as span attributes. Matching is case-sensitive. `?` matches one character and `*` matches zero or more characters."
     type: list
     default: ""
 
   messaging.headers.excluded:
-    name: otel.instrumentation.messaging.experimental.headers.excluded
+    name: otel.instrumentation.common.messaging.experimental.headers.excluded
     declarative_name: java.common.messaging.headers/development.excluded
     description: "A comma-separated list of message header name patterns to exclude from span attributes. Excluded patterns take precedence over included patterns. Matching is case-sensitive. `?` matches one character and `*` matches zero or more characters. If included is not configured, all non-excluded headers are captured, which may expose sensitive information."
     type: list
@@ -122,13 +122,33 @@ configurations:
   messaging.capture-headers:
     name: otel.instrumentation.messaging.experimental.capture-headers
     declarative_name: java.common.messaging.capture_headers/development
-    description: "Deprecated: use `otel.instrumentation.messaging.experimental.headers.included` instead. A comma-separated list of header names to capture as span attributes. It does not support glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other entry is matched as a literal header name."
+    description: "Deprecated: use `otel.instrumentation.common.messaging.experimental.headers.included` instead. A comma-separated list of header names to capture as span attributes. It does not support glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other entry is matched as a literal header name."
     type: list
     default: ""
 
-  messaging.batch-send.message-creation-spans.enabled:
-    name: otel.instrumentation.messaging.batch-send.message-creation-spans.enabled
-    declarative_name: java.common.messaging.batch_send.message_creation_spans.enabled
+  # The deprecated names below are flat properties only: the declarative configuration schema keeps
+  # them under `java.common.messaging`, so they declare no declarative_name.
+  messaging.deprecated-headers.included:
+    name: otel.instrumentation.messaging.experimental.headers.included
+    description: "Deprecated: use `otel.instrumentation.common.messaging.experimental.headers.included` instead. It may be removed in the next minor release."
+    type: list
+    default: ""
+
+  messaging.deprecated-headers.excluded:
+    name: otel.instrumentation.messaging.experimental.headers.excluded
+    description: "Deprecated: use `otel.instrumentation.common.messaging.experimental.headers.excluded` instead. It may be removed in the next minor release."
+    type: list
+    default: ""
+
+  messaging.deprecated-receive-telemetry.enabled:
+    name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+    description: "Deprecated: use `otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled` instead. It may be removed in the next minor release."
+    type: boolean
+    default: false
+
+  common.messaging.message-create-spans.enabled:
+    name: otel.instrumentation.common.messaging.message-create-spans.enabled
+    declarative_name: java.common.messaging.message_create_spans.enabled
     description: "Provides the default for whether to create a producer span for each eligible message in a batch send when stable messaging semantic conventions are enabled. An instrumentation-specific setting takes precedence."
     type: boolean
     default: true

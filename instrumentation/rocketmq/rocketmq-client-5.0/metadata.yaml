@@ -6,13 +6,16 @@ semantic_conventions:
   - MESSAGING_SPANS
 library_link: https://rocketmq.apache.org/
 configurations:
-  - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+  - name: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
     declarative_name: java.common.messaging.receive_telemetry/development.enabled
     description: >
       Enables experimental receive telemetry, which will cause consumers to start a new trace, with
       only a span link connecting it to the producer trace.
     type: boolean
     default: false
+  - ref: messaging.deprecated-receive-telemetry.enabled
   - ref: messaging.headers.included
   - ref: messaging.headers.excluded
   - ref: messaging.capture-headers
+  - ref: messaging.deprecated-headers.included
+  - ref: messaging.deprecated-headers.excluded

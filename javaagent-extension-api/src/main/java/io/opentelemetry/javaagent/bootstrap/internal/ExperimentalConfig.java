@@ -23,6 +23,7 @@ public final class ExperimentalConfig {
 
   private final DeclarativeConfigProperties commonConfig;
   private final IncludeExclude messagingHeaders;
+  private final boolean messagingReceiveInstrumentationEnabled;
 
   /** Returns the global agent configuration. */
   public static ExperimentalConfig get() {
@@ -32,6 +33,8 @@ public final class ExperimentalConfig {
   public ExperimentalConfig(OpenTelemetry openTelemetry) {
     this.commonConfig = DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
     this.messagingHeaders = MessagingConfig.getHeaders(openTelemetry);
+    this.messagingReceiveInstrumentationEnabled =
+        MessagingConfig.isReceiveTelemetryEnabled(openTelemetry, false);
   }
 
   public boolean controllerTelemetryEnabled() {
@@ -43,10 +46,7 @@ public final class ExperimentalConfig {
   }
 
   public boolean messagingReceiveInstrumentationEnabled() {
-    return commonConfig
-        .get("messaging")
-        .get("receive_telemetry/development")
-        .getBoolean("enabled", false);
+    return messagingReceiveInstrumentationEnabled;
   }
 
   /**

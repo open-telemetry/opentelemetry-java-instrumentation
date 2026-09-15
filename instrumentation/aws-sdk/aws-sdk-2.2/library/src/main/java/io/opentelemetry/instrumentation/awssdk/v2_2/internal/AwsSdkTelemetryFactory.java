@@ -35,8 +35,6 @@ public final class AwsSdkTelemetryFactory {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
     DeclarativeConfigProperties commonConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
-    DeclarativeConfigProperties messaging = commonConfig.get("messaging");
-
     DeclarativeConfigProperties awsSdk =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "aws_sdk");
 
@@ -51,13 +49,8 @@ public final class AwsSdkTelemetryFactory {
                     systemProperties.getBoolean(
                         "otel.instrumentation.aws-sdk.experimental-span-attributes", false)))
             .setMessagingReceiveTelemetryEnabled(
-                messaging
-                    .get("receive_telemetry/development")
-                    .getBoolean(
-                        "enabled",
-                        systemProperties.getBoolean(
-                            "otel.instrumentation.messaging.experimental.receive-telemetry.enabled",
-                            false)))
+                MessagingConfig.isReceiveTelemetryEnabled(
+                    openTelemetry, systemProperties == SystemProperties.ENABLED))
             .setUseConfiguredPropagatorForMessaging(
                 awsSdk.getBoolean(
                     "use_propagator_for_messaging/development",

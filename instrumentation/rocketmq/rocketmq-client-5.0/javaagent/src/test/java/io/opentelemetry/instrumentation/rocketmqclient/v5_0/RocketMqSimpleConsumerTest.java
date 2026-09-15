@@ -70,7 +70,8 @@ class RocketMqSimpleConsumerTest {
   private static final String[] KEYS = {"simple-key-0", "simple-key-1"};
   private static final byte[] BODY = "simple-consumer".getBytes(UTF_8);
   private static final boolean RECEIVE_TELEMETRY_ENABLED =
-      Boolean.getBoolean("otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
+      Boolean.getBoolean(
+          "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled");
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
