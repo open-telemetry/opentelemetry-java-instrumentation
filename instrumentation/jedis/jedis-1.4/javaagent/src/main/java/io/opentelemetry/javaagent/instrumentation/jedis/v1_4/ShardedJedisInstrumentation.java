@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 
+import static io.opentelemetry.javaagent.instrumentation.jedis.v1_4.JedisSingletons.currentConfiguredTarget;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -40,12 +41,12 @@ class ShardedJedisInstrumentation implements TypeInstrumentation {
     public static RedisServerTarget onEnter(
         @Advice.Argument(0) @Nullable List<JedisShardInfo> shards) {
       RedisServerTarget target = JedisSingletons.createServerTarget(shards);
-      return JedisSingletons.setConfiguredTarget(target);
+      return currentConfiguredTarget().set(target);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable RedisServerTarget previousConfiguredTarget) {
-      JedisSingletons.restoreConfiguredTarget(previousConfiguredTarget);
+      currentConfiguredTarget().restore(previousConfiguredTarget);
     }
   }
 }

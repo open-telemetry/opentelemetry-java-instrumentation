@@ -74,11 +74,12 @@ class JedisSingletonsTest {
     Connection connection = new Connection("direct", 6379);
     RedisServerTarget configuredTarget = RedisServerTarget.ofHostAndPort("configured", 6380);
 
-    RedisServerTarget previousTarget = JedisSingletons.setConfiguredTarget(configuredTarget);
+    RedisServerTarget previousTarget =
+        JedisSingletons.currentConfiguredTarget().set(configuredTarget);
     try {
       JedisSingletons.captureConnectionTarget(connection);
     } finally {
-      JedisSingletons.restoreConfiguredTarget(previousTarget);
+      JedisSingletons.currentConfiguredTarget().restore(previousTarget);
     }
 
     assertThat(JedisSingletons.connectionTarget(connection)).isSameAs(configuredTarget);

@@ -16,8 +16,8 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.Servi
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.bootstrap.internal.ScopedThreadLocal;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -31,8 +31,8 @@ public class JedisSingletons {
 
   private static final VirtualField<Connection, RedisServerTarget> CONNECTION_TARGET =
       VirtualField.find(Connection.class, RedisServerTarget.class);
-  private static final ScopedThreadLocal<RedisServerTarget> configuredTarget =
-      new ScopedThreadLocal<>();
+  private static final ScopedThreadValue<RedisServerTarget> currentConfiguredTarget =
+      new ScopedThreadValue<>();
 
   static {
     JedisDbAttributesGetter dbAttributesGetter = new JedisDbAttributesGetter();
@@ -56,8 +56,12 @@ public class JedisSingletons {
     return instrumenter;
   }
 
+  public static ScopedThreadValue<RedisServerTarget> currentConfiguredTarget() {
+    return currentConfiguredTarget;
+  }
+
   public static void captureConnectionTarget(Connection connection) {
-    RedisServerTarget target = configuredTarget.get();
+    RedisServerTarget target = currentConfiguredTarget.get();
     if (target == null) {
       target = RedisServerTarget.ofHostAndPort(connection.getHost(), connection.getPort());
     }
@@ -65,17 +69,8 @@ public class JedisSingletons {
   }
 
   @Nullable
-  public static RedisServerTarget setConfiguredTarget(@Nullable RedisServerTarget target) {
-    return configuredTarget.set(target);
-  }
-
-  public static void restoreConfiguredTarget(@Nullable RedisServerTarget previousTarget) {
-    configuredTarget.restore(previousTarget);
-  }
-
-  @Nullable
   static RedisServerTarget connectionTarget(Connection connection) {
-    RedisServerTarget target = configuredTarget.get();
+    RedisServerTarget target = currentConfiguredTarget.get();
     if (target != null) {
       return target;
     }
