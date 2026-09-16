@@ -59,6 +59,7 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,6 +69,8 @@ import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 import reactor.kafka.receiver.KafkaReceiver;
 import reactor.kafka.receiver.ReceiverOptions;
 import reactor.kafka.sender.KafkaSender;
@@ -175,6 +178,19 @@ public abstract class AbstractReactorKafkaTest {
     } else {
       assertWithoutReceiveTelemetry(record);
     }
+  }
+
+  @Test
+  void testReceiveAutoAckAfterAsyncHandoff() {
+    Scheduler scheduler = Schedulers.newSingle("kafka-handoff");
+    cleanup.deferCleanup(scheduler::dispose);
+    testSingleRecordProcess(
+        recordConsumer ->
+            receiver
+                .receiveAutoAck()
+                .publishOn(scheduler)
+                .concatMap(records -> records)
+                .subscribe(recordConsumer));
   }
 
   private static void assertWithReceiveTelemetry(SenderRecord<String, String, Object> record) {
