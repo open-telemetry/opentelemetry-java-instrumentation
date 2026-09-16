@@ -5,13 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.SPAN;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.currentProcessSpanSuppression;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -36,16 +33,16 @@ class KafkaFetchRecordsInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
-    public static MessagingTelemetrySignals onEnter() {
+    public static Boolean onEnter() {
       if (!emitStableMessagingSemconv()) {
         return null;
       }
-      return currentProcessSpanSuppression().suppress(PROCESS, SPAN);
+      return currentProcessSpanSuppression().set(Boolean.TRUE);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter @Nullable MessagingTelemetrySignals previous) {
-      if (previous != null) {
+    public static void onExit(@Advice.Enter @Nullable Boolean previous) {
+      if (emitStableMessagingSemconv()) {
         currentProcessSpanSuppression().restore(previous);
       }
     }

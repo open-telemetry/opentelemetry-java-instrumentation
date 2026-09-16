@@ -5,14 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.kafkaclient.v3_6;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.SPAN;
 import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.currentProcessSpanSuppression;
 import static io.opentelemetry.javaagent.instrumentation.vertx.kafkaclient.v3_6.VertxKafkaSingletons.batchProcessInstrumenter;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
@@ -42,7 +39,7 @@ public class InstrumentedBatchRecordsHandler<K, V> implements Handler<ConsumerRe
     }
 
     // the instrumenter iterates over records when adding links, we need to suppress that
-    MessagingTelemetrySignals previous = currentProcessSpanSuppression().suppress(PROCESS, SPAN);
+    Boolean previous = currentProcessSpanSuppression().set(Boolean.TRUE);
     try {
       Context context = batchProcessInstrumenter().start(parentContext, request);
       try (Scope ignored = context.makeCurrent()) {

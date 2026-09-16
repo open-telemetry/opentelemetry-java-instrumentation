@@ -5,15 +5,12 @@
 
 package io.opentelemetry.javaagent.bootstrap.kafka;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.SPAN;
-
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.javaagent.bootstrap.messaging.MessagingTelemetrySuppression;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import java.util.function.BooleanSupplier;
 
 // Classes used by multiple instrumentations should be in a bootstrap module to ensure that all
@@ -25,17 +22,15 @@ public final class KafkaClientsConsumerProcessTracing {
   private static final ContextKey<Boolean> FRAMEWORK_PROCESS_KEY =
       ContextKey.named("opentelemetry-kafka-framework-process-span");
 
-  // This holder is the coordination key, so its suppressed signals stay invisible to every other
-  // messaging stack that runs on the same thread.
-  private static final MessagingTelemetrySuppression currentProcessSpanSuppression =
-      MessagingTelemetrySuppression.create();
+  private static final ScopedThreadValue<Boolean> currentProcessSpanSuppression =
+      new ScopedThreadValue<>();
 
-  public static MessagingTelemetrySuppression currentProcessSpanSuppression() {
+  public static ScopedThreadValue<Boolean> currentProcessSpanSuppression() {
     return currentProcessSpanSuppression;
   }
 
   public static boolean isWrappingEnabled() {
-    return !currentProcessSpanSuppression().isSuppressed(PROCESS, SPAN);
+    return currentProcessSpanSuppression().get() == null;
   }
 
   public static BooleanSupplier getWrappingEnabledSupplier() {

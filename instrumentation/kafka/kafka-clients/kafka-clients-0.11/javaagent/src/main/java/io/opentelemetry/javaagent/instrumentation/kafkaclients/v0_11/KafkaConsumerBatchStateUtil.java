@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaConsumerBatchState;
 import java.util.function.BooleanSupplier;
+import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
 public final class KafkaConsumerBatchStateUtil {
@@ -15,9 +16,9 @@ public final class KafkaConsumerBatchStateUtil {
   private static final VirtualField<ConsumerRecords<?, ?>, KafkaConsumerBatchState> BATCH_STATE =
       VirtualField.find(ConsumerRecords.class, KafkaConsumerBatchState.class);
 
-  public static void recordPoll(ConsumerRecords<?, ?> records, boolean applicationPoll) {
+  public static void recordPoll(ConsumerRecords<?, ?> records, @Nullable Boolean previous) {
     if (!records.isEmpty()) {
-      BATCH_STATE.set(records, new KafkaConsumerBatchState(applicationPoll));
+      BATCH_STATE.set(records, new KafkaConsumerBatchState(previous == null));
     }
   }
 

@@ -5,17 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.kafkaclient.v3_6;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.SPAN;
 import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.currentProcessSpanSuppression;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -41,12 +39,13 @@ class KafkaConsumerRecordsImplInstrumentation implements TypeInstrumentation {
   public static class RecordAtAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static MessagingTelemetrySignals onEnter() {
-      return currentProcessSpanSuppression().suppress(PROCESS, SPAN);
+    @Nullable
+    public static Boolean onEnter() {
+      return currentProcessSpanSuppression().set(Boolean.TRUE);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter MessagingTelemetrySignals previous) {
+    public static void onExit(@Advice.Enter @Nullable Boolean previous) {
       currentProcessSpanSuppression().restore(previous);
     }
   }

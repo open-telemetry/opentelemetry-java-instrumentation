@@ -20,7 +20,7 @@ class KafkaConsumerBatchStateTest {
   @Test
   void shouldTraceUnclaimedApplicationPoll() {
     ConsumerRecords<String, String> records = records();
-    KafkaConsumerBatchStateUtil.recordPoll(records, true);
+    KafkaConsumerBatchStateUtil.recordPoll(records, null);
 
     assertThat(KafkaConsumerBatchStateUtil.processSpanEnabled(records, () -> true).getAsBoolean())
         .isTrue();
@@ -29,7 +29,7 @@ class KafkaConsumerBatchStateTest {
   @Test
   void shouldHonorClaimBeforeIteratorCreation() {
     ConsumerRecords<String, String> records = records();
-    KafkaConsumerBatchStateUtil.recordPoll(records, true);
+    KafkaConsumerBatchStateUtil.recordPoll(records, null);
     KafkaConsumerBatchStateUtil.claimProcessSpan(records);
 
     BooleanSupplier processSpanEnabled =
@@ -40,7 +40,7 @@ class KafkaConsumerBatchStateTest {
   @Test
   void shouldHonorClaimAfterIteratorCreation() {
     ConsumerRecords<String, String> records = records();
-    KafkaConsumerBatchStateUtil.recordPoll(records, true);
+    KafkaConsumerBatchStateUtil.recordPoll(records, null);
 
     BooleanSupplier processSpanEnabled =
         KafkaConsumerBatchStateUtil.processSpanEnabled(records, () -> true);
@@ -52,7 +52,7 @@ class KafkaConsumerBatchStateTest {
   @Test
   void shouldNotTraceFrameworkPoll() {
     ConsumerRecords<String, String> records = records();
-    KafkaConsumerBatchStateUtil.recordPoll(records, false);
+    KafkaConsumerBatchStateUtil.recordPoll(records, Boolean.TRUE);
 
     assertThat(KafkaConsumerBatchStateUtil.processSpanEnabled(records, () -> true).getAsBoolean())
         .isFalse();
@@ -61,7 +61,7 @@ class KafkaConsumerBatchStateTest {
   @Test
   void shouldHonorFrameworkSuppressionAfterApplicationPoll() {
     ConsumerRecords<String, String> records = records();
-    KafkaConsumerBatchStateUtil.recordPoll(records, true);
+    KafkaConsumerBatchStateUtil.recordPoll(records, null);
 
     assertThat(KafkaConsumerBatchStateUtil.processSpanEnabled(records, () -> false).getAsBoolean())
         .isFalse();

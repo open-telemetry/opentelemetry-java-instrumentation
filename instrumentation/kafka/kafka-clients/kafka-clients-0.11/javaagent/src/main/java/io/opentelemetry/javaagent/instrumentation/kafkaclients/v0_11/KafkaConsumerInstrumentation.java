@@ -5,10 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.SPAN;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.currentProcessSpanSuppression;
@@ -21,7 +19,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
@@ -82,7 +79,7 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
       KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumer);
 
       // disable process tracing and store the receive span for each individual record too
-      MessagingTelemetrySignals previous = currentProcessSpanSuppression().suppress(PROCESS, SPAN);
+      Boolean previous = currentProcessSpanSuppression().set(Boolean.TRUE);
       try {
         Context receiveContext = null;
         boolean receiveOperationStarted = false;
@@ -117,7 +114,7 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
             recordTelemetry().add(record, RECEIVE, CONSUMED_MESSAGES);
           }
         }
-        KafkaConsumerBatchStateUtil.recordPoll(records, !previous.contains(PROCESS, SPAN));
+        KafkaConsumerBatchStateUtil.recordPoll(records, previous);
       } finally {
         currentProcessSpanSuppression().restore(previous);
       }
