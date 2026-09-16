@@ -7,6 +7,7 @@
 - Requirement: every value that holds operation-specific temporary state needs cleanup on every
   exit, including exceptional exits
 - Default for temporary state installed on entry and cleaned up on exit: restore the previous value
+- Naming: use `current*` for ambient state that belongs to the executing thread
 
 ## Match Cleanup to the Lifecycle
 
@@ -35,6 +36,21 @@ public static void onExit(@Advice.Enter @Nullable Request previous) {
 ```
 
 `restore` removes the entry when `set` returned `null`.
+
+## Name ambient thread state with `current*`
+
+Name a field or accessor `current*` when it represents ambient state that belongs to the executing
+thread. This follows conventions such as `currentContext()` and makes the thread confinement clear.
+Examples include `currentRequest`, `currentReceiveSpanSuppression()`, and
+`currentProcessSpanSuppression()`.
+
+Name the state, not its storage mechanism. In particular, do not use a `*ThreadLocal` accessor name
+when the accessor returns a wrapper such as `ScopedThreadValue`. Keep the `ScopedThreadValue` class
+name and its `set` and `restore` API unchanged.
+
+Do not use `current*` for message, request, record, or batch state attached to an object carrier
+through `VirtualField`. That state belongs to the carrier and may cross thread boundaries. Name the
+field for the carrier state instead, for example `MESSAGE_STATE` or `REQUEST_STATE`.
 
 The restore-previous rule does not apply to long-lived per-thread caches, reusable objects,
 counters, persistent maps, or producer/consumer callback handoffs. Manage those values according to
