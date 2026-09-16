@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.buildShortUrl;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.HostPort;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.UrlParams;
@@ -26,8 +27,13 @@ public final class ParseContext {
   @Nullable private String system;
   @Nullable private String oldSemconvSystem;
   @Nullable private String subtype;
-  @Nullable private String host;
-  @Nullable private Integer port;
+  @Nullable private String legacyHost;
+  @Nullable private Integer legacyPort;
+  @Nullable private Integer parserDefaultPort;
+  @Nullable private String singleServerHost;
+  @Nullable private Integer singleServerPort;
+  @Nullable private DbServerTarget configuredServerTarget;
+  private boolean allowSingleServerFallback = true;
   @Nullable private String user;
   @Nullable private String databaseName;
   @Nullable private String namespace;
@@ -87,29 +93,61 @@ public final class ParseContext {
     this.subtype = subtype;
   }
 
-  /** The host value accumulated so far. */
+  /** The legacy host accumulated so far, including any parser default. */
   @Nullable
   public String host() {
-    return host;
+    return legacyHost;
   }
 
   /**
-   * Set the host value. Enclosing brackets are removed from literal IPv6 addresses so that {@code
-   * server.address} always holds the address alone, regardless of which parser produced it.
+   * Record a parsed host for legacy output and, when allowed, single-server fallback. Enclosing
+   * brackets are removed from literal IPv6 addresses so that {@code server.address} holds the
+   * address alone.
    */
   public void host(@Nullable String host) {
-    this.host = host == null ? null : UrlParsingUtils.stripIpv6Brackets(host);
+    legacyHost = host == null ? null : UrlParsingUtils.stripIpv6Brackets(host);
+    if (allowSingleServerFallback) {
+      singleServerHost = legacyHost;
+    }
   }
 
-  /** The port value accumulated so far. */
+  /** Set a parser default host without marking it as configured. */
+  public void defaultHost(@Nullable String host) {
+    legacyHost = host == null ? null : UrlParsingUtils.stripIpv6Brackets(host);
+  }
+
+  /** The legacy port accumulated so far, including any parser default. */
   @Nullable
   public Integer port() {
-    return port;
+    return legacyPort;
   }
 
-  /** Set the port value. */
+  /** Record a parsed port for legacy output and, when allowed, single-server fallback. */
   public void port(@Nullable Integer port) {
-    this.port = port;
+    legacyPort = port;
+    if (allowSingleServerFallback) {
+      singleServerPort = port;
+    }
+  }
+
+  /** Set a parser default port without marking it as configured. */
+  public void defaultPort(@Nullable Integer port) {
+    legacyPort = port;
+    parserDefaultPort = port;
+  }
+
+  /**
+   * Resolve the configured target, or {@code null} when it cannot be represented safely. Disables
+   * single-server fallback in either case.
+   */
+  public void resolveConfiguredServerTarget(@Nullable DbServerTarget configuredServerTarget) {
+    allowSingleServerFallback = false;
+    this.configuredServerTarget = configuredServerTarget;
+  }
+
+  /** Prevent single-server fallback without discarding an already resolved target. */
+  public void disableSingleServerFallback() {
+    allowSingleServerFallback = false;
   }
 
   /** The user value accumulated so far. */
@@ -199,7 +237,7 @@ public final class ParseContext {
     }
     Integer port = UrlParsingUtils.parsePort(params.get("portnumber"));
     if (port != null) {
-      this.port = port;
+      port(port);
     }
     String databaseName = params.get("databasename");
     if (databaseName != null && !databaseName.isEmpty()) {
@@ -228,7 +266,7 @@ public final class ParseContext {
 
     Integer parsedPort = UrlParsingUtils.parsePort(props.getProperty("portNumber"));
     if (parsedPort != null) {
-      this.port = parsedPort;
+      port(parsedPort);
     }
 
     String databaseName = props.getProperty("databaseName");
@@ -300,7 +338,7 @@ public final class ParseContext {
     // Handle IPv6 addresses and extract host:port
     HostPort hostPort = UrlParsingUtils.extractHostPort(serverName);
     if (hostPort.port() != null) {
-      this.port = hostPort.port();
+      port(hostPort.port());
     }
     if (!hostPort.host().isEmpty()) {
       host(hostPort.host());
@@ -316,11 +354,11 @@ public final class ParseContext {
     // oldSemconvSystem falls back to system when not explicitly set (i.e., when both are the same)
     String oldSystem = oldSemconvSystem != null ? oldSemconvSystem : system;
     DbInfo.Builder builder = DbInfo.builder().dbSystemName(system).dbSystem(oldSystem);
-    if (host != null) {
-      builder.serverAddress(host);
+    if (legacyHost != null) {
+      builder.legacyServerAddress(legacyHost);
     }
-    if (port != null) {
-      builder.serverPort(port);
+    if (legacyPort != null) {
+      builder.legacyServerPort(legacyPort);
     }
     if (user != null) {
       builder.dbUser(user);
@@ -337,7 +375,24 @@ public final class ParseContext {
     } else if (namespace != null) {
       builder.dbName(namespace);
     }
-    builder.dbConnectionString(buildShortUrl(type, subtype, host, port));
+    String legacyConnectionString = buildShortUrl(type, subtype, legacyHost, legacyPort);
+    builder.dbConnectionString(legacyConnectionString);
+    builder.configuredServerTarget(buildConfiguredServerTarget());
     return builder.build();
+  }
+
+  @Nullable
+  private DbServerTarget buildConfiguredServerTarget() {
+    if (!allowSingleServerFallback) {
+      return configuredServerTarget;
+    }
+    if (singleServerHost == null) {
+      return null;
+    }
+    Integer configuredPort = singleServerPort != null ? singleServerPort : legacyPort;
+    if (parserDefaultPort != null && parserDefaultPort.equals(configuredPort)) {
+      configuredPort = null;
+    }
+    return DbServerTarget.create(singleServerHost, configuredPort);
   }
 }

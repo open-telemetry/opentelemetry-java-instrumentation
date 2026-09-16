@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /**
@@ -32,6 +34,8 @@ import javax.annotation.Nullable;
  */
 public class ServicePeerResolver {
 
+  private static final Pattern ADDRESS_GROUP_PATTERN =
+      Pattern.compile("\\(\\s*address\\s*=", Pattern.CASE_INSENSITIVE);
   private static final Logger logger = Logger.getLogger(ServicePeerResolver.class.getName());
 
   // copied from PeerIncubatingAttributes
@@ -42,12 +46,16 @@ public class ServicePeerResolver {
   private static final AttributeKey<String> SERVICE_PEER_NAMESPACE =
       AttributeKey.stringKey("service.peer.namespace");
 
-  private static final Comparator<ServiceMatcher> matcherComparator =
+  private static final Comparator<PortPathMatcher> matcherComparator =
       nullsFirst(
-          comparing(ServiceMatcher::getPort, nullsFirst(naturalOrder()))
-              .thenComparing(ServiceMatcher::getPath, nullsFirst(naturalOrder())));
+          comparing(PortPathMatcher::getPort, nullsFirst(naturalOrder()))
+              .thenComparing(PortPathMatcher::getPath, nullsFirst(naturalOrder())));
 
-  private final Map<String, Map<ServiceMatcher, ServicePeer>> servicePeerMapping = new HashMap<>();
+  // Mappings resolved from separately supplied server.address, server.port, and optional URL path.
+  private final Map<String, Map<PortPathMatcher, ServicePeer>> servicePeersByHost = new HashMap<>();
+
+  // Mappings resolved by matching the complete server.address value verbatim.
+  private final Map<String, ServicePeer> servicePeersByExactAddress = new HashMap<>();
 
   public ServicePeerResolver(OpenTelemetry openTelemetry) {
     DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common")
@@ -84,22 +92,57 @@ public class ServicePeerResolver {
     String host = UrlParser.getHost(url);
     Integer port = UrlParser.getPort(url);
     String path = UrlParser.getPath(url);
-    Map<ServiceMatcher, ServicePeer> matchers =
-        servicePeerMapping.computeIfAbsent(host, x -> new HashMap<>());
-    matchers.putIfAbsent(ServiceMatcher.create(port, path), info);
+    // A non-host peer may be reported verbatim in server.address or as separate address, port, and
+    // path components. Index single-endpoint peers both ways. A multi-endpoint peer has no single
+    // host identity, so only exact matching is meaningful.
+    if (!peer.equals(host)) {
+      servicePeersByExactAddress.putIfAbsent(peer, info);
+      if (hasMultipleEndpoints(peer)) {
+        return;
+      }
+    }
+    Map<PortPathMatcher, ServicePeer> matchers =
+        servicePeersByHost.computeIfAbsent(host, x -> new HashMap<>());
+    matchers.putIfAbsent(PortPathMatcher.create(port, path), info);
+  }
+
+  private static boolean hasMultipleEndpoints(String peer) {
+    int schemeEnd = peer.indexOf("://");
+    int authorityStart = schemeEnd < 0 ? 0 : schemeEnd + 3;
+    int authorityEnd = peer.length();
+    for (int i = authorityStart; i < peer.length(); i++) {
+      char c = peer.charAt(i);
+      if (c == '/' || c == '?' || c == '#') {
+        authorityEnd = i;
+        break;
+      }
+      if (c == ',') {
+        return true;
+      }
+    }
+    Matcher addressGroups = ADDRESS_GROUP_PATTERN.matcher(peer);
+    addressGroups.region(authorityStart, authorityEnd);
+    if (!addressGroups.find()) {
+      return false;
+    }
+    return addressGroups.find();
   }
 
   public boolean isEmpty() {
-    return servicePeerMapping.isEmpty();
+    return servicePeersByHost.isEmpty() && servicePeersByExactAddress.isEmpty();
   }
 
+  /**
+   * Resolves an exact server.address match first, then falls back to matching server.address as a
+   * host together with the separately supplied port and path.
+   */
   @SuppressWarnings("deprecation") // old semconv
   public void resolve(
-      String host,
+      String serverAddress,
       @Nullable Integer port,
       Supplier<String> pathSupplier,
       BiConsumer<AttributeKey<String>, String> attributeSetter) {
-    ServicePeer servicePeer = resolveServicePeer(host, port, pathSupplier);
+    ServicePeer servicePeer = resolveServicePeer(serverAddress, port, pathSupplier);
     if (servicePeer == null) {
       return;
     }
@@ -123,8 +166,12 @@ public class ServicePeerResolver {
 
   @Nullable
   private ServicePeer resolveServicePeer(
-      String host, @Nullable Integer port, Supplier<String> pathSupplier) {
-    Map<ServiceMatcher, ServicePeer> matchers = servicePeerMapping.get(host);
+      String serverAddress, @Nullable Integer port, Supplier<String> pathSupplier) {
+    ServicePeer exactMatch = servicePeersByExactAddress.get(serverAddress);
+    if (exactMatch != null) {
+      return exactMatch;
+    }
+    Map<PortPathMatcher, ServicePeer> matchers = servicePeersByHost.get(serverAddress);
     if (matchers == null) {
       return null;
     }
@@ -136,10 +183,10 @@ public class ServicePeerResolver {
   }
 
   @AutoValue
-  abstract static class ServiceMatcher {
+  abstract static class PortPathMatcher {
 
-    static ServiceMatcher create(@Nullable Integer port, @Nullable String path) {
-      return new AutoValue_ServicePeerResolver_ServiceMatcher(port, path);
+    static PortPathMatcher create(@Nullable Integer port, @Nullable String path) {
+      return new AutoValue_ServicePeerResolver_PortPathMatcher(port, path);
     }
 
     @Nullable
