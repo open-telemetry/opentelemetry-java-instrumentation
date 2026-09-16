@@ -5,10 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CLIENT_OPERATION_DURATION;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.SPAN;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.currentReceiveSpanSuppression;
 import static java.util.Collections.emptyMap;
@@ -19,10 +15,9 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import io.opentelemetry.instrumentation.api.internal.Timer;
-import io.opentelemetry.javaagent.bootstrap.messaging.MessagingTelemetrySuppression;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.VirtualFieldStore;
 import io.opentelemetry.javaagent.instrumentation.spring.pulsar.v1_0.SpringPulsarSingletons;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
@@ -99,21 +94,20 @@ class ReceiveFailureFallbackTest {
 
   @Test
   void pulsarReceiveSuppressionRestoresAfterException() {
-    MessagingTelemetrySuppression suppression = currentReceiveSpanSuppression();
-    MessagingTelemetrySignals previous = suppression.suppress(RECEIVE, SPAN);
+    ScopedThreadValue<Boolean> suppression = currentReceiveSpanSuppression();
+    Boolean previous = suppression.set(Boolean.TRUE);
 
     assertThatIllegalStateException()
         .isThrownBy(
             () -> {
               try {
-                assertThat(suppression.isSuppressed(RECEIVE, CLIENT_OPERATION_DURATION)).isFalse();
-                assertThat(suppression.isSuppressed(RECEIVE, CONSUMED_MESSAGES)).isFalse();
+                assertThat(suppression.get()).isTrue();
                 throw new IllegalStateException("boom");
               } finally {
                 suppression.restore(previous);
               }
             });
 
-    assertThat(suppression.isSuppressed(RECEIVE, SPAN)).isFalse();
+    assertThat(suppression.get()).isNull();
   }
 }

@@ -5,11 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingReceiveExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.SPAN;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -33,10 +31,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
-import io.opentelemetry.javaagent.bootstrap.messaging.MessagingTelemetrySuppression;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.VirtualFieldStore;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
@@ -69,8 +67,8 @@ public class PulsarSingletons {
   private static final Instrumenter<PulsarRequest, Void> producerInstrumenter =
       createProducerInstrumenter();
 
-  private static final MessagingTelemetrySuppression currentReceiveSpanSuppression =
-      MessagingTelemetrySuppression.create();
+  private static final ScopedThreadValue<Boolean> currentReceiveSpanSuppression =
+      new ScopedThreadValue<>();
 
   public static Instrumenter<PulsarRequest, Void> consumerProcessInstrumenter() {
     return consumerProcessInstrumenter;
@@ -80,7 +78,7 @@ public class PulsarSingletons {
     return producerInstrumenter;
   }
 
-  public static MessagingTelemetrySuppression currentReceiveSpanSuppression() {
+  public static ScopedThreadValue<Boolean> currentReceiveSpanSuppression() {
     return currentReceiveSpanSuppression;
   }
 
@@ -354,7 +352,7 @@ public class PulsarSingletons {
   }
 
   private static boolean isSuppressingReceive() {
-    return currentReceiveSpanSuppression.isSuppressed(RECEIVE, SPAN);
+    return currentReceiveSpanSuppression.get() != null;
   }
 
   private PulsarSingletons() {}

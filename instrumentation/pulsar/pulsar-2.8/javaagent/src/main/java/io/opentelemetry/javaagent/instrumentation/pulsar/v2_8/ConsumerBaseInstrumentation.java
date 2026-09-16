@@ -5,17 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.SPAN;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.MessageListenerContext.currentReceiveSpanSuppression;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -45,12 +43,13 @@ class ConsumerBaseInstrumentation implements TypeInstrumentation {
   public static class TriggerListenerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static MessagingTelemetrySignals onEnter() {
-      return currentReceiveSpanSuppression().suppress(RECEIVE, SPAN);
+    @Nullable
+    public static Boolean onEnter() {
+      return currentReceiveSpanSuppression().set(Boolean.TRUE);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter MessagingTelemetrySignals previous) {
+    public static void onExit(@Advice.Enter @Nullable Boolean previous) {
       currentReceiveSpanSuppression().restore(previous);
     }
   }

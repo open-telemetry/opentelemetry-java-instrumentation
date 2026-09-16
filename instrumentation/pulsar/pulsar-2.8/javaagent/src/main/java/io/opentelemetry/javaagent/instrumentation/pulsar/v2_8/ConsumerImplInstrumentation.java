@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.SPAN;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.currentReceiveSpanSuppression;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.startAndEndConsumerReceive;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.wrap;
@@ -19,7 +17,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -170,14 +167,15 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
   public static class SuppressInstrumentationAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static MessagingTelemetrySignals before() {
+    @Nullable
+    public static Boolean before() {
       // MultiTopicsConsumerImpl#receiveMessageFromConsumer is called from a background thread, we
       // don't want to create a span for it.
-      return currentReceiveSpanSuppression().suppress(RECEIVE, SPAN);
+      return currentReceiveSpanSuppression().set(Boolean.TRUE);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
-    public static void after(@Advice.Enter MessagingTelemetrySignals previous) {
+    public static void after(@Advice.Enter @Nullable Boolean previous) {
       currentReceiveSpanSuppression().restore(previous);
     }
   }
