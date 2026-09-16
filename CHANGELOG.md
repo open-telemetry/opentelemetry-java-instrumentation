@@ -1948,7 +1948,7 @@ for more details.
 ### 🌟 New javaagent instrumentation
 
 - AWS Bedrock instrumentation, following
-  [Gen AI semantic conventions](https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/README.md)
+  [Gen AI semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/gen-ai/README.md#semantic-conventions-for-generative-ai-systems)
   ([#13355](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13355),
   [#13408](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13408),
   [#13473](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13473),
@@ -1961,7 +1961,7 @@ for more details.
 ### 🌟 New library instrumentation
 
 - AWS Bedrock instrumentation, following
-  [Gen AI semantic conventions](https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/README.md)
+  [Gen AI semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/gen-ai/README.md#semantic-conventions-for-generative-ai-systems)
   ([#13355](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13355),
   [#13408](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13408),
   [#13473](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13473),
