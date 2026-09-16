@@ -19,7 +19,10 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -28,16 +31,30 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.KStream;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class KafkaStreamsOwnershipTest extends KafkaStreamsBaseTest {
+
+  private String inputTopic;
+
+  @BeforeEach
+  void createInputTopic() throws Exception {
+    inputTopic = "ownership-" + UUID.randomUUID();
+    try (AdminClient adminClient = AdminClient.create(producerProps(kafka.getBootstrapServers()))) {
+      adminClient
+          .createTopics(singletonList(new NewTopic(inputTopic, 1, (short) 1)))
+          .all()
+          .get(10, SECONDS);
+    }
+  }
 
   @Test
   void nestedRawKafkaProcessingIsNotSuppressed() throws Exception {
     KafkaStreamsReflectionUtil.StreamBuilder streamBuilder =
         KafkaStreamsReflectionUtil.createBuilder();
     KStream<Integer, String> values =
-        streamBuilder.stream(STREAM_PENDING)
+        streamBuilder.stream(inputTopic)
             .mapValues(
                 value -> {
                   ConsumerRecords<Integer, String> nestedRecords =
@@ -54,14 +71,13 @@ class KafkaStreamsOwnershipTest extends KafkaStreamsBaseTest {
     streams.start();
     testing.clearData();
 
-    producer.send(new ProducerRecord<>(STREAM_PENDING, 10, "VALUE"));
+    producer.send(new ProducerRecord<>(inputTopic, 10, "VALUE"));
 
     await()
         .atMost(Duration.ofSeconds(30))
         .untilAsserted(
             () -> {
-              SpanData streamsProcess =
-                  onlySpan("io.opentelemetry.kafka-streams-0.11", STREAM_PENDING);
+              SpanData streamsProcess = onlySpan("io.opentelemetry.kafka-streams-0.11", inputTopic);
               SpanData nestedProcess =
                   onlySpan("io.opentelemetry.kafka-clients-0.11", "nested-topic");
               assertThat(nestedProcess.getTraceId()).isEqualTo(streamsProcess.getTraceId());
@@ -75,7 +91,7 @@ class KafkaStreamsOwnershipTest extends KafkaStreamsBaseTest {
     KafkaStreamsReflectionUtil.StreamBuilder streamBuilder =
         KafkaStreamsReflectionUtil.createBuilder();
     KStream<Integer, String> values =
-        streamBuilder.stream(STREAM_PENDING)
+        streamBuilder.stream(inputTopic)
             .mapValues(
                 value -> {
                   invoked.countDown();
@@ -88,15 +104,14 @@ class KafkaStreamsOwnershipTest extends KafkaStreamsBaseTest {
     streams.start();
     testing.clearData();
 
-    producer.send(new ProducerRecord<>(STREAM_PENDING, 11, "VALUE"));
+    producer.send(new ProducerRecord<>(inputTopic, 11, "VALUE"));
     assertThat(invoked.await(30, SECONDS)).isTrue();
 
     await()
         .atMost(Duration.ofSeconds(30))
         .untilAsserted(
             () ->
-                assertThat(
-                        onlySpan("io.opentelemetry.kafka-streams-0.11", STREAM_PENDING).getStatus())
+                assertThat(onlySpan("io.opentelemetry.kafka-streams-0.11", inputTopic).getStatus())
                     .extracting(status -> status.getStatusCode())
                     .isEqualTo(StatusCode.ERROR));
   }

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6;
+package io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
@@ -16,21 +16,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaConsumerBatchState;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.TopicPartition;
-import org.apache.kafka.connect.sink.SinkRecord;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-class KafkaConnectOwnershipTest {
+class KafkaStreamsSuppressionTest {
 
   private static final VirtualField<ConsumerRecords<?, ?>, KafkaConsumerBatchState> BATCH_STATE =
       VirtualField.find(ConsumerRecords.class, KafkaConsumerBatchState.class);
-  private static final VirtualField<SinkRecord, Boolean> RECEIVE_OWNED =
-      VirtualField.find(SinkRecord.class, Boolean.class);
 
   @AfterEach
   void restoreProcessTracing() {
@@ -38,60 +34,59 @@ class KafkaConnectOwnershipTest {
   }
 
   @Test
-  void workerPollClaimsBatchAndRestoresNestedRawKafkaProcessing() {
+  void pollSuppressesOnlyProcessSpanAndClaimsBatch() {
     ConsumerRecords<String, String> records = records();
     KafkaConsumerBatchState state = new KafkaConsumerBatchState(true);
     BATCH_STATE.set(records, state);
 
-    MessagingTelemetrySignals previous = WorkerSinkTaskInstrumentation.PollConsumerAdvice.onEnter();
-    assertThat(KafkaClientsConsumerProcessTracing.isWrappingEnabled()).isFalse();
+    MessagingTelemetrySignals previous = StreamThreadInstrumentation.PollRequestsAdvice.onEnter();
     assertThat(currentProcessSpanSuppression().current())
         .isEqualTo(MessagingTelemetrySignals.of(PROCESS, SPAN));
 
-    WorkerSinkTaskInstrumentation.PollConsumerAdvice.onExit(previous, records);
+    StreamThreadInstrumentation.PollRequestsAdvice.onExit(previous, records);
 
     assertThat(state.getAsBoolean()).isFalse();
-    assertThat(KafkaClientsConsumerProcessTracing.isWrappingEnabled()).isTrue();
-  }
-
-  @Test
-  void workerPollFailureRestoresNestedRawKafkaProcessing() {
-    MessagingTelemetrySignals previous = WorkerSinkTaskInstrumentation.PollConsumerAdvice.onEnter();
-
-    WorkerSinkTaskInstrumentation.PollConsumerAdvice.onExit(previous, null);
-
-    assertThat(KafkaClientsConsumerProcessTracing.isWrappingEnabled()).isTrue();
     assertThat(currentProcessSpanSuppression().current())
         .isEqualTo(MessagingTelemetrySignals.none());
   }
 
   @Test
-  void nestedPollFailurePreservesOuterSuppression() {
+  void pollFailureRestoresSuppression() {
+    MessagingTelemetrySignals previous = StreamThreadInstrumentation.PollRequestsAdvice.onEnter();
+
+    StreamThreadInstrumentation.PollRequestsAdvice.onExit(previous, null);
+
+    assertThat(currentProcessSpanSuppression().current())
+        .isEqualTo(MessagingTelemetrySignals.none());
+  }
+
+  @Test
+  void standbyUpdateSuppressesOnlyProcessSpanAndRestoresSuppression() {
+    MessagingTelemetrySignals previous =
+        StreamThreadInstrumentation.StandbyTaskUpdateAdvice.onEnter();
+    assertThat(currentProcessSpanSuppression().current())
+        .isEqualTo(MessagingTelemetrySignals.of(PROCESS, SPAN));
+
+    StreamThreadInstrumentation.StandbyTaskUpdateAdvice.onExit(previous);
+
+    assertThat(currentProcessSpanSuppression().current())
+        .isEqualTo(MessagingTelemetrySignals.none());
+  }
+
+  @Test
+  void nestedPollAndStandbyUpdatePreserveOuterSuppression() {
     MessagingTelemetrySignals initial =
         MessagingTelemetrySignals.of(RECEIVE, SPAN).with(PROCESS, CONSUMED_MESSAGES);
     currentProcessSpanSuppression().restore(initial);
 
-    MessagingTelemetrySignals outer = WorkerSinkTaskInstrumentation.PollConsumerAdvice.onEnter();
-    MessagingTelemetrySignals inner = WorkerSinkTaskInstrumentation.PollConsumerAdvice.onEnter();
+    MessagingTelemetrySignals outer = StreamThreadInstrumentation.PollRequestsAdvice.onEnter();
+    MessagingTelemetrySignals inner = StreamThreadInstrumentation.StandbyTaskUpdateAdvice.onEnter();
 
-    WorkerSinkTaskInstrumentation.PollConsumerAdvice.onExit(inner, null);
+    StreamThreadInstrumentation.StandbyTaskUpdateAdvice.onExit(inner);
     assertThat(currentProcessSpanSuppression().current()).isEqualTo(initial.with(PROCESS, SPAN));
 
-    ConsumerRecords<String, String> records = records();
-    WorkerSinkTaskInstrumentation.PollConsumerAdvice.onExit(outer, records);
+    StreamThreadInstrumentation.PollRequestsAdvice.onExit(outer, null);
     assertThat(currentProcessSpanSuppression().current()).isEqualTo(initial);
-    assertThat(BATCH_STATE.get(records).getAsBoolean()).isFalse();
-  }
-
-  @Test
-  void receiveOwnershipIsConsumedEvenWhenProcessTelemetryDoesNotStart() {
-    SinkRecord record = new SinkRecord("topic", 0, null, null, null, null, 0);
-    RECEIVE_OWNED.set(record, true);
-
-    KafkaConnectTask firstAttempt = new KafkaConnectTask(singletonList(record));
-
-    assertThat(firstAttempt.countUnmarkedRecords()).isZero();
-    assertThat(new KafkaConnectTask(singletonList(record)).countUnmarkedRecords()).isEqualTo(1);
   }
 
   private static ConsumerRecords<String, String> records() {

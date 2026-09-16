@@ -57,13 +57,13 @@ class StreamThreadInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class StandbyTaskUpdateAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static boolean onEnter() {
-      return KafkaClientsConsumerProcessTracing.setWrappingEnabled(false);
+    public static MessagingTelemetrySignals onEnter() {
+      return currentProcessSpanSuppression().suppress(PROCESS, SPAN);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter boolean previousValue) {
-      KafkaClientsConsumerProcessTracing.setWrappingEnabled(previousValue);
+    public static void onExit(@Advice.Enter MessagingTelemetrySignals previous) {
+      currentProcessSpanSuppression().restore(previous);
     }
   }
 }
