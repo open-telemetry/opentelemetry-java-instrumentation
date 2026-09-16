@@ -2,7 +2,7 @@ pluginManagement {
   plugins {
     id("com.github.jk1.dependency-license-report") version "3.1.4"
     id("com.google.cloud.tools.jib") version "3.5.4"
-    id("com.gradle.plugin-publish") version "2.1.1"
+    id("com.gradle.plugin-publish") version "2.2.1"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
     id("org.jetbrains.kotlin.jvm") version "2.4.10"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
@@ -22,7 +22,7 @@ plugins {
   // ./gradlew :smoke-tests:images:servlet:pushLinuxImages -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:pushWindowsImages -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "10.0.0" apply false
-  id("com.gradle.develocity") version "4.5.0"
+  id("com.gradle.develocity") version "4.5.1"
 }
 
 dependencyResolutionManagement {
@@ -76,8 +76,10 @@ val shouldDisableLocalBuildCache =
   isRemoteBuildCachePushEnabled && System.getenv("GITHUB_REF_NAME") == "main"
 
 develocity {
-  server = develocityServer
   projectId = "OpenTelemetry"
+  if (develocityAccessKey.isNotEmpty()) {
+    server = develocityServer
+  }
 
   buildScan {
     if (develocityAccessKey.isNotEmpty()) {
@@ -115,6 +117,7 @@ buildCache {
     isEnabled = !shouldDisableLocalBuildCache
   }
   remote(develocity.buildCache) {
+    server = develocityServer
     isPush = isRemoteBuildCachePushEnabled
   }
 }
