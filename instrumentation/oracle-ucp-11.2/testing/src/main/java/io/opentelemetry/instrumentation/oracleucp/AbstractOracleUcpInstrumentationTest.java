@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.oracleucp;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -103,11 +104,15 @@ public abstract class AbstractOracleUcpInstrumentationTest {
   }
 
   protected static String expectedDefaultMetricPoolName() {
+    String databaseName = oracle.getDatabaseName().toLowerCase(Locale.ROOT);
+    if (emitStableDatabaseSemconv()) {
+      return databaseName;
+    }
     return oracle.getHost().toLowerCase(Locale.ROOT)
         + ":"
         + oracle.getOraclePort()
         + "/"
-        + oracle.getDatabaseName().toLowerCase(Locale.ROOT);
+        + databaseName;
   }
 
   private void assertNoConnectionPoolMetrics() {

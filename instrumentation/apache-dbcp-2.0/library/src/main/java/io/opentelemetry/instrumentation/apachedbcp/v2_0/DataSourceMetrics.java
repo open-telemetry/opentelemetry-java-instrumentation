@@ -25,11 +25,20 @@ final class DataSourceMetrics {
 
   static void registerMetrics(
       OpenTelemetry openTelemetry, BasicDataSourceMXBean dataSource, String dataSourceName) {
+    registerMetrics(openTelemetry, dataSource, dataSourceName, Attributes.empty());
+  }
+
+  static void registerMetrics(
+      OpenTelemetry openTelemetry,
+      BasicDataSourceMXBean dataSource,
+      String dataSourceName,
+      Attributes databaseAttributes) {
     dataSourceMetrics.computeIfAbsent(
         dataSource,
         ds -> {
           DbConnectionPoolMetrics metrics =
-              DbConnectionPoolMetrics.create(openTelemetry, INSTRUMENTATION_NAME, dataSourceName);
+              DbConnectionPoolMetrics.create(
+                  openTelemetry, INSTRUMENTATION_NAME, dataSourceName, databaseAttributes);
 
           ObservableLongMeasurement connections = metrics.connections();
           ObservableLongMeasurement minIdleConnections = metrics.minIdleConnections();

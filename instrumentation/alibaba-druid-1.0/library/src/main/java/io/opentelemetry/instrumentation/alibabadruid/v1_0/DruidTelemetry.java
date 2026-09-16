@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.alibabadruid.v1_0;
 
 import com.alibaba.druid.pool.DruidDataSourceMBean;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.Attributes;
 
 public final class DruidTelemetry {
   private final OpenTelemetry openTelemetry;
@@ -21,6 +22,12 @@ public final class DruidTelemetry {
 
   public void registerMetrics(DruidDataSourceMBean dataSource, String dataSourceName) {
     ConnectionPoolMetrics.registerMetrics(openTelemetry, dataSource, dataSourceName);
+  }
+
+  public void registerMetrics(
+      DruidDataSourceMBean dataSource, String dataSourceName, Attributes databaseAttributes) {
+    ConnectionPoolMetrics.registerMetrics(
+        openTelemetry, dataSource, dataSourceName, databaseAttributes);
   }
 
   public void unregisterMetrics(DruidDataSourceMBean dataSource) {

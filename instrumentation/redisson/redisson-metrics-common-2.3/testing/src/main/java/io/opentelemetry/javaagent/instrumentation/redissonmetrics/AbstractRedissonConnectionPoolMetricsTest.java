@@ -9,6 +9,8 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -187,12 +189,18 @@ public abstract class AbstractRedissonConnectionPoolMetricsTest {
                                                 .hasValue(regularIdle)
                                                 .hasAttributesSatisfyingExactly(
                                                     equalTo(stringKey(poolNameKey()), regularPool),
+                                                    equalTo(
+                                                        DB_SYSTEM_NAME,
+                                                        emitStableDatabaseSemconv() ? REDIS : null),
                                                     equalTo(stringKey(stateKey()), "idle")),
                                         point ->
                                             point
                                                 .hasValue(regularUsed)
                                                 .hasAttributesSatisfyingExactly(
                                                     equalTo(stringKey(poolNameKey()), regularPool),
+                                                    equalTo(
+                                                        DB_SYSTEM_NAME,
+                                                        emitStableDatabaseSemconv() ? REDIS : null),
                                                     equalTo(stringKey(stateKey()), "used")),
                                         point ->
                                             point
@@ -200,6 +208,9 @@ public abstract class AbstractRedissonConnectionPoolMetricsTest {
                                                 .hasAttributesSatisfyingExactly(
                                                     equalTo(
                                                         stringKey(poolNameKey()), subscriptionPool),
+                                                    equalTo(
+                                                        DB_SYSTEM_NAME,
+                                                        emitStableDatabaseSemconv() ? REDIS : null),
                                                     equalTo(stringKey(stateKey()), "idle")),
                                         point ->
                                             point
@@ -207,6 +218,9 @@ public abstract class AbstractRedissonConnectionPoolMetricsTest {
                                                 .hasAttributesSatisfyingExactly(
                                                     equalTo(
                                                         stringKey(poolNameKey()), subscriptionPool),
+                                                    equalTo(
+                                                        DB_SYSTEM_NAME,
+                                                        emitStableDatabaseSemconv() ? REDIS : null),
                                                     equalTo(stringKey(stateKey()), "used"))))));
   }
 
@@ -235,14 +249,23 @@ public abstract class AbstractRedissonConnectionPoolMetricsTest {
                                             point
                                                 .hasValue(regularValue)
                                                 .hasAttributesSatisfyingExactly(
-                                                    equalTo(stringKey(poolNameKey()), regularPool)),
+                                                    equalTo(stringKey(poolNameKey()), regularPool),
+                                                    equalTo(
+                                                        DB_SYSTEM_NAME,
+                                                        emitStableDatabaseSemconv()
+                                                            ? REDIS
+                                                            : null)),
                                         point ->
                                             point
                                                 .hasValue(subscriptionValue)
                                                 .hasAttributesSatisfyingExactly(
                                                     equalTo(
-                                                        stringKey(poolNameKey()),
-                                                        subscriptionPool))))));
+                                                        stringKey(poolNameKey()), subscriptionPool),
+                                                    equalTo(
+                                                        DB_SYSTEM_NAME,
+                                                        emitStableDatabaseSemconv()
+                                                            ? REDIS
+                                                            : null))))));
   }
 
   protected final void assertPendingRequests(
@@ -269,14 +292,23 @@ public abstract class AbstractRedissonConnectionPoolMetricsTest {
                                             point
                                                 .hasValue(regularPending)
                                                 .hasAttributesSatisfyingExactly(
-                                                    equalTo(stringKey(poolNameKey()), regularPool)),
+                                                    equalTo(stringKey(poolNameKey()), regularPool),
+                                                    equalTo(
+                                                        DB_SYSTEM_NAME,
+                                                        emitStableDatabaseSemconv()
+                                                            ? REDIS
+                                                            : null)),
                                         point ->
                                             point
                                                 .hasValue(subscriptionPending)
                                                 .hasAttributesSatisfyingExactly(
                                                     equalTo(
-                                                        stringKey(poolNameKey()),
-                                                        subscriptionPool))))));
+                                                        stringKey(poolNameKey()), subscriptionPool),
+                                                    equalTo(
+                                                        DB_SYSTEM_NAME,
+                                                        emitStableDatabaseSemconv()
+                                                            ? REDIS
+                                                            : null))))));
   }
 
   protected static MasterSlaveEntry getMasterSlaveEntry(Redisson redisson)
