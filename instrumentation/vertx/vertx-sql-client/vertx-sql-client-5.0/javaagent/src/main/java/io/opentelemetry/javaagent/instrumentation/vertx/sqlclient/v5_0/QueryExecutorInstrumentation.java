@@ -64,12 +64,24 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
         this.callDepth = callDepth;
       }
 
-      public static AdviceScope start(Object queryExecutor, String methodName, Object[] arguments) {
+      public static AdviceScope start(Object queryExecutor, String methodName, Object[] arguments)
+          throws Throwable {
         CallDepth callDepth = CallDepth.forClass(queryExecutor.getClass());
         if (callDepth.getAndIncrement() > 0) {
           return new AdviceScope(callDepth);
         }
         AdviceScope adviceScope = new AdviceScope(callDepth);
+        try {
+          start(adviceScope, queryExecutor, methodName, arguments);
+          return adviceScope;
+        } catch (Throwable t) {
+          adviceScope.end(t);
+          throw t;
+        }
+      }
+
+      private static void start(
+          AdviceScope adviceScope, Object queryExecutor, String methodName, Object[] arguments) {
         Context parentContext = Context.current();
         if (parentContext.get(QUERY_STATE) != null) {
           adviceScope.scope = parentContext.with(QUERY_STATE, null).makeCurrent();
@@ -99,12 +111,12 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
           }
         }
         if (sql == null || promiseInternal == null) {
-          return adviceScope;
+          return;
         }
 
         VertxSqlClientInfo info = VertxSqlClientSingletons.getQueryExecutorInfo(queryExecutor);
         if (info == null) {
-          return adviceScope;
+          return;
         }
 
         VertxSqlClientRequest otelRequest =
@@ -112,7 +124,7 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
                 ? new VertxSqlClientDeferredRequest(sql, info, parameterizedQuery, batchSize)
                 : new VertxSqlClientRequest(sql, info, parameterizedQuery, batchSize);
         if (!instrumenter().shouldStart(parentContext, otelRequest)) {
-          return adviceScope;
+          return;
         }
 
         Context context = instrumenter().start(parentContext, otelRequest);
@@ -131,7 +143,6 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
           adviceScope.scope.close();
         }
         adviceScope.scope = context.makeCurrent();
-        return adviceScope;
       }
 
       public void end(@Nullable Throwable throwable) {
@@ -161,7 +172,8 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
     public static AdviceScope onEnter(
         @Advice.This Object queryExecutor,
         @Advice.Origin("#m") String methodName,
-        @Advice.AllArguments Object[] arguments) {
+        @Advice.AllArguments Object[] arguments)
+        throws Throwable {
       return AdviceScope.start(queryExecutor, methodName, arguments);
     }
 
