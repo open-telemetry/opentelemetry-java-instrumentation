@@ -5,14 +5,50 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.SPAN;
+import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.currentProcessSpanSuppression;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import org.junit.jupiter.api.Test;
 
 class KafkaClientsConsumerProcessTracingTest {
+
+  @Test
+  void shouldRestoreProcessSpanSuppression() {
+    MessagingTelemetrySignals previous = currentProcessSpanSuppression().suppress(PROCESS, SPAN);
+    try {
+      assertThat(KafkaClientsConsumerProcessTracing.isWrappingEnabled()).isFalse();
+    } finally {
+      currentProcessSpanSuppression().restore(previous);
+    }
+
+    assertThat(KafkaClientsConsumerProcessTracing.isWrappingEnabled()).isTrue();
+  }
+
+  @Test
+  void shouldRestoreNestedProcessSpanSuppression() {
+    MessagingTelemetrySignals outerPrevious =
+        currentProcessSpanSuppression().suppress(PROCESS, SPAN);
+    try {
+      MessagingTelemetrySignals innerPrevious =
+          currentProcessSpanSuppression().suppress(PROCESS, SPAN);
+      try {
+        assertThat(KafkaClientsConsumerProcessTracing.isWrappingEnabled()).isFalse();
+      } finally {
+        currentProcessSpanSuppression().restore(innerPrevious);
+      }
+      assertThat(KafkaClientsConsumerProcessTracing.isWrappingEnabled()).isFalse();
+    } finally {
+      currentProcessSpanSuppression().restore(outerPrevious);
+    }
+
+    assertThat(KafkaClientsConsumerProcessTracing.isWrappingEnabled()).isTrue();
+  }
 
   @Test
   void shouldPreserveGlobalInstrumentationSuppression() {

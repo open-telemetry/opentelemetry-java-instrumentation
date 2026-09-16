@@ -3,6 +3,7 @@ plugins {
 }
 
 dependencies {
+  testImplementation(project(":instrumentation-api-incubator"))
   testImplementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
   testImplementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent"))
   testImplementation(project(":javaagent-bootstrap"))

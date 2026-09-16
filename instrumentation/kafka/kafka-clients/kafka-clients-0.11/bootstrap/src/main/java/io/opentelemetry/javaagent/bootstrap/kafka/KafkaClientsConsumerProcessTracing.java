@@ -13,7 +13,6 @@ import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
 import io.opentelemetry.javaagent.bootstrap.messaging.MessagingTelemetrySuppression;
 import java.util.function.BooleanSupplier;
 
@@ -28,17 +27,15 @@ public final class KafkaClientsConsumerProcessTracing {
 
   // This holder is the coordination key, so its suppressed signals stay invisible to every other
   // messaging stack that runs on the same thread.
-  private static final MessagingTelemetrySuppression suppression =
+  private static final MessagingTelemetrySuppression currentProcessSpanSuppression =
       MessagingTelemetrySuppression.create();
 
-  public static boolean setWrappingEnabled(boolean enabled) {
-    MessagingTelemetrySignals previous = suppression.current();
-    suppression.restore(enabled ? previous.without(PROCESS, SPAN) : previous.with(PROCESS, SPAN));
-    return !previous.contains(PROCESS, SPAN);
+  public static MessagingTelemetrySuppression currentProcessSpanSuppression() {
+    return currentProcessSpanSuppression;
   }
 
   public static boolean isWrappingEnabled() {
-    return !suppression.isSuppressed(PROCESS, SPAN);
+    return !currentProcessSpanSuppression().isSuppressed(PROCESS, SPAN);
   }
 
   public static BooleanSupplier getWrappingEnabledSupplier() {

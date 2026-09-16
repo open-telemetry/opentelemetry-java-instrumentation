@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.kafka.v2_7;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.SPAN;
+import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.currentProcessSpanSuppression;
 import static io.opentelemetry.javaagent.instrumentation.spring.kafka.v2_7.SpringKafkaSingletons.batchProcessInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -12,6 +15,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
@@ -52,15 +56,15 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
   public static class PollAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static boolean onEnter() {
-      return KafkaClientsConsumerProcessTracing.setWrappingEnabled(false);
+    public static MessagingTelemetrySignals onEnter() {
+      return currentProcessSpanSuppression().suppress(PROCESS, SPAN);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Enter boolean previousValue,
+        @Advice.Enter MessagingTelemetrySignals previous,
         @Advice.Return @Nullable ConsumerRecords<?, ?> records) {
-      KafkaClientsConsumerProcessTracing.setWrappingEnabled(previousValue);
+      currentProcessSpanSuppression().restore(previous);
       if (records != null) {
         SpringKafkaBatchState.claimProcessSpan(records);
       }
