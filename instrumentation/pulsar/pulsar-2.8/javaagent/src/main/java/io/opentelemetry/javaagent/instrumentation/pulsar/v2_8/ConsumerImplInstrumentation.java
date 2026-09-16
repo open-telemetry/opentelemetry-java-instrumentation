@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.SPAN;
+import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.currentReceiveSpanSuppression;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.startAndEndConsumerReceive;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.wrap;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.wrapBatch;
@@ -20,7 +23,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
@@ -171,12 +173,12 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
     public static MessagingTelemetrySignals before() {
       // MultiTopicsConsumerImpl#receiveMessageFromConsumer is called from a background thread, we
       // don't want to create a span for it.
-      return PulsarSingletons.startSuppressingReceive();
+      return currentReceiveSpanSuppression().suppress(RECEIVE, SPAN);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void after(@Advice.Enter MessagingTelemetrySignals previous) {
-      PulsarSingletons.endSuppressingReceive(previous);
+      currentReceiveSpanSuppression().restore(previous);
     }
   }
 }

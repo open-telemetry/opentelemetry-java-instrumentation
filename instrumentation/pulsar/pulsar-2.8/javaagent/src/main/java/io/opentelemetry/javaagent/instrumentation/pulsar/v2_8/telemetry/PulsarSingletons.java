@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingReceiveExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
@@ -27,7 +28,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -69,7 +69,7 @@ public class PulsarSingletons {
   private static final Instrumenter<PulsarRequest, Void> producerInstrumenter =
       createProducerInstrumenter();
 
-  private static final MessagingTelemetrySuppression receiveSuppression =
+  private static final MessagingTelemetrySuppression currentReceiveSpanSuppression =
       MessagingTelemetrySuppression.create();
 
   public static Instrumenter<PulsarRequest, Void> consumerProcessInstrumenter() {
@@ -78,6 +78,10 @@ public class PulsarSingletons {
 
   public static Instrumenter<PulsarRequest, Void> producerInstrumenter() {
     return producerInstrumenter;
+  }
+
+  public static MessagingTelemetrySuppression currentReceiveSpanSuppression() {
+    return currentReceiveSpanSuppression;
   }
 
   private static Instrumenter<PulsarRequest, Void> createConsumerReceiveInstrumenter() {
@@ -349,16 +353,8 @@ public class PulsarSingletons {
     }
   }
 
-  public static MessagingTelemetrySignals startSuppressingReceive() {
-    return receiveSuppression.suppress(MessagingOperationType.RECEIVE, SPAN);
-  }
-
-  public static void endSuppressingReceive(MessagingTelemetrySignals previous) {
-    receiveSuppression.restore(previous);
-  }
-
   private static boolean isSuppressingReceive() {
-    return receiveSuppression.isSuppressed(MessagingOperationType.RECEIVE, SPAN);
+    return currentReceiveSpanSuppression.isSuppressed(RECEIVE, SPAN);
   }
 
   private PulsarSingletons() {}
