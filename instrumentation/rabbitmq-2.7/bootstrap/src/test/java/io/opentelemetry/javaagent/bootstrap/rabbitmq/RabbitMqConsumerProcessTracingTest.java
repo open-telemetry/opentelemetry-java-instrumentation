@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.bootstrap.rabbitmq;
 
-import static io.opentelemetry.javaagent.bootstrap.rabbitmq.RabbitMqConsumerProcessTracing.rabbitProcessTracingSuppression;
+import static io.opentelemetry.javaagent.bootstrap.rabbitmq.RabbitMqConsumerProcessTracing.currentProcessSpanSuppression;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -17,11 +17,11 @@ class RabbitMqConsumerProcessTracingTest {
   void shouldScopeSpringProcessTelemetryOwnership() {
     assertThat(RabbitMqConsumerProcessTracing.shouldTraceProcess()).isTrue();
 
-    Boolean previous = rabbitProcessTracingSuppression().set(Boolean.TRUE);
+    Boolean previous = currentProcessSpanSuppression().set(Boolean.TRUE);
     try {
       assertThat(RabbitMqConsumerProcessTracing.shouldTraceProcess()).isFalse();
     } finally {
-      rabbitProcessTracingSuppression().restore(previous);
+      currentProcessSpanSuppression().restore(previous);
     }
 
     assertThat(RabbitMqConsumerProcessTracing.shouldTraceProcess()).isTrue();
@@ -29,17 +29,17 @@ class RabbitMqConsumerProcessTracingTest {
 
   @Test
   void shouldRestoreNestedRegistration() {
-    Boolean outerPrevious = rabbitProcessTracingSuppression().set(Boolean.TRUE);
+    Boolean outerPrevious = currentProcessSpanSuppression().set(Boolean.TRUE);
     try {
-      Boolean innerPrevious = rabbitProcessTracingSuppression().set(Boolean.TRUE);
+      Boolean innerPrevious = currentProcessSpanSuppression().set(Boolean.TRUE);
       try {
         assertThat(RabbitMqConsumerProcessTracing.shouldTraceProcess()).isFalse();
       } finally {
-        rabbitProcessTracingSuppression().restore(innerPrevious);
+        currentProcessSpanSuppression().restore(innerPrevious);
       }
       assertThat(RabbitMqConsumerProcessTracing.shouldTraceProcess()).isFalse();
     } finally {
-      rabbitProcessTracingSuppression().restore(outerPrevious);
+      currentProcessSpanSuppression().restore(outerPrevious);
     }
 
     assertThat(RabbitMqConsumerProcessTracing.shouldTraceProcess()).isTrue();
@@ -49,11 +49,11 @@ class RabbitMqConsumerProcessTracingTest {
   void shouldCleanUpAfterException() {
     assertThatThrownBy(
             () -> {
-              Boolean previous = rabbitProcessTracingSuppression().set(Boolean.TRUE);
+              Boolean previous = currentProcessSpanSuppression().set(Boolean.TRUE);
               try {
                 throw new IllegalStateException("test");
               } finally {
-                rabbitProcessTracingSuppression().restore(previous);
+                currentProcessSpanSuppression().restore(previous);
               }
             })
         .isInstanceOf(IllegalStateException.class);

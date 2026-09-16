@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
-import static io.opentelemetry.javaagent.bootstrap.rabbitmq.RabbitMqConsumerProcessTracing.rabbitProcessTracingSuppression;
+import static io.opentelemetry.javaagent.bootstrap.rabbitmq.RabbitMqConsumerProcessTracing.currentProcessSpanSuppression;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -39,17 +39,17 @@ class LegacyBlockingQueueConsumerInstrumentation implements TypeInstrumentation 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static boolean onEnter(@Advice.This BlockingQueueConsumer consumer) {
       if (!SpringRabbitListenerUtil.isSpringListenerConsumer(consumer)
-          || rabbitProcessTracingSuppression().get() != null) {
+          || currentProcessSpanSuppression().get() != null) {
         return false;
       }
-      rabbitProcessTracingSuppression().set(Boolean.TRUE);
+      currentProcessSpanSuppression().set(Boolean.TRUE);
       return true;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter boolean installed) {
       if (installed) {
-        rabbitProcessTracingSuppression().restore(null);
+        currentProcessSpanSuppression().restore(null);
       }
     }
   }
