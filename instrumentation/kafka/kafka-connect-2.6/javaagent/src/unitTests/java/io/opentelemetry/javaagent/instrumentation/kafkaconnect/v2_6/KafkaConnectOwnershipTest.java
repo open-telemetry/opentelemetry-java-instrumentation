@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6;
 
-import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.currentProcessSpanSuppression;
+import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.isProcessSpanSuppressed;
+import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanSuppression;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaConsumerBatchState;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -29,7 +29,7 @@ class KafkaConnectOwnershipTest {
 
   @AfterEach
   void restoreProcessTracing() {
-    currentProcessSpanSuppression().restore(null);
+    processSpanSuppression().restore(null);
   }
 
   @Test
@@ -40,14 +40,14 @@ class KafkaConnectOwnershipTest {
 
     Boolean previous = WorkerSinkTaskInstrumentation.PollConsumerAdvice.onEnter();
     assertThat(previous).isNull();
-    assertThat(KafkaClientsConsumerProcessTracing.isWrappingEnabled()).isFalse();
-    assertThat(currentProcessSpanSuppression().get()).isTrue();
+    assertThat(isProcessSpanSuppressed()).isTrue();
+    assertThat(processSpanSuppression().get()).isTrue();
 
     WorkerSinkTaskInstrumentation.PollConsumerAdvice.onExit(previous, records);
 
     assertThat(state.getAsBoolean()).isFalse();
-    assertThat(KafkaClientsConsumerProcessTracing.isWrappingEnabled()).isTrue();
-    assertThat(currentProcessSpanSuppression().get()).isNull();
+    assertThat(isProcessSpanSuppressed()).isFalse();
+    assertThat(processSpanSuppression().get()).isNull();
   }
 
   @Test
@@ -57,13 +57,13 @@ class KafkaConnectOwnershipTest {
 
     WorkerSinkTaskInstrumentation.PollConsumerAdvice.onExit(previous, null);
 
-    assertThat(KafkaClientsConsumerProcessTracing.isWrappingEnabled()).isTrue();
-    assertThat(currentProcessSpanSuppression().get()).isNull();
+    assertThat(isProcessSpanSuppressed()).isFalse();
+    assertThat(processSpanSuppression().get()).isNull();
   }
 
   @Test
   void nestedPollFailurePreservesOuterSuppression() {
-    assertThat(currentProcessSpanSuppression().set(Boolean.TRUE)).isNull();
+    assertThat(processSpanSuppression().set(Boolean.TRUE)).isNull();
 
     Boolean outer = WorkerSinkTaskInstrumentation.PollConsumerAdvice.onEnter();
     Boolean inner = WorkerSinkTaskInstrumentation.PollConsumerAdvice.onEnter();
@@ -71,11 +71,11 @@ class KafkaConnectOwnershipTest {
     assertThat(inner).isTrue();
 
     WorkerSinkTaskInstrumentation.PollConsumerAdvice.onExit(inner, null);
-    assertThat(currentProcessSpanSuppression().get()).isTrue();
+    assertThat(processSpanSuppression().get()).isTrue();
 
     ConsumerRecords<String, String> records = records();
     WorkerSinkTaskInstrumentation.PollConsumerAdvice.onExit(outer, records);
-    assertThat(currentProcessSpanSuppression().get()).isTrue();
+    assertThat(processSpanSuppression().get()).isTrue();
     assertThat(BATCH_STATE.get(records).getAsBoolean()).isFalse();
   }
 

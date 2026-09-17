@@ -59,12 +59,12 @@ class StreamThreadInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static Boolean onEnter() {
-      return currentProcessSpanSuppression().set(Boolean.TRUE);
+      return processSpanSuppression().set(Boolean.TRUE);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Boolean previous) {
-      currentProcessSpanSuppression().restore(previous);
+      processSpanSuppression().restore(previous);
     }
   }
 }

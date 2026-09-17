@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11;
 
-import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.currentProcessSpanSuppression;
+import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanSuppression;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,7 +25,7 @@ class KafkaStreamsSuppressionTest {
 
   @AfterEach
   void restoreProcessTracing() {
-    currentProcessSpanSuppression().restore(null);
+    processSpanSuppression().restore(null);
   }
 
   @Test
@@ -36,12 +36,12 @@ class KafkaStreamsSuppressionTest {
 
     Boolean previous = StreamThreadInstrumentation.PollRequestsAdvice.onEnter();
     assertThat(previous).isNull();
-    assertThat(currentProcessSpanSuppression().get()).isTrue();
+    assertThat(processSpanSuppression().get()).isTrue();
 
     StreamThreadInstrumentation.PollRequestsAdvice.onExit(previous, records);
 
     assertThat(state.getAsBoolean()).isFalse();
-    assertThat(currentProcessSpanSuppression().get()).isNull();
+    assertThat(processSpanSuppression().get()).isNull();
   }
 
   @Test
@@ -51,23 +51,23 @@ class KafkaStreamsSuppressionTest {
 
     StreamThreadInstrumentation.PollRequestsAdvice.onExit(previous, null);
 
-    assertThat(currentProcessSpanSuppression().get()).isNull();
+    assertThat(processSpanSuppression().get()).isNull();
   }
 
   @Test
   void standbyUpdateSuppressesOnlyProcessSpanAndRestoresSuppression() {
     Boolean previous = StreamThreadInstrumentation.StandbyTaskUpdateAdvice.onEnter();
     assertThat(previous).isNull();
-    assertThat(currentProcessSpanSuppression().get()).isTrue();
+    assertThat(processSpanSuppression().get()).isTrue();
 
     StreamThreadInstrumentation.StandbyTaskUpdateAdvice.onExit(previous);
 
-    assertThat(currentProcessSpanSuppression().get()).isNull();
+    assertThat(processSpanSuppression().get()).isNull();
   }
 
   @Test
   void nestedPollAndStandbyUpdatePreserveOuterSuppression() {
-    assertThat(currentProcessSpanSuppression().set(Boolean.TRUE)).isNull();
+    assertThat(processSpanSuppression().set(Boolean.TRUE)).isNull();
 
     Boolean outer = StreamThreadInstrumentation.PollRequestsAdvice.onEnter();
     Boolean inner = StreamThreadInstrumentation.StandbyTaskUpdateAdvice.onEnter();
@@ -75,10 +75,10 @@ class KafkaStreamsSuppressionTest {
     assertThat(inner).isTrue();
 
     StreamThreadInstrumentation.StandbyTaskUpdateAdvice.onExit(inner);
-    assertThat(currentProcessSpanSuppression().get()).isTrue();
+    assertThat(processSpanSuppression().get()).isTrue();
 
     StreamThreadInstrumentation.PollRequestsAdvice.onExit(outer, null);
-    assertThat(currentProcessSpanSuppression().get()).isTrue();
+    assertThat(processSpanSuppression().get()).isTrue();
   }
 
   private static ConsumerRecords<String, String> records() {
