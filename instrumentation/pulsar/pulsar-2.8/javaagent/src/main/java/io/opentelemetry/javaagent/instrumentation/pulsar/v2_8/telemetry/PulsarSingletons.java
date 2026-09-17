@@ -67,7 +67,9 @@ public class PulsarSingletons {
   private static final Instrumenter<PulsarRequest, Void> producerInstrumenter =
       createProducerInstrumenter();
 
-  private static final ScopedThreadSuppression receiveSpanSuppression =
+  private static final ScopedThreadSuppression listenerReceiveSpanSuppression =
+      new ScopedThreadSuppression();
+  private static final ScopedThreadSuppression internalReceiveSpanSuppression =
       new ScopedThreadSuppression();
 
   public static Instrumenter<PulsarRequest, Void> consumerProcessInstrumenter() {
@@ -78,8 +80,12 @@ public class PulsarSingletons {
     return producerInstrumenter;
   }
 
-  public static ScopedThreadSuppression receiveSpanSuppression() {
-    return receiveSpanSuppression;
+  public static ScopedThreadSuppression listenerReceiveSpanSuppression() {
+    return listenerReceiveSpanSuppression;
+  }
+
+  public static ScopedThreadSuppression internalReceiveSpanSuppression() {
+    return internalReceiveSpanSuppression;
   }
 
   private static Instrumenter<PulsarRequest, Void> createConsumerReceiveInstrumenter() {
@@ -205,7 +211,7 @@ public class PulsarSingletons {
     if (!receiveInstrumentationEnabled) {
       // suppress receive span when receive telemetry is not enabled and message is going to be
       // processed by a listener
-      if (MessageListenerContext.isReceiveSpanSuppressed()) {
+      if (listenerReceiveSpanSuppression.isActive()) {
         return null;
       }
       if (!emitStableMessagingSemconv()) {
@@ -286,11 +292,11 @@ public class PulsarSingletons {
 
   public static CompletableFuture<Message<?>> wrap(
       CompletableFuture<Message<?>> future, Timer timer, Consumer<?> consumer) {
-    if (isReceiveSpanSuppressed()) {
+    if (internalReceiveSpanSuppression.isActive()) {
       return future;
     }
 
-    boolean listenerContextActive = MessageListenerContext.isReceiveSpanSuppressed();
+    boolean listenerContextActive = listenerReceiveSpanSuppression.isActive();
     Context parent = Context.current();
     CompletableFuture<Message<?>> result = new CompletableFuture<>();
     future.whenComplete(
@@ -317,7 +323,7 @@ public class PulsarSingletons {
 
   public static CompletableFuture<Messages<?>> wrapBatch(
       CompletableFuture<Messages<?>> future, Timer timer, Consumer<?> consumer) {
-    if (isReceiveSpanSuppressed()) {
+    if (internalReceiveSpanSuppression.isActive()) {
       return future;
     }
 
@@ -349,10 +355,6 @@ public class PulsarSingletons {
     } else {
       runnable.run();
     }
-  }
-
-  private static boolean isReceiveSpanSuppressed() {
-    return receiveSpanSuppression.isActive();
   }
 
   private PulsarSingletons() {}

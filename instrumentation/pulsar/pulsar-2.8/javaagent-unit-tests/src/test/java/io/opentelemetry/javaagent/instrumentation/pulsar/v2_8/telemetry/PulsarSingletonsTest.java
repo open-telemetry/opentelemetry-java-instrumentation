@@ -5,18 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 
-import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.MessageListenerContext.receiveSpanSuppression;
+import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.listenerReceiveSpanSuppression;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 
 import io.opentelemetry.instrumentation.api.internal.ScopedThreadSuppression;
 import org.junit.jupiter.api.Test;
 
-class MessageListenerContextTest {
+class PulsarSingletonsTest {
 
   @Test
   void nestedReceiveSpanSuppressionPreservesOuterSuppression() {
-    ScopedThreadSuppression suppression = receiveSpanSuppression();
+    ScopedThreadSuppression suppression = listenerReceiveSpanSuppression();
     boolean outerSuppressionAcquired = suppression.tryAcquire();
     try {
       assertThat(outerSuppressionAcquired).isTrue();
@@ -25,18 +25,18 @@ class MessageListenerContextTest {
       if (innerSuppressionAcquired) {
         suppression.release();
       }
-      assertThat(MessageListenerContext.isReceiveSpanSuppressed()).isTrue();
+      assertThat(suppression.isActive()).isTrue();
     } finally {
       if (outerSuppressionAcquired) {
         suppression.release();
       }
     }
-    assertThat(MessageListenerContext.isReceiveSpanSuppressed()).isFalse();
+    assertThat(suppression.isActive()).isFalse();
   }
 
   @Test
   void receiveSpanSuppressionReleasesAfterException() {
-    ScopedThreadSuppression suppression = receiveSpanSuppression();
+    ScopedThreadSuppression suppression = listenerReceiveSpanSuppression();
     boolean suppressionAcquired = suppression.tryAcquire();
 
     assertThatIllegalStateException()
@@ -51,6 +51,6 @@ class MessageListenerContextTest {
               }
             });
 
-    assertThat(MessageListenerContext.isReceiveSpanSuppressed()).isFalse();
+    assertThat(suppression.isActive()).isFalse();
   }
 }
