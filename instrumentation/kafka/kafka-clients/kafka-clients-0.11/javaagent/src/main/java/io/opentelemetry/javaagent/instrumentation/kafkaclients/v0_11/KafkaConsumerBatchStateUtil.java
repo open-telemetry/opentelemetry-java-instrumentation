@@ -15,9 +15,17 @@ public final class KafkaConsumerBatchStateUtil {
   private static final VirtualField<ConsumerRecords<?, ?>, KafkaConsumerBatchState> BATCH_STATE =
       VirtualField.find(ConsumerRecords.class, KafkaConsumerBatchState.class);
 
-  public static void recordPoll(ConsumerRecords<?, ?> records, boolean applicationOwned) {
-    if (!records.isEmpty()) {
-      BATCH_STATE.set(records, new KafkaConsumerBatchState(applicationOwned));
+  public static void recordPoll(ConsumerRecords<?, ?> records, boolean applicationPoll) {
+    if (records.isEmpty()) {
+      return;
+    }
+
+    KafkaConsumerBatchState state = BATCH_STATE.get(records);
+    if (state == null) {
+      state = new KafkaConsumerBatchState(applicationPoll);
+      BATCH_STATE.set(records, state);
+    } else {
+      state.recordPoll(applicationPoll);
     }
   }
 
