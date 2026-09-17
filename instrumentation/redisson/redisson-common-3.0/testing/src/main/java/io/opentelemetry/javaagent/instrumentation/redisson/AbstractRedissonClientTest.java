@@ -33,6 +33,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.nCopies;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -44,6 +45,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
@@ -681,6 +683,7 @@ public abstract class AbstractRedissonClientTest {
 
     RBatch batch = redisson.createBatch(batchOptions("REDIS_WRITE_ATOMIC"));
     batch.getBucket("batch1").setAsync("v1");
+    workAroundRedissonDiscardBug(batch);
     batch.getClass().getMethod("discard").invoke(batch);
 
     // Verify that DISCARD clears suppression state from the pooled connection.
@@ -1071,6 +1074,20 @@ public abstract class AbstractRedissonClientTest {
           .invoke(options, executionModeValue);
     } catch (ReflectiveOperationException e) {
       throw new LinkageError(e.getMessage(), e);
+    }
+  }
+
+  private static void workAroundRedissonDiscardBug(RBatch batch)
+      throws ReflectiveOperationException {
+    Field executorServiceField = batch.getClass().getDeclaredField("executorService");
+    executorServiceField.setAccessible(true);
+    Object executorService = executorServiceField.get(batch);
+    Field aggregatedCommandsField =
+        executorService.getClass().getDeclaredField("aggregatedCommands");
+    aggregatedCommandsField.setAccessible(true);
+    if (aggregatedCommandsField.get(executorService) == emptyMap()) {
+      // Redisson 3.52.0 passes this map to the DISCARD executor before making it mutable.
+      aggregatedCommandsField.set(executorService, new HashMap<>());
     }
   }
 
