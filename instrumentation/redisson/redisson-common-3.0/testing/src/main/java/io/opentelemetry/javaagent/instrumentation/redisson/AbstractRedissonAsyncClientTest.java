@@ -441,18 +441,19 @@ public abstract class AbstractRedissonAsyncClientTest {
       Assumptions.abort();
       return;
     }
-    BatchOptions.ExecutionMode executionMode =
-        usesRPromise
-            ? BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC
-            : BatchOptions.ExecutionMode.IN_MEMORY_ATOMIC;
+    BatchOptions batchOptions =
+        BatchOptions.defaults()
+            .executionMode(
+                usesRPromise
+                    ? BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC
+                    : BatchOptions.ExecutionMode.IN_MEMORY_ATOMIC);
+    RBatch batch = redisson.createBatch(batchOptions);
 
     CompletableFuture<String> callbackResult = new CompletableFuture<>();
     CompletionStage<?> result =
         testing.runWithSpan(
             "parent",
             () -> {
-              RBatch batch =
-                  redisson.createBatch(BatchOptions.defaults().executionMode(executionMode));
               RFuture<Void> commandFuture = batch.getBucket("batch1").setAsync("v1");
               commandFuture.whenComplete(
                   (unused, commandError) -> {
@@ -468,9 +469,9 @@ public abstract class AbstractRedissonAsyncClientTest {
                         });
                   });
               batch.getBucket("batch2").setAsync("v2");
-              return batch
-                  .executeAsync()
-                  .thenCombine(callbackResult, (batchResult, value) -> batchResult);
+              RFuture<?> batchResultFuture = batch.executeAsync();
+              return batchResultFuture.thenCombine(
+                  callbackResult, (batchResult, value) -> batchResult);
             });
     assertThat(result.toCompletableFuture()).succeedsWithin(TIMEOUT);
 
