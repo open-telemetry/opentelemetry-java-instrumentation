@@ -33,17 +33,17 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("invokeListener")
+        named("executeListener")
             .and(
                 takesArguments(2)
                     .and(
                         takesArgument(1, Object.class)
                             .or(takesArgument(1, named("org.springframework.amqp.core.Message"))))),
-        getClass().getName() + "$InvokeListenerAdvice");
+        getClass().getName() + "$ExecuteListenerAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class InvokeListenerAdvice {
+  public static class ExecuteListenerAdvice {
 
     public static class AdviceScope {
       private final Context context;

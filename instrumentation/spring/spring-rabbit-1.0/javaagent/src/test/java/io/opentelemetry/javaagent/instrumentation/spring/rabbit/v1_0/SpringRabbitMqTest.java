@@ -38,6 +38,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -58,6 +60,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.BeforeAll;
@@ -506,6 +509,42 @@ class SpringRabbitMqTest {
         testLatestDeps()
             ? "org.springframework.amqp.rabbit.support.ListenerExecutionFailedException"
             : "org.springframework.amqp.rabbit.listener.exception.ListenerExecutionFailedException");
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void testErrorHandlerContextPropagation(boolean directContainer) throws InterruptedException {
+    String queue = directContainer ? "directErrorHandlerQueue" : "simpleErrorHandlerQueue";
+    applicationContext.getBean(AmqpAdmin.class).declareQueue(new Queue(queue));
+    CountDownLatch errorHandled = new CountDownLatch(1);
+    AtomicReference<SpanContext> errorHandlerSpanContext = new AtomicReference<>();
+
+    AbstractMessageListenerContainer container =
+        directContainer
+            ? new DirectMessageListenerContainer()
+            : new SimpleMessageListenerContainer();
+    container.setConnectionFactory(
+        applicationContext.getBean(
+            org.springframework.amqp.rabbit.connection.ConnectionFactory.class));
+    container.setQueueNames(queue);
+    container.setDefaultRequeueRejected(false);
+    container.setMessageListener(
+        message -> {
+          throw new IllegalStateException("test");
+        });
+    container.setErrorHandler(
+        error -> {
+          errorHandlerSpanContext.set(Span.current().getSpanContext());
+          errorHandled.countDown();
+        });
+    cleanup.deferCleanup(container::stop);
+    container.start();
+
+    applicationContext.getBean(AmqpTemplate.class).convertAndSend(queue, "test");
+
+    assertThat(errorHandled.await(10, SECONDS)).isTrue();
+    assertThat(errorHandlerSpanContext.get()).isNotNull();
+    assertThat(errorHandlerSpanContext.get().isValid()).isTrue();
   }
 
   @ParameterizedTest
