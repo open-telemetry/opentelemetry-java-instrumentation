@@ -691,11 +691,15 @@ public abstract class AbstractRedissonClientTest {
 
     RBatch batch =
         redisson.createBatch(
-            BatchOptions.defaults().executionMode(BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC));
+            BatchOptions.defaults()
+                .executionMode(
+                    testLatestDeps()
+                        ? BatchOptions.ExecutionMode.IN_MEMORY_ATOMIC
+                        : BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC));
     batch.getBucket("batch1").setAsync("v1");
     batch.getClass().getMethod("discard").invoke(batch);
 
-    // Verify that DISCARD clears suppression state from the pooled connection.
+    // Verify that DISCARD clears suppression state.
     redisson.getBucket("after-discard").get();
     testing.waitAndAssertTraces(
         trace ->
