@@ -19,7 +19,7 @@ import redis.RedisClientActorLike;
 import redis.RedisClientMasterSlaves;
 import redis.RedisClientPool;
 import redis.RedisServer;
-import redis.SentinelMonitoredRedisClient;
+import redis.SentinelMonitored;
 import scala.Option;
 import scala.Tuple2;
 import scala.collection.Seq;
@@ -204,7 +204,7 @@ class RediscalaServerTargetsTest {
 
   @Test
   void sentinelsAreScopedByTheirMaster() {
-    SentinelMonitoredRedisClient client = mock(SentinelMonitoredRedisClient.class);
+    SentinelMonitored client = mock(SentinelMonitored.class);
     when(client.master()).thenReturn("mymaster");
     when(client.sentinels())
         .thenReturn(sequence(new Tuple2<>("sentinel2", 26380), new Tuple2<>("sentinel1", 26379)));
@@ -216,7 +216,7 @@ class RediscalaServerTargetsTest {
   @Test
   @SuppressWarnings("MockitoDoSetup")
   void sentinelsFailClosedOnUnsupportedMember() {
-    SentinelMonitoredRedisClient client = mock(SentinelMonitoredRedisClient.class);
+    SentinelMonitored client = mock(SentinelMonitored.class);
     when(client.master()).thenReturn("mymaster");
     doReturn(sequence(new Tuple2<>("sentinel1", 26379), new Object())).when(client).sentinels();
 
