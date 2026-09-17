@@ -15,19 +15,19 @@ class RabbitMqConsumerProcessTracingTest {
 
   @Test
   void shouldScopeSpringProcessTelemetryOwnership() {
-    assertThat(RabbitMqConsumerProcessTracing.isProcessSpanSuppressed()).isFalse();
+    assertThat(processSpanSuppression().isActive()).isFalse();
 
     boolean suppressionAcquired = processSpanSuppression().tryAcquire();
     try {
       assertThat(suppressionAcquired).isTrue();
-      assertThat(RabbitMqConsumerProcessTracing.isProcessSpanSuppressed()).isTrue();
+      assertThat(processSpanSuppression().isActive()).isTrue();
     } finally {
       if (suppressionAcquired) {
         processSpanSuppression().release();
       }
     }
 
-    assertThat(RabbitMqConsumerProcessTracing.isProcessSpanSuppressed()).isFalse();
+    assertThat(processSpanSuppression().isActive()).isFalse();
   }
 
   @Test
@@ -39,20 +39,20 @@ class RabbitMqConsumerProcessTracingTest {
       boolean innerSuppressionAcquired = processSpanSuppression().tryAcquire();
       try {
         assertThat(innerSuppressionAcquired).isFalse();
-        assertThat(RabbitMqConsumerProcessTracing.isProcessSpanSuppressed()).isTrue();
+        assertThat(processSpanSuppression().isActive()).isTrue();
       } finally {
         if (innerSuppressionAcquired) {
           processSpanSuppression().release();
         }
       }
-      assertThat(RabbitMqConsumerProcessTracing.isProcessSpanSuppressed()).isTrue();
+      assertThat(processSpanSuppression().isActive()).isTrue();
     } finally {
       if (outerSuppressionAcquired) {
         processSpanSuppression().release();
       }
     }
 
-    assertThat(RabbitMqConsumerProcessTracing.isProcessSpanSuppressed()).isFalse();
+    assertThat(processSpanSuppression().isActive()).isFalse();
   }
 
   @Test
@@ -71,6 +71,6 @@ class RabbitMqConsumerProcessTracingTest {
             })
         .isInstanceOf(IllegalStateException.class);
 
-    assertThat(RabbitMqConsumerProcessTracing.isProcessSpanSuppressed()).isFalse();
+    assertThat(processSpanSuppression().isActive()).isFalse();
   }
 }

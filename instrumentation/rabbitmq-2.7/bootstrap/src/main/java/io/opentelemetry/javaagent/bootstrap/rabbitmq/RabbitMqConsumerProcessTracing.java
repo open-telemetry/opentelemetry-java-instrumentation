@@ -17,9 +17,5 @@ public final class RabbitMqConsumerProcessTracing {
     return processSpanSuppression;
   }
 
-  public static boolean isProcessSpanSuppressed() {
-    return processSpanSuppression.isActive();
-  }
-
   private RabbitMqConsumerProcessTracing() {}
 }
