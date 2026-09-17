@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.isWrappingEnabled;
+import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.isProcessSpanSuppressed;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessagingMetricsAssertions.assertSendAndProcessMetrics;
 import static java.util.Collections.singleton;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -59,7 +59,7 @@ class KafkaCamelTest {
   private static String brokers;
   private static KafkaConsumer<String, String> nestedConsumer;
   private static final CountDownLatch received = new CountDownLatch(1);
-  private static final AtomicBoolean wrappingEnabledInRoute = new AtomicBoolean();
+  private static final AtomicBoolean processSpanSuppressedInRoute = new AtomicBoolean();
   private static final AtomicBoolean nestedRecordReceived = new AtomicBoolean();
   private static final AtomicBoolean nestedRecordProcessed = new AtomicBoolean();
 
@@ -97,7 +97,7 @@ class KafkaCamelTest {
                 .to("direct:consume")
                 .process(
                     exchange -> {
-                      wrappingEnabledInRoute.set(isWrappingEnabled());
+                      processSpanSuppressedInRoute.set(isProcessSpanSuppressed());
                       ConsumerRecords<String, String> records = nestedConsumer.poll(30_000);
                       nestedRecordReceived.set(!records.isEmpty());
                       if (emitStableMessagingSemconv()) {
@@ -132,7 +132,7 @@ class KafkaCamelTest {
     sender.submit(() -> template.sendBody("direct:input", "test message")).get();
     assertThat(sender.submit(Context::current).get()).isEqualTo(Context.root());
     assertThat(received.await(1, MINUTES)).isTrue();
-    assertThat(wrappingEnabledInRoute).isTrue();
+    assertThat(processSpanSuppressedInRoute).isFalse();
     assertThat(nestedRecordReceived).isTrue();
     assertThat(nestedRecordProcessed.get()).isEqualTo(emitStableMessagingSemconv());
 
