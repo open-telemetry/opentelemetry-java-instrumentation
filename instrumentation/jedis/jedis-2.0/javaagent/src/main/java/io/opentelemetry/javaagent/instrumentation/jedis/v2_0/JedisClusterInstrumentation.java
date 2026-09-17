@@ -1,0 +1,143 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
+
+import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
+import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
+import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.not;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
+import java.util.Set;
+import javax.annotation.Nullable;
+import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.matcher.ElementMatcher;
+import redis.clients.jedis.JedisClusterConnectionHandler;
+
+class JedisClusterInstrumentation implements TypeInstrumentation {
+
+  @Override
+  public ElementMatcher<TypeDescription> typeMatcher() {
+    return namedOneOf(
+        "redis.clients.jedis.JedisClusterConnectionHandler",
+        "redis.clients.jedis.JedisSlotBasedConnectionHandler");
+  }
+
+  @Override
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
+        isConstructor()
+            .and(isDeclaredBy(named("redis.clients.jedis.JedisClusterConnectionHandler")))
+            .and(takesArgument(0, Set.class)),
+        getClass().getName() + "$ConstructorAdvice");
+    transformer.applyAdviceToMethod(
+        named("initializeSlotsCache").and(takesArgument(0, Set.class)),
+        getClass().getName() + "$InitializeAdvice");
+    transformer.applyAdviceToMethod(
+        namedOneOf("getConnection", "getConnectionFromSlot")
+            .and(not(isAbstract()))
+            .and(returns(named("redis.clients.jedis.Jedis"))),
+        getClass().getName() + "$GetConnectionAdvice");
+    transformer.applyAdviceToMethod(
+        named("getConnectionFromNode").and(returns(named("redis.clients.jedis.Jedis"))),
+        getClass().getName() + "$GetConnectionAdvice");
+    transformer.applyAdviceToMethod(
+        named("renewSlotCache"), getClass().getName() + "$RenewSlotCacheAdvice");
+  }
+
+  // Cluster types are absent before Jedis 2.3, so their advice references are excluded from Muzzle.
+  @SuppressWarnings("unused")
+  public static class ConstructorAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @NoMuzzle
+    public static void onExit(
+        @Advice.This JedisClusterConnectionHandler handler,
+        @Advice.Argument(0) @Nullable Set<?> nodes) {
+      JedisClusterTargetAccessor.setTarget(handler, JedisServerTargets.ofNodes(nodes));
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class InitializeAdvice {
+
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @NoMuzzle
+    public static Scope onEnter(
+        @Advice.This JedisClusterConnectionHandler handler,
+        @Advice.Argument(0) @Nullable Set<?> nodes) {
+      RedisServerTarget target = JedisServerTargets.ofNodes(nodes);
+      JedisClusterTargetAccessor.setTarget(handler, target);
+      Context context = JedisSingletons.configuredTargetContext(target);
+      return context != null ? context.makeCurrent() : null;
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    @NoMuzzle
+    public static void onExit(
+        @Advice.This JedisClusterConnectionHandler handler,
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
+      }
+      if (throwable != null) {
+        JedisClusterTargetAccessor.setTarget(handler, null);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class GetConnectionAdvice {
+
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @NoMuzzle
+    public static Scope onEnter(@Advice.This JedisClusterConnectionHandler handler) {
+      Context context =
+          JedisSingletons.configuredTargetContext(JedisClusterTargetAccessor.getTarget(handler));
+      return context != null ? context.makeCurrent() : null;
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class RenewSlotCacheAdvice {
+
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @NoMuzzle
+    public static Scope onEnter(@Advice.This JedisClusterConnectionHandler handler) {
+      Context context =
+          JedisSingletons.configuredTargetContext(JedisClusterTargetAccessor.getTarget(handler));
+      return context != null ? context.makeCurrent() : null;
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
+      }
+    }
+  }
+}

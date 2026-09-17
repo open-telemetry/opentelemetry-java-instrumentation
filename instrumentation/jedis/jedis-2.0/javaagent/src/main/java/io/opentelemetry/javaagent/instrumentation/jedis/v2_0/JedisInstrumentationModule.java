@@ -7,16 +7,21 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
+import java.util.function.BiConsumer;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class JedisInstrumentationModule extends InstrumentationModule {
+public class JedisInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public JedisInstrumentationModule() {
     super("jedis", "jedis-2.0");
@@ -31,9 +36,29 @@ public class JedisInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public List<String> getAdditionalHelperClassNames() {
+    // Cluster advice uses @NoMuzzle because cluster classes are absent before Jedis 2.3, so Muzzle
+    // cannot discover this helper automatically.
+    return singletonList(
+        "io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisClusterTargetAccessor");
+  }
+
+  @Override
+  public void registerVirtualFields(BiConsumer<String, String> virtualFieldRegistrar) {
+    // The cluster accessor is outside Muzzle's reach for the same reason, so register its virtual
+    // field explicitly.
+    virtualFieldRegistrar.accept(
+        "redis.clients.jedis.JedisClusterConnectionHandler", RedisServerTarget.class.getName());
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new JedisConnectionInstrumentation(),
+        new ShardedJedisInstrumentation(),
+        new JedisSentinelPoolInstrumentation(),
+        new PoolResourceInstrumentation(),
+        new JedisClusterInstrumentation(),
         new JedisInstrumentation(),
         new JedisPipelineInstrumentation(),
         new JedisTransactionInstrumentation());
