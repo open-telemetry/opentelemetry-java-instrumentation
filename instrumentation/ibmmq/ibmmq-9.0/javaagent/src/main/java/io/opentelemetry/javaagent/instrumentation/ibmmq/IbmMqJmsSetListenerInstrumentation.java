@@ -43,10 +43,10 @@ public class IbmMqJmsSetListenerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SetListenerAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void onEnter(
         @Advice.This Object consumer, @Advice.Argument(0) @Nullable MessageListener listener) {
-      // On exit, so the listener is only remembered once registration actually succeeded.
+      // On entry, so the association exists before the provider can deliver the first message.
       IbmMqJmsListenerQmid.associate(consumer, listener);
     }
   }

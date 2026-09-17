@@ -10,6 +10,7 @@ import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import com.ibm.mq.jms.MQConnectionFactory;
 import com.ibm.msg.client.jms.JmsReadablePropertyContext;
@@ -21,12 +22,12 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.Message;
@@ -277,23 +278,26 @@ class IbmMqJmsTest {
    * direct listener invocation are not guaranteed to land in the same exported trace.
    */
   private static SpanData awaitSpanForOperation(String operation) {
-    List<SpanData> seen = new ArrayList<>();
-    for (int i = 0; i < 5; i++) {
-      List<List<SpanData>> traces = testing.waitForTraces(1);
-      for (List<SpanData> trace : traces) {
-        for (SpanData span : trace) {
-          seen.add(span);
-          if (asList(span.getName().split(" ")).contains(operation)) {
-            return span;
-          }
-        }
-      }
-    }
-    throw new AssertionError(
-        "no span with operation token '"
-            + operation
-            + "' among: "
-            + seen.stream().map(s -> s.getKind() + "/" + s.getName()).collect(toList()));
+    AtomicReference<SpanData> found = new AtomicReference<>();
+    await()
+        .untilAsserted(
+            () -> {
+              SpanData match =
+                  testing.spans().stream()
+                      .filter(span -> asList(span.getName().split(" ")).contains(operation))
+                      .findFirst()
+                      .orElse(null);
+              assertThat(match)
+                  .describedAs(
+                      "span with operation token '%s' among: %s",
+                      operation,
+                      testing.spans().stream()
+                          .map(s -> s.getKind() + "/" + s.getName())
+                          .collect(toList()))
+                  .isNotNull();
+              found.set(match);
+            });
+    return found.get();
   }
 
   private static class CountingListener implements MessageListener {
