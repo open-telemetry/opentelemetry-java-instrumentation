@@ -6,14 +6,38 @@
   or helpers
 - Requirement: every value that holds operation-specific temporary state needs cleanup on every
   exit, including exceptional exits
+- Default for temporary state installed on entry and cleaned up on exit: restore the previous value
 - Suppression: only the caller that acquires a `ScopedThreadSuppression` releases it
 - Naming: use `current*` for ambient state that belongs to the executing thread, except for
   suppression holders and accessors
 
-## Match suppression cleanup to ownership
+## Match cleanup to the lifecycle
 
 Trace every writer, reader, and cleanup point. Thread confinement does not prevent recursion,
-constructor chaining, or overlapping advice from observing an outer suppression.
+constructor chaining, or overlapping advice from replacing or observing outer state.
+
+For temporary state installed on entry and cleaned up on exit, cleanup must restore the previous
+value rather than simply remove the entry. Follow this rule even when no current call path is known
+to be reentrant. Prefer the allocation-free `ScopedThreadValue`, and carry the value returned by
+`set` through `@Advice.Enter`:
+
+```java
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
+
+private static final ScopedThreadValue<Request> currentRequest = new ScopedThreadValue<>();
+
+@Advice.OnMethodEnter(suppress = Throwable.class)
+public static @Nullable Request onEnter(Request request) {
+  return currentRequest.set(request);
+}
+
+@Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+public static void onExit(@Advice.Enter @Nullable Request previous) {
+  currentRequest.restore(previous);
+}
+```
+
+`restore` removes the entry when `set` returned `null`.
 
 Use `ScopedThreadSuppression` for temporary suppression installed on entry and cleared on exit.
 `tryAcquire()` returns `true` to the caller that installed the suppression. Nested calls return
@@ -59,9 +83,9 @@ Do not use `current*` for message, request, record, or batch state attached to a
 through `VirtualField`. That state belongs to the carrier and may cross thread boundaries. Name the
 field for the carrier state instead, for example `MESSAGE_STATE` or `REQUEST_STATE`.
 
-The acquire-and-release rule does not apply to long-lived per-thread caches, reusable objects,
-counters, persistent maps, or producer/consumer callback handoffs. Manage those values according
-to their actual lifetime instead of forcing them into an entry/exit pair.
+The entry-and-exit cleanup rules do not apply to long-lived per-thread caches, reusable objects,
+counters, persistent maps, or producer/consumer callback handoffs. Manage those values according to
+their actual lifetime instead of forcing them into an entry/exit pair.
 
 For a cross-callback handoff, document the producer, the consumer, and the failure path that cleans
 up the value when the handoff cannot complete.
