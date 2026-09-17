@@ -1,0 +1,164 @@
+{
+  "schema": {
+    "id": "github.copilot.agent-task-conflict-receipt",
+    "version": 1
+  },
+  "request": {
+    "id": "pr-19234-4e373bcfd5b7c163",
+    "sha256": "31350d083676d13ccf918767331f5829995483dbbe2b4707249be3f3f03887e4"
+  },
+  "policy": {
+    "id": "marketplace-conflict-worker",
+    "sha256": "7fcb65dff47f5dc76f790f999de202e28692c5207dba7d3ff007145a327e6c67",
+    "version": 1
+  },
+  "model": "gpt-5.6-sol",
+  "mode": "conflict_with_report",
+  "strategy": "merge",
+  "repository": "open-telemetry/opentelemetry-java-instrumentation",
+  "pull_request": {
+    "base_ref": "main",
+    "base_repository": "open-telemetry/opentelemetry-java-instrumentation",
+    "base_sha": "2515ed4055bb1802c7d21d7a01882b92b6d5c675",
+    "head_ref": "sign-release-artifacts-cosign",
+    "head_repository": "trask/opentelemetry-java-instrumentation",
+    "head_sha": "fa157fbd13318ae18f61c0398094d12c11044ab9",
+    "number": 19234,
+    "url": "https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19234"
+  },
+  "generated_refs": [
+    {
+      "ref": {
+        "role": "code",
+        "pr_number": 19234,
+        "repository": "open-telemetry/opentelemetry-java-instrumentation",
+        "ref": "8cf251bb7de457616dbfb89250236813b1bfc552",
+        "old_sha": "fa157fbd13318ae18f61c0398094d12c11044ab9",
+        "new_sha": "8cf251bb7de457616dbfb89250236813b1bfc552",
+        "base_ref": "sign-release-artifacts-cosign",
+        "base_sha": "fa157fbd13318ae18f61c0398094d12c11044ab9",
+        "lease_sha": "fa157fbd13318ae18f61c0398094d12c11044ab9",
+        "commits": [
+          {
+            "old_sha": "ca98b0517f408d418fe8ef402f8ad626eb424fe0",
+            "new_sha": "ca98b0517f408d418fe8ef402f8ad626eb424fe0",
+            "subject": "Sign release artifacts with Cosign",
+            "trailers": [],
+            "patch_sha256": "c0d9ada8cd92f1cd2ac1154f880cfe1a000cffa7db65ae5dd64008be4170c5d7",
+            "conflict_paths": [
+              ".github/workflows/release.yml"
+            ],
+            "companion_paths": [
+              "RELEASING.md",
+              "version.gradle.kts"
+            ],
+            "unaffected_path_digests": {
+              "RELEASING.md": "b3ce82e8aabe1432c3eac4ce87b5edc6d69afd671a75b5abd01ff360818e83cf"
+            },
+            "rationale": "Preserved the original Cosign workflow and release-guide patch byte-for-byte; its workflow changes participate in the cumulative release.yml merge conflict, while RELEASING.md remains unaffected."
+          },
+          {
+            "old_sha": "85076fd9c1a92e42d6387520dcabaa2b92d70754",
+            "new_sha": "85076fd9c1a92e42d6387520dcabaa2b92d70754",
+            "subject": "Disable credential persistence before artifact download",
+            "trailers": [],
+            "patch_sha256": "e887840d74ef950485c5e119bfb1153d6d2e0ef90304817815a6c704499594ce",
+            "conflict_paths": [
+              ".github/workflows/release.yml"
+            ],
+            "companion_paths": [
+              "RELEASING.md",
+              "version.gradle.kts"
+            ],
+            "unaffected_path_digests": {},
+            "rationale": "Preserved the credential-persistence hardening commit byte-for-byte; its release.yml patch participates in the cumulative workflow conflict."
+          },
+          {
+            "old_sha": "3aa13d57034871ae7dd17319ffa59c09ddbbf657",
+            "new_sha": "3aa13d57034871ae7dd17319ffa59c09ddbbf657",
+            "subject": "Merge main into sign-release-artifacts-cosign",
+            "trailers": [
+              "Co-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>"
+            ],
+            "patch_sha256": "631dfdfffcaffa94ac3f7a8cfc0619dd8c9ef46c4fe149cb56f7fb28dae5ba78",
+            "conflict_paths": [],
+            "companion_paths": [],
+            "unaffected_path_digests": {},
+            "rationale": "Preserved the prior two-parent integration commit and its empty first-parent patch exactly; no path from this commit required resolution."
+          },
+          {
+            "old_sha": "cc581c4f701427a0e77f9560ed893b1565f95718",
+            "new_sha": "cc581c4f701427a0e77f9560ed893b1565f95718",
+            "subject": "Address Copilot review comments: document immutable release tags",
+            "trailers": [
+              "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+            ],
+            "patch_sha256": "4c91f2f10fac504ec5ab07451731120f77130362d89a70affa9c94367200f5a7",
+            "conflict_paths": [],
+            "companion_paths": [
+              "RELEASING.md"
+            ],
+            "unaffected_path_digests": {
+              "RELEASING.md": "d1d47d8641a54d5c69a7a2ed2da5fcc12b34b3c811650eaaf8f28f0d9c41d641"
+            },
+            "rationale": "Preserved the immutable-tag documentation patch byte-for-byte; RELEASING.md did not conflict with frozen main."
+          },
+          {
+            "old_sha": "5d85248170ac17e804986da43778d175dcba455f",
+            "new_sha": "5d85248170ac17e804986da43778d175dcba455f",
+            "subject": "Address Copilot review comment: document tag dispatch",
+            "trailers": [
+              "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+            ],
+            "patch_sha256": "ec44ed9be9311f99203e9459839eafc75ec76eac6c7439c1965baf8169942b42",
+            "conflict_paths": [],
+            "companion_paths": [
+              "RELEASING.md"
+            ],
+            "unaffected_path_digests": {
+              "RELEASING.md": "9a835d5a2a610a21a2b10627a4e8cde5457621684002f40595d210bb5a0c61ab"
+            },
+            "rationale": "Preserved the tag-dispatch documentation patch byte-for-byte; RELEASING.md did not conflict with frozen main."
+          },
+          {
+            "old_sha": "fa157fbd13318ae18f61c0398094d12c11044ab9",
+            "new_sha": "fa157fbd13318ae18f61c0398094d12c11044ab9",
+            "subject": "Address review finding: reject snapshot versions in the release tag check",
+            "trailers": [
+              "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+            ],
+            "patch_sha256": "b538e5e0ca95bfcce3bdf8a7abf6f1ebd62fb4a67d9ac18a9394329fa68cb416",
+            "conflict_paths": [
+              ".github/workflows/release.yml"
+            ],
+            "companion_paths": [
+              "RELEASING.md",
+              "version.gradle.kts"
+            ],
+            "unaffected_path_digests": {},
+            "rationale": "Preserved the snapshot-version rejection patch byte-for-byte; its release.yml guard remains intact in the merged workflow."
+          }
+        ]
+      },
+      "sha256": "dc80ea51f6cbcc051939b3cd04c7f872209bed604189264292e2d92acd2da938"
+    }
+  ],
+  "validation_complete": true,
+  "validation": [
+    {
+      "command": "GitHub Actions workflow run 35179835842: Gradle wrapper validation",
+      "status": "passed",
+      "detail": "Remote workflow completed successfully for 8cf251bb7de457616dbfb89250236813b1bfc552."
+    },
+    {
+      "command": "parallel_validation: CodeQL Security Scan",
+      "status": "passed",
+      "detail": "Remote Actions and Python analysis found zero alerts; Java was skipped by the service size limit and the conflict resolution did not manually change Java source."
+    },
+    {
+      "command": "repository formatting applicability check",
+      "status": "passed",
+      "detail": "No repository formatting command applies to the manually resolved workflow YAML path."
+    }
+  ]
+}
