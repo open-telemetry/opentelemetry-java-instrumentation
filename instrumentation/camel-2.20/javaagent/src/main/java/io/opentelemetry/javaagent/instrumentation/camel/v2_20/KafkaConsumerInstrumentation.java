@@ -42,7 +42,7 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
         @Advice.This KafkaConsumer<?, ?> consumer,
         @Advice.Return @Nullable ConsumerRecords<?, ?> records) {
       if (records != null) {
-        CamelKafkaBatchState.markBatch(consumer, records);
+        CamelKafkaBatchState.claimBatch(consumer, records);
       }
     }
   }

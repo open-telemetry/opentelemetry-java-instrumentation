@@ -14,8 +14,6 @@ public final class CamelKafkaBatchState {
 
   private static final VirtualField<KafkaConsumer<?, ?>, Boolean> CAMEL_CONSUMERS =
       VirtualField.find(KafkaConsumer.class, Boolean.class);
-  private static final VirtualField<ConsumerRecords<?, ?>, Boolean> CAMEL_BATCHES =
-      VirtualField.find(ConsumerRecords.class, Boolean.class);
   private static final VirtualField<ConsumerRecords<?, ?>, KafkaConsumerBatchState> BATCH_STATE =
       VirtualField.find(ConsumerRecords.class, KafkaConsumerBatchState.class);
 
@@ -23,22 +21,15 @@ public final class CamelKafkaBatchState {
     CAMEL_CONSUMERS.set(consumer, true);
   }
 
-  public static void markBatch(KafkaConsumer<?, ?> consumer, ConsumerRecords<?, ?> records) {
+  public static void claimBatch(KafkaConsumer<?, ?> consumer, ConsumerRecords<?, ?> records) {
     if (CAMEL_CONSUMERS.get(consumer) == null || records.isEmpty()) {
-      return;
-    }
-    CAMEL_BATCHES.set(records, true);
-  }
-
-  public static void claimProcessSpan(ConsumerRecords<?, ?> records) {
-    if (CAMEL_BATCHES.get(records) == null) {
       return;
     }
     KafkaConsumerBatchState state = BATCH_STATE.get(records);
     if (state == null) {
-      return;
+      state = new KafkaConsumerBatchState(false);
+      BATCH_STATE.set(records, state);
     }
-    CAMEL_BATCHES.set(records, null);
     state.claimProcessSpan();
   }
 
