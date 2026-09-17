@@ -67,7 +67,7 @@ public class PulsarSingletons {
   private static final Instrumenter<PulsarRequest, Void> producerInstrumenter =
       createProducerInstrumenter();
 
-  private static final ScopedThreadValue<Boolean> currentReceiveSpanSuppression =
+  private static final ScopedThreadValue<Boolean> receiveSpanSuppression =
       new ScopedThreadValue<>();
 
   public static Instrumenter<PulsarRequest, Void> consumerProcessInstrumenter() {
@@ -78,8 +78,8 @@ public class PulsarSingletons {
     return producerInstrumenter;
   }
 
-  public static ScopedThreadValue<Boolean> currentReceiveSpanSuppression() {
-    return currentReceiveSpanSuppression;
+  public static ScopedThreadValue<Boolean> receiveSpanSuppression() {
+    return receiveSpanSuppression;
   }
 
   private static Instrumenter<PulsarRequest, Void> createConsumerReceiveInstrumenter() {
@@ -205,7 +205,7 @@ public class PulsarSingletons {
     if (!receiveInstrumentationEnabled) {
       // suppress receive span when receive telemetry is not enabled and message is going to be
       // processed by a listener
-      if (MessageListenerContext.isProcessing()) {
+      if (MessageListenerContext.isReceiveSpanSuppressed()) {
         return null;
       }
       if (!emitStableMessagingSemconv()) {
@@ -286,11 +286,11 @@ public class PulsarSingletons {
 
   public static CompletableFuture<Message<?>> wrap(
       CompletableFuture<Message<?>> future, Timer timer, Consumer<?> consumer) {
-    if (isSuppressingReceive()) {
+    if (isReceiveSpanSuppressed()) {
       return future;
     }
 
-    boolean listenerContextActive = MessageListenerContext.isProcessing();
+    boolean listenerContextActive = MessageListenerContext.isReceiveSpanSuppressed();
     Context parent = Context.current();
     CompletableFuture<Message<?>> result = new CompletableFuture<>();
     future.whenComplete(
@@ -317,7 +317,7 @@ public class PulsarSingletons {
 
   public static CompletableFuture<Messages<?>> wrapBatch(
       CompletableFuture<Messages<?>> future, Timer timer, Consumer<?> consumer) {
-    if (isSuppressingReceive()) {
+    if (isReceiveSpanSuppressed()) {
       return future;
     }
 
@@ -351,8 +351,8 @@ public class PulsarSingletons {
     }
   }
 
-  private static boolean isSuppressingReceive() {
-    return currentReceiveSpanSuppression.get() != null;
+  private static boolean isReceiveSpanSuppressed() {
+    return receiveSpanSuppression.get() != null;
   }
 
   private PulsarSingletons() {}

@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.currentReceiveSpanSuppression;
+import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.receiveSpanSuppression;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
@@ -94,7 +94,7 @@ class ReceiveFailureFallbackTest {
 
   @Test
   void pulsarReceiveSuppressionRestoresAfterException() {
-    ScopedThreadValue<Boolean> suppression = currentReceiveSpanSuppression();
+    ScopedThreadValue<Boolean> suppression = receiveSpanSuppression();
     Boolean previous = suppression.set(Boolean.TRUE);
 
     assertThatIllegalStateException()

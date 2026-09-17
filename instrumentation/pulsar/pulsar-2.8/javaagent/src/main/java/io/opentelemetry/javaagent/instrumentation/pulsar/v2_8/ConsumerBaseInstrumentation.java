@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
-import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.MessageListenerContext.currentReceiveSpanSuppression;
+import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.MessageListenerContext.receiveSpanSuppression;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -45,12 +45,12 @@ class ConsumerBaseInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static Boolean onEnter() {
-      return currentReceiveSpanSuppression().set(Boolean.TRUE);
+      return receiveSpanSuppression().set(Boolean.TRUE);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Boolean previous) {
-      currentReceiveSpanSuppression().restore(previous);
+      receiveSpanSuppression().restore(previous);
     }
   }
 }

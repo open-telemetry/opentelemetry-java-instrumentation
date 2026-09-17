@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 
-import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.MessageListenerContext.currentReceiveSpanSuppression;
+import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.MessageListenerContext.receiveSpanSuppression;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 
@@ -16,21 +16,21 @@ class MessageListenerContextTest {
 
   @Test
   void nestedReceiveSpanSuppressionRestoresPreviousSuppression() {
-    ScopedThreadValue<Boolean> suppression = currentReceiveSpanSuppression();
+    ScopedThreadValue<Boolean> suppression = receiveSpanSuppression();
     Boolean beforeOuter = suppression.set(Boolean.TRUE);
     try {
       Boolean beforeInner = suppression.set(Boolean.TRUE);
       suppression.restore(beforeInner);
-      assertThat(MessageListenerContext.isProcessing()).isTrue();
+      assertThat(MessageListenerContext.isReceiveSpanSuppressed()).isTrue();
     } finally {
       suppression.restore(beforeOuter);
     }
-    assertThat(MessageListenerContext.isProcessing()).isFalse();
+    assertThat(MessageListenerContext.isReceiveSpanSuppressed()).isFalse();
   }
 
   @Test
   void receiveSpanSuppressionRestoresAfterException() {
-    ScopedThreadValue<Boolean> suppression = currentReceiveSpanSuppression();
+    ScopedThreadValue<Boolean> suppression = receiveSpanSuppression();
     Boolean previous = suppression.set(Boolean.TRUE);
 
     assertThatIllegalStateException()
@@ -43,6 +43,6 @@ class MessageListenerContextTest {
               }
             });
 
-    assertThat(MessageListenerContext.isProcessing()).isFalse();
+    assertThat(MessageListenerContext.isReceiveSpanSuppressed()).isFalse();
   }
 }

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
-import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.currentReceiveSpanSuppression;
+import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.receiveSpanSuppression;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.startAndEndConsumerReceive;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.wrap;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.wrapBatch;
@@ -171,12 +171,12 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
     public static Boolean before() {
       // MultiTopicsConsumerImpl#receiveMessageFromConsumer is called from a background thread, we
       // don't want to create a span for it.
-      return currentReceiveSpanSuppression().set(Boolean.TRUE);
+      return receiveSpanSuppression().set(Boolean.TRUE);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void after(@Advice.Enter @Nullable Boolean previous) {
-      currentReceiveSpanSuppression().restore(previous);
+      receiveSpanSuppression().restore(previous);
     }
   }
 }

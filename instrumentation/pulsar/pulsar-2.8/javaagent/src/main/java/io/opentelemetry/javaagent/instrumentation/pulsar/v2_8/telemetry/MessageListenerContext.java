@@ -13,16 +13,16 @@ import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
  * "process" operation, we are going to suppress the span from the message "receive" operation.
  */
 public class MessageListenerContext {
-  private static final ScopedThreadValue<Boolean> currentReceiveSpanSuppression =
+  private static final ScopedThreadValue<Boolean> receiveSpanSuppression =
       new ScopedThreadValue<>();
 
-  public static ScopedThreadValue<Boolean> currentReceiveSpanSuppression() {
-    return currentReceiveSpanSuppression;
+  public static ScopedThreadValue<Boolean> receiveSpanSuppression() {
+    return receiveSpanSuppression;
   }
 
-  /** Returns true if we expect a received message to be passed to a listener. */
-  public static boolean isProcessing() {
-    return currentReceiveSpanSuppression.get() != null;
+  /** Returns true while receive spans are suppressed for listener processing. */
+  public static boolean isReceiveSpanSuppressed() {
+    return receiveSpanSuppression.get() != null;
   }
 
   private MessageListenerContext() {}
