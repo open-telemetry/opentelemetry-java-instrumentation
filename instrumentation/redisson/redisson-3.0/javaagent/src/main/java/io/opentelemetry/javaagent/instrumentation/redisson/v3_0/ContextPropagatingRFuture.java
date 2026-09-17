@@ -12,12 +12,15 @@ import org.redisson.misc.RedissonPromise;
 
 public class ContextPropagatingRFuture<T> extends RedissonPromise<T> {
 
+  private final RFuture<T> delegate;
+
   private ContextPropagatingRFuture(RFuture<T> delegate, Context context) {
+    this.delegate = delegate;
     delegate.whenComplete(
         (result, error) -> {
           try (Scope ignored = context.makeCurrent()) {
             if (delegate.isCancelled()) {
-              cancel(false);
+              cancelFromDelegate();
             } else if (error != null) {
               tryFailure(error);
             } else {
@@ -32,5 +35,19 @@ public class ContextPropagatingRFuture<T> extends RedissonPromise<T> {
       return delegate;
     }
     return new ContextPropagatingRFuture<>(delegate, context);
+  }
+
+  @SuppressWarnings("UnsynchronizedOverridesSynchronized")
+  @Override
+  public boolean cancel(boolean mayInterruptIfRunning) {
+    if (!delegate.cancel(mayInterruptIfRunning)) {
+      return false;
+    }
+    cancelFromDelegate();
+    return true;
+  }
+
+  private boolean cancelFromDelegate() {
+    return super.cancel(false);
   }
 }

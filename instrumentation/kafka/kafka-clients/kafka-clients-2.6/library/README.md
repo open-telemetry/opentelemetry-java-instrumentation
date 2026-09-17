@@ -34,8 +34,12 @@ There are two options for capturing traces, either using interceptors or wrappin
 The Kafka clients API provides a way to intercept messages before they are sent to the brokers
 as well as messages received from the broker before being passed to the application.
 Note that interceptors are not able to capture errors that occur during the sending or receiving
-of messages. If you want to capture those as well, you should consider the wrapping option described
-in the next section.
+of messages. The interceptor hooks also do not cover the whole call to the broker, so timing them
+would be misleading, and the interceptors do not record `messaging.client.operation.duration`. When
+the stable messaging semantic conventions are enabled, the producer interceptor still records
+`messaging.client.sent.messages`, and the consumer interceptor still records
+`messaging.process.duration`. If you want to capture the errors and the operation duration as well,
+you should consider the wrapping option described in the next section.
 
 To intercept messages and emit telemetry for a `KafkaProducer`:
 

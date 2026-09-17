@@ -12,13 +12,15 @@ import static java.util.Collections.singletonList;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
-import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
 
-class SpringRabbitMessageAttributesGetter implements MessagingAttributesGetter<Message, Void> {
+class SpringRabbitMessageAttributesGetter
+    implements MessagingAttributesGetter<SpringRabbitRequest, Void> {
 
   @Nullable private static final Method getConsumerQueue = getConsumerQueueMethod();
 
@@ -29,14 +31,14 @@ class SpringRabbitMessageAttributesGetter implements MessagingAttributesGetter<M
       Pattern.compile("\\.anonymous\\.[A-Za-z0-9_-]{22}$");
 
   @Override
-  public String getSystem(Message message) {
+  public String getSystem(SpringRabbitRequest request) {
     return "rabbitmq";
   }
 
   @Override
   @Nullable
-  public String getDestination(Message message) {
-    MessageProperties properties = message.getMessageProperties();
+  public String getDestination(SpringRabbitRequest request) {
+    MessageProperties properties = request.getMessage().getMessageProperties();
     if (!emitStableMessagingSemconv()) {
       return properties.getReceivedRoutingKey();
     }
@@ -104,19 +106,19 @@ class SpringRabbitMessageAttributesGetter implements MessagingAttributesGetter<M
 
   @Nullable
   @Override
-  public String getDestinationTemplate(Message message) {
+  public String getDestinationTemplate(SpringRabbitRequest request) {
     return null;
   }
 
   @Override
-  public boolean isTemporaryDestination(Message message) {
+  public boolean isTemporaryDestination(SpringRabbitRequest request) {
     return false;
   }
 
   @Override
-  public boolean isAnonymousDestination(Message message) {
+  public boolean isAnonymousDestination(SpringRabbitRequest request) {
     return emitStableMessagingSemconv()
-        && isGeneratedQueueName(getQueue(message.getMessageProperties()));
+        && isGeneratedQueueName(getQueue(request.getMessage().getMessageProperties()));
   }
 
   private static boolean isGeneratedQueueName(@Nullable String queue) {
@@ -157,45 +159,55 @@ class SpringRabbitMessageAttributesGetter implements MessagingAttributesGetter<M
 
   @Override
   @Nullable
-  public String getConversationId(Message message) {
-    return null;
-  }
-
-  @Override
-  public Long getMessageBodySize(Message message) {
-    return message.getMessageProperties().getContentLength();
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(Message message) {
+  public String getConversationId(SpringRabbitRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public String getMessageId(Message message, @Nullable Void unused) {
-    return message.getMessageProperties().getMessageId();
+  public Long getMessageBodySize(SpringRabbitRequest request) {
+    if (request.isBatch()) {
+      return null;
+    }
+    byte[] body = request.getMessage().getBody();
+    return body == null ? null : (long) body.length;
   }
 
   @Nullable
   @Override
-  public String getClientId(Message message) {
+  public Long getMessageEnvelopeSize(SpringRabbitRequest request) {
+    return null;
+  }
+
+  @Override
+  @Nullable
+  public String getMessageId(SpringRabbitRequest request, @Nullable Void unused) {
+    return request.getMessage().getMessageProperties().getMessageId();
+  }
+
+  @Nullable
+  @Override
+  public String getClientId(SpringRabbitRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public Long getBatchMessageCount(Message message, @Nullable Void unused) {
-    return null;
+  public Long getBatchMessageCount(SpringRabbitRequest request, @Nullable Void unused) {
+    return request.isBatch() ? (long) request.getBatchMessageCount() : null;
   }
 
   @Override
-  public List<String> getMessageHeader(Message message, String name) {
-    Object value = message.getMessageProperties().getHeaders().get(name);
+  public List<String> getMessageHeader(SpringRabbitRequest request, String name) {
+    Object value = request.getMessage().getMessageProperties().getHeaders().get(name);
     if (value != null) {
       return singletonList(value.toString());
     }
     return emptyList();
+  }
+
+  @Override
+  public Collection<String> getMessageHeaderNames(SpringRabbitRequest request) {
+    return new ArrayList<>(request.getMessage().getMessageProperties().getHeaders().keySet());
   }
 }

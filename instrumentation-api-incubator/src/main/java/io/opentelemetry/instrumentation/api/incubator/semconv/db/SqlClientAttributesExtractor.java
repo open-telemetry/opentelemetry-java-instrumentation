@@ -97,7 +97,6 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   @SuppressWarnings("deprecation") // until old db semconv are dropped
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
     SqlDialect dialect = getter.getSqlDialect(request);
 
     Long batchSize = getter.getDbOperationBatchSize(request);
@@ -106,8 +105,9 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     boolean isBatch = batchSize != null && batchSize != 1;
 
     if (emitOldDatabaseSemconv()) {
-      if (rawQueryTexts.size() == 1) { // for backcompat(?)
-        String rawQueryText = rawQueryTexts.iterator().next();
+      Collection<String> oldSemconvRawQueryTexts = getter.getRawQueryTextsForOldSemconv(request);
+      if (oldSemconvRawQueryTexts.size() == 1) { // for backcompat(?)
+        String rawQueryText = oldSemconvRawQueryTexts.iterator().next();
         SqlQuery analyzedQuery = SqlQueryAnalyzerUtil.analyze(rawQueryText, dialect);
         String operationName = analyzedQuery.getOperationName();
         attributes.put(
@@ -120,6 +120,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     }
 
     if (emitStableDatabaseSemconv()) {
+      Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
       if (isBatch) {
         attributes.put(DB_OPERATION_BATCH_SIZE, batchSize);
       }

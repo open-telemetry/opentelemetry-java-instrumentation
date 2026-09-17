@@ -49,7 +49,10 @@ class MessageListenerInstrumentation implements TypeInstrumentation {
     public static MessageListener<?> after(
         @Advice.This ConsumerConfigurationData<?> data,
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) MessageListener<?> listener) {
-      return listener == null ? null : new MessageListenerWrapper<>(listener);
+      if (listener == null || listener instanceof MessageListenerWrapper) {
+        return listener;
+      }
+      return new MessageListenerWrapper<>(listener);
     }
   }
 

@@ -18,23 +18,28 @@ class AwsSdkHttpAttributesGetter
     implements HttpClientAttributesGetter<ExecutionAttributes, Response> {
 
   @Override
+  @Nullable
   public String getUrlFull(ExecutionAttributes request) {
     SdkHttpRequest httpRequest =
         request.getAttribute(TracingExecutionInterceptor.SDK_HTTP_REQUEST_ATTRIBUTE);
-    return httpRequest.getUri().toString();
+    return httpRequest == null ? null : httpRequest.getUri().toString();
   }
 
   @Override
+  @Nullable
   public String getHttpRequestMethod(ExecutionAttributes request) {
     SdkHttpRequest httpRequest =
         request.getAttribute(TracingExecutionInterceptor.SDK_HTTP_REQUEST_ATTRIBUTE);
-    return httpRequest.method().name();
+    return httpRequest == null ? null : httpRequest.method().name();
   }
 
   @Override
   public List<String> getHttpRequestHeader(ExecutionAttributes request, String name) {
     SdkHttpRequest httpRequest =
         request.getAttribute(TracingExecutionInterceptor.SDK_HTTP_REQUEST_ATTRIBUTE);
+    if (httpRequest == null) {
+      return emptyList();
+    }
     List<String> value = httpRequest.headers().get(name);
     return value == null ? emptyList() : value;
   }
@@ -57,7 +62,7 @@ class AwsSdkHttpAttributesGetter
   public String getServerAddress(ExecutionAttributes request) {
     SdkHttpRequest httpRequest =
         request.getAttribute(TracingExecutionInterceptor.SDK_HTTP_REQUEST_ATTRIBUTE);
-    return httpRequest.host();
+    return httpRequest == null ? null : httpRequest.host();
   }
 
   @Override
@@ -65,6 +70,8 @@ class AwsSdkHttpAttributesGetter
   public Integer getServerPort(ExecutionAttributes request) {
     SdkHttpRequest httpRequest =
         request.getAttribute(TracingExecutionInterceptor.SDK_HTTP_REQUEST_ATTRIBUTE);
-    return HttpConstants.portOrDefaultFromScheme(httpRequest.port(), httpRequest.protocol());
+    return httpRequest == null
+        ? null
+        : HttpConstants.portOrDefaultFromScheme(httpRequest.port(), httpRequest.protocol());
   }
 }

@@ -63,6 +63,15 @@ targets:
       target: ':instrumentation:alibaba-druid-1.0:library'
     - type: gradle
       path: ./
+      target: ':instrumentation:apache-commons-pool-2.0:bootstrap'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:apache-commons-pool-2.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:apache-commons-pool-2.0:library'
+    - type: gradle
+      path: ./
       target: ':instrumentation:apache-dbcp-2.0:javaagent'
     - type: gradle
       path: ./
@@ -258,6 +267,9 @@ targets:
       target: ':instrumentation:r2dbc-1.0:library'
     - type: gradle
       path: ./
+      target: ':instrumentation:rabbitmq-2.7:bootstrap'
+    - type: gradle
+      path: ./
       target: ':instrumentation:rabbitmq-2.7:javaagent'
     - type: gradle
       path: ./
@@ -447,19 +459,22 @@ targets:
       target: ':instrumentation:couchbase:couchbase-2.6:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:couchbase:couchbase-3.1:javaagent'
+      target: ':instrumentation:couchbase:couchbase-3.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:couchbase:couchbase-3.1.6:javaagent'
+      target: ':instrumentation:couchbase:couchbase-3.1:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:couchbase:couchbase-3.2:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:couchbase:couchbase-3.4:javaagent'
+      target: ':instrumentation:couchbase:couchbase-common-2.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:couchbase:couchbase-common-2.0:javaagent'
+      target: ':instrumentation:couchbase:couchbase-common-3.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:couchbase:couchbase-common-3.1:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:dropwizard:dropwizard-metrics-4.0:javaagent'
@@ -481,6 +496,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:elasticsearch:elasticsearch-rest-7.0:library'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:elasticsearch:elasticsearch-rest-common-5.0:bootstrap'
     - type: gradle
       path: ./
       target: ':instrumentation:elasticsearch:elasticsearch-rest-common-5.0:javaagent'
@@ -876,6 +894,9 @@ targets:
       target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.63:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.65:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:opentelemetry-instrumentation-api:opentelemetry-instrumentation-api-1.14:javaagent'
     - type: gradle
       path: ./
@@ -883,6 +904,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:pekko:pekko-http-1.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:pekko:pekko-remote-1.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:pulsar:pulsar-2.8:javaagent'
@@ -916,6 +940,18 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:redisson:redisson-common-3.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:redisson:redisson-metrics-2.3:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:redisson:redisson-metrics-3.18:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:redisson:redisson-metrics-3.26:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:redisson:redisson-metrics-common-2.3:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:restlet:restlet-1.1:javaagent'
@@ -1060,6 +1096,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:tomcat:tomcat-common-7.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:tomcat:tomcat-dbcp-8.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:tomcat:tomcat-jdbc-8.5:javaagent'

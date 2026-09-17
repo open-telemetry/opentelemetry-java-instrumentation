@@ -17,10 +17,13 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ORACLE_DB;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.SAP_HANA;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
+import java.sql.SQLException;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class JdbcAttributesGetterTest {
@@ -61,5 +64,27 @@ class JdbcAttributesGetterTest {
 
     assertThat(attributesGetter.getSqlDialect(request))
         .isEqualTo(DOUBLE_QUOTES_ARE_STRING_LITERALS);
+  }
+
+  @ParameterizedTest
+  @MethodSource("errorCodes")
+  void getErrorTypeNormalizesVendorCode(int errorCode, String sqlState, String expectedErrorType) {
+    DbRequest request =
+        DbRequest.create(DbInfo.builder().dbSystemName(POSTGRESQL).build(), "SELECT 1", false);
+
+    assertThat(
+            attributesGetter.getErrorType(
+                request, null, new SQLException("test", sqlState, errorCode)))
+        .isEqualTo(expectedErrorType);
+  }
+
+  private static Stream<Arguments> errorCodes() {
+    return Stream.of(
+        argumentSet("positive vendor code takes precedence", 42, "42601", "42"),
+        argumentSet("negative vendor code", -42, null, "-42"),
+        argumentSet("SQLSTATE with zero vendor code", 0, "42601", "42601"),
+        argumentSet("null SQLSTATE is unavailable", 0, null, null),
+        argumentSet("empty SQLSTATE is unavailable", 0, "", null),
+        argumentSet("successful completion SQLSTATE is unavailable", 0, "00000", null));
   }
 }

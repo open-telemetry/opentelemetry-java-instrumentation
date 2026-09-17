@@ -20,10 +20,31 @@ configurations:
   - name: otel.instrumentation.runtime-telemetry.experimental.prefer-jfr
     declarative_name: java.runtime_telemetry.prefer_jfr/development
     description: >
-      Prefer JFR over JMX for metrics available from both sources, on Java 17+. When enabled,
-      overlapping metrics are collected via JFR and the corresponding JMX metrics are suppressed.
+      Deprecated: use `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included`
+      instead. Prefer JFR over JMX for metrics available from both sources, on Java 17+.
     type: boolean
     default: false
+  - name: otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included
+    declarative_name: java.runtime_telemetry.jfr_metrics/development.included
+    description: >
+      Selects JVM runtime metrics to source from JFR on Java 17+. Supports exact names and glob
+      patterns with * and ?. Configuring either JFR metric selector property activates JFR. Use *
+      to select all metrics.
+    type: list
+    default: ""
+    examples:
+      - "jvm.memory.*,jvm.cpu.longlock"
+  - name: otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.excluded
+    declarative_name: java.runtime_telemetry.jfr_metrics/development.excluded
+    description: >
+      Excludes JVM runtime metrics from JFR on Java 17+ using exact names or glob patterns with * and
+      ?. Excluded patterns take precedence over included patterns, including over shorthand and
+      legacy selections. Configuring this property without included selects all metrics except those
+      excluded.
+    type: list
+    default: ""
+    examples:
+      - "jvm.memory.allocation,jvm.network.*"
   - name: otel.instrumentation.runtime-telemetry.experimental.package-emitter.enabled
     declarative_name: java.runtime_telemetry.package_emitter/development.enabled
     description: Enables creating events for JAR libraries used by the application.

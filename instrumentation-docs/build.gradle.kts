@@ -8,7 +8,7 @@ otelJava {
 }
 
 dependencies {
-  implementation("org.yaml:snakeyaml:2.6")
+  implementation("org.yaml:snakeyaml:2.7")
   implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
   implementation("io.opentelemetry:opentelemetry-sdk-common")
 
@@ -47,5 +47,6 @@ tasks {
     systemProperty("basePath", project.rootDir)
     mainClass.set("io.opentelemetry.instrumentation.docs.DocSynchronization")
     classpath(sourceSets["main"].runtimeClasspath)
+    args(layout.buildDirectory.file("audit-result").get().asFile.absolutePath)
   }
 }

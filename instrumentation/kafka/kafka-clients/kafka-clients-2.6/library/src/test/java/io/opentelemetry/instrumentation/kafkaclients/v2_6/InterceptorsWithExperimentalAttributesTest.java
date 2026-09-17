@@ -5,14 +5,18 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
-import static java.util.Collections.singletonList;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 
 class InterceptorsWithExperimentalAttributesTest extends AbstractInterceptorsTest {
 
   private static final KafkaTelemetry kafkaTelemetry =
       KafkaTelemetry.builder(testing.getOpenTelemetry())
           .setMessagingReceiveTelemetryEnabled(true)
-          .setCapturedHeaders(singletonList("Test-Message-Header"))
+          .setHeaders(
+              IncludeExclude.builder()
+                  .setIncluded("Test-Message-*")
+                  .setExcluded("*-Excluded-Header")
+                  .build())
           .setCaptureExperimentalSpanAttributes(true)
           .build();
 

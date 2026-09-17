@@ -30,11 +30,13 @@ class ApacheHttpClientTest extends AbstractApacheHttpClientTest {
   }
 
   @Override
+  @SuppressWarnings("deprecation") // testing deprecated API
   protected CloseableHttpClient createClient(boolean readTimeout) {
     HttpClientBuilder builder =
         ApacheHttpClientTelemetry.builder(testing.getOpenTelemetry())
+            // keeps coverage of the deprecated exact-name setter
             .setCapturedRequestHeaders(singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
-            .setCapturedResponseHeaders(singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
+            .setResponseHeaders(AbstractHttpClientTest.TEST_HEADERS)
             .build()
             .createHttpClientBuilder();
     builder.setDefaultRequestConfig(RequestConfig.custom().setMaxRedirects(2).build());

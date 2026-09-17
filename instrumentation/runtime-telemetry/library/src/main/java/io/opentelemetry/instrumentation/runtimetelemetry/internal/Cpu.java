@@ -10,6 +10,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import io.opentelemetry.api.metrics.Meter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
@@ -31,8 +32,15 @@ public class Cpu {
 
   /** Register observers for java runtime CPU metrics. */
   public static List<AutoCloseable> registerObservers(Meter meter) {
-    return INSTANCE.registerObservers(
-        meter, CpuMethods.processCpuTime(), CpuMethods.processCpuUtilization());
+    return registerObservers(meter, unused -> true);
+  }
+
+  static List<AutoCloseable> registerObservers(Meter meter, Predicate<String> metricNamePredicate) {
+    return registerObservers(
+        meter,
+        CpuMethods.processCpuTime(),
+        CpuMethods.processCpuUtilization(),
+        metricNamePredicate);
   }
 
   // Visible for testing
@@ -40,9 +48,17 @@ public class Cpu {
       Meter meter,
       @Nullable Supplier<Long> processCpuTime,
       @Nullable Supplier<Double> processCpuUtilization) {
+    return registerObservers(meter, processCpuTime, processCpuUtilization, unused -> true);
+  }
+
+  private static List<AutoCloseable> registerObservers(
+      Meter meter,
+      @Nullable Supplier<Long> processCpuTime,
+      @Nullable Supplier<Double> processCpuUtilization,
+      Predicate<String> metricNamePredicate) {
     List<AutoCloseable> observables = new ArrayList<>();
 
-    if (processCpuTime != null) {
+    if (processCpuTime != null && metricNamePredicate.test("jvm.cpu.time")) {
       observables.add(
           meter
               .counterBuilder("jvm.cpu.time")
@@ -57,7 +73,7 @@ public class Cpu {
                     }
                   }));
     }
-    if (processCpuUtilization != null) {
+    if (processCpuUtilization != null && metricNamePredicate.test("jvm.cpu.recent_utilization")) {
       observables.add(
           meter
               .gaugeBuilder("jvm.cpu.recent_utilization")

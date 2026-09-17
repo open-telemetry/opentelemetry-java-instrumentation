@@ -2,8 +2,10 @@
 
 ## Quick Reference
 
-- Use when: reviewing ByteBuddy advice classes/methods (`@Advice.OnMethodEnter` / `@Advice.OnMethodExit`)
-- Review focus: nested advice classes, static advice methods, `suppress = Throwable.class`, no-throw behavior
+- Use when: reviewing ByteBuddy advice classes/methods (`@Advice.OnMethodEnter` /
+  `@Advice.OnMethodExit`), helpers called by advice, or `Java8BytecodeBridge` usage
+- Review focus: nested advice classes, static advice methods, advice-called helpers,
+  `suppress = Throwable.class`, no-throw behavior
 
 ## Advice Classes as Nested Classes
 
@@ -63,10 +65,18 @@ Advice classes should also have **no instance fields** — they are never instan
 
 ## `Java8BytecodeBridge`
 
-Use the bridge only for supported OpenTelemetry API calls written directly in annotated advice
-methods, which classic mode may copy into pre-Java-8 bytecode. Helpers called by advice are not
-copied, so use direct APIs such as `Context.current()` and `Span.fromContext()` there. Ignore
-source-level `inline = false`; the transformer controls inlining.
+When building or reviewing advice, inspect both the annotated advice bodies and every helper they
+call for `Java8BytecodeBridge` usage.
+
+Use the bridge only for supported OpenTelemetry API calls written directly in
+`@Advice.OnMethodEnter` or `@Advice.OnMethodExit` methods, which classic mode may copy into
+pre-Java-8 bytecode. Everywhere else, use the direct OpenTelemetry API, for example
+`Context.current()` instead of `Java8BytecodeBridge.currentContext()` and
+`Span.fromContext(context)` instead of `Java8BytecodeBridge.spanFromContext(context)`.
+
+Helpers called by advice are ordinary compiled methods and are not copied into the instrumented
+method, even when the helper is nested in an advice class. Source-level `inline = false` does not
+create an exception; the transformer controls inlining.
 
 ## Use `suppress = Throwable.class` by Default
 
@@ -192,9 +202,62 @@ contains a helper call.
 
 ## AdviceScope Patterns
 
+### Make scope ownership visible
+
+Scope acquisition and closure must make ownership visually obvious. In ordinary code, call
+`makeCurrent()` at the call site and use try-with-resources:
+
+```java
+try (Scope ignored = context.makeCurrent()) {
+  doWork();
+}
+```
+
+When method advice passes a raw `Scope` through `@Advice.Enter`, call `makeCurrent()` directly in
+`@Advice.OnMethodEnter` and close that same returned scope in the paired
+`@Advice.OnMethodExit`:
+
+```java
+@Advice.OnMethodEnter(suppress = Throwable.class)
+public static @Nullable Scope onEnter(Request request) {
+  Context context = startContext(request);
+  if (context == null) {
+    return null;
+  }
+  return context.makeCurrent();
+}
+
+@Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+public static void onExit(@Advice.Enter @Nullable Scope scope) {
+  if (scope != null) {
+    scope.close();
+  }
+}
+```
+
+Do not hide `makeCurrent()` in a general helper that returns an open raw `Scope` for its caller to
+close. That pattern obscures ownership and makes leaks easy. A helper may instead return a
+`Context`, target, or other state, leaving the enter advice to call `makeCurrent()`.
+
+Opening the scope must be the last fallible action before suppressed enter advice returns. A
+dedicated `AdviceScope` remains valid when it clearly owns both acquisition and closure through the
+established `start()` / `end()` pattern below.
+
 `AdviceScope` usage in this repository falls into **two justified state patterns**.
 Review new code against these patterns instead of treating every existing variation as equally
 canonical.
+
+### Close `Scope` before fallible completion work
+
+Method-exit advice and `AdviceScope` completion should close an entered `Scope` at the first safe
+point, before other fallible completion or cleanup work. Otherwise, a later failure suppressed by
+the advice can leave the context attached to the thread. Closing early also keeps the scope
+lifetime as short as possible.
+
+Close the scope directly before fallible work rather than deferring it to a `finally` block.
+Closing it in `finally` also avoids a leak, but unnecessarily keeps the context current during the
+preceding work. Defer the close only when that exit work intentionally requires the context to
+remain current.
 
 ### Pattern 1 — Nullable `AdviceScope` for ordinary advice
 

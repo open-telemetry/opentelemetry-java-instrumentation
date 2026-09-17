@@ -5,11 +5,13 @@
 
 package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 
+import static io.opentelemetry.instrumentation.apachehttpclient.v4_3.ApacheHttpClientRequest.headerNamesToList;
 import static io.opentelemetry.instrumentation.apachehttpclient.v4_3.ApacheHttpClientRequest.headersToList;
 
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.net.InetSocketAddress;
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.http.HttpResponse;
@@ -34,6 +36,11 @@ class ApacheHttpClientHttpAttributesGetter
   }
 
   @Override
+  public Collection<String> getHttpRequestHeaderNames(ApacheHttpClientRequest request) {
+    return request.getHeaderNames();
+  }
+
+  @Override
   public Integer getHttpResponseStatusCode(
       ApacheHttpClientRequest request, HttpResponse response, @Nullable Throwable error) {
     return response.getStatusLine().getStatusCode();
@@ -43,6 +50,12 @@ class ApacheHttpClientHttpAttributesGetter
   public List<String> getHttpResponseHeader(
       ApacheHttpClientRequest request, HttpResponse response, String name) {
     return headersToList(response.getHeaders(name));
+  }
+
+  @Override
+  public Collection<String> getHttpResponseHeaderNames(
+      ApacheHttpClientRequest request, HttpResponse response) {
+    return headerNamesToList(response.getAllHeaders());
   }
 
   @Override

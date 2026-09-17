@@ -40,25 +40,38 @@ public final class TracingRequestHandler extends RequestHandler2 {
       "com.amazonaws.services.sqs.model.SendMessageBatchRequest";
   private static final String SEND_MESSAGE_REQUEST_CLASS =
       "com.amazonaws.services.sqs.model.SendMessageRequest";
+  private static final String DELETE_MESSAGE_BATCH_REQUEST_CLASS =
+      "com.amazonaws.services.sqs.model.DeleteMessageBatchRequest";
+  private static final String DELETE_MESSAGE_REQUEST_CLASS =
+      "com.amazonaws.services.sqs.model.DeleteMessageRequest";
   private static final String DYNAMODBV2_CLASS_PREFIX = "com.amazonaws.services.dynamodbv2.model.";
 
   private final Instrumenter<Request<?>, Response<?>> requestInstrumenter;
   private final Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter;
   private final Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter;
+  private final Instrumenter<SqsCreateRequest, Void> producerCreateInstrumenter;
   private final Instrumenter<Request<?>, Response<?>> producerInstrumenter;
+  private final Instrumenter<Request<?>, Response<?>> settleInstrumenter;
   private final Instrumenter<Request<?>, Response<?>> dynamoDbInstrumenter;
+  private final boolean messageCreateSpansEnabled;
 
   public TracingRequestHandler(
       Instrumenter<Request<?>, Response<?>> requestInstrumenter,
       Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter,
       Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter,
+      Instrumenter<SqsCreateRequest, Void> producerCreateInstrumenter,
       Instrumenter<Request<?>, Response<?>> producerInstrumenter,
-      Instrumenter<Request<?>, Response<?>> dynamoDbInstrumenter) {
+      Instrumenter<Request<?>, Response<?>> settleInstrumenter,
+      Instrumenter<Request<?>, Response<?>> dynamoDbInstrumenter,
+      boolean messageCreateSpansEnabled) {
     this.requestInstrumenter = requestInstrumenter;
     this.consumerReceiveInstrumenter = consumerReceiveInstrumenter;
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
+    this.producerCreateInstrumenter = producerCreateInstrumenter;
     this.producerInstrumenter = producerInstrumenter;
+    this.settleInstrumenter = settleInstrumenter;
     this.dynamoDbInstrumenter = dynamoDbInstrumenter;
+    this.messageCreateSpansEnabled = messageCreateSpansEnabled;
   }
 
   @Override
@@ -105,10 +118,8 @@ public final class TracingRequestHandler extends RequestHandler2 {
   @Override
   @CanIgnoreReturnValue
   public AmazonWebServiceRequest beforeMarshalling(AmazonWebServiceRequest request) {
-    // TODO: We are modifying the request in-place instead of using clone() as recommended
-    //  by the Javadoc in the interface.
-    SqsAccess.beforeMarshalling(request);
-    return request;
+    return SqsAccess.beforeMarshalling(
+        request, producerCreateInstrumenter, messageCreateSpansEnabled);
   }
 
   Instrumenter<SqsReceiveRequest, Response<?>> getConsumerReceiveInstrumenter() {
@@ -175,6 +186,11 @@ public final class TracingRequestHandler extends RequestHandler2 {
     if (className.equals(SEND_MESSAGE_REQUEST_CLASS)
         || (emitStableMessagingSemconv() && className.equals(SEND_MESSAGE_BATCH_REQUEST_CLASS))) {
       return producerInstrumenter;
+    }
+    if (emitStableMessagingSemconv()
+        && (className.equals(DELETE_MESSAGE_REQUEST_CLASS)
+            || className.equals(DELETE_MESSAGE_BATCH_REQUEST_CLASS))) {
+      return settleInstrumenter;
     }
     return requestInstrumenter;
   }

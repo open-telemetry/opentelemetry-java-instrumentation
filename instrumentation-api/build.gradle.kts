@@ -4,12 +4,24 @@ plugins {
   id("otel.java-conventions")
   id("otel.animalsniffer-conventions")
   id("otel.jacoco-conventions")
+  id("otel.osgi-conventions")
   id("otel.publish-conventions")
   id("otel.jmh-conventions")
   id("otel.nullaway-conventions")
 }
 
 group = "io.opentelemetry.instrumentation"
+
+otelJava {
+  // InternalInstrumenterCustomizerUtil looks up an instrumentation-api-incubator class via
+  // Class.forName and tolerates its absence ("incubator api not available, ignore"). Mark that
+  // package optional so the stable instrumentation-api bundle still resolves in an OSGi runtime that
+  // does not ship instrumentation-api-incubator. (The upstream io.opentelemetry.api.incubator.*
+  // packages remain mandatory - instrumentation-api genuinely requires opentelemetry-api-incubator.)
+  osgiImportPackages.add(
+    "io.opentelemetry.instrumentation.api.incubator.instrumenter.internal;resolution:=optional",
+  )
+}
 
 dependencies {
   api("io.opentelemetry:opentelemetry-api")

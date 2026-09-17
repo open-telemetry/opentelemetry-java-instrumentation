@@ -9,10 +9,12 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.common.header.Header;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -90,6 +92,13 @@ final class KafkaProducerAttributesGetter
     return StreamSupport.stream(request.getRecord().headers().headers(name).spliterator(), false)
         .filter(header -> header.value() != null)
         .map(header -> new String(header.value(), UTF_8))
+        .collect(toList());
+  }
+
+  @Override
+  public Collection<String> getMessageHeaderNames(KafkaProducerRequest request) {
+    return StreamSupport.stream(request.getRecord().headers().spliterator(), false)
+        .map(Header::key)
         .collect(toList());
   }
 }

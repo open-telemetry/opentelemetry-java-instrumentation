@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.openai.v1_1;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.openai.v1_1.GenAiAttributes.GEN_AI_PROVIDER_NAME;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
@@ -38,7 +37,12 @@ import javax.annotation.Nullable;
 
 final class ChatCompletionEventsHelper {
 
+  // copied from EventIncubatingAttributes
   private static final AttributeKey<String> EVENT_NAME = stringKey("event.name");
+
+  // copied from GenAiIncubatingAttributes
+  private static final AttributeKey<String> GEN_AI_PROVIDER_NAME =
+      stringKey("gen_ai.provider.name");
 
   static void emitPromptLogEvents(
       Context context,

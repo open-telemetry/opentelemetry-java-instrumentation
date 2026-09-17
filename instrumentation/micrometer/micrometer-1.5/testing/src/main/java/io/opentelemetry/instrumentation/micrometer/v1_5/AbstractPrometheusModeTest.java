@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTe
 import static io.opentelemetry.instrumentation.micrometer.v1_5.MaxGaugeAssertions.assertMaxGauge;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -19,8 +20,12 @@ import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.FunctionTimer;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.LongTaskTimer;
+import io.micrometer.core.instrument.Measurement;
+import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.Metrics;
+import io.micrometer.core.instrument.Statistic;
 import io.micrometer.core.instrument.Timer;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.time.Duration;
 import org.junit.jupiter.api.Test;
@@ -282,6 +287,42 @@ public abstract class AbstractPrometheusModeTest {
   }
 
   @Test
+  void testMeter() {
+    // given
+    Measurement measurement = new Measurement(() -> 12.0, Statistic.COUNT);
+    String expectedName =
+        SemconvStability.v3Preview()
+            ? "testPrometheusMeter.bytes.count"
+            : "testPrometheusMeter.count.bytes";
+
+    // when
+    Meter.builder("testPrometheusMeter", Meter.Type.COUNTER, singletonList(measurement))
+        .description("This is a test meter")
+        .baseUnit("bytes")
+        .tag("tag", "value")
+        .register(Metrics.globalRegistry);
+
+    // then
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            metric ->
+                metric
+                    .hasName(expectedName)
+                    .hasDescription("This is a test meter")
+                    .hasUnit("bytes")
+                    .hasDoubleSumSatisfying(
+                        sum ->
+                            sum.isMonotonic()
+                                .hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(12)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(stringKey("tag"), "value")))));
+  }
+
+  @Test
   void testTimer() {
     // given
     Timer timer =
@@ -329,6 +370,45 @@ public abstract class AbstractPrometheusModeTest {
                                     .hasValue(10.789)
                                     .hasAttributesSatisfyingExactly(
                                         equalTo(stringKey("tag"), "value")))));
+  }
+
+  @Test
+  void testSameNameDifferentTypeKeepsOwnDescription() {
+    // given a counter and a timer that share a Micrometer name, but that the prometheus naming
+    // convention maps onto two different OpenTelemetry instrument names
+    Counter counter =
+        Counter.builder("testPrometheusSharedName")
+            .description("This is a test counter")
+            .tags("type", "counter")
+            .baseUnit("")
+            .register(Metrics.globalRegistry);
+    Timer timer =
+        Timer.builder("testPrometheusSharedName")
+            .description("This is a test timer")
+            .tags("type", "timer")
+            .register(Metrics.globalRegistry);
+
+    // when
+    counter.increment(12);
+    timer.record(1, SECONDS);
+
+    // then each instrument keeps its own description
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            metric ->
+                metric
+                    .hasName("testPrometheusSharedName")
+                    .hasDescription("This is a test counter")
+                    .hasDoubleSumSatisfying(sum -> sum.isMonotonic()));
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            metric ->
+                metric
+                    .hasName("testPrometheusSharedName.seconds")
+                    .hasDescription("This is a test timer")
+                    .hasHistogramSatisfying(histogram -> {}));
   }
 
   @Test

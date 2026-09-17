@@ -12,7 +12,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import java.nio.ByteBuffer;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
@@ -34,19 +33,10 @@ final class KafkaProducerAttributesExtractor
   public void onStart(
       AttributesBuilder attributes, Context parentContext, KafkaProducerRequest request) {
 
-    Object key = request.getRecord().key();
-    if (key != null && canSerialize(key.getClass())) {
-      attributes.put(MESSAGING_KAFKA_MESSAGE_KEY, key.toString());
-    }
+    attributes.put(MESSAGING_KAFKA_MESSAGE_KEY, KafkaUtil.serializeKey(request.getRecord().key()));
     if (request.getRecord().value() == null) {
       attributes.put(MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true);
     }
-  }
-
-  private static boolean canSerialize(Class<?> keyClass) {
-    // we make a simple assumption here that we can serialize keys by simply calling toString()
-    // and that does not work for byte[] or ByteBuffer
-    return !(keyClass.isArray() || keyClass == ByteBuffer.class);
   }
 
   @Override

@@ -75,16 +75,32 @@ enum SpanSuppressionStrategy {
   abstract SpanSuppressor create(Set<SpanKey> spanKeys);
 
   static SpanSuppressionStrategy fromConfig(@Nullable String value) {
+    SpanSuppressionStrategy strategy = parse(value);
+    return strategy != null ? strategy : SEMCONV;
+  }
+
+  static SpanSuppressionStrategy fromProgrammatic(String value) {
+    SpanSuppressionStrategy strategy = parse(value);
+    if (strategy == null) {
+      throw new IllegalArgumentException("Unrecognized span suppression strategy: " + value);
+    }
+    return strategy;
+  }
+
+  @Nullable
+  private static SpanSuppressionStrategy parse(@Nullable String value) {
     if (value == null) {
-      value = "semconv";
+      return null;
     }
     switch (value.toLowerCase(Locale.ROOT)) {
       case "none":
         return NONE;
       case "span-kind":
         return SPAN_KIND;
-      default:
+      case "semconv":
         return SEMCONV;
+      default:
+        return null;
     }
   }
 }

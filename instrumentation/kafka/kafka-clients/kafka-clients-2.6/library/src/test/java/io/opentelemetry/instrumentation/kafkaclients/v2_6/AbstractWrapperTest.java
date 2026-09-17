@@ -6,9 +6,9 @@
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaClientBaseTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -29,6 +29,8 @@ abstract class AbstractWrapperTest extends KafkaClientBaseTest {
 
   static final String greeting = "Hello Kafka!";
 
+  protected long consumedOffset;
+
   @ParameterizedTest
   @CsvSource({
     "true, true",
@@ -37,7 +39,11 @@ abstract class AbstractWrapperTest extends KafkaClientBaseTest {
   void testWrappers(boolean testHeaders, boolean testExperimental) throws InterruptedException {
     KafkaTelemetryBuilder telemetryBuilder =
         KafkaTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedHeaders(singletonList("Test-Message-Header"))
+            .setHeaders(
+                IncludeExclude.builder()
+                    .setIncluded("Test-Message-*")
+                    .setExcluded("*-Excluded-Header")
+                    .build())
             .setCaptureExperimentalSpanAttributes(testExperimental);
     configure(telemetryBuilder);
     KafkaTelemetry telemetry = telemetryBuilder.build();
@@ -71,6 +77,7 @@ abstract class AbstractWrapperTest extends KafkaClientBaseTest {
     for (ConsumerRecord<?, ?> record : records) {
       assertThat(record.value()).isEqualTo(greeting);
       assertThat(record.key()).isNull();
+      consumedOffset = record.offset();
       testing.runWithSpan("process child", () -> {});
     }
 

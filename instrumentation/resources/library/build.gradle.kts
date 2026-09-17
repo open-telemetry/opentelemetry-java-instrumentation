@@ -1,5 +1,14 @@
 plugins {
   id("otel.sdk-extension")
+  id("otel.osgi-conventions")
+}
+
+otelJava {
+  // opentelemetry-api-incubator is a compileOnly dependency used only by the declarative-config
+  // ComponentProvider (ResourceComponentProvider references DeclarativeConfigProperties). Mark the
+  // incubator package optional so the whole resources bundle - including its plain ResourceProviders
+  // - still resolves in an OSGi runtime that doesn't ship the optional declarative-config stack.
+  osgiOptionalPackages.add("io.opentelemetry.api.incubator")
 }
 
 val mrJarVersions = listOf(9, 11)
@@ -89,6 +98,7 @@ tasks {
     // use the final jar instead of directories with built classes to test the mrjar functionality
     classpath = project.files(jar) + classpath
     systemProperty("testSecret", "test")
+    systemProperty("testMultilineSecret", "test\nleaked")
     systemProperty("testPassword", "test")
     systemProperty("testNotRedacted", "test")
   }

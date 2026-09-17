@@ -96,6 +96,12 @@ class HttpRequestInstrumentation implements TypeInstrumentation {
           return null;
         }
 
+        // Skip if this request has already been instrumented.
+        Contexts contexts = CONTEXTS.get(request);
+        if (contexts != null) {
+          return null;
+        }
+
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;

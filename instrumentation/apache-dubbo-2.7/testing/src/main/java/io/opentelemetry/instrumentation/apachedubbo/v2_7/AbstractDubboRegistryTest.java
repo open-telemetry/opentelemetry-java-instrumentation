@@ -64,8 +64,6 @@ public abstract class AbstractDubboRegistryTest {
 
   protected abstract InstrumentationExtension testing();
 
-  protected abstract boolean hasServicePeerName();
-
   @BeforeAll
   static void setUp() throws Exception {
     zkServer = new TestingServer();
@@ -182,10 +180,8 @@ public abstract class AbstractDubboRegistryTest {
                                         : "$invoke"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasServicePeerName()
-                                            && testLatestDeps()
-                                            && !emitStableRpcSemconv()
-                                        ? "test-peer-service"
+                                    testLatestDeps() && !emitStableRpcSemconv()
+                                        ? testing().expectedPeerService()
                                         : null),
                                 satisfies(
                                     SERVER_ADDRESS,
@@ -232,9 +228,7 @@ public abstract class AbstractDubboRegistryTest {
                                         : "hello"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasServicePeerName() && testLatestDeps()
-                                        ? "test-peer-service"
-                                        : null),
+                                    testLatestDeps() ? testing().expectedPeerService() : null),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
                                 satisfies(

@@ -14,6 +14,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
@@ -53,9 +54,9 @@ public abstract class AbstractJmsTest {
             asList(
                 equalTo(MESSAGING_SYSTEM, "jms"),
                 messagingDestinationName(destinationName),
-                oldOperation("publish"),
-                operationName("send"),
-                operationType("send"),
+                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
+                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
+                equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null),
                 satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class))));
     if (destinationName.equals("(temporary)")) {
       attributeAssertions.add(equalTo(MESSAGING_DESTINATION_TEMPORARY, true));
@@ -78,6 +79,19 @@ public abstract class AbstractJmsTest {
       String operation,
       boolean testHeaders,
       String msgId) {
+    assertConsumerSpan(
+        span, producer, parent, destinationName, operation, testHeaders, msgId, null);
+  }
+
+  protected void assertConsumerSpan(
+      SpanDataAssert span,
+      SpanData producer,
+      SpanData parent,
+      String destinationName,
+      String operation,
+      boolean testHeaders,
+      String msgId,
+      String subscriptionName) {
     span.hasName(
             emitStableMessagingSemconv()
                 ? destinationName.equals("(temporary)")
@@ -94,19 +108,30 @@ public abstract class AbstractJmsTest {
       span.hasLinks(LinkData.create(producer.getSpanContext()));
     }
     span.hasAttributesSatisfyingExactly(
-        consumerAttributeAssertions(destinationName, testHeaders, operation, msgId));
+        consumerAttributeAssertions(
+            destinationName, testHeaders, operation, msgId, subscriptionName));
   }
 
   protected List<AttributeAssertion> consumerAttributeAssertions(
       String destinationName, boolean testHeaders, String operation, String msgId) {
+    return consumerAttributeAssertions(destinationName, testHeaders, operation, msgId, null);
+  }
+
+  protected List<AttributeAssertion> consumerAttributeAssertions(
+      String destinationName,
+      boolean testHeaders,
+      String operation,
+      String msgId,
+      String subscriptionName) {
     List<AttributeAssertion> attributeAssertions =
         new ArrayList<>(
             asList(
                 equalTo(MESSAGING_SYSTEM, "jms"),
                 messagingDestinationName(destinationName),
-                oldOperation(operation),
-                operationName(operation),
-                operationType(operation)));
+                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? operation : null),
+                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? operation : null),
+                equalTo(
+                    MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operation : null)));
     if (msgId != null) {
       attributeAssertions.add(equalTo(MESSAGING_MESSAGE_ID, msgId));
     } else {
@@ -123,6 +148,12 @@ public abstract class AbstractJmsTest {
           equalTo(
               stringArrayKey("messaging.header.Test_Message_Int_Header"), singletonList("1234")));
     }
+    if (subscriptionName != null) {
+      attributeAssertions.add(
+          equalTo(
+              MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+              emitStableMessagingSemconv() ? subscriptionName : null));
+    }
     return attributeAssertions;
   }
 
@@ -130,17 +161,5 @@ public abstract class AbstractJmsTest {
     return emitStableMessagingSemconv() && destinationName.equals("(temporary)")
         ? satisfies(MESSAGING_DESTINATION_NAME, val -> val.isNotEmpty())
         : equalTo(MESSAGING_DESTINATION_NAME, destinationName);
-  }
-
-  private static AttributeAssertion oldOperation(String operation) {
-    return equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? operation : null);
-  }
-
-  private static AttributeAssertion operationName(String operation) {
-    return equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? operation : null);
-  }
-
-  private static AttributeAssertion operationType(String operation) {
-    return equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operation : null);
   }
 }

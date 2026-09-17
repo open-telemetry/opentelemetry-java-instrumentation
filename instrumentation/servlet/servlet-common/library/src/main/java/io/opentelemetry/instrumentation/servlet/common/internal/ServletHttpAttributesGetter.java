@@ -53,6 +53,11 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
   }
 
   @Override
+  public Iterable<String> getHttpRequestHeaderNames(ServletRequestContext<REQUEST> requestContext) {
+    return accessor.getRequestHeaderNames(requestContext.request());
+  }
+
+  @Override
   @Nullable
   public Integer getHttpResponseStatusCode(
       ServletRequestContext<REQUEST> requestContext,
@@ -87,6 +92,17 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
       return emptyList();
     }
     return accessor.getResponseHeaderValues(response, name);
+  }
+
+  @Override
+  public Iterable<String> getHttpResponseHeaderNames(
+      ServletRequestContext<REQUEST> requestContext,
+      ServletResponseContext<RESPONSE> responseContext) {
+    RESPONSE response = responseContext.response();
+    if (response == null) {
+      return emptyList();
+    }
+    return accessor.getResponseHeaderNames(response);
   }
 
   @Nullable

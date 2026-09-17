@@ -5,29 +5,33 @@
 
 package io.opentelemetry.javaagent.instrumentation.nats.v2_17;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.nats.v2_17.internal.NatsInstrumenterFactory.createConsumerProcessInstrumenter;
 import static io.opentelemetry.instrumentation.nats.v2_17.internal.NatsInstrumenterFactory.createPublishInstrumenter;
 import static io.opentelemetry.instrumentation.nats.v2_17.internal.NatsInstrumenterFactory.createRequestInstrumenter;
+import static io.opentelemetry.instrumentation.nats.v2_17.internal.NatsInstrumenterFactory.createSettleInstrumenter;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.nats.v2_17.internal.NatsRequest;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
-import java.util.List;
 
 class NatsSingletons {
 
-  private static final List<String> capturedHeaders =
-      ExperimentalConfig.get().getMessagingHeaders();
+  private static final IncludeExclude headers = ExperimentalConfig.get().getMessagingHeaders();
 
   private static final Instrumenter<NatsRequest, NatsRequest> publishInstrumenter =
-      createPublishInstrumenter(GlobalOpenTelemetry.get(), capturedHeaders);
+      createPublishInstrumenter(GlobalOpenTelemetry.get(), headers);
 
   private static final Instrumenter<NatsRequest, NatsRequest> requestInstrumenter =
-      createRequestInstrumenter(GlobalOpenTelemetry.get(), capturedHeaders);
+      createRequestInstrumenter(GlobalOpenTelemetry.get(), headers);
+
+  private static final Instrumenter<NatsRequest, NatsRequest> settleInstrumenter =
+      createSettleInstrumenter(GlobalOpenTelemetry.get(), headers);
 
   private static final Instrumenter<NatsRequest, Void> consumerProcessInstrumenter =
-      createConsumerProcessInstrumenter(GlobalOpenTelemetry.get(), capturedHeaders);
+      createConsumerProcessInstrumenter(GlobalOpenTelemetry.get(), headers);
 
   static Instrumenter<NatsRequest, NatsRequest> publishInstrumenter() {
     return publishInstrumenter;
@@ -35,6 +39,16 @@ class NatsSingletons {
 
   static Instrumenter<NatsRequest, NatsRequest> requestInstrumenter() {
     return requestInstrumenter;
+  }
+
+  static Instrumenter<NatsRequest, NatsRequest> settleInstrumenter() {
+    return settleInstrumenter;
+  }
+
+  static Instrumenter<NatsRequest, NatsRequest> instrumenterFor(NatsRequest request) {
+    return emitStableMessagingSemconv() && request.isJetStreamSettlement()
+        ? settleInstrumenter
+        : requestInstrumenter;
   }
 
   static Instrumenter<NatsRequest, Void> consumerProcessInstrumenter() {

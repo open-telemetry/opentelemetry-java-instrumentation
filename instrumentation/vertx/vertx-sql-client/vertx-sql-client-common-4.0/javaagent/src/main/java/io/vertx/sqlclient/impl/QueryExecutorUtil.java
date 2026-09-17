@@ -6,22 +6,28 @@
 package io.vertx.sqlclient.impl;
 
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.vertx.sqlclient.SqlConnectOptions;
 import javax.annotation.Nullable;
 
-// Helper class for accessing virtual field on package private QueryExecutor class.
+// Helper class for accessing virtual field on package private QueryExecutor class. This class is
+// injected into the application class loader, which can not see the instrumentation helper classes,
+// so the virtual field is typed as Object and callers are responsible for the cast.
 public class QueryExecutorUtil {
-  private static final VirtualField<QueryExecutor<?, ?, ?>, SqlConnectOptions> CONNECT_OPTIONS =
-      VirtualField.find(QueryExecutor.class, SqlConnectOptions.class);
+  private static final VirtualField<QueryExecutor<?, ?, ?>, Object> DATA =
+      VirtualField.find(QueryExecutor.class, Object.class);
 
-  public static void setConnectOptions(
-      Object queryExecutor, @Nullable SqlConnectOptions connectOptions) {
-    CONNECT_OPTIONS.set((QueryExecutor<?, ?, ?>) queryExecutor, connectOptions);
+  public static void setData(Object queryExecutor, @Nullable Object data) {
+    DATA.set((QueryExecutor<?, ?, ?>) queryExecutor, data);
   }
 
   @Nullable
-  public static SqlConnectOptions getConnectOptions(Object queryExecutor) {
-    return CONNECT_OPTIONS.get((QueryExecutor<?, ?, ?>) queryExecutor);
+  public static Object getData(Object queryExecutor) {
+    return DATA.get((QueryExecutor<?, ?, ?>) queryExecutor);
+  }
+
+  public static void copyQueryExecutorData(Object sourceQuery, Object copiedQuery) {
+    QueryExecutor<?, ?, ?> sourceExecutor = ((QueryBase<?, ?>) sourceQuery).builder;
+    QueryExecutor<?, ?, ?> copiedExecutor = ((QueryBase<?, ?>) copiedQuery).builder;
+    DATA.set(copiedExecutor, DATA.get(sourceExecutor));
   }
 
   private QueryExecutorUtil() {}

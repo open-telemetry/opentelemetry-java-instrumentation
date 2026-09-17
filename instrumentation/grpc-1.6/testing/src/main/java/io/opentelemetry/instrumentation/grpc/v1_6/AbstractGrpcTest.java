@@ -98,6 +98,8 @@ public abstract class AbstractGrpcTest {
 
   protected static final String SERVER_REQUEST_METADATA_KEY = "some-server-key";
 
+  private static final String EXCLUDED_REQUEST_METADATA_KEY = "some-excluded-key";
+
   protected abstract ServerBuilder<?> configureServer(ServerBuilder<?> server);
 
   protected abstract ManagedChannelBuilder<?> configureClient(ManagedChannelBuilder<?> client);
@@ -1656,6 +1658,10 @@ public abstract class AbstractGrpcTest {
         AttributeKey.stringArrayKey(oldMetadataAttributePrefix + SERVER_REQUEST_METADATA_KEY);
     AttributeKey<List<String>> stableServerAttributeKey =
         AttributeKey.stringArrayKey(stableMetadataAttributePrefix + SERVER_REQUEST_METADATA_KEY);
+    AttributeKey<List<String>> oldExcludedAttributeKey =
+        AttributeKey.stringArrayKey(oldMetadataAttributePrefix + EXCLUDED_REQUEST_METADATA_KEY);
+    AttributeKey<List<String>> stableExcludedAttributeKey =
+        AttributeKey.stringArrayKey(stableMetadataAttributePrefix + EXCLUDED_REQUEST_METADATA_KEY);
     String serverMetadataValue = "server-value";
     String clientMetadataValue = "client-value";
 
@@ -1684,6 +1690,9 @@ public abstract class AbstractGrpcTest {
     extraMetadata.put(
         Metadata.Key.of(CLIENT_REQUEST_METADATA_KEY, Metadata.ASCII_STRING_MARSHALLER),
         clientMetadataValue);
+    extraMetadata.put(
+        Metadata.Key.of(EXCLUDED_REQUEST_METADATA_KEY, Metadata.ASCII_STRING_MARSHALLER),
+        "excluded-value");
 
     GreeterGrpc.GreeterBlockingStub client =
         GreeterGrpc.newBlockingStub(channel)
@@ -1714,6 +1723,9 @@ public abstract class AbstractGrpcTest {
                         span.hasAttribute(
                             stableClientAttributeKey, singletonList(clientMetadataValue));
                       }
+                      span.hasAttributesSatisfying(
+                          equalTo(oldExcludedAttributeKey, null),
+                          equalTo(stableExcludedAttributeKey, null));
                     },
                     span -> {
                       span.hasName("example.Greeter/SayHello")
@@ -1727,6 +1739,9 @@ public abstract class AbstractGrpcTest {
                         span.hasAttribute(
                             stableServerAttributeKey, singletonList(serverMetadataValue));
                       }
+                      span.hasAttributesSatisfying(
+                          equalTo(oldExcludedAttributeKey, null),
+                          equalTo(stableExcludedAttributeKey, null));
                     }));
   }
 

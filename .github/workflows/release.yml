@@ -7,7 +7,7 @@ permissions:
 
 jobs:
   common:
-    uses: ./.github/workflows/build-common.yml
+    uses: $/.github/workflows/build-common.yml
 
   # test-latest-deps is intentionally not included in the release workflows
   # because any time a new library version is released to maven central
@@ -101,7 +101,7 @@ jobs:
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
 
-      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: temurin
           java-version-file: .java-version
@@ -226,11 +226,19 @@ jobs:
               --certificate-oidc-issuer "${CERTIFICATE_OIDC_ISSUER}"
           done
 
-      - uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+      - name: Generate checksums
+        run: |
+          sha256sum opentelemetry-javaagent.jar \
+                    opentelemetry-javaagent.jar.asc \
+                    opentelemetry-java-instrumentation-SBOM.zip \
+                    > checksums.txt
+
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: |
             opentelemetry-javaagent.jar
             opentelemetry-java-instrumentation-SBOM.zip
+            checksums.txt
 
       - id: create-github-release
         name: Create GitHub release
@@ -247,7 +255,8 @@ jobs:
                             opentelemetry-javaagent.jar.asc \
                             opentelemetry-javaagent.jar.sigstore.json \
                             opentelemetry-java-instrumentation-SBOM.zip \
-                            opentelemetry-java-instrumentation-SBOM.zip.sigstore.json
+                            opentelemetry-java-instrumentation-SBOM.zip.sigstore.json \
+                            checksums.txt
 
           # these are used as job outputs
           echo "version=$VERSION" >> $GITHUB_OUTPUT
@@ -262,8 +271,6 @@ jobs:
     uses: ./.github/workflows/documentation-synchronization-audit.yml
 
   post-release-updates:
-    permissions:
-      contents: write # for git push to PR branch
     runs-on: ubuntu-latest
     needs:
       - sign-and-release
@@ -284,8 +291,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: main
-          # zizmor: ignore[artipacked] Credentials are required by the branch push below.
-          persist-credentials: true
+          persist-credentials: false
 
       - name: Merge change log to main
         env:
@@ -309,7 +315,7 @@ jobs:
             sleep 60
           done
 
-      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: temurin
           java-version-file: .java-version
@@ -333,8 +339,9 @@ jobs:
       - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         id: otelbot-token
         with:
-          client-id: ${{ vars.OTELBOT_CLIENT_ID }}
-          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+          client-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_CLIENT_ID }}
+          private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
+          permission-contents: write
           permission-pull-requests: write
 
       - name: Create pull request against main
@@ -347,6 +354,7 @@ jobs:
           body="Post-release updates for \`$VERSION\`."
           branch="otelbot/update-apidiff-baseline-to-released-version-${VERSION}"
 
+          gh auth setup-git
           git checkout -b $branch
           git add CHANGELOG.md
           git add docs/apidiffs

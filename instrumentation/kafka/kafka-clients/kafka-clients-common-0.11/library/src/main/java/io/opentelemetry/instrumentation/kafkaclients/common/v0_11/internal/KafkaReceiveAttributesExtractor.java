@@ -31,6 +31,7 @@ final class KafkaReceiveAttributesExtractor
     }
     if (emitStableMessagingSemconv()) {
       attributes.put(MESSAGING_CONSUMER_GROUP_NAME, request.getConsumerGroup());
+      request.getBatchRecordAttributes().putCommonAttributes(attributes);
     }
   }
 

@@ -9,11 +9,18 @@ import static java.util.Collections.emptyList;
 
 import io.nats.client.impl.Headers;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 
-final class NatsRequestMessagingAttributesGetter
+class NatsRequestMessagingAttributesGetter
     implements MessagingAttributesGetter<NatsRequest, Object> {
+
+  private final boolean boundJetStreamAckDestination;
+
+  NatsRequestMessagingAttributesGetter(boolean boundJetStreamAckDestination) {
+    this.boundJetStreamAckDestination = boundJetStreamAckDestination;
+  }
 
   @Override
   public String getSystem(NatsRequest request) {
@@ -28,6 +35,9 @@ final class NatsRequestMessagingAttributesGetter
   @Nullable
   @Override
   public String getDestinationTemplate(NatsRequest request) {
+    if (boundJetStreamAckDestination && NatsSubject.isJetStreamSettlement(request.getSubject())) {
+      return NatsSubject.JETSTREAM_ACK_SUBJECT;
+    }
     if (isTemporaryDestination(request)) {
       return request.getInboxPrefix();
     }
@@ -86,5 +96,11 @@ final class NatsRequestMessagingAttributesGetter
     }
     List<String> result = headers.get(name);
     return result == null ? emptyList() : result;
+  }
+
+  @Override
+  public Collection<String> getMessageHeaderNames(NatsRequest request) {
+    Headers headers = request.getHeaders();
+    return headers == null ? emptyList() : headers.keySet();
   }
 }

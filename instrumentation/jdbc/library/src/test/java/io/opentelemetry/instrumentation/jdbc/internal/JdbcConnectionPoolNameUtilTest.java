@@ -9,7 +9,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
+import java.util.Properties;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -17,6 +19,51 @@ import org.junit.jupiter.params.provider.MethodSource;
 class JdbcConnectionPoolNameUtilTest {
 
   private static final String FALLBACK_NAME = "fallback";
+
+  @Test
+  void returnsExpectedPoolNameFromProperties() {
+    Properties properties = new Properties();
+    properties.setProperty("serverName", "properties.example");
+    properties.put("portNumber", 5433);
+    properties.setProperty("databaseName", "inventory");
+
+    assertThat(JdbcConnectionPoolNameUtil.poolName(properties, FALLBACK_NAME))
+        .isEqualTo("properties.example:5433/inventory");
+  }
+
+  @Test
+  void returnsExpectedPoolNameFromDefaultProperties() {
+    Properties defaults = new Properties();
+    defaults.setProperty("serverName", "properties.example");
+    defaults.setProperty("portNumber", "5433");
+    defaults.setProperty("databaseName", "inventory");
+    Properties properties = new Properties(defaults);
+
+    assertThat(JdbcConnectionPoolNameUtil.poolName(properties, FALLBACK_NAME))
+        .isEqualTo("properties.example:5433/inventory");
+  }
+
+  @Test
+  void returnsExpectedPoolNameFromPropertiesWithBracketedIpv6Address() {
+    Properties properties = new Properties();
+    properties.setProperty("serverName", "[2001:db8::1]");
+    properties.setProperty("portNumber", "5432");
+    properties.setProperty("databaseName", "orders");
+
+    assertThat(JdbcConnectionPoolNameUtil.poolName(properties, FALLBACK_NAME))
+        .isEqualTo("[2001:db8::1]:5432/orders");
+  }
+
+  @Test
+  void returnsFallbackNameFromPropertiesWithoutUsableValues() {
+    Properties properties = new Properties();
+    properties.setProperty("serverName", "");
+    properties.setProperty("portNumber", "invalid");
+    properties.setProperty("databaseName", "");
+
+    assertThat(JdbcConnectionPoolNameUtil.poolName(properties, FALLBACK_NAME))
+        .isEqualTo(FALLBACK_NAME);
+  }
 
   @ParameterizedTest
   @MethodSource("poolNameArguments")

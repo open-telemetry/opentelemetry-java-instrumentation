@@ -14,10 +14,9 @@ import org.apache.rocketmq.client.hook.SendMessageHook;
 
 public class RocketMqSingletons {
 
-  @SuppressWarnings("deprecation") // call to deprecated method will be removed in the future
   private static final RocketMqTelemetry telemetry =
       RocketMqTelemetry.builder(GlobalOpenTelemetry.get())
-          .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
+          .setHeaders(ExperimentalConfig.get().getMessagingHeaders())
           .setCaptureExperimentalSpanAttributes(
               DeclarativeConfigUtil.getInstrumentationConfig(
                       GlobalOpenTelemetry.get(), "rocketmq_client")

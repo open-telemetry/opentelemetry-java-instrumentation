@@ -5,6 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms.v3_0;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.SPAN;
+
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.bootstrap.messaging.MessagingTelemetryCarrier;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.DestinationAdapter;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageAdapter;
 import jakarta.jms.Destination;
@@ -15,6 +22,10 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 public class JakartaMessageAdapter implements MessageAdapter {
+
+  private static final MessagingTelemetryCarrier<Message> messageTelemetry =
+      MessagingTelemetryCarrier.create(
+          VirtualField.find(Message.class, MessagingTelemetrySignals.class));
 
   public static MessageAdapter create(Message message) {
     return new JakartaMessageAdapter(message);
@@ -69,5 +80,20 @@ public class JakartaMessageAdapter implements MessageAdapter {
   @Override
   public String getJmsMessageId() throws JMSException {
     return message.getJMSMessageID();
+  }
+
+  @Override
+  public boolean wereConsumedMessagesRecorded() {
+    return messageTelemetry.contains(message, RECEIVE, CONSUMED_MESSAGES);
+  }
+
+  @Override
+  public void markReceiveSpanRecorded() {
+    messageTelemetry.add(message, RECEIVE, SPAN);
+  }
+
+  @Override
+  public void markConsumedMessagesRecorded() {
+    messageTelemetry.add(message, RECEIVE, CONSUMED_MESSAGES);
   }
 }

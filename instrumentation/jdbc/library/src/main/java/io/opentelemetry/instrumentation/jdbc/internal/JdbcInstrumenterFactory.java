@@ -80,15 +80,17 @@ public final class JdbcInstrumenterFactory {
       OpenTelemetry openTelemetry,
       List<AttributesExtractor<DbRequest, Void>> extractors,
       boolean enabled) {
-    return Instrumenter.<DbRequest, Void>builder(
-            openTelemetry, INSTRUMENTATION_NAME, DbRequest::getOperationName)
-        .addAttributesExtractor(
-            SqlClientAttributesExtractor.builder(new JdbcAttributesGetter()).build())
-        .addAttributesExtractor(new TransactionAttributeExtractor())
-        .addAttributesExtractors(extractors)
-        .addOperationMetrics(DbClientMetrics.get())
-        .setEnabled(enabled)
-        .buildInstrumenter(SpanKindExtractor.alwaysClient());
+    InstrumenterBuilder<DbRequest, Void> builder =
+        Instrumenter.<DbRequest, Void>builder(
+                openTelemetry, INSTRUMENTATION_NAME, DbRequest::getOperationName)
+            .addAttributesExtractor(
+                SqlClientAttributesExtractor.builder(new JdbcAttributesGetter()).build())
+            .addAttributesExtractor(new TransactionAttributeExtractor())
+            .addAttributesExtractors(extractors)
+            .addOperationMetrics(DbClientMetrics.get())
+            .setEnabled(enabled);
+    setDbClientExceptionEventExtractor(builder);
+    return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   private JdbcInstrumenterFactory() {}

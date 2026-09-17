@@ -69,30 +69,48 @@ public class KafkaConsumerTelemetry {
   }
 
   @Nullable
-  public <K, V> Context buildAndFinishSpan(
+  <K, V> Context buildAndFinishSpan(
+      ConsumerRecords<K, V> records, @Nullable String consumerGroup, @Nullable String clientId) {
+    return buildAndFinishSpan(records, consumerGroup, clientId, null);
+  }
+
+  @Nullable
+  private <K, V> Context buildAndFinishSpan(
       ConsumerRecords<K, V> records,
       @Nullable String consumerGroup,
       @Nullable String clientId,
-      Timer timer) {
+      @Nullable Timer timer) {
     if (records.isEmpty()) {
       return null;
     }
     Context parentContext = KafkaConsumerContextUtil.withoutLeakedProcessSpan(Context.current());
     KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumerGroup, clientId);
     Context receiveContext = null;
+    boolean receiveOperationStarted = false;
     if (consumerReceiveInstrumenter.shouldStart(parentContext, request)) {
-      receiveContext =
-          InstrumenterUtil.startAndEnd(
-              consumerReceiveInstrumenter,
-              parentContext,
-              request,
-              null,
-              null,
-              timer.startTime(),
-              timer.now());
+      if (timer == null) {
+        // The interceptor runs after poll, so let the SDK time an immediate span, not poll
+        // duration.
+        receiveContext = consumerReceiveInstrumenter.start(parentContext, request);
+        consumerReceiveInstrumenter.end(receiveContext, request, null, null);
+      } else {
+        receiveContext =
+            InstrumenterUtil.startAndEnd(
+                consumerReceiveInstrumenter,
+                parentContext,
+                request,
+                null,
+                null,
+                timer.startTime(),
+                timer.now());
+      }
+      receiveOperationStarted = true;
     }
 
-    return emitStableMessagingSemconv() ? parentContext : receiveContext;
+    if (!emitStableMessagingSemconv()) {
+      return receiveContext;
+    }
+    return KafkaConsumerContextUtil.withReceiveOperation(parentContext, receiveOperationStarted);
   }
 
   public <K, V> void buildAndFinishErrorSpan(
