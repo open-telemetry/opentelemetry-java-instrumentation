@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
+import static io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0.VertxRedisClientSingletons.currentRedisUri;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -56,12 +57,12 @@ class RedisConnectionProviderInstrumentation implements TypeInstrumentation {
     public static RedisURI onEnter(@Advice.FieldValue("redisURI") RedisURI redisUri) {
       // For 4.1.0 and later, init constructs RedisStandaloneConnection without passing RedisURI.
       // Its constructor advice consumes RedisURI from this scoped thread local.
-      return VertxRedisClientSingletons.setRedisUriThreadLocal(redisUri);
+      return currentRedisUri().set(redisUri);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable RedisURI previous) {
-      VertxRedisClientSingletons.restoreRedisUriThreadLocal(previous);
+      currentRedisUri().restore(previous);
     }
   }
 
@@ -92,8 +93,7 @@ class RedisConnectionProviderInstrumentation implements TypeInstrumentation {
   public static class ConstructorWithOptionsAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.FieldValue("redisURI") RedisURI redisUri) {
-      VertxRedisServerTargets.set(
-          redisUri, RedisConnectionManagerUtil.getServerTargetThreadLocal());
+      VertxRedisServerTargets.set(redisUri, RedisConnectionManagerUtil.currentServerTarget().get());
     }
   }
 }

@@ -54,12 +54,13 @@ class RedisConnectionManagerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static RedisServerTarget onEnter(@Advice.This Object manager) {
-      return RedisConnectionManagerUtil.setServerTargetThreadLocal(manager);
+      return RedisConnectionManagerUtil.currentServerTarget()
+          .set(RedisConnectionManagerUtil.getServerTarget(manager));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable RedisServerTarget previous) {
-      RedisConnectionManagerUtil.restoreServerTargetThreadLocal(previous);
+      RedisConnectionManagerUtil.currentServerTarget().restore(previous);
     }
   }
 }
