@@ -35,9 +35,14 @@ public final class GrpcTelemetry {
     Method method = null;
     Class<?> factoryClass = null;
     try {
-      Class<?> internalBuilder = Class.forName("io.grpc.InternalManagedChannelBuilder");
+      ClassLoader classLoader = ManagedChannelBuilder.class.getClassLoader();
+      Class<?> internalBuilder =
+          Class.forName("io.grpc.InternalManagedChannelBuilder", false, classLoader);
       factoryClass =
-          Class.forName("io.grpc.InternalManagedChannelBuilder$InternalInterceptorFactory");
+          Class.forName(
+              "io.grpc.InternalManagedChannelBuilder$InternalInterceptorFactory",
+              false,
+              classLoader);
       method =
           internalBuilder.getMethod(
               "interceptWithTarget", ManagedChannelBuilder.class, factoryClass);
