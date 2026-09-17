@@ -157,22 +157,26 @@ public class VertxSqlClientSingletons {
   @SuppressWarnings("unchecked") // virtual field key type is not known at compile time
   private static <T> VirtualField<Object, T> getVersionedVirtualField(
       String firstClassName, String secondClassName, Class<T> fieldClass) {
-    Class<?> carrierClass = null;
-    try {
-      carrierClass = Class.forName(firstClassName);
-    } catch (ClassNotFoundException ignored) {
-      // ignored
-    }
-    if (carrierClass == null) {
-      try {
-        carrierClass = Class.forName(secondClassName);
-      } catch (ClassNotFoundException ignored) {
-        // ignored
-      }
-    }
+    Class<?> carrierClass = loadVersionedClass(firstClassName, secondClassName);
     return carrierClass != null
         ? (VirtualField<Object, T>) VirtualField.find(carrierClass, fieldClass)
         : null;
+  }
+
+  // visible for testing
+  @Nullable
+  static Class<?> loadVersionedClass(String firstClassName, String secondClassName) {
+    Class<?> loadedClass = loadClass(firstClassName);
+    return loadedClass != null ? loadedClass : loadClass(secondClassName);
+  }
+
+  @Nullable
+  private static Class<?> loadClass(String className) {
+    try {
+      return Class.forName(className, false, VertxSqlClientSingletons.class.getClassLoader());
+    } catch (ClassNotFoundException ignored) {
+      return null;
+    }
   }
 
   @Nullable

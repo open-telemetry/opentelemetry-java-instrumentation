@@ -47,12 +47,25 @@ dependencies {
   testImplementation("org.hsqldb:hsqldb:2.3.4")
 }
 
-tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation("io.vertx:vertx-sql-client:5.0.0")
+      }
+    }
   }
+}
+
+tasks {
+  withType<Test>()
+    .matching { it.name != "unitTests" }
+    .configureEach {
+      usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+      systemProperty("collectMetadata", otelProps.collectMetadata)
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    }
 
   val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
@@ -62,6 +75,6 @@ tasks {
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites, testStableSemconv)
   }
 }
