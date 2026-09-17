@@ -7,7 +7,8 @@
 - Requirement: every value that holds operation-specific temporary state needs cleanup on every
   exit, including exceptional exits
 - Default for temporary state installed on entry and cleaned up on exit: restore the previous value
-- Naming: use `current*` for ambient state that belongs to the executing thread
+- Naming: use `current*` for ambient state that belongs to the executing thread, except for
+  suppression holders and accessors
 
 ## Match Cleanup to the Lifecycle
 
@@ -41,8 +42,11 @@ public static void onExit(@Advice.Enter @Nullable Request previous) {
 
 Name a field or accessor `current*` when it represents ambient state that belongs to the executing
 thread. This follows conventions such as `currentContext()` and makes the thread confinement clear.
-Examples include `currentRequest`, `currentReceiveSpanSuppression()`, and
-`currentProcessSpanSuppression()`.
+Examples include `currentRequest` and `currentContext()`.
+
+Suppression holders and accessors are a narrow exception. Omit `current` when the suppression name
+already identifies the state and purpose, for example `receiveSpanSuppression()` and
+`processSpanSuppression()`.
 
 Name the state, not its storage mechanism. In particular, do not use a `*ThreadLocal` accessor name
 when the accessor returns a wrapper such as `ScopedThreadValue`. Keep the `ScopedThreadValue` class
