@@ -28,8 +28,10 @@ class KafkaConnectOwnershipTest {
       VirtualField.find(SinkRecord.class, Boolean.class);
 
   @AfterEach
-  void restoreProcessTracing() {
-    processSpanSuppression().restore(null);
+  void releaseProcessSpanSuppression() {
+    if (processSpanSuppression().isActive()) {
+      processSpanSuppression().release();
+    }
   }
 
   @Test
@@ -38,44 +40,39 @@ class KafkaConnectOwnershipTest {
     KafkaConsumerBatchState state = new KafkaConsumerBatchState(true);
     BATCH_STATE.set(records, state);
 
-    Boolean previous = WorkerSinkTaskInstrumentation.PollConsumerAdvice.onEnter();
-    assertThat(previous).isNull();
+    boolean suppressionAcquired = WorkerSinkTaskInstrumentation.PollConsumerAdvice.onEnter();
+    assertThat(suppressionAcquired).isTrue();
     assertThat(isProcessSpanSuppressed()).isTrue();
-    assertThat(processSpanSuppression().get()).isTrue();
 
-    WorkerSinkTaskInstrumentation.PollConsumerAdvice.onExit(previous, records);
+    WorkerSinkTaskInstrumentation.PollConsumerAdvice.onExit(suppressionAcquired, records);
 
     assertThat(state.getAsBoolean()).isFalse();
     assertThat(isProcessSpanSuppressed()).isFalse();
-    assertThat(processSpanSuppression().get()).isNull();
   }
 
   @Test
   void workerPollFailureRestoresNestedRawKafkaProcessing() {
-    Boolean previous = WorkerSinkTaskInstrumentation.PollConsumerAdvice.onEnter();
-    assertThat(previous).isNull();
+    boolean suppressionAcquired = WorkerSinkTaskInstrumentation.PollConsumerAdvice.onEnter();
+    assertThat(suppressionAcquired).isTrue();
 
-    WorkerSinkTaskInstrumentation.PollConsumerAdvice.onExit(previous, null);
+    WorkerSinkTaskInstrumentation.PollConsumerAdvice.onExit(suppressionAcquired, null);
 
     assertThat(isProcessSpanSuppressed()).isFalse();
-    assertThat(processSpanSuppression().get()).isNull();
   }
 
   @Test
   void nestedPollFailurePreservesOuterSuppression() {
-    assertThat(processSpanSuppression().set(Boolean.TRUE)).isNull();
-
-    Boolean outer = WorkerSinkTaskInstrumentation.PollConsumerAdvice.onEnter();
-    Boolean inner = WorkerSinkTaskInstrumentation.PollConsumerAdvice.onEnter();
+    boolean outer = WorkerSinkTaskInstrumentation.PollConsumerAdvice.onEnter();
+    boolean inner = WorkerSinkTaskInstrumentation.PollConsumerAdvice.onEnter();
     assertThat(outer).isTrue();
-    assertThat(inner).isTrue();
+    assertThat(inner).isFalse();
 
     WorkerSinkTaskInstrumentation.PollConsumerAdvice.onExit(inner, null);
-    assertThat(processSpanSuppression().get()).isTrue();
+    assertThat(isProcessSpanSuppressed()).isTrue();
 
     ConsumerRecords<String, String> records = records();
     WorkerSinkTaskInstrumentation.PollConsumerAdvice.onExit(outer, records);
-    assertThat(processSpanSuppression().get()).isTrue();
+    assertThat(isProcessSpanSuppressed()).isFalse();
     assertThat(BATCH_STATE.get(records).getAsBoolean()).isFalse();
   }
 

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11;
 
+import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.isProcessSpanSuppressed;
 import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanSuppression;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
@@ -24,8 +25,10 @@ class KafkaStreamsSuppressionTest {
       VirtualField.find(ConsumerRecords.class, KafkaConsumerBatchState.class);
 
   @AfterEach
-  void restoreProcessTracing() {
-    processSpanSuppression().restore(null);
+  void releaseProcessSpanSuppression() {
+    if (processSpanSuppression().isActive()) {
+      processSpanSuppression().release();
+    }
   }
 
   @Test
@@ -34,51 +37,49 @@ class KafkaStreamsSuppressionTest {
     KafkaConsumerBatchState state = new KafkaConsumerBatchState(true);
     BATCH_STATE.set(records, state);
 
-    Boolean previous = StreamThreadInstrumentation.PollRequestsAdvice.onEnter();
-    assertThat(previous).isNull();
-    assertThat(processSpanSuppression().get()).isTrue();
+    boolean suppressionAcquired = StreamThreadInstrumentation.PollRequestsAdvice.onEnter();
+    assertThat(suppressionAcquired).isTrue();
+    assertThat(isProcessSpanSuppressed()).isTrue();
 
-    StreamThreadInstrumentation.PollRequestsAdvice.onExit(previous, records);
+    StreamThreadInstrumentation.PollRequestsAdvice.onExit(suppressionAcquired, records);
 
     assertThat(state.getAsBoolean()).isFalse();
-    assertThat(processSpanSuppression().get()).isNull();
+    assertThat(isProcessSpanSuppressed()).isFalse();
   }
 
   @Test
   void pollFailureRestoresSuppression() {
-    Boolean previous = StreamThreadInstrumentation.PollRequestsAdvice.onEnter();
-    assertThat(previous).isNull();
+    boolean suppressionAcquired = StreamThreadInstrumentation.PollRequestsAdvice.onEnter();
+    assertThat(suppressionAcquired).isTrue();
 
-    StreamThreadInstrumentation.PollRequestsAdvice.onExit(previous, null);
+    StreamThreadInstrumentation.PollRequestsAdvice.onExit(suppressionAcquired, null);
 
-    assertThat(processSpanSuppression().get()).isNull();
+    assertThat(isProcessSpanSuppressed()).isFalse();
   }
 
   @Test
   void standbyUpdateSuppressesOnlyProcessSpanAndRestoresSuppression() {
-    Boolean previous = StreamThreadInstrumentation.StandbyTaskUpdateAdvice.onEnter();
-    assertThat(previous).isNull();
-    assertThat(processSpanSuppression().get()).isTrue();
+    boolean suppressionAcquired = StreamThreadInstrumentation.StandbyTaskUpdateAdvice.onEnter();
+    assertThat(suppressionAcquired).isTrue();
+    assertThat(isProcessSpanSuppressed()).isTrue();
 
-    StreamThreadInstrumentation.StandbyTaskUpdateAdvice.onExit(previous);
+    StreamThreadInstrumentation.StandbyTaskUpdateAdvice.onExit(suppressionAcquired);
 
-    assertThat(processSpanSuppression().get()).isNull();
+    assertThat(isProcessSpanSuppressed()).isFalse();
   }
 
   @Test
   void nestedPollAndStandbyUpdatePreserveOuterSuppression() {
-    assertThat(processSpanSuppression().set(Boolean.TRUE)).isNull();
-
-    Boolean outer = StreamThreadInstrumentation.PollRequestsAdvice.onEnter();
-    Boolean inner = StreamThreadInstrumentation.StandbyTaskUpdateAdvice.onEnter();
+    boolean outer = StreamThreadInstrumentation.PollRequestsAdvice.onEnter();
+    boolean inner = StreamThreadInstrumentation.StandbyTaskUpdateAdvice.onEnter();
     assertThat(outer).isTrue();
-    assertThat(inner).isTrue();
+    assertThat(inner).isFalse();
 
     StreamThreadInstrumentation.StandbyTaskUpdateAdvice.onExit(inner);
-    assertThat(processSpanSuppression().get()).isTrue();
+    assertThat(isProcessSpanSuppressed()).isTrue();
 
     StreamThreadInstrumentation.PollRequestsAdvice.onExit(outer, null);
-    assertThat(processSpanSuppression().get()).isTrue();
+    assertThat(isProcessSpanSuppressed()).isFalse();
   }
 
   private static ConsumerRecords<String, String> records() {

@@ -57,14 +57,15 @@ class StreamThreadInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class StandbyTaskUpdateAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    @Nullable
-    public static Boolean onEnter() {
-      return processSpanSuppression().set(Boolean.TRUE);
+    public static boolean onEnter() {
+      return processSpanSuppression().tryAcquire();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter @Nullable Boolean previous) {
-      processSpanSuppression().restore(previous);
+    public static void onExit(@Advice.Enter boolean suppressionAcquired) {
+      if (suppressionAcquired) {
+        processSpanSuppression().release();
+      }
     }
   }
 }
