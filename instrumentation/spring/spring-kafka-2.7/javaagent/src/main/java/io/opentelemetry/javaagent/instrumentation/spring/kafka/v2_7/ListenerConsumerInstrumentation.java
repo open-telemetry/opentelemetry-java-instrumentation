@@ -53,16 +53,17 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
   public static class PollAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    @Nullable
-    public static Boolean onEnter() {
-      return processSpanSuppression().set(Boolean.TRUE);
+    public static boolean onEnter() {
+      return processSpanSuppression().tryAcquire();
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Enter @Nullable Boolean previous,
+        @Advice.Enter boolean suppressionAcquired,
         @Advice.Return @Nullable ConsumerRecords<?, ?> records) {
-      processSpanSuppression().restore(previous);
+      if (suppressionAcquired) {
+        processSpanSuppression().release();
+      }
       if (records != null) {
         SpringKafkaBatchState.claimProcessSpan(records);
       }

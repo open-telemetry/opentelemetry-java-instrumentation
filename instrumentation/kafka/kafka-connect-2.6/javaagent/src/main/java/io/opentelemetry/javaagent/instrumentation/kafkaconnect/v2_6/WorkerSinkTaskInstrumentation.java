@@ -50,14 +50,15 @@ class WorkerSinkTaskInstrumentation implements TypeInstrumentation {
   public static class ExecuteAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    @Nullable
-    public static Boolean onEnter() {
-      return processSpanSuppression().set(Boolean.TRUE);
+    public static boolean onEnter() {
+      return processSpanSuppression().tryAcquire();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter @Nullable Boolean previous) {
-      processSpanSuppression().restore(previous);
+    public static void onExit(@Advice.Enter boolean suppressionAcquired) {
+      if (suppressionAcquired) {
+        processSpanSuppression().release();
+      }
     }
   }
 

@@ -52,11 +52,13 @@ public class TracingDisablingKafkaFlux<T> extends FluxOperator<T, T> {
 
     @Override
     public void onNext(T record) {
-      Boolean previous = processSpanSuppression().set(Boolean.TRUE);
+      boolean suppressionAcquired = processSpanSuppression().tryAcquire();
       try {
         actual.onNext(record);
       } finally {
-        processSpanSuppression().restore(previous);
+        if (suppressionAcquired) {
+          processSpanSuppression().release();
+        }
       }
     }
 

@@ -13,7 +13,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -39,14 +38,15 @@ class KafkaConsumerRecordsImplInstrumentation implements TypeInstrumentation {
   public static class RecordAtAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    @Nullable
-    public static Boolean onEnter() {
-      return processSpanSuppression().set(Boolean.TRUE);
+    public static boolean onEnter() {
+      return processSpanSuppression().tryAcquire();
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter @Nullable Boolean previous) {
-      processSpanSuppression().restore(previous);
+    public static void onExit(@Advice.Enter boolean suppressionAcquired) {
+      if (suppressionAcquired) {
+        processSpanSuppression().release();
+      }
     }
   }
 }

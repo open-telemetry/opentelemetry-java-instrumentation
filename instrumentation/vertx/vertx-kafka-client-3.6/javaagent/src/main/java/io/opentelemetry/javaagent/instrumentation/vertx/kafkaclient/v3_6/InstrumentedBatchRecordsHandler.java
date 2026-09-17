@@ -39,7 +39,7 @@ public class InstrumentedBatchRecordsHandler<K, V> implements Handler<ConsumerRe
     }
 
     // the instrumenter iterates over records when adding links, we need to suppress that
-    Boolean previous = processSpanSuppression().set(Boolean.TRUE);
+    boolean suppressionAcquired = processSpanSuppression().tryAcquire();
     try {
       Context context = batchProcessInstrumenter().start(parentContext, request);
       try (Scope ignored = context.makeCurrent()) {
@@ -50,7 +50,9 @@ public class InstrumentedBatchRecordsHandler<K, V> implements Handler<ConsumerRe
       }
       batchProcessInstrumenter().end(context, request, null, null);
     } finally {
-      processSpanSuppression().restore(previous);
+      if (suppressionAcquired) {
+        processSpanSuppression().release();
+      }
     }
   }
 

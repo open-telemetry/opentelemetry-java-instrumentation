@@ -18,16 +18,19 @@ import org.junit.jupiter.api.Test;
 class KafkaClientsConsumerProcessTracingTest {
 
   @Test
-  void shouldRestoreProcessSpanSuppression() {
+  void shouldScopeProcessSpanSuppressionOwnership() {
     assertThat(KafkaClientsConsumerProcessTracing.isProcessSpanSuppressed()).isFalse();
     assertThat(processSpanEnabledSupplier().getAsBoolean()).isTrue();
 
-    Boolean previous = processSpanSuppression().set(Boolean.TRUE);
+    boolean suppressionAcquired = processSpanSuppression().tryAcquire();
     try {
+      assertThat(suppressionAcquired).isTrue();
       assertThat(KafkaClientsConsumerProcessTracing.isProcessSpanSuppressed()).isTrue();
       assertThat(processSpanEnabledSupplier().getAsBoolean()).isFalse();
     } finally {
-      processSpanSuppression().restore(previous);
+      if (suppressionAcquired) {
+        processSpanSuppression().release();
+      }
     }
 
     assertThat(KafkaClientsConsumerProcessTracing.isProcessSpanSuppressed()).isFalse();
@@ -35,18 +38,25 @@ class KafkaClientsConsumerProcessTracingTest {
   }
 
   @Test
-  void shouldRestoreNestedProcessSpanSuppression() {
-    Boolean outerPrevious = processSpanSuppression().set(Boolean.TRUE);
+  void shouldPreserveNestedProcessSpanSuppression() {
+    boolean outerSuppressionAcquired = processSpanSuppression().tryAcquire();
     try {
-      Boolean innerPrevious = processSpanSuppression().set(Boolean.TRUE);
+      assertThat(outerSuppressionAcquired).isTrue();
+
+      boolean innerSuppressionAcquired = processSpanSuppression().tryAcquire();
       try {
+        assertThat(innerSuppressionAcquired).isFalse();
         assertThat(KafkaClientsConsumerProcessTracing.isProcessSpanSuppressed()).isTrue();
       } finally {
-        processSpanSuppression().restore(innerPrevious);
+        if (innerSuppressionAcquired) {
+          processSpanSuppression().release();
+        }
       }
       assertThat(KafkaClientsConsumerProcessTracing.isProcessSpanSuppressed()).isTrue();
     } finally {
-      processSpanSuppression().restore(outerPrevious);
+      if (outerSuppressionAcquired) {
+        processSpanSuppression().release();
+      }
     }
 
     assertThat(KafkaClientsConsumerProcessTracing.isProcessSpanSuppressed()).isFalse();
@@ -56,11 +66,14 @@ class KafkaClientsConsumerProcessTracingTest {
   void shouldCleanUpAfterException() {
     assertThatThrownBy(
             () -> {
-              Boolean previous = processSpanSuppression().set(Boolean.TRUE);
+              boolean suppressionAcquired = processSpanSuppression().tryAcquire();
               try {
+                assertThat(suppressionAcquired).isTrue();
                 throw new IllegalStateException("test");
               } finally {
-                processSpanSuppression().restore(previous);
+                if (suppressionAcquired) {
+                  processSpanSuppression().release();
+                }
               }
             })
         .isInstanceOf(IllegalStateException.class);

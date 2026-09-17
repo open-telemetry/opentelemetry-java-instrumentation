@@ -79,7 +79,7 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
       KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumer);
 
       // disable process tracing and store the receive span for each individual record too
-      Boolean previous = processSpanSuppression().set(Boolean.TRUE);
+      boolean suppressionAcquired = processSpanSuppression().tryAcquire();
       try {
         Context receiveContext = null;
         boolean receiveOperationStarted = false;
@@ -114,9 +114,11 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
             recordTelemetry().add(record, RECEIVE, CONSUMED_MESSAGES);
           }
         }
-        KafkaConsumerBatchStateUtil.recordPoll(records, previous);
+        KafkaConsumerBatchStateUtil.recordPoll(records, suppressionAcquired);
       } finally {
-        processSpanSuppression().restore(previous);
+        if (suppressionAcquired) {
+          processSpanSuppression().release();
+        }
       }
     }
   }

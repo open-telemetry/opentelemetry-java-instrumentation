@@ -10,7 +10,7 @@ import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadSuppression;
 import java.util.function.BooleanSupplier;
 
 // Classes used by multiple instrumentations should be in a bootstrap module to ensure that all
@@ -22,19 +22,19 @@ public final class KafkaClientsConsumerProcessTracing {
   private static final ContextKey<Boolean> FRAMEWORK_PROCESS_KEY =
       ContextKey.named("opentelemetry-kafka-framework-process-span");
 
-  private static final ScopedThreadValue<Boolean> processSpanSuppression =
-      new ScopedThreadValue<>();
+  private static final ScopedThreadSuppression processSpanSuppression =
+      new ScopedThreadSuppression();
 
-  public static ScopedThreadValue<Boolean> processSpanSuppression() {
+  public static ScopedThreadSuppression processSpanSuppression() {
     return processSpanSuppression;
   }
 
   public static boolean isProcessSpanSuppressed() {
-    return processSpanSuppression().get() != null;
+    return processSpanSuppression.isActive();
   }
 
   public static BooleanSupplier processSpanEnabledSupplier() {
-    return () -> !isProcessSpanSuppressed();
+    return () -> !processSpanSuppression.isActive();
   }
 
   public static Context markFrameworkProcess(Context context) {
