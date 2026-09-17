@@ -95,7 +95,7 @@ public final class SemconvExceptionSignal {
     // SdkLoggerProvider hands out when it has no log record processors. WARN is the lowest
     // severity exception log records are emitted with, so anything they use is enabled when
     // it is.
-    // 
+    //
     // Note: if the SDK changes the configurations of the loggers it hands out, this check may
     // go stale. However, the SDK appears not to do that at the time of writing this logic.
     return openTelemetry
