@@ -28,6 +28,29 @@ class RedissonBatchState {
       RedisCommandSanitizer.create(
           DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "redisson"));
 
+  private static final ClassValue<BatchOptionsAccessor> batchOptionsAccessors =
+      new ClassValue<BatchOptionsAccessor>() {
+        @Override
+        protected BatchOptionsAccessor computeValue(Class<?> type) {
+          try {
+            Method method = type.getMethod("getExecutionMode");
+            return options -> {
+              Object executionMode = method.invoke(options);
+              return executionMode != null && executionMode.toString().endsWith("_ATOMIC");
+            };
+          } catch (NoSuchMethodException ignored) {
+            try {
+              Method method = type.getMethod("isAtomic");
+              return options -> Boolean.TRUE.equals(method.invoke(options));
+            } catch (NoSuchMethodException e) {
+              return options -> {
+                throw e;
+              };
+            }
+          }
+        }
+      };
+
   private final TreeMap<Integer, CapturedCommand> commands = new TreeMap<>();
   private int queryTextLength;
   private int queryTextCommandCount;
@@ -135,14 +158,7 @@ class RedissonBatchState {
       return (Boolean) options;
     }
     try {
-      try {
-        Method method = options.getClass().getMethod("getExecutionMode");
-        Object executionMode = method.invoke(options);
-        return executionMode != null && executionMode.toString().endsWith("_ATOMIC");
-      } catch (NoSuchMethodException ignored) {
-        Method method = options.getClass().getMethod("isAtomic");
-        return Boolean.TRUE.equals(method.invoke(options));
-      }
+      return batchOptionsAccessors.get(options.getClass()).isAtomic(options);
     } catch (ReflectiveOperationException e) {
       logger.log(FINE, "Failed to read Redisson batch execution mode", e);
       return false;
@@ -167,6 +183,10 @@ class RedissonBatchState {
       }
     }
     return sanitizer.sanitize(command.getName(), args);
+  }
+
+  private interface BatchOptionsAccessor {
+    boolean isAtomic(Object options) throws ReflectiveOperationException;
   }
 
   private static class CapturedCommand {
