@@ -29,10 +29,6 @@ public final class KafkaClientsConsumerProcessTracing {
     return processSpanSuppression;
   }
 
-  public static boolean isProcessSpanSuppressed() {
-    return processSpanSuppression.isActive();
-  }
-
   public static BooleanSupplier processSpanEnabledSupplier() {
     return () -> !processSpanSuppression.isActive();
   }

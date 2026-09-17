@@ -19,13 +19,13 @@ class KafkaClientsConsumerProcessTracingTest {
 
   @Test
   void shouldScopeProcessSpanSuppressionOwnership() {
-    assertThat(KafkaClientsConsumerProcessTracing.isProcessSpanSuppressed()).isFalse();
+    assertThat(processSpanSuppression().isActive()).isFalse();
     assertThat(processSpanEnabledSupplier().getAsBoolean()).isTrue();
 
     boolean suppressionAcquired = processSpanSuppression().tryAcquire();
     try {
       assertThat(suppressionAcquired).isTrue();
-      assertThat(KafkaClientsConsumerProcessTracing.isProcessSpanSuppressed()).isTrue();
+      assertThat(processSpanSuppression().isActive()).isTrue();
       assertThat(processSpanEnabledSupplier().getAsBoolean()).isFalse();
     } finally {
       if (suppressionAcquired) {
@@ -33,7 +33,7 @@ class KafkaClientsConsumerProcessTracingTest {
       }
     }
 
-    assertThat(KafkaClientsConsumerProcessTracing.isProcessSpanSuppressed()).isFalse();
+    assertThat(processSpanSuppression().isActive()).isFalse();
     assertThat(processSpanEnabledSupplier().getAsBoolean()).isTrue();
   }
 
@@ -46,20 +46,20 @@ class KafkaClientsConsumerProcessTracingTest {
       boolean innerSuppressionAcquired = processSpanSuppression().tryAcquire();
       try {
         assertThat(innerSuppressionAcquired).isFalse();
-        assertThat(KafkaClientsConsumerProcessTracing.isProcessSpanSuppressed()).isTrue();
+        assertThat(processSpanSuppression().isActive()).isTrue();
       } finally {
         if (innerSuppressionAcquired) {
           processSpanSuppression().release();
         }
       }
-      assertThat(KafkaClientsConsumerProcessTracing.isProcessSpanSuppressed()).isTrue();
+      assertThat(processSpanSuppression().isActive()).isTrue();
     } finally {
       if (outerSuppressionAcquired) {
         processSpanSuppression().release();
       }
     }
 
-    assertThat(KafkaClientsConsumerProcessTracing.isProcessSpanSuppressed()).isFalse();
+    assertThat(processSpanSuppression().isActive()).isFalse();
   }
 
   @Test
@@ -78,7 +78,7 @@ class KafkaClientsConsumerProcessTracingTest {
             })
         .isInstanceOf(IllegalStateException.class);
 
-    assertThat(KafkaClientsConsumerProcessTracing.isProcessSpanSuppressed()).isFalse();
+    assertThat(processSpanSuppression().isActive()).isFalse();
   }
 
   @Test
