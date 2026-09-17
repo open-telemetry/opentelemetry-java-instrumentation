@@ -8,6 +8,8 @@
   exit, including exceptional exits
 - Default for temporary state installed on entry and cleaned up on exit: restore the previous value
 - Suppression: only the caller that acquires a `ScopedThreadSuppression` releases it
+- Advice lifecycle: keep each thread-local mutation and its cleanup visible in the paired entry and
+  exit advice
 - Naming: use `current*` for ambient state that belongs to the executing thread, except for
   suppression holders and accessors
 
@@ -15,6 +17,12 @@
 
 Trace every writer, reader, and cleanup point. Thread confinement does not prevent recursion,
 constructor chaining, or overlapping advice from replacing or observing outer state.
+
+Advice should call `set`/`restore` or `tryAcquire`/`release` directly. When the holder lives in
+another class, expose the `ScopedThreadValue` or `ScopedThreadSuppression` through a zero-argument
+static accessor and call the lifecycle methods on the returned holder. Do not hide lifecycle
+mutations behind semantic wrappers such as `enter`/`exit`, `startSuppressing`/`endSuppressing`, or
+similar methods.
 
 For temporary state installed on entry and cleaned up on exit, cleanup must restore the previous
 value rather than simply remove the entry. Follow this rule even when no current call path is known
@@ -26,14 +34,18 @@ import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 
 private static final ScopedThreadValue<Request> currentRequest = new ScopedThreadValue<>();
 
+public static ScopedThreadValue<Request> currentRequest() {
+  return currentRequest;
+}
+
 @Advice.OnMethodEnter(suppress = Throwable.class)
 public static @Nullable Request onEnter(Request request) {
-  return currentRequest.set(request);
+  return currentRequest().set(request);
 }
 
 @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
 public static void onExit(@Advice.Enter @Nullable Request previous) {
-  currentRequest.restore(previous);
+  currentRequest().restore(previous);
 }
 ```
 
@@ -50,21 +62,29 @@ import io.opentelemetry.instrumentation.api.internal.ScopedThreadSuppression;
 private static final ScopedThreadSuppression receiveSpanSuppression =
     new ScopedThreadSuppression();
 
+public static ScopedThreadSuppression receiveSpanSuppression() {
+  return receiveSpanSuppression;
+}
+
 @Advice.OnMethodEnter(suppress = Throwable.class)
 public static boolean onEnter() {
-  return receiveSpanSuppression.tryAcquire();
+  return receiveSpanSuppression().tryAcquire();
 }
 
 @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
 public static void onExit(@Advice.Enter boolean acquired) {
   if (acquired) {
-    receiveSpanSuppression.release();
+    receiveSpanSuppression().release();
   }
 }
 ```
 
 Use `isActive()` when code only needs to check whether suppression is active. A nested caller that
 received `false` from `tryAcquire()` must not release suppression owned by an outer caller.
+
+The review invariant must be visible in each advice pair. The previous value or acquisition result
+flows from entry advice through `@Advice.Enter`, and exit advice uses
+`onThrowable = Throwable.class` to perform the matching `restore` or conditional `release`.
 
 ## Name ambient thread state with `current*`
 
