@@ -22,34 +22,35 @@ class RabbitProcessTracingSuppressionTest {
     BlockingQueueConsumer eligibleConsumer = mock(BlockingQueueConsumer.class);
     SpringRabbitListenerUtil.markSpringListenerConsumer(eligibleConsumer);
 
-    boolean installed =
+    boolean suppressionAcquired =
         BlockingQueueConsumerInstrumentation.ConsumerRegistrationAdvice.onEnter(eligibleConsumer);
     try {
-      assertThat(installed).isTrue();
+      assertThat(suppressionAcquired).isTrue();
       assertThat(isProcessSpanSuppressed()).isTrue();
 
-      boolean nestedEligible =
+      boolean nestedSuppressionAcquired =
           LegacyBlockingQueueConsumerInstrumentation.ConsumerRegistrationAdvice.onEnter(
               eligibleConsumer);
       try {
-        assertThat(nestedEligible).isFalse();
+        assertThat(nestedSuppressionAcquired).isFalse();
         assertThat(isProcessSpanSuppressed()).isTrue();
       } finally {
         LegacyBlockingQueueConsumerInstrumentation.ConsumerRegistrationAdvice.onExit(
-            nestedEligible);
+            nestedSuppressionAcquired);
       }
 
-      boolean nestedIneligible =
+      boolean ineligibleSuppressionAcquired =
           BlockingQueueConsumerInstrumentation.ConsumerRegistrationAdvice.onEnter(
               mock(BlockingQueueConsumer.class));
       try {
-        assertThat(nestedIneligible).isFalse();
+        assertThat(ineligibleSuppressionAcquired).isFalse();
         assertThat(isProcessSpanSuppressed()).isTrue();
       } finally {
-        BlockingQueueConsumerInstrumentation.ConsumerRegistrationAdvice.onExit(nestedIneligible);
+        BlockingQueueConsumerInstrumentation.ConsumerRegistrationAdvice.onExit(
+            ineligibleSuppressionAcquired);
       }
     } finally {
-      BlockingQueueConsumerInstrumentation.ConsumerRegistrationAdvice.onExit(installed);
+      BlockingQueueConsumerInstrumentation.ConsumerRegistrationAdvice.onExit(suppressionAcquired);
     }
 
     assertThat(isProcessSpanSuppressed()).isFalse();
@@ -61,25 +62,26 @@ class RabbitProcessTracingSuppressionTest {
     eligibleContainer.setMessageListener((MessageListener) message -> {});
     SimpleMessageListenerContainer ineligibleContainer = new SimpleMessageListenerContainer();
 
-    boolean installed =
+    boolean suppressionAcquired =
         DirectMessageListenerContainerInstrumentation.ConsumeAdvice.onEnter(eligibleContainer);
     try {
-      assertThat(installed).isTrue();
+      assertThat(suppressionAcquired).isTrue();
       assertThat(isProcessSpanSuppressed()).isTrue();
 
-      boolean nestedEligible =
+      boolean nestedSuppressionAcquired =
           DirectMessageListenerContainerInstrumentation.ConsumeAdvice.onEnter(eligibleContainer);
-      DirectMessageListenerContainerInstrumentation.ConsumeAdvice.onExit(nestedEligible);
-      assertThat(nestedEligible).isFalse();
+      DirectMessageListenerContainerInstrumentation.ConsumeAdvice.onExit(nestedSuppressionAcquired);
+      assertThat(nestedSuppressionAcquired).isFalse();
       assertThat(isProcessSpanSuppressed()).isTrue();
 
-      boolean nestedIneligible =
+      boolean ineligibleSuppressionAcquired =
           DirectMessageListenerContainerInstrumentation.ConsumeAdvice.onEnter(ineligibleContainer);
-      DirectMessageListenerContainerInstrumentation.ConsumeAdvice.onExit(nestedIneligible);
-      assertThat(nestedIneligible).isFalse();
+      DirectMessageListenerContainerInstrumentation.ConsumeAdvice.onExit(
+          ineligibleSuppressionAcquired);
+      assertThat(ineligibleSuppressionAcquired).isFalse();
       assertThat(isProcessSpanSuppressed()).isTrue();
     } finally {
-      DirectMessageListenerContainerInstrumentation.ConsumeAdvice.onExit(installed);
+      DirectMessageListenerContainerInstrumentation.ConsumeAdvice.onExit(suppressionAcquired);
     }
 
     assertThat(isProcessSpanSuppressed()).isFalse();
@@ -92,14 +94,15 @@ class RabbitProcessTracingSuppressionTest {
 
     assertThatThrownBy(
             () -> {
-              boolean installed =
+              boolean suppressionAcquired =
                   LegacyBlockingQueueConsumerInstrumentation.ConsumerRegistrationAdvice.onEnter(
                       consumer);
               try {
+                assertThat(suppressionAcquired).isTrue();
                 throw new IllegalStateException("test");
               } finally {
                 LegacyBlockingQueueConsumerInstrumentation.ConsumerRegistrationAdvice.onExit(
-                    installed);
+                    suppressionAcquired);
               }
             })
         .isInstanceOf(IllegalStateException.class);

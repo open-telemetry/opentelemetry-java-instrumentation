@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
-import static io.opentelemetry.javaagent.bootstrap.rabbitmq.RabbitMqConsumerProcessTracing.isProcessSpanSuppressed;
 import static io.opentelemetry.javaagent.bootstrap.rabbitmq.RabbitMqConsumerProcessTracing.processSpanSuppression;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -37,18 +36,16 @@ class DirectMessageListenerContainerInstrumentation implements TypeInstrumentati
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static boolean onEnter(@Advice.This AbstractMessageListenerContainer container) {
-      if (!SpringRabbitListenerUtil.shouldTraceListenerProcess(container)
-          || isProcessSpanSuppressed()) {
+      if (!SpringRabbitListenerUtil.shouldTraceListenerProcess(container)) {
         return false;
       }
-      processSpanSuppression().set(Boolean.TRUE);
-      return true;
+      return processSpanSuppression().tryAcquire();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter boolean installed) {
-      if (installed) {
-        processSpanSuppression().restore(null);
+    public static void onExit(@Advice.Enter boolean suppressionAcquired) {
+      if (suppressionAcquired) {
+        processSpanSuppression().release();
       }
     }
   }

@@ -17,11 +17,14 @@ class RabbitMqConsumerProcessTracingTest {
   void shouldScopeSpringProcessTelemetryOwnership() {
     assertThat(RabbitMqConsumerProcessTracing.isProcessSpanSuppressed()).isFalse();
 
-    Boolean previous = processSpanSuppression().set(Boolean.TRUE);
+    boolean suppressionAcquired = processSpanSuppression().tryAcquire();
     try {
+      assertThat(suppressionAcquired).isTrue();
       assertThat(RabbitMqConsumerProcessTracing.isProcessSpanSuppressed()).isTrue();
     } finally {
-      processSpanSuppression().restore(previous);
+      if (suppressionAcquired) {
+        processSpanSuppression().release();
+      }
     }
 
     assertThat(RabbitMqConsumerProcessTracing.isProcessSpanSuppressed()).isFalse();
@@ -29,17 +32,24 @@ class RabbitMqConsumerProcessTracingTest {
 
   @Test
   void shouldRestoreNestedRegistration() {
-    Boolean outerPrevious = processSpanSuppression().set(Boolean.TRUE);
+    boolean outerSuppressionAcquired = processSpanSuppression().tryAcquire();
     try {
-      Boolean innerPrevious = processSpanSuppression().set(Boolean.TRUE);
+      assertThat(outerSuppressionAcquired).isTrue();
+
+      boolean innerSuppressionAcquired = processSpanSuppression().tryAcquire();
       try {
+        assertThat(innerSuppressionAcquired).isFalse();
         assertThat(RabbitMqConsumerProcessTracing.isProcessSpanSuppressed()).isTrue();
       } finally {
-        processSpanSuppression().restore(innerPrevious);
+        if (innerSuppressionAcquired) {
+          processSpanSuppression().release();
+        }
       }
       assertThat(RabbitMqConsumerProcessTracing.isProcessSpanSuppressed()).isTrue();
     } finally {
-      processSpanSuppression().restore(outerPrevious);
+      if (outerSuppressionAcquired) {
+        processSpanSuppression().release();
+      }
     }
 
     assertThat(RabbitMqConsumerProcessTracing.isProcessSpanSuppressed()).isFalse();
@@ -49,11 +59,14 @@ class RabbitMqConsumerProcessTracingTest {
   void shouldCleanUpAfterException() {
     assertThatThrownBy(
             () -> {
-              Boolean previous = processSpanSuppression().set(Boolean.TRUE);
+              boolean suppressionAcquired = processSpanSuppression().tryAcquire();
               try {
+                assertThat(suppressionAcquired).isTrue();
                 throw new IllegalStateException("test");
               } finally {
-                processSpanSuppression().restore(previous);
+                if (suppressionAcquired) {
+                  processSpanSuppression().release();
+                }
               }
             })
         .isInstanceOf(IllegalStateException.class);
