@@ -30,7 +30,7 @@ public class VertxRedisClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vertx-redis-client-4.0";
   private static final Instrumenter<VertxRedisClientRequest, Void> instrumenter;
 
-  private static final ScopedThreadValue<RedisURI> redisUriThreadLocal = new ScopedThreadValue<>();
+  private static final ScopedThreadValue<RedisURI> currentRedisUri = new ScopedThreadValue<>();
   private static final VirtualField<Command, String> COMMAND_NAME =
       VirtualField.find(Command.class, String.class);
   private static final VirtualField<RedisStandaloneConnection, RedisURI> REDIS_URI =
@@ -88,18 +88,8 @@ public class VertxRedisClientSingletons {
     return Future.fromCompletionStage(result);
   }
 
-  @Nullable
-  public static RedisURI getRedisUriThreadLocal() {
-    return redisUriThreadLocal.get();
-  }
-
-  @Nullable
-  public static RedisURI setRedisUriThreadLocal(RedisURI redisUri) {
-    return redisUriThreadLocal.set(redisUri);
-  }
-
-  public static void restoreRedisUriThreadLocal(@Nullable RedisURI previous) {
-    redisUriThreadLocal.restore(previous);
+  public static ScopedThreadValue<RedisURI> currentRedisUri() {
+    return currentRedisUri;
   }
 
   public static void setCommandName(Command command, String commandName) {
