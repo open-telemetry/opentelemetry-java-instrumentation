@@ -37,12 +37,16 @@ public class JedisInstrumentationModule extends InstrumentationModule
 
   @Override
   public List<String> getAdditionalHelperClassNames() {
+    // Cluster advice uses @NoMuzzle because cluster classes are absent before Jedis 2.3, so Muzzle
+    // cannot discover this helper automatically.
     return singletonList(
         "io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisClusterTargetAccessor");
   }
 
   @Override
   public void registerVirtualFields(BiConsumer<String, String> virtualFieldRegistrar) {
+    // The cluster accessor is outside Muzzle's reach for the same reason, so register its virtual
+    // field explicitly.
     virtualFieldRegistrar.accept(
         "redis.clients.jedis.JedisClusterConnectionHandler", RedisServerTarget.class.getName());
   }
