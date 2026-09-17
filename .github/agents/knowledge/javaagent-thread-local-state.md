@@ -6,37 +6,41 @@
   or helpers
 - Requirement: every value that holds operation-specific temporary state needs cleanup on every
   exit, including exceptional exits
-- Default for temporary state installed on entry and cleaned up on exit: restore the previous value
+- Suppression: only the caller that acquires a `ScopedThreadSuppression` releases it
 - Naming: use `current*` for ambient state that belongs to the executing thread, except for
   suppression holders and accessors
 
-## Match Cleanup to the Lifecycle
+## Match suppression cleanup to ownership
 
 Trace every writer, reader, and cleanup point. Thread confinement does not prevent recursion,
-constructor chaining, or overlapping advice from replacing an outer value.
+constructor chaining, or overlapping advice from observing an outer suppression.
 
-For temporary state installed on entry and cleaned up on exit, cleanup must restore the previous
-value rather than simply remove the entry. Follow this rule even when no current call path is known
-to be reentrant. Prefer the allocation-free `ScopedThreadValue`, and carry the value returned by
-`set` through `@Advice.Enter`:
+Use `ScopedThreadSuppression` for temporary suppression installed on entry and cleared on exit.
+`tryAcquire()` returns `true` to the caller that installed the suppression. Nested calls return
+`false`. Carry that result through `@Advice.Enter`, and call `release()` only when the result is
+`true`:
 
 ```java
-import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadSuppression;
 
-private static final ScopedThreadValue<Request> currentRequest = new ScopedThreadValue<>();
+private static final ScopedThreadSuppression receiveSpanSuppression =
+    new ScopedThreadSuppression();
 
 @Advice.OnMethodEnter(suppress = Throwable.class)
-public static @Nullable Request onEnter(Request request) {
-  return currentRequest.set(request);
+public static boolean onEnter() {
+  return receiveSpanSuppression.tryAcquire();
 }
 
 @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-public static void onExit(@Advice.Enter @Nullable Request previous) {
-  currentRequest.restore(previous);
+public static void onExit(@Advice.Enter boolean acquired) {
+  if (acquired) {
+    receiveSpanSuppression.release();
+  }
 }
 ```
 
-`restore` removes the entry when `set` returned `null`.
+Use `isActive()` when code only needs to check whether suppression is active. A nested caller that
+received `false` from `tryAcquire()` must not release suppression owned by an outer caller.
 
 ## Name ambient thread state with `current*`
 
@@ -49,16 +53,15 @@ already identifies the state and purpose, for example `receiveSpanSuppression()`
 `processSpanSuppression()`.
 
 Name the state, not its storage mechanism. In particular, do not use a `*ThreadLocal` accessor name
-when the accessor returns a wrapper such as `ScopedThreadValue`. Keep the `ScopedThreadValue` class
-name and its `set` and `restore` API unchanged.
+when the accessor returns a wrapper such as `ScopedThreadSuppression`.
 
 Do not use `current*` for message, request, record, or batch state attached to an object carrier
 through `VirtualField`. That state belongs to the carrier and may cross thread boundaries. Name the
 field for the carrier state instead, for example `MESSAGE_STATE` or `REQUEST_STATE`.
 
-The restore-previous rule does not apply to long-lived per-thread caches, reusable objects,
-counters, persistent maps, or producer/consumer callback handoffs. Manage those values according to
-their actual lifetime instead of forcing them into an entry/exit pair.
+The acquire-and-release rule does not apply to long-lived per-thread caches, reusable objects,
+counters, persistent maps, or producer/consumer callback handoffs. Manage those values according
+to their actual lifetime instead of forcing them into an entry/exit pair.
 
 For a cross-callback handoff, document the producer, the consumer, and the failure path that cleans
 up the value when the handoff cannot complete.
