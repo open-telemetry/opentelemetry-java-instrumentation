@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11;
 
-import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.isProcessSpanSuppressed;
 import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanSuppression;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
@@ -39,12 +38,12 @@ class KafkaStreamsSuppressionTest {
 
     boolean suppressionAcquired = StreamThreadInstrumentation.PollRequestsAdvice.onEnter();
     assertThat(suppressionAcquired).isTrue();
-    assertThat(isProcessSpanSuppressed()).isTrue();
+    assertThat(processSpanSuppression().isActive()).isTrue();
 
     StreamThreadInstrumentation.PollRequestsAdvice.onExit(suppressionAcquired, records);
 
     assertThat(state.getAsBoolean()).isFalse();
-    assertThat(isProcessSpanSuppressed()).isFalse();
+    assertThat(processSpanSuppression().isActive()).isFalse();
   }
 
   @Test
@@ -54,18 +53,18 @@ class KafkaStreamsSuppressionTest {
 
     StreamThreadInstrumentation.PollRequestsAdvice.onExit(suppressionAcquired, null);
 
-    assertThat(isProcessSpanSuppressed()).isFalse();
+    assertThat(processSpanSuppression().isActive()).isFalse();
   }
 
   @Test
   void standbyUpdateSuppressesOnlyProcessSpanAndRestoresSuppression() {
     boolean suppressionAcquired = StreamThreadInstrumentation.StandbyTaskUpdateAdvice.onEnter();
     assertThat(suppressionAcquired).isTrue();
-    assertThat(isProcessSpanSuppressed()).isTrue();
+    assertThat(processSpanSuppression().isActive()).isTrue();
 
     StreamThreadInstrumentation.StandbyTaskUpdateAdvice.onExit(suppressionAcquired);
 
-    assertThat(isProcessSpanSuppressed()).isFalse();
+    assertThat(processSpanSuppression().isActive()).isFalse();
   }
 
   @Test
@@ -76,10 +75,10 @@ class KafkaStreamsSuppressionTest {
     assertThat(inner).isFalse();
 
     StreamThreadInstrumentation.StandbyTaskUpdateAdvice.onExit(inner);
-    assertThat(isProcessSpanSuppressed()).isTrue();
+    assertThat(processSpanSuppression().isActive()).isTrue();
 
     StreamThreadInstrumentation.PollRequestsAdvice.onExit(outer, null);
-    assertThat(isProcessSpanSuppressed()).isFalse();
+    assertThat(processSpanSuppression().isActive()).isFalse();
   }
 
   private static ConsumerRecords<String, String> records() {
