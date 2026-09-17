@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 
-import static io.opentelemetry.javaagent.instrumentation.jedis.v1_4.JedisSingletons.currentConfiguredTarget;
 import static java.util.Arrays.asList;
+import static java.util.Collections.nCopies;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -21,6 +21,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.JedisShardInfo;
+import redis.clients.jedis.ShardedJedis;
 
 class JedisSingletonsTest {
 
@@ -60,6 +61,36 @@ class JedisSingletonsTest {
   }
 
   @Test
+  void shardListKeepsAtMostFiveEndpoints() {
+    List<JedisShardInfo> shards =
+        asList(
+            new JedisShardInfo("shard1"),
+            new JedisShardInfo("shard2"),
+            new JedisShardInfo("shard3"),
+            new JedisShardInfo("shard4"),
+            new JedisShardInfo("shard5"),
+            new JedisShardInfo("shard6"));
+
+    assertThat(JedisSingletons.createServerTarget(shards).getAddress())
+        .isEqualTo("shard1,shard2,shard3,shard4,shard5");
+  }
+
+  @Test
+  void shardListKeepsCompleteEndpointsWithin255Characters() {
+    String first = String.join(".", nCopies(2, String.join("", nCopies(60, "a"))));
+    String second = String.join(".", nCopies(2, String.join("", nCopies(60, "b"))));
+    String third = String.join(".", nCopies(2, String.join("", nCopies(60, "c"))));
+
+    RedisServerTarget target =
+        JedisSingletons.createServerTarget(
+            asList(
+                new JedisShardInfo(first), new JedisShardInfo(second), new JedisShardInfo(third)));
+
+    assertThat(target.getAddress()).isEqualTo(first + "," + second);
+    assertThat(target.getAddress()).hasSizeLessThanOrEqualTo(255);
+  }
+
+  @Test
   void captureConnectionTargetFallsBackToHostAndPortWhenNoConfiguredTargetExists() {
     Connection connection = new Connection("direct", 6380);
 
@@ -71,17 +102,16 @@ class JedisSingletonsTest {
   }
 
   @Test
-  void captureConnectionTargetUsesConfiguredTargetInsteadOfHostAndPort() {
-    Connection connection = new Connection("direct", 6379);
-    RedisServerTarget configuredTarget = RedisServerTarget.ofHostAndPort("configured", 6380);
+  void captureShardedConnectionTargetsOverridesHostAndPort() {
+    JedisShardInfo first = new JedisShardInfo("first", 6380);
+    JedisShardInfo second = new JedisShardInfo("second", 6381);
+    List<JedisShardInfo> shards = asList(first, second);
+    ShardedJedis sharded = new ShardedJedis(shards);
 
-    RedisServerTarget previousTarget = currentConfiguredTarget().set(configuredTarget);
-    try {
-      JedisSingletons.captureConnectionTarget(connection);
-    } finally {
-      currentConfiguredTarget().restore(previousTarget);
-    }
+    JedisSingletons.captureShardedConnectionTargets(sharded, shards);
 
-    assertThat(JedisSingletons.connectionTarget(connection)).isSameAs(configuredTarget);
+    RedisServerTarget target = JedisSingletons.connectionTarget(first.getResource().getClient());
+    assertThat(target.getAddress()).isEqualTo("first:6380,second:6381");
+    assertThat(target.getPort()).isNull();
   }
 }

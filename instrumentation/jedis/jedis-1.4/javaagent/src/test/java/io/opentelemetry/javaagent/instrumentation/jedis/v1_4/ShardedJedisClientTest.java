@@ -186,8 +186,9 @@ class ShardedJedisClientTest {
   }
 
   @Test
-  void nestedInitializationRestoresConfiguredTarget() {
-    CapturingJedisShardInfo nestedShard = new CapturingJedisShardInfo("nested", 6380);
+  void callbackConnectionIsNotAssignedOuterTarget() {
+    CapturingJedisShardInfo nestedShard =
+        new CapturingJedisShardInfo(firstServer.getHost(), firstServer.getMappedPort(6379));
     ReentrantJedisShardInfo outerShard =
         new ReentrantJedisShardInfo(
             firstServer.getHost(), firstServer.getMappedPort(6379), nestedShard);
@@ -198,8 +199,10 @@ class ShardedJedisClientTest {
     cleanup.deferCleanup(outerShard.createdResource().getClient()::disconnect);
     cleanup.deferCleanup(secondOuterShard.createdResource().getClient()::disconnect);
     cleanup.deferCleanup(nestedShard.createdResource().getClient()::disconnect);
+    cleanup.deferCleanup(outerShard.callbackJedis()::disconnect);
 
-    outerShard.createdResource().set("reentrant", "bar");
+    outerShard.callbackJedis().set("callback", "bar");
+    outerShard.createdResource().set("outer", "bar");
 
     String outerTarget =
         outerShard.getHost()
@@ -213,11 +216,26 @@ class ShardedJedisClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SET " + outerShard.getHost() + ":" + outerShard.getPort()
+                                : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "SET callback ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(SERVER_ADDRESS, outerShard.getHost()),
+                            equalTo(SERVER_PORT, (long) outerShard.getPort()))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
                     span.hasName(emitStableDatabaseSemconv() ? "SET " + outerTarget : "SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SET reentrant ?"),
+                            equalTo(maybeStable(DB_STATEMENT), "SET outer ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(
                                 maybeStablePeerService(),
@@ -254,6 +272,7 @@ class ShardedJedisClientTest {
   private static class ReentrantJedisShardInfo extends CapturingJedisShardInfo {
 
     private final JedisShardInfo nestedShard;
+    private Jedis callbackJedis;
 
     private ReentrantJedisShardInfo(String host, int port, JedisShardInfo nestedShard) {
       super(host, port);
@@ -262,9 +281,13 @@ class ShardedJedisClientTest {
 
     @Override
     public Jedis createResource() {
-      // Jedis calls this while the outer Sharded.initialize() advice is active.
       new ShardedJedis(singletonList(nestedShard));
+      callbackJedis = new Jedis(getHost(), getPort());
       return super.createResource();
+    }
+
+    private Jedis callbackJedis() {
+      return callbackJedis;
     }
   }
 }

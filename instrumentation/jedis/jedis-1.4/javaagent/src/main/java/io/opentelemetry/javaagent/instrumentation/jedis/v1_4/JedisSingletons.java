@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
+import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
@@ -16,23 +17,27 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.Servi
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import redis.clients.jedis.Connection;
+import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisShardInfo;
+import redis.clients.util.Sharded;
 
 public class JedisSingletons {
+  private static final Logger logger = Logger.getLogger(JedisSingletons.class.getName());
+
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jedis-1.4";
 
   private static final Instrumenter<JedisRequest, Void> instrumenter;
 
   private static final VirtualField<Connection, RedisServerTarget> CONNECTION_TARGET =
       VirtualField.find(Connection.class, RedisServerTarget.class);
-  private static final ScopedThreadValue<RedisServerTarget> currentConfiguredTarget =
-      new ScopedThreadValue<>();
+  @Nullable private static final Method SHARD_INFO_GET_RESOURCE = findShardInfoGetResource();
 
   static {
     JedisDbAttributesGetter dbAttributesGetter = new JedisDbAttributesGetter();
@@ -56,24 +61,28 @@ public class JedisSingletons {
     return instrumenter;
   }
 
-  public static ScopedThreadValue<RedisServerTarget> currentConfiguredTarget() {
-    return currentConfiguredTarget;
+  public static void captureConnectionTarget(Connection connection) {
+    CONNECTION_TARGET.set(
+        connection, RedisServerTarget.ofHostAndPort(connection.getHost(), connection.getPort()));
   }
 
-  public static void captureConnectionTarget(Connection connection) {
-    RedisServerTarget target = currentConfiguredTarget.get();
+  public static void captureShardedConnectionTargets(
+      Sharded<?, ?> sharded, @Nullable List<JedisShardInfo> shards) {
+    RedisServerTarget target = createServerTarget(shards);
     if (target == null) {
-      target = RedisServerTarget.ofHostAndPort(connection.getHost(), connection.getPort());
+      return;
     }
-    CONNECTION_TARGET.set(connection, target);
+
+    for (Object shard : sharded.getAllShards()) {
+      Jedis jedis = getJedis(shard);
+      if (jedis != null) {
+        CONNECTION_TARGET.set(jedis.getClient(), target);
+      }
+    }
   }
 
   @Nullable
   static RedisServerTarget connectionTarget(Connection connection) {
-    RedisServerTarget target = currentConfiguredTarget.get();
-    if (target != null) {
-      return target;
-    }
     return CONNECTION_TARGET.get(connection);
   }
 
@@ -88,6 +97,33 @@ public class JedisSingletons {
           shard == null ? null : RedisServerTarget.endpoint(shard.getHost(), shard.getPort()));
     }
     return RedisServerTarget.ofEndpoints(endpoints);
+  }
+
+  @Nullable
+  private static Jedis getJedis(Object shard) {
+    if (shard instanceof Jedis) {
+      return (Jedis) shard;
+    }
+    if (!(shard instanceof JedisShardInfo) || SHARD_INFO_GET_RESOURCE == null) {
+      return null;
+    }
+
+    try {
+      Object resource = SHARD_INFO_GET_RESOURCE.invoke(shard);
+      return resource instanceof Jedis ? (Jedis) resource : null;
+    } catch (ReflectiveOperationException e) {
+      logger.log(FINE, "Failed to obtain Jedis shard resource", e);
+      return null;
+    }
+  }
+
+  @Nullable
+  private static Method findShardInfoGetResource() {
+    try {
+      return JedisShardInfo.class.getMethod("getResource");
+    } catch (NoSuchMethodException | SecurityException ignored) {
+      return null;
+    }
   }
 
   private JedisSingletons() {}

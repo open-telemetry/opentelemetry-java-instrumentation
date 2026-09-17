@@ -5,11 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 
-import static io.opentelemetry.javaagent.instrumentation.jedis.v1_4.JedisSingletons.currentConfiguredTarget;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.List;
@@ -18,6 +16,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import redis.clients.jedis.JedisShardInfo;
+import redis.clients.util.Sharded;
 
 class ShardedJedisInstrumentation implements TypeInstrumentation {
 
@@ -36,17 +35,11 @@ class ShardedJedisInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class InitializeAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    @Nullable
-    public static RedisServerTarget onEnter(
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This Sharded<?, ?> sharded,
         @Advice.Argument(0) @Nullable List<JedisShardInfo> shards) {
-      RedisServerTarget target = JedisSingletons.createServerTarget(shards);
-      return currentConfiguredTarget().set(target);
-    }
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter @Nullable RedisServerTarget previousConfiguredTarget) {
-      currentConfiguredTarget().restore(previousConfiguredTarget);
+      JedisSingletons.captureShardedConnectionTargets(sharded, shards);
     }
   }
 }
