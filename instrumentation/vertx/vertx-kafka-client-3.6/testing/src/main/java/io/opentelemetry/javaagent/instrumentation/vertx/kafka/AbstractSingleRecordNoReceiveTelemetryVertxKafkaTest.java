@@ -7,11 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.vertx.kafka;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
+import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanEnabledSupplier;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
@@ -28,7 +28,7 @@ public abstract class AbstractSingleRecordNoReceiveTelemetryVertxKafkaTest
   void setUpTopicAndConsumer() {
     kafkaConsumer.handler(
         record -> {
-          assertThat(KafkaClientsConsumerProcessTracing.isProcessSpanSuppressed()).isFalse();
+          assertThat(processSpanEnabledSupplier().getAsBoolean()).isTrue();
           testing().runWithSpan("consumer", () -> {});
           if ("error".equals(record.value())) {
             throw new IllegalArgumentException("boom");

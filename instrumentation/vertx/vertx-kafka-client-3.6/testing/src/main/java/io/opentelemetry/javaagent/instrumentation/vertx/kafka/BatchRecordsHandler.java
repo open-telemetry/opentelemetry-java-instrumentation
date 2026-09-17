@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.kafka;
 
+import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanEnabledSupplier;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
-import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import io.vertx.core.Handler;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecords;
@@ -29,7 +29,7 @@ class BatchRecordsHandler implements Handler<KafkaConsumerRecords<String, String
 
   @Override
   public void handle(KafkaConsumerRecords<String, String> records) {
-    assertThat(KafkaClientsConsumerProcessTracing.isProcessSpanSuppressed()).isFalse();
+    assertThat(processSpanEnabledSupplier().getAsBoolean()).isTrue();
     lastBatchSize.set(records.size());
     IntStream.range(0, records.size()).forEach(it -> messageReceived.countDown());
 
