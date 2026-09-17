@@ -21,8 +21,7 @@ import redis.RedisClientPool;
 import redis.RedisClientPoolLike;
 import redis.RedisServer;
 import redis.Request;
-import redis.SentinelMonitoredRedisBlockingClient;
-import redis.SentinelMonitoredRedisClient;
+import redis.SentinelMonitored;
 import scala.Tuple2;
 import scala.collection.Iterable;
 import scala.collection.Iterator;
@@ -74,20 +73,7 @@ public class RediscalaServerTargets {
   static final Class<?> SENTINEL_MASTER_SLAVES_CLASS = findClass(SENTINEL_MASTER_SLAVES_CLASS_NAME);
 
   @Nullable
-  private static final Method SENTINEL_MASTER_SLAVES_SENTINELS =
-      findMethod(SENTINEL_MASTER_SLAVES_CLASS, "sentinels");
-
-  @Nullable
-  private static final Method SENTINEL_MASTER_SLAVES_MASTER =
-      findMethod(SENTINEL_MASTER_SLAVES_CLASS, "master");
-
-  @Nullable
-  private static final Method SENTINELS =
-      findMethod(SentinelMonitoredRedisClient.class, "sentinels");
-
-  @Nullable
-  private static final Method BLOCKING_SENTINELS =
-      findMethod(SentinelMonitoredRedisBlockingClient.class, "sentinels");
+  private static final Method SENTINELS = findMethod(SentinelMonitored.class, "sentinels");
 
   @Nullable
   static Class<?> findClass(String className) {
@@ -158,15 +144,9 @@ public class RediscalaServerTargets {
 
   @Nullable
   static RedisServerTarget of(@Nullable Object client) {
-    if (client instanceof SentinelMonitoredRedisClient) {
-      return ofSentinel(client, SENTINELS, ((SentinelMonitoredRedisClient) client).master());
-    }
-    if (client instanceof SentinelMonitoredRedisBlockingClient) {
-      return ofSentinel(
-          client, BLOCKING_SENTINELS, ((SentinelMonitoredRedisBlockingClient) client).master());
-    }
-    if (SENTINEL_MASTER_SLAVES_CLASS != null && SENTINEL_MASTER_SLAVES_CLASS.isInstance(client)) {
-      return ofSentinelMasterSlaves(client);
+    if (client instanceof SentinelMonitored) {
+      SentinelMonitored sentinelMonitored = (SentinelMonitored) client;
+      return ofSentinel(sentinelMonitored, sentinelMonitored.master());
     }
     if (client instanceof RedisClientMasterSlaves) {
       return ofMasterSlaves((RedisClientMasterSlaves) client);
@@ -182,24 +162,6 @@ public class RediscalaServerTargets {
       return RedisServerTarget.ofHostAndPort(actorClient.host(), actorClient.port());
     }
     return null;
-  }
-
-  @Nullable
-  private static RedisServerTarget ofSentinelMasterSlaves(Object client) {
-    if (SENTINEL_MASTER_SLAVES_MASTER == null) {
-      return null;
-    }
-    Object master;
-    try {
-      master = SENTINEL_MASTER_SLAVES_MASTER.invoke(client);
-    } catch (ReflectiveOperationException e) {
-      logger.log(FINE, "Failed to read the configured rediscala Sentinel master", e);
-      return null;
-    }
-    if (!(master instanceof String)) {
-      return null;
-    }
-    return ofSentinel(client, SENTINEL_MASTER_SLAVES_SENTINELS, (String) master);
   }
 
   @Nullable
@@ -236,14 +198,13 @@ public class RediscalaServerTargets {
   }
 
   @Nullable
-  private static RedisServerTarget ofSentinel(
-      Object client, @Nullable Method sentinelsMethod, String master) {
-    if (sentinelsMethod == null) {
+  private static RedisServerTarget ofSentinel(SentinelMonitored client, String master) {
+    if (SENTINELS == null) {
       return null;
     }
     Object sentinels;
     try {
-      sentinels = sentinelsMethod.invoke(client);
+      sentinels = SENTINELS.invoke(client);
     } catch (ReflectiveOperationException e) {
       logger.log(FINE, "Failed to read the configured rediscala Sentinel servers", e);
       return null;
