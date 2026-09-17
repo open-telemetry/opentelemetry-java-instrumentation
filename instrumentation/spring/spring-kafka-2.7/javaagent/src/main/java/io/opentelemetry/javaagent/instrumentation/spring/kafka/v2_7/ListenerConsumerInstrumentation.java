@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.kafka.v2_7;
 
-import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.currentProcessSpanSuppression;
+import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanSuppression;
 import static io.opentelemetry.javaagent.instrumentation.spring.kafka.v2_7.SpringKafkaSingletons.batchProcessInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -55,14 +55,14 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static Boolean onEnter() {
-      return currentProcessSpanSuppression().set(Boolean.TRUE);
+      return processSpanSuppression().set(Boolean.TRUE);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Enter @Nullable Boolean previous,
         @Advice.Return @Nullable ConsumerRecords<?, ?> records) {
-      currentProcessSpanSuppression().restore(previous);
+      processSpanSuppression().restore(previous);
       if (records != null) {
         SpringKafkaBatchState.claimProcessSpan(records);
       }

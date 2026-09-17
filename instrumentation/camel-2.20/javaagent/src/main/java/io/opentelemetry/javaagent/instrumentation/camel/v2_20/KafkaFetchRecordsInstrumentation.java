@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.currentProcessSpanSuppression;
+import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanSuppression;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -37,13 +37,13 @@ class KafkaFetchRecordsInstrumentation implements TypeInstrumentation {
       if (!emitStableMessagingSemconv()) {
         return null;
       }
-      return currentProcessSpanSuppression().set(Boolean.TRUE);
+      return processSpanSuppression().set(Boolean.TRUE);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Boolean previous) {
       if (emitStableMessagingSemconv()) {
-        currentProcessSpanSuppression().restore(previous);
+        processSpanSuppression().restore(previous);
       }
     }
   }

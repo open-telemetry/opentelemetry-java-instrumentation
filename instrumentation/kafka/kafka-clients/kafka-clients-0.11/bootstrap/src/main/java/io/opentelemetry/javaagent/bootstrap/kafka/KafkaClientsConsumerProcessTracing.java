@@ -22,19 +22,19 @@ public final class KafkaClientsConsumerProcessTracing {
   private static final ContextKey<Boolean> FRAMEWORK_PROCESS_KEY =
       ContextKey.named("opentelemetry-kafka-framework-process-span");
 
-  private static final ScopedThreadValue<Boolean> currentProcessSpanSuppression =
+  private static final ScopedThreadValue<Boolean> processSpanSuppression =
       new ScopedThreadValue<>();
 
-  public static ScopedThreadValue<Boolean> currentProcessSpanSuppression() {
-    return currentProcessSpanSuppression;
+  public static ScopedThreadValue<Boolean> processSpanSuppression() {
+    return processSpanSuppression;
   }
 
-  public static boolean isWrappingEnabled() {
-    return currentProcessSpanSuppression().get() == null;
+  public static boolean isProcessSpanSuppressed() {
+    return processSpanSuppression().get() != null;
   }
 
-  public static BooleanSupplier getWrappingEnabledSupplier() {
-    return KafkaClientsConsumerProcessTracing::isWrappingEnabled;
+  public static BooleanSupplier processSpanEnabledSupplier() {
+    return () -> !isProcessSpanSuppressed();
   }
 
   public static Context markFrameworkProcess(Context context) {

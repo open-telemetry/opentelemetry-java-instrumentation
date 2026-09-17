@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.M
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.currentProcessSpanSuppression;
+import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanSuppression;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.consumerReceiveInstrumenter;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.recordTelemetry;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -79,7 +79,7 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
       KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumer);
 
       // disable process tracing and store the receive span for each individual record too
-      Boolean previous = currentProcessSpanSuppression().set(Boolean.TRUE);
+      Boolean previous = processSpanSuppression().set(Boolean.TRUE);
       try {
         Context receiveContext = null;
         boolean receiveOperationStarted = false;
@@ -116,7 +116,7 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
         }
         KafkaConsumerBatchStateUtil.recordPoll(records, previous);
       } finally {
-        currentProcessSpanSuppression().restore(previous);
+        processSpanSuppression().restore(previous);
       }
     }
   }

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactor.kafka.v1_0;
 
-import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.currentProcessSpanSuppression;
+import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanSuppression;
 
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
@@ -52,11 +52,11 @@ public class TracingDisablingKafkaFlux<T> extends FluxOperator<T, T> {
 
     @Override
     public void onNext(T record) {
-      Boolean previous = currentProcessSpanSuppression().set(Boolean.TRUE);
+      Boolean previous = processSpanSuppression().set(Boolean.TRUE);
       try {
         actual.onNext(record);
       } finally {
-        currentProcessSpanSuppression().restore(previous);
+        processSpanSuppression().restore(previous);
       }
     }
 

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.kafkaclient.v3_6;
 
-import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.currentProcessSpanSuppression;
+import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanSuppression;
 import static io.opentelemetry.javaagent.instrumentation.vertx.kafkaclient.v3_6.VertxKafkaSingletons.batchProcessInstrumenter;
 
 import io.opentelemetry.context.Context;
@@ -39,7 +39,7 @@ public class InstrumentedBatchRecordsHandler<K, V> implements Handler<ConsumerRe
     }
 
     // the instrumenter iterates over records when adding links, we need to suppress that
-    Boolean previous = currentProcessSpanSuppression().set(Boolean.TRUE);
+    Boolean previous = processSpanSuppression().set(Boolean.TRUE);
     try {
       Context context = batchProcessInstrumenter().start(parentContext, request);
       try (Scope ignored = context.makeCurrent()) {
@@ -50,7 +50,7 @@ public class InstrumentedBatchRecordsHandler<K, V> implements Handler<ConsumerRe
       }
       batchProcessInstrumenter().end(context, request, null, null);
     } finally {
-      currentProcessSpanSuppression().restore(previous);
+      processSpanSuppression().restore(previous);
     }
   }
 

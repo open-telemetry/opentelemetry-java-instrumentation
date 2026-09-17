@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
-import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.getWrappingEnabledSupplier;
+import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanEnabledSupplier;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.consumerProcessInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -80,7 +80,7 @@ class ConsumerRecordsInstrumentation implements TypeInstrumentation {
       return TracingIterable.wrap(
           iterable,
           consumerProcessInstrumenter(),
-          KafkaConsumerBatchStateUtil.processSpanEnabled(records, getWrappingEnabledSupplier()),
+          KafkaConsumerBatchStateUtil.processSpanEnabled(records, processSpanEnabledSupplier()),
           consumerContext);
     }
   }
@@ -102,7 +102,7 @@ class ConsumerRecordsInstrumentation implements TypeInstrumentation {
       return TracingList.wrap(
           list,
           consumerProcessInstrumenter(),
-          KafkaConsumerBatchStateUtil.processSpanEnabled(records, getWrappingEnabledSupplier()),
+          KafkaConsumerBatchStateUtil.processSpanEnabled(records, processSpanEnabledSupplier()),
           consumerContext);
     }
   }
@@ -124,7 +124,7 @@ class ConsumerRecordsInstrumentation implements TypeInstrumentation {
       return TracingIterator.wrap(
           iterator,
           consumerProcessInstrumenter(),
-          KafkaConsumerBatchStateUtil.processSpanEnabled(records, getWrappingEnabledSupplier()),
+          KafkaConsumerBatchStateUtil.processSpanEnabled(records, processSpanEnabledSupplier()),
           consumerContext);
     }
   }
@@ -146,7 +146,7 @@ class ConsumerRecordsInstrumentation implements TypeInstrumentation {
       return TracingListIterator.wrap(
           listIterator,
           consumerProcessInstrumenter(),
-          KafkaConsumerBatchStateUtil.processSpanEnabled(records, getWrappingEnabledSupplier()),
+          KafkaConsumerBatchStateUtil.processSpanEnabled(records, processSpanEnabledSupplier()),
           consumerContext);
     }
   }

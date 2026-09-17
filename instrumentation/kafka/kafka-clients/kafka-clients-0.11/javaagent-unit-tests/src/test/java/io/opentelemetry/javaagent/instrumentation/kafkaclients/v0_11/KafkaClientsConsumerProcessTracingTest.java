@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
-import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.currentProcessSpanSuppression;
+import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanEnabledSupplier;
+import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanSuppression;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -18,48 +19,53 @@ class KafkaClientsConsumerProcessTracingTest {
 
   @Test
   void shouldRestoreProcessSpanSuppression() {
-    Boolean previous = currentProcessSpanSuppression().set(Boolean.TRUE);
+    assertThat(KafkaClientsConsumerProcessTracing.isProcessSpanSuppressed()).isFalse();
+    assertThat(processSpanEnabledSupplier().getAsBoolean()).isTrue();
+
+    Boolean previous = processSpanSuppression().set(Boolean.TRUE);
     try {
-      assertThat(KafkaClientsConsumerProcessTracing.isWrappingEnabled()).isFalse();
+      assertThat(KafkaClientsConsumerProcessTracing.isProcessSpanSuppressed()).isTrue();
+      assertThat(processSpanEnabledSupplier().getAsBoolean()).isFalse();
     } finally {
-      currentProcessSpanSuppression().restore(previous);
+      processSpanSuppression().restore(previous);
     }
 
-    assertThat(KafkaClientsConsumerProcessTracing.isWrappingEnabled()).isTrue();
+    assertThat(KafkaClientsConsumerProcessTracing.isProcessSpanSuppressed()).isFalse();
+    assertThat(processSpanEnabledSupplier().getAsBoolean()).isTrue();
   }
 
   @Test
   void shouldRestoreNestedProcessSpanSuppression() {
-    Boolean outerPrevious = currentProcessSpanSuppression().set(Boolean.TRUE);
+    Boolean outerPrevious = processSpanSuppression().set(Boolean.TRUE);
     try {
-      Boolean innerPrevious = currentProcessSpanSuppression().set(Boolean.TRUE);
+      Boolean innerPrevious = processSpanSuppression().set(Boolean.TRUE);
       try {
-        assertThat(KafkaClientsConsumerProcessTracing.isWrappingEnabled()).isFalse();
+        assertThat(KafkaClientsConsumerProcessTracing.isProcessSpanSuppressed()).isTrue();
       } finally {
-        currentProcessSpanSuppression().restore(innerPrevious);
+        processSpanSuppression().restore(innerPrevious);
       }
-      assertThat(KafkaClientsConsumerProcessTracing.isWrappingEnabled()).isFalse();
+      assertThat(KafkaClientsConsumerProcessTracing.isProcessSpanSuppressed()).isTrue();
     } finally {
-      currentProcessSpanSuppression().restore(outerPrevious);
+      processSpanSuppression().restore(outerPrevious);
     }
 
-    assertThat(KafkaClientsConsumerProcessTracing.isWrappingEnabled()).isTrue();
+    assertThat(KafkaClientsConsumerProcessTracing.isProcessSpanSuppressed()).isFalse();
   }
 
   @Test
   void shouldCleanUpAfterException() {
     assertThatThrownBy(
             () -> {
-              Boolean previous = currentProcessSpanSuppression().set(Boolean.TRUE);
+              Boolean previous = processSpanSuppression().set(Boolean.TRUE);
               try {
                 throw new IllegalStateException("test");
               } finally {
-                currentProcessSpanSuppression().restore(previous);
+                processSpanSuppression().restore(previous);
               }
             })
         .isInstanceOf(IllegalStateException.class);
 
-    assertThat(KafkaClientsConsumerProcessTracing.isWrappingEnabled()).isTrue();
+    assertThat(KafkaClientsConsumerProcessTracing.isProcessSpanSuppressed()).isFalse();
   }
 
   @Test
