@@ -35,7 +35,7 @@ class RedisConnectionProviderInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.FieldValue("redisURI") RedisURI redisUri) {
       io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0.VertxRedisServerTargets.set(
-          redisUri, RedisConnectionManagerUtil.getServerTargetThreadLocal());
+          redisUri, RedisConnectionManagerUtil.currentServerTarget().get());
     }
   }
 }
