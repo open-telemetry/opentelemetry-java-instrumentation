@@ -30,17 +30,22 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 class HttpClientExperimentalMetricsTest {
+
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @Test
   void collectsMetrics() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.create();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
 
     OperationListener listener =
         HttpClientExperimentalMetrics.get().create(meterProvider.get("test"));

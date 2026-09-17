@@ -19,7 +19,8 @@ public class MongoInstrumentationSingletons {
       MongoInstrumenterFactory.createInstrumenter(
           GlobalOpenTelemetry.get(),
           "io.opentelemetry.mongo-3.7",
-          DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "mongo"));
+          DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "mongo"),
+          MongoConnectionPeer::resolve);
 
   private static final CommandListener tracingListener = new TracingCommandListener(instrumenter);
 

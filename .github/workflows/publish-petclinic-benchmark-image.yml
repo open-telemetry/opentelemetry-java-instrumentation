@@ -21,7 +21,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+      - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
 
       - name: Login to GitHub container registry
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
@@ -46,6 +46,6 @@ jobs:
     needs:
       - publish
     if: always()
-    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@62d5939b47144252763c5ff9fffe8c20d76cd806 # v0.4.0
+    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@03559ef555db0eae5d85c3c6347d1530243e7aa7 # v0.13.0
     with:
       success: ${{ needs.publish.result == 'success' }}
