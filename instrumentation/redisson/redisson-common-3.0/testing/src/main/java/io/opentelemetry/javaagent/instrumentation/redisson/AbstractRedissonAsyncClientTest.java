@@ -305,9 +305,7 @@ public abstract class AbstractRedissonAsyncClientTest {
         testing.runWithSpan(
             "parent",
             () -> {
-              BatchOptions batchOptions =
-                  BatchOptions.defaults()
-                      .executionMode(BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC);
+              BatchOptions batchOptions = batchOptions("REDIS_WRITE_ATOMIC");
               RBatch batch = redisson.createBatch(batchOptions);
               batch.getBucket("batch1").setAsync("v1");
               batch.getBucket("batch2").setAsync("v2");
@@ -441,18 +439,14 @@ public abstract class AbstractRedissonAsyncClientTest {
       Assumptions.abort();
       return;
     }
-    BatchOptions.ExecutionMode executionMode =
-        usesRPromise
-            ? BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC
-            : BatchOptions.ExecutionMode.IN_MEMORY_ATOMIC;
+    String executionMode = usesRPromise ? "REDIS_WRITE_ATOMIC" : "IN_MEMORY_ATOMIC";
 
     CompletableFuture<String> callbackResult = new CompletableFuture<>();
     CompletionStage<?> result =
         testing.runWithSpan(
             "parent",
             () -> {
-              RBatch batch =
-                  redisson.createBatch(BatchOptions.defaults().executionMode(executionMode));
+              RBatch batch = redisson.createBatch(batchOptions(executionMode));
               RFuture<Void> commandFuture = batch.getBucket("batch1").setAsync("v1");
               commandFuture.whenComplete(
                   (unused, commandError) -> {
@@ -468,9 +462,8 @@ public abstract class AbstractRedissonAsyncClientTest {
                         });
                   });
               batch.getBucket("batch2").setAsync("v2");
-              return batch
-                  .executeAsync()
-                  .thenCombine(callbackResult, (batchResult, value) -> batchResult);
+              CompletionStage<?> batchResult = batch.executeAsync();
+              return batchResult.thenCombine(callbackResult, (resultValue, value) -> resultValue);
             });
     assertThat(result.toCompletableFuture()).succeedsWithin(TIMEOUT);
 
@@ -513,6 +506,22 @@ public abstract class AbstractRedissonAsyncClientTest {
 
   private String dbNamespace() {
     return emitStableDatabaseSemconv() && hasDatabaseIndex() ? "0" : null;
+  }
+
+  @SuppressWarnings({"unchecked", "TypeParameterUnusedInFormals"})
+  private static <T> T batchOptions(String executionMode) {
+    try {
+      Class<?> optionsClass = Class.forName("org.redisson.api.BatchOptions");
+      Class<?> executionModeClass = Class.forName("org.redisson.api.BatchOptions$ExecutionMode");
+      Object executionModeValue = executionModeClass.getField(executionMode).get(null);
+      Object options = optionsClass.getMethod("defaults").invoke(null);
+      return (T)
+          optionsClass
+              .getMethod("executionMode", executionModeClass)
+              .invoke(options, executionModeValue);
+    } catch (ReflectiveOperationException e) {
+      throw new LinkageError(e.getMessage(), e);
+    }
   }
 
   private static class MyCallable implements Serializable, Callable<Object> {
