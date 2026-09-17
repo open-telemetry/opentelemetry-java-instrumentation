@@ -5,11 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_4_5;
 
+import static io.vertx.redis.client.RedisReplicationConnectOptions.TestTopology.DISCOVER;
+import static io.vertx.redis.client.RedisReplicationConnectOptions.TestTopology.STATIC;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.vertx.redis.client.RedisClusterConnectOptions;
 import io.vertx.redis.client.RedisConnectOptions;
+import io.vertx.redis.client.RedisReplicationConnectOptions;
 import io.vertx.redis.client.RedisSentinelConnectOptions;
 import io.vertx.redis.client.RedisStandaloneConnectOptions;
 import org.junit.jupiter.api.Test;
@@ -161,7 +164,7 @@ class VertxRedisServerTargetsTest {
   void staticReplicationConnectOptionsPreserveEndpointOrder() {
     RedisServerTarget target =
         VertxRedisServerTargets.of(
-            new StaticReplicationConnectOptions()
+            new RedisReplicationConnectOptions(STATIC)
                 .addConnectionString("redis://z-master:6380")
                 .addConnectionString("redis://a-replica:6380"));
 
@@ -173,12 +176,12 @@ class VertxRedisServerTargetsTest {
   void discoverReplicationSortsBootstrapSeedsThroughRedisConnectOptions() {
     RedisServerTarget first =
         VertxRedisServerTargets.of(
-            new DiscoverReplicationConnectOptions()
+            new RedisReplicationConnectOptions(DISCOVER)
                 .addConnectionString("redis://z-seed:6380")
                 .addConnectionString("redis://a-seed:6380"));
     RedisServerTarget second =
         VertxRedisServerTargets.of(
-            new DiscoverReplicationConnectOptions()
+            new RedisReplicationConnectOptions(DISCOVER)
                 .addConnectionString("redis://a-seed:6380")
                 .addConnectionString("redis://z-seed:6380"));
 
@@ -191,7 +194,7 @@ class VertxRedisServerTargetsTest {
   void staticReplicationWithMultipleUnixSocketsIsUnrepresentable() {
     RedisServerTarget target =
         VertxRedisServerTargets.of(
-            new StaticReplicationConnectOptions()
+            new RedisReplicationConnectOptions(STATIC)
                 .addConnectionString("unix:///var/run/redis-master.sock")
                 .addConnectionString("unix:///var/run/redis-replica.sock"));
 
@@ -329,39 +332,5 @@ class VertxRedisServerTargetsTest {
   @Test
   void noOptions() {
     assertThat(VertxRedisServerTargets.of((RedisConnectOptions) null)).isNull();
-  }
-
-  static class StaticReplicationConnectOptions extends RedisConnectOptions {
-    public TestTopology getTopology() {
-      return TestTopology.STATIC;
-    }
-
-    @Override
-    public StaticReplicationConnectOptions addConnectionString(String connectionString) {
-      super.addConnectionString(connectionString);
-      return this;
-    }
-  }
-
-  static class DiscoverReplicationConnectOptions extends RedisConnectOptions {
-    public TestTopology getTopology() {
-      return TestTopology.DISCOVER;
-    }
-
-    @Override
-    public DiscoverReplicationConnectOptions addConnectionString(String connectionString) {
-      super.addConnectionString(connectionString);
-      return this;
-    }
-  }
-
-  enum TestTopology {
-    STATIC,
-    DISCOVER;
-
-    @Override
-    public String toString() {
-      return "custom";
-    }
   }
 }

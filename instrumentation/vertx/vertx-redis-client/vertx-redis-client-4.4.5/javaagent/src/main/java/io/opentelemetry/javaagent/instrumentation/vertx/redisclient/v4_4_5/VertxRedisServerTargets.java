@@ -13,6 +13,7 @@ import io.vertx.core.Future;
 import io.vertx.redis.client.RedisConnectOptions;
 import io.vertx.redis.client.RedisSentinelConnectOptions;
 import io.vertx.redis.client.RedisStandaloneConnectOptions;
+import java.lang.reflect.Method;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -23,6 +24,8 @@ public final class VertxRedisServerTargets {
 
   private static final String CONSTANT_SUPPLIER_CLASS_NAME =
       "io.vertx.redis.client.ConstantSupplier";
+
+  @Nullable private static final Method GET_TOPOLOGY = findGetTopology();
 
   @Nullable
   public static RedisServerTarget of(@Nullable RedisConnectOptions options) {
@@ -71,17 +74,32 @@ public final class VertxRedisServerTargets {
   }
 
   private static boolean hasStaticTopology(Object options) {
+    if (GET_TOPOLOGY == null || !GET_TOPOLOGY.getDeclaringClass().isInstance(options)) {
+      return false;
+    }
     try {
-      Object topology = options.getClass().getMethod("getTopology").invoke(options);
+      Object topology = GET_TOPOLOGY.invoke(options);
       if (topology instanceof Enum<?>) {
         return ((Enum<?>) topology).name().equals("STATIC");
       }
       return topology != null && topology.toString().equals("STATIC");
-    } catch (NoSuchMethodException ignored) {
-      return false;
     } catch (ReflectiveOperationException e) {
       logger.log(FINE, "Failed to read the Vert.x Redis topology", e);
       return false;
+    }
+  }
+
+  @Nullable
+  private static Method findGetTopology() {
+    try {
+      Class<?> replicationConnectOptions =
+          Class.forName(
+              "io.vertx.redis.client.RedisReplicationConnectOptions",
+              false,
+              VertxRedisServerTargets.class.getClassLoader());
+      return replicationConnectOptions.getMethod("getTopology");
+    } catch (ReflectiveOperationException ignored) {
+      return null;
     }
   }
 
