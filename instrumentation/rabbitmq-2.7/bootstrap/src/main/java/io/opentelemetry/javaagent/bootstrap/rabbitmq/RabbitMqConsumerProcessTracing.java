@@ -10,15 +10,15 @@ import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 /** Coordinates process telemetry between Spring Rabbit and RabbitMQ instrumentations. */
 public final class RabbitMqConsumerProcessTracing {
 
-  private static final ScopedThreadValue<Boolean> currentProcessSpanSuppression =
+  private static final ScopedThreadValue<Boolean> processSpanSuppression =
       new ScopedThreadValue<>();
 
-  public static ScopedThreadValue<Boolean> currentProcessSpanSuppression() {
-    return currentProcessSpanSuppression;
+  public static ScopedThreadValue<Boolean> processSpanSuppression() {
+    return processSpanSuppression;
   }
 
-  public static boolean shouldTraceProcess() {
-    return currentProcessSpanSuppression.get() == null;
+  public static boolean isProcessSpanSuppressed() {
+    return processSpanSuppression.get() != null;
   }
 
   private RabbitMqConsumerProcessTracing() {}

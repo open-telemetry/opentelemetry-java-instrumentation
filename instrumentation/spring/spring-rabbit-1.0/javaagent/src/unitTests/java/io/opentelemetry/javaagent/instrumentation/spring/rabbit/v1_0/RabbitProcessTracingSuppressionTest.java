@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
-import static io.opentelemetry.javaagent.bootstrap.rabbitmq.RabbitMqConsumerProcessTracing.shouldTraceProcess;
+import static io.opentelemetry.javaagent.bootstrap.rabbitmq.RabbitMqConsumerProcessTracing.isProcessSpanSuppressed;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
@@ -26,14 +26,14 @@ class RabbitProcessTracingSuppressionTest {
         BlockingQueueConsumerInstrumentation.ConsumerRegistrationAdvice.onEnter(eligibleConsumer);
     try {
       assertThat(installed).isTrue();
-      assertThat(shouldTraceProcess()).isFalse();
+      assertThat(isProcessSpanSuppressed()).isTrue();
 
       boolean nestedEligible =
           LegacyBlockingQueueConsumerInstrumentation.ConsumerRegistrationAdvice.onEnter(
               eligibleConsumer);
       try {
         assertThat(nestedEligible).isFalse();
-        assertThat(shouldTraceProcess()).isFalse();
+        assertThat(isProcessSpanSuppressed()).isTrue();
       } finally {
         LegacyBlockingQueueConsumerInstrumentation.ConsumerRegistrationAdvice.onExit(
             nestedEligible);
@@ -44,7 +44,7 @@ class RabbitProcessTracingSuppressionTest {
               mock(BlockingQueueConsumer.class));
       try {
         assertThat(nestedIneligible).isFalse();
-        assertThat(shouldTraceProcess()).isFalse();
+        assertThat(isProcessSpanSuppressed()).isTrue();
       } finally {
         BlockingQueueConsumerInstrumentation.ConsumerRegistrationAdvice.onExit(nestedIneligible);
       }
@@ -52,7 +52,7 @@ class RabbitProcessTracingSuppressionTest {
       BlockingQueueConsumerInstrumentation.ConsumerRegistrationAdvice.onExit(installed);
     }
 
-    assertThat(shouldTraceProcess()).isTrue();
+    assertThat(isProcessSpanSuppressed()).isFalse();
   }
 
   @Test
@@ -65,24 +65,24 @@ class RabbitProcessTracingSuppressionTest {
         DirectMessageListenerContainerInstrumentation.ConsumeAdvice.onEnter(eligibleContainer);
     try {
       assertThat(installed).isTrue();
-      assertThat(shouldTraceProcess()).isFalse();
+      assertThat(isProcessSpanSuppressed()).isTrue();
 
       boolean nestedEligible =
           DirectMessageListenerContainerInstrumentation.ConsumeAdvice.onEnter(eligibleContainer);
       DirectMessageListenerContainerInstrumentation.ConsumeAdvice.onExit(nestedEligible);
       assertThat(nestedEligible).isFalse();
-      assertThat(shouldTraceProcess()).isFalse();
+      assertThat(isProcessSpanSuppressed()).isTrue();
 
       boolean nestedIneligible =
           DirectMessageListenerContainerInstrumentation.ConsumeAdvice.onEnter(ineligibleContainer);
       DirectMessageListenerContainerInstrumentation.ConsumeAdvice.onExit(nestedIneligible);
       assertThat(nestedIneligible).isFalse();
-      assertThat(shouldTraceProcess()).isFalse();
+      assertThat(isProcessSpanSuppressed()).isTrue();
     } finally {
       DirectMessageListenerContainerInstrumentation.ConsumeAdvice.onExit(installed);
     }
 
-    assertThat(shouldTraceProcess()).isTrue();
+    assertThat(isProcessSpanSuppressed()).isFalse();
   }
 
   @Test
@@ -104,6 +104,6 @@ class RabbitProcessTracingSuppressionTest {
             })
         .isInstanceOf(IllegalStateException.class);
 
-    assertThat(shouldTraceProcess()).isTrue();
+    assertThat(isProcessSpanSuppressed()).isFalse();
   }
 }
