@@ -9,29 +9,35 @@ import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.M
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 
-import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadSuppression;
 import org.junit.jupiter.api.Test;
 
 class MessageListenerContextTest {
 
   @Test
-  void nestedReceiveSpanSuppressionRestoresPreviousSuppression() {
-    ScopedThreadValue<Boolean> suppression = receiveSpanSuppression();
-    Boolean beforeOuter = suppression.set(Boolean.TRUE);
+  void nestedReceiveSpanSuppressionPreservesOuterSuppression() {
+    ScopedThreadSuppression suppression = receiveSpanSuppression();
+    boolean outerSuppressionAcquired = suppression.tryAcquire();
     try {
-      Boolean beforeInner = suppression.set(Boolean.TRUE);
-      suppression.restore(beforeInner);
+      assertThat(outerSuppressionAcquired).isTrue();
+      boolean innerSuppressionAcquired = suppression.tryAcquire();
+      assertThat(innerSuppressionAcquired).isFalse();
+      if (innerSuppressionAcquired) {
+        suppression.release();
+      }
       assertThat(MessageListenerContext.isReceiveSpanSuppressed()).isTrue();
     } finally {
-      suppression.restore(beforeOuter);
+      if (outerSuppressionAcquired) {
+        suppression.release();
+      }
     }
     assertThat(MessageListenerContext.isReceiveSpanSuppressed()).isFalse();
   }
 
   @Test
-  void receiveSpanSuppressionRestoresAfterException() {
-    ScopedThreadValue<Boolean> suppression = receiveSpanSuppression();
-    Boolean previous = suppression.set(Boolean.TRUE);
+  void receiveSpanSuppressionReleasesAfterException() {
+    ScopedThreadSuppression suppression = receiveSpanSuppression();
+    boolean suppressionAcquired = suppression.tryAcquire();
 
     assertThatIllegalStateException()
         .isThrownBy(
@@ -39,7 +45,9 @@ class MessageListenerContextTest {
               try {
                 throw new IllegalStateException("boom");
               } finally {
-                suppression.restore(previous);
+                if (suppressionAcquired) {
+                  suppression.release();
+                }
               }
             });
 

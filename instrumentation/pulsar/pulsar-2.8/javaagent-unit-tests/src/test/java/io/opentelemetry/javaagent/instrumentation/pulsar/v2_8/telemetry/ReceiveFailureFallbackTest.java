@@ -16,7 +16,7 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadSuppression;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.VirtualFieldStore;
 import io.opentelemetry.javaagent.instrumentation.spring.pulsar.v1_0.SpringPulsarSingletons;
@@ -93,21 +93,23 @@ class ReceiveFailureFallbackTest {
   }
 
   @Test
-  void pulsarReceiveSuppressionRestoresAfterException() {
-    ScopedThreadValue<Boolean> suppression = receiveSpanSuppression();
-    Boolean previous = suppression.set(Boolean.TRUE);
+  void pulsarReceiveSuppressionReleasesAfterException() {
+    ScopedThreadSuppression suppression = receiveSpanSuppression();
+    boolean suppressionAcquired = suppression.tryAcquire();
 
     assertThatIllegalStateException()
         .isThrownBy(
             () -> {
               try {
-                assertThat(suppression.get()).isTrue();
+                assertThat(suppression.isActive()).isTrue();
                 throw new IllegalStateException("boom");
               } finally {
-                suppression.restore(previous);
+                if (suppressionAcquired) {
+                  suppression.release();
+                }
               }
             });
 
-    assertThat(suppression.get()).isNull();
+    assertThat(suppression.isActive()).isFalse();
   }
 }

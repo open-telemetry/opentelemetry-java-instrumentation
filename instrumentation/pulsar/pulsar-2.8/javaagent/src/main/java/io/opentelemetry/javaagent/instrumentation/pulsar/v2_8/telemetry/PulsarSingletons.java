@@ -31,7 +31,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
-import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadSuppression;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
@@ -67,8 +67,8 @@ public class PulsarSingletons {
   private static final Instrumenter<PulsarRequest, Void> producerInstrumenter =
       createProducerInstrumenter();
 
-  private static final ScopedThreadValue<Boolean> receiveSpanSuppression =
-      new ScopedThreadValue<>();
+  private static final ScopedThreadSuppression receiveSpanSuppression =
+      new ScopedThreadSuppression();
 
   public static Instrumenter<PulsarRequest, Void> consumerProcessInstrumenter() {
     return consumerProcessInstrumenter;
@@ -78,7 +78,7 @@ public class PulsarSingletons {
     return producerInstrumenter;
   }
 
-  public static ScopedThreadValue<Boolean> receiveSpanSuppression() {
+  public static ScopedThreadSuppression receiveSpanSuppression() {
     return receiveSpanSuppression;
   }
 
@@ -352,7 +352,7 @@ public class PulsarSingletons {
   }
 
   private static boolean isReceiveSpanSuppressed() {
-    return receiveSpanSuppression.get() != null;
+    return receiveSpanSuppression.isActive();
   }
 
   private PulsarSingletons() {}

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 
-import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadSuppression;
 
 /**
  * Helper class used to determine whether message is going to be processed by a listener. If we know
@@ -13,16 +13,16 @@ import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
  * "process" operation, we are going to suppress the span from the message "receive" operation.
  */
 public class MessageListenerContext {
-  private static final ScopedThreadValue<Boolean> receiveSpanSuppression =
-      new ScopedThreadValue<>();
+  private static final ScopedThreadSuppression receiveSpanSuppression =
+      new ScopedThreadSuppression();
 
-  public static ScopedThreadValue<Boolean> receiveSpanSuppression() {
+  public static ScopedThreadSuppression receiveSpanSuppression() {
     return receiveSpanSuppression;
   }
 
   /** Returns true while receive spans are suppressed for listener processing. */
   public static boolean isReceiveSpanSuppressed() {
-    return receiveSpanSuppression.get() != null;
+    return receiveSpanSuppression.isActive();
   }
 
   private MessageListenerContext() {}

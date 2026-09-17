@@ -167,16 +167,17 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
   public static class SuppressInstrumentationAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    @Nullable
-    public static Boolean before() {
+    public static boolean before() {
       // MultiTopicsConsumerImpl#receiveMessageFromConsumer is called from a background thread, we
       // don't want to create a span for it.
-      return receiveSpanSuppression().set(Boolean.TRUE);
+      return receiveSpanSuppression().tryAcquire();
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
-    public static void after(@Advice.Enter @Nullable Boolean previous) {
-      receiveSpanSuppression().restore(previous);
+    public static void after(@Advice.Enter boolean suppressionAcquired) {
+      if (suppressionAcquired) {
+        receiveSpanSuppression().release();
+      }
     }
   }
 }
