@@ -34,6 +34,11 @@ final class EmbeddingAttributesGetter
     return request.model().asString();
   }
 
+  @Override
+  public boolean isRequestStreaming(EmbeddingCreateParams request) {
+    return false;
+  }
+
   @Nullable
   @Override
   public Long getRequestSeed(EmbeddingCreateParams request) {

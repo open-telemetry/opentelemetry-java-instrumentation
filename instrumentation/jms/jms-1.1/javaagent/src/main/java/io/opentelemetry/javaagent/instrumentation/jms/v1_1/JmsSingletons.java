@@ -47,8 +47,8 @@ public class JmsSingletons {
   }
 
   public static Instrumenter<MessageWithDestination, Void> consumerProcessInstrumenter(
-      boolean receiveTelemetryRecorded) {
-    return receiveTelemetryRecorded
+      boolean consumedMessagesRecorded) {
+    return consumedMessagesRecorded
         ? consumerProcessInstrumenter
         : consumerProcessInstrumenterWithConsumedMessages;
   }

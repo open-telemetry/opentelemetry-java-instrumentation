@@ -26,20 +26,25 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import java.util.Collection;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class RpcClientMetricsTest {
+
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @Test
   void collectsMetrics() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
 
     OperationListener listener = RpcClientMetrics.get().create(meterProvider.get("test"));
 

@@ -9,16 +9,22 @@ Follow `docs/contributing/style-guide.md`.
 - **Visibility**: principle of least access. Use the most restrictive modifier
   that still works. Static fields should be `private` unless they are
   constant-like with a `SCREAMING_SNAKE_CASE` name.
-- **`final` on classes**: declare public API classes `final` where possible. Do
-  **not** add `final` in `javaagent/src/main/`, in `.internal` packages, or in
-  test code (paths under `src/test/` or modules whose name starts/ends with
-  `testing` or `tests`).
+- **`final` on classes**: declare
+  [public API classes](../../docs/contributing/style-guide.md#public-api) `final`
+  where possible.
 - **`final` on parameters and local variables**: never declare them `final`.
 - **Null comparisons**: use `value == null` / `value != null`, not
   `null == value` / `null != value`. Applies to Java, Kotlin, and Scala.
 - **`equals` operand order**: prefer `value.equals(CONSTANT)` over
   `CONSTANT.equals(value)`. Do not flip operand order solely as a defensive
   null-safety cleanup; only flip when `value` can actually be null.
+- **Byte Buddy `isDeclaredBy` matchers**: do not add `isDeclaredBy` by default.
+  Use it when a `TypeInstrumentation` type matcher covers multiple types and an
+  advice intentionally applies only to a member declared by one specific type.
+  Do not add it as speculative future-proofing when the method name and required
+  signature already identify the target. As with method parameter matching,
+  avoid restrictions that correctness, advice binding, or intended behavior do
+  not require.
 - **Class organization**: static fields → static initializer → instance fields
   → constructors → methods → nested classes. Place calling methods above the
   methods they call.
@@ -29,9 +35,12 @@ Follow `docs/contributing/style-guide.md`.
   methods.
 - **Uppercase field names**: use `SCREAMING_SNAKE_CASE` only for constant-like
   values — literals, immutable value constants (e.g. `Duration` timeouts),
-  semantic keys/handles (`AttributeKey`, `ContextKey`, `VirtualField`,
-  `MethodHandle`, `Pattern`), and canonical singletons (`INSTANCE`, `EMPTY`,
-  `NOOP`). Use lower camel case for runtime collaborators (loggers,
+  canonical singletons (`INSTANCE`, `EMPTY`, `NOOP`), and semantic key/handle
+  types (`AttributeKey`, `ContextKey`, `VirtualField`, `MethodHandle`,
+  `Pattern`). A `static final VirtualField` field **must** be
+  `SCREAMING_SNAKE_CASE` regardless of visibility and regardless of the fact
+  that `VirtualField.find(...)` creates the handle at runtime rather than at
+  compile time. Use lower camel case for runtime collaborators (loggers,
   instrumenters, helpers, caches), even when `static final`.
 - **Collection constants**: public, protected, and package-private collection
   constants must be unmodifiable. Private collection constants must also be

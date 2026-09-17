@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityU
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
 import io.opentelemetry.sdk.testing.assertj.TraceAssert
+import io.opentelemetry.sdk.trace.data.StatusData
 import io.vertx.core.Vertx
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.CompletableDeferred
@@ -56,6 +57,8 @@ import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
 import java.util.stream.Stream
 import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
+import kotlin.coroutines.jvm.internal.CoroutineStackFrame
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExperimentalCoroutinesApi
@@ -436,6 +439,128 @@ class KotlinCoroutinesInstrumentationTest {
     @SpanAttribute("stringValue") s: String
   ) {
     delay(10)
+  }
+
+  // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/12837
+  @Test
+  fun `WithSpan restores effective context after unannotated suspension`() {
+    Assumptions.assumeFalse(v3Preview())
+
+    val rootSpan = tracer.spanBuilder("root").startSpan()
+    runBlocking(Context.root().asContextElement()) {
+      withContext(TestContextElement(rootSpan.storeInContext(Context.root()))) {
+        annotatedIntermediate()
+        tracer.spanBuilder("after").startSpan().end()
+      }
+    }
+    rootSpan.end()
+
+    testing.waitAndAssertTraces(
+      { trace ->
+        trace.hasSpansSatisfyingExactly(
+          {
+            it.hasName("root")
+              .hasNoParent()
+          },
+          {
+            it.hasName("intermediate")
+              .hasParent(trace.getSpan(0))
+          },
+          {
+            it.hasName("leaf")
+              .hasParent(trace.getSpan(1))
+          },
+          {
+            it.hasName("leaf")
+              .hasParent(trace.getSpan(1))
+          },
+          {
+            it.hasName("after")
+              .hasParent(trace.getSpan(0))
+          },
+        )
+      },
+    )
+  }
+
+  @WithSpan("intermediate")
+  private suspend fun annotatedIntermediate() {
+    unannotatedIntermediate()
+  }
+
+  private suspend fun unannotatedIntermediate() {
+    annotatedLeaf()
+    annotatedLeaf()
+  }
+
+  @WithSpan("leaf")
+  private suspend fun annotatedLeaf() {
+    delay(10)
+  }
+
+  @Test
+  fun `WithSpan preserves coroutine stack frames`() {
+    Assumptions.assumeFalse(v3Preview())
+
+    runBlocking {
+      stackFrameCaller()
+    }
+  }
+
+  private suspend fun stackFrameCaller() {
+    annotatedStackFrame()
+    yield()
+  }
+
+  @WithSpan("stack-frame")
+  private suspend fun annotatedStackFrame() {
+    inspectStackFrame()
+  }
+
+  private suspend fun inspectStackFrame() {
+    suspendCoroutineUninterceptedOrReturn<Unit> { continuation ->
+      assertThat(continuation).isInstanceOf(CoroutineStackFrame::class.java)
+      val frame = continuation as CoroutineStackFrame
+      assertThat(frame.callerFrame).isNotNull()
+      assertThat(frame.getStackTraceElement()).isNull()
+      Unit
+    }
+  }
+
+  @Test
+  fun `WithSpan ends span on failed completion`() {
+    Assumptions.assumeFalse(v3Preview())
+
+    val exception = IllegalStateException("expected")
+    val result = runCatching {
+      runBlocking {
+        annotatedFailure(exception)
+      }
+    }
+
+    assertThat(result.exceptionOrNull()).isSameAs(exception)
+    testing.waitAndAssertTraces(
+      { trace ->
+        trace.hasSpansSatisfyingExactly(
+          {
+            it.hasName("failing")
+              .hasNoParent()
+              .hasStatus(StatusData.error())
+              .hasException(exception)
+          },
+        )
+      },
+    )
+  }
+
+  @WithSpan("failing")
+  private suspend fun annotatedFailure(exception: RuntimeException) {
+    unannotatedFailure(exception)
+  }
+
+  private suspend fun unannotatedFailure(exception: RuntimeException) {
+    delay(10)
+    throw exception
   }
 
   // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/9312
