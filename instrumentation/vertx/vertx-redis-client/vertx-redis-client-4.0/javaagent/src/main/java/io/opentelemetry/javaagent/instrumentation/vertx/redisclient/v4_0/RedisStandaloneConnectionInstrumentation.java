@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
+import static io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0.VertxRedisClientSingletons.currentRedisUri;
 import static io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0.VertxRedisClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -226,8 +227,7 @@ class RedisStandaloneConnectionInstrumentation implements TypeInstrumentation {
     public static void onExit(@Advice.This RedisStandaloneConnection connection) {
       // For 4.1.0 and later, InitAdvice exposes RedisURI during this synchronous constructor call.
       // For 4.0.0, RedisConnectionProviderInstrumentation sets it directly.
-      VertxRedisClientSingletons.setRedisUri(
-          connection, VertxRedisClientSingletons.getRedisUriThreadLocal());
+      VertxRedisClientSingletons.setRedisUri(connection, currentRedisUri().get());
     }
   }
 }
