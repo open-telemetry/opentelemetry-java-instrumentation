@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v4_8;
 
+import static io.opentelemetry.instrumentation.rocketmqclient.v4_8.RocketMqBatchSendHelper.currentBatchSendState;
 import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v4_8.RocketMqSingletons.batchSendHelper;
 import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v4_8.RocketMqSingletons.sendMessageHook;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -13,6 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.instrumentation.rocketmqclient.v4_8.RocketMqBatchSendHelper.BatchSendState;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -66,47 +68,82 @@ class RocketMqProducerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class BatchSendAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Object onEnter(@Advice.This Object producer) {
-      return batchSendHelper().batchSendStart(producer, false);
+    public static Object[] onEnter(@Advice.This Object producer) {
+      BatchSendState state = batchSendHelper().createBatchSendState(producer, false);
+      Object[] enterResult = new Object[] {state, null};
+      if (state != null) {
+        enterResult[1] = currentBatchSendState().set(state);
+      }
+      return enterResult;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter Object state, @Advice.Thrown Throwable throwable) {
-      batchSendHelper().batchSendEnd(state, throwable);
+    public static void onExit(
+        @Advice.Enter Object[] enterResult, @Advice.Thrown Throwable throwable) {
+      BatchSendState state = (BatchSendState) enterResult[0];
+      try {
+        batchSendHelper().completeBatchSend(state, throwable);
+      } finally {
+        if (state != null) {
+          currentBatchSendState().restore((BatchSendState) enterResult[1]);
+        }
+      }
     }
   }
 
   @SuppressWarnings("unused")
   public static class AsyncBatchSendArgumentOneAdvice {
-    @AssignReturned.ToArguments(@ToArgument(value = 1, index = 1))
+    @AssignReturned.ToArguments(@ToArgument(value = 1, index = 2))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
         @Advice.This Object producer, @Advice.Argument(1) SendCallback callback) {
-      Object state = batchSendHelper().batchSendStart(producer, callback != null);
-      return new Object[] {state, batchSendHelper().wrap(callback, state)};
+      BatchSendState state = batchSendHelper().createBatchSendState(producer, callback != null);
+      Object[] enterResult = new Object[] {state, null, batchSendHelper().wrap(callback, state)};
+      if (state != null) {
+        enterResult[1] = currentBatchSendState().set(state);
+      }
+      return enterResult;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Enter Object[] enterResult, @Advice.Thrown Throwable throwable) {
-      batchSendHelper().batchSendEnd(enterResult[0], throwable);
+      BatchSendState state = (BatchSendState) enterResult[0];
+      try {
+        batchSendHelper().completeBatchSend(state, throwable);
+      } finally {
+        if (state != null) {
+          currentBatchSendState().restore((BatchSendState) enterResult[1]);
+        }
+      }
     }
   }
 
   @SuppressWarnings("unused")
   public static class AsyncBatchSendArgumentTwoAdvice {
-    @AssignReturned.ToArguments(@ToArgument(value = 2, index = 1))
+    @AssignReturned.ToArguments(@ToArgument(value = 2, index = 2))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
         @Advice.This Object producer, @Advice.Argument(2) SendCallback callback) {
-      Object state = batchSendHelper().batchSendStart(producer, callback != null);
-      return new Object[] {state, batchSendHelper().wrap(callback, state)};
+      BatchSendState state = batchSendHelper().createBatchSendState(producer, callback != null);
+      Object[] enterResult = new Object[] {state, null, batchSendHelper().wrap(callback, state)};
+      if (state != null) {
+        enterResult[1] = currentBatchSendState().set(state);
+      }
+      return enterResult;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Enter Object[] enterResult, @Advice.Thrown Throwable throwable) {
-      batchSendHelper().batchSendEnd(enterResult[0], throwable);
+      BatchSendState state = (BatchSendState) enterResult[0];
+      try {
+        batchSendHelper().completeBatchSend(state, throwable);
+      } finally {
+        if (state != null) {
+          currentBatchSendState().restore((BatchSendState) enterResult[1]);
+        }
+      }
     }
   }
 }

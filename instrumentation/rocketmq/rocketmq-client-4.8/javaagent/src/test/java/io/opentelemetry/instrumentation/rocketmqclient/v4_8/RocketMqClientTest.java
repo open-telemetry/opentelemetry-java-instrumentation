@@ -13,6 +13,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.context.Context;
@@ -23,18 +24,25 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.util.AbstractCollection;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.AbstractExecutorService;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
+import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;
+import org.apache.rocketmq.client.producer.SendStatus;
 import org.apache.rocketmq.common.message.Message;
+import org.apache.rocketmq.common.message.MessageBatch;
 import org.apache.rocketmq.remoting.exception.RemotingTooMuchRequestException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -63,6 +71,66 @@ class RocketMqClientTest extends AbstractRocketMqClientTest {
   @Override
   boolean isJavaagent() {
     return true;
+  }
+
+  @Test
+  void testNestedBatchSendRestoresOuterState() throws Exception {
+    assumeTrue(emitStableMessagingSemconv());
+    String topic = BaseConf.initTopic();
+    List<Message> inner =
+        asList(
+            new Message(topic, "inner one".getBytes(UTF_8)),
+            new Message(topic, "inner two".getBytes(UTF_8)));
+    List<Message> outer =
+        asList(
+            new Message(topic, "outer one".getBytes(UTF_8)),
+            new Message(topic, "outer two".getBytes(UTF_8)));
+    AtomicBoolean nestedSent = new AtomicBoolean();
+    Collection<Message> nestingBatch =
+        new AbstractCollection<Message>() {
+          @Override
+          public Iterator<Message> iterator() {
+            if (nestedSent.compareAndSet(false, true)) {
+              try {
+                producer().send(inner);
+              } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException(e);
+              } catch (Exception e) {
+                throw new IllegalStateException(e);
+              }
+            }
+            return outer.iterator();
+          }
+
+          @Override
+          public int size() {
+            return outer.size();
+          }
+        };
+
+    assertThat(producer().send(nestingBatch).getSendStatus()).isEqualTo(SendStatus.SEND_OK);
+    assertThat(nestedSent).isTrue();
+    assertThat(inner)
+        .allSatisfy(message -> assertThat(message.getProperty("traceparent")).isNotNull());
+    assertThat(outer)
+        .allSatisfy(message -> assertThat(message.getProperty("traceparent")).isNotNull());
+    testing().waitForTraces(hasBatchCreateSpans() ? 6 : 2);
+  }
+
+  @Test
+  void testBatchSendStateCleanupOnException() {
+    assumeTrue(emitStableMessagingSemconv());
+    List<Message> messages =
+        asList(
+            new Message("unused", "one".getBytes(UTF_8)),
+            new Message("unused", "two".getBytes(UTF_8)));
+
+    assertThatThrownBy(() -> producer().send(failingBatch())).isInstanceOf(MQClientException.class);
+
+    MessageBatch.generateFromList(messages).encode();
+    assertThat(messages)
+        .allSatisfy(message -> assertThat(message.getProperty("traceparent")).isNull());
   }
 
   @Test
@@ -150,6 +218,20 @@ class RocketMqClientTest extends AbstractRocketMqClientTest {
                           .hasStatus(StatusData.error()));
               trace.hasSpansSatisfyingExactlyInAnyOrder(assertions);
             });
+  }
+
+  private static Collection<Message> failingBatch() {
+    return new AbstractCollection<Message>() {
+      @Override
+      public Iterator<Message> iterator() {
+        throw new IllegalStateException("batch iteration failed");
+      }
+
+      @Override
+      public int size() {
+        return 1;
+      }
+    };
   }
 
   private static final class CapturingExecutor extends AbstractExecutorService {

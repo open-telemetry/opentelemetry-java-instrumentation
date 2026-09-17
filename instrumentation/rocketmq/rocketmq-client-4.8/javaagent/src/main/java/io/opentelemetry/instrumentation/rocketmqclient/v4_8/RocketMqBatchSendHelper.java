@@ -14,6 +14,7 @@ import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +30,8 @@ public final class RocketMqBatchSendHelper {
 
   private static final VirtualField<Message, BatchSendState> BATCH_SEND_STATE =
       VirtualField.find(Message.class, BatchSendState.class);
-  private static final ThreadLocal<BatchSendState> CURRENT_STATE = new ThreadLocal<>();
+  private static final ScopedThreadValue<BatchSendState> currentBatchSendState =
+      new ScopedThreadValue<>();
 
   private final Instrumenter<SendMessageContext, Void> sendInstrumenter;
   private final Instrumenter<SendMessageContext, Void> createInstrumenter;
@@ -50,40 +52,32 @@ public final class RocketMqBatchSendHelper {
     propagator = openTelemetry.getPropagators().getTextMapPropagator();
   }
 
+  public static ScopedThreadValue<BatchSendState> currentBatchSendState() {
+    return currentBatchSendState;
+  }
+
   @Nullable
-  public Object batchSendStart(Object producer, boolean callbackCompletionExpected) {
+  public BatchSendState createBatchSendState(Object producer, boolean callbackCompletionExpected) {
     if (!emitStableMessagingSemconv()) {
       return null;
     }
-    BatchSendState state =
-        new BatchSendState(
-            Context.current(),
-            RocketMqNamespaceUtil.getNamespace(producer),
-            CURRENT_STATE.get(),
-            callbackCompletionExpected);
-    CURRENT_STATE.set(state);
-    return state;
+    return new BatchSendState(
+        Context.current(),
+        RocketMqNamespaceUtil.getNamespace(producer),
+        callbackCompletionExpected);
   }
 
   public void beforeBatchEncode(Message batch) {
-    BatchSendState state = CURRENT_STATE.get();
+    BatchSendState state = currentBatchSendState.get();
     if (state == null || state.request != null) {
       return;
     }
     state.prepare(batch);
   }
 
-  public void batchSendEnd(@Nullable Object stateObject, @Nullable Throwable error) {
-    if (stateObject == null) {
+  public void completeBatchSend(@Nullable BatchSendState state, @Nullable Throwable error) {
+    if (state == null) {
       return;
-    }
-    BatchSendState state = (BatchSendState) stateObject;
-    if (CURRENT_STATE.get() == state) {
-      if (state.previous == null) {
-        CURRENT_STATE.remove();
-      } else {
-        CURRENT_STATE.set(state.previous);
-      }
     }
     if (error != null || (!state.callbackCompletionExpected && !state.wasClaimedAsynchronously())) {
       state.end(error);
@@ -91,11 +85,10 @@ public final class RocketMqBatchSendHelper {
   }
 
   @Nullable
-  public SendCallback wrap(@Nullable SendCallback delegate, @Nullable Object stateObject) {
-    if (delegate == null || stateObject == null) {
+  public SendCallback wrap(@Nullable SendCallback delegate, @Nullable BatchSendState state) {
+    if (delegate == null || state == null) {
       return delegate;
     }
-    BatchSendState state = (BatchSendState) stateObject;
     return new SendCallback() {
       @Override
       public void onSuccess(SendResult sendResult) {
@@ -151,10 +144,9 @@ public final class RocketMqBatchSendHelper {
         : BATCH_SEND_STATE.get(context.getMessage());
   }
 
-  private final class BatchSendState {
+  public final class BatchSendState {
     private final Context parentContext;
     @Nullable private final String namespace;
-    @Nullable private final BatchSendState previous;
     private final boolean callbackCompletionExpected;
 
     @Nullable private BatchSendContext request;
@@ -162,13 +154,9 @@ public final class RocketMqBatchSendHelper {
     private boolean ended;
 
     private BatchSendState(
-        Context parentContext,
-        @Nullable String namespace,
-        @Nullable BatchSendState previous,
-        boolean callbackCompletionExpected) {
+        Context parentContext, @Nullable String namespace, boolean callbackCompletionExpected) {
       this.parentContext = parentContext;
       this.namespace = namespace;
-      this.previous = previous;
       this.callbackCompletionExpected = callbackCompletionExpected;
     }
 
