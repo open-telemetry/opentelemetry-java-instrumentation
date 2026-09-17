@@ -51,7 +51,7 @@ public final class RocketMqBatchSendHelper {
   }
 
   @Nullable
-  public Object batchSendStart(Object producer, boolean asynchronous) {
+  public Object batchSendStart(Object producer, boolean callbackCompletionExpected) {
     if (!emitStableMessagingSemconv()) {
       return null;
     }
@@ -60,14 +60,14 @@ public final class RocketMqBatchSendHelper {
             Context.current(),
             RocketMqNamespaceUtil.getNamespace(producer),
             CURRENT_STATE.get(),
-            asynchronous);
+            callbackCompletionExpected);
     CURRENT_STATE.set(state);
     return state;
   }
 
   public void beforeBatchEncode(Message batch) {
     BatchSendState state = CURRENT_STATE.get();
-    if (state == null || state.prepared) {
+    if (state == null || state.request != null) {
       return;
     }
     state.prepare(batch);
@@ -85,7 +85,7 @@ public final class RocketMqBatchSendHelper {
         CURRENT_STATE.set(state.previous);
       }
     }
-    if (error != null || (!state.asynchronous && (!state.claimed || state.isSynchronous()))) {
+    if (error != null || (!state.callbackCompletionExpected && !state.wasClaimedAsynchronously())) {
       state.end(error);
     }
   }
@@ -125,7 +125,6 @@ public final class RocketMqBatchSendHelper {
           delegate.sendMessageBefore(context);
           return;
         }
-        state.claimed = true;
         state.copyFrom(context);
       }
 
@@ -156,29 +155,25 @@ public final class RocketMqBatchSendHelper {
     private final Context parentContext;
     @Nullable private final String namespace;
     @Nullable private final BatchSendState previous;
-    private final boolean asynchronous;
+    private final boolean callbackCompletionExpected;
 
     @Nullable private BatchSendContext request;
     @Nullable private Context sendContext;
-    @Nullable private Message batch;
-    private boolean prepared;
-    private boolean claimed;
     private boolean ended;
 
     private BatchSendState(
         Context parentContext,
         @Nullable String namespace,
         @Nullable BatchSendState previous,
-        boolean asynchronous) {
+        boolean callbackCompletionExpected) {
       this.parentContext = parentContext;
       this.namespace = namespace;
       this.previous = previous;
-      this.asynchronous = asynchronous;
+      this.callbackCompletionExpected = callbackCompletionExpected;
     }
 
     private void prepare(Message batch) {
-      prepared = true;
-      this.batch = batch;
+      request = new BatchSendContext(batch, namespace);
       List<Context> creationContexts = new ArrayList<>();
       List<Message> messagesWithoutCreationContext = new ArrayList<>();
       Context extractionContext = parentContext.with(Span.getInvalid());
@@ -200,7 +195,6 @@ public final class RocketMqBatchSendHelper {
         creationContexts.add(creationContext);
       }
 
-      request = new BatchSendContext(batch, namespace);
       RocketMqBatchSendSpanLinksExtractor.setContexts(request, creationContexts);
       if (sendInstrumenter.shouldStart(parentContext, request)) {
         sendContext = sendInstrumenter.start(parentContext, request);
@@ -226,8 +220,8 @@ public final class RocketMqBatchSendHelper {
       request.setSendResult(context.getSendResult());
     }
 
-    private boolean isSynchronous() {
-      return request != null && CommunicationMode.ASYNC != request.getCommunicationMode();
+    private boolean wasClaimedAsynchronously() {
+      return request != null && CommunicationMode.ASYNC == request.getCommunicationMode();
     }
 
     private void end(@Nullable Throwable error) {
@@ -240,9 +234,7 @@ public final class RocketMqBatchSendHelper {
       }
       if (request != null) {
         RocketMqBatchSendSpanLinksExtractor.clearContexts(request);
-      }
-      if (batch != null) {
-        BATCH_SEND_STATE.set(batch, null);
+        BATCH_SEND_STATE.set(request.getMessage(), null);
       }
     }
   }
