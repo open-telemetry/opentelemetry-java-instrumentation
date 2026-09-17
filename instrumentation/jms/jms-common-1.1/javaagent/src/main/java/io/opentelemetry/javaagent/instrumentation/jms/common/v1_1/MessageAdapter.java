@@ -46,6 +46,21 @@ public interface MessageAdapter {
   /** Ends a processing callback for this message. */
   void endProcessing();
 
+  /** Ends processing when listener setup fails without replacing the setup failure. */
+  default void endProcessingAfterStartFailure(Throwable startFailure) {
+    try {
+      endProcessing();
+    } catch (Throwable cleanupFailure) {
+      if (cleanupFailure != startFailure) {
+        try {
+          startFailure.addSuppressed(cleanupFailure);
+        } catch (Throwable ignored) {
+          // Keep the setup failure as the throwable suppressed by the advice.
+        }
+      }
+    }
+  }
+
   /** Claims responsibility for recording the consumed messages metric for this delivery. */
   boolean claimConsumedMessages();
 }

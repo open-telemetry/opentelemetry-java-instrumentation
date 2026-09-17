@@ -83,46 +83,51 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
             MessageWithDestination.create(messageAdapter, null, JmsSubscriptionNames.get(message));
         messageAdapter.beginProcessing();
 
-        Context currentContext = Context.current();
-        if (!consumerProcessInstrumenter(true)
-            .shouldStart(currentContext, messageWithDestination)) {
-          return new AdviceScope(
-              consumerProcessInstrumenter(true),
-              messageWithDestination,
-              messageAdapter,
-              null,
-              null,
-              messageWithListenerSubscriptionName);
-        }
-
-        Context parentContext = currentContext;
-        if (!emitStableMessagingSemconv()) {
-          JmsReceiveContext receiveContext = messageAdapter.getReceiveContext();
-          if (receiveContext != null) {
-            parentContext = receiveContext.context();
+        try {
+          Context currentContext = Context.current();
+          if (!consumerProcessInstrumenter(true)
+              .shouldStart(currentContext, messageWithDestination)) {
+            return new AdviceScope(
+                consumerProcessInstrumenter(true),
+                messageWithDestination,
+                messageAdapter,
+                null,
+                null,
+                messageWithListenerSubscriptionName);
           }
-        }
-        Instrumenter<MessageWithDestination, Void> instrumenter =
-            consumerProcessInstrumenter(!messageAdapter.claimConsumedMessages());
-        if (!instrumenter.shouldStart(parentContext, messageWithDestination)) {
-          // an advice scope is still needed, to clear the listener's subscription name on exit
+
+          Context parentContext = currentContext;
+          if (!emitStableMessagingSemconv()) {
+            JmsReceiveContext receiveContext = messageAdapter.getReceiveContext();
+            if (receiveContext != null) {
+              parentContext = receiveContext.context();
+            }
+          }
+          Instrumenter<MessageWithDestination, Void> instrumenter =
+              consumerProcessInstrumenter(!messageAdapter.claimConsumedMessages());
+          if (!instrumenter.shouldStart(parentContext, messageWithDestination)) {
+            // an advice scope is still needed, to clear the listener's subscription name on exit
+            return new AdviceScope(
+                instrumenter,
+                messageWithDestination,
+                messageAdapter,
+                null,
+                null,
+                messageWithListenerSubscriptionName);
+          }
+
+          Context context = instrumenter.start(parentContext, messageWithDestination);
           return new AdviceScope(
               instrumenter,
               messageWithDestination,
               messageAdapter,
-              null,
-              null,
+              context,
+              context.makeCurrent(),
               messageWithListenerSubscriptionName);
+        } catch (Throwable t) {
+          messageAdapter.endProcessingAfterStartFailure(t);
+          throw t;
         }
-
-        Context context = instrumenter.start(parentContext, messageWithDestination);
-        return new AdviceScope(
-            instrumenter,
-            messageWithDestination,
-            messageAdapter,
-            context,
-            context.makeCurrent(),
-            messageWithListenerSubscriptionName);
       }
 
       // a name that a synchronous receive or a Spring dispatch attached to the message wins over

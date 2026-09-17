@@ -34,6 +34,16 @@ dependencies {
 
 testing {
   suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
+        implementation(project(":instrumentation:jms:jms-common-1.1:javaagent"))
+        implementation(project(":javaagent-extension-api"))
+        implementation("javax.jms:jms-api:1.1-rev-1")
+      }
+    }
+
     register<JvmTestSuite>("jms2Test") {
       dependencies {
         implementation("org.hornetq:hornetq-jms-client:2.4.7.Final")

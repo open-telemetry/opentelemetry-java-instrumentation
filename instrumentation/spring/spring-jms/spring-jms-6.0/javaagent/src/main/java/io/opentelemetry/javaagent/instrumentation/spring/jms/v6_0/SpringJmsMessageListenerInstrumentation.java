@@ -83,27 +83,32 @@ class SpringJmsMessageListenerInstrumentation implements TypeInstrumentation {
             MessageWithDestination.create(messageAdapter, null, JmsSubscriptionNames.get(message));
         messageAdapter.beginProcessing();
 
-        Context currentContext = Context.current();
-        if (!listenerInstrumenter(true).shouldStart(currentContext, request)) {
-          return new AdviceScope(listenerInstrumenter(true), request, messageAdapter, null, null);
-        }
-
-        Context parentContext = currentContext;
-        if (!emitStableMessagingSemconv()) {
-          JmsReceiveContext receiveContext = messageAdapter.getReceiveContext();
-          if (receiveContext != null) {
-            parentContext = receiveContext.context();
+        try {
+          Context currentContext = Context.current();
+          if (!listenerInstrumenter(true).shouldStart(currentContext, request)) {
+            return new AdviceScope(listenerInstrumenter(true), request, messageAdapter, null, null);
           }
-        }
-        Instrumenter<MessageWithDestination, Void> instrumenter =
-            listenerInstrumenter(!messageAdapter.claimConsumedMessages());
-        if (!instrumenter.shouldStart(parentContext, request)) {
-          return new AdviceScope(instrumenter, request, messageAdapter, null, null);
-        }
 
-        Context context = instrumenter.start(parentContext, request);
-        return new AdviceScope(
-            instrumenter, request, messageAdapter, context, context.makeCurrent());
+          Context parentContext = currentContext;
+          if (!emitStableMessagingSemconv()) {
+            JmsReceiveContext receiveContext = messageAdapter.getReceiveContext();
+            if (receiveContext != null) {
+              parentContext = receiveContext.context();
+            }
+          }
+          Instrumenter<MessageWithDestination, Void> instrumenter =
+              listenerInstrumenter(!messageAdapter.claimConsumedMessages());
+          if (!instrumenter.shouldStart(parentContext, request)) {
+            return new AdviceScope(instrumenter, request, messageAdapter, null, null);
+          }
+
+          Context context = instrumenter.start(parentContext, request);
+          return new AdviceScope(
+              instrumenter, request, messageAdapter, context, context.makeCurrent());
+        } catch (Throwable t) {
+          messageAdapter.endProcessingAfterStartFailure(t);
+          throw t;
+        }
       }
 
       public void end(@Nullable Throwable throwable) {
