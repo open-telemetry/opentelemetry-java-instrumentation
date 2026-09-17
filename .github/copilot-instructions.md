@@ -1,9 +1,8 @@
 # OpenTelemetry Java Instrumentation
 
-First-pass PR review rules. A deep review with full knowledge files runs
-separately later in the PR lifecycle. **Prefer silence over uncertainty.** Only
-flag substantive issues on changed lines. Skip stylistic preferences not listed
-below. Do not nitpick.
+Repository rules for GitHub Copilot code review. **Prefer silence over
+uncertainty.** Only flag substantive issues on changed lines. Skip stylistic
+preferences not listed below. Do not nitpick.
 
 Do not flag anything CI will catch. This includes compilation errors (missing
 imports, unbalanced braces, type errors, unresolved symbols), Spotless-covered
@@ -19,6 +18,25 @@ addition to this one when reviewing Java changes):
 
 - `.github/instructions/java-style.instructions.md`
 - `.github/instructions/java-tests.instructions.md`
+
+## Knowledge loading
+
+Before reviewing changed code:
+
+1. Read `.github/agents/knowledge/README.md`,
+   `.github/agents/knowledge/general-rules.md`,
+   `.github/agents/knowledge/metadata-yaml-format.md`, and
+   `docs/contributing/style-guide.md`.
+2. Evaluate every row in the README topic table against all changed file paths
+   and the complete pull request diff. Use code constructs and behavior, not
+   file names alone.
+3. Read every article whose trigger matches any part of the pull request before
+   analyzing the changed lines. Several articles can apply to one file.
+4. If surrounding code or a referenced unchanged file reveals another trigger,
+   read that article and recheck the entire pull request.
+
+Do not load articles whose triggers do not match. Irrelevant rules reduce
+review precision.
 
 ## [Style] `@SuppressWarnings` Scoping
 

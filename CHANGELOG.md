@@ -17,6 +17,12 @@
 
 ### 🚫 Deprecations
 
+- Deprecate the Elasticsearch REST library artifacts and their public entrypoints. Elasticsearch
+  Java API Client users should use its [native OpenTelemetry
+  support](https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/8.10/opentelemetry.html),
+  available in 7.17.20+ on the 7.x line and 8.10+. Applications that use the REST Client directly
+  have no drop-in library replacement; they can use the javaagent or migrate to the Java API Client.
+  ([#19697](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/19697))
 - Deprecate `SelectorConfig.resolve` overloads that do not specify `SelectorConfig.Stability` in favor
   of overloads that require callers to choose the stability explicitly.
   ([#19969](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19969))
@@ -1947,7 +1953,7 @@ for more details.
 ### 🌟 New javaagent instrumentation
 
 - AWS Bedrock instrumentation, following
-  [Gen AI semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/README.md#semantic-conventions-for-generative-ai-systems)
+  [Gen AI semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/gen-ai/README.md#semantic-conventions-for-generative-ai-systems)
   ([#13355](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13355),
   [#13408](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13408),
   [#13473](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13473),
@@ -1960,7 +1966,7 @@ for more details.
 ### 🌟 New library instrumentation
 
 - AWS Bedrock instrumentation, following
-  [Gen AI semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/README.md#semantic-conventions-for-generative-ai-systems)
+  [Gen AI semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/gen-ai/README.md#semantic-conventions-for-generative-ai-systems)
   ([#13355](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13355),
   [#13408](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13408),
   [#13473](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13473),

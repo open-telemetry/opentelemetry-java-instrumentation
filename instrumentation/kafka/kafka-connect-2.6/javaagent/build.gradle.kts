@@ -17,6 +17,18 @@ dependencies {
   library("org.apache.kafka:connect-api:2.6.0")
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
+        implementation("org.apache.kafka:connect-api:2.6.0")
+      }
+    }
+  }
+}
+
 tasks {
   val testMessagingPreview = register<Test>("testMessagingPreview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
@@ -27,6 +39,6 @@ tasks {
   }
 
   check {
-    dependsOn(testMessagingPreview)
+    dependsOn(testing.suites, testMessagingPreview)
   }
 }

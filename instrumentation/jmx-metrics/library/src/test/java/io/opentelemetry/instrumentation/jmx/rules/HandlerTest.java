@@ -14,6 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.github.netmikey.logunit.api.LogCapturer;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetryBuilder;
 import io.opentelemetry.instrumentation.jmx.internal.ExperimentalJmxMetricHandler;
@@ -141,6 +142,50 @@ class HandlerTest {
                             .hasPointsSatisfying(
                                 point ->
                                     point.hasValueSatisfying(value -> value.isGreaterThan(0)))));
+    assertThat(BaseThreadHandler.createCount.get()).isEqualTo(2);
+  }
+
+  @Test
+  void handlerMetricsAreFiltered(@TempDir Path tempDir) throws IOException {
+    Path spiFile = tempDir.resolve(ExperimentalJmxMetricHandler.class.getName());
+    Files.write(
+        spiFile,
+        String.join("\n", asList(ThreadHandler.class.getName(), ThreadHandler2.class.getName()))
+            .getBytes(UTF_8));
+
+    JmxTelemetryBuilder builder = JmxTelemetry.builder(testing.getOpenTelemetry());
+    builder.addRules(getClass().getResourceAsStream("/jmx/rules/handler-list.yaml"));
+    builder.setMetrics(IncludeExclude.builder().setIncluded("test.thread.count").build());
+    builder.setServiceClassLoader(
+        new ClassLoader(this.getClass().getClassLoader()) {
+          @Override
+          public Enumeration<URL> getResources(String name) throws IOException {
+            if (("META-INF/services/" + ExperimentalJmxMetricHandler.class.getName())
+                .equals(name)) {
+              return enumeration(singletonList(spiFile.toUri().toURL()));
+            }
+            return super.getResources(name);
+          }
+        });
+    JmxTelemetry telemetry = builder.build();
+    cleanup.deferCleanup(telemetry.start());
+
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jmx",
+        metric ->
+            metric
+                .hasName("test.thread.count")
+                .hasLongSumSatisfying(
+                    sum ->
+                        sum.isNotMonotonic()
+                            .hasPointsSatisfying(
+                                point ->
+                                    point.hasValueSatisfying(value -> value.isGreaterThan(0)))));
+    assertThat(testing.metrics())
+        .filteredOn(
+            metric -> metric.getInstrumentationScopeInfo().getName().equals("io.opentelemetry.jmx"))
+        .extracting(metric -> metric.getName())
+        .containsOnly("test.thread.count");
     assertThat(BaseThreadHandler.createCount.get()).isEqualTo(2);
   }
 
