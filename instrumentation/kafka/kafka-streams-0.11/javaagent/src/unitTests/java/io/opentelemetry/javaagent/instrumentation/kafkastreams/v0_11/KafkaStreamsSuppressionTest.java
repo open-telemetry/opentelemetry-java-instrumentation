@@ -5,16 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.SPAN;
 import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.currentProcessSpanSuppression;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaConsumerBatchState;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -30,7 +25,7 @@ class KafkaStreamsSuppressionTest {
 
   @AfterEach
   void restoreProcessTracing() {
-    currentProcessSpanSuppression().restore(MessagingTelemetrySignals.none());
+    currentProcessSpanSuppression().restore(null);
   }
 
   @Test
@@ -39,54 +34,51 @@ class KafkaStreamsSuppressionTest {
     KafkaConsumerBatchState state = new KafkaConsumerBatchState(true);
     BATCH_STATE.set(records, state);
 
-    MessagingTelemetrySignals previous = StreamThreadInstrumentation.PollRequestsAdvice.onEnter();
-    assertThat(currentProcessSpanSuppression().current())
-        .isEqualTo(MessagingTelemetrySignals.of(PROCESS, SPAN));
+    Boolean previous = StreamThreadInstrumentation.PollRequestsAdvice.onEnter();
+    assertThat(previous).isNull();
+    assertThat(currentProcessSpanSuppression().get()).isTrue();
 
     StreamThreadInstrumentation.PollRequestsAdvice.onExit(previous, records);
 
     assertThat(state.getAsBoolean()).isFalse();
-    assertThat(currentProcessSpanSuppression().current())
-        .isEqualTo(MessagingTelemetrySignals.none());
+    assertThat(currentProcessSpanSuppression().get()).isNull();
   }
 
   @Test
   void pollFailureRestoresSuppression() {
-    MessagingTelemetrySignals previous = StreamThreadInstrumentation.PollRequestsAdvice.onEnter();
+    Boolean previous = StreamThreadInstrumentation.PollRequestsAdvice.onEnter();
+    assertThat(previous).isNull();
 
     StreamThreadInstrumentation.PollRequestsAdvice.onExit(previous, null);
 
-    assertThat(currentProcessSpanSuppression().current())
-        .isEqualTo(MessagingTelemetrySignals.none());
+    assertThat(currentProcessSpanSuppression().get()).isNull();
   }
 
   @Test
   void standbyUpdateSuppressesOnlyProcessSpanAndRestoresSuppression() {
-    MessagingTelemetrySignals previous =
-        StreamThreadInstrumentation.StandbyTaskUpdateAdvice.onEnter();
-    assertThat(currentProcessSpanSuppression().current())
-        .isEqualTo(MessagingTelemetrySignals.of(PROCESS, SPAN));
+    Boolean previous = StreamThreadInstrumentation.StandbyTaskUpdateAdvice.onEnter();
+    assertThat(previous).isNull();
+    assertThat(currentProcessSpanSuppression().get()).isTrue();
 
     StreamThreadInstrumentation.StandbyTaskUpdateAdvice.onExit(previous);
 
-    assertThat(currentProcessSpanSuppression().current())
-        .isEqualTo(MessagingTelemetrySignals.none());
+    assertThat(currentProcessSpanSuppression().get()).isNull();
   }
 
   @Test
   void nestedPollAndStandbyUpdatePreserveOuterSuppression() {
-    MessagingTelemetrySignals initial =
-        MessagingTelemetrySignals.of(RECEIVE, SPAN).with(PROCESS, CONSUMED_MESSAGES);
-    currentProcessSpanSuppression().restore(initial);
+    assertThat(currentProcessSpanSuppression().set(Boolean.TRUE)).isNull();
 
-    MessagingTelemetrySignals outer = StreamThreadInstrumentation.PollRequestsAdvice.onEnter();
-    MessagingTelemetrySignals inner = StreamThreadInstrumentation.StandbyTaskUpdateAdvice.onEnter();
+    Boolean outer = StreamThreadInstrumentation.PollRequestsAdvice.onEnter();
+    Boolean inner = StreamThreadInstrumentation.StandbyTaskUpdateAdvice.onEnter();
+    assertThat(outer).isTrue();
+    assertThat(inner).isTrue();
 
     StreamThreadInstrumentation.StandbyTaskUpdateAdvice.onExit(inner);
-    assertThat(currentProcessSpanSuppression().current()).isEqualTo(initial.with(PROCESS, SPAN));
+    assertThat(currentProcessSpanSuppression().get()).isTrue();
 
     StreamThreadInstrumentation.PollRequestsAdvice.onExit(outer, null);
-    assertThat(currentProcessSpanSuppression().current()).isEqualTo(initial);
+    assertThat(currentProcessSpanSuppression().get()).isTrue();
   }
 
   private static ConsumerRecords<String, String> records() {

@@ -5,16 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.SPAN;
 import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.currentProcessSpanSuppression;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaConsumerBatchState;
@@ -34,7 +29,7 @@ class KafkaConnectOwnershipTest {
 
   @AfterEach
   void restoreProcessTracing() {
-    currentProcessSpanSuppression().restore(MessagingTelemetrySignals.none());
+    currentProcessSpanSuppression().restore(null);
   }
 
   @Test
@@ -43,43 +38,44 @@ class KafkaConnectOwnershipTest {
     KafkaConsumerBatchState state = new KafkaConsumerBatchState(true);
     BATCH_STATE.set(records, state);
 
-    MessagingTelemetrySignals previous = WorkerSinkTaskInstrumentation.PollConsumerAdvice.onEnter();
+    Boolean previous = WorkerSinkTaskInstrumentation.PollConsumerAdvice.onEnter();
+    assertThat(previous).isNull();
     assertThat(KafkaClientsConsumerProcessTracing.isWrappingEnabled()).isFalse();
-    assertThat(currentProcessSpanSuppression().current())
-        .isEqualTo(MessagingTelemetrySignals.of(PROCESS, SPAN));
+    assertThat(currentProcessSpanSuppression().get()).isTrue();
 
     WorkerSinkTaskInstrumentation.PollConsumerAdvice.onExit(previous, records);
 
     assertThat(state.getAsBoolean()).isFalse();
     assertThat(KafkaClientsConsumerProcessTracing.isWrappingEnabled()).isTrue();
+    assertThat(currentProcessSpanSuppression().get()).isNull();
   }
 
   @Test
   void workerPollFailureRestoresNestedRawKafkaProcessing() {
-    MessagingTelemetrySignals previous = WorkerSinkTaskInstrumentation.PollConsumerAdvice.onEnter();
+    Boolean previous = WorkerSinkTaskInstrumentation.PollConsumerAdvice.onEnter();
+    assertThat(previous).isNull();
 
     WorkerSinkTaskInstrumentation.PollConsumerAdvice.onExit(previous, null);
 
     assertThat(KafkaClientsConsumerProcessTracing.isWrappingEnabled()).isTrue();
-    assertThat(currentProcessSpanSuppression().current())
-        .isEqualTo(MessagingTelemetrySignals.none());
+    assertThat(currentProcessSpanSuppression().get()).isNull();
   }
 
   @Test
   void nestedPollFailurePreservesOuterSuppression() {
-    MessagingTelemetrySignals initial =
-        MessagingTelemetrySignals.of(RECEIVE, SPAN).with(PROCESS, CONSUMED_MESSAGES);
-    currentProcessSpanSuppression().restore(initial);
+    assertThat(currentProcessSpanSuppression().set(Boolean.TRUE)).isNull();
 
-    MessagingTelemetrySignals outer = WorkerSinkTaskInstrumentation.PollConsumerAdvice.onEnter();
-    MessagingTelemetrySignals inner = WorkerSinkTaskInstrumentation.PollConsumerAdvice.onEnter();
+    Boolean outer = WorkerSinkTaskInstrumentation.PollConsumerAdvice.onEnter();
+    Boolean inner = WorkerSinkTaskInstrumentation.PollConsumerAdvice.onEnter();
+    assertThat(outer).isTrue();
+    assertThat(inner).isTrue();
 
     WorkerSinkTaskInstrumentation.PollConsumerAdvice.onExit(inner, null);
-    assertThat(currentProcessSpanSuppression().current()).isEqualTo(initial.with(PROCESS, SPAN));
+    assertThat(currentProcessSpanSuppression().get()).isTrue();
 
     ConsumerRecords<String, String> records = records();
     WorkerSinkTaskInstrumentation.PollConsumerAdvice.onExit(outer, records);
-    assertThat(currentProcessSpanSuppression().current()).isEqualTo(initial);
+    assertThat(currentProcessSpanSuppression().get()).isTrue();
     assertThat(BATCH_STATE.get(records).getAsBoolean()).isFalse();
   }
 
