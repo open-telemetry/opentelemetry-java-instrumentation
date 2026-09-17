@@ -42,7 +42,7 @@ public abstract class AbstractBatchRecordsNoReceiveTelemetryVertxKafkaTest
     kafkaConsumer.batchHandler(BatchRecordsHandler.INSTANCE);
     kafkaConsumer.handler(
         record -> {
-          assertThat(KafkaClientsConsumerProcessTracing.isWrappingEnabled()).isTrue();
+          assertThat(KafkaClientsConsumerProcessTracing.isProcessSpanSuppressed()).isFalse();
           testing().runWithSpan("process " + record.value(), () -> {});
         });
 

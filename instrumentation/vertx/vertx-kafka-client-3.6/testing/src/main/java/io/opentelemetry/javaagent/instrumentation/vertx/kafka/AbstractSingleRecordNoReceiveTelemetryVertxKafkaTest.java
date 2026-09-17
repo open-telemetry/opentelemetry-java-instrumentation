@@ -28,7 +28,7 @@ public abstract class AbstractSingleRecordNoReceiveTelemetryVertxKafkaTest
   void setUpTopicAndConsumer() {
     kafkaConsumer.handler(
         record -> {
-          assertThat(KafkaClientsConsumerProcessTracing.isWrappingEnabled()).isTrue();
+          assertThat(KafkaClientsConsumerProcessTracing.isProcessSpanSuppressed()).isFalse();
           testing().runWithSpan("consumer", () -> {});
           if ("error".equals(record.value())) {
             throw new IllegalArgumentException("boom");

@@ -32,7 +32,7 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
     kafkaConsumer.handler(
         record -> {
           try {
-            assertThat(KafkaClientsConsumerProcessTracing.isWrappingEnabled()).isTrue();
+            assertThat(KafkaClientsConsumerProcessTracing.isProcessSpanSuppressed()).isFalse();
             testing().runWithSpan("consumer", () -> {});
             if ("error".equals(record.value())) {
               throw new IllegalArgumentException("boom");

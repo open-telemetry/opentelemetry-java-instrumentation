@@ -163,7 +163,7 @@ public abstract class AbstractReactorKafkaTest {
     Disposable disposable =
         subscriptionFunction.apply(
             record -> {
-              assertThat(KafkaClientsConsumerProcessTracing.isWrappingEnabled()).isTrue();
+              assertThat(KafkaClientsConsumerProcessTracing.isProcessSpanSuppressed()).isFalse();
               testing.runWithSpan("consumer", () -> {});
             });
     cleanup.deferCleanup(disposable::dispose);

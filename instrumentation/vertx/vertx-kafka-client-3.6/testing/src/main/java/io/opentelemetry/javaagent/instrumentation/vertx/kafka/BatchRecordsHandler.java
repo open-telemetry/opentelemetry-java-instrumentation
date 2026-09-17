@@ -29,7 +29,7 @@ class BatchRecordsHandler implements Handler<KafkaConsumerRecords<String, String
 
   @Override
   public void handle(KafkaConsumerRecords<String, String> records) {
-    assertThat(KafkaClientsConsumerProcessTracing.isWrappingEnabled()).isTrue();
+    assertThat(KafkaClientsConsumerProcessTracing.isProcessSpanSuppressed()).isFalse();
     lastBatchSize.set(records.size());
     IntStream.range(0, records.size()).forEach(it -> messageReceived.countDown());
 
