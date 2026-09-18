@@ -17,6 +17,9 @@
 
 ### 🚫 Deprecations
 
+- Deprecate `GrpcRequest.getLogicalHost()` and `getLogicalPort()` in favor of
+  `getServerAddress()` and `getServerPort()`.
+  ([#16161](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16161))
 - Deprecate the Elasticsearch REST library artifacts and their public entrypoints. Elasticsearch
   Java API Client users should use its [native OpenTelemetry
   support](https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/8.10/opentelemetry.html),

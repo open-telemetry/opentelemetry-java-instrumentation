@@ -43,7 +43,8 @@ class GrpcAttributesExtractorTest {
     metadata.put(
         Metadata.Key.of("included-bin", Metadata.BINARY_BYTE_MARSHALLER),
         "binary-value".getBytes(UTF_8));
-    GrpcRequest request = new GrpcRequest(mock(MethodDescriptor.class), metadata, null, null);
+    GrpcRequest request =
+        GrpcRequest.createServerRequest(mock(MethodDescriptor.class), metadata, null, null);
     IncludeExclude selector =
         IncludeExclude.builder()
             .setIncluded(asList("INCLUDED-*", "missing-key"))
@@ -68,7 +69,8 @@ class GrpcAttributesExtractorTest {
   void absentSelectorCapturesNothing() {
     Metadata metadata = new Metadata();
     metadata.put(Metadata.Key.of("some-key", Metadata.ASCII_STRING_MARSHALLER), "some-value");
-    GrpcRequest request = new GrpcRequest(mock(MethodDescriptor.class), metadata, null, null);
+    GrpcRequest request =
+        GrpcRequest.createServerRequest(mock(MethodDescriptor.class), metadata, null, null);
     AttributesBuilder attributes = Attributes.builder();
 
     new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), null)
@@ -81,7 +83,8 @@ class GrpcAttributesExtractorTest {
   void emptySelectorCapturesNothing() {
     Metadata metadata = new Metadata();
     metadata.put(Metadata.Key.of("some-key", Metadata.ASCII_STRING_MARSHALLER), "some-value");
-    GrpcRequest request = new GrpcRequest(mock(MethodDescriptor.class), metadata, null, null);
+    GrpcRequest request =
+        GrpcRequest.createServerRequest(mock(MethodDescriptor.class), metadata, null, null);
     AttributesBuilder attributes = Attributes.builder();
 
     new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), IncludeExclude.builder().build())
@@ -100,7 +103,8 @@ class GrpcAttributesExtractorTest {
     // a transport could surface metadata key names with casing that Metadata.Key would normalize
     Metadata metadata = spy(delegate);
     when(metadata.keys()).thenReturn(new HashSet<>(asList("Included-Key", "Excluded-Key")));
-    GrpcRequest request = new GrpcRequest(mock(MethodDescriptor.class), metadata, null, null);
+    GrpcRequest request =
+        GrpcRequest.createServerRequest(mock(MethodDescriptor.class), metadata, null, null);
     IncludeExclude selector =
         IncludeExclude.builder()
             .setIncluded(singletonList("*-key"))
@@ -126,7 +130,8 @@ class GrpcAttributesExtractorTest {
   void skipsKeysThatGrpcMetadataCannotRepresent(String key) {
     Metadata metadata = mock(Metadata.class);
     when(metadata.keys()).thenReturn(singleton(key));
-    GrpcRequest request = new GrpcRequest(mock(MethodDescriptor.class), metadata, null, null);
+    GrpcRequest request =
+        GrpcRequest.createServerRequest(mock(MethodDescriptor.class), metadata, null, null);
     AttributesBuilder attributes = Attributes.builder();
     IncludeExclude selector = IncludeExclude.builder().setIncluded(singleton("*")).build();
 
