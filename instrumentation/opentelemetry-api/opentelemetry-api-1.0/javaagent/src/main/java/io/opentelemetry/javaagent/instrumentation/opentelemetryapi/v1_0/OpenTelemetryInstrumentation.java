@@ -59,7 +59,17 @@ class OpenTelemetryInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static application.io.opentelemetry.api.OpenTelemetry methodExit() {
-      return ApplicationOpenTelemetry.INSTANCE;
+      try {
+        return ApplicationOpenTelemetry.INSTANCE;
+      } catch (LinkageError e) {
+        Logger.getLogger(OpenTelemetryInstrumentation.class.getName())
+            .log(
+                WARNING,
+                "Failed to install the OpenTelemetry API bridge; GlobalOpenTelemetry will act as"
+                    + " a no-op for the remainder of this JVM's lifetime.",
+                e);
+        return application.io.opentelemetry.api.OpenTelemetry.noop();
+      }
     }
   }
 
