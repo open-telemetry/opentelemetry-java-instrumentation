@@ -86,6 +86,12 @@ The review invariant must be visible in each advice pair. The previous value or 
 flows from entry advice through `@Advice.Enter`, and exit advice uses
 `onThrowable = Throwable.class` to perform the matching `restore` or conditional `release`.
 
+When follow-up completion or end work uses explicit captured state and does not need the temporary
+thread-local, restore or release first. Like closing an OpenTelemetry `Scope` before ending, this
+ensures callbacks and nested instrumentation observe the outer state and avoids unnecessary
+`try`/`finally`. Use `try`/`finally` only when the follow-up work must run with the temporary state
+installed because it reads or mutates that current state; restore or release in `finally`.
+
 ## Name ambient thread state with `current*`
 
 Name a field or accessor `current*` when it represents ambient state that belongs to the executing
