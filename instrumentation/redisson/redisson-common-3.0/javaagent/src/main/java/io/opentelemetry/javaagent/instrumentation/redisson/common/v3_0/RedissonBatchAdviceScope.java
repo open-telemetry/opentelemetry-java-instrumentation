@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -48,7 +47,7 @@ public class RedissonBatchAdviceScope {
     if (state == null) {
       return null;
     }
-    if (RedissonBatchContext.isActive(currentContext())) {
+    if (RedissonBatchContext.isActive(Context.current())) {
       return RedissonBatchContext.startCapture();
     }
     return RedissonBatchContext.startCapture(state, command, codec, parameters);
@@ -84,7 +83,7 @@ public class RedissonBatchAdviceScope {
       return null;
     }
 
-    Context parentContext = currentContext();
+    Context parentContext = Context.current();
     if (!instrumenter.shouldStart(parentContext, request)) {
       return null;
     }
