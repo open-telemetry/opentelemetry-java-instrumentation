@@ -81,12 +81,13 @@ class RocketMqProducerInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Enter Object[] enterResult, @Advice.Thrown Throwable throwable) {
       BatchSendState state = (BatchSendState) enterResult[0];
+      if (state == null) {
+        return;
+      }
       try {
         batchSendHelper().completeBatchSend(state, throwable);
       } finally {
-        if (state != null) {
-          currentBatchSendState().restore((BatchSendState) enterResult[1]);
-        }
+        currentBatchSendState().restore((BatchSendState) enterResult[1]);
       }
     }
   }
@@ -109,12 +110,13 @@ class RocketMqProducerInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Enter Object[] enterResult, @Advice.Thrown Throwable throwable) {
       BatchSendState state = (BatchSendState) enterResult[0];
+      if (state == null) {
+        return;
+      }
       try {
         batchSendHelper().completeBatchSend(state, throwable);
       } finally {
-        if (state != null) {
-          currentBatchSendState().restore((BatchSendState) enterResult[1]);
-        }
+        currentBatchSendState().restore((BatchSendState) enterResult[1]);
       }
     }
   }
@@ -137,12 +139,13 @@ class RocketMqProducerInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Enter Object[] enterResult, @Advice.Thrown Throwable throwable) {
       BatchSendState state = (BatchSendState) enterResult[0];
+      if (state == null) {
+        return;
+      }
       try {
         batchSendHelper().completeBatchSend(state, throwable);
       } finally {
-        if (state != null) {
-          currentBatchSendState().restore((BatchSendState) enterResult[1]);
-        }
+        currentBatchSendState().restore((BatchSendState) enterResult[1]);
       }
     }
   }
