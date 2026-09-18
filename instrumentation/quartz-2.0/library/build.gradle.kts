@@ -18,8 +18,8 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    jvmArgs("-Dotel.instrumentation.quartz.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.quartz.experimental-span-attributes=true")
+    jvmArgs("-Dotel.instrumentation.quartz.emit-experimental-telemetry=true")
+    systemProperty("metadataConfig", "otel.instrumentation.quartz.emit-experimental-telemetry=true")
   }
 
   check {
