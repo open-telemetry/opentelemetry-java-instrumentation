@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientConnectionPoolState.currentAcquisition;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientConnectionPoolState.currentConnectionAttempt;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -52,12 +54,14 @@ class ConnectionPoolInstrumentation implements TypeInstrumentation {
     @Nullable
     public static Acquisition onEnter(
         @Advice.This ConnectionPool<?> pool, @Advice.Argument(2) Completable<?> handler) {
-      return VertxSqlClientConnectionPoolState.enterAcquisition(pool, handler);
+      return currentAcquisition()
+          .set(VertxSqlClientConnectionPoolState.createAcquisition(pool, handler));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Acquisition previous) {
-      VertxSqlClientConnectionPoolState.exitAcquisition(previous);
+      // If no waiter consumed the current acquisition, this discards that failed handoff.
+      currentAcquisition().restore(previous);
     }
   }
 
@@ -67,12 +71,14 @@ class ConnectionPoolInstrumentation implements TypeInstrumentation {
     @Nullable
     public static Acquisition onEnter(
         @Advice.This ConnectionPool<?> pool, @Advice.Argument(3) Completable<?> handler) {
-      return VertxSqlClientConnectionPoolState.enterAcquisition(pool, handler);
+      return currentAcquisition()
+          .set(VertxSqlClientConnectionPoolState.createAcquisition(pool, handler));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Acquisition previous) {
-      VertxSqlClientConnectionPoolState.exitAcquisition(previous);
+      // If no waiter consumed the current acquisition, this discards that failed handoff.
+      currentAcquisition().restore(previous);
     }
   }
 
@@ -82,14 +88,22 @@ class ConnectionPoolInstrumentation implements TypeInstrumentation {
     @Nullable
     public static ConnectionAttempt onEnter(
         @Advice.This ConnectionPool<?> pool, @Advice.Argument(1) PoolWaiter<?> waiter) {
-      return VertxSqlClientConnectionPoolState.enterConnection(pool, waiter);
+      return currentConnectionAttempt()
+          .set(VertxSqlClientConnectionPoolState.createConnectionAttempt(pool, waiter));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Enter @Nullable ConnectionAttempt previous,
         @Advice.Thrown @Nullable Throwable throwable) {
-      VertxSqlClientConnectionPoolState.exitConnection(previous, throwable);
+      ConnectionAttempt current = currentConnectionAttempt().get();
+      try {
+        if (current != null) {
+          current.end(throwable);
+        }
+      } finally {
+        currentConnectionAttempt().restore(previous);
+      }
     }
   }
 }

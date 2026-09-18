@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.wrapContext;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientConnectionPoolState.currentConnectionAttempt;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -62,8 +63,7 @@ class ConnectionFactoryInstrumentation implements TypeInstrumentation {
     @Nullable
     public static Object[] onEnter(
         @Advice.Argument(1) Future<SqlConnectOptions> connectOptionsFuture) {
-      ConnectionAttempt connectionAttempt =
-          VertxSqlClientConnectionPoolState.getConnectionAttempt();
+      ConnectionAttempt connectionAttempt = currentConnectionAttempt().get();
       if (connectionAttempt == null) {
         return null;
       }
