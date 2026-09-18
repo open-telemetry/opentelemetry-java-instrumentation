@@ -1,0 +1,7 @@
+{
+  "body": "Reports configured Redis deployments in stable `server.address` and `server.port` for Rediscala direct clients, pools, replicated clients, clusters, Sentinel deployments, and transactions. These attributes describe the configured deployment instead of the network peer selected for a request. Legacy database semantic convention output does not change.\n\nThis is the Rediscala slice of #20010 and follows #19899.\n\nStacked on #20070, which introduces the shared `RedisServerTarget.ofEndpointAndUnorderedEndpoints` helper this PR reuses for master-and-replicas targets.",
+  "findings": [],
+  "status": "clean",
+  "summary": "Cleared the pull request after two complete review iterations; no verified worthwhile findings remain.",
+  "title": "Report configured Redis targets for Rediscala"
+}
