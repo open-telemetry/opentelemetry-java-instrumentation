@@ -239,6 +239,51 @@ public final class SelectorConfig {
   }
 
   /**
+   * Returns a predicate matching a deprecated selector or its deprecated boolean predecessor.
+   *
+   * <p>Warns when either setting is applied and directs users to {@code replacementFlatProperties}.
+   */
+  @Nullable
+  static Predicate<String> resolveDeprecatedLegacyBoolean(
+      DeclarativeConfigProperties config,
+      String instrumentationName,
+      String selectorName,
+      String deprecatedSelectorName,
+      String replacementFlatProperties) {
+    IncludeExclude selector =
+        getSelector(config, instrumentationName, selectorName, Stability.EXPERIMENTAL, false);
+    if (selector != null) {
+      String deprecatedFlatProperties =
+          selectorFlatProperties(instrumentationName, selectorName, Stability.EXPERIMENTAL);
+      warnOnce(
+          deprecatedFlatProperties + ":deprecated",
+          "The "
+              + deprecatedFlatProperties
+              + " settings and the equivalent declarative configuration properties are deprecated"
+              + " and will be removed in 3.0. Use "
+              + replacementFlatProperties
+              + " or equivalent declarative configuration instead.");
+      return selector::matches;
+    }
+    Boolean deprecated =
+        config.getBoolean("capture_" + nodeName(deprecatedSelectorName) + "/development");
+    if (deprecated == null) {
+      return null;
+    }
+    String deprecatedFlatProperty =
+        deprecatedFlatProperty(instrumentationName, deprecatedSelectorName);
+    warnOnce(
+        deprecatedFlatProperty + ":deprecated",
+        "The "
+            + deprecatedFlatProperty
+            + " setting and the equivalent declarative configuration property are deprecated and"
+            + " will be removed in 3.0. Use "
+            + replacementFlatProperties
+            + " or equivalent declarative configuration instead.");
+    return deprecated ? value -> true : null;
+  }
+
+  /**
    * Returns the configured selector, or {@code null} when it is not configured. An empty selector
    * is equivalent to no selector at all, matching flat configuration where empty property values
    * cannot be distinguished from unset ones.

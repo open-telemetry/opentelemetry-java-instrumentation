@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
 import static io.opentelemetry.instrumentation.log4j.appender.v2_17.AbstractLog4j2Test.mapMessageKey;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -79,6 +80,12 @@ class Log4jMapMessageSelectorTest {
         break;
       case "exclude-only":
         expectedKeys = asList("order-id", "user-1", "user-22", "other");
+        break;
+      case "all":
+        expectedKeys = asList("order-id", "order-secret", "user-1", "user-22", "other");
+        break;
+      case "none":
+        expectedKeys = emptyList();
         break;
       default:
         expectedKeys = asList("order-id", "user-1");
