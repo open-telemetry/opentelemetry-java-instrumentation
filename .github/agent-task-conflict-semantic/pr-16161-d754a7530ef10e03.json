@@ -1,0 +1,18 @@
+{
+  "kind": "conflict-resolution",
+  "payload": {
+    "commit_annotations": [
+      [
+        {
+          "companion_paths": [],
+          "conflict_paths": [
+            "CHANGELOG.md"
+          ],
+          "rationale": "Retained the independently added gRPC API deprecation entry alongside the base branch's Elasticsearch, selector configuration, and query-capture deprecation entries so neither side's release-note intent was lost."
+        }
+      ]
+    ],
+    "summary": "Merged the frozen base into the frozen head and preserved both sets of unreleased deprecation notes."
+  },
+  "version": 1
+}
