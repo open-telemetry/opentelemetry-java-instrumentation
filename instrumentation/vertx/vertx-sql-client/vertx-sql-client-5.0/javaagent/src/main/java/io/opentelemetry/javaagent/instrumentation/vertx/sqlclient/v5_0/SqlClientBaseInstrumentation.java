@@ -70,11 +70,8 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
       if (state == null || state.callDepth.decrementAndGet() > 0) {
         return;
       }
-      try {
-        currentQuerySupplier().restore(state.previousSupplier);
-      } finally {
-        currentClientInfo().restore(state.previousInfo);
-      }
+      currentQuerySupplier().restore(state.previousSupplier);
+      currentClientInfo().restore(state.previousInfo);
     }
 
     public static final class QueryAdviceState {
