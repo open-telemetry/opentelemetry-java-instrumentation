@@ -454,6 +454,18 @@ class RedisServerTargetTest {
   }
 
   @Test
+  void firstEndpointAndUnorderedRestContainingUnixSocketsAreOmitted() {
+    assertThat(
+            RedisServerTarget.ofEndpointAndUnorderedEndpoints(
+                "unix://redis.sock", singletonList("node1:6379")))
+        .isNull();
+    assertThat(
+            RedisServerTarget.ofEndpointAndUnorderedEndpoints(
+                "node1:6379", singletonList("unix://redis.sock")))
+        .isNull();
+  }
+
+  @Test
   void unorderedIpv6EndpointsStayBracketedWithPorts() {
     RedisServerTarget target =
         RedisServerTarget.ofUnorderedEndpoints(asList("[::2]:6380", "[::1]:6379"));

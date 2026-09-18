@@ -72,22 +72,21 @@ public final class RedisServerTarget {
   @Nullable
   public static RedisServerTarget ofEndpointAndUnorderedEndpoints(
       @Nullable String endpoint, @Nullable List<String> otherEndpoints) {
-    Endpoint first = Endpoint.parse(endpoint);
-    if (first == null) {
+    int otherEndpointCount = otherEndpoints == null ? 0 : otherEndpoints.size();
+    List<String> endpoints = new ArrayList<>(otherEndpointCount + 1);
+    endpoints.add(endpoint);
+    if (otherEndpoints != null) {
+      endpoints.addAll(otherEndpoints);
+    }
+    List<Endpoint> parsed = parseConfiguredEndpoints(endpoints, false);
+    if (parsed == null || parsed.isEmpty()) {
       return null;
     }
-    List<Endpoint> others = parseConfiguredEndpoints(otherEndpoints, false);
-    if (others == null) {
-      return null;
+    if (parsed.size() == 1) {
+      return directTarget(parsed.get(0));
     }
-    if (others.isEmpty()) {
-      return directTarget(first);
-    }
-    others.sort(comparing(Endpoint::renderConfigured));
-    List<Endpoint> endpoints = new ArrayList<>(others.size() + 1);
-    endpoints.add(first);
-    endpoints.addAll(others);
-    return networkTarget(endpoints, false);
+    parsed.subList(1, parsed.size()).sort(comparing(Endpoint::renderConfigured));
+    return networkTarget(parsed, false);
   }
 
   @Nullable
