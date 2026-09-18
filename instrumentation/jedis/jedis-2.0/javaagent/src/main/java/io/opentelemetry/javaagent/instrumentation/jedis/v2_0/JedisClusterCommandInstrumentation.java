@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisClusterCommandContext.currentCommandContext;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -45,18 +46,41 @@ class JedisClusterCommandInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CommandAdvice {
 
+    public static class AdviceState {
+      public final JedisClusterCommandContext commandContext;
+      @Nullable public JedisClusterCommandContext previousCommandContext;
+
+      public AdviceState(JedisClusterCommandContext commandContext) {
+        this.commandContext = commandContext;
+      }
+    }
+
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static JedisClusterCommandContext onEnter() {
-      return JedisClusterCommandContext.start();
+    public static AdviceState onEnter() {
+      if (currentCommandContext().get() != null) {
+        return null;
+      }
+      JedisClusterCommandContext commandContext = JedisClusterCommandContext.create();
+      if (commandContext == null) {
+        return null;
+      }
+      AdviceState adviceState = new AdviceState(commandContext);
+      adviceState.previousCommandContext = currentCommandContext().set(commandContext);
+      return adviceState;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter @Nullable JedisClusterCommandContext commandContext) {
-      if (commandContext != null) {
-        commandContext.end(throwable);
+        @Advice.Enter @Nullable AdviceState adviceState) {
+      if (adviceState == null) {
+        return;
+      }
+      try {
+        adviceState.commandContext.end(throwable);
+      } finally {
+        currentCommandContext().restore(adviceState.previousCommandContext);
       }
     }
   }
@@ -67,7 +91,7 @@ class JedisClusterCommandInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static JedisClusterCommandContext onEnter() {
-      JedisClusterCommandContext commandContext = JedisClusterCommandContext.current();
+      JedisClusterCommandContext commandContext = currentCommandContext().get();
       if (commandContext != null) {
         commandContext.enterExecute();
       }

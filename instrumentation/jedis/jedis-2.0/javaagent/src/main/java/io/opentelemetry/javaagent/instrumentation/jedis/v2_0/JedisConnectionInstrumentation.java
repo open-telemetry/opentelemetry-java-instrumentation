@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
+import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisClusterCommandContext.currentCommandContext;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSingletons.instrumenter;
 import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.is;
@@ -104,7 +105,7 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
         // batch span created at sync()/exec().
         return new AdviceScope(null, null, request, null);
       }
-      JedisClusterCommandContext clusterCommandContext = JedisClusterCommandContext.current();
+      JedisClusterCommandContext clusterCommandContext = currentCommandContext().get();
       if (clusterCommandContext != null) {
         if (clusterCommandContext.isAcquiringConnection()
             && CONNECTION_HEALTH_CHECK_COMMAND.equals(request.getOperationName())) {

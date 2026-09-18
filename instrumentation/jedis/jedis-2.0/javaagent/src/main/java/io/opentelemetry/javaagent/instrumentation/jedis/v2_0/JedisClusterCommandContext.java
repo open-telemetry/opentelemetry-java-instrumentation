@@ -9,31 +9,27 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import javax.annotation.Nullable;
 
 public final class JedisClusterCommandContext {
-  private static final ThreadLocal<JedisClusterCommandContext> current = new ThreadLocal<>();
+  private static final ScopedThreadValue<JedisClusterCommandContext> currentCommandContext =
+      new ScopedThreadValue<>();
 
   @Nullable private Context context;
   @Nullable private JedisRequest request;
-  private boolean executing;
+  private int executionDepth;
   private int connectionAcquisitionDepth;
 
   @Nullable
-  public static JedisClusterCommandContext start() {
-    if (!emitStableDatabaseSemconv() || current.get() != null) {
-      return null;
-    }
-    JedisClusterCommandContext commandContext = new JedisClusterCommandContext();
-    current.set(commandContext);
-    return commandContext;
+  public static JedisClusterCommandContext create() {
+    return emitStableDatabaseSemconv() ? new JedisClusterCommandContext() : null;
   }
 
   private JedisClusterCommandContext() {}
 
-  @Nullable
-  public static JedisClusterCommandContext current() {
-    return current.get();
+  public static ScopedThreadValue<JedisClusterCommandContext> currentCommandContext() {
+    return currentCommandContext;
   }
 
   /**
@@ -42,7 +38,7 @@ public final class JedisClusterCommandContext {
    * rather than operations of their own.
    */
   public static void enterConnectionAcquisition() {
-    JedisClusterCommandContext commandContext = current.get();
+    JedisClusterCommandContext commandContext = currentCommandContext.get();
     if (commandContext != null) {
       commandContext.connectionAcquisitionDepth++;
     }
@@ -50,7 +46,7 @@ public final class JedisClusterCommandContext {
 
   /** Marks the end of borrowing a cluster connection. */
   public static void exitConnectionAcquisition() {
-    JedisClusterCommandContext commandContext = current.get();
+    JedisClusterCommandContext commandContext = currentCommandContext.get();
     if (commandContext != null && commandContext.connectionAcquisitionDepth > 0) {
       commandContext.connectionAcquisitionDepth--;
     }
@@ -71,19 +67,21 @@ public final class JedisClusterCommandContext {
   }
 
   public boolean isExecuting() {
-    return executing;
+    return executionDepth > 0;
   }
 
   public void enterExecute() {
-    executing = true;
+    executionDepth++;
   }
 
   public void exitExecute() {
-    executing = false;
+    if (executionDepth > 0) {
+      executionDepth--;
+    }
   }
 
   public void capture(@Nullable Context context, JedisRequest request) {
-    if (!executing) {
+    if (!isExecuting()) {
       return;
     }
     if (this.request == null) {
@@ -97,7 +95,6 @@ public final class JedisClusterCommandContext {
   }
 
   public void end(@Nullable Throwable throwable) {
-    current.remove();
     if (context != null && request != null) {
       instrumenter().end(context, request, null, throwable);
     }
