@@ -1,0 +1,400 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
+
+import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.REQUEST_TARGET;
+import static java.util.logging.Level.FINE;
+
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Logger;
+import javax.annotation.Nullable;
+import redis.RedisClientActorLike;
+import redis.RedisClientMasterSlaves;
+import redis.RedisClientPool;
+import redis.RedisClientPoolLike;
+import redis.RedisServer;
+import redis.Request;
+import redis.SentinelMonitored;
+import scala.Tuple2;
+import scala.collection.Iterable;
+import scala.collection.Iterator;
+import scala.collection.mutable.HashMap;
+
+public class RediscalaServerTargets {
+
+  private static final Logger logger = Logger.getLogger(RediscalaServerTargets.class.getName());
+
+  private static final String CLUSTER_CLASS_NAME = "redis.RedisCluster";
+  private static final String MUTABLE_POOL_CLASS_NAME = "redis.RedisClientMutablePool";
+  private static final String SENTINEL_MASTER_SLAVES_CLASS_NAME =
+      "redis.SentinelMonitoredRedisClientMasterSlaves";
+
+  @Nullable private static final Class<?> CLUSTER_CLASS = findClass(CLUSTER_CLASS_NAME);
+
+  @Nullable
+  private static final Method CLUSTER_REDIS_SERVERS = findMethod(CLUSTER_CLASS, "redisServers");
+
+  // Scala collection return types differ between the Scala 2.12 and 2.13 builds, so
+  // collection-returning methods are resolved reflectively rather than called directly.
+  @Nullable
+  private static final Method POOL_REDIS_SERVERS =
+      findMethod(RedisClientPool.class, "redisServers");
+
+  // Some rediscala forks drop the master and slaves accessors from RedisClientMasterSlaves, so both
+  // are resolved reflectively and the client is skipped when either one is missing.
+  @Nullable
+  private static final Method MASTER_SLAVES_MASTER =
+      findMethod(RedisClientMasterSlaves.class, "master");
+
+  @Nullable
+  private static final Method MASTER_SLAVES_SLAVES =
+      findMethod(RedisClientMasterSlaves.class, "slaves");
+
+  @Nullable private static final Class<?> MUTABLE_POOL_CLASS = findClass(MUTABLE_POOL_CLASS_NAME);
+
+  @Nullable
+  private static final Method MUTABLE_POOL_CONNECTIONS =
+      findMethod(MUTABLE_POOL_CLASS, "redisServerConnections");
+
+  private static final VirtualField<RedisClientPoolLike, MutablePoolState> MUTABLE_POOL_STATE =
+      VirtualField.find(RedisClientPoolLike.class, MutablePoolState.class);
+
+  private static final VirtualField<RedisClientActorLike, RedisServerTarget> CLIENT_TARGET =
+      VirtualField.find(RedisClientActorLike.class, RedisServerTarget.class);
+
+  @Nullable
+  static final Class<?> SENTINEL_MASTER_SLAVES_CLASS = findClass(SENTINEL_MASTER_SLAVES_CLASS_NAME);
+
+  @Nullable
+  private static final Method SENTINELS = findMethod(SentinelMonitored.class, "sentinels");
+
+  @Nullable
+  static Class<?> findClass(String className) {
+    try {
+      return Class.forName(className, false, RediscalaServerTargets.class.getClassLoader());
+    } catch (ClassNotFoundException ignored) {
+      return null;
+    }
+  }
+
+  @Nullable
+  static Method findMethod(@Nullable Class<?> declaringClass, String methodName) {
+    if (declaringClass == null) {
+      return null;
+    }
+    try {
+      return declaringClass.getMethod(methodName);
+    } catch (NoSuchMethodException ignored) {
+      return null;
+    }
+  }
+
+  @Nullable
+  static RedisServerTarget get(@Nullable Object client) {
+    if (MUTABLE_POOL_CLASS != null && MUTABLE_POOL_CLASS.isInstance(client)) {
+      return ofMutablePool(client);
+    }
+    if (client instanceof RedisClientActorLike) {
+      return getClientTarget((RedisClientActorLike) client);
+    }
+    if (client instanceof Request) {
+      return get((Request) client);
+    }
+    return of(client);
+  }
+
+  @Nullable
+  private static RedisServerTarget get(Request request) {
+    RedisServerTarget target = REQUEST_TARGET.get(request);
+    if (target == null) {
+      target = of(request);
+      if (target != null) {
+        REQUEST_TARGET.set(request, target);
+      }
+    }
+    return target;
+  }
+
+  public static void captureClientTarget(RedisClientActorLike client) {
+    updateClientTarget(client, client.host(), client.port());
+  }
+
+  @Nullable
+  static RedisServerTarget getClientTarget(RedisClientActorLike client) {
+    return CLIENT_TARGET.get(client);
+  }
+
+  public static boolean clientConfigurationChanged(
+      RedisClientActorLike client, String host, int port) {
+    String currentHost = client.host();
+    return !(currentHost == null ? host == null : currentHost.equals(host))
+        || client.port() != port;
+  }
+
+  public static void updateClientTarget(RedisClientActorLike client, String host, int port) {
+    CLIENT_TARGET.set(client, RedisServerTarget.ofHostAndPort(host, port));
+  }
+
+  @Nullable
+  static RedisServerTarget of(@Nullable Object client) {
+    if (client instanceof SentinelMonitored) {
+      SentinelMonitored sentinelMonitored = (SentinelMonitored) client;
+      return ofSentinel(sentinelMonitored, sentinelMonitored.master());
+    }
+    if (client instanceof RedisClientMasterSlaves) {
+      return ofMasterSlaves((RedisClientMasterSlaves) client);
+    }
+    if (CLUSTER_CLASS != null && CLUSTER_CLASS.isInstance(client)) {
+      return ofPool(client, CLUSTER_REDIS_SERVERS);
+    }
+    if (client instanceof RedisClientPool) {
+      return ofPool(client, POOL_REDIS_SERVERS);
+    }
+    if (client instanceof RedisClientActorLike) {
+      RedisClientActorLike actorClient = (RedisClientActorLike) client;
+      return RedisServerTarget.ofHostAndPort(actorClient.host(), actorClient.port());
+    }
+    return null;
+  }
+
+  @Nullable
+  private static RedisServerTarget ofMasterSlaves(RedisClientMasterSlaves client) {
+    if (MASTER_SLAVES_MASTER == null || MASTER_SLAVES_SLAVES == null) {
+      return null;
+    }
+    Object master;
+    Object slaves;
+    try {
+      master = MASTER_SLAVES_MASTER.invoke(client);
+      slaves = MASTER_SLAVES_SLAVES.invoke(client);
+    } catch (ReflectiveOperationException e) {
+      logger.log(FINE, "Failed to read the configured rediscala master-slaves servers", e);
+      return null;
+    }
+    if (!(slaves instanceof Iterable)) {
+      return null;
+    }
+    String masterEndpoint = endpoint(master);
+    if (masterEndpoint == null) {
+      return null;
+    }
+    List<String> slaveEndpoints = new ArrayList<>();
+    Iterator<?> iterator = ((Iterable<?>) slaves).iterator();
+    while (iterator.hasNext()) {
+      String slaveEndpoint = endpoint(iterator.next());
+      if (slaveEndpoint == null) {
+        return null;
+      }
+      slaveEndpoints.add(slaveEndpoint);
+    }
+    return RedisServerTarget.ofEndpointAndUnorderedEndpoints(masterEndpoint, slaveEndpoints);
+  }
+
+  @Nullable
+  private static RedisServerTarget ofSentinel(SentinelMonitored client, String master) {
+    if (SENTINELS == null) {
+      return null;
+    }
+    Object sentinels;
+    try {
+      sentinels = SENTINELS.invoke(client);
+    } catch (ReflectiveOperationException e) {
+      logger.log(FINE, "Failed to read the configured rediscala Sentinel servers", e);
+      return null;
+    }
+    return ofSentinelEndpoints(sentinels, master);
+  }
+
+  @Nullable
+  private static RedisServerTarget ofSentinelEndpoints(Object sentinels, String master) {
+    if (!(sentinels instanceof Iterable)) {
+      return null;
+    }
+    List<String> endpoints = new ArrayList<>();
+    Iterator<?> iterator = ((Iterable<?>) sentinels).iterator();
+    while (iterator.hasNext()) {
+      Object sentinel = iterator.next();
+      if (!(sentinel instanceof Tuple2)) {
+        endpoints.add(null);
+        continue;
+      }
+      Tuple2<?, ?> endpoint = (Tuple2<?, ?>) sentinel;
+      if (!(endpoint._1() instanceof String) || !(endpoint._2() instanceof Number)) {
+        endpoints.add(null);
+        continue;
+      }
+      endpoints.add(
+          RedisServerTarget.endpoint((String) endpoint._1(), ((Number) endpoint._2()).intValue()));
+    }
+    return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(endpoints, master);
+  }
+
+  @Nullable
+  private static RedisServerTarget ofPool(Object pool, @Nullable Method redisServersMethod) {
+    if (redisServersMethod == null) {
+      return null;
+    }
+    Object servers;
+    try {
+      servers = redisServersMethod.invoke(pool);
+    } catch (ReflectiveOperationException e) {
+      logger.log(FINE, "Failed to read the configured rediscala pool servers", e);
+      return null;
+    }
+    if (!(servers instanceof Iterable)) {
+      return null;
+    }
+    List<String> endpoints = new ArrayList<>();
+    Iterator<?> iterator = ((Iterable<?>) servers).iterator();
+    while (iterator.hasNext()) {
+      endpoints.add(endpoint(iterator.next()));
+    }
+    return RedisServerTarget.ofUnorderedEndpoints(endpoints);
+  }
+
+  @Nullable
+  private static RedisServerTarget ofMutablePool(Object pool) {
+    if (!(pool instanceof RedisClientPoolLike)) {
+      return null;
+    }
+    MutablePoolState state = MUTABLE_POOL_STATE.get((RedisClientPoolLike) pool);
+    if (state == null) {
+      return null;
+    }
+    return state.target();
+  }
+
+  public static void initializeMutablePool(Object pool) {
+    if (MUTABLE_POOL_CONNECTIONS == null || !(pool instanceof RedisClientPoolLike)) {
+      return;
+    }
+
+    Object connections;
+    try {
+      connections = MUTABLE_POOL_CONNECTIONS.invoke(pool);
+    } catch (ReflectiveOperationException | RuntimeException e) {
+      logger.log(FINE, "Failed to initialize rediscala mutable pool server state", e);
+      return;
+    }
+    if (!(connections instanceof HashMap)) {
+      return;
+    }
+
+    HashMap<?, ?> map = (HashMap<?, ?>) connections;
+    MutablePoolState state = MutablePoolState.fromMap(map);
+    MUTABLE_POOL_STATE.set((RedisClientPoolLike) pool, state);
+  }
+
+  public static void refreshMutablePool(Object pool) {
+    MutablePoolState state = mutablePoolState(pool);
+    if (state == null) {
+      return;
+    }
+    if (MUTABLE_POOL_CONNECTIONS == null) {
+      state.markUnavailable();
+      return;
+    }
+
+    Object connections;
+    try {
+      connections = MUTABLE_POOL_CONNECTIONS.invoke(pool);
+    } catch (ReflectiveOperationException | RuntimeException e) {
+      state.markUnavailable();
+      logger.log(FINE, "Failed to refresh rediscala mutable pool server state", e);
+      return;
+    }
+    if (!(connections instanceof HashMap)) {
+      state.markUnavailable();
+      return;
+    }
+
+    HashMap<?, ?> map = (HashMap<?, ?>) connections;
+    // Rediscala synchronizes supported pool mutations on this map.
+    synchronized (map) {
+      state.refresh(map);
+    }
+  }
+
+  public static void markMutablePoolUnavailable(Object pool) {
+    MutablePoolState state = mutablePoolState(pool);
+    if (state != null) {
+      state.markUnavailable();
+    }
+  }
+
+  @Nullable
+  private static MutablePoolState mutablePoolState(Object pool) {
+    return pool instanceof RedisClientPoolLike
+        ? MUTABLE_POOL_STATE.get((RedisClientPoolLike) pool)
+        : null;
+  }
+
+  @Nullable
+  private static String endpoint(@Nullable Object server) {
+    if (!(server instanceof RedisServer)) {
+      return null;
+    }
+    RedisServer redisServer = (RedisServer) server;
+    return RedisServerTarget.endpoint(redisServer.host(), redisServer.port());
+  }
+
+  static final class MutablePoolState {
+    // Requests may race pool updates, so only complete immutable snapshots are published.
+    @Nullable private volatile RedisServerTarget target;
+
+    private MutablePoolState() {}
+
+    // visible for testing
+    static MutablePoolState fromMap(HashMap<?, ?> map) {
+      MutablePoolState state = new MutablePoolState();
+      state.refresh(map);
+      return state;
+    }
+
+    // visible for testing
+    @Nullable
+    RedisServerTarget target() {
+      return target;
+    }
+
+    void markUnavailable() {
+      target = null;
+    }
+
+    void refresh(HashMap<?, ?> map) {
+      try {
+        target = snapshot(map);
+      } catch (RuntimeException e) {
+        markUnavailable();
+        logger.log(FINE, "Failed to snapshot rediscala mutable pool servers", e);
+      }
+    }
+
+    @Nullable
+    private static RedisServerTarget snapshot(HashMap<?, ?> map) {
+      List<String> endpoints = new ArrayList<>();
+      Iterator<?> iterator = map.iterator();
+      while (iterator.hasNext()) {
+        Object entry = iterator.next();
+        if (!(entry instanceof Tuple2)) {
+          return null;
+        }
+        String endpoint = endpoint(((Tuple2<?, ?>) entry)._1());
+        if (endpoint == null) {
+          return null;
+        }
+        endpoints.add(endpoint);
+      }
+      return RedisServerTarget.ofUnorderedEndpoints(endpoints);
+    }
+  }
+
+  private RediscalaServerTargets() {}
+}
