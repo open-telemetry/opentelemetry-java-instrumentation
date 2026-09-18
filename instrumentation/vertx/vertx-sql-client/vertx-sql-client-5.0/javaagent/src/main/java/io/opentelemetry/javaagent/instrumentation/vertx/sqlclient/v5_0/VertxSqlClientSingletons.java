@@ -16,6 +16,8 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfo;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientRequest;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientConnectionPoolState.Acquisition;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientConnectionPoolState.Submission;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -42,6 +44,11 @@ public class VertxSqlClientSingletons {
   private static final ScopedThreadValue<VertxSqlClientSupplierInfo> currentQuerySupplier =
       new ScopedThreadValue<>();
   private static final ScopedThreadValue<VertxSqlClientConstructionState> currentConstructionState =
+      new ScopedThreadValue<>();
+  private static final ScopedThreadValue<Submission> currentSubmission = new ScopedThreadValue<>();
+  private static final ScopedThreadValue<Acquisition> currentAcquisition =
+      new ScopedThreadValue<>();
+  private static final ScopedThreadValue<ConnectionAttempt> currentConnectionAttempt =
       new ScopedThreadValue<>();
   private static final VirtualField<PreparedStatement, VertxSqlClientInfo> PREPARED_STATEMENT_INFO =
       VirtualField.find(PreparedStatement.class, VertxSqlClientInfo.class);
@@ -96,6 +103,18 @@ public class VertxSqlClientSingletons {
 
   public static ScopedThreadValue<VertxSqlClientConstructionState> currentConstructionState() {
     return currentConstructionState;
+  }
+
+  public static ScopedThreadValue<Submission> currentSubmission() {
+    return currentSubmission;
+  }
+
+  public static ScopedThreadValue<Acquisition> currentAcquisition() {
+    return currentAcquisition;
+  }
+
+  public static ScopedThreadValue<ConnectionAttempt> currentConnectionAttempt() {
+    return currentConnectionAttempt;
   }
 
   @Nullable
