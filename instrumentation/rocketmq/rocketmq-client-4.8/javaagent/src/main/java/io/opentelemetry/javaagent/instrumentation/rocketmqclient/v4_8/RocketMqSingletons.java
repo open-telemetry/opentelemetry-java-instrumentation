@@ -9,7 +9,9 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingConfig;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import io.opentelemetry.instrumentation.rocketmqclient.v4_8.RocketMqBatchSendHelper;
+import io.opentelemetry.instrumentation.rocketmqclient.v4_8.RocketMqBatchSendHelper.BatchSendState;
 import io.opentelemetry.instrumentation.rocketmqclient.v4_8.RocketMqTelemetry;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import org.apache.rocketmq.client.hook.ConsumeMessageHook;
@@ -27,6 +29,9 @@ public class RocketMqSingletons {
           .setHeaders(headers)
           .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
           .build();
+
+  private static final ScopedThreadValue<BatchSendState> currentBatchSendState =
+      new ScopedThreadValue<>();
 
   private static final RocketMqBatchSendHelper batchSendHelper =
       new RocketMqBatchSendHelper(
@@ -47,6 +52,10 @@ public class RocketMqSingletons {
 
   public static ConsumeMessageHook consumeMessageHook() {
     return consumeMessageHook;
+  }
+
+  public static ScopedThreadValue<BatchSendState> currentBatchSendState() {
+    return currentBatchSendState;
   }
 
   public static SendMessageHook sendMessageHook() {

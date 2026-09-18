@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v4_8.RocketMqSingletons.currentBatchSendState;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
@@ -14,7 +15,6 @@ import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,8 +30,6 @@ public final class RocketMqBatchSendHelper {
 
   private static final VirtualField<Message, BatchSendState> BATCH_SEND_STATE =
       VirtualField.find(Message.class, BatchSendState.class);
-  private static final ScopedThreadValue<BatchSendState> currentBatchSendState =
-      new ScopedThreadValue<>();
 
   private final Instrumenter<SendMessageContext, Void> sendInstrumenter;
   private final Instrumenter<SendMessageContext, Void> createInstrumenter;
@@ -52,10 +50,6 @@ public final class RocketMqBatchSendHelper {
     propagator = openTelemetry.getPropagators().getTextMapPropagator();
   }
 
-  public static ScopedThreadValue<BatchSendState> currentBatchSendState() {
-    return currentBatchSendState;
-  }
-
   @Nullable
   public BatchSendState createBatchSendState(Object producer, boolean callbackCompletionExpected) {
     if (!emitStableMessagingSemconv()) {
@@ -68,7 +62,7 @@ public final class RocketMqBatchSendHelper {
   }
 
   public void beforeBatchEncode(Message batch) {
-    BatchSendState state = currentBatchSendState.get();
+    BatchSendState state = currentBatchSendState().get();
     if (state == null || state.request != null) {
       return;
     }

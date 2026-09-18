@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v4_8;
 
-import static io.opentelemetry.instrumentation.rocketmqclient.v4_8.RocketMqBatchSendHelper.currentBatchSendState;
 import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v4_8.RocketMqSingletons.batchSendHelper;
+import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v4_8.RocketMqSingletons.currentBatchSendState;
 import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v4_8.RocketMqSingletons.sendMessageHook;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
