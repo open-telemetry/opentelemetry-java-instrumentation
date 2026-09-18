@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
 import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisPipelineContext.captureTransactionFramingRequest;
-import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisPipelineContext.currentTransactionFraming;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisPipelineContext.transactionFraming;
+import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSingletons.currentTransactionFraming;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
