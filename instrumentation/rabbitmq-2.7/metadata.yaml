@@ -19,7 +19,15 @@ configurations:
       regardless of this setting.
     type: boolean
     default: false
-  - ref: messaging.deprecated-receive-telemetry.enabled
+  - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+    description: >
+      Deprecated: use
+      `otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled` instead. It
+      may be removed in the next minor release. Enables consumer spans for RabbitMQ `basicGet`
+      receive operations when legacy messaging semantic conventions are emitted. Stable messaging
+      semantic conventions emit these spans regardless of this setting.
+    type: boolean
+    default: false
   - ref: messaging.headers.included
   - ref: messaging.headers.excluded
   - ref: messaging.capture-headers
