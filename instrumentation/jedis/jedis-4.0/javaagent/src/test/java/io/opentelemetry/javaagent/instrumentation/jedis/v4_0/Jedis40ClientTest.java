@@ -12,6 +12,8 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -19,11 +21,10 @@ import static io.opentelemetry.semconv.NetworkAttributes.NetworkTypeValues.IPV4;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
@@ -31,8 +32,12 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Proxy;
 import java.net.InetAddress;
+import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
@@ -44,10 +49,15 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.testcontainers.containers.GenericContainer;
 import redis.clients.jedis.DefaultJedisClientConfig;
+import redis.clients.jedis.DefaultJedisSocketFactory;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisClientConfig;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisSocketFactory;
 import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Transaction;
+import redis.clients.jedis.UnifiedJedis;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class Jedis40ClientTest {
@@ -120,6 +130,259 @@ class Jedis40ClientTest {
         SERVER_PORT,
         NETWORK_PEER_ADDRESS,
         NETWORK_PEER_PORT);
+  }
+
+  @Test
+  void mappedCommandUsesConfiguredTarget() {
+    String configuredHost = "redis.internal";
+    int configuredPort = 6380;
+    try (Jedis mapped =
+        new Jedis(
+            new HostAndPort(configuredHost, configuredPort),
+            DefaultJedisClientConfig.builder()
+                .hostAndPortMapper(ignored -> new HostAndPort(host, port))
+                .build())) {
+      testing.clearData();
+      mapped.set("mapped", "value");
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SET " + configuredHost + ":" + configuredPort
+                                : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "SET mapped ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv() ? configuredHost : host),
+                            equalTo(
+                                SERVER_PORT, emitStableDatabaseSemconv() ? configuredPort : port),
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip))));
+
+    if (emitStableDatabaseSemconv()) {
+      testing.waitAndAssertMetrics(
+          "io.opentelemetry.jedis-4.0",
+          metric ->
+              metric
+                  .hasName("db.client.operation.duration")
+                  .hasHistogramSatisfying(
+                      histogram ->
+                          histogram.hasPointsSatisfying(
+                              point ->
+                                  point
+                                      .hasAttribute(DB_OPERATION_NAME, "SET")
+                                      .hasAttribute(SERVER_ADDRESS, configuredHost)
+                                      .hasAttribute(SERVER_PORT, (long) configuredPort))));
+    }
+  }
+
+  @Test
+  void shardedCommandUsesConfiguredTargets() throws ReflectiveOperationException {
+    Class<? extends UnifiedJedis> jedisShardingClass;
+    try {
+      jedisShardingClass =
+          Class.forName("redis.clients.jedis.JedisSharding").asSubclass(UnifiedJedis.class);
+    } catch (ClassNotFoundException ignored) {
+      assertThat(Boolean.getBoolean("testLatestDeps")).isTrue();
+      return;
+    }
+
+    boolean jedis51OrLater = Boolean.getBoolean("testJedis51OrLater");
+    String firstShard = "redis-one.internal";
+    int firstShardPort = 6380;
+    String secondShard = "redis-two.internal";
+    int secondShardPort = 6381;
+    DefaultJedisClientConfig clientConfig =
+        DefaultJedisClientConfig.builder()
+            .hostAndPortMapper(ignored -> new HostAndPort(host, port))
+            .build();
+    String configuredTargets =
+        firstShard + ":" + firstShardPort + "," + secondShard + ":" + secondShardPort;
+    try (UnifiedJedis sharded =
+        createShardedClient(
+            asList(
+                new HostAndPort(firstShard, firstShardPort),
+                new HostAndPort(secondShard, secondShardPort)),
+            clientConfig,
+            jedisShardingClass)) {
+      sharded.set("sharded", "warmup");
+      testing.waitForTraces(jedis51OrLater ? 3 : 1);
+      testing.clearData();
+      sharded.set("sharded", "value");
+
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTargets : "SET")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(maybeStable(DB_SYSTEM), REDIS),
+                              equalTo(maybeStable(DB_STATEMENT), "SET sharded ?"),
+                              equalTo(maybeStable(DB_OPERATION), "SET"),
+                              equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                              equalTo(
+                                  SERVER_ADDRESS,
+                                  emitStableDatabaseSemconv() ? configuredTargets : host),
+                              equalTo(
+                                  SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) port),
+                              equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                              equalTo(NETWORK_PEER_PORT, port),
+                              equalTo(NETWORK_PEER_ADDRESS, ip))));
+    }
+    testing.waitForTraces(jedis51OrLater ? 1 : 2);
+    testing.clearData();
+  }
+
+  private static UnifiedJedis createShardedClient(
+      List<HostAndPort> shards,
+      JedisClientConfig clientConfig,
+      Class<? extends UnifiedJedis> jedisShardingClass)
+      throws ReflectiveOperationException {
+    return jedisShardingClass
+        .getConstructor(List.class, JedisClientConfig.class)
+        .newInstance(shards, clientConfig);
+  }
+
+  @Test
+  void defaultSocketFactoryUsesDefaultConfiguredTarget() {
+    DefaultJedisSocketFactory delegate = new DefaultJedisSocketFactory(new HostAndPort(host, port));
+    DefaultJedisSocketFactory socketFactory =
+        new DefaultJedisSocketFactory() {
+          @Override
+          public Socket createSocket() {
+            return delegate.createSocket();
+          }
+        };
+    try (Jedis direct = new Jedis(socketFactory)) {
+      testing.clearData();
+      direct.set("default-factory", "value");
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET 127.0.0.1" : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "SET default-factory ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : 6379L),
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip))));
+  }
+
+  @Test
+  void configOnlySocketFactoryUsesDefaultConfiguredTarget() {
+    DefaultJedisClientConfig clientConfig =
+        DefaultJedisClientConfig.builder()
+            .hostAndPortMapper(ignored -> new HostAndPort(host, port))
+            .build();
+    try (Jedis mapped = new Jedis(new DefaultJedisSocketFactory(clientConfig), clientConfig)) {
+      testing.clearData();
+      mapped.set("mapped-default", "value");
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET 127.0.0.1" : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "SET mapped-default ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(
+                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? "127.0.0.1" : host),
+                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) port),
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip))));
+  }
+
+  @Test
+  void customSocketFactoryFallsBackToNetworkPeer() {
+    DefaultJedisClientConfig clientConfig = DefaultJedisClientConfig.builder().build();
+    DefaultJedisSocketFactory delegate =
+        new DefaultJedisSocketFactory(new HostAndPort(host, port), clientConfig);
+    JedisSocketFactory socketFactory =
+        (JedisSocketFactory)
+            Proxy.newProxyInstance(
+                JedisSocketFactory.class.getClassLoader(),
+                new Class<?>[] {JedisSocketFactory.class},
+                (proxy, method, args) -> {
+                  try {
+                    return method.invoke(delegate, args);
+                  } catch (InvocationTargetException e) {
+                    throw e.getCause();
+                  }
+                });
+
+    try (Jedis custom = new Jedis(socketFactory, clientConfig)) {
+      testing.clearData();
+      custom.set("custom", "value");
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "SET custom ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(SERVER_ADDRESS, null),
+                            equalTo(SERVER_PORT, null),
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip))));
+  }
+
+  @Test
+  void pooledCommand() {
+    JedisPool pool = new JedisPool(host, port);
+    cleanup.deferCleanup(pool);
+    try (Jedis pooled = pool.getResource()) {
+      testing.clearData();
+      pooled.set("pooled", "value");
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "SET pooled ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip))));
   }
 
   @Test
