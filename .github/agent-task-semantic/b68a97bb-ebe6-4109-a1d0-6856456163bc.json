@@ -1,0 +1,20 @@
+{
+  "title": "Add logical spans for Redisson atomic batches",
+  "body": "Represent atomic Redisson batches as one logical CLIENT span under stable database semantic conventions. The instrumentation captures queued user commands, derives sanitized operation and batch attributes, spans the overall batch result, and suppresses fragmented MULTI/command/EXEC protocol spans across supported Redisson versions. Legacy semantic-convention behavior and ordinary pipeline telemetry remain unchanged, and user callbacks retain the application context instead of intermittently inheriting the internal logical batch span.",
+  "summary": "Fixed one compatibility defect in the new callback regression test, then re-reviewed the resulting pull request and found no remaining findings. The live title and description accurately describe the final user-facing behavior and need no correction.",
+  "outcome": "cleared",
+  "iterations": 2,
+  "findings": [
+    {
+      "id": "redisson-legacy-test-discovery",
+      "title": "Callback regression prevents legacy Redisson test discovery",
+      "path": "instrumentation/redisson/redisson-common-3.0/testing/src/main/java/io/opentelemetry/javaagent/instrumentation/redisson/AbstractRedissonAsyncClientTest.java",
+      "line": 424,
+      "side": "RIGHT",
+      "body": "The callback regression captures newer Redisson-only `BatchOptions.ExecutionMode`, `BatchOptions`, and `BatchResult` types in compiler-generated lambda method signatures. JUnit resolves those signatures while discovering the shared test class against Redisson 3.0.0, where the types do not exist, so every test fails discovery with `NoClassDefFoundError`. Keep newer-only types out of synthetic method signatures while preserving coverage of both promise implementations.",
+      "disposition": "fixed",
+      "reason": "Reproduced with `:instrumentation:redisson:redisson-3.0:javaagent:testStableSemconv`. The fix resolves the execution mode reflectively before the callback lambda, creates the batch outside that lambda, and returns the version-neutral callback future instead of a `BatchResult`-typed combination. The legacy stable-semconv task and both Redisson module `check` tasks then passed.",
+      "commit_index": 1
+    }
+  ]
+}
