@@ -56,7 +56,9 @@ abstract class AbstractHttpServerInstrumentationTest
           t != ServerEndpoint.EXCEPTION
       }
     )
-    // instrumentation does not create a span at all
+    // pekko-http rejects an unknown method while parsing the request, so it is answered by the
+    // sparse parsing error span, which reports the 501 and no request attributes, while this test
+    // also asserts server.address and http.request.method_original
     options.disableTestNonStandardHttpMethod
   }
 
