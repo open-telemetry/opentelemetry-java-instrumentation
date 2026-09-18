@@ -24,7 +24,7 @@ import javax.annotation.Nullable;
 
 public class AnnotationSingletons {
 
-  private static final String INSTRUMENTATION_NAME =
+  static final String INSTRUMENTATION_NAME =
       "io.opentelemetry.opentelemetry-instrumentation-annotations-1.16";
 
   private static final Logger logger = Logger.getLogger(AnnotationSingletons.class.getName());
