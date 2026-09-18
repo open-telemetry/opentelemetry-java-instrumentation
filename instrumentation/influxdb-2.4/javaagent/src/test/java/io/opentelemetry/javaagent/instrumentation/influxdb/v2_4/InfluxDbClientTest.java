@@ -439,4 +439,31 @@ class InfluxDbClientTest {
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? "write" : "WRITE"))));
   }
+
+  @Test
+  void testServerAttributesFromConfiguredUrlWithUserInfo() {
+    String serverUrl = "http://influxuser:influxsecret@" + host + ":" + port + "/";
+    InfluxDB influxDbWithCredentialsInUrl = InfluxDBFactory.connect(serverUrl);
+    cleanup.deferCleanup(influxDbWithCredentialsInUrl);
+
+    influxDbWithCredentialsInUrl.query(new Query("SELECT * FROM cpu", DATABASE_NAME));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), INFLUXDB),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(maybeStable(DB_STATEMENT), "SELECT * FROM cpu"),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "SELECT cpu" : null))));
+  }
 }

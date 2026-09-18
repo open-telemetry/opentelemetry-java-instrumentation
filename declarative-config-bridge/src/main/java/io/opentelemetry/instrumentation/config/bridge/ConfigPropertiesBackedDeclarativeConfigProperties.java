@@ -81,6 +81,9 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
         "java.common.messaging.capture_headers/development",
         "otel.instrumentation.messaging.experimental.capture-headers");
     SPECIAL_MAPPINGS.put(
+        "java.common.messaging.batch_send.message_creation_spans.enabled",
+        "otel.instrumentation.messaging.batch-send.message-creation-spans.enabled");
+    SPECIAL_MAPPINGS.put(
         "java.common.gen_ai.capture_message_content",
         "otel.instrumentation.genai.capture-message-content");
     // top-level common configs
@@ -95,13 +98,15 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
     SPECIAL_MAPPINGS.put(
         "java.servlet.javascript_snippet/development", "otel.experimental.javascript-snippet");
     // jmx properties don't have an "instrumentation" segment
-    SPECIAL_MAPPINGS.put("java.jmx.enabled", "otel.jmx.enabled");
+    SPECIAL_MAPPINGS.put("java.jmx.enabled", "otel.jmx.enabled"); // TODO: remove in v3
     SPECIAL_MAPPINGS.put("java.jmx.config", "otel.jmx.config");
     // otel.jmx.discovery.delay also has a dedicated branch in getLong() that reads it as a
     // Duration and falls back to otel.metric.export.interval; this mapping is here only to keep
     // it consistent with the rest of the jmx.* properties.
     SPECIAL_MAPPINGS.put("java.jmx.discovery.delay", "otel.jmx.discovery.delay");
     SPECIAL_MAPPINGS.put("java.jmx.target.system", "otel.jmx.target.system");
+    SPECIAL_MAPPINGS.put("java.jmx.metrics.included", "otel.jmx.metrics.included");
+    SPECIAL_MAPPINGS.put("java.jmx.metrics.excluded", "otel.jmx.metrics.excluded");
   }
 
   private final ConfigProperties configProperties;

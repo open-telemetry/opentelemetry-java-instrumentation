@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.jmx.internal.yaml;
 
-import io.opentelemetry.instrumentation.jmx.internal.engine.MetricConfiguration;
-import io.opentelemetry.instrumentation.jmx.internal.engine.MetricDef;
 import java.util.List;
 
 /**
@@ -30,19 +28,5 @@ public class JmxConfig {
 
   public List<JmxRule> getRules() {
     return rules;
-  }
-
-  /**
-   * Converts the rules from this object into MetricDefs and adds them to the specified
-   * MetricConfiguration.
-   *
-   * @param configuration MetricConfiguration to add MetricDefs to
-   * @throws Exception an exception if the rule conversion cannot be performed
-   */
-  void addMetricDefsTo(MetricConfiguration configuration) throws Exception {
-    for (JmxRule rule : rules) {
-      MetricDef metricDef = rule.buildMetricDef();
-      configuration.addMetricDef(metricDef);
-    }
   }
 }

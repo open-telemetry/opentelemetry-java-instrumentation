@@ -106,7 +106,7 @@ public final class DbConnectionPoolMetrics {
 
   public ObservableLongMeasurement maxConnections() {
     String metricName =
-        emitStableDatabaseSemconv() ? "db.client.connection.max" : "db.client.connections.max";
+        emitStableDatabaseSemconv() ? "db.client.connection.limit" : "db.client.connections.max";
     return meter
         .upDownCounterBuilder(metricName)
         .setUnit(emitStableDatabaseSemconv() ? "{connection}" : "{connections}")

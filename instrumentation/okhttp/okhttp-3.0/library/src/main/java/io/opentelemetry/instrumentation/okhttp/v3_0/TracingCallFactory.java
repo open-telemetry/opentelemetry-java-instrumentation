@@ -22,7 +22,7 @@ import okio.Timeout;
 
 class TracingCallFactory implements Call.Factory {
 
-  private static final VirtualField<Request, Context> contextsByRequest =
+  private static final VirtualField<Request, Context> REQUEST_CONTEXT =
       VirtualField.find(Request.class, Context.class);
   private static final boolean supportsTags = supportsTags();
 
@@ -60,7 +60,7 @@ class TracingCallFactory implements Call.Factory {
     if (supportsTags) {
       return getContextFromRequestTag(request);
     }
-    return contextsByRequest.get(request);
+    return REQUEST_CONTEXT.get(request);
   }
 
   @Nullable
@@ -83,7 +83,7 @@ class TracingCallFactory implements Call.Factory {
     }
     Request newRequest = builder.build();
     if (!supportsTags) {
-      contextsByRequest.set(newRequest, context);
+      REQUEST_CONTEXT.set(newRequest, context);
     }
     return newRequest;
   }

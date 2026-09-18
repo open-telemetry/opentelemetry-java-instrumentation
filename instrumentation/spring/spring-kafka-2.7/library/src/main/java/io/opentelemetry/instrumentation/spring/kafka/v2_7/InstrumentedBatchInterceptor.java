@@ -21,7 +21,7 @@ import org.springframework.kafka.listener.BatchInterceptor;
 
 final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V> {
 
-  private static final VirtualField<ConsumerRecords<?, ?>, State<KafkaReceiveRequest>> stateField =
+  private static final VirtualField<ConsumerRecords<?, ?>, State<KafkaReceiveRequest>> BATCH_STATE =
       VirtualField.find(ConsumerRecords.class, State.class);
   private static final ThreadLocal<WeakReference<ConsumerRecords<?, ?>>> lastProcessed =
       new ThreadLocal<>();
@@ -44,7 +44,7 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
     if (batchProcessInstrumenter.shouldStart(parentContext, request) && !skipProcessing(records)) {
       Context context = batchProcessInstrumenter.start(parentContext, request);
       Scope scope = context.makeCurrent();
-      stateField.set(records, State.create(request, context, scope));
+      BATCH_STATE.set(records, State.create(request, context, scope));
     }
 
     return decorated == null ? records : decorated.intercept(records, consumer);
@@ -92,8 +92,8 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
   }
 
   private void end(ConsumerRecords<K, V> records, @Nullable Throwable error) {
-    State<KafkaReceiveRequest> state = stateField.get(records);
-    stateField.set(records, null);
+    State<KafkaReceiveRequest> state = BATCH_STATE.get(records);
+    BATCH_STATE.set(records, null);
     if (state != null) {
       KafkaReceiveRequest request = state.request();
       state.scope().close();
