@@ -58,12 +58,20 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
+    jvmArgs("-Dotel.instrumentation.couchbase.emit-experimental-telemetry=true")
+    systemProperty("metadataConfig", "otel.instrumentation.couchbase.emit-experimental-telemetry=true")
+  }
+
+  val testLegacyConfig = register<Test>("testLegacyConfig") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     jvmArgs("-Dotel.instrumentation.couchbase.experimental-span-attributes=true")
     systemProperty("metadataConfig", "otel.instrumentation.couchbase.experimental-span-attributes=true")
   }
 
   check {
-    dependsOn(testStableSemconv, testExperimental)
+    dependsOn(testStableSemconv, testExperimental, testLegacyConfig)
   }
 
   if (otelProps.denyUnsafe) {

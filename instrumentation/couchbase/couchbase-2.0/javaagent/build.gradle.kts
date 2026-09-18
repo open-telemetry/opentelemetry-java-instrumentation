@@ -69,8 +69,8 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    jvmArgs("-Dotel.instrumentation.couchbase.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.couchbase.experimental-span-attributes=true")
+    jvmArgs("-Dotel.instrumentation.couchbase.emit-experimental-telemetry=true")
+    systemProperty("metadataConfig", "otel.instrumentation.couchbase.emit-experimental-telemetry=true")
   }
 
   check {
