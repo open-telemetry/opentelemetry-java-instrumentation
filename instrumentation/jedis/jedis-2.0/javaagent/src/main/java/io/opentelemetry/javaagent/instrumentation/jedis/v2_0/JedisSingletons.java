@@ -66,7 +66,7 @@ public class JedisSingletons {
     instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
-  static Instrumenter<JedisRequest, Void> instrumenter() {
+  public static Instrumenter<JedisRequest, Void> instrumenter() {
     return instrumenter;
   }
 
