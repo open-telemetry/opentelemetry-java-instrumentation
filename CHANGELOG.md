@@ -4,6 +4,14 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Add the required `isRequestStreaming(REQUEST)` method to `GenAiAttributesGetter`.
+  ([#19879](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19879))
+- Elasticsearch REST javaagent and 7.x library instrumentation now capture sanitized search query
+  bodies by default under v3-preview; outside v3-preview, capture defaults remain unchanged. The
+  javaagent also sanitizes explicitly enabled capture by default, replacing literal values with `?`
+  while preserving the query structure. Javaagent sanitization can be disabled with
+  `otel.instrumentation.elasticsearch.query-sanitization.enabled=false`.
+  ([#19675](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19675))
 - Remove the deprecated `HostIdResource.REGISTRY_QUERY` in favor of the absolute-path `reg.exe` lookup used by
   `HostIdResource`. ([#19778](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19778))
 
@@ -12,6 +20,18 @@
 - Deprecate `GrpcRequest.getLogicalHost()` and `getLogicalPort()` in favor of
   `getServerAddress()` and `getServerPort()`.
   ([#16161](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16161))
+- Deprecate the Elasticsearch REST library artifacts and their public entrypoints. Elasticsearch
+  Java API Client users should use its [native OpenTelemetry
+  support](https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/8.10/opentelemetry.html),
+  available in 7.17.20+ on the 7.x line and 8.10+. Applications that use the REST Client directly
+  have no drop-in library replacement; they can use the javaagent or migrate to the Java API Client.
+  ([#19697](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/19697))
+- Deprecate `SelectorConfig.resolve` overloads that do not specify `SelectorConfig.Stability` in favor
+  of overloads that require callers to choose the stability explicitly.
+  ([#19969](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19969))
+- Deprecate `otel.instrumentation.opensearch.capture-search-query`. There is no replacement.
+- Deprecate `otel.instrumentation.elasticsearch.capture-search-query` There is no replacement.
+  ([#19675](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19675))
 
 ## Version 2.31.1 (2026-08-23)
 
@@ -1931,7 +1951,7 @@ for more details.
 ### 🌟 New javaagent instrumentation
 
 - AWS Bedrock instrumentation, following
-  [Gen AI semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/README.md#semantic-conventions-for-generative-ai-systems)
+  [Gen AI semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/gen-ai/README.md#semantic-conventions-for-generative-ai-systems)
   ([#13355](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13355),
   [#13408](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13408),
   [#13473](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13473),
@@ -1944,7 +1964,7 @@ for more details.
 ### 🌟 New library instrumentation
 
 - AWS Bedrock instrumentation, following
-  [Gen AI semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/README.md#semantic-conventions-for-generative-ai-systems)
+  [Gen AI semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/gen-ai/README.md#semantic-conventions-for-generative-ai-systems)
   ([#13355](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13355),
   [#13408](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13408),
   [#13473](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13473),

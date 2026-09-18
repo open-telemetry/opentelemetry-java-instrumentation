@@ -38,6 +38,12 @@ The `testExperimental` task follows the standard custom test task pattern — se
 [gradle-conventions.md](gradle-conventions.md) for `testClassesDirs`, `classpath`,
 `collectMetadata`, `metadataConfig`, and `check` wiring requirements.
 
+When the module creates an experimental variant for every `JvmTestSuite` and source suites have
+task-specific JVM arguments or system properties, follow the
+[source suite JVM settings](gradle-conventions.md#preserving-source-suite-jvm-settings)
+pattern. Inherit the source values, then add the experimental flag. Do not reconstruct source
+settings with checks against `suite.name`.
+
 The domain-specific parts are the `jvmArgs` and `metadataConfig` values:
 
 ```kotlin

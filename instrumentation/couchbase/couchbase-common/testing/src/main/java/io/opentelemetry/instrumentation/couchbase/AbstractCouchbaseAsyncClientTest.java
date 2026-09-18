@@ -118,14 +118,22 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("Cluster.openBucket")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "Cluster.openBucket 127.0.0.1"
+                                : "Cluster.openBucket")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
-                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket")),
+                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"),
+                            equalTo(
+                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? "127.0.0.1" : null)),
                 span ->
-                    span.hasName("ClusterManager.hasBucket")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "ClusterManager.hasBucket 127.0.0.1"
+                                : "ClusterManager.hasBucket")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -137,7 +145,8 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalAttribute()))));
+                                stringKey("couchbase.local.address"),
+                                experimentalLocalAddress()))));
   }
 
   @ParameterizedTest
@@ -169,12 +178,17 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("Cluster.openBucket")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "Cluster.openBucket 127.0.0.1"
+                                : "Cluster.openBucket")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
-                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket")),
+                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"),
+                            equalTo(
+                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? "127.0.0.1" : null)),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -192,9 +206,9 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalAttribute()),
+                                stringKey("couchbase.local.address"), experimentalLocalAddress()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), experimentalAttribute()))));
+                                stringKey("couchbase.operation_id"), experimentalOperationId()))));
   }
 
   @ParameterizedTest
@@ -233,12 +247,17 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("Cluster.openBucket")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "Cluster.openBucket 127.0.0.1"
+                                : "Cluster.openBucket")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
-                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket")),
+                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"),
+                            equalTo(
+                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? "127.0.0.1" : null)),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -256,9 +275,9 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalAttribute()),
+                                stringKey("couchbase.local.address"), experimentalLocalAddress()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), experimentalAttribute())),
+                                stringKey("couchbase.operation_id"), experimentalOperationId())),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -276,9 +295,9 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalAttribute()),
+                                stringKey("couchbase.local.address"), experimentalLocalAddress()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), experimentalAttribute()))));
+                                stringKey("couchbase.operation_id"), experimentalOperationId()))));
   }
 
   @Test
@@ -313,12 +332,17 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("Cluster.openBucket")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "Cluster.openBucket 127.0.0.1"
+                                : "Cluster.openBucket")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
-                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket")),
+                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"),
+                            equalTo(
+                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? "127.0.0.1" : null)),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -340,9 +364,9 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalAttribute()),
+                                stringKey("couchbase.local.address"), experimentalLocalAddress()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), experimentalAttribute()))));
+                                stringKey("couchbase.operation_id"), experimentalOperationId()))));
   }
 
   @ParameterizedTest
@@ -360,10 +384,10 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                 .openBucket(bucketSettings.name(), bucketSettings.password())
                 .subscribe(
                     bucket -> {
-                      Observable<JsonDocument> observable =
+                      Observable<JsonDocument> upsert =
                           bucket.upsert(JsonDocument.create("helloworld", content));
-                      observable.subscribe(first::complete);
-                      observable.subscribe(second::complete);
+                      upsert.subscribe(first::complete);
+                      upsert.subscribe(second::complete);
                     }));
 
     assertThat(first).succeedsWithin(TIMEOUT);
@@ -374,12 +398,16 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("Cluster.openBucket")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "Cluster.openBucket 127.0.0.1"
+                                : "Cluster.openBucket")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
-                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket")),
+                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"),
+                            equalTo(SERVER_ADDRESS, configuredServerAddress())),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -397,9 +425,9 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalAttribute()),
+                                stringKey("couchbase.local.address"), experimentalLocalAddress()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), experimentalAttribute())),
+                                stringKey("couchbase.operation_id"), experimentalOperationId())),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -417,8 +445,8 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalAttribute()),
+                                stringKey("couchbase.local.address"), experimentalLocalAddress()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), experimentalAttribute()))));
+                                stringKey("couchbase.operation_id"), experimentalOperationId()))));
   }
 }
