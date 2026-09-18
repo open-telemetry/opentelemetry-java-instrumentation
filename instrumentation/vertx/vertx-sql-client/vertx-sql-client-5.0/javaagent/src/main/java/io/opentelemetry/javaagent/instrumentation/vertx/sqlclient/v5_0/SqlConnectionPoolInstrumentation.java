@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientConnectionPoolState.currentSubmission;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -54,12 +55,13 @@ class SqlConnectionPoolInstrumentation implements TypeInstrumentation {
     @Nullable
     public static Submission onEnter(
         @Advice.FieldValue("pool") ConnectionPool<?> pool, @Advice.Argument(0) Object command) {
-      return VertxSqlClientConnectionPoolState.enterSubmission(pool, command);
+      return currentSubmission()
+          .set(VertxSqlClientConnectionPoolState.createSubmission(pool, command));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Submission previous) {
-      VertxSqlClientConnectionPoolState.exitSubmission(previous);
+      currentSubmission().restore(previous);
     }
   }
 }

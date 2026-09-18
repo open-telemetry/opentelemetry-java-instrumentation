@@ -5,8 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.currentClientInfo;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.currentConstructionState;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.currentQuerySupplier;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfo;
+import io.vertx.core.Future;
+import io.vertx.sqlclient.PreparedStatement;
 import org.junit.jupiter.api.Test;
 
 class VertxSqlClientSingletonsTest {
@@ -29,6 +38,69 @@ class VertxSqlClientSingletonsTest {
 
     assertThat(loadedClass).isSameAs(SecondCarrier.class);
     assertThat(initialized).isFalse();
+  }
+
+  @Test
+  void restoresNestedPreparedStatementState() {
+    VertxSqlClientInfo ambientInfo = VertxSqlClientInfo.createUnknown("ambient");
+    VertxSqlClientInfo firstInfo = VertxSqlClientInfo.createUnknown("first");
+    VertxSqlClientInfo secondInfo = VertxSqlClientInfo.createUnknown("second");
+    VertxSqlClientSupplierInfo ambientSupplier = new VertxSqlClientSupplierInfo(ambientInfo);
+    PreparedStatement firstStatement = mock(PreparedStatement.class);
+    PreparedStatement secondStatement = mock(PreparedStatement.class);
+    VertxSqlClientSingletons.attachPreparedStatementInfo(
+        Future.succeededFuture(firstStatement), firstInfo);
+    VertxSqlClientSingletons.attachPreparedStatementInfo(
+        Future.succeededFuture(secondStatement), secondInfo);
+
+    VertxSqlClientInfo initialInfo = currentClientInfo().set(ambientInfo);
+    VertxSqlClientSupplierInfo initialSupplier = currentQuerySupplier().set(ambientSupplier);
+    try {
+      PreparedStatementInstrumentation.QueryAdvice.QueryAdviceState firstState =
+          PreparedStatementInstrumentation.QueryAdvice.onEnter(firstStatement);
+      assertThat(currentClientInfo().get()).isSameAs(firstInfo);
+      assertThat(currentQuerySupplier().get()).isNull();
+
+      PreparedStatementInstrumentation.QueryAdvice.QueryAdviceState secondState =
+          PreparedStatementInstrumentation.QueryAdvice.onEnter(secondStatement);
+      assertThat(currentClientInfo().get()).isSameAs(secondInfo);
+      assertThat(currentQuerySupplier().get()).isNull();
+
+      PreparedStatementInstrumentation.QueryAdvice.onExit(secondState);
+      assertThat(currentClientInfo().get()).isSameAs(firstInfo);
+      assertThat(currentQuerySupplier().get()).isNull();
+
+      PreparedStatementInstrumentation.QueryAdvice.onExit(firstState);
+      assertThat(currentClientInfo().get()).isSameAs(ambientInfo);
+      assertThat(currentQuerySupplier().get()).isSameAs(ambientSupplier);
+    } finally {
+      currentQuerySupplier().restore(initialSupplier);
+      currentClientInfo().restore(initialInfo);
+    }
+  }
+
+  @Test
+  void restoresConstructionStateWhenCompletionThrows() {
+    RuntimeException failure = new RuntimeException("completion failed");
+    VertxSqlClientConstructionState ambientState =
+        new VertxSqlClientConstructionState(null, "ambient");
+    VertxSqlClientConstructionState failingState = mock(VertxSqlClientConstructionState.class);
+    doThrow(failure).when(failingState).complete(null);
+
+    VertxSqlClientConstructionState initialState = currentConstructionState().set(ambientState);
+    VertxSqlClientConstructionState previousState = currentConstructionState().set(failingState);
+    Object[] enterState = {
+      null,
+      new ClientBuilderInstrumentation.BuildAdvice.BuildState(failingState, null, previousState)
+    };
+    try {
+      assertThatThrownBy(
+              () -> ClientBuilderInstrumentation.BuildAdvice.onExit(null, null, enterState))
+          .isSameAs(failure);
+      assertThat(currentConstructionState().get()).isSameAs(ambientState);
+    } finally {
+      currentConstructionState().restore(initialState);
+    }
   }
 
   private static class FirstCarrier {

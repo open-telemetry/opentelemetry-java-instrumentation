@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.currentConstructionState;
 import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -97,7 +98,7 @@ class ClientBuilderInstrumentation implements TypeInstrumentation {
           new VertxSqlClientConstructionState(
               databases != null && !databases.isEmpty() ? databases : null,
               VertxSqlClientUtil.getDbSystemNameFromClassName(driver));
-      VertxSqlClientConstructionState previous = VertxSqlClientSingletons.enterConstruction(state);
+      VertxSqlClientConstructionState previous = currentConstructionState().set(state);
       VertxSqlClientInfo info = state.getInfo();
       return new Object[] {
         state.getSupplier() == null && info != null
@@ -118,8 +119,11 @@ class ClientBuilderInstrumentation implements TypeInstrumentation {
       }
 
       BuildState state = (BuildState) enterState[1];
-      VertxSqlClientSingletons.exitConstruction(state.previousConstructionState);
-      state.constructionState.complete(client);
+      try {
+        state.constructionState.complete(client);
+      } finally {
+        currentConstructionState().restore(state.previousConstructionState);
+      }
       // Restore the original connect handler after onEnter temporarily replaced it.
       return new Object[] {state.connectHandler};
     }

@@ -22,46 +22,51 @@ public final class VertxSqlClientConnectionPoolState {
       VirtualField.find(ConnectionPool.class, VertxSqlClientInfo.class);
   private static final VirtualField<PoolWaiter<?>, VertxSqlClientQueryState> WAITER_QUERY =
       VirtualField.find(PoolWaiter.class, VertxSqlClientQueryState.class);
-  private static final ScopedThreadValue<Submission> submission = new ScopedThreadValue<>();
-  private static final ScopedThreadValue<Acquisition> acquisition = new ScopedThreadValue<>();
-  private static final ScopedThreadValue<ConnectionAttempt> connectionAttempt =
+  private static final ScopedThreadValue<Submission> currentSubmission = new ScopedThreadValue<>();
+  private static final ScopedThreadValue<Acquisition> currentAcquisition =
+      new ScopedThreadValue<>();
+  private static final ScopedThreadValue<ConnectionAttempt> currentConnectionAttempt =
       new ScopedThreadValue<>();
 
+  public static ScopedThreadValue<Submission> currentSubmission() {
+    return currentSubmission;
+  }
+
+  public static ScopedThreadValue<Acquisition> currentAcquisition() {
+    return currentAcquisition;
+  }
+
+  public static ScopedThreadValue<ConnectionAttempt> currentConnectionAttempt() {
+    return currentConnectionAttempt;
+  }
+
   public static void attachSupplier(ConnectionPool<?> pool) {
-    VertxSqlClientConstructionState state = VertxSqlClientSingletons.getConstructionState();
+    VertxSqlClientConstructionState state =
+        VertxSqlClientSingletons.currentConstructionState().get();
     if (state != null && state.getSupplier() != null) {
       POOL_SUPPLIER.set(pool, state.getInfo());
     }
   }
 
   @Nullable
-  public static Submission enterSubmission(ConnectionPool<?> pool, Object command) {
+  public static Submission createSubmission(ConnectionPool<?> pool, Object command) {
     Context context = VertxSqlClientSingletons.getCommandContext(command);
     VertxSqlClientQueryState query = context != null ? context.get(QUERY_STATE) : null;
-    return submission.set(query != null ? new Submission(pool, query) : null);
-  }
-
-  public static void exitSubmission(@Nullable Submission previous) {
-    submission.restore(previous);
+    return query != null ? new Submission(pool, query) : null;
   }
 
   @Nullable
-  public static Acquisition enterAcquisition(ConnectionPool<?> pool, Completable<?> handler) {
-    Submission current = submission.get();
+  public static Acquisition createAcquisition(ConnectionPool<?> pool, Completable<?> handler) {
+    Submission current = currentSubmission.get();
     if (current != null && current.pool == pool && !current.claimed) {
       current.claimed = true;
-      return acquisition.set(new Acquisition(handler, current.query));
+      return new Acquisition(handler, current.query);
     }
-    return acquisition.set(null);
-  }
-
-  public static void exitAcquisition(@Nullable Acquisition previous) {
-    // If no waiter consumed the current acquisition, this discards that failed handoff.
-    acquisition.restore(previous);
+    return null;
   }
 
   public static void attachWaiter(PoolWaiter<?> waiter, Completable<?> handler) {
-    Acquisition current = acquisition.get();
+    Acquisition current = currentAcquisition.get();
     // The acquisition advice restores its previous value. Claim this one-shot handoff so only the
     // waiter created for this handler consumes the query.
     if (current != null && current.handler == handler && !current.claimed) {
@@ -71,29 +76,16 @@ public final class VertxSqlClientConnectionPoolState {
   }
 
   @Nullable
-  public static ConnectionAttempt enterConnection(ConnectionPool<?> pool, PoolWaiter<?> waiter) {
+  public static ConnectionAttempt createConnectionAttempt(
+      ConnectionPool<?> pool, PoolWaiter<?> waiter) {
     VertxSqlClientInfo supplier = POOL_SUPPLIER.get(pool);
     if (supplier == null) {
-      return connectionAttempt.set(null);
+      return null;
     }
     // The combiner may start a queued replacement before delivering another waiter's failure.
     VertxSqlClientQueryState query = WAITER_QUERY.get(waiter);
     WAITER_QUERY.set(waiter, null);
-    return connectionAttempt.set(new ConnectionAttempt(supplier.getDbSystemName(), query));
-  }
-
-  @Nullable
-  public static ConnectionAttempt getConnectionAttempt() {
-    return connectionAttempt.get();
-  }
-
-  public static void exitConnection(
-      @Nullable ConnectionAttempt previous, @Nullable Throwable throwable) {
-    ConnectionAttempt current = connectionAttempt.get();
-    connectionAttempt.restore(previous);
-    if (current != null) {
-      current.end(throwable);
-    }
+    return new ConnectionAttempt(supplier.getDbSystemName(), query);
   }
 
   public static final class Submission {

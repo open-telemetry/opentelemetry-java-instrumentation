@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getDbSystemNameFromClassName;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.resolveDbSystemName;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.wrapContext;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.currentConstructionState;
 import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -74,8 +75,7 @@ class PoolInstrumentation implements TypeInstrumentation {
       String dbSystemName = resolveDbSystemName(sqlConnectOptions, declaringTypeName);
       VertxSqlClientConstructionState constructionState =
           new VertxSqlClientConstructionState(singletonList(sqlConnectOptions), dbSystemName);
-      VertxSqlClientConstructionState previous =
-          VertxSqlClientSingletons.enterConstruction(constructionState);
+      VertxSqlClientConstructionState previous = currentConstructionState().set(constructionState);
       return new PoolConstructionState(callDepth, constructionState, previous);
     }
 
@@ -87,12 +87,15 @@ class PoolInstrumentation implements TypeInstrumentation {
       }
 
       VertxSqlClientConstructionState constructionState = state.getConstructionState();
-      VertxSqlClientSingletons.exitConstruction(state.getPreviousConstructionState());
-      if (constructionState != null) {
-        if (pool != null) {
-          constructionState.setDbSystemName(getDbSystemNameFromClassName(pool));
+      try {
+        if (constructionState != null) {
+          if (pool != null) {
+            constructionState.setDbSystemName(getDbSystemNameFromClassName(pool));
+          }
+          constructionState.complete(pool);
         }
-        constructionState.complete(pool);
+      } finally {
+        currentConstructionState().restore(state.getPreviousConstructionState());
       }
     }
 

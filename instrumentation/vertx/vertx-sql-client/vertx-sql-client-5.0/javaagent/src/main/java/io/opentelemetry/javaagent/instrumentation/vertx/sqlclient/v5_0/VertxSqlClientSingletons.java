@@ -37,10 +37,11 @@ public class VertxSqlClientSingletons {
   private static final Instrumenter<VertxSqlClientRequest, Void> instrumenter =
       VertxSqlInstrumenterFactory.createInstrumenter(INSTRUMENTATION_NAME);
 
-  private static final ScopedThreadValue<VertxSqlClientInfo> clientInfo = new ScopedThreadValue<>();
-  private static final ScopedThreadValue<VertxSqlClientSupplierInfo> querySupplier =
+  private static final ScopedThreadValue<VertxSqlClientInfo> currentClientInfo =
       new ScopedThreadValue<>();
-  private static final ScopedThreadValue<VertxSqlClientConstructionState> constructionState =
+  private static final ScopedThreadValue<VertxSqlClientSupplierInfo> currentQuerySupplier =
+      new ScopedThreadValue<>();
+  private static final ScopedThreadValue<VertxSqlClientConstructionState> currentConstructionState =
       new ScopedThreadValue<>();
   private static final VirtualField<PreparedStatement, VertxSqlClientInfo> PREPARED_STATEMENT_INFO =
       VirtualField.find(PreparedStatement.class, VertxSqlClientInfo.class);
@@ -85,9 +86,16 @@ public class VertxSqlClientSingletons {
     return instrumenter;
   }
 
-  @Nullable
-  public static VertxSqlClientInfo getClientInfo() {
-    return clientInfo.get();
+  public static ScopedThreadValue<VertxSqlClientInfo> currentClientInfo() {
+    return currentClientInfo;
+  }
+
+  public static ScopedThreadValue<VertxSqlClientSupplierInfo> currentQuerySupplier() {
+    return currentQuerySupplier;
+  }
+
+  public static ScopedThreadValue<VertxSqlClientConstructionState> currentConstructionState() {
+    return currentConstructionState;
   }
 
   @Nullable
@@ -96,8 +104,8 @@ public class VertxSqlClientSingletons {
   }
 
   public static void captureQueryExecutorInfo(Object queryExecutor) {
-    VertxSqlClientSupplierInfo supplier = querySupplier.get();
-    QueryExecutorUtil.setData(queryExecutor, supplier != null ? supplier : getClientInfo());
+    VertxSqlClientSupplierInfo supplier = currentQuerySupplier.get();
+    QueryExecutorUtil.setData(queryExecutor, supplier != null ? supplier : currentClientInfo.get());
   }
 
   @Nullable
@@ -112,14 +120,6 @@ public class VertxSqlClientSingletons {
     return QueryExecutorUtil.getData(queryExecutor) instanceof VertxSqlClientSupplierInfo;
   }
 
-  public static QueryInfoScope enterQueryInfo(
-      @Nullable VertxSqlClientInfo info, @Nullable VertxSqlClientSupplierInfo supplier) {
-    VertxSqlClientInfo previousInfo = clientInfo.set(info);
-    VertxSqlClientSupplierInfo previousSupplier = querySupplier.set(supplier);
-    return new QueryInfoScope(previousInfo, previousSupplier);
-  }
-
-  @Nullable
   public static VertxSqlClientSupplierInfo getClientSupplier(SqlClientBase client) {
     return CLIENT_SUPPLIER.get(client);
   }
@@ -241,21 +241,6 @@ public class VertxSqlClientSingletons {
       }
       handler.handle(connection);
     };
-  }
-
-  @Nullable
-  public static VertxSqlClientConstructionState enterConstruction(
-      VertxSqlClientConstructionState state) {
-    return constructionState.set(state);
-  }
-
-  public static void exitConstruction(@Nullable VertxSqlClientConstructionState previous) {
-    constructionState.restore(previous);
-  }
-
-  @Nullable
-  public static VertxSqlClientConstructionState getConstructionState() {
-    return constructionState.get();
   }
 
   public static Future<SqlConnectOptions> captureConnectionAttempt(
@@ -380,7 +365,7 @@ public class VertxSqlClientSingletons {
       }
     }
 
-    void end(@Nullable Throwable throwable) {
+    public void end(@Nullable Throwable throwable) {
       if (scope != null) {
         scope.close();
         scope = null;
@@ -388,23 +373,6 @@ public class VertxSqlClientSingletons {
       if (throwable != null && query != null) {
         query.end(throwable);
       }
-    }
-  }
-
-  public static final class QueryInfoScope {
-    @Nullable private final VertxSqlClientInfo previousInfo;
-    @Nullable private final VertxSqlClientSupplierInfo previousSupplier;
-
-    private QueryInfoScope(
-        @Nullable VertxSqlClientInfo previousInfo,
-        @Nullable VertxSqlClientSupplierInfo previousSupplier) {
-      this.previousInfo = previousInfo;
-      this.previousSupplier = previousSupplier;
-    }
-
-    public void close() {
-      querySupplier.restore(previousSupplier);
-      clientInfo.restore(previousInfo);
     }
   }
 
