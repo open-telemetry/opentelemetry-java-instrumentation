@@ -25,6 +25,10 @@ public final class ServerOutProtocolDecorator extends TProtocolDecorator {
     super(protocol);
   }
 
+  public void resetExceptionState() {
+    hasException = false;
+  }
+
   @Override
   public void writeMessageBegin(TMessage message) throws TException {
     if (message.type == TMessageType.EXCEPTION) {

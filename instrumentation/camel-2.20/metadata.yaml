@@ -1,8 +1,8 @@
 display_name: Apache Camel
 description: >
-  This instrumentation enables tracing for Apache Camel 2.x applications by generating spans for
-  each route execution. For Camel versions 3.5 and newer, users should instead use the native
-  'camel-opentelemetry' component provided directly by the Camel project.
+  This instrumentation enables tracing and messaging metrics for Apache Camel 2.x applications. For
+  Camel versions 3.5 and newer, users should instead use the native 'camel-opentelemetry' component
+  provided directly by the Camel project.
 semantic_conventions:
   - HTTP_CLIENT_SPANS
   - HTTP_SERVER_SPANS
@@ -19,3 +19,184 @@ configurations:
       and `camel.kafka.offset` span attributes.
     type: boolean
     default: false
+additional_telemetry:
+  - when: otel.semconv-stability.opt-in=messaging
+    metrics:
+      - name: messaging.client.consumed.messages
+        description: Number of messages that were delivered to the application.
+        type: LONG_SUM
+        unit: "{message}"
+        attributes:
+          - name: error.type
+            type: STRING
+          - name: messaging.destination.name
+            type: STRING
+          - name: messaging.destination.partition.id
+            type: STRING
+          - name: messaging.operation.name
+            type: STRING
+          - name: messaging.system
+            type: STRING
+      - name: messaging.client.operation.duration
+        description: Duration of messaging operation initiated by a producer or consumer client.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+          - name: error.type
+            type: STRING
+          - name: messaging.destination.name
+            type: STRING
+          - name: messaging.operation.name
+            type: STRING
+          - name: messaging.operation.type
+            type: STRING
+          - name: messaging.system
+            type: STRING
+      - name: messaging.client.sent.messages
+        description: Number of messages producer attempted to send to the broker.
+        type: LONG_SUM
+        unit: "{message}"
+        attributes:
+          - name: error.type
+            type: STRING
+          - name: messaging.destination.name
+            type: STRING
+          - name: messaging.operation.name
+            type: STRING
+          - name: messaging.system
+            type: STRING
+      - name: messaging.process.duration
+        description: Duration of processing operation.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+          - name: error.type
+            type: STRING
+          - name: messaging.destination.name
+            type: STRING
+          - name: messaging.destination.partition.id
+            type: STRING
+          - name: messaging.operation.name
+            type: STRING
+          - name: messaging.system
+            type: STRING
+  - when: otel.semconv-stability.opt-in=messaging/dup
+    metrics:
+      - name: messaging.client.consumed.messages
+        description: Number of messages that were delivered to the application.
+        type: LONG_SUM
+        unit: "{message}"
+        attributes:
+          - name: error.type
+            type: STRING
+          - name: messaging.destination.name
+            type: STRING
+          - name: messaging.destination.partition.id
+            type: STRING
+          - name: messaging.operation.name
+            type: STRING
+          - name: messaging.system
+            type: STRING
+      - name: messaging.client.operation.duration
+        description: Duration of messaging operation initiated by a producer or consumer client.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+          - name: error.type
+            type: STRING
+          - name: messaging.destination.name
+            type: STRING
+          - name: messaging.operation.name
+            type: STRING
+          - name: messaging.operation.type
+            type: STRING
+          - name: messaging.system
+            type: STRING
+      - name: messaging.client.sent.messages
+        description: Number of messages producer attempted to send to the broker.
+        type: LONG_SUM
+        unit: "{message}"
+        attributes:
+          - name: error.type
+            type: STRING
+          - name: messaging.destination.name
+            type: STRING
+          - name: messaging.operation.name
+            type: STRING
+          - name: messaging.system
+            type: STRING
+      - name: messaging.process.duration
+        description: Duration of processing operation.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+          - name: error.type
+            type: STRING
+          - name: messaging.destination.name
+            type: STRING
+          - name: messaging.destination.partition.id
+            type: STRING
+          - name: messaging.operation.name
+            type: STRING
+          - name: messaging.system
+            type: STRING
+  - when: otel.instrumentation.common.v3-preview=true
+    metrics:
+      - name: messaging.client.consumed.messages
+        description: Number of messages that were delivered to the application.
+        type: LONG_SUM
+        unit: "{message}"
+        attributes:
+          - name: error.type
+            type: STRING
+          - name: messaging.destination.name
+            type: STRING
+          - name: messaging.destination.partition.id
+            type: STRING
+          - name: messaging.operation.name
+            type: STRING
+          - name: messaging.system
+            type: STRING
+      - name: messaging.client.operation.duration
+        description: Duration of messaging operation initiated by a producer or consumer client.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+          - name: error.type
+            type: STRING
+          - name: messaging.destination.name
+            type: STRING
+          - name: messaging.operation.name
+            type: STRING
+          - name: messaging.operation.type
+            type: STRING
+          - name: messaging.system
+            type: STRING
+      - name: messaging.client.sent.messages
+        description: Number of messages producer attempted to send to the broker.
+        type: LONG_SUM
+        unit: "{message}"
+        attributes:
+          - name: error.type
+            type: STRING
+          - name: messaging.destination.name
+            type: STRING
+          - name: messaging.operation.name
+            type: STRING
+          - name: messaging.system
+            type: STRING
+      - name: messaging.process.duration
+        description: Duration of processing operation.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+          - name: error.type
+            type: STRING
+          - name: messaging.destination.name
+            type: STRING
+          - name: messaging.destination.partition.id
+            type: STRING
+          - name: messaging.operation.name
+            type: STRING
+          - name: messaging.system
+            type: STRING

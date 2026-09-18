@@ -8,14 +8,20 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfo;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientRequest;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlInstrumenterFactory;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.sqlclient.Pool;
+import io.vertx.sqlclient.PreparedStatement;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
+import io.vertx.sqlclient.impl.ClientBuilderBase;
+import io.vertx.sqlclient.impl.QueryExecutorUtil;
 import io.vertx.sqlclient.internal.SqlClientBase;
+import java.util.List;
 import javax.annotation.Nullable;
 
 public class VertxSqlClientSingletons {
@@ -23,21 +29,74 @@ public class VertxSqlClientSingletons {
   private static final Instrumenter<VertxSqlClientRequest, Void> instrumenter =
       VertxSqlInstrumenterFactory.createInstrumenter(INSTRUMENTATION_NAME);
 
-  private static final VirtualField<Pool, String> poolDbSystem =
-      VirtualField.find(Pool.class, String.class);
-
-  private static final VirtualField<SqlConnectOptions, String> connectOptionsDbSystem =
-      VirtualField.find(SqlConnectOptions.class, String.class);
-
-  private static final VirtualField<SqlClientBase, SqlConnectOptions> connectOptionsField =
-      VirtualField.find(SqlClientBase.class, SqlConnectOptions.class);
+  private static final ThreadLocal<VertxSqlClientInfo> clientInfo = new ThreadLocal<>();
+  private static final ThreadLocal<VertxSqlClientConstructionState> constructionState =
+      new ThreadLocal<>();
+  private static final VirtualField<PreparedStatement, VertxSqlClientInfo> PREPARED_STATEMENT_INFO =
+      VirtualField.find(PreparedStatement.class, VertxSqlClientInfo.class);
+  private static final VirtualField<Pool, VertxSqlClientInfo> POOL_CLIENT_INFO =
+      VirtualField.find(Pool.class, VertxSqlClientInfo.class);
+  private static final VirtualField<SqlClientBase, VertxSqlClientInfo> CLIENT_INFO =
+      VirtualField.find(SqlClientBase.class, VertxSqlClientInfo.class);
+  private static final VirtualField<ClientBuilderBase<?>, List<SqlConnectOptions>>
+      BUILDER_DATABASES = VirtualField.find(ClientBuilderBase.class, List.class);
 
   @Nullable
-  private static final VirtualField<Object, Context> commandContextField =
+  private static final VirtualField<Object, Context> COMMAND_CONTEXT =
       getCommandContextVirtualField();
 
   public static Instrumenter<VertxSqlClientRequest, Void> instrumenter() {
     return instrumenter;
+  }
+
+  public static void setClientInfo(@Nullable VertxSqlClientInfo value) {
+    if (value == null) {
+      clientInfo.remove();
+    } else {
+      clientInfo.set(value);
+    }
+  }
+
+  @Nullable
+  public static VertxSqlClientInfo getClientInfo() {
+    return clientInfo.get();
+  }
+
+  @Nullable
+  public static VertxSqlClientInfo getClientInfo(SqlClientBase sqlClientBase) {
+    return CLIENT_INFO.get(sqlClientBase);
+  }
+
+  public static void setQueryExecutorInfo(Object queryExecutor, @Nullable VertxSqlClientInfo info) {
+    QueryExecutorUtil.setData(queryExecutor, info);
+  }
+
+  @Nullable
+  public static VertxSqlClientInfo getQueryExecutorInfo(Object queryExecutor) {
+    return (VertxSqlClientInfo) QueryExecutorUtil.getData(queryExecutor);
+  }
+
+  public static void setPoolClientInfo(Pool pool, @Nullable VertxSqlClientInfo info) {
+    POOL_CLIENT_INFO.set(pool, info);
+  }
+
+  @Nullable
+  public static VertxSqlClientInfo getPoolClientInfo(Pool pool) {
+    return POOL_CLIENT_INFO.get(pool);
+  }
+
+  public static Future<PreparedStatement> attachPreparedStatementInfo(
+      Future<PreparedStatement> future, VertxSqlClientInfo info) {
+    return future.map(
+        preparedStatement -> {
+          PREPARED_STATEMENT_INFO.set(preparedStatement, info);
+          return preparedStatement;
+        });
+  }
+
+  @Nullable
+  public static VertxSqlClientInfo getPreparedStatementInfo(PreparedStatement preparedStatement) {
+    return PREPARED_STATEMENT_INFO.get(preparedStatement);
   }
 
   @NoMuzzle // to skip virtual field detection in this method
@@ -66,50 +125,70 @@ public class VertxSqlClientSingletons {
 
   @Nullable
   public static Context getCommandContext(Object command) {
-    return commandContextField != null ? commandContextField.get(command) : null;
+    return COMMAND_CONTEXT != null ? COMMAND_CONTEXT.get(command) : null;
   }
 
   public static void setCommandContext(Object command, Context context) {
-    if (commandContextField != null) {
-      commandContextField.set(command, context);
+    if (COMMAND_CONTEXT != null) {
+      COMMAND_CONTEXT.set(command, context);
     }
   }
 
-  public static void storePoolDbSystem(Pool pool, String dbSystem) {
-    poolDbSystem.set(pool, dbSystem);
+  public static void attachClientInfo(
+      SqlClientBase sqlClientBase, @Nullable VertxSqlClientInfo info) {
+    CLIENT_INFO.set(sqlClientBase, info);
   }
 
-  @Nullable
-  public static String getConnectOptionsDbSystem(SqlConnectOptions sqlConnectOptions) {
-    return connectOptionsDbSystem.get(sqlConnectOptions);
-  }
-
-  public static void resolveAndStoreDbSystem(Pool pool, SqlConnectOptions sqlConnectOptions) {
-    String dbSystem = poolDbSystem.get(pool);
-    if (sqlConnectOptions != null && dbSystem != null) {
-      connectOptionsDbSystem.set(sqlConnectOptions, dbSystem);
-    }
-  }
-
-  @Nullable
-  public static SqlConnectOptions getSqlConnectOptions(SqlClientBase sqlClientBase) {
-    return connectOptionsField.get(sqlClientBase);
-  }
-
-  public static void attachConnectOptions(
-      SqlClientBase sqlClientBase, @Nullable SqlConnectOptions connectOptions) {
-    connectOptionsField.set(sqlClientBase, connectOptions);
-  }
-
-  public static Future<SqlConnection> attachConnectOptions(
-      Future<SqlConnection> future, @Nullable SqlConnectOptions connectOptions) {
+  public static Future<SqlConnection> attachClientInfo(
+      Future<SqlConnection> future, @Nullable VertxSqlClientInfo info) {
     return future.map(
-        sqlConnection -> {
-          if (sqlConnection instanceof SqlClientBase) {
-            connectOptionsField.set((SqlClientBase) sqlConnection, connectOptions);
+        connection -> {
+          if (connection instanceof SqlClientBase) {
+            attachClientInfo((SqlClientBase) connection, info);
           }
-          return sqlConnection;
+          return connection;
         });
+  }
+
+  @Nullable
+  public static Handler<SqlConnection> wrapConnectHandler(
+      @Nullable Handler<SqlConnection> handler, VertxSqlClientInfo info) {
+    if (handler == null) {
+      return null;
+    }
+    return connection -> {
+      if (connection instanceof SqlClientBase) {
+        attachClientInfo((SqlClientBase) connection, info);
+      }
+      handler.handle(connection);
+    };
+  }
+
+  public static void setConstructionState(@Nullable VertxSqlClientConstructionState state) {
+    if (state == null) {
+      constructionState.remove();
+    } else {
+      constructionState.set(state);
+    }
+  }
+
+  @Nullable
+  public static VertxSqlClientConstructionState getConstructionState() {
+    return constructionState.get();
+  }
+
+  public static void setBuilderDatabases(
+      Object clientBuilder, @Nullable List<SqlConnectOptions> databases) {
+    if (clientBuilder instanceof ClientBuilderBase) {
+      BUILDER_DATABASES.set((ClientBuilderBase<?>) clientBuilder, databases);
+    }
+  }
+
+  @Nullable
+  public static List<SqlConnectOptions> getBuilderDatabases(Object clientBuilder) {
+    return clientBuilder instanceof ClientBuilderBase
+        ? BUILDER_DATABASES.get((ClientBuilderBase<?>) clientBuilder)
+        : null;
   }
 
   private VertxSqlClientSingletons() {}

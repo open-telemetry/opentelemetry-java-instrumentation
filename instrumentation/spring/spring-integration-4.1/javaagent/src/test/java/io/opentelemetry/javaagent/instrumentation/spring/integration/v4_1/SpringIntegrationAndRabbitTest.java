@@ -108,10 +108,8 @@ class SpringIntegrationAndRabbitTest {
                             satisfies(
                                 MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
                                 val -> val.isInstanceOf(String.class))),
-                // spring-cloud-stream-binder-rabbit listener puts all messages into a BlockingQueue
-                // immediately after receiving
-                // that's why the rabbitmq CONSUMER span will never have any child span (and
-                // propagate context, actually)
+                // the rabbitmq CONSUMER span is suppressed for Spring listener containers (see
+                // RabbitMqConsumerProcessTracing), so spring-rabbit creates the single process span
                 span ->
                     span.satisfies(
                             spanData ->
@@ -119,7 +117,7 @@ class SpringIntegrationAndRabbitTest {
                                     .matches(
                                         emitStableMessagingSemconv()
                                             ? "process"
-                                            : "testTopic.anonymous.[-\\w]+ process"))
+                                            : "testTopic process"))
                         .hasParent(trace.getSpan(6))
                         .hasKind(SpanKind.CONSUMER)
                         .hasAttributesSatisfyingExactly(
@@ -132,36 +130,9 @@ class SpringIntegrationAndRabbitTest {
                             serverPort(),
                             equalTo(MESSAGING_SYSTEM, "rabbitmq"),
                             consumerDestinationName(),
-                            anonymousDestination(),
                             equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            bodySize(),
-                            satisfies(
-                                MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
-                                val -> val.isInstanceOf(String.class)),
-                            deliveryTag()),
-                // spring-integration will detect that spring-rabbit has already created a consumer
-                // span and back off
-                span ->
-                    span.satisfies(
-                            spanData ->
-                                assertThat(spanData.getName())
-                                    .matches(
-                                        emitStableMessagingSemconv()
-                                            ? "process"
-                                            : "testTopic process"))
-                        .hasParent(trace.getSpan(6))
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "rabbitmq"),
-                            consumerDestinationName(),
-                            anonymousDestination(),
+                                MESSAGING_DESTINATION_ANONYMOUS,
+                                emitStableMessagingSemconv() ? true : null),
                             equalTo(
                                 MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
                             equalTo(
@@ -177,7 +148,7 @@ class SpringIntegrationAndRabbitTest {
                                 emitStableMessagingSemconv() ? "testTopic" : null),
                             deliveryTag()),
                 span ->
-                    span.hasName("consumer").hasParent(trace.getSpan(8)).hasTotalAttributeCount(0)),
+                    span.hasName("consumer").hasParent(trace.getSpan(7)).hasTotalAttributeCount(0)),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -272,9 +243,5 @@ class SpringIntegrationAndRabbitTest {
             val.isEqualTo("testTopic");
           }
         });
-  }
-
-  private static AttributeAssertion anonymousDestination() {
-    return equalTo(MESSAGING_DESTINATION_ANONYMOUS, emitStableMessagingSemconv() ? true : null);
   }
 }

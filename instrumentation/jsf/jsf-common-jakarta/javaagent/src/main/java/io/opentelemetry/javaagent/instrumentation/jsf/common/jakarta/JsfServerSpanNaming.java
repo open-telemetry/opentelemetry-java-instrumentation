@@ -31,7 +31,9 @@ public class JsfServerSpanNaming {
     // view, such as a JSP page or a Facelets page.
     String viewId = uiViewRoot.getViewId();
     String name = ServletContextPath.prepend(context, viewId);
-    serverSpan.updateName(name);
+    if (name != null) {
+      serverSpan.updateName(name);
+    }
   }
 
   private JsfServerSpanNaming() {}

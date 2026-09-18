@@ -192,6 +192,35 @@ check {
 }
 ```
 
+## Javaagent unit test suites
+
+Tests that exercise javaagent helper or instrumentation classes directly should use a
+`JvmTestSuite` whose name ends with `unitTests`. The javaagent testing convention runs these suites
+without installing the agent and keeps javaagent classes on the test classpath. Prefer this over a
+separate `javaagent-unit-tests` project or reflection used only to bypass the normal agent test
+class-loader separation.
+
+```kotlin
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+      }
+    }
+  }
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
+  }
+}
+```
+
+Put the tests under `src/unitTests`. Declare test-only dependencies inside the suite's
+`dependencies` block.
+
 ### Variant tasks in modules with custom `JvmTestSuite`s
 
 `testing.suites` includes the built-in `test` suite alongside any suite the module registers
@@ -222,6 +251,42 @@ The map produces `testStableSemconv` for the built-in suite, so the conventional
 preserved. Declare a separate map per variant when a module has more than one, for example
 `${suite.name}StableSemconv` and `${suite.name}BothSemconv` for RPC modules.
 
+#### Preserving source suite JVM settings
+
+When source suite tasks have different JVM arguments or system properties, copy those values into
+the variant before adding its own configuration. This avoids rebuilding source settings with
+suite-name checks. When metadata collection is already active, append the variant setting to the
+inherited `metadataConfig`:
+
+```kotlin
+val experimentalSuites = testing.suites.withType(JvmTestSuite::class)
+  .map { suite ->
+    register<Test>("${suite.name}Experimental") {
+      val sourceTask = named<Test>(suite.name).get()
+      setJvmArgs(sourceTask.jvmArgs)
+      setSystemProperties(sourceTask.systemProperties)
+
+      testClassesDirs = suite.sources.output.classesDirs
+      classpath = suite.sources.runtimeClasspath
+
+      val experimentalConfig = "otel.instrumentation.example.experimental-span-attributes=true"
+      jvmArgs("-D$experimentalConfig")
+      systemProperty(
+        "metadataConfig",
+        listOfNotNull(sourceTask.systemProperties["metadataConfig"], experimentalConfig)
+          .joinToString(","),
+      )
+      isEnabled = sourceTask.enabled
+    }
+  }
+```
+
+Use `setJvmArgs` and `setSystemProperties`, not `sourceTask.copyTo(this)`. Gradle's
+`JavaForkOptions.copyTo` evaluates the source task's `jvmArgumentProviders` and turns their output
+into ordinary JVM arguments. Repository conventions later attach providers to the variant itself.
+This can add the javaagent twice and drop the copied providers' input tracking. The variant gets its
+own argument providers from the repository conventions.
+
 Points to watch:
 
 - Do not fan a variant out merely because custom suites exist. Keep it bound to
@@ -231,9 +296,9 @@ Points to watch:
   the extra coverage is worth the additional build-script complexity.
 - The `testing { suites { … } }` block must appear **before** the `tasks { }` block that maps
   over it. `.map` realizes the container, so suites registered afterwards are silently missed.
-- When a source suite task is conditionally disabled, inherit its state in the derived task
-  with `isEnabled = project.tasks.named(suite.name).get().enabled` instead of repeating the
-  condition in a separate `named(...)` block.
+- When a source suite task is conditionally disabled, inherit its state in the derived task with
+  `isEnabled = sourceTask.enabled` instead of repeating the condition in a separate `named(...)`
+  block.
 - Keep a variant task bound to a single source set when it is deliberately narrow — one bound
   to a specific suite, or narrowed with `includeTestsMatching(...)`. Fanning such a task across
   every suite fails the build, because Gradle fails a `Test` task whose filter matches nothing.
@@ -318,8 +383,8 @@ These system properties support the metadata collection pipeline. They are not r
 test correctness and are being added as a separate migration — **do not add them during
 review**. Only verify correctness when they are already present.
 
-Do not add `collectMetadata` or `metadataConfig` to `javaagent-unit-tests` projects. These are
-unit tests, and metadata collection should not run there.
+Do not add `collectMetadata` or `metadataConfig` to `unitTests` suites or legacy
+`javaagent-unit-tests` projects. These are unit tests, and metadata collection should not run there.
 
 | Property          | Type            | Value                                                                                            |
 | ----------------- | --------------- | ------------------------------------------------------------------------------------------------ |

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import static io.opentelemetry.instrumentation.api.internal.StringUtils.truncate;
+
 import com.google.auto.value.AutoValue;
 import javax.annotation.Nullable;
 
@@ -61,7 +63,7 @@ public abstract class SqlQuery {
       return querySummary.substring(0, lastSpace);
     }
     // If no space found, truncate at the limit
-    return querySummary.substring(0, QUERY_SUMMARY_MAX_LENGTH);
+    return truncate(querySummary, QUERY_SUMMARY_MAX_LENGTH);
   }
 
   @Nullable

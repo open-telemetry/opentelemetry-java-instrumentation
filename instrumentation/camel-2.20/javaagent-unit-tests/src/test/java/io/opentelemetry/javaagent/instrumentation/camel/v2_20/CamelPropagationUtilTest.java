@@ -17,6 +17,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
 import java.util.Map;
 import org.apache.camel.Endpoint;
 import org.apache.camel.component.aws.sqs.SqsComponent;
@@ -100,5 +101,19 @@ class CamelPropagationUtilTest {
     SpanContext parentSpanContext = parentSpan.getSpanContext();
     assertThat(parentSpanContext.getTraceId()).isEqualTo("5759e988bd862e3fe1be46a994272793");
     assertThat(parentSpanContext.getSpanId()).isEqualTo("53995c3f42cd8ad8");
+  }
+
+  @Test
+  void shouldClearPropagationFieldsIncludingAwsAlias() {
+    Map<String, Object> exchangeHeaders = new HashMap<>();
+    exchangeHeaders.put("traceparent", "00-1f7f8dab3f0043b1b9cf0a75caf57510-a13825abcb764bd3-01");
+    exchangeHeaders.put(
+        "AWSTraceHeader",
+        "Root=1-5759e988-bd862e3fe1be46a994272793;Parent=53995c3f42cd8ad8;Sampled=1");
+    exchangeHeaders.put("other", "value");
+
+    CamelPropagationUtil.clearPropagationFields(exchangeHeaders);
+
+    assertThat(exchangeHeaders).containsOnlyKeys("other").containsEntry("other", "value");
   }
 }
