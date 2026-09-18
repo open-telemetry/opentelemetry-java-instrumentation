@@ -6,8 +6,8 @@ tracer_provider:
         schedule_delay: 10
         max_export_batch_size: 1
         exporter:
-          otlp_grpc:
-            endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT}
+          otlp_http:
+            endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT}/v1/traces
 
 # add extra resource attributes to verify that declarative config is picked up
 resource:

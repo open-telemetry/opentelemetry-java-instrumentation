@@ -230,6 +230,28 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   @Test
+  void clientAddressFromSocketPeer() {
+    assumeTrue(options.testClientAddressFromSocketPeer);
+
+    String method = "GET";
+    AggregatedHttpRequest request = request(SUCCESS, method);
+    AggregatedHttpResponse response = clientWithoutForwardedFor.execute(request).aggregate().join();
+
+    assertThat(response.status().code()).isEqualTo(SUCCESS.getStatus());
+    assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
+
+    String spanId = assertResponseHasCustomizedHeaders(response, SUCCESS, null);
+    assertTheTraces(
+        1,
+        null,
+        null,
+        spanId,
+        method,
+        SUCCESS,
+        span -> assertServerSpan(span, method, SUCCESS, SUCCESS.status, "127.0.0.1", "127.0.0.1"));
+  }
+
+  @Test
   void successfulGetRequestWithParent() {
     String method = "GET";
     String traceId = "00000000000000000000000000000123";
@@ -951,6 +973,24 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
       String spanId,
       String method,
       ServerEndpoint endpoint) {
+    assertTheTraces(
+        size,
+        traceId,
+        parentId,
+        spanId,
+        method,
+        endpoint,
+        span -> assertServerSpan(span, method, endpoint, endpoint.status));
+  }
+
+  private void assertTheTraces(
+      int size,
+      String traceId,
+      String parentId,
+      String spanId,
+      String method,
+      ServerEndpoint endpoint,
+      Consumer<SpanDataAssert> serverSpanAssertion) {
     List<Consumer<TraceAssert>> assertions = new ArrayList<>();
     for (int i = 0; i < size; i++) {
       assertions.add(
@@ -958,7 +998,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
             List<Consumer<SpanDataAssert>> spanAssertions = new ArrayList<>();
             spanAssertions.add(
                 span -> {
-                  assertServerSpan(span, method, endpoint, endpoint.status);
+                  serverSpanAssertion.accept(span);
                   if (traceId != null) {
                     span.hasTraceId(traceId);
                   }
@@ -1122,7 +1162,18 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   @CanIgnoreReturnValue
   protected SpanDataAssert assertServerSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint, int statusCode) {
+    return assertServerSpan(
+        span, method, endpoint, statusCode, options.sockPeerAddr.apply(endpoint), TEST_CLIENT_IP);
+  }
 
+  @CanIgnoreReturnValue
+  private SpanDataAssert assertServerSpan(
+      SpanDataAssert span,
+      String method,
+      ServerEndpoint endpoint,
+      int statusCode,
+      String expectedNetworkPeerAddress,
+      String expectedClientAddress) {
     Set<AttributeKey<?>> httpAttributes = options.httpAttributes.apply(endpoint);
     String expectedRoute = options.expectedHttpRoute.apply(endpoint, method);
     String name = options.expectedServerSpanNameMapper.apply(endpoint, method, expectedRoute);
@@ -1162,8 +1213,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
           }
 
           if (attrs.get(NETWORK_PEER_ADDRESS) != null) {
-            assertThat(attrs)
-                .containsEntry(NETWORK_PEER_ADDRESS, options.sockPeerAddr.apply(endpoint));
+            assertThat(attrs).containsEntry(NETWORK_PEER_ADDRESS, expectedNetworkPeerAddress);
           }
           if (attrs.get(NETWORK_PEER_PORT) != null) {
             assertThat(attrs)
@@ -1175,7 +1225,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                             .isNotEqualTo(Long.valueOf(port)));
           }
 
-          assertThat(attrs).containsEntry(CLIENT_ADDRESS, TEST_CLIENT_IP);
+          assertThat(attrs).containsEntry(CLIENT_ADDRESS, expectedClientAddress);
           // client.port is opt-in
           assertThat(attrs).doesNotContainKey(CLIENT_PORT);
 

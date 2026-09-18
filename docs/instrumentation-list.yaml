@@ -116,6 +116,14 @@ definitions:
             type: boolean
             description: Whether this rule overrides an already-applied template.
             default: false
+    messaging.batch-send.message-creation-spans.enabled:
+      name: otel.instrumentation.messaging.batch-send.message-creation-spans.enabled
+      declarative_name: java.common.messaging.batch_send.message_creation_spans.enabled
+      description: Provides the default for whether to create a producer span for
+        each eligible message in a batch send when stable messaging semantic conventions
+        are enabled. An instrumentation-specific setting takes precedence.
+      type: boolean
+      default: true
     messaging.capture-headers:
       name: otel.instrumentation.messaging.experimental.capture-headers
       declarative_name: java.common.messaging.capture_headers/development
@@ -159,12 +167,6 @@ definitions:
       default: ''
       examples:
       - <script type="text/javascript">console.log('test')</script>
-    otel.instrumentation.apache-commons-pool.enabled:
-      name: otel.instrumentation.apache-commons-pool.enabled
-      declarative_name: java.apache_commons_pool.enabled
-      description: Enables the Apache Commons Pool instrumentation.
-      type: boolean
-      default: false
     otel.instrumentation.apache-elasticjob.experimental-span-attributes:
       name: otel.instrumentation.apache-elasticjob.experimental-span-attributes
       declarative_name: java.apache_elasticjob.experimental_span_attributes/development
@@ -185,6 +187,14 @@ definitions:
       description: Flush timeout in milliseconds.
       type: int
       default: 10000
+    otel.instrumentation.aws-sdk.batch-send.message-creation-spans.enabled:
+      name: otel.instrumentation.aws-sdk.batch-send.message-creation-spans.enabled
+      declarative_name: java.aws_sdk.batch_send.message_creation_spans.enabled
+      description: Determines whether to create a producer span for each eligible
+        message in an SQS batch send when stable messaging semantic conventions are
+        enabled. Overrides `otel.instrumentation.messaging.batch-send.message-creation-spans.enabled`.
+      type: boolean
+      default: true
     otel.instrumentation.aws-sdk.experimental-record-individual-http-error:
       name: otel.instrumentation.aws-sdk.experimental-record-individual-http-error
       declarative_name: java.aws_sdk.record_individual_http_error/development
@@ -312,17 +322,11 @@ definitions:
         Enables experimental span attributes `couchbase.operation_id` and `couchbase.local.address`. Different operation types receive different experimental attributes.
       type: boolean
       default: false
-    otel.instrumentation.dropwizard-metrics.enabled:
-      name: otel.instrumentation.dropwizard-metrics.enabled
-      declarative_name: java.dropwizard_metrics.enabled
-      description: Enables the dropwizard metrics instrumentation.
-      type: boolean
-      default: false
     otel.instrumentation.elasticsearch.capture-search-query:
       name: otel.instrumentation.elasticsearch.capture-search-query
       declarative_name: java.elasticsearch.capture_search_query
       description: |
-        Enable the capture of search query bodies. It is important to note that Elasticsearch queries may contain personal or sensitive information.
+        Deprecated for removal in 3.0 with no replacement. Outside v3-preview, explicitly set this to capture or omit search query bodies. Under v3-preview and in 3.0, the setting is ignored and search query bodies are always captured. Sanitization remains separately configurable with otel.instrumentation.elasticsearch.query-sanitization.enabled.
       type: boolean
       default: false
     otel.instrumentation.elasticsearch.experimental-span-attributes-4728abdb:
@@ -346,6 +350,13 @@ definitions:
         Enable the capture of the experimental span attributes `elasticsearch.action`, `elasticsearch.id`, `elasticsearch.request`, `elasticsearch.request.indices`, `elasticsearch.request.write.routing`, `elasticsearch.request.write.type`, `elasticsearch.response.status`, `elasticsearch.shard.replication.failed`, `elasticsearch.shard.replication.successful`, `elasticsearch.shard.replication.total`, `elasticsearch.type`, and `elasticsearch.version`.
       type: boolean
       default: false
+    otel.instrumentation.elasticsearch.query-sanitization.enabled:
+      name: otel.instrumentation.elasticsearch.query-sanitization.enabled
+      declarative_name: java.elasticsearch.query_sanitization.enabled
+      description: |
+        Enables sanitization of the captured search query bodies. Takes precedence over otel.instrumentation.common.db.query-sanitization.enabled.
+      type: boolean
+      default: true
     otel.instrumentation.executors.include:
       name: otel.instrumentation.executors.include
       declarative_name: java.executors.include
@@ -1087,7 +1098,14 @@ definitions:
       name: otel.instrumentation.opensearch.capture-search-query
       declarative_name: java.opensearch.capture_search_query
       description: |
-        Enable the capture of sanitized search query bodies. Search queries may contain personal or sensitive information.
+        Deprecated and will be removed in 3.0, when search query bodies are always captured. There is no replacement. Until then, set this to false to disable capture. Search queries may contain personal or sensitive information.
+      type: boolean
+      default: true
+    otel.instrumentation.opensearch.query-sanitization.enabled:
+      name: otel.instrumentation.opensearch.query-sanitization.enabled
+      declarative_name: java.opensearch.query_sanitization.enabled
+      description: |
+        Enables sanitization of captured search query bodies. Takes precedence over otel.instrumentation.common.db.query-sanitization.enabled. When disabled, bodies are captured verbatim and may contain personal or sensitive information.
       type: boolean
       default: true
     otel.instrumentation.opentelemetry-annotations.exclude-methods:
@@ -1405,6 +1423,24 @@ definitions:
       description: Enables collection of JMX metrics.
       type: boolean
       default: true
+    otel.jmx.metrics.excluded:
+      name: otel.jmx.metrics.excluded
+      declarative_name: java.jmx.metrics.excluded
+      description: |
+        Comma-separated list of case-sensitive glob patterns for metric names not to collect. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. When no included patterns are configured, all metrics that are not excluded are collected. With neither selector property configured, all metrics are collected.
+      type: list
+      default: ''
+      examples:
+      - jvm.memory.limit,kafka.connect.*
+    otel.jmx.metrics.included:
+      name: otel.jmx.metrics.included
+      declarative_name: java.jmx.metrics.included
+      description: |
+        Comma-separated list of case-sensitive glob patterns for metric names to collect. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. When no included patterns are configured, all metrics that are not excluded are collected. With neither selector property configured, all metrics are collected.
+      type: list
+      default: ''
+      examples:
+      - jvm.memory.*,jvm.thread.count
     otel.jmx.target.system:
       name: otel.jmx.target.system
       declarative_name: java.jmx.target.system
@@ -1515,8 +1551,8 @@ definitions:
       attributes:
       - name: db.client.connection.pool.name
         type: STRING
-    db.client.connection.max-c7917942:
-      name: db.client.connection.max
+    db.client.connection.limit-12f711ee:
+      name: db.client.connection.limit
       description: The maximum number of open connections allowed.
       instrument: updowncounter
       data_type: LONG_SUM
@@ -1700,6 +1736,27 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
+    db.client.operation.duration-499ab06d:
+      name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: db.collection.name
+        type: STRING
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: server.address
+        type: STRING
     db.client.operation.duration-4f486dc3:
       name: db.client.operation.duration
       description: Duration of database client operations.
@@ -1754,7 +1811,7 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    db.client.operation.duration-7714cbf7:
+    db.client.operation.duration-64e6fadd:
       name: db.client.operation.duration
       description: Duration of database client operations.
       instrument: histogram
@@ -1768,6 +1825,46 @@ definitions:
       - name: network.peer.address
         type: STRING
       - name: network.peer.port
+        type: LONG
+      - name: server.address
+        type: STRING
+    db.client.operation.duration-6614b2d6:
+      name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: db.collection.name
+        type: STRING
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+    db.client.operation.duration-6dc4ed81:
+      name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
         type: LONG
     db.client.operation.duration-8ae2b8ce:
       name: db.client.operation.duration
@@ -1845,6 +1942,42 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
+    db.client.operation.duration-ec9463db:
+      name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: db.namespace
+        type: STRING
+      - name: db.query.summary
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    db.client.operation.duration-f0613d87:
+      name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: db.collection.name
+        type: STRING
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
     db.client.operation.duration-fce1854c:
       name: db.client.operation.duration
       description: Duration of database client operations.
@@ -4220,6 +4353,21 @@ definitions:
         type: STRING
       - name: messaging.system
         type: STRING
+    messaging.client.consumed.messages-83bc8813:
+      name: messaging.client.consumed.messages
+      description: Number of messages that were delivered to the application.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{message}'
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
     messaging.client.consumed.messages-bda2d99f:
       name: messaging.client.consumed.messages
       description: Number of messages that were delivered to the application.
@@ -4237,6 +4385,23 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
+    messaging.client.consumed.messages-c0fc17f6:
+      name: messaging.client.consumed.messages
+      description: Number of messages that were delivered to the application.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{message}'
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
     messaging.client.consumed.messages-e8268bc3:
       name: messaging.client.consumed.messages
       description: Number of messages that were delivered to the application.
@@ -4250,6 +4415,25 @@ definitions:
         type: STRING
       - name: messaging.system
         type: STRING
+    messaging.client.consumed.messages-f3bb81cb:
+      name: messaging.client.consumed.messages
+      description: Number of messages that were delivered to the application.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{message}'
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
     messaging.client.operation.duration-4afb25bc:
       name: messaging.client.operation.duration
       description: Duration of messaging operation initiated by a producer or consumer
@@ -4302,6 +4486,24 @@ definitions:
         type: STRING
       - name: messaging.system
         type: STRING
+    messaging.client.operation.duration-d165a8db:
+      name: messaging.client.operation.duration
+      description: Duration of messaging operation initiated by a producer or consumer
+        client.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
     messaging.client.operation.duration-dab7c60a:
       name: messaging.client.operation.duration
       description: Duration of messaging operation initiated by a producer or consumer
@@ -4322,7 +4524,7 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    messaging.client.operation.duration-f4822aab:
+    messaging.client.operation.duration-df200871:
       name: messaging.client.operation.duration
       description: Duration of messaging operation initiated by a producer or consumer
         client.
@@ -4330,9 +4532,9 @@ definitions:
       data_type: HISTOGRAM
       unit: s
       attributes:
-      - name: messaging.consumer.group.name
-        type: STRING
       - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.subscription.name
         type: STRING
       - name: messaging.operation.name
         type: STRING
@@ -4340,6 +4542,10 @@ definitions:
         type: STRING
       - name: messaging.system
         type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
     messaging.client.sent.messages-38a90199:
       name: messaging.client.sent.messages
       description: Number of messages producer attempted to send to the broker.
@@ -4357,6 +4563,21 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
+    messaging.client.sent.messages-4c72bd1e:
+      name: messaging.client.sent.messages
+      description: Number of messages producer attempted to send to the broker.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{message}'
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
     messaging.client.sent.messages-a16c8de0:
       name: messaging.client.sent.messages
       description: Number of messages producer attempted to send to the broker.
@@ -4377,6 +4598,42 @@ definitions:
       data_type: LONG_SUM
       unit: '{message}'
       attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    messaging.process.duration-049f91c8:
+      name: messaging.process.duration
+      description: Duration of processing operation.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    messaging.process.duration-0ca61f76:
+      name: messaging.process.duration
+      description: Duration of processing operation.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: error.type
+        type: STRING
       - name: messaging.destination.name
         type: STRING
       - name: messaging.destination.partition.id
@@ -5087,6 +5344,10 @@ libraries:
         type: LONG
       - name: http.route
         type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
       - name: network.protocol.version
         type: STRING
       - name: server.address
@@ -5136,6 +5397,10 @@ libraries:
         type: LONG
       - name: http.route
         type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
       - name: network.protocol.version
         type: STRING
       - name: server.address
@@ -5179,12 +5444,12 @@ libraries:
     - db.client.connection.count-2e6ba9b7
     - db.client.connection.idle.max-b95e4f5c
     - db.client.connection.idle.min-73bdafbc
-    - db.client.connection.max-c7917942
+    - db.client.connection.limit-12f711ee
     - db.client.connection.pending_requests-a0f41111
 - name: apache-commons-pool-2.0
   display_name: Apache Commons Pool
   description: |
-    This instrumentation enables object pool metrics for Apache Commons Pool GenericObjectPool and GenericKeyedObjectPool instances.
+    This instrumentation enables object pool metrics for Apache Commons Pool GenericObjectPool and GenericKeyedObjectPool instances. When Apache DBCP instrumentation is enabled, metrics for the GenericObjectPool backing an Apache DBCP BasicDataSource are excluded because the DBCP instrumentation already reports database connection pool metrics for it.
   library_link: https://commons.apache.org/proper/commons-pool/
   disabled_by_default: true
   source_path: instrumentation/apache-commons-pool-2.0
@@ -5194,8 +5459,6 @@ libraries:
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.commons:commons-pool2:[2.0,)
-  configuration_refs:
-  - otel.instrumentation.apache-commons-pool.enabled
   telemetry:
   - when: otel.instrumentation.apache-commons-pool.enabled=true
     metric_refs:
@@ -5233,7 +5496,7 @@ libraries:
     - db.client.connection.count-2e6ba9b7
     - db.client.connection.idle.max-b95e4f5c
     - db.client.connection.idle.min-73bdafbc
-    - db.client.connection.max-c7917942
+    - db.client.connection.limit-12f711ee
 - name: apache-dubbo-2.7
   display_name: Apache Dubbo
   description: |
@@ -6520,9 +6783,11 @@ libraries:
   - com.amazonaws:aws-java-sdk-core:[1.10.33,)
   - com.amazonaws:aws-java-sdk-sqs:[1.10.33,)
   configuration_refs:
+  - messaging.batch-send.message-creation-spans.enabled
   - messaging.capture-headers
   - messaging.headers.excluded
   - messaging.headers.included
+  - otel.instrumentation.aws-sdk.batch-send.message-creation-spans.enabled
   - otel.instrumentation.aws-sdk.experimental-span-attributes-f30ad240
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
   telemetry:
@@ -6893,9 +7158,11 @@ libraries:
   - software.amazon.awssdk:sns:[2.2.0,)
   - software.amazon.awssdk:sqs:[2.2.0,)
   configuration_refs:
+  - messaging.batch-send.message-creation-spans.enabled
   - messaging.capture-headers
   - messaging.headers.excluded
   - messaging.headers.included
+  - otel.instrumentation.aws-sdk.batch-send.message-creation-spans.enabled
   - otel.instrumentation.aws-sdk.experimental-record-individual-http-error
   - otel.instrumentation.aws-sdk.experimental-span-attributes-0c4c01de
   - otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging
@@ -6910,6 +7177,8 @@ libraries:
     - span_kind: CLIENT
       attributes:
       - name: aws.agent
+        type: STRING
+      - name: aws.bedrock.guardrail.id
         type: STRING
       - name: aws.dynamodb.consumed_capacity
         type: STRING_ARRAY
@@ -6971,6 +7240,8 @@ libraries:
         type: STRING
       - name: gen_ai.request.stop_sequences
         type: STRING_ARRAY
+      - name: gen_ai.request.stream
+        type: BOOLEAN
       - name: gen_ai.request.temperature
         type: DOUBLE
       - name: gen_ai.request.top_p
@@ -7396,7 +7667,7 @@ libraries:
 - name: camel-2.20
   display_name: Apache Camel
   description: |
-    This instrumentation enables tracing for Apache Camel 2.x applications by generating spans for each route execution. For Camel versions 3.5 and newer, users should instead use the native 'camel-opentelemetry' component provided directly by the Camel project.
+    This instrumentation enables tracing and messaging metrics for Apache Camel 2.x applications. For Camel versions 3.5 and newer, users should instead use the native 'camel-opentelemetry' component provided directly by the Camel project.
   semantic_conventions:
   - HTTP_CLIENT_SPANS
   - HTTP_SERVER_SPANS
@@ -7512,7 +7783,12 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - when: otel.semconv-stability.opt-in=database
+  - when: otel.instrumentation.common.v3-preview=true
+    metric_refs:
+    - messaging.client.consumed.messages-c0fc17f6
+    - messaging.client.operation.duration-d165a8db
+    - messaging.client.sent.messages-4c72bd1e
+    - messaging.process.duration-0ca61f76
     spans:
     - span_kind: CLIENT
       attributes:
@@ -7520,6 +7796,16 @@ libraries:
         type: STRING
       - name: http.response.status_code
         type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
       - name: url.full
         type: STRING
     - span_kind: CONSUMER
@@ -7528,19 +7814,29 @@ libraries:
         type: STRING
       - name: messaging.message.id
         type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
     - span_kind: INTERNAL
       attributes:
       - name: http.request.method
-        type: STRING
-      - name: messaging.destination.name
-        type: STRING
-      - name: messaging.message.id
         type: STRING
       - name: url.full
         type: STRING
     - span_kind: PRODUCER
       attributes:
       - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
         type: STRING
     - span_kind: SERVER
       attributes:
@@ -7550,6 +7846,81 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
+  - when: otel.semconv-stability.opt-in=database,messaging
+    metric_refs:
+    - messaging.client.consumed.messages-e8268bc3
+    - messaging.client.operation.duration-68138657
+    - messaging.client.sent.messages-a16c8de0
+    - messaging.process.duration-ab13a22e
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: url.full
+        type: STRING
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: INTERNAL
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: url.full
+        type: STRING
+    - span_kind: PRODUCER
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: url.full
+        type: STRING
+  - when: otel.semconv-stability.opt-in=messaging
+    metric_refs:
+    - messaging.client.consumed.messages-c0fc17f6
+    - messaging.client.operation.duration-d165a8db
+    - messaging.client.sent.messages-4c72bd1e
+    - messaging.process.duration-0ca61f76
+  - when: otel.semconv-stability.opt-in=messaging/dup
+    metric_refs:
+    - messaging.client.consumed.messages-c0fc17f6
+    - messaging.client.operation.duration-d165a8db
+    - messaging.client.sent.messages-4c72bd1e
+    - messaging.process.duration-0ca61f76
 - name: cassandra-3.0
   display_name: Cassandra Driver
   description: |
@@ -7651,6 +8022,7 @@ libraries:
     name: io.opentelemetry.cassandra-4.0
   has_javaagent: true
   javaagent_target_versions:
+  - com.datastax.oss:java-driver-core-shaded:[4.0,4.4)
   - com.datastax.oss:java-driver-core:[4.0,4.4)
   configuration_refs:
   - common.db.query-sanitization.enabled
@@ -7745,6 +8117,7 @@ libraries:
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
+  - com.datastax.oss:java-driver-core-shaded:[4.4,)
   - com.datastax.oss:java-driver-core:[4.4,)
   - org.apache.cassandra:java-driver-core:(,)
   configuration_refs:
@@ -7862,7 +8235,7 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
-    - db.client.operation.duration-d4212042
+    - db.client.operation.duration-ec9463db
     spans:
     - span_kind: CLIENT
       attributes:
@@ -7876,6 +8249,10 @@ libraries:
         type: STRING
       - name: error.type
         type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
       - name: server.address
         type: STRING
       - name: server.port
@@ -7915,7 +8292,7 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
-    - db.client.operation.duration-d4212042
+    - db.client.operation.duration-ec9463db
     spans:
     - span_kind: CLIENT
       attributes:
@@ -7929,6 +8306,10 @@ libraries:
         type: STRING
       - name: error.type
         type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
       - name: server.address
         type: STRING
       - name: server.port
@@ -7963,9 +8344,21 @@ libraries:
         type: STRING
       - name: db.system
         type: STRING
+  - when: otel.instrumentation.couchbase.experimental-span-attributes=true
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: db.name
+        type: STRING
+      - name: db.operation
+        type: STRING
+      - name: db.statement
+        type: STRING
+      - name: db.system
+        type: STRING
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
-    - db.client.operation.duration-55295033
+    - db.client.operation.duration-64e6fadd
     spans:
     - span_kind: CLIENT
       attributes:
@@ -7978,6 +8371,12 @@ libraries:
       - name: db.query.text
         type: STRING
       - name: db.system.name
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: server.address
         type: STRING
 - name: couchbase-2.6
   display_name: Couchbase Client
@@ -8015,6 +8414,10 @@ libraries:
         type: LONG
       - name: network.type
         type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
   - when: otel.instrumentation.couchbase.experimental-span-attributes=true
     spans:
     - span_kind: CLIENT
@@ -8037,9 +8440,13 @@ libraries:
         type: LONG
       - name: network.type
         type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
-    - db.client.operation.duration-7714cbf7
+    - db.client.operation.duration-64e6fadd
     spans:
     - span_kind: CLIENT
       attributes:
@@ -8057,21 +8464,63 @@ libraries:
         type: STRING
       - name: network.peer.port
         type: LONG
-- name: couchbase-3.1
+      - name: server.address
+        type: STRING
+- name: couchbase-3.0
   display_name: Couchbase Client
   description: |
-    Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
+    This instrumentation uses the Couchbase tracing SPI to create spans for Couchbase Java SDK 3.0.
   semantic_conventions:
   - DATABASE_CLIENT_SPANS
   library_link: https://github.com/couchbase/couchbase-java-client
-  features:
-  - AUTO_INSTRUMENTATION_SHIM
+  source_path: instrumentation/couchbase/couchbase-3.0
+  scope:
+    name: io.opentelemetry.couchbase-3.0
+  has_javaagent: true
+  javaagent_target_versions:
+  - com.couchbase.client:java-client:[3.0,3.1)
+  telemetry:
+  - when: default
+    spans:
+    - span_kind: INTERNAL
+      attributes:
+      - name: couchbase.client_context.request_id
+        type: STRING
+      - name: couchbase.document_id
+        type: STRING
+      - name: couchbase.operation_id
+        type: STRING
+      - name: peer.latency
+        type: LONG
+      - name: peer.service
+        type: STRING
+  - when: otel.semconv-stability.opt-in=database
+    spans:
+    - span_kind: INTERNAL
+      attributes:
+      - name: couchbase.client_context.request_id
+        type: STRING
+      - name: couchbase.document_id
+        type: STRING
+      - name: couchbase.operation_id
+        type: STRING
+      - name: peer.latency
+        type: LONG
+      - name: peer.service
+        type: STRING
+- name: couchbase-3.1
+  display_name: Couchbase Client
+  description: |
+    This instrumentation uses the Couchbase tracing SPI to create database client spans for Couchbase Java SDK 3.1.
+  semantic_conventions:
+  - DATABASE_CLIENT_SPANS
+  library_link: https://github.com/couchbase/couchbase-java-client
   source_path: instrumentation/couchbase/couchbase-3.1
   scope:
     name: io.opentelemetry.couchbase-3.1
   has_javaagent: true
   javaagent_target_versions:
-  - com.couchbase.client:java-client:[3.1,3.1.6)
+  - com.couchbase.client:java-client:[3.1,3.2)
   configuration_refs:
   - otel.instrumentation.couchbase.experimental-span-attributes-6c36d22e
   telemetry:
@@ -8117,12 +8566,16 @@ libraries:
         type: STRING
       - name: db.operation.name
         type: STRING
+      - name: db.query.text
+        type: STRING
       - name: db.system.name
         type: STRING
       - name: network.peer.address
         type: STRING
       - name: network.peer.port
         type: LONG
+      - name: server.address
+        type: STRING
   - when: otel.semconv-stability.opt-in=database,otel.instrumentation.couchbase.experimental-span-attributes=true
     spans:
     - span_kind: INTERNAL
@@ -8132,103 +8585,9 @@ libraries:
       - name: db.couchbase.local_id
         type: STRING
       - name: db.couchbase.operation_id
-        type: LONG
-      - name: db.couchbase.scope
-        type: STRING
-      - name: db.couchbase.server_duration
-        type: LONG
-      - name: db.couchbase.service
-        type: STRING
-      - name: db.namespace
-        type: STRING
-      - name: db.operation.name
-        type: STRING
-      - name: db.system.name
-        type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-- name: couchbase-3.1.6
-  display_name: Couchbase Client
-  description: |
-    Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
-  semantic_conventions:
-  - DATABASE_CLIENT_SPANS
-  library_link: https://github.com/couchbase/couchbase-java-client
-  features:
-  - AUTO_INSTRUMENTATION_SHIM
-  source_path: instrumentation/couchbase/couchbase-3.1.6
-  scope:
-    name: io.opentelemetry.couchbase-3.1.6
-  has_javaagent: true
-  javaagent_target_versions:
-  - com.couchbase.client:java-client:[3.1.6,3.2.0)
-  configuration_refs:
-  - otel.instrumentation.couchbase.experimental-span-attributes-6c36d22e
-  telemetry:
-  - when: default
-    spans:
-    - span_kind: INTERNAL
-      attributes:
-      - name: db.couchbase.collection
-        type: STRING
-      - name: db.couchbase.local_id
         type: STRING
       - name: db.couchbase.operation_id
         type: LONG
-      - name: db.couchbase.retries
-        type: LONG
-      - name: db.couchbase.scope
-        type: STRING
-      - name: db.couchbase.server_duration
-        type: LONG
-      - name: db.couchbase.service
-        type: STRING
-      - name: db.name
-        type: STRING
-      - name: db.operation
-        type: STRING
-      - name: db.system
-        type: STRING
-      - name: net.host.name
-        type: STRING
-      - name: net.host.port
-        type: LONG
-      - name: net.peer.name
-        type: STRING
-      - name: net.peer.port
-        type: LONG
-      - name: net.transport
-        type: STRING
-  - when: otel.semconv-stability.opt-in=database
-    spans:
-    - span_kind: INTERNAL
-      attributes:
-      - name: db.collection.name
-        type: STRING
-      - name: db.namespace
-        type: STRING
-      - name: db.operation.name
-        type: STRING
-      - name: db.system.name
-        type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-  - when: otel.semconv-stability.opt-in=database,otel.instrumentation.couchbase.experimental-span-attributes=true
-    spans:
-    - span_kind: INTERNAL
-      attributes:
-      - name: db.collection.name
-        type: STRING
-      - name: db.couchbase.local_id
-        type: STRING
-      - name: db.couchbase.operation_id
-        type: LONG
-      - name: db.couchbase.retries
-        type: LONG
       - name: db.couchbase.scope
         type: STRING
       - name: db.couchbase.server_duration
@@ -8239,27 +8598,29 @@ libraries:
         type: STRING
       - name: db.operation.name
         type: STRING
+      - name: db.query.text
+        type: STRING
       - name: db.system.name
         type: STRING
       - name: network.peer.address
         type: STRING
       - name: network.peer.port
         type: LONG
+      - name: server.address
+        type: STRING
 - name: couchbase-3.2
   display_name: Couchbase Client
   description: |
-    Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
+    This instrumentation uses the Couchbase tracing SPI to create database client spans for Couchbase Java SDK 3.2 and later.
   semantic_conventions:
   - DATABASE_CLIENT_SPANS
   library_link: https://github.com/couchbase/couchbase-java-client
-  features:
-  - AUTO_INSTRUMENTATION_SHIM
   source_path: instrumentation/couchbase/couchbase-3.2
   scope:
     name: io.opentelemetry.couchbase-3.2
   has_javaagent: true
   javaagent_target_versions:
-  - com.couchbase.client:java-client:[3.2.0,3.4.0)
+  - com.couchbase.client:java-client:[3.2.0,)
   configuration_refs:
   - otel.instrumentation.couchbase.experimental-span-attributes-6c36d22e
   telemetry:
@@ -8315,6 +8676,10 @@ libraries:
         type: STRING
       - name: network.peer.port
         type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
   - when: otel.semconv-stability.opt-in=database,otel.instrumentation.couchbase.experimental-span-attributes=true
     spans:
     - span_kind: INTERNAL
@@ -8345,105 +8710,9 @@ libraries:
         type: STRING
       - name: network.peer.port
         type: LONG
-- name: couchbase-3.4
-  display_name: Couchbase Client
-  description: |
-    Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
-  semantic_conventions:
-  - DATABASE_CLIENT_SPANS
-  library_link: https://github.com/couchbase/couchbase-java-client
-  features:
-  - AUTO_INSTRUMENTATION_SHIM
-  source_path: instrumentation/couchbase/couchbase-3.4
-  scope:
-    name: io.opentelemetry.couchbase-3.4
-  has_javaagent: true
-  javaagent_target_versions:
-  - com.couchbase.client:java-client:[3.4.0,)
-  configuration_refs:
-  - otel.instrumentation.couchbase.experimental-span-attributes-6c36d22e
-  telemetry:
-  - when: default
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: db.couchbase.collection
+      - name: server.address
         type: STRING
-      - name: db.couchbase.document_id
-        type: STRING
-      - name: db.couchbase.local_id
-        type: STRING
-      - name: db.couchbase.operation_id
-        type: LONG
-      - name: db.couchbase.retries
-        type: LONG
-      - name: db.couchbase.scope
-        type: STRING
-      - name: db.couchbase.server_duration
-        type: LONG
-      - name: db.couchbase.service
-        type: STRING
-      - name: db.name
-        type: STRING
-      - name: db.operation
-        type: STRING
-      - name: db.system
-        type: STRING
-      - name: net.host.name
-        type: STRING
-      - name: net.host.port
-        type: LONG
-      - name: net.peer.name
-        type: STRING
-      - name: net.peer.port
-        type: LONG
-      - name: net.transport
-        type: STRING
-  - when: otel.semconv-stability.opt-in=database
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: db.collection.name
-        type: STRING
-      - name: db.namespace
-        type: STRING
-      - name: db.operation.name
-        type: STRING
-      - name: db.system.name
-        type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-  - when: otel.semconv-stability.opt-in=database,otel.instrumentation.couchbase.experimental-span-attributes=true
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: db.collection.name
-        type: STRING
-      - name: db.couchbase.document_id
-        type: STRING
-      - name: db.couchbase.local_id
-        type: STRING
-      - name: db.couchbase.operation_id
-        type: LONG
-      - name: db.couchbase.retries
-        type: LONG
-      - name: db.couchbase.scope
-        type: STRING
-      - name: db.couchbase.server_duration
-        type: LONG
-      - name: db.couchbase.service
-        type: STRING
-      - name: db.namespace
-        type: STRING
-      - name: db.operation.name
-        type: STRING
-      - name: db.system.name
-        type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
+      - name: server.port
         type: LONG
 - name: dropwizard-metrics-4.0
   display_name: Dropwizard Metrics
@@ -8458,8 +8727,6 @@ libraries:
   has_javaagent: true
   javaagent_target_versions:
   - io.dropwizard.metrics:metrics-core:[4.0.0,)
-  configuration_refs:
-  - otel.instrumentation.dropwizard-metrics.enabled
 - name: dropwizard-views-0.7
   display_name: Dropwizard Views
   description: |
@@ -8551,8 +8818,10 @@ libraries:
   - org.elasticsearch.client:elasticsearch-rest-client:[5.0,6.4)
   - org.elasticsearch.client:rest:[5.0,6.4)
   configuration_refs:
+  - common.db.query-sanitization.enabled
   - http.known-methods
   - otel.instrumentation.elasticsearch.capture-search-query
+  - otel.instrumentation.elasticsearch.query-sanitization.enabled
   telemetry:
   - when: default
     spans:
@@ -8599,8 +8868,10 @@ libraries:
   javaagent_target_versions:
   - org.elasticsearch.client:elasticsearch-rest-client:[6.4,7.0)
   configuration_refs:
+  - common.db.query-sanitization.enabled
   - http.known-methods
   - otel.instrumentation.elasticsearch.capture-search-query
+  - otel.instrumentation.elasticsearch.query-sanitization.enabled
   telemetry:
   - when: default
     spans:
@@ -8634,8 +8905,8 @@ libraries:
         type: STRING
 - name: elasticsearch-rest-7.0
   display_name: Elasticsearch REST Client
-  description: This instrumentation enables database client spans and database client
-    metrics for Elasticsearch REST clients.
+  description: |
+    This instrumentation enables database client spans and database client metrics for Elasticsearch REST clients. The library artifacts are deprecated and will be removed in 3.0. Elasticsearch Java API Client users should use its native OpenTelemetry support (https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/8.10/opentelemetry.html), available in 7.17.20+ on the 7.x line and 8.10+. Applications that use the REST Client directly have no drop-in library replacement; they can use the javaagent or migrate to the Java API Client.
   semantic_conventions:
   - DATABASE_CLIENT_SPANS
   - DATABASE_CLIENT_METRICS
@@ -8648,8 +8919,10 @@ libraries:
   javaagent_target_versions:
   - org.elasticsearch.client:elasticsearch-rest-client:[7.0,)
   configuration_refs:
+  - common.db.query-sanitization.enabled
   - http.known-methods
   - otel.instrumentation.elasticsearch.capture-search-query
+  - otel.instrumentation.elasticsearch.query-sanitization.enabled
   telemetry:
   - when: default
     spans:
@@ -8761,6 +9034,8 @@ libraries:
         type: STRING
       - name: network.peer.port
         type: LONG
+      - name: server.address
+        type: STRING
 - name: elasticsearch-transport-5.3
   display_name: Elasticsearch Transport Client
   description: |
@@ -8851,6 +9126,10 @@ libraries:
         type: STRING
       - name: network.peer.port
         type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
 - name: elasticsearch-transport-6.0
   display_name: Elasticsearch Transport Client
   description: |
@@ -8936,6 +9215,10 @@ libraries:
       - name: network.peer.address
         type: STRING
       - name: network.peer.port
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
         type: LONG
 - name: executors
   display_name: Java Executors
@@ -9038,9 +9321,13 @@ libraries:
         type: STRING
       - name: db.system
         type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
-    - db.client.operation.duration-556e77d6
+    - db.client.operation.duration-f0613d87
     spans:
     - span_kind: CLIENT
       attributes:
@@ -9052,6 +9339,10 @@ libraries:
         type: STRING
       - name: db.system.name
         type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
 - name: google-http-client-1.19
   display_name: Google HTTP Client
   description: This instrumentation enables HTTP client spans and HTTP client metrics
@@ -9501,7 +9792,7 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
-    - db.client.operation.duration-e36c6087
+    - db.client.operation.duration-6614b2d6
     spans:
     - span_kind: CLIENT
       attributes:
@@ -9519,8 +9810,6 @@ libraries:
         type: STRING
       - name: server.address
         type: STRING
-      - name: server.port
-        type: LONG
 - name: hbase-client-1.4
   display_name: HBase Client
   description: |
@@ -9554,7 +9843,7 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
-    - db.client.operation.duration-e36c6087
+    - db.client.operation.duration-6614b2d6
     spans:
     - span_kind: CLIENT
       attributes:
@@ -9572,8 +9861,6 @@ libraries:
         type: STRING
       - name: server.address
         type: STRING
-      - name: server.port
-        type: LONG
 - name: hbase-client-2.0
   display_name: HBase Client
   description: |
@@ -9607,7 +9894,7 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
-    - db.client.operation.duration-e36c6087
+    - db.client.operation.duration-499ab06d
     spans:
     - span_kind: CLIENT
       attributes:
@@ -9623,10 +9910,12 @@ libraries:
         type: STRING
       - name: error.type
         type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
       - name: server.address
         type: STRING
-      - name: server.port
-        type: LONG
 - name: helidon-4.3
   display_name: Helidon
   description: This instrumentation enables HTTP server spans and HTTP server metrics
@@ -9821,7 +10110,7 @@ libraries:
     - db.client.connection.count-2e6ba9b7
     - db.client.connection.create_time-4f586679
     - db.client.connection.idle.min-73bdafbc
-    - db.client.connection.max-c7917942
+    - db.client.connection.limit-12f711ee
     - db.client.connection.pending_requests-a0f41111
     - db.client.connection.timeouts-d2dbfa58
     - db.client.connection.use_time-a06760eb
@@ -12289,6 +12578,11 @@ libraries:
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.kafka:connect-api:[2.6.0,)
+  telemetry:
+  - when: otel.semconv-stability.preview=messaging
+    metric_refs:
+    - messaging.client.consumed.messages-83bc8813
+    - messaging.process.duration-5301bc21
 - name: kafka-streams-0.11
   display_name: Apache Kafka Streams
   description: This instrumentation enables messaging spans for Kafka Streams processing.
@@ -13096,7 +13390,7 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
-    - db.client.operation.duration-bfd9d23c
+    - db.client.operation.duration-6dc4ed81
     spans:
     - span_kind: CLIENT
       attributes:
@@ -13492,6 +13786,10 @@ libraries:
         type: STRING
       - name: db.system.name
         type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
       - name: server.address
         type: STRING
       - name: server.port
@@ -13615,6 +13913,8 @@ libraries:
         type: STRING
       - name: messaging.destination.name
         type: STRING
+      - name: messaging.destination.template
+        type: STRING
       - name: messaging.destination.temporary
         type: BOOLEAN
       - name: messaging.message.body.size
@@ -13630,6 +13930,20 @@ libraries:
     - messaging.client.sent.messages-a16c8de0
     - messaging.process.duration-800050f8
     spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: messaging.client.id
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.template
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
     - span_kind: CONSUMER
       attributes:
       - name: messaging.client.id
@@ -14299,18 +14613,6 @@ libraries:
         type: STRING
       - name: gen_ai.request.encoding_formats
         type: STRING_ARRAY
-      - name: gen_ai.request.model
-        type: STRING
-      - name: gen_ai.response.model
-        type: STRING
-      - name: gen_ai.usage.input_tokens
-        type: LONG
-    - span_kind: INTERNAL
-      attributes:
-      - name: gen_ai.operation.name
-        type: STRING
-      - name: gen_ai.provider.name
-        type: STRING
       - name: gen_ai.request.frequency_penalty
         type: DOUBLE
       - name: gen_ai.request.max_tokens
@@ -14323,6 +14625,8 @@ libraries:
         type: LONG
       - name: gen_ai.request.stop_sequences
         type: STRING_ARRAY
+      - name: gen_ai.request.stream
+        type: BOOLEAN
       - name: gen_ai.request.temperature
         type: DOUBLE
       - name: gen_ai.request.top_p
@@ -14333,9 +14637,13 @@ libraries:
         type: STRING
       - name: gen_ai.response.model
         type: STRING
+      - name: gen_ai.usage.cache_read.input_tokens
+        type: LONG
       - name: gen_ai.usage.input_tokens
         type: LONG
       - name: gen_ai.usage.output_tokens
+        type: LONG
+      - name: gen_ai.usage.reasoning.output_tokens
         type: LONG
 - name: opensearch-java-3.0
   display_name: OpenSearch Java Client
@@ -14353,7 +14661,9 @@ libraries:
   javaagent_target_versions:
   - org.opensearch.client:opensearch-java:[3.0,)
   configuration_refs:
+  - common.db.query-sanitization.enabled
   - otel.instrumentation.opensearch.capture-search-query
+  - otel.instrumentation.opensearch.query-sanitization.enabled
   telemetry:
   - when: default
     spans:
@@ -14367,7 +14677,7 @@ libraries:
         type: STRING
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
-    - db.client.operation.duration-55295033
+    - db.client.operation.duration-32559b79
     spans:
     - span_kind: CLIENT
       attributes:
@@ -14377,6 +14687,12 @@ libraries:
         type: STRING
       - name: db.system.name
         type: STRING
+      - name: error.type
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
 - name: opensearch-rest-1.0
   display_name: OpenSearch REST Client
   description: |
@@ -14405,16 +14721,18 @@ libraries:
         type: STRING
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
-    - db.client.operation.duration-55295033
+    - db.client.operation.duration-32559b79
     spans:
     - span_kind: CLIENT
       attributes:
       - name: db.operation.name
         type: STRING
-      - name: db.query.text
-        type: STRING
       - name: db.system.name
         type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
 - name: opensearch-rest-3.0
   display_name: OpenSearch REST Client
   description: |
@@ -14443,16 +14761,18 @@ libraries:
         type: STRING
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
-    - db.client.operation.duration-55295033
+    - db.client.operation.duration-32559b79
     spans:
     - span_kind: CLIENT
       attributes:
       - name: db.operation.name
         type: STRING
-      - name: db.query.text
-        type: STRING
       - name: db.system.name
         type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
 - name: oracle-ucp-11.2
   display_name: Oracle UCP
   description: |
@@ -14476,7 +14796,7 @@ libraries:
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
     - db.client.connection.count-2e6ba9b7
-    - db.client.connection.max-c7917942
+    - db.client.connection.limit-12f711ee
     - db.client.connection.pending_requests-a0f41111
 - name: oshi-5.0
   display_name: OSHI
@@ -14611,6 +14931,10 @@ libraries:
         type: LONG
       - name: http.route
         type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
       - name: network.protocol.version
         type: STRING
       - name: server.address
@@ -14625,6 +14949,21 @@ libraries:
         type: STRING
       - name: user_agent.original
         type: STRING
+- name: pekko-remote-1.0
+  display_name: Pekko Remote
+  description: |
+    This instrumentation propagates context between the nodes of a Pekko cluster, over artery and over classic remoting, it does not emit any telemetry on its own.
+  library_link: https://pekko.apache.org/docs/pekko/current/remoting-artery.html
+  features:
+  - CONTEXT_PROPAGATION
+  source_path: instrumentation/pekko/pekko-remote-1.0
+  scope:
+    name: io.opentelemetry.pekko-remote-1.0
+  has_javaagent: true
+  javaagent_target_versions:
+  - org.apache.pekko:pekko-remote_2.12:[1.0,)
+  - org.apache.pekko:pekko-remote_2.13:[1.0,)
+  - org.apache.pekko:pekko-remote_3:[1.0,)
 - name: play-mvc-2.4
   display_name: Play MVC
   description: |
@@ -14981,7 +15320,7 @@ libraries:
   - when: otel.semconv-stability.preview=messaging
     metric_refs:
     - messaging.client.consumed.messages-5c21579f
-    - messaging.client.operation.duration-dab7c60a
+    - messaging.client.operation.duration-df200871
     - messaging.client.sent.messages-38a90199
     - messaging.process.duration-9ee3dd0a
     spans:
@@ -15479,7 +15818,7 @@ libraries:
         type: STRING
   - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
     metric_refs:
-    - http.client.request.duration-98bb5f3b
+    - http.client.request.duration-a64b5297
     spans:
     - span_kind: CLIENT
       attributes:
@@ -15492,6 +15831,8 @@ libraries:
       - name: http.response.status_code
         type: LONG
       - name: http.route
+        type: STRING
+      - name: network.protocol.version
         type: STRING
       - name: peer.service
         type: STRING
@@ -15503,7 +15844,7 @@ libraries:
         type: STRING
   - when: otel.semconv-stability.opt-in=service.peer
     metric_refs:
-    - http.client.request.duration-98bb5f3b
+    - http.client.request.duration-a64b5297
     spans:
     - span_kind: CLIENT
       attributes:
@@ -15516,6 +15857,8 @@ libraries:
       - name: http.response.status_code
         type: LONG
       - name: http.route
+        type: STRING
+      - name: network.protocol.version
         type: STRING
       - name: server.address
         type: STRING
@@ -15574,7 +15917,27 @@ libraries:
   - otel.instrumentation.kafka.experimental-span-attributes-956cabd8
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
   telemetry:
-  - when: otel.instrumentation.kafka.experimental-span-attributes=true
+  - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true
+    spans:
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.client_id
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.kafka.message.key
+        type: STRING
+      - name: messaging.kafka.message.offset
+        type: LONG
+      - name: messaging.message.body.size
+        type: LONG
+      - name: messaging.operation
+        type: STRING
+      - name: messaging.system
+        type: STRING
+  - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true,otel.instrumentation.kafka.experimental-span-attributes=true
     spans:
     - span_kind: CONSUMER
       attributes:
@@ -15596,27 +15959,7 @@ libraries:
         type: STRING
       - name: messaging.system
         type: STRING
-  - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true
-    spans:
-    - span_kind: CONSUMER
-      attributes:
-      - name: messaging.client_id
-        type: STRING
-      - name: messaging.destination.name
-        type: STRING
-      - name: messaging.destination.partition.id
-        type: STRING
-      - name: messaging.kafka.message.key
-        type: STRING
-      - name: messaging.kafka.message.offset
-        type: LONG
-      - name: messaging.message.body.size
-        type: LONG
-      - name: messaging.operation
-        type: STRING
-      - name: messaging.system
-        type: STRING
-  - when: otel.semconv-stability.preview=messaging
+  - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true,otel.semconv-stability.preview=messaging
     metric_refs:
     - messaging.process.duration-5301bc21
     spans:
@@ -15772,10 +16115,12 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
-    - db.client.operation.duration-32559b79
+    - db.client.operation.duration-fce1854c
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: db.namespace
+        type: STRING
       - name: db.operation.batch.size
         type: LONG
       - name: db.operation.name
@@ -15902,6 +16247,60 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
+- name: redisson-metrics-2.3
+  display_name: Redisson
+  description: This instrumentation enables database connection pool metrics for Redisson.
+  semantic_conventions:
+  - DATABASE_POOL_METRICS
+  library_link: https://github.com/redisson/redisson
+  source_path: instrumentation/redisson/redisson-metrics-2.3
+  scope:
+    name: io.opentelemetry.redisson-metrics-2.3
+  has_javaagent: true
+  javaagent_target_versions:
+  - org.redisson:redisson:[2.3.0,3.18.0)
+  configuration_refs:
+  - otel.semconv-stability.opt-in
+  telemetry:
+  - when: default
+    metric_refs:
+    - db.client.connections.idle.min-f04d4083
+    - db.client.connections.max-ddde65fe
+    - db.client.connections.pending_requests-a0698f55
+    - db.client.connections.usage-5ef1d5ef
+  - when: otel.semconv-stability.opt-in=database
+    metric_refs:
+    - db.client.connection.count-2e6ba9b7
+    - db.client.connection.idle.min-73bdafbc
+    - db.client.connection.limit-12f711ee
+    - db.client.connection.pending_requests-a0f41111
+- name: redisson-metrics-3.18
+  display_name: Redisson
+  description: This instrumentation enables database connection pool metrics for Redisson.
+  semantic_conventions:
+  - DATABASE_POOL_METRICS
+  library_link: https://github.com/redisson/redisson
+  source_path: instrumentation/redisson/redisson-metrics-3.18
+  scope:
+    name: io.opentelemetry.redisson-metrics-3.18
+  has_javaagent: true
+  javaagent_target_versions:
+  - org.redisson:redisson:[3.18.0,3.26.0)
+  configuration_refs:
+  - otel.semconv-stability.opt-in
+  telemetry:
+  - when: default
+    metric_refs:
+    - db.client.connections.idle.min-f04d4083
+    - db.client.connections.max-ddde65fe
+    - db.client.connections.pending_requests-a0698f55
+    - db.client.connections.usage-5ef1d5ef
+  - when: otel.semconv-stability.opt-in=database
+    metric_refs:
+    - db.client.connection.count-2e6ba9b7
+    - db.client.connection.idle.min-73bdafbc
+    - db.client.connection.limit-12f711ee
+    - db.client.connection.pending_requests-a0f41111
 - name: redisson-metrics-3.26
   display_name: Redisson
   description: This instrumentation enables database connection pool metrics for Redisson.
@@ -15927,7 +16326,7 @@ libraries:
     metric_refs:
     - db.client.connection.count-2e6ba9b7
     - db.client.connection.idle.min-73bdafbc
-    - db.client.connection.max-c7917942
+    - db.client.connection.limit-12f711ee
     - db.client.connection.pending_requests-a0f41111
 - name: resources
   display_name: Resource Detectors
@@ -16284,7 +16683,7 @@ libraries:
   - when: otel.semconv-stability.preview=messaging
     metric_refs:
     - messaging.client.consumed.messages-73097de6
-    - messaging.client.operation.duration-f4822aab
+    - messaging.client.operation.duration-68138657
     - messaging.client.sent.messages-a16c8de0
     - messaging.process.duration-b45860c7
     spans:
@@ -17221,9 +17620,16 @@ libraries:
         type: STRING
       - name: messaging.system
         type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.type
+        type: STRING
   - when: otel.semconv-stability.preview=messaging
     metric_refs:
-    - messaging.process.duration-800050f8
+    - messaging.client.consumed.messages-f3bb81cb
+    - messaging.process.duration-049f91c8
     spans:
     - span_kind: CONSUMER
       attributes:
@@ -17239,6 +17645,16 @@ libraries:
         type: LONG
       - name: messaging.system
         type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.type
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
 - name: spring-rmi-4.0
   display_name: Spring RMI
   description: This instrumentation enables RPC client and RPC server spans for Spring
@@ -17415,7 +17831,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - http.client.request.duration-98bb5f3b
+    - http.client.request.duration-a64b5297
     spans:
     - span_kind: CLIENT
       attributes:
@@ -17425,6 +17841,8 @@ libraries:
         type: STRING
       - name: http.response.status_code
         type: LONG
+      - name: network.protocol.version
+        type: STRING
       - name: peer.service
         type: STRING
       - name: server.address
@@ -17451,7 +17869,7 @@ libraries:
         type: STRING
   - when: otel.semconv-stability.opt-in=service.peer
     metric_refs:
-    - http.client.request.duration-98bb5f3b
+    - http.client.request.duration-a64b5297
     spans:
     - span_kind: CLIENT
       attributes:
@@ -17461,6 +17879,8 @@ libraries:
         type: STRING
       - name: http.response.status_code
         type: LONG
+      - name: network.protocol.version
+        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
@@ -17781,7 +18201,7 @@ libraries:
         type: STRING
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
-    - db.client.operation.duration-32559b79
+    - db.client.operation.duration-bfd9d23c
     spans:
     - span_kind: CLIENT
       attributes:
@@ -17791,6 +18211,10 @@ libraries:
         type: STRING
       - name: error.type
         type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
       - name: server.address
         type: STRING
       - name: server.port
@@ -18129,7 +18553,7 @@ libraries:
     - db.client.connection.count-2e6ba9b7
     - db.client.connection.idle.max-b95e4f5c
     - db.client.connection.idle.min-73bdafbc
-    - db.client.connection.max-c7917942
+    - db.client.connection.limit-12f711ee
 - name: tomcat-jdbc-8.5
   display_name: Tomcat JDBC
   description: |
@@ -18158,7 +18582,7 @@ libraries:
     - db.client.connection.count-2e6ba9b7
     - db.client.connection.idle.max-b95e4f5c
     - db.client.connection.idle.min-73bdafbc
-    - db.client.connection.max-c7917942
+    - db.client.connection.limit-12f711ee
     - db.client.connection.pending_requests-a0f41111
 - name: twilio-6.6
   display_name: Twilio
@@ -18818,7 +19242,7 @@ libraries:
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
     - db.client.connection.count-2e6ba9b7
-    - db.client.connection.max-c7917942
+    - db.client.connection.limit-12f711ee
 - name: wicket-8.0
   display_name: Apache Wicket
   description: |
@@ -18985,7 +19409,7 @@ custom:
 - name: jmx-metrics
   display_name: JMX Metrics
   description: |
-    Collects and reports metrics exposed through Java Management Extensions (JMX). It can be configured to extract JVM and application-level telemetry data from JMX MBeans such as memory usage, thread counts, and garbage collection statistics, and translate these measurements into OpenTelemetry metrics.
+    Collects and reports metrics exposed through Java Management Extensions (JMX). It can be configured to extract JVM and application-level telemetry data from JMX MBeans such as memory usage, thread counts, and garbage collection statistics, and translate these measurements into OpenTelemetry metrics. Collected metrics can be filtered by name using include and exclude patterns.
   source_path: instrumentation/jmx-metrics
   scope:
     name: io.opentelemetry.jmx-metrics
@@ -18995,6 +19419,8 @@ custom:
   - otel.jmx.config
   - otel.jmx.discovery.delay
   - otel.jmx.enabled
+  - otel.jmx.metrics.excluded
+  - otel.jmx.metrics.included
   - otel.jmx.target.system
 - name: methods
   display_name: Methods

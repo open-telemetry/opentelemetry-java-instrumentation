@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.ktor.v2_0
 import io.ktor.server.application.*
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension
+import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import org.junit.jupiter.api.extension.RegisterExtension
 
 class KtorHttpServerTest : AbstractKtorHttpServerTest() {
@@ -22,5 +23,10 @@ class KtorHttpServerTest : AbstractKtorHttpServerTest() {
 
   override fun installOpenTelemetry(application: Application) {
     KtorTestUtil.installOpenTelemetry(application, testing.openTelemetry)
+  }
+
+  override fun configure(options: HttpServerTestOptions) {
+    super.configure(options)
+    options.setTestClientAddressFromSocketPeer(false)
   }
 }

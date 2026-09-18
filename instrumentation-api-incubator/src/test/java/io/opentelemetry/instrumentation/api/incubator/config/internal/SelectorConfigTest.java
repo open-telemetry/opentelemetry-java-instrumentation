@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.config.internal;
 
+import static io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig.Stability.EXPERIMENTAL;
+import static io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig.Stability.STABLE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -17,6 +19,7 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.api.internal.DeprecatedCaptureNames;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
@@ -24,7 +27,10 @@ import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.ResourceLock;
+import org.junit.jupiter.api.parallel.Resources;
 
+@ResourceLock("SelectorConfig.logger")
 class SelectorConfigTest {
 
   private static final String SELECTOR = "mdc-attributes";
@@ -40,6 +46,8 @@ class SelectorConfigTest {
         .thenReturn(asList("exact", "prefix.*", "single?"));
     when(selectorNode.getScalarList("excluded", String.class))
         .thenReturn(singletonList("prefix.secret"));
+    when(config.get("mdc_attributes").getScalarList("included", String.class))
+        .thenReturn(singletonList("stable-only"));
 
     Predicate<String> selector = SelectorConfig.resolveLegacyLiteral(config, "test", SELECTOR);
 
@@ -49,7 +57,41 @@ class SelectorConfigTest {
     assertThat(selector.test("single1")).isTrue();
     assertThat(selector.test("single22")).isFalse();
     assertThat(selector.test("prefix.secret")).isFalse();
+    assertThat(selector.test("stable-only")).isFalse();
     assertThat(selector.test("other")).isFalse();
+  }
+
+  @Test
+  void readsStableSelector() {
+    DeclarativeConfigProperties config = mockStableConfig();
+    DeclarativeConfigProperties selectorNode = config.get("mdc_attributes");
+    when(selectorNode.getScalarList("included", String.class))
+        .thenReturn(asList("exact", "prefix.*"));
+    when(selectorNode.getScalarList("excluded", String.class))
+        .thenReturn(singletonList("prefix.secret"));
+    when(config.get("mdc_attributes/development").getScalarList("included", String.class))
+        .thenReturn(singletonList("wrong"));
+
+    IncludeExclude selector = SelectorConfig.resolve(config, "test", SELECTOR, STABLE);
+
+    assertThat(selector).isNotNull();
+    assertThat(selector.matches("exact")).isTrue();
+    assertThat(selector.matches("prefix.value")).isTrue();
+    assertThat(selector.matches("prefix.secret")).isFalse();
+    assertThat(selector.matches("wrong")).isFalse();
+  }
+
+  @Test
+  void stableExcludeOnlySelectorSelectsAllExceptExclusions() {
+    DeclarativeConfigProperties config = mockStableConfig();
+    when(config.get("mdc_attributes").getScalarList("excluded", String.class))
+        .thenReturn(singletonList("secret*"));
+
+    IncludeExclude selector = SelectorConfig.resolve(config, "test", SELECTOR, STABLE);
+
+    assertThat(selector).isNotNull();
+    assertThat(selector.matches("public")).isTrue();
+    assertThat(selector.matches("secret-token")).isFalse();
   }
 
   @Test
@@ -89,8 +131,41 @@ class SelectorConfigTest {
 
     assertThat(SelectorConfig.resolveLegacyLiteral(absent, "test", SELECTOR)).isNull();
     assertThat(SelectorConfig.resolveLegacyLiteral(empty, "test", SELECTOR)).isNull();
-    assertThat(SelectorConfig.resolve(absent, "test", SELECTOR)).isNull();
-    assertThat(SelectorConfig.resolve(empty, "test", SELECTOR)).isNull();
+    assertThat(SelectorConfig.resolve(absent, "test", SELECTOR, EXPERIMENTAL)).isNull();
+    assertThat(SelectorConfig.resolve(empty, "test", SELECTOR, EXPERIMENTAL)).isNull();
+  }
+
+  @Test
+  void absentAndEmptyStableSelectorsCaptureNothing() {
+    DeclarativeConfigProperties absent = mockStableConfig();
+    DeclarativeConfigProperties empty = mockStableConfig();
+    when(empty.get("mdc_attributes").getScalarList("included", String.class))
+        .thenReturn(emptyList());
+    when(empty.get("mdc_attributes").getScalarList("excluded", String.class))
+        .thenReturn(emptyList());
+
+    assertThat(SelectorConfig.resolve(absent, "stable-absent", SELECTOR, STABLE)).isNull();
+    assertThat(SelectorConfig.resolve(empty, "stable-empty", SELECTOR, STABLE)).isNull();
+  }
+
+  @SuppressWarnings("deprecation")
+  @Test
+  void deprecatedResolveOverloadsUseExperimentalStability() {
+    DeclarativeConfigProperties config = mockConfig();
+    when(config.get("mdc_attributes/development").getScalarList("included", String.class))
+        .thenReturn(singletonList("experimental"));
+    when(config.get("mdc_attributes").getScalarList("included", String.class))
+        .thenReturn(singletonList("stable"));
+
+    IncludeExclude selector = SelectorConfig.resolve(config, "test", SELECTOR);
+    IncludeExclude selectorWithFallback = SelectorConfig.resolve(config, "test", SELECTOR, false);
+
+    assertThat(selector).isNotNull();
+    assertThat(selector.matches("experimental")).isTrue();
+    assertThat(selector.matches("stable")).isFalse();
+    assertThat(selectorWithFallback).isNotNull();
+    assertThat(selectorWithFallback.matches("experimental")).isTrue();
+    assertThat(selectorWithFallback.matches("stable")).isFalse();
   }
 
   @Test
@@ -121,6 +196,35 @@ class SelectorConfigTest {
                   + " setting and the equivalent declarative configuration property are deprecated"
                   + " and may be removed in the next minor release. Use"
                   + " otel.instrumentation.exact-matching.experimental.mdc-attributes.included"
+                  + " or otel.instrumentation.exact-matching.experimental.mdc-attributes.excluded"
+                  + " or equivalent declarative configuration instead.");
+    } finally {
+      detachWarningHandler(handler);
+    }
+  }
+
+  @Test
+  void stableSelectorFallsBackToExperimentalDeprecatedConfig() {
+    DeclarativeConfigProperties config = mockStableConfig();
+    when(config.getScalarList("capture_mdc_attributes/development", String.class))
+        .thenReturn(singletonList("legacy"));
+    TestHandler handler = attachWarningHandler();
+    try {
+      IncludeExclude selector =
+          SelectorConfig.resolve(config, "stable-deprecated", SELECTOR, STABLE);
+
+      assertThat(selector).isNotNull();
+      assertThat(selector.matches("legacy")).isTrue();
+      assertThat(selector.matches("other")).isFalse();
+      verify(config, never()).getScalarList("capture_mdc_attributes", String.class);
+      assertThat(handler.records).hasSize(1);
+      assertThat(handler.records.get(0).getMessage())
+          .isEqualTo(
+              "The otel.instrumentation.stable-deprecated.experimental.capture-mdc-attributes"
+                  + " setting and the equivalent declarative configuration property are deprecated"
+                  + " and may be removed in the next minor release. Use"
+                  + " otel.instrumentation.stable-deprecated.mdc-attributes.included"
+                  + " or otel.instrumentation.stable-deprecated.mdc-attributes.excluded"
                   + " or equivalent declarative configuration instead.");
     } finally {
       detachWarningHandler(handler);
@@ -148,7 +252,8 @@ class SelectorConfigTest {
         .thenReturn(emptyList());
 
     assertThat(SelectorConfig.resolveLegacyLiteral(config, "deprecated-empty", SELECTOR)).isNull();
-    assertThat(SelectorConfig.resolve(config, "deprecated-empty-resolve", SELECTOR)).isNull();
+    assertThat(SelectorConfig.resolve(config, "deprecated-empty-resolve", SELECTOR, EXPERIMENTAL))
+        .isNull();
   }
 
   @Test
@@ -163,7 +268,8 @@ class SelectorConfigTest {
       Predicate<String> first = SelectorConfig.resolveLegacyLiteral(config, "precedence", SELECTOR);
       Predicate<String> second =
           SelectorConfig.resolveLegacyLiteral(config, "precedence", SELECTOR);
-      IncludeExclude resolved = SelectorConfig.resolve(config, "precedence", SELECTOR);
+      IncludeExclude resolved =
+          SelectorConfig.resolve(config, "precedence", SELECTOR, EXPERIMENTAL);
 
       assertThat(first).isNotNull();
       assertThat(first.test("new")).isTrue();
@@ -181,12 +287,66 @@ class SelectorConfigTest {
   }
 
   @Test
+  void stableSelectorTakesPrecedenceOverExperimentalDeprecatedConfig() {
+    DeclarativeConfigProperties config = mockStableConfig();
+    when(config.get("mdc_attributes").getScalarList("included", String.class))
+        .thenReturn(singletonList("new"));
+    when(config.getScalarList("capture_mdc_attributes/development", String.class))
+        .thenReturn(singletonList("legacy"));
+    TestHandler handler = attachWarningHandler();
+    try {
+      IncludeExclude selector =
+          SelectorConfig.resolve(config, "stable-precedence", SELECTOR, STABLE);
+
+      assertThat(selector).isNotNull();
+      assertThat(selector.matches("new")).isTrue();
+      assertThat(selector.matches("legacy")).isFalse();
+      assertThat(handler.records).isEmpty();
+      verify(config, never()).getScalarList("capture_mdc_attributes/development", String.class);
+    } finally {
+      detachWarningHandler(handler);
+    }
+  }
+
+  @Test
+  @ResourceLock(Resources.SYSTEM_PROPERTIES)
+  void stableSystemPropertyFallbackIsOnlyUsedWhenEnabled() {
+    DeclarativeConfigProperties config = mockStableConfig();
+    String includedProperty = "otel.instrumentation.stable-flat.mdc-attributes.included";
+    String excludedProperty = "otel.instrumentation.stable-flat.mdc-attributes.excluded";
+    String experimentalIncludedProperty =
+        "otel.instrumentation.stable-flat.experimental.mdc-attributes.included";
+    String previousIncluded = System.getProperty(includedProperty);
+    String previousExcluded = System.getProperty(excludedProperty);
+    String previousExperimentalIncluded = System.getProperty(experimentalIncludedProperty);
+    System.setProperty(includedProperty, "public*,secret*");
+    System.setProperty(excludedProperty, "secret*");
+    System.setProperty(experimentalIncludedProperty, "wrong");
+    try {
+      assertThat(SelectorConfig.resolve(config, "stable-flat", SELECTOR, STABLE)).isNull();
+
+      IncludeExclude selector =
+          SelectorConfig.resolve(config, "stable-flat", SELECTOR, STABLE, true);
+
+      assertThat(selector).isNotNull();
+      assertThat(selector.matches("public-value")).isTrue();
+      assertThat(selector.matches("secret-value")).isFalse();
+      assertThat(selector.matches("wrong")).isFalse();
+    } finally {
+      restoreSystemProperty(includedProperty, previousIncluded);
+      restoreSystemProperty(excludedProperty, previousExcluded);
+      restoreSystemProperty(experimentalIncludedProperty, previousExperimentalIncluded);
+    }
+  }
+
+  @Test
   void resolveMatchesDeprecatedValuesExactlyAndIgnoresWildcards() {
     DeclarativeConfigProperties config = mockConfig();
     when(config.getScalarList("capture_mdc_attributes/development", String.class))
         .thenReturn(asList("exact.name", "prefix.*"));
 
-    IncludeExclude selector = SelectorConfig.resolve(config, "resolve-deprecated", SELECTOR);
+    IncludeExclude selector =
+        SelectorConfig.resolve(config, "resolve-deprecated", SELECTOR, EXPERIMENTAL);
 
     assertThat(selector).isNotNull();
     assertThat(selector.matches("exact.name")).isTrue();
@@ -195,12 +355,38 @@ class SelectorConfigTest {
   }
 
   @Test
+  void ignoredDeprecatedWildcardsPointToTheIncludedProperty() {
+    DeclarativeConfigProperties config = mockStableConfig();
+    when(config.getScalarList("capture_mdc_attributes/development", String.class))
+        .thenReturn(asList("exact.name", "prefix.*"));
+    TestHandler handler = new TestHandler();
+    Logger logger = Logger.getLogger(DeprecatedCaptureNames.class.getName());
+    logger.addHandler(handler);
+    try {
+      assertThat(SelectorConfig.resolve(config, "ignored-wildcards", SELECTOR, STABLE)).isNotNull();
+
+      assertThat(handler.records).hasSize(1);
+      assertThat(handler.records.get(0).getMessage())
+          .isEqualTo(
+              "Ignoring [prefix.*] configured in the"
+                  + " otel.instrumentation.ignored-wildcards.experimental.capture-mdc-attributes"
+                  + " setting or equivalent declarative configuration, which matches names"
+                  + " literally and never supported wildcards. Use"
+                  + " otel.instrumentation.ignored-wildcards.mdc-attributes.included or equivalent"
+                  + " declarative configuration to match names by pattern.");
+    } finally {
+      logger.removeHandler(handler);
+    }
+  }
+
+  @Test
   void resolveIgnoresDeprecatedValuesThatAreAllWildcards() {
     DeclarativeConfigProperties config = mockConfig();
     when(config.getScalarList("capture_mdc_attributes/development", String.class))
         .thenReturn(singletonList("*"));
 
-    assertThat(SelectorConfig.resolve(config, "resolve-all-wildcards", SELECTOR)).isNull();
+    assertThat(SelectorConfig.resolve(config, "resolve-all-wildcards", SELECTOR, EXPERIMENTAL))
+        .isNull();
   }
 
   @Test
@@ -214,7 +400,8 @@ class SelectorConfigTest {
     when(config.getScalarList("capture_request_parameters/development", String.class))
         .thenReturn(null);
 
-    IncludeExclude selector = SelectorConfig.resolve(config, "servlet", "request-parameters");
+    IncludeExclude selector =
+        SelectorConfig.resolve(config, "servlet", "request-parameters", EXPERIMENTAL);
 
     assertThat(selector).isNotNull();
     assertThat(selector.matches("id")).isTrue();
@@ -281,8 +468,9 @@ class SelectorConfigTest {
                   + ".capture-key-value-pair-attributes setting and the equivalent declarative"
                   + " configuration property are deprecated and may be removed in the next minor"
                   + " release. Use otel.instrumentation.boolean-enabled.experimental"
-                  + ".key-value-pair-attributes.included or equivalent declarative configuration"
-                  + " instead.");
+                  + ".key-value-pair-attributes.included or otel.instrumentation.boolean-enabled"
+                  + ".experimental.key-value-pair-attributes.excluded or equivalent declarative"
+                  + " configuration instead.");
     } finally {
       detachWarningHandler(handler);
     }
@@ -334,7 +522,9 @@ class SelectorConfigTest {
                   + ".capture-logstash-structured-arguments setting and the equivalent declarative"
                   + " configuration property are deprecated and may be removed in the next minor"
                   + " release. Use otel.instrumentation.boolean-renamed.experimental"
-                  + ".logstash-structured-argument-attributes.included or equivalent declarative"
+                  + ".logstash-structured-argument-attributes.included or"
+                  + " otel.instrumentation.boolean-renamed.experimental"
+                  + ".logstash-structured-argument-attributes.excluded or equivalent declarative"
                   + " configuration instead.");
     } finally {
       detachWarningHandler(handler);
@@ -393,6 +583,24 @@ class SelectorConfigTest {
     when(selectorNode.getScalarList("excluded", String.class)).thenReturn(null);
     when(config.getScalarList("capture_mdc_attributes/development", String.class)).thenReturn(null);
     return config;
+  }
+
+  private static DeclarativeConfigProperties mockStableConfig() {
+    DeclarativeConfigProperties config =
+        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
+    DeclarativeConfigProperties selectorNode = config.get("mdc_attributes");
+    when(selectorNode.getScalarList("included", String.class)).thenReturn(null);
+    when(selectorNode.getScalarList("excluded", String.class)).thenReturn(null);
+    when(config.getScalarList("capture_mdc_attributes/development", String.class)).thenReturn(null);
+    return config;
+  }
+
+  private static void restoreSystemProperty(String name, String value) {
+    if (value == null) {
+      System.clearProperty(name);
+    } else {
+      System.setProperty(name, value);
+    }
   }
 
   private static TestHandler attachWarningHandler() {

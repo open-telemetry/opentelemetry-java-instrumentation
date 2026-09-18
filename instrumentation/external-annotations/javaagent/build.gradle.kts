@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {
@@ -30,6 +31,17 @@ dependencies {
   }
   // For some annotations used by sleuth
   testCompileOnly("org.springframework:spring-core:4.3.30.RELEASE")
+}
+
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":javaagent-extension-api"))
+      }
+    }
+  }
 }
 
 tasks {
@@ -91,6 +103,12 @@ tasks {
   }
 
   check {
-    dependsOn(testIncludeProperty, testExcludeMethodsProperty, testDeclarativeConfigInclude, testDeclarativeConfigExcludeMethods)
+    dependsOn(
+      testing.suites,
+      testIncludeProperty,
+      testExcludeMethodsProperty,
+      testDeclarativeConfigInclude,
+      testDeclarativeConfigExcludeMethods,
+    )
   }
 }

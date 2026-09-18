@@ -1,6 +1,6 @@
 plugins {
   id("java")
-  id("com.diffplug.spotless") version "8.10.0"
+  id("com.diffplug.spotless") version "8.10.2"
 }
 
 spotless {
@@ -26,7 +26,7 @@ dependencies {
   testImplementation("com.squareup.okhttp3:okhttp:5.5.0")
   testImplementation("org.jooq:joox:2.0.1")
   testImplementation("com.jayway.jsonpath:json-path:3.0.0")
-  testImplementation("org.slf4j:slf4j-simple:2.0.18")
+  testImplementation("org.slf4j:slf4j-simple:2.0.19")
   testImplementation("org.assertj:assertj-core:3.27.7")
 
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
@@ -36,5 +36,24 @@ dependencies {
 tasks {
   test {
     useJUnitPlatform()
+    exclude("**/AotStartupBenchmark.class")
   }
+}
+
+tasks.register<Test>("aotStartupBenchmark") {
+  description = "Measures JDK 25 Spring startup with and without AOT and the Java agent."
+  group = "verification"
+  testClassesDirs = sourceSets.test.get().output.classesDirs
+  classpath = sourceSets.test.get().runtimeClasspath
+  useJUnitPlatform()
+  include("**/AotStartupBenchmark.class")
+  maxParallelForks = 1
+  outputs.upToDateWhen { false }
+  outputs.cacheIf { false }
+  systemProperty("aot.benchmark.enabled", "true")
+  systemProperty("aot.benchmark.output", layout.buildDirectory.dir("reports/aot-startup").get().asFile.absolutePath)
+  systemProperty("aot.benchmark.agent", providers.gradleProperty("aotBenchmarkAgentJar").orElse("").get())
+  systemProperty("aot.benchmark.samples", providers.gradleProperty("aotBenchmarkSamples").orElse("20").get())
+  systemProperty("aot.benchmark.warmups", providers.gradleProperty("aotBenchmarkWarmups").orElse("2").get())
+  testLogging.showStandardStreams = true
 }

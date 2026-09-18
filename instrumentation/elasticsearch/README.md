@@ -1,10 +1,18 @@
 # Settings for the elasticsearch instrumentation
 
+The Elasticsearch REST library artifacts are deprecated and will be removed in
+3.0. Elasticsearch Java API Client users should use its
+[native OpenTelemetry support](https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/8.10/opentelemetry.html),
+available in 7.17.20+ on the 7.x line and 8.10+. Applications that use the REST
+Client directly have no drop-in library replacement; they can use the
+javaagent or migrate to the Java API Client.
+
 ## Settings for the [Elasticsearch Java API Client](https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/current/index.html) instrumentation
 
-| System property                                           | Type    | Default | Description                                                                                                                |
-| --------------------------------------------------------- | ------- | ------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `otel.instrumentation.elasticsearch.capture-search-query` | Boolean | `false` | Enable the capture of search query bodies. Attention: Elasticsearch queries may contain personal or sensitive information. |
+| System property                                                 | Type    | Default | Description                                                                                                                                                                                                                                                                                             |
+| --------------------------------------------------------------- | ------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `otel.instrumentation.elasticsearch.capture-search-query`       | Boolean | `false` | Deprecated for removal in 3.0 with no replacement. Outside v3-preview, explicitly set this to capture or omit search query bodies. Under v3-preview and in 3.0, the setting is ignored and search query bodies are always captured. Sanitization remains separately configurable with the next setting. |
+| `otel.instrumentation.elasticsearch.query-sanitization.enabled` | Boolean | `true`  | Whether captured search query bodies are sanitized by replacing literal values with `?`. When disabled, bodies are captured verbatim and may contain personal or sensitive information.                                                                                                                 |
 
 ## Settings for the [Elasticsearch Transport Client](https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/index.html) instrumentation
 
