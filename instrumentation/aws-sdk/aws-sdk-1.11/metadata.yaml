@@ -37,4 +37,4 @@ configurations:
     description: Determines whether to create a producer span for each eligible message in an SQS batch send when stable messaging semantic conventions are enabled. Overrides `otel.instrumentation.common.messaging.message-create-spans.enabled`.
     type: boolean
     default: true
-  - ref: common.messaging.message-create-spans.enabled
+  - ref: messaging.batch-send.message-creation-spans.enabled
