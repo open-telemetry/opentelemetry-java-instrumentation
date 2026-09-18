@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
+import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSingletons.currentBatch;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -21,6 +22,9 @@ import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.Queable;
+import redis.clients.jedis.Transaction;
 
 class JedisPipelineInstrumentation implements TypeInstrumentation {
   @Override
@@ -47,16 +51,23 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class QueueCommandAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(@Advice.This Object pipeline) {
+    public static Queable onEnter(@Advice.This Object pipeline) {
       // Attaches a thread-local pipeline that the nested Connection.sendCommand advice uses to
       // collect captured requests; sync() then consumes them to build the batch span.
-      JedisPipelineContext.enter(pipeline);
+      Queable previous = currentBatch().get();
+      // Other Queable subtypes have no flush point, so leaving them uncaptured keeps their
+      // per-command spans.
+      if (pipeline instanceof Pipeline || pipeline instanceof Transaction) {
+        return currentBatch().set((Queable) pipeline);
+      }
+      return previous;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void stopCollecting() {
-      JedisPipelineContext.exit();
+    public static void stopCollecting(@Advice.Enter @Nullable Queable previous) {
+      currentBatch().restore(previous);
     }
   }
 
