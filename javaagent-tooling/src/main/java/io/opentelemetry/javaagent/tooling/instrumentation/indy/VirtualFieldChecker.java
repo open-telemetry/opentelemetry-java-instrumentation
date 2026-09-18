@@ -18,10 +18,11 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 
 /**
- * Check that advice does not call {@link VirtualField#find(Class, Class)}. For inline advice {@link
- * VirtualField#find(Class, Class)} calls in advice are rewritten for efficiency. In non-inline
- * advice we don't do such rewriting, we expect users to keep the result of {@link
- * VirtualField#find(Class, Class)} in a static field.
+ * Check that advice does not call {@link VirtualField#find(Class, Class)} or {@link
+ * VirtualField#find(String, Class, Class)}. For inline advice {@link VirtualField#find(Class,
+ * Class)} calls in advice are rewritten for efficiency. In non-inline advice we don't do such
+ * rewriting, we expect users to keep the result of {@link VirtualField#find(Class, Class)} in a
+ * static field.
  */
 class VirtualFieldChecker {
   private static final boolean ENABLE_VIRTUAL_FIELD_USAGE_CHECKER =

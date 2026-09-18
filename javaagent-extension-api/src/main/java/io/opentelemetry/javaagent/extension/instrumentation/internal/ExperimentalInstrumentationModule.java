@@ -10,7 +10,6 @@ import static java.util.Collections.emptyMap;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
 import net.bytebuddy.utility.JavaModule;
 
 /**
@@ -19,11 +18,8 @@ import net.bytebuddy.utility.JavaModule;
  */
 public interface ExperimentalInstrumentationModule {
 
-  /**
-   * Register virtual field. First argument for the consumer is dot class name of the type where the
-   * field is added and the second argument is the dot class name of the field type.
-   */
-  default void registerVirtualFields(BiConsumer<String, String> virtualFieldRegistrar) {}
+  /** Register virtual field. */
+  default void registerVirtualFields(VirtualFieldRegistration virtualFieldRegistration) {}
 
   /**
    * Some instrumentations need to invoke classes which are present both in the agent classloader
@@ -77,5 +73,29 @@ public interface ExperimentalInstrumentationModule {
      * application.
      */
     ISOLATED
+  }
+
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
+  interface VirtualFieldRegistration {
+
+    /**
+     * Register a virtual field.
+     *
+     * @param typeName Dot class name of the type where the field is added.
+     * @param fieldTypeName Dot class name of the field type.
+     */
+    void register(String typeName, String fieldTypeName);
+
+    /**
+     * Register a virtual field.
+     *
+     * @param fieldName Name of the field
+     * @param typeName Dot class name of the type where the field is added.
+     * @param fieldTypeName Dot class name of the field type.
+     */
+    void register(String fieldName, String typeName, String fieldTypeName);
   }
 }

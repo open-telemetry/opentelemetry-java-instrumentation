@@ -21,7 +21,7 @@ public class Servlet2Singletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.servlet-2.2";
 
   public static final VirtualField<ServletResponse, Integer> RESPONSE_STATUS =
-      VirtualField.find(ServletResponse.class, Integer.class);
+      VirtualField.find("responseStatus", ServletResponse.class, Integer.class);
 
   private static final Servlet2Helper helper;
   private static final Instrumenter<ClassAndMethod, Void> responseInstrumenter;
