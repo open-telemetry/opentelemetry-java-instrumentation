@@ -227,7 +227,7 @@ class ShardedJedisClientTest {
                             equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, outerShard.getHost()),
-                            equalTo(SERVER_PORT, (long) outerShard.getPort()))),
+                            equalTo(SERVER_PORT, outerShard.getPort()))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
