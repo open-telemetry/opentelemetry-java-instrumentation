@@ -103,11 +103,8 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
       if (adviceState == null) {
         return;
       }
-      try {
-        adviceState.end(throwable);
-      } finally {
-        currentTransactionFraming().restore(adviceState.previousTransactionFraming);
-      }
+      currentTransactionFraming().restore(adviceState.previousTransactionFraming);
+      adviceState.end(throwable);
     }
   }
 
