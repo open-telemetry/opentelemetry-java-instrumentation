@@ -1,0 +1,6 @@
+{
+  "findings": [],
+  "status": "clean",
+  "title": "Populate gRPC `server.address` and `server.port` from channel targets",
+  "body": "gRPC client spans now populate `server.address` and `server.port` from configured channel targets instead of relying only on channel authority. Target parsing covers DNS, Unix domain socket, IPv4, IPv6, and xDS addresses. Direct-address channels fall back to authority.\n\n### Library API\n\nUse `addClientInterceptor` when configuring a `ManagedChannelBuilder`:\n\n```java\nGrpcTelemetry telemetry = GrpcTelemetry.create(openTelemetry);\ntelemetry.addClientInterceptor(channelBuilder);\n```\n\nOn gRPC 1.64 and newer, this method captures the builder target. Older versions fall back to channel authority. `createClientInterceptor()` remains supported for integrations that accept only a `ClientInterceptor`, but it cannot capture the builder target.\n\n### Compatibility\n\n`GrpcRequest.getLogicalHost()` and `getLogicalPort()` are deprecated. Use `getServerAddress()` and `getServerPort()` instead."
+}
