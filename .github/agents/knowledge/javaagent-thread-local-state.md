@@ -24,6 +24,13 @@ static accessor and call the lifecycle methods on the returned holder. Do not hi
 mutations behind semantic wrappers such as `enter`/`exit`, `startSuppressing`/`endSuppressing`, or
 similar methods.
 
+Place each holder in the narrowest owner. Keep a holder used by one instrumentation class as a
+private lower-camel field in that class. When multiple instrumentation or advice classes in one
+module use the holder, put the private lower-camel field in the module's `*Singletons` class and
+expose it through a public zero-argument accessor with the same name. Statically import that
+accessor at advice call sites so the `set`/`restore` or `tryAcquire`/`release` pairing stays visible.
+When state intentionally spans instrumentation modules, use a focused shared bootstrap owner.
+
 For temporary state installed on entry and cleaned up on exit, cleanup must restore the previous
 value rather than simply remove the entry. Follow this rule even when no current call path is known
 to be reentrant. Prefer the allocation-free `ScopedThreadValue`, and carry the value returned by
