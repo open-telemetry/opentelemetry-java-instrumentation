@@ -93,7 +93,7 @@ public final class MessagingConfig {
       boolean systemPropertyFallback) {
     String replacementProperty = COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.headers." + name;
     List<String> patterns = getList(headers, name, replacementProperty, systemPropertyFallback);
-    if (patterns != null) {
+    if (patterns != null && !patterns.isEmpty()) {
       return patterns;
     }
 

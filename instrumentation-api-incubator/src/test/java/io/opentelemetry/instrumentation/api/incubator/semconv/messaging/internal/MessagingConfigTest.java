@@ -168,6 +168,23 @@ class MessagingConfigTest {
   }
 
   @Test
+  void emptyReplacementHeadersSystemPropertyFallsBackToDeprecatedProperty() {
+    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
+    String replacementProperty =
+        "otel.instrumentation.common.messaging.experimental.headers.included";
+    String deprecatedProperty = "otel.instrumentation.messaging.experimental.headers.included";
+    System.setProperty(replacementProperty, "");
+    System.setProperty(deprecatedProperty, "deprecated");
+    try {
+      assertThat(MessagingConfig.getHeaders(openTelemetry, true).getIncluded())
+          .containsExactly("deprecated");
+    } finally {
+      System.clearProperty(replacementProperty);
+      System.clearProperty(deprecatedProperty);
+    }
+  }
+
+  @Test
   void replacementAndDeprecatedHeaderAliasesAreResolvedIndependently() {
     ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
     when(messagingConfig(openTelemetry)
