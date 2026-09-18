@@ -5,9 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
+import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSingletons.currentBatch;
+import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSingletons.currentTransactionFraming;
 import static java.util.Collections.emptyList;
 
-import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,37 +16,26 @@ import javax.annotation.Nullable;
 import redis.clients.jedis.Queable;
 
 public final class JedisPipelineContext {
-  private static final ScopedThreadValue<Queable> currentBatch = new ScopedThreadValue<>();
-  private static final ScopedThreadValue<TransactionFraming> currentTransactionFraming =
-      new ScopedThreadValue<>();
   private static final VirtualField<Queable, BatchState> BATCH_STATE =
       VirtualField.find(Queable.class, BatchState.class);
-
-  public static ScopedThreadValue<Queable> currentBatch() {
-    return currentBatch;
-  }
-
-  public static ScopedThreadValue<TransactionFraming> currentTransactionFraming() {
-    return currentTransactionFraming;
-  }
 
   public static TransactionFraming transactionFraming(@Nullable JedisRequest request) {
     return new TransactionFraming(request);
   }
 
   public static void captureTransactionFramingRequest(@Nullable Object transaction) {
-    TransactionFraming framing = currentTransactionFraming.get();
+    TransactionFraming framing = currentTransactionFraming().get();
     if (framing != null && framing.framingRequest != null && transaction instanceof Queable) {
       batchState((Queable) transaction).transactionFramingRequest = framing.framingRequest;
     }
   }
 
   public static boolean inTransactionFraming() {
-    return currentTransactionFraming.get() != null;
+    return currentTransactionFraming().get() != null;
   }
 
   public static void captureTransactionFramingPeer(JedisRequest request) {
-    TransactionFraming framing = currentTransactionFraming.get();
+    TransactionFraming framing = currentTransactionFraming().get();
     if (framing == null) {
       return;
     }
@@ -73,7 +63,7 @@ public final class JedisPipelineContext {
   }
 
   public static boolean capture(JedisRequest request) {
-    Queable batch = currentBatch.get();
+    Queable batch = currentBatch().get();
     if (batch == null) {
       return false;
     }

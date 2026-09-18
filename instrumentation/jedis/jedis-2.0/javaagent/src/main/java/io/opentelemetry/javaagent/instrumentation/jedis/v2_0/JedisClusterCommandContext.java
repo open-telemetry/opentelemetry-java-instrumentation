@@ -6,16 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSingletons.currentCommandContext;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import javax.annotation.Nullable;
 
 public final class JedisClusterCommandContext {
-  private static final ScopedThreadValue<JedisClusterCommandContext> currentCommandContext =
-      new ScopedThreadValue<>();
-
   @Nullable private Context context;
   @Nullable private JedisRequest request;
   private int executionDepth;
@@ -28,17 +25,13 @@ public final class JedisClusterCommandContext {
 
   private JedisClusterCommandContext() {}
 
-  public static ScopedThreadValue<JedisClusterCommandContext> currentCommandContext() {
-    return currentCommandContext;
-  }
-
   /**
    * Marks the start of borrowing a cluster connection. Commands the client sends while borrowing,
    * such as the health check that validates a pooled connection, are part of getting the connection
    * rather than operations of their own.
    */
   public static void enterConnectionAcquisition() {
-    JedisClusterCommandContext commandContext = currentCommandContext.get();
+    JedisClusterCommandContext commandContext = currentCommandContext().get();
     if (commandContext != null) {
       commandContext.connectionAcquisitionDepth++;
     }
@@ -46,7 +39,7 @@ public final class JedisClusterCommandContext {
 
   /** Marks the end of borrowing a cluster connection. */
   public static void exitConnectionAcquisition() {
-    JedisClusterCommandContext commandContext = currentCommandContext.get();
+    JedisClusterCommandContext commandContext = currentCommandContext().get();
     if (commandContext != null && commandContext.connectionAcquisitionDepth > 0) {
       commandContext.connectionAcquisitionDepth--;
     }

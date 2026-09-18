@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisPipelineContext.currentBatch;
+import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSingletons.currentBatch;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
