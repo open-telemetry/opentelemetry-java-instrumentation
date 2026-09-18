@@ -421,11 +421,12 @@ public abstract class AbstractRedissonAsyncClientTest {
   // A callback attached to a queued atomic-batch command must inherit the parent trace context but
   // not the internal batch marker; otherwise the callback-issued GET is incorrectly suppressed.
   @Test
-  void atomicBatchCommandCallback() {
+  void atomicBatchCommandCallback() throws ReflectiveOperationException {
     Assumptions.assumeTrue(emitStableDatabaseSemconv());
     boolean usesRPromise;
+    Class<?> executionModeClass;
     try {
-      Class.forName("org.redisson.api.BatchOptions$ExecutionMode");
+      executionModeClass = Class.forName("org.redisson.api.BatchOptions$ExecutionMode");
       usesRPromise =
           Arrays.stream(
                   Class.forName("org.redisson.client.protocol.CommandData")
@@ -441,18 +442,20 @@ public abstract class AbstractRedissonAsyncClientTest {
       Assumptions.abort();
       return;
     }
-    BatchOptions.ExecutionMode executionMode =
-        usesRPromise
-            ? BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC
-            : BatchOptions.ExecutionMode.IN_MEMORY_ATOMIC;
+    String executionModeName = usesRPromise ? "REDIS_WRITE_ATOMIC" : "IN_MEMORY_ATOMIC";
+    Object executionMode =
+        executionModeClass.getMethod("valueOf", String.class).invoke(null, executionModeName);
+    BatchOptions options = BatchOptions.defaults();
+    BatchOptions.class
+        .getMethod("executionMode", executionModeClass)
+        .invoke(options, executionMode);
+    RBatch batch = redisson.createBatch(options);
 
     CompletableFuture<String> callbackResult = new CompletableFuture<>();
     CompletionStage<?> result =
         testing.runWithSpan(
             "parent",
             () -> {
-              RBatch batch =
-                  redisson.createBatch(BatchOptions.defaults().executionMode(executionMode));
               RFuture<Void> commandFuture = batch.getBucket("batch1").setAsync("v1");
               commandFuture.whenComplete(
                   (unused, commandError) -> {
@@ -468,9 +471,8 @@ public abstract class AbstractRedissonAsyncClientTest {
                         });
                   });
               batch.getBucket("batch2").setAsync("v2");
-              return batch
-                  .executeAsync()
-                  .thenCombine(callbackResult, (batchResult, value) -> batchResult);
+              batch.executeAsync();
+              return callbackResult;
             });
     assertThat(result.toCompletableFuture()).succeedsWithin(TIMEOUT);
 
