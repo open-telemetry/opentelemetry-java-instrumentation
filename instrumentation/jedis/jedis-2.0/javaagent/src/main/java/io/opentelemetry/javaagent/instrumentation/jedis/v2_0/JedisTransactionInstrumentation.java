@@ -5,14 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
+import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisPipelineContext.currentTransactionFraming;
+import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisPipelineContext.transactionFraming;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisPipelineContext.TransactionFraming;
 import java.util.List;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -37,68 +41,72 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ExecAdvice {
 
-    public static class AdviceScope {
+    public static class AdviceState {
       @Nullable private final Context context;
-      @Nullable private final Scope scope;
       @Nullable private final JedisRequest request;
-      @Nullable private final Object previousTransactionFraming;
+      @Nullable public Scope scope;
+      @Nullable public TransactionFraming previousTransactionFraming;
 
-      private AdviceScope(
-          @Nullable Context context,
-          @Nullable Scope scope,
-          @Nullable JedisRequest request,
-          @Nullable Object previousTransactionFraming) {
+      public AdviceState(@Nullable Context context, @Nullable JedisRequest request) {
         this.context = context;
-        this.scope = scope;
         this.request = request;
-        this.previousTransactionFraming = previousTransactionFraming;
-      }
-
-      public static AdviceScope start(Object transaction) {
-        List<JedisRequest> requests = JedisPipelineContext.getAndClearCapturedRequests(transaction);
-        JedisRequest multiRequest =
-            JedisPipelineContext.getAndClearTransactionFramingRequest(transaction);
-        // Suppress the EXEC framing command's own span; the transaction is reported as a single
-        // batch span here.
-        if (requests.isEmpty()) {
-          // An empty transaction sends nothing for the batch, and with no captured request there
-          // is no connection to derive server attributes from, so it is not reported as a batch
-          // span.
-          Object previous = JedisPipelineContext.enterTransactionFraming();
-          return new AdviceScope(null, null, null, previous);
-        }
-        JedisRequest request = JedisRequest.createTransaction(requests, multiRequest);
-        Context parentContext = Context.current();
-        if (!instrumenter().shouldStart(parentContext, request)) {
-          Object previous = JedisPipelineContext.enterTransactionFraming(request);
-          return new AdviceScope(null, null, null, previous);
-        }
-        Context context = instrumenter().start(parentContext, request);
-        Scope scope = context.makeCurrent();
-        Object previous = JedisPipelineContext.enterTransactionFraming(request);
-        return new AdviceScope(context, scope, request, previous);
       }
 
       public void end(@Nullable Throwable throwable) {
-        JedisPipelineContext.exitTransactionFraming(previousTransactionFraming);
         if (scope != null) {
           scope.close();
+        }
+        if (context != null && request != null) {
           instrumenter().end(context, request, null, throwable);
         }
       }
     }
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static AdviceScope onEnter(@Advice.This Object transaction) {
-      return AdviceScope.start(transaction);
+    public static AdviceState onEnter(@Advice.This Object transaction) {
+      List<JedisRequest> requests = JedisPipelineContext.getAndClearCapturedRequests(transaction);
+      JedisRequest multiRequest =
+          JedisPipelineContext.getAndClearTransactionFramingRequest(transaction);
+      @Nullable JedisRequest request = null;
+      @Nullable Context context = null;
+      if (!requests.isEmpty()) {
+        request = JedisRequest.createTransaction(requests, multiRequest);
+        Context parentContext = Java8BytecodeBridge.currentContext();
+        if (instrumenter().shouldStart(parentContext, request)) {
+          context = instrumenter().start(parentContext, request);
+        }
+      }
+
+      // Suppress the EXEC framing command's own span; the transaction is reported as a single
+      // batch span here. An empty transaction has no peer to report, so it has no batch span.
+      AdviceState adviceState = new AdviceState(context, request);
+      adviceState.previousTransactionFraming =
+          currentTransactionFraming().set(transactionFraming(request));
+      if (context != null) {
+        try {
+          adviceState.scope = context.makeCurrent();
+        } catch (RuntimeException e) {
+          currentTransactionFraming().restore(adviceState.previousTransactionFraming);
+          throw e;
+        } catch (Error error) {
+          currentTransactionFraming().restore(adviceState.previousTransactionFraming);
+          throw error;
+        }
+      }
+      return adviceState;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter @Nullable AdviceScope adviceScope) {
-      if (adviceScope != null) {
-        adviceScope.end(throwable);
+        @Advice.Enter @Nullable AdviceState adviceState) {
+      if (adviceState == null) {
+        return;
+      }
+      try {
+        adviceState.end(throwable);
+      } finally {
+        currentTransactionFraming().restore(adviceState.previousTransactionFraming);
       }
     }
   }
@@ -108,16 +116,16 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Object onEnter(@Advice.This Object transaction) {
+    public static TransactionFraming onEnter(@Advice.This Object transaction) {
       // A discarded transaction is abandoned, so drop its captured commands without reporting a
       // batch span, and suppress the DISCARD framing command's own span.
       JedisPipelineContext.clear(transaction);
-      return JedisPipelineContext.enterTransactionFraming();
+      return currentTransactionFraming().set(transactionFraming(null));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter @Nullable Object previous) {
-      JedisPipelineContext.exitTransactionFraming(previous);
+    public static void onExit(@Advice.Enter @Nullable TransactionFraming previous) {
+      currentTransactionFraming().restore(previous);
     }
   }
 }
