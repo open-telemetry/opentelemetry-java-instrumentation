@@ -99,6 +99,9 @@ public class JedisSingletons {
     return RedisServerTarget.ofEndpoints(endpoints);
   }
 
+  // Jedis 1.4 returns ShardInfo from getAllShards() and exposes its resource through
+  // ShardInfo.getResource(). Jedis 1.5 returns the resource directly and removes getResource().
+  // getAllShards() erases to Collection in both versions, so only getResource() needs reflection.
   @Nullable
   private static Jedis getJedis(Object shard) {
     if (shard instanceof Jedis) {
