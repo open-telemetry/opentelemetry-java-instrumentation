@@ -84,11 +84,8 @@ class RocketMqProducerInstrumentation implements TypeInstrumentation {
       if (state == null) {
         return;
       }
-      try {
-        batchSendHelper().completeBatchSend(state, throwable);
-      } finally {
-        currentBatchSendState().restore((BatchSendState) enterResult[1]);
-      }
+      currentBatchSendState().restore((BatchSendState) enterResult[1]);
+      batchSendHelper().completeBatchSend(state, throwable);
     }
   }
 
@@ -113,11 +110,8 @@ class RocketMqProducerInstrumentation implements TypeInstrumentation {
       if (state == null) {
         return;
       }
-      try {
-        batchSendHelper().completeBatchSend(state, throwable);
-      } finally {
-        currentBatchSendState().restore((BatchSendState) enterResult[1]);
-      }
+      currentBatchSendState().restore((BatchSendState) enterResult[1]);
+      batchSendHelper().completeBatchSend(state, throwable);
     }
   }
 
@@ -142,11 +136,8 @@ class RocketMqProducerInstrumentation implements TypeInstrumentation {
       if (state == null) {
         return;
       }
-      try {
-        batchSendHelper().completeBatchSend(state, throwable);
-      } finally {
-        currentBatchSendState().restore((BatchSendState) enterResult[1]);
-      }
+      currentBatchSendState().restore((BatchSendState) enterResult[1]);
+      batchSendHelper().completeBatchSend(state, throwable);
     }
   }
 }
