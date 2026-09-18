@@ -44,13 +44,11 @@ class PreparedStatementInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable QueryAdviceState state) {
-      if (state != null) {
-        try {
-          currentQuerySupplier().restore(state.previousSupplier);
-        } finally {
-          currentClientInfo().restore(state.previousInfo);
-        }
+      if (state == null) {
+        return;
       }
+      currentQuerySupplier().restore(state.previousSupplier);
+      currentClientInfo().restore(state.previousInfo);
     }
 
     public static final class QueryAdviceState {
