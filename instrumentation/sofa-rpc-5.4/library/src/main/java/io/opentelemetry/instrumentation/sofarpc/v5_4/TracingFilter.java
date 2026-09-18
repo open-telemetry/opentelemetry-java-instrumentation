@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.sofarpc.v5_4;
 
 import static com.alipay.sofa.rpc.core.exception.RpcErrorType.SERVER_UNDECLARED_ERROR;
 
+import com.alipay.sofa.rpc.client.ProviderInfo;
 import com.alipay.sofa.rpc.common.RemotingConstants;
 import com.alipay.sofa.rpc.config.AbstractInterfaceConfig;
 import com.alipay.sofa.rpc.config.ConsumerConfig;
@@ -18,11 +19,15 @@ import com.alipay.sofa.rpc.filter.FilterInvoker;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.net.InetSocketAddress;
+import java.util.concurrent.atomic.AtomicBoolean;
+import javax.annotation.Nullable;
 
 final class TracingFilter extends Filter {
 
-  private static final String OTEL_CONTEXT_KEY = "otel.context";
-  private static final String OTEL_REQUEST_KEY = "otel.request";
+  private static final VirtualField<SofaRequest, AsyncState> ASYNC_STATE_FIELD =
+      VirtualField.find(SofaRequest.class, AsyncState.class);
 
   private final Instrumenter<SofaRpcRequest, SofaResponse> instrumenter;
   private final boolean isClientSide;
@@ -45,22 +50,24 @@ final class TracingFilter extends Filter {
       return invoker.invoke(request);
     }
     Context context = instrumenter.start(parentContext, sofaRpcRequest);
+    boolean isAsync = isClientSide && request.isAsync();
+    if (isAsync) {
+      ASYNC_STATE_FIELD.set(request, new AsyncState(instrumenter, context, sofaRpcRequest));
+    }
 
     SofaResponse response;
-    boolean isSynchronous = true;
     try (Scope ignored = context.makeCurrent()) {
       response = invoker.invoke(request);
-      if (isClientSide && request.isAsync()) {
-        isSynchronous = false;
-        request.addRequestProp(OTEL_CONTEXT_KEY, context);
-        request.addRequestProp(OTEL_REQUEST_KEY, sofaRpcRequest);
-      }
     } catch (Throwable t) {
-      instrumenter.end(context, sofaRpcRequest, null, t);
+      if (isAsync) {
+        completeAsyncRequest(request, null, t);
+      } else {
+        instrumenter.end(context, sofaRpcRequest, null, t);
+      }
       throw t;
     }
 
-    if (isSynchronous) {
+    if (!isAsync) {
       Throwable exception = extractException(response);
       instrumenter.end(context, sofaRpcRequest, response, exception);
     }
@@ -121,12 +128,52 @@ final class TracingFilter extends Filter {
     if (!isClientSide) {
       return;
     }
-    Context context = (Context) request.getRequestProp(OTEL_CONTEXT_KEY);
-    SofaRpcRequest sofaRpcRequest = (SofaRpcRequest) request.getRequestProp(OTEL_REQUEST_KEY);
-    if (context == null || sofaRpcRequest == null) {
+    completeAsyncRequest(request, response, exception);
+  }
+
+  // Completes an asynchronous request at most once across transport failures, standard filter
+  // callbacks, and custom completion callbacks.
+  static void completeAsyncRequest(
+      SofaRequest request, @Nullable SofaResponse response, @Nullable Throwable exception) {
+    AsyncState asyncState = ASYNC_STATE_FIELD.get(request);
+    if (asyncState == null || !asyncState.tryComplete()) {
       return;
     }
+    ASYNC_STATE_FIELD.set(request, null);
+
     Throwable error = exception != null ? exception : extractException(response);
-    instrumenter.end(context, sofaRpcRequest, response, error);
+    asyncState.end(request, response, error);
+  }
+
+  private static final class AsyncState {
+
+    private final Instrumenter<SofaRpcRequest, SofaResponse> instrumenter;
+    private final Context context;
+    @Nullable private final InetSocketAddress remoteAddress;
+    @Nullable private final InetSocketAddress localAddress;
+    @Nullable private final ProviderInfo providerInfo;
+    private final AtomicBoolean completed = new AtomicBoolean();
+
+    private AsyncState(
+        Instrumenter<SofaRpcRequest, SofaResponse> instrumenter,
+        Context context,
+        SofaRpcRequest request) {
+      this.instrumenter = instrumenter;
+      this.context = context;
+      remoteAddress = request.remoteAddress();
+      localAddress = request.localAddress();
+      providerInfo = request.providerInfo();
+    }
+
+    private boolean tryComplete() {
+      return completed.compareAndSet(false, true);
+    }
+
+    private void end(
+        SofaRequest request, @Nullable SofaResponse response, @Nullable Throwable error) {
+      SofaRpcRequest endRequest =
+          SofaRpcRequest.create(request, remoteAddress, localAddress, providerInfo);
+      instrumenter.end(context, endRequest, response, error);
+    }
   }
 }
