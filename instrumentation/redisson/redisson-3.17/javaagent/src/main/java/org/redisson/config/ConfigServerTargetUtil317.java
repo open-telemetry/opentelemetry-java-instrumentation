@@ -25,10 +25,6 @@ public class ConfigServerTargetUtil317 {
   @Nullable private static final MethodHandle SERVICE_MANAGER_GET_CFG = findServiceManagerGetCfg();
 
   @Nullable
-  private static final MethodHandle SINGLE_SERVER_CONFIG_GET_ADDRESS =
-      findSingleServerConfigGetAddress();
-
-  @Nullable
   private static MethodHandle findServiceManagerGetCfg() {
     try {
       Class<?> serviceManagerClass =
@@ -45,23 +41,13 @@ public class ConfigServerTargetUtil317 {
   }
 
   @Nullable
-  private static MethodHandle findSingleServerConfigGetAddress() {
-    try {
-      return MethodHandles.publicLookup()
-          .unreflect(SingleServerConfig.class.getMethod("getAddress"));
-    } catch (ReflectiveOperationException ignored) {
-      return null;
-    }
-  }
-
-  @Nullable
   public static RedisServerTarget of(@Nullable Config config) {
     if (config == null) {
       return null;
     }
     SingleServerConfig singleServerConfig = config.getSingleServerConfig();
     if (singleServerConfig != null) {
-      return RedisServerTarget.ofEndpoint(getAddress(singleServerConfig));
+      return RedisServerTarget.ofEndpoint(singleServerConfig.getAddress());
     }
     SentinelServersConfig sentinelConfig = config.getSentinelServersConfig();
     if (sentinelConfig != null) {
@@ -94,21 +80,6 @@ public class ConfigServerTargetUtil317 {
       return of((Config) SERVICE_MANAGER_GET_CFG.invoke(serviceManager));
     } catch (Throwable t) {
       logger.log(FINE, "Failed to read the Redisson configuration from the service manager", t);
-      return null;
-    }
-  }
-
-  // Redisson changes the single server address return type across supported versions.
-  @Nullable
-  private static String getAddress(SingleServerConfig config) {
-    if (SINGLE_SERVER_CONFIG_GET_ADDRESS == null) {
-      return null;
-    }
-    try {
-      Object address = SINGLE_SERVER_CONFIG_GET_ADDRESS.invoke(config);
-      return address != null ? address.toString() : null;
-    } catch (Throwable t) {
-      logger.log(FINE, "Failed to read the configured Redisson single-server address", t);
       return null;
     }
   }
