@@ -44,8 +44,8 @@ public final class JtdsUrlParser implements JdbcUrlParser {
   public void parse(String jdbcUrl, ParseContext ctx) {
     ctx.system(MICROSOFT_SQL_SERVER);
     ctx.oldSemconvSystem(MSSQL);
-    ctx.host(DEFAULT_HOST);
-    ctx.port(DEFAULT_PORT);
+    ctx.defaultHost(DEFAULT_HOST);
+    ctx.defaultPort(DEFAULT_PORT);
 
     ctx.subtype("sqlserver");
 
