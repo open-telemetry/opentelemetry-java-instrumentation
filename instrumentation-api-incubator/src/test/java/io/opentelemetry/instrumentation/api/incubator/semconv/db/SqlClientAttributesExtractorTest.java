@@ -36,6 +36,8 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -44,6 +46,15 @@ import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class SqlClientAttributesExtractorTest {
+
+  @Test
+  void shouldProvideSchemaUrl() {
+    AttributesExtractor<Map<String, Object>, Void> extractor =
+        SqlClientAttributesExtractor.create(new TestAttributesGetter());
+
+    assertThat(((SchemaUrlProvider) extractor).internalGetSchemaUrl())
+        .isEqualTo(emitStableDatabaseSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_24_0);
+  }
 
   static class TestAttributesGetter
       implements SqlClientAttributesGetter<Map<String, Object>, Void> {
