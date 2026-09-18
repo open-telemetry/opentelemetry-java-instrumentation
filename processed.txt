@@ -621,3 +621,4 @@ mongo-4.0:javaagent-unit-tests
 cassandra-4.4:javaagent-unit-tests
 vertx-sql-client-4.0:javaagent-unit-tests
 vertx-sql-client-common-4.0:javaagent-unit-tests
+redisson-3.0:javaagent-unit-tests
