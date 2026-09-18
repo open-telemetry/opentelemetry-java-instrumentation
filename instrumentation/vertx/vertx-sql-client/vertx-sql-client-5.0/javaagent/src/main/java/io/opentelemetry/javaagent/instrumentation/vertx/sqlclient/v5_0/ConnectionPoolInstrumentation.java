@@ -97,12 +97,9 @@ class ConnectionPoolInstrumentation implements TypeInstrumentation {
         @Advice.Enter @Nullable ConnectionAttempt previous,
         @Advice.Thrown @Nullable Throwable throwable) {
       ConnectionAttempt current = currentConnectionAttempt().get();
-      try {
-        if (current != null) {
-          current.end(throwable);
-        }
-      } finally {
-        currentConnectionAttempt().restore(previous);
+      currentConnectionAttempt().restore(previous);
+      if (current != null) {
+        current.end(throwable);
       }
     }
   }
