@@ -1,0 +1,5 @@
+{
+  "status": "clean",
+  "title": "Add logical spans for Redisson atomic batches",
+  "body": "Represent atomic Redisson batches as one logical CLIENT span under stable database semantic conventions. The instrumentation captures queued user commands, derives sanitized operation and batch attributes, spans the overall batch result, and suppresses fragmented MULTI/command/EXEC protocol spans across supported Redisson versions. Legacy semantic-convention behavior and ordinary pipeline telemetry remain unchanged, and user callbacks retain the application context instead of intermittently inheriting the internal logical batch span."
+}
