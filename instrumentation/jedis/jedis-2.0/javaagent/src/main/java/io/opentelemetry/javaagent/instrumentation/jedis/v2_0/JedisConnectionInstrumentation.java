@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisClusterCommandContext.currentCommandContext;
+import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSingletons.currentCommandContext;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSingletons.instrumenter;
 import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.is;
