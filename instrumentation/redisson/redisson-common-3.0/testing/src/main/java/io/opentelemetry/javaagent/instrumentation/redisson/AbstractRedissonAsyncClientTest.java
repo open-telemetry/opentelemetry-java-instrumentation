@@ -12,6 +12,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.javaagent.instrumentation.redisson.RedissonBatchTestHelper.batchOptions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
@@ -305,9 +306,7 @@ public abstract class AbstractRedissonAsyncClientTest {
         testing.runWithSpan(
             "parent",
             () -> {
-              BatchOptions batchOptions =
-                  BatchOptions.defaults()
-                      .executionMode(BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC);
+              BatchOptions batchOptions = batchOptions("REDIS_WRITE_ATOMIC");
               RBatch batch = redisson.createBatch(batchOptions);
               batch.getBucket("batch1").setAsync("v1");
               batch.getBucket("batch2").setAsync("v2");
@@ -441,18 +440,14 @@ public abstract class AbstractRedissonAsyncClientTest {
       Assumptions.abort();
       return;
     }
-    BatchOptions.ExecutionMode executionMode =
-        usesRPromise
-            ? BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC
-            : BatchOptions.ExecutionMode.IN_MEMORY_ATOMIC;
+    String executionMode = usesRPromise ? "REDIS_WRITE_ATOMIC" : "IN_MEMORY_ATOMIC";
 
     CompletableFuture<String> callbackResult = new CompletableFuture<>();
     CompletionStage<?> result =
         testing.runWithSpan(
             "parent",
             () -> {
-              RBatch batch =
-                  redisson.createBatch(BatchOptions.defaults().executionMode(executionMode));
+              RBatch batch = redisson.createBatch(batchOptions(executionMode));
               RFuture<Void> commandFuture = batch.getBucket("batch1").setAsync("v1");
               commandFuture.whenComplete(
                   (unused, commandError) -> {
@@ -468,9 +463,8 @@ public abstract class AbstractRedissonAsyncClientTest {
                         });
                   });
               batch.getBucket("batch2").setAsync("v2");
-              return batch
-                  .executeAsync()
-                  .thenCombine(callbackResult, (batchResult, value) -> batchResult);
+              CompletionStage<?> batchResult = batch.executeAsync();
+              return batchResult.thenCombine(callbackResult, (ignored, value) -> value);
             });
     assertThat(result.toCompletableFuture()).succeedsWithin(TIMEOUT);
 
