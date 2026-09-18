@@ -13,6 +13,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -31,6 +32,8 @@ public class VertxRedisClientSingletons {
   private static final Instrumenter<VertxRedisClientRequest, Void> instrumenter;
 
   private static final ScopedThreadValue<RedisURI> currentRedisUri = new ScopedThreadValue<>();
+  private static final ScopedThreadValue<RedisServerTarget> currentServerTarget =
+      new ScopedThreadValue<>();
   private static final VirtualField<Command, String> COMMAND_NAME =
       VirtualField.find(Command.class, String.class);
   private static final VirtualField<RedisStandaloneConnection, RedisURI> REDIS_URI =
@@ -90,6 +93,10 @@ public class VertxRedisClientSingletons {
 
   public static ScopedThreadValue<RedisURI> currentRedisUri() {
     return currentRedisUri;
+  }
+
+  public static ScopedThreadValue<RedisServerTarget> currentServerTarget() {
+    return currentServerTarget;
   }
 
   public static void setCommandName(Command command, String commandName) {
