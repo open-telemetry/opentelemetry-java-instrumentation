@@ -1,0 +1,1 @@
+{"summary":"Merged the frozen base into the frozen head while preserving both sides of the Unreleased changelog.","validation":[{"command":"./gradlew spotlessCheck :instrumentation:grpc-1.6:library:test :instrumentation:grpc-1.6:javaagent:test :instrumentation:armeria:armeria-grpc-1.14:javaagent:test","result":"passed"}]}
