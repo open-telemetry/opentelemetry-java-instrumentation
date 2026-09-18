@@ -58,13 +58,11 @@ public class KafkaProducerTelemetry {
       return record;
     }
 
+    // The interceptor runs before send, so end immediately without measuring send duration.
     Context context = producerInstrumenter.start(parentContext, request);
-    try {
-      if (producerPropagationEnabled) {
-        record = KafkaPropagation.propagateContext(propagator, context, record);
-      }
-    } finally {
-      producerInstrumenter.end(context, request, null, null);
+    producerInstrumenter.end(context, request, null, null);
+    if (producerPropagationEnabled) {
+      record = KafkaPropagation.propagateContext(propagator, context, record);
     }
     return record;
   }

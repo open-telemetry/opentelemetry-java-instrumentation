@@ -57,6 +57,7 @@ tasks {
       "tomee" to listOf("**/Tomee*.*"),
       "websphere" to listOf("**/Websphere*.*"),
       "wildfly" to listOf("**/Wildfly*.*"),
+      "spring-aot" to listOf("**/SpringBootAotSmokeTest.*"),
     )
 
     val smokeTestSuite = project.findProperty("smokeTestSuite") as String?

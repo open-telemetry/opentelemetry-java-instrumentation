@@ -94,7 +94,7 @@ jobs:
 
   build:
     needs: [resolve-native, resolve-servlet-images]
-    uses: ./.github/workflows/reusable-pr-build.yml
+    uses: $/.github/workflows/reusable-pr-build.yml
     with:
       skip-native-tests: ${{ !(needs.resolve-native.outputs.run-native-tests == 'true' || contains(github.event.pull_request.labels.*.name, 'test native')) }}
       skip-openj9-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test openj9') }}

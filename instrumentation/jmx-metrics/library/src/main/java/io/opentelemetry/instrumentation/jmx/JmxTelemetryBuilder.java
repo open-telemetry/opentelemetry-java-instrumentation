@@ -11,6 +11,7 @@ import static java.util.logging.Level.FINE;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.common.ComponentLoader;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricConfiguration;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricDef;
 import io.opentelemetry.instrumentation.jmx.internal.handler.HandlerRegistry;
@@ -33,6 +34,7 @@ public final class JmxTelemetryBuilder {
   private long discoveryDelayMs;
   private ComponentLoader componentLoader =
       ComponentLoader.forClassLoader(JmxTelemetryBuilder.class.getClassLoader());
+  private IncludeExclude metrics = IncludeExclude.builder().build();
 
   JmxTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -56,7 +58,8 @@ public final class JmxTelemetryBuilder {
   }
 
   /**
-   * Adds JMX rules from input stream
+   * Adds JMX rules from input stream, all metrics are included unless filtered out by the {@link
+   * #setMetrics(IncludeExclude)} method.
    *
    * @param input input to read rules from
    * @throws IllegalArgumentException when input is {@literal null} or can't be parsed
@@ -76,7 +79,8 @@ public final class JmxTelemetryBuilder {
   }
 
   /**
-   * Adds JMX rules from file system path
+   * Adds JMX rules from file system path, all metrics are included unless filtered out by the
+   * {@link #setMetrics(IncludeExclude)} method.
    *
    * @param path path to yaml file
    * @return builder instance
@@ -95,6 +99,23 @@ public final class JmxTelemetryBuilder {
     }
   }
 
+  /**
+   * Configures which JMX metrics are collected.
+   *
+   * <p>Matching is case-sensitive. {@code ?} matches one character and {@code *} matches any number
+   * of characters, including none. Excluded patterns take precedence over included patterns. A
+   * selector with no included patterns collects every metric that is not excluded, and an
+   * {@linkplain IncludeExclude#isEmpty() empty} selector collects every metric.
+   *
+   * @param metrics metric names to include and exclude
+   * @return builder instance
+   */
+  @CanIgnoreReturnValue
+  public JmxTelemetryBuilder setMetrics(IncludeExclude metrics) {
+    this.metrics = metrics;
+    return this;
+  }
+
   /** Sets the {@link ClassLoader} to be used to load SPI implementations. */
   @CanIgnoreReturnValue
   public JmxTelemetryBuilder setServiceClassLoader(ClassLoader serviceClassLoader) {
@@ -106,6 +127,8 @@ public final class JmxTelemetryBuilder {
   public JmxTelemetry build() {
     HandlerRegistry handlerRegistry = new HandlerRegistry();
     handlerRegistry.load(componentLoader);
-    return new JmxTelemetry(openTelemetry, discoveryDelayMs, metricConfiguration, handlerRegistry);
+
+    return new JmxTelemetry(
+        openTelemetry, discoveryDelayMs, metricConfiguration, handlerRegistry, metrics);
   }
 }
