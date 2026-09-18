@@ -683,6 +683,7 @@ public abstract class AbstractRedissonClientTest {
   @Tag(TEST_SINGLE_CONNECTION)
   void atomicBatchDiscard() throws ReflectiveOperationException {
     assumeStableAtomicBatchSupport();
+    Assumptions.assumeFalse(testLatestDeps());
     try {
       RBatch.class.getMethod("discard");
     } catch (NoSuchMethodException ignored) {
