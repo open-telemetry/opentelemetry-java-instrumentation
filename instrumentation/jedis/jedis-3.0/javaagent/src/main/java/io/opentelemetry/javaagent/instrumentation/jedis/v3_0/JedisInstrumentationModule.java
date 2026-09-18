@@ -33,7 +33,13 @@ public class JedisInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
+        new HostAndPortInstrumentation(),
         new JedisConnectionInstrumentation(),
+        new JedisFactoryInstrumentation(),
+        new ShardedJedisInstrumentation(),
+        new JedisSentinelPoolInstrumentation(),
+        new PoolResourceInstrumentation(),
+        new JedisClusterInstrumentation(),
         new JedisInstrumentation(),
         new JedisPipelineInstrumentation(),
         new JedisTransactionInstrumentation());
