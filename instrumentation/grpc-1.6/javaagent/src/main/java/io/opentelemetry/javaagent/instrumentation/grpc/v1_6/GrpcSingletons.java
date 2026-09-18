@@ -39,6 +39,8 @@ public class GrpcSingletons {
 
   private static final AtomicReference<Context.Storage> storageReference = new AtomicReference<>();
 
+  private static final boolean propagateGrpcDeadline;
+
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
     DeclarativeConfigProperties config =
@@ -48,6 +50,8 @@ public class GrpcSingletons {
 
     boolean experimentalSpanAttributes =
         config.getBoolean("experimental_span_attributes/development", false);
+
+    propagateGrpcDeadline = config.getBoolean("propagate_grpc_deadline", false);
 
     GrpcTelemetryBuilder telemetryBuilder =
         GrpcTelemetry.builder(openTelemetry)
@@ -81,7 +85,7 @@ public class GrpcSingletons {
   }
 
   public static Context.Storage setStorage(Context.Storage storage) {
-    storageReference.compareAndSet(null, new ContextStorageBridge(storage));
+    storageReference.compareAndSet(null, new ContextStorageBridge(propagateGrpcDeadline, storage));
     return storage();
   }
 
