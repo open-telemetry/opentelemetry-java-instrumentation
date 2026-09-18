@@ -45,7 +45,7 @@ tasks {
       excludeTestsMatching("SqsSuppressReceiveSpansTest")
     }
     jvmArgs(
-      "-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true",
+      "-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
       "-Dotel.semconv-stability.opt-in=database",
     )
   }
@@ -54,7 +54,7 @@ tasks {
     filter {
       excludeTestsMatching("SqsSuppressReceiveSpansTest")
     }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
   }
 
   check {
