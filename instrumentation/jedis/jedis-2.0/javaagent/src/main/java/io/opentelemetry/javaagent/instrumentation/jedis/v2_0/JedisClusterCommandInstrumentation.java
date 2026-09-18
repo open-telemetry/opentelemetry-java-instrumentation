@@ -77,11 +77,8 @@ class JedisClusterCommandInstrumentation implements TypeInstrumentation {
       if (adviceState == null) {
         return;
       }
-      try {
-        adviceState.commandContext.end(throwable);
-      } finally {
-        currentCommandContext().restore(adviceState.previousCommandContext);
-      }
+      currentCommandContext().restore(adviceState.previousCommandContext);
+      adviceState.commandContext.end(throwable);
     }
   }
 
