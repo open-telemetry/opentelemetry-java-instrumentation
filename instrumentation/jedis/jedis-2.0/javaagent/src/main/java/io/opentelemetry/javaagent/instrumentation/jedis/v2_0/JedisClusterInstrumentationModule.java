@@ -15,30 +15,27 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
+/**
+ * Cluster instrumentation is isolated from the core Jedis 2.x instrumentation so Muzzle can disable
+ * it independently before the cluster classes were added in Jedis 2.3.
+ */
 @AutoService(InstrumentationModule.class)
-public class JedisInstrumentationModule extends InstrumentationModule {
+public class JedisClusterInstrumentationModule extends InstrumentationModule {
 
-  public JedisInstrumentationModule() {
-    super("jedis", "jedis-2.0", "jedis-2.0-core");
+  public JedisClusterInstrumentationModule() {
+    super("jedis", "jedis-2.0", "jedis-2.3-cluster");
   }
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // added in 2.0
-    return hasClassesNamed("redis.clients.jedis.Response")
+    // added in 2.3
+    return hasClassesNamed("redis.clients.jedis.JedisClusterConnectionHandler")
         // added in 3.0
         .and(not(hasClassesNamed("redis.clients.jedis.commands.ProtocolCommand")));
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(
-        new JedisConnectionInstrumentation(),
-        new ShardedJedisInstrumentation(),
-        new JedisSentinelPoolInstrumentation(),
-        new PoolResourceInstrumentation(),
-        new JedisInstrumentation(),
-        new JedisPipelineInstrumentation(),
-        new JedisTransactionInstrumentation());
+    return asList(new JedisClusterInstrumentation(), new JedisClusterCommandInstrumentation());
   }
 }

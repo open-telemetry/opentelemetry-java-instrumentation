@@ -19,7 +19,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import java.util.Set;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -58,12 +57,10 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
         named("renewSlotCache"), getClass().getName() + "$RenewSlotCacheAdvice");
   }
 
-  // Cluster types are absent before Jedis 2.3, so their advice references are excluded from Muzzle.
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    @NoMuzzle
     public static void onExit(
         @Advice.This JedisClusterConnectionHandler handler,
         @Advice.Argument(0) @Nullable Set<?> nodes) {
@@ -76,7 +73,6 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    @NoMuzzle
     public static Scope onEnter(
         @Advice.This JedisClusterConnectionHandler handler,
         @Advice.Argument(0) @Nullable Set<?> nodes) {
@@ -87,7 +83,6 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    @NoMuzzle
     public static void onExit(
         @Advice.This JedisClusterConnectionHandler handler,
         @Advice.Thrown @Nullable Throwable throwable,
@@ -106,7 +101,6 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    @NoMuzzle
     public static Scope onEnter(@Advice.This JedisClusterConnectionHandler handler) {
       JedisClusterCommandContext.enterConnectionAcquisition();
       Context context =
@@ -131,7 +125,6 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    @NoMuzzle
     public static Scope onEnter(@Advice.This JedisClusterConnectionHandler handler) {
       Context context =
           JedisSingletons.configuredTargetContext(JedisClusterTargetAccessor.getTarget(handler));
