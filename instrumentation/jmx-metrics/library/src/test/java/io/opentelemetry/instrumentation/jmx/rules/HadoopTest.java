@@ -9,9 +9,9 @@ import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAtt
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
 import java.io.BufferedReader;
@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.time.Duration;
-import java.util.List;
+import java.util.Collection;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -28,19 +28,18 @@ import org.testcontainers.images.builder.Transferable;
 class HadoopTest extends TargetSystemTest {
 
   private static final String ENDPOINT_PLACEHOLDER = "<<ENDPOINT_PLACEHOLDER>>";
+  private static final String JMX_CONFIG_PLACEHOLDER = "<<JMX_CONFIG_PLACEHOLDER>>";
 
   @Test
   void testMetrics_Hadoop2x() throws IOException {
-    List<String> yamlFiles = singletonList("hadoop.yaml");
-
-    yamlFiles.forEach(this::validateYamlSyntax);
+    Collection<String> yamlFiles = getAllRulesForSystem("hadoop");
 
     // Hadoop startup script does not propagate env vars to launched hadoop daemons,
     // so all the env vars needs to be embedded inside the hadoop-env.sh file
     GenericContainer<?> target =
         new GenericContainer<>("bmedora/hadoop:2.9-base")
             .withCopyToContainer(
-                Transferable.of(readAndPreprocessEnvFile("hadoop2-env.sh")),
+                Transferable.of(readAndPreprocessEnvFile("hadoop2-env.sh", yamlFiles)),
                 "/hadoop/etc/hadoop/hadoop-env.sh")
             .withCreateContainerCmdModifier(cmd -> cmd.withHostName("test-host"))
             .withStartupTimeout(Duration.ofMinutes(3))
@@ -76,22 +75,24 @@ class HadoopTest extends TargetSystemTest {
     verifyMetrics(createMetricsVerifier());
   }
 
-  private String readAndPreprocessEnvFile(String fileName) throws IOException {
+  private String readAndPreprocessEnvFile(String fileName, Collection<String> yamlFiles)
+      throws IOException {
     try (InputStream input =
             requireNonNull(getClass().getClassLoader().getResourceAsStream(fileName));
         BufferedReader reader = new BufferedReader(new InputStreamReader(input, UTF_8))) {
+
+      String config = String.join(",", yamlFiles.stream().map(f -> "/" + f).collect(toList()));
       return reader
           .lines()
           .map(line -> line.replace(ENDPOINT_PLACEHOLDER, getOtlpEndpoint()))
+          .map(line -> line.replace(JMX_CONFIG_PLACEHOLDER, config))
           .collect(joining("\n"));
     }
   }
 
   @Test
   void testMetrics_Hadoop3x() throws IOException {
-    List<String> yamlFiles = singletonList("hadoop.yaml");
-
-    yamlFiles.forEach(this::validateYamlSyntax);
+    Collection<String> yamlFiles = getAllRulesForSystem("hadoop");
 
     // Hadoop startup script does not propagate env vars to launched hadoop daemons,
     // so all the env vars needs to be embedded inside the hadoop-env.sh file
@@ -99,7 +100,7 @@ class HadoopTest extends TargetSystemTest {
         new GenericContainer<>("loum/hadoop-pseudo:3.3.6")
             .withExposedPorts(9870, 9000)
             .withCopyToContainer(
-                Transferable.of(readAndPreprocessEnvFile("hadoop3-env.sh")),
+                Transferable.of(readAndPreprocessEnvFile("hadoop3-env.sh", yamlFiles)),
                 "/opt/hadoop/etc/hadoop/hadoop-env.sh")
             .withCreateContainerCmdModifier(cmd -> cmd.withHostName("test-host"))
             .waitingFor(
