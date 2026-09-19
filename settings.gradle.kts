@@ -2,7 +2,7 @@ pluginManagement {
   plugins {
     id("com.github.jk1.dependency-license-report") version "3.1.4"
     id("com.google.cloud.tools.jib") version "3.5.4"
-    id("com.gradle.plugin-publish") version "2.1.1"
+    id("com.gradle.plugin-publish") version "2.2.1"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
     id("org.jetbrains.kotlin.jvm") version "2.4.10"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
@@ -76,8 +76,10 @@ val shouldDisableLocalBuildCache =
   isRemoteBuildCachePushEnabled && System.getenv("GITHUB_REF_NAME") == "main"
 
 develocity {
-  server = develocityServer
   projectId = "OpenTelemetry"
+  if (develocityAccessKey.isNotEmpty()) {
+    server = develocityServer
+  }
 
   buildScan {
     if (develocityAccessKey.isNotEmpty()) {
@@ -115,6 +117,7 @@ buildCache {
     isEnabled = !shouldDisableLocalBuildCache
   }
   remote(develocity.buildCache) {
+    server = develocityServer
     isPush = isRemoteBuildCachePushEnabled
   }
 }
@@ -617,7 +620,9 @@ include(":instrumentation:reactor:reactor-netty:reactor-netty-1.0:javaagent")
 include(":instrumentation:reactor:reactor-netty:reactor-netty-1.0:javaagent-unit-tests")
 include(":instrumentation:rediscala-1.8:javaagent")
 include(":instrumentation:redisson:redisson-3.0:javaagent")
+include(":instrumentation:redisson:redisson-3.0:javaagent-unit-tests")
 include(":instrumentation:redisson:redisson-3.17:javaagent")
+include(":instrumentation:redisson:redisson-3.17:javaagent-unit-tests")
 include(":instrumentation:redisson:redisson-common-3.0:javaagent")
 include(":instrumentation:redisson:redisson-common-3.0:testing")
 include(":instrumentation:redisson:redisson-metrics-2.3:javaagent")

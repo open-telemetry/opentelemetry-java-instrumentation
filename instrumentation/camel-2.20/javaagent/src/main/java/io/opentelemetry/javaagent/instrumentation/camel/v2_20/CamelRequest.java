@@ -14,6 +14,7 @@ import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessag
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.javaagent.bootstrap.jms.JmsMessageDeliveryState;
+import io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators.DbSpanDecorator;
 import io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators.MessagingSpanDecorator;
 import javax.annotation.Nullable;
 import org.apache.camel.Endpoint;
@@ -70,6 +71,7 @@ abstract class CamelRequest {
         endpoint,
         camelDirection,
         spanKind,
+        spanDecorator instanceof DbSpanDecorator,
         messagingSystem,
         messagingDestination,
         messagingDestinationPartitionId,
@@ -132,6 +134,8 @@ abstract class CamelRequest {
   abstract CamelDirection getCamelDirection();
 
   abstract SpanKind getSpanKind();
+
+  abstract boolean isDatabase();
 
   boolean isMessaging() {
     return getMessagingSystem() != null;
