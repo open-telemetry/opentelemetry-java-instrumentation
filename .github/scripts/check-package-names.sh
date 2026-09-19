@@ -72,6 +72,8 @@ check_source_set() {
         instrumentation/hbase/hbase-client-common-1.0/javaagent/src/main/java/org/apache/hadoop/hbase/ipc) continue ;;
         instrumentation/jedis/jedis-4.0/javaagent/src/main/java/redis/clients/jedis) continue ;;
         instrumentation/reactor/reactor-netty/reactor-netty-1.0/javaagent/src/main/java/reactor/netty/http/client | instrumentation/reactor/reactor-netty/reactor-netty-1.0/javaagent/src/main/java/reactor/netty/http/client/*) continue ;;
+        instrumentation/redisson/redisson-3.0/javaagent/src/main/java/org/redisson/config) continue ;;
+        instrumentation/redisson/redisson-3.17/javaagent/src/main/java/org/redisson/config) continue ;;
         instrumentation/spring/spring-boot-resources/javaagent/src/main/java/io/opentelemetry/instrumentation/spring/resources) continue ;;
         instrumentation/spring/spring-webmvc/spring-webmvc-3.1/javaagent/src/main/java/org/springframework/web/servlet/v3_1 | instrumentation/spring/spring-webmvc/spring-webmvc-3.1/javaagent/src/main/java/org/springframework/web/servlet/v3_1/*) continue ;;
         instrumentation/spring/spring-webmvc/spring-webmvc-6.0/javaagent/src/main/java/org/springframework/web/servlet/v6_0 | instrumentation/spring/spring-webmvc/spring-webmvc-6.0/javaagent/src/main/java/org/springframework/web/servlet/v6_0/*) continue ;;
