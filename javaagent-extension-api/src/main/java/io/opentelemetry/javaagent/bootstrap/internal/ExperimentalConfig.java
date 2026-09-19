@@ -5,13 +5,12 @@
 
 package io.opentelemetry.javaagent.bootstrap.internal;
 
-import static java.util.Collections.emptyList;
-
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import java.util.List;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingConfig;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -23,7 +22,7 @@ public final class ExperimentalConfig {
       new ExperimentalConfig(GlobalOpenTelemetry.get());
 
   private final DeclarativeConfigProperties commonConfig;
-  private final List<String> messagingHeaders;
+  private final IncludeExclude messagingHeaders;
 
   /** Returns the global agent configuration. */
   public static ExperimentalConfig get() {
@@ -32,10 +31,7 @@ public final class ExperimentalConfig {
 
   public ExperimentalConfig(OpenTelemetry openTelemetry) {
     this.commonConfig = DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
-    this.messagingHeaders =
-        commonConfig
-            .get("messaging")
-            .getScalarList("capture_headers/development", String.class, emptyList());
+    this.messagingHeaders = MessagingConfig.getHeaders(openTelemetry);
   }
 
   public boolean controllerTelemetryEnabled() {
@@ -53,7 +49,11 @@ public final class ExperimentalConfig {
         .getBoolean("enabled", false);
   }
 
-  public List<String> getMessagingHeaders() {
+  /**
+   * Returns the messaging header selector, or an {@linkplain IncludeExclude#isEmpty() empty}
+   * selector when no headers should be captured.
+   */
+  public IncludeExclude getMessagingHeaders() {
     return messagingHeaders;
   }
 }

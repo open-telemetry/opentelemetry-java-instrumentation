@@ -14,6 +14,8 @@ configurations:
     description: Enables the capture of the experimental consumer attributes `kafka.record.queue_time_ms` and `messaging.kafka.bootstrap.servers`.
     type: boolean
     default: false
+  - ref: messaging.headers.included
+  - ref: messaging.headers.excluded
   - ref: messaging.capture-headers
   - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
     declarative_name: java.common.messaging.receive_telemetry/development.enabled

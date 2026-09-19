@@ -49,9 +49,9 @@ class ConcurrentKafkaListenerContainerFactoryPostProcessor implements BeanPostPr
   }
 
   @Nullable
-  private static <T> T readField(Object container, String filedName, Class<T> fieldType) {
+  private static <T> T readField(Object container, String fieldName, Class<T> fieldType) {
     try {
-      Field field = AbstractKafkaListenerContainerFactory.class.getDeclaredField(filedName);
+      Field field = AbstractKafkaListenerContainerFactory.class.getDeclaredField(fieldName);
       field.setAccessible(true);
       return fieldType.cast(field.get(container));
     } catch (Exception ignored) {

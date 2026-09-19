@@ -80,7 +80,7 @@ public final class CommonConfig {
         generalConfig
             .get("sanitization")
             .get("url")
-            .getScalarList("sensitive_query_parameters/development", String.class);
+            .getScalarList("sensitive_query_parameters", String.class);
     sensitiveQueryParameters =
         sensitiveQueryParameterList != null
             ? new HashSet<>(sensitiveQueryParameterList)

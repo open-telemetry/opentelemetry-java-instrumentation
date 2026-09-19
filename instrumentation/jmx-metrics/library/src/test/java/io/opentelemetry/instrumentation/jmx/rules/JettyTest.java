@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.jmx.rules;
 
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
@@ -62,6 +63,36 @@ class JettyTest extends TargetSystemTest {
     // Deploy example web application for session-related metrics
     copyTestWebAppToTarget(container, "/var/lib/jetty/webapps/ROOT.war");
 
+    List<String> reportedMetrics =
+        new ArrayList<>(
+            asList(
+                "jetty.thread.limit",
+                "jetty.thread.count",
+                "jetty.thread.queue.size",
+                "jetty.thread.busy.count",
+                "jetty.select.count",
+                "jetty.thread.idle.count"));
+
+    List<String> notReportedMetrics = new ArrayList<>();
+
+    if (jettyMajorVersion >= 12) {
+      reportedMetrics.add("jetty.session.count");
+      notReportedMetrics.add("jetty.session.created.count");
+      notReportedMetrics.add("jetty.session.duration.sum");
+    } else {
+      notReportedMetrics.add("jetty.session.count");
+      reportedMetrics.add("jetty.session.created.count");
+      reportedMetrics.add("jetty.session.duration.sum");
+    }
+
+    startWeaverValidation(
+        "jetty.yaml",
+        result ->
+            result
+                .checkNothingUnregisteredWithPrefix("jetty.")
+                .checkRegisteredMetrics("jetty.", reportedMetrics, notReportedMetrics)
+                .checkRegisteredAttributes("jetty.", singletonList("jetty.context"), emptyList()));
+
     startTarget(container);
 
     verifyMetrics(createMetricsVerifier(jettyMajorVersion));
@@ -76,7 +107,7 @@ class JettyTest extends TargetSystemTest {
                 metric ->
                     metric
                         .isUpDownCounter()
-                        .hasDescription("The current number of threads")
+                        .hasDescription("The current number of threads.")
                         .hasUnit("{thread}")
                         .hasDataPointsWithoutAttributes())
             .add(
@@ -84,7 +115,7 @@ class JettyTest extends TargetSystemTest {
                 metric ->
                     metric
                         .isUpDownCounter()
-                        .hasDescription("The configured maximum number of threads in the pool")
+                        .hasDescription("The configured maximum number of threads in the pool.")
                         .hasUnit("{thread}")
                         .hasDataPointsWithoutAttributes())
             .add(
@@ -92,7 +123,7 @@ class JettyTest extends TargetSystemTest {
                 metric ->
                     metric
                         .isUpDownCounter()
-                        .hasDescription("The current number of idle threads")
+                        .hasDescription("The current number of idle threads.")
                         .hasUnit("{thread}")
                         .hasDataPointsWithoutAttributes())
             .add(
@@ -100,7 +131,7 @@ class JettyTest extends TargetSystemTest {
                 metric ->
                     metric
                         .isUpDownCounter()
-                        .hasDescription("The current number of busy threads")
+                        .hasDescription("The current number of busy threads.")
                         .hasUnit("{thread}")
                         .hasDataPointsWithoutAttributes())
             .add(
@@ -108,15 +139,15 @@ class JettyTest extends TargetSystemTest {
                 metric ->
                     metric
                         .isUpDownCounter()
-                        .hasDescription("The current job queue size")
-                        .hasUnit("{thread}")
+                        .hasDescription("The current job queue size.")
+                        .hasUnit("{job}")
                         .hasDataPointsWithoutAttributes())
             .add(
                 "jetty.select.count",
                 metric ->
                     metric
                         .isCounter()
-                        .hasDescription("The number of select calls")
+                        .hasDescription("The number of select calls.")
                         .hasUnit("{operation}")
                         .hasDataPointsWithoutAttributes());
 
@@ -127,7 +158,7 @@ class JettyTest extends TargetSystemTest {
           metric ->
               metric
                   .isUpDownCounter()
-                  .hasDescription("Current number of active sessions")
+                  .hasDescription("Current number of active sessions.")
                   .hasUnit("{session}")
                   .hasDataPointsWithOneAttribute(contextAttribute));
     } else {
@@ -137,7 +168,7 @@ class JettyTest extends TargetSystemTest {
               metric ->
                   metric
                       .isCounter()
-                      .hasDescription("The total number of created sessions")
+                      .hasDescription("The total number of created sessions.")
                       .hasUnit("{session}")
                       .hasDataPointsWithOneAttribute(contextAttribute))
           .add(
@@ -145,7 +176,7 @@ class JettyTest extends TargetSystemTest {
               metric ->
                   metric
                       .isCounter()
-                      .hasDescription("The cumulated session duration")
+                      .hasDescription("The cumulated session duration.")
                       .hasUnit("s")
                       .hasDataPointsWithOneAttribute(contextAttribute));
     }

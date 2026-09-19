@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
 import io.opentelemetry.context.Context;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -67,6 +68,12 @@ public final class SqsMessageImpl implements SqsMessage {
   public String getMessageAttribute(String name) {
     MessageAttributeValue value = message.messageAttributes().get(name);
     return value != null ? value.stringValue() : null;
+  }
+
+  @Override
+  public Collection<String> getMessageAttributeNames() {
+    // the SDK message is immutable, so its attribute names can be returned directly
+    return message.messageAttributes().keySet();
   }
 
   @Override

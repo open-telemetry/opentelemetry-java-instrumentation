@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CLIENT_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_ANONYMOUS;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPLATE;
@@ -34,7 +35,9 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -48,6 +51,26 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class MessagingAttributesExtractorTest {
+
+  @Test
+  void shouldProvideSchemaUrl() {
+    AttributesExtractor<Map<String, String>, String> extractor =
+        MessagingAttributesExtractor.create(
+            TestGetter.INSTANCE, MessagingOperationType.SEND, "send");
+
+    assertThat(((SchemaUrlProvider) extractor).internalGetSchemaUrl())
+        .isEqualTo(emitStableMessagingSemconv() ? SchemaUrls.V1_43_0 : SchemaUrls.V1_24_0);
+  }
+
+  @SuppressWarnings("deprecation")
+  @Test
+  void deprecatedExtractorShouldProvideLegacySchemaUrl() {
+    AttributesExtractor<Map<String, String>, String> extractor =
+        MessagingAttributesExtractor.create(TestGetter.INSTANCE, MessageOperation.PUBLISH);
+
+    assertThat(((SchemaUrlProvider) extractor).internalGetSchemaUrl())
+        .isEqualTo(SchemaUrls.V1_24_0);
+  }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest
@@ -116,7 +139,7 @@ class MessagingAttributesExtractorTest {
       expectedEntries.add(entry(MESSAGING_OPERATION, operationType.legacyOperationName()));
     }
     if (emitStableMessagingSemconv()) {
-      expectedEntries.add(entry(stringKey("messaging.client.id"), "43"));
+      expectedEntries.add(entry(MESSAGING_CLIENT_ID, "43"));
       expectedEntries.add(entry(MESSAGING_OPERATION_NAME, operationName));
       expectedEntries.add(entry(MESSAGING_OPERATION_TYPE, operationType.value()));
     }
@@ -176,11 +199,7 @@ class MessagingAttributesExtractorTest {
   void shouldReturnSpanKey(MessagingOperationType operationType, SpanKey spanKey) {
     MessagingAttributesExtractor<Map<String, String>, String> underTest =
         new MessagingAttributesExtractor<>(
-            TestGetter.INSTANCE,
-            operationType,
-            operationType.legacyOperationName(),
-            true,
-            new ArrayList<>());
+            TestGetter.INSTANCE, operationType, operationType.legacyOperationName(), true, null);
 
     assertThat(underTest.internalGetSpanKey()).isSameAs(spanKey);
   }
@@ -249,7 +268,7 @@ class MessagingAttributesExtractorTest {
     assertThat(attributes.build()).isEqualTo(expected);
   }
 
-  @SuppressWarnings("OtelDeprecatedApiUsage")
+  @SuppressWarnings("deprecation")
   @Test
   void shouldExtractNoAttributesIfNoneAreAvailable() {
     // given

@@ -1,0 +1,28 @@
+display_name: Tomcat DBCP
+description: >
+  This instrumentation enables database connection pool metrics for Tomcat DBCP.
+
+  The auto-instrumentation registers metrics when the connection pool is initialized
+  (`BasicDataSource.startPoolMaintenance()`) or when `BasicDataSource.preRegister(...)` is invoked
+  during MBean registration, whichever comes first, and unregisters them when the
+  `BasicDataSource` is closed. JMX registration is not required. When a JMX `ObjectName` is
+  available, its `name` property is used as the pool name; if the property is absent, the full
+  `ObjectName` is used. Otherwise, the JDBC URL and connection properties are used to derive
+  `server.address[:server.port][/db.namespace]`. If neither server address nor database namespace
+  is available, `tomcat-dbcp` is used. A pool registered as an MBean after it has already started
+  switches from the derived name to the `ObjectName`-based name.
+library_link: https://tomcat.apache.org/tomcat-8.5-doc/api/org/apache/tomcat/dbcp/dbcp2/BasicDataSource.html
+semantic_conventions:
+  - DATABASE_POOL_METRICS
+configurations:
+  - name: otel.semconv-stability.opt-in
+    declarative_name: general.stability_opt_in_list
+    description: >
+      Opt-in to emit stable semantic conventions instead of the old
+      experimental semantic conventions. Accepts a comma-separated list of semantic convention
+      groups (e.g., `database`, `http`, `messaging`). Use `<group>/dup` to emit both old and new
+      conventions simultaneously. Stable semantic conventions will become the default in version
+      3.0 of the agent.
+    type: list
+    declarative_type: string
+    default: ""

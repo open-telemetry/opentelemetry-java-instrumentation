@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.databaseSchemaUrl;
 
 import com.lambdaworks.redis.ReactiveCommandDispatcher;
 import com.lambdaworks.redis.RedisChannelHandler;
@@ -51,14 +52,30 @@ public class LettuceSingletons {
   public static final VirtualField<RedisCommand<?, ?, ?>, InetSocketAddress> COMMAND_ADDRESS =
       VirtualField.find(RedisCommand.class, InetSocketAddress.class);
 
+  public static final VirtualField<RedisChannelHandler<?, ?>, Integer> CONNECTION_DATABASE_INDEX =
+      VirtualField.find(RedisChannelHandler.class, Integer.class);
+
+  public static final VirtualField<RedisCommand<?, ?, ?>, Integer> COMMAND_DATABASE_INDEX =
+      VirtualField.find(RedisCommand.class, Integer.class);
+
   static {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
+    // Redis semantic conventions don't follow the regular pattern of adding db.namespace to the
+    // span name.
+    LettuceDbAttributesGetter spanNameAttributesGetter =
+        new LettuceDbAttributesGetter() {
+          @Override
+          @Nullable
+          public String getDbNamespace(RedisCommand<?, ?, ?> request) {
+            return null;
+          }
+        };
 
     InstrumenterBuilder<RedisCommand<?, ?, ?>, Void> builder =
         Instrumenter.<RedisCommand<?, ?, ?>, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(dbAttributesGetter))
+                DbClientSpanNameExtractor.create(spanNameAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(builder);
@@ -66,11 +83,19 @@ public class LettuceSingletons {
     instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
 
     LettuceBatchAttributesGetter batchAttributesGetter = new LettuceBatchAttributesGetter();
+    LettuceBatchAttributesGetter batchSpanNameAttributesGetter =
+        new LettuceBatchAttributesGetter() {
+          @Override
+          @Nullable
+          public String getDbNamespace(LettuceBatchRequest request) {
+            return null;
+          }
+        };
     InstrumenterBuilder<LettuceBatchRequest, Void> batchBuilder =
         Instrumenter.<LettuceBatchRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(batchAttributesGetter))
+                DbClientSpanNameExtractor.create(batchSpanNameAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(batchAttributesGetter))
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(batchBuilder);
@@ -87,6 +112,7 @@ public class LettuceSingletons {
                 ServicePeerAttributesExtractor.create(
                     netAttributesGetter, GlobalOpenTelemetry.get()))
             .addAttributesExtractor(new LettuceConnectAttributesExtractor())
+            .setSchemaUrl(databaseSchemaUrl())
             .setEnabled(
                 DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "lettuce")
                     .get("connection_telemetry")
@@ -109,12 +135,20 @@ public class LettuceSingletons {
   public static void attachAddress(
       RedisCommand<?, ?, ?> command, StatefulConnection<?, ?> connection) {
     COMMAND_ADDRESS.set(command, serverAddress(connection));
+    COMMAND_DATABASE_INDEX.set(command, databaseIndex(connection));
   }
 
   @Nullable
   static InetSocketAddress serverAddress(StatefulConnection<?, ?> connection) {
     return connection instanceof RedisChannelHandler
         ? CONNECTION_ADDRESS.get((RedisChannelHandler<?, ?>) connection)
+        : null;
+  }
+
+  @Nullable
+  static Integer databaseIndex(StatefulConnection<?, ?> connection) {
+    return connection instanceof RedisChannelHandler
+        ? CONNECTION_DATABASE_INDEX.get((RedisChannelHandler<?, ?>) connection)
         : null;
   }
 

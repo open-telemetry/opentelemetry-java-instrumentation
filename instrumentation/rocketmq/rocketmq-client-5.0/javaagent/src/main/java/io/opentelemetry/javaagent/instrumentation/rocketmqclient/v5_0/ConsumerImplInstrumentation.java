@@ -13,6 +13,7 @@ import apache.rocketmq.v2.ReceiveMessageRequest;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.time.Duration;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -34,7 +35,7 @@ final class ConsumerImplInstrumentation implements TypeInstrumentation {
             .and(takesArguments(3))
             .and(takesArgument(0, named("apache.rocketmq.v2.ReceiveMessageRequest")))
             .and(takesArgument(1, named("org.apache.rocketmq.client.java.route.MessageQueueImpl")))
-            .and(takesArgument(2, named("java.time.Duration"))),
+            .and(takesArgument(2, Duration.class)),
         getClass().getName() + "$ReceiveMessageAdvice");
   }
 
@@ -42,7 +43,12 @@ final class ConsumerImplInstrumentation implements TypeInstrumentation {
   public static class ReceiveMessageAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Timer onStart() {
+    public static Timer onStart(@Advice.This Object consumer) {
+      // SimpleConsumer receives are recorded at the application-facing SimpleConsumerImpl level
+      // under stable/v3 semconv, so the per-queue calls underneath are not recorded again.
+      if (SimpleConsumerReceiveOperation.handlesReceive(consumer)) {
+        return null;
+      }
       return Timer.start();
     }
 
@@ -51,6 +57,9 @@ final class ConsumerImplInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) ReceiveMessageRequest request,
         @Advice.Enter Timer timer,
         @Advice.Return ListenableFuture<ReceiveMessageResult> future) {
+      if (timer == null) {
+        return;
+      }
       ReceiveSpanFinishingCallback spanFinishingCallback =
           new ReceiveSpanFinishingCallback(request, timer);
       Futures.addCallback(future, spanFinishingCallback, MoreExecutors.directExecutor());

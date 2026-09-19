@@ -11,6 +11,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -33,6 +34,11 @@ final class JavaHttpClientAttributesGetter
   }
 
   @Override
+  public Collection<String> getHttpRequestHeaderNames(HttpRequest httpRequest) {
+    return httpRequest.headers().map().keySet();
+  }
+
+  @Override
   public Integer getHttpResponseStatusCode(
       HttpRequest httpRequest, HttpResponse<?> httpResponse, @Nullable Throwable error) {
     return httpResponse.statusCode();
@@ -42,6 +48,12 @@ final class JavaHttpClientAttributesGetter
   public List<String> getHttpResponseHeader(
       HttpRequest httpRequest, HttpResponse<?> httpResponse, String name) {
     return httpResponse.headers().allValues(name);
+  }
+
+  @Override
+  public Collection<String> getHttpResponseHeaderNames(
+      HttpRequest httpRequest, HttpResponse<?> httpResponse) {
+    return httpResponse.headers().map().keySet();
   }
 
   @Override

@@ -8,7 +8,11 @@ package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
@@ -100,5 +104,24 @@ class RocketMqConsumerAttributeGetterTest {
     // merging the headers of every message into one attribute would lose which message each value
     // came from, so they belong on the span links instead
     assertThat(getter.getMessageHeader(request, "test-header")).isEmpty();
+  }
+
+  @Test
+  void lazilyComputesOnlyRequestedBatchAttribute() {
+    MessageExt first = mock(MessageExt.class);
+    MessageExt second = mock(MessageExt.class);
+    when(first.getTopic()).thenReturn("topic");
+    when(second.getTopic()).thenReturn("topic");
+    clearInvocations(first, second);
+
+    RocketMqConsumerRequest request =
+        new RocketMqConsumerRequest(asList(first, second), "consumer-group", 2, null);
+
+    verifyNoInteractions(first, second);
+    assertThat(request.getDestination()).isEqualTo("topic");
+    assertThat(request.getDestination()).isEqualTo("topic");
+    verify(first).getTopic();
+    verify(second).getTopic();
+    verifyNoMoreInteractions(first, second);
   }
 }

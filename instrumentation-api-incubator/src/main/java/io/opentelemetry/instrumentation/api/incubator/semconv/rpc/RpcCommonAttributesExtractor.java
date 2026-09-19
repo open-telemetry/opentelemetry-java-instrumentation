@@ -7,18 +7,22 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.rpcSchemaUrl;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import javax.annotation.Nullable;
 
 abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
-    implements AttributesExtractor<REQUEST, RESPONSE> {
+    implements AttributesExtractor<REQUEST, RESPONSE>, SchemaUrlProvider {
 
   static final AttributeKey<String> RPC_METHOD = AttributeKey.stringKey("rpc.method");
+  private static final AttributeKey<String> RPC_METHOD_ORIGINAL =
+      AttributeKey.stringKey("rpc.method_original");
 
   // Stable semconv keys
   static final AttributeKey<String> RPC_SYSTEM_NAME = AttributeKey.stringKey("rpc.system.name");
@@ -42,6 +46,7 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
     if (emitStableRpcSemconv()) {
       attributes.put(RPC_SYSTEM_NAME, getter.getRpcSystemName(request));
       attributes.put(RPC_METHOD, getter.getRpcMethod(request));
+      attributes.put(RPC_METHOD_ORIGINAL, getter.getRpcMethodOriginal(request));
     }
 
     if (emitOldRpcSemconv()) {
@@ -69,5 +74,10 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
       }
       attributes.put(ERROR_TYPE, errorType);
     }
+  }
+
+  @Override
+  public final String internalGetSchemaUrl() {
+    return rpcSchemaUrl();
   }
 }

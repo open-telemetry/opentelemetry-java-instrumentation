@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson.v3_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.redisson.v3_0.RedissonSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -16,6 +15,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.EndOperationListener;
 import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.PromiseWrapper;
 import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.RedissonRequest;
+import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.RedissonServerTargets;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -52,12 +52,14 @@ class RedisConnectionInstrumentation implements TypeInstrumentation {
       public static AdviceScope start(RedisConnection connection, Object arg) {
         InetSocketAddress remoteAddress =
             (InetSocketAddress) connection.getChannel().remoteAddress();
-        RedissonRequest request = RedissonRequest.create(remoteAddress, arg);
+        // the redisson 3.0 client API does not expose the database index
+        RedissonRequest request =
+            RedissonRequest.create(remoteAddress, arg, null, RedissonServerTargets.get(connection));
         PromiseWrapper<?> promise = request.getPromiseWrapper();
         if (promise == null) {
           return null;
         }
-        Context parentContext = currentContext();
+        Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;
         }

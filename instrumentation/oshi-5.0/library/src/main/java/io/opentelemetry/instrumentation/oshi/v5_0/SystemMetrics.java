@@ -27,6 +27,7 @@ public final class SystemMetrics {
   private static final AttributeKey<String> DEVICE_KEY = AttributeKey.stringKey("device");
   private static final AttributeKey<String> DIRECTION_KEY = AttributeKey.stringKey("direction");
 
+  // copied from OtherIncubatingAttributes
   private static final AttributeKey<String> STATE_KEY = AttributeKey.stringKey("state");
 
   private static final Attributes ATTRIBUTES_USED = Attributes.of(STATE_KEY, "used");

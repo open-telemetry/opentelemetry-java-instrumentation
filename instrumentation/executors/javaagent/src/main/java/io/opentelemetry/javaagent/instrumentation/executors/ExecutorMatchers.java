@@ -16,7 +16,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -102,7 +101,7 @@ final class ExecutorMatchers {
     combined.addAll(
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "executors")
             .getScalarList("include", String.class, emptyList()));
-    INSTRUMENTED_EXECUTOR_NAMES = Collections.unmodifiableSet(combined);
+    INSTRUMENTED_EXECUTOR_NAMES = combined;
 
     INSTRUMENTED_EXECUTOR_PREFIXES = singletonList("slick.util.AsyncExecutor$");
   }

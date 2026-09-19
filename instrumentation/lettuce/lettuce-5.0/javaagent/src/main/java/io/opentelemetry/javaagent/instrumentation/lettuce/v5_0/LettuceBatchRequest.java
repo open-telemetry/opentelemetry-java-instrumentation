@@ -8,12 +8,12 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Collections.emptyList;
 
-import io.lettuce.core.RedisURI;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter;
+import java.net.InetSocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -26,26 +26,32 @@ final class LettuceBatchRequest {
   private final String operationName;
   @Nullable private final String queryText;
   @Nullable private final Long batchSize;
-  @Nullable private final RedisURI redisUri;
+  @Nullable private final InetSocketAddress serverAddress;
+  @Nullable private final Integer databaseIndex;
 
   private LettuceBatchRequest(
       String operationName,
       @Nullable String queryText,
       @Nullable Long batchSize,
-      @Nullable RedisURI redisUri) {
+      @Nullable InetSocketAddress serverAddress,
+      @Nullable Integer databaseIndex) {
     this.operationName = operationName;
     this.queryText = queryText;
     this.batchSize = batchSize;
-    this.redisUri = redisUri;
+    this.serverAddress = serverAddress;
+    this.databaseIndex = databaseIndex;
   }
 
   static LettuceBatchRequest create(
-      List<RedisCommand<?, ?, ?>> commands, @Nullable RedisURI redisUri) {
+      List<RedisCommand<?, ?, ?>> commands,
+      @Nullable InetSocketAddress serverAddress,
+      @Nullable Integer databaseIndex) {
     return new LettuceBatchRequest(
         operationName(commands),
         queryText(commands),
         commands.size() != 1 ? (long) commands.size() : null,
-        redisUri);
+        serverAddress,
+        databaseIndex);
   }
 
   String getOperationName() {
@@ -63,8 +69,13 @@ final class LettuceBatchRequest {
   }
 
   @Nullable
-  RedisURI getRedisUri() {
-    return redisUri;
+  InetSocketAddress getServerAddress() {
+    return serverAddress;
+  }
+
+  @Nullable
+  Integer getDatabaseIndex() {
+    return databaseIndex;
   }
 
   private static String operationName(List<RedisCommand<?, ?, ?>> commands) {

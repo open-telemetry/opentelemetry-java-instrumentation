@@ -1,8 +1,7 @@
 """Shared paths for the flaky-test-remediation toolkit.
 
-All intermediate files live under ``build/flaky-test-remediation/`` (gitignored). The
-workflow and ``run-local.py`` both rely on this layout; do not change a path
-here without also updating both.
+All intermediate files live under ``build/flaky-test-remediation/`` (gitignored).
+The workflow relies on this layout; keep its artifact paths in sync with changes here.
 """
 
 from pathlib import Path

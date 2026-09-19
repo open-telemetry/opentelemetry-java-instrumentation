@@ -62,7 +62,7 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
       }
 
       public static AdviceScope captureForBatching(AbstractRedisAsyncCommands<?, ?> commands) {
-        Context parentContext = currentContext();
+        Context parentContext = Context.current();
         // batch spans start on flush, but AsyncCommand construction still needs the dispatch
         // caller context so callbacks run under it
         Context context = parentContext.with(COMMAND_CONTEXT_KEY, parentContext);

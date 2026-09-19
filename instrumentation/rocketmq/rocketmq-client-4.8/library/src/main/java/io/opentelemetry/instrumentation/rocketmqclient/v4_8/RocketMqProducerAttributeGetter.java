@@ -10,7 +10,10 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 import org.apache.rocketmq.client.producer.SendResult;
@@ -118,5 +121,15 @@ final class RocketMqProducerAttributeGetter
       return singletonList(value);
     }
     return emptyList();
+  }
+
+  @Override
+  public Collection<String> getMessageHeaderNames(SendMessageContext request) {
+    Message message = request.getMessage();
+    if (message == null) {
+      return emptyList();
+    }
+    Map<String, String> properties = message.getProperties();
+    return properties == null ? emptyList() : new ArrayList<>(properties.keySet());
   }
 }

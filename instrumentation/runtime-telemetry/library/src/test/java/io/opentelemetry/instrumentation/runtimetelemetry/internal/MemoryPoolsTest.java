@@ -5,7 +5,8 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.semconv.JvmAttributes.JVM_MEMORY_POOL_NAME;
+import static io.opentelemetry.semconv.JvmAttributes.JVM_MEMORY_TYPE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.mockito.ArgumentMatchers.any;
@@ -91,14 +92,13 @@ class MemoryPoolsTest {
                             point ->
                                 point
                                     .hasValue(11)
-                                    .hasAttribute(stringKey("jvm.memory.pool.name"), "heap_pool")
-                                    .hasAttribute(stringKey("jvm.memory.type"), "heap"),
+                                    .hasAttribute(JVM_MEMORY_POOL_NAME, "heap_pool")
+                                    .hasAttribute(JVM_MEMORY_TYPE, "heap"),
                             point ->
                                 point
                                     .hasValue(15)
-                                    .hasAttribute(
-                                        stringKey("jvm.memory.pool.name"), "non_heap_pool")
-                                    .hasAttribute(stringKey("jvm.memory.type"), "non_heap"))));
+                                    .hasAttribute(JVM_MEMORY_POOL_NAME, "non_heap_pool")
+                                    .hasAttribute(JVM_MEMORY_TYPE, "non_heap"))));
     testing.waitAndAssertMetrics(
         "test",
         metric ->
@@ -112,14 +112,13 @@ class MemoryPoolsTest {
                             point ->
                                 point
                                     .hasValue(12)
-                                    .hasAttribute(stringKey("jvm.memory.pool.name"), "heap_pool")
-                                    .hasAttribute(stringKey("jvm.memory.type"), "heap"),
+                                    .hasAttribute(JVM_MEMORY_POOL_NAME, "heap_pool")
+                                    .hasAttribute(JVM_MEMORY_TYPE, "heap"),
                             point ->
                                 point
                                     .hasValue(16)
-                                    .hasAttribute(
-                                        stringKey("jvm.memory.pool.name"), "non_heap_pool")
-                                    .hasAttribute(stringKey("jvm.memory.type"), "non_heap"))));
+                                    .hasAttribute(JVM_MEMORY_POOL_NAME, "non_heap_pool")
+                                    .hasAttribute(JVM_MEMORY_TYPE, "non_heap"))));
     testing.waitAndAssertMetrics(
         "test",
         metric ->
@@ -133,14 +132,13 @@ class MemoryPoolsTest {
                             point ->
                                 point
                                     .hasValue(13)
-                                    .hasAttribute(stringKey("jvm.memory.pool.name"), "heap_pool")
-                                    .hasAttribute(stringKey("jvm.memory.type"), "heap"),
+                                    .hasAttribute(JVM_MEMORY_POOL_NAME, "heap_pool")
+                                    .hasAttribute(JVM_MEMORY_TYPE, "heap"),
                             point ->
                                 point
                                     .hasValue(17)
-                                    .hasAttribute(
-                                        stringKey("jvm.memory.pool.name"), "non_heap_pool")
-                                    .hasAttribute(stringKey("jvm.memory.type"), "non_heap"))));
+                                    .hasAttribute(JVM_MEMORY_POOL_NAME, "non_heap_pool")
+                                    .hasAttribute(JVM_MEMORY_TYPE, "non_heap"))));
     testing.waitAndAssertMetrics(
         "test",
         metric ->
@@ -155,14 +153,13 @@ class MemoryPoolsTest {
                             point ->
                                 point
                                     .hasValue(18)
-                                    .hasAttribute(stringKey("jvm.memory.pool.name"), "heap_pool")
-                                    .hasAttribute(stringKey("jvm.memory.type"), "heap"),
+                                    .hasAttribute(JVM_MEMORY_POOL_NAME, "heap_pool")
+                                    .hasAttribute(JVM_MEMORY_TYPE, "heap"),
                             point ->
                                 point
                                     .hasValue(19)
-                                    .hasAttribute(
-                                        stringKey("jvm.memory.pool.name"), "non_heap_pool")
-                                    .hasAttribute(stringKey("jvm.memory.type"), "non_heap"))));
+                                    .hasAttribute(JVM_MEMORY_POOL_NAME, "non_heap_pool")
+                                    .hasAttribute(JVM_MEMORY_TYPE, "non_heap"))));
   }
 
   @Test
@@ -172,8 +169,8 @@ class MemoryPoolsTest {
 
     Consumer<ObservableLongMeasurement> callback =
         MemoryPools.callback(
-            stringKey("jvm.memory.pool.name"),
-            stringKey("jvm.memory.type"),
+            JVM_MEMORY_POOL_NAME,
+            JVM_MEMORY_TYPE,
             beans,
             MemoryPoolMXBean::getUsage,
             MemoryUsage::getUsed);
@@ -202,8 +199,8 @@ class MemoryPoolsTest {
 
     Consumer<ObservableLongMeasurement> callback =
         MemoryPools.callback(
-            stringKey("jvm.memory.pool.name"),
-            stringKey("jvm.memory.type"),
+            JVM_MEMORY_POOL_NAME,
+            JVM_MEMORY_TYPE,
             beans,
             MemoryPoolMXBean::getUsage,
             MemoryUsage::getMax);
@@ -225,8 +222,8 @@ class MemoryPoolsTest {
 
     Consumer<ObservableLongMeasurement> callback =
         MemoryPools.callback(
-            stringKey("jvm.memory.pool.name"),
-            stringKey("jvm.memory.type"),
+            JVM_MEMORY_POOL_NAME,
+            JVM_MEMORY_TYPE,
             singletonList(heapPoolBean),
             MemoryPoolMXBean::getCollectionUsage,
             MemoryUsage::getUsed);

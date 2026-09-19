@@ -189,7 +189,10 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
     @Override
     public String extract(REQUEST request) {
       SqlDialect dialect = getter.getSqlDialect(request);
-      Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
+      Collection<String> rawQueryTexts =
+          emitStableDatabaseSemconv()
+              ? getter.getRawQueryTexts(request)
+              : getter.getRawQueryTextsForOldSemconv(request);
 
       if (rawQueryTexts.isEmpty()) {
         if (emitStableDatabaseSemconv()) {
@@ -274,7 +277,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
       // For old semconv, use the generic span name format (operation + db.name)
       // without collection name to preserve backward compatibility
       String dbName = getter.getDbName(request);
-      Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
+      Collection<String> rawQueryTexts = getter.getRawQueryTextsForOldSemconv(request);
       String operationName = null;
       if (rawQueryTexts.size() == 1) {
         String rawQuery = rawQueryTexts.iterator().next();

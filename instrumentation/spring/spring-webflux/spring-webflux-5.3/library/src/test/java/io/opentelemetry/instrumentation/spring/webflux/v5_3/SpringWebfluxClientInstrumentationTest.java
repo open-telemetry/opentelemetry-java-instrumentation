@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.v5_3;
 
-import static java.util.Collections.singletonList;
-
 import io.opentelemetry.instrumentation.spring.webflux.client.AbstractSpringWebfluxClientInstrumentationTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
@@ -24,14 +22,9 @@ class SpringWebfluxClientInstrumentationTest
   protected WebClient.Builder instrument(WebClient.Builder builder) {
     SpringWebfluxClientTelemetry instrumentation =
         SpringWebfluxClientTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedRequestHeaders(singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
-            .setCapturedResponseHeaders(singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
+            .setRequestHeaders(AbstractHttpClientTest.TEST_HEADERS)
+            .setResponseHeaders(AbstractHttpClientTest.TEST_HEADERS)
             .build();
     return builder.filters(instrumentation::addFilterAndRegisterReactorHook);
-  }
-
-  @Override
-  protected boolean hasServicePeerName() {
-    return false;
   }
 }

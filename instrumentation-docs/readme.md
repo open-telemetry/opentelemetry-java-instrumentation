@@ -247,14 +247,17 @@ disabled_by_default: true                         # Defaults to `false`
 classification: internal                          # instrumentation classification: library | internal | custom
 library_link: https://...                         # URL to the library or framework's main website or documentation
 configurations:
+  # Do not add a general enabled/disabled config for the whole module here (for example
+  # `otel.instrumentation.my-module.enabled`) — modules are assumed enabled unless
+  # `disabled_by_default: true` is set above.
   # Reference a shared definition instead of hand-copying a common config block. The id must exist
   # in instrumentation-docs/src/main/resources/shared-config-definitions.yaml (an unknown ref fails
   # the build). See "Shared configuration definitions" below.
   - ref: common.db.query-sanitization.enabled
   # Module-specific configs are still defined inline:
-  - name: otel.instrumentation.my-module.enabled
-    declarative_name: java.my_module.enabled    # Optional: YAML config path
-    description: Enables the my-module feature.
+  - name: otel.instrumentation.my-module.some-feature
+    declarative_name: java.my_module.some_feature    # Optional: YAML config path
+    description: Enables the some-feature capability.
     type: boolean               # boolean | string | list | map (the flat form)
     default: true
     examples:                   # Optional: Example values for this configuration
@@ -274,9 +277,11 @@ configurations:
         pattern:
           type: string
           description: Regular expression matched against the request URL.
+          example: '/users/\d+'
         template:
           type: string
           description: Template used to derive the low-cardinality route.
+          example: '/users/{id}'
         override:
           type: boolean
           default: false
@@ -328,6 +333,34 @@ We parse gradle files in order to determine several pieces of metadata:
 - Javaagent versions are determined by the `muzzle` plugin configurations
 - Standalone Library versions are identified, but we do not try and parse version ranges
 - Minimum Java version is determined by the `otelJava` configurations
+
+#### Excluding a muzzle directive from the docs
+
+Every `pass { ... }` block contributes a line to `javaagent_target_versions`. Some pass blocks exist
+only to verify a sub-range or an alternate dependency set, and publishing their version range
+alongside the module's real range is misleading. Add a `// instrumentation-docs:ignore` comment
+inside such a block to leave it out of the generated documentation:
+
+```kotlin
+muzzle {
+  pass {
+    group.set("com.couchbase.client")
+    module.set("java-client")
+    versions.set("[2,3)")
+  }
+  pass {
+    // instrumentation-docs:ignore - verification only, the [2,3) directive above is the range we document
+    name.set("Pre-2.6 network instrumentation")
+    group.set("com.couchbase.client")
+    module.set("java-client")
+    versions.set("[2,2.6)")
+  }
+}
+```
+
+The comment must appear inside the `pass` block; placing it first is recommended. A comment above
+`pass {` is not honored.
+The marker has no effect on muzzle itself, only on the generated `instrumentation-list.yaml`.
 
 ### Scope
 

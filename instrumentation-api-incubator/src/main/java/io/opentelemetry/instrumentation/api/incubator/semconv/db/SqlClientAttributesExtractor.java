@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.databaseSchemaUrl;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.stableDbSystemName;
@@ -21,6 +22,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
@@ -41,7 +43,7 @@ import javax.annotation.Nullable;
  * statement parameters are removed.
  */
 public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
-    implements AttributesExtractor<REQUEST, RESPONSE>, SpanKeyProvider {
+    implements AttributesExtractor<REQUEST, RESPONSE>, SchemaUrlProvider, SpanKeyProvider {
 
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_NAME = AttributeKey.stringKey("db.name");
@@ -97,7 +99,6 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   @SuppressWarnings("deprecation") // until old db semconv are dropped
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
     SqlDialect dialect = getter.getSqlDialect(request);
 
     Long batchSize = getter.getDbOperationBatchSize(request);
@@ -106,8 +107,9 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     boolean isBatch = batchSize != null && batchSize != 1;
 
     if (emitOldDatabaseSemconv()) {
-      if (rawQueryTexts.size() == 1) { // for backcompat(?)
-        String rawQueryText = rawQueryTexts.iterator().next();
+      Collection<String> oldSemconvRawQueryTexts = getter.getRawQueryTextsForOldSemconv(request);
+      if (oldSemconvRawQueryTexts.size() == 1) { // for backcompat(?)
+        String rawQueryText = oldSemconvRawQueryTexts.iterator().next();
         SqlQuery analyzedQuery = SqlQueryAnalyzerUtil.analyze(rawQueryText, dialect);
         String operationName = analyzedQuery.getOperationName();
         attributes.put(
@@ -120,6 +122,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     }
 
     if (emitStableDatabaseSemconv()) {
+      Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
       if (isBatch) {
         attributes.put(DB_OPERATION_BATCH_SIZE, batchSize);
       }
@@ -214,5 +217,10 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public SpanKey internalGetSpanKey() {
     return SpanKey.DB_CLIENT;
+  }
+
+  @Override
+  public String internalGetSchemaUrl() {
+    return databaseSchemaUrl();
   }
 }

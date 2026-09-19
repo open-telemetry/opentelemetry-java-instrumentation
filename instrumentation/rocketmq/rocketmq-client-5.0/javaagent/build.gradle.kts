@@ -46,6 +46,34 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
 
+  val testMessagingPreviewReceiveTelemetryDisabled =
+    register<Test>("testMessagingPreviewReceiveTelemetryDisabled") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+      filter {
+        includeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
+      }
+      include("**/RocketMqClientSuppressReceiveSpanTest.*")
+      jvmArgs("-Dotel.semconv-stability.preview=messaging")
+      systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+    }
+
+  // A SimpleConsumer pull has no process span, so it gets a receive span even when receive
+  // telemetry is disabled by default.
+  val testSimpleConsumerReceiveTelemetryDisabled =
+    register<Test>("testSimpleConsumerReceiveTelemetryDisabled") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+      filter {
+        includeTestsMatching(
+          "RocketMqSimpleConsumerTest.shouldInstrumentReceiveWhenReceiveTelemetryDisabled",
+        )
+      }
+      include("**/RocketMqSimpleConsumerTest.*")
+      jvmArgs("-Dotel.semconv-stability.preview=messaging")
+      systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+    }
+
   val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -70,7 +98,13 @@ tasks {
   }
 
   check {
-    dependsOn(testReceiveSpanDisabled, testMessagingPreview, testBothSemconv)
+    dependsOn(
+      testReceiveSpanDisabled,
+      testMessagingPreview,
+      testMessagingPreviewReceiveTelemetryDisabled,
+      testSimpleConsumerReceiveTelemetryDisabled,
+      testBothSemconv,
+    )
   }
 
   if (otelProps.denyUnsafe) {

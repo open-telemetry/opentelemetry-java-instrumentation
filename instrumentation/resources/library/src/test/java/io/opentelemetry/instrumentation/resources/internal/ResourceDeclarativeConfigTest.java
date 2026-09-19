@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.resources.internal;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.as;
@@ -51,7 +51,7 @@ class ResourceDeclarativeConfigTest {
         .satisfies(
             resource -> {
               // From .resource.attributes
-              assertThat(resource.getAttribute(stringKey("service.name"))).isEqualTo("my-service");
+              assertThat(resource.getAttribute(SERVICE_NAME)).isEqualTo("my-service");
 
               // From ComponentProvider SPI
               Set<String> attributeKeys =

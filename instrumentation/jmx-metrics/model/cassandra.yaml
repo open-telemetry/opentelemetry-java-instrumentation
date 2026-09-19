@@ -1,0 +1,185 @@
+groups:
+  - id: attributes.cassandra
+    type: attribute_group
+    brief: Cassandra attributes
+    attributes:
+      - id: cassandra.operation
+        type:
+          members:
+            - id: read
+              value: "read"
+              brief: Read operation
+              stability: development
+            - id: write
+              value: "write"
+              brief: Write operation
+              stability: development
+            - id: rangeslice
+              value: "rangeslice"
+              brief: Range slice operation
+              stability: development
+        stability: development
+        brief: Cassandra operation type.
+        examples:
+          - "read"
+          - "write"
+          - "rangeslice"
+      - id: cassandra.status
+        type:
+          members:
+            - id: unavailable
+              value: "unavailable"
+              brief: Unavailable error
+              stability: development
+            - id: timeout
+              value: "timeout"
+              brief: Timeout error
+              stability: development
+            - id: failure
+              value: "failure"
+              brief: Failure error
+              stability: development
+        stability: development
+        brief: Cassandra request error status.
+        examples:
+          - "unavailable"
+          - "timeout"
+          - "failure"
+      - id: cassandra.keyspace
+        type: string
+        stability: development
+        brief: Cassandra keyspace.
+        examples:
+          - "test"
+      - id: cassandra.table
+        type: string
+        stability: development
+        brief: Cassandra table.
+        examples:
+          - "data"
+      - id: cassandra.compaction.task_type
+        type: string
+        stability: development
+        brief: Cassandra compaction task type.
+        examples:
+          - "compaction"
+
+  - id: metric.cassandra.compaction.tasks.completed
+    metric_name: cassandra.compaction.tasks.completed
+    type: metric
+    stability: development
+    brief: Number of completed compactions since server start.
+    unit: "{task}"
+    instrument: counter
+    attributes: []
+
+  - id: metric.cassandra.compaction.tasks.pending
+    metric_name: cassandra.compaction.tasks.pending
+    type: metric
+    stability: development
+    brief: Estimated number of compactions remaining to perform.
+    unit: "{task}"
+    instrument: gauge
+    attributes: []
+
+  - id: metric.cassandra.storage.load
+    metric_name: cassandra.storage.load
+    type: metric
+    stability: development
+    brief: Size of the on disk data size this node manages.
+    unit: By
+    instrument: updowncounter
+    attributes: []
+
+  - id: metric.cassandra.storage.hints.count
+    metric_name: cassandra.storage.hints.count
+    type: metric
+    stability: development
+    brief: Number of hint messages written to this node since server start.
+    unit: "{hint}"
+    instrument: counter
+    attributes: []
+
+  - id: metric.cassandra.storage.hints.in_progress
+    metric_name: cassandra.storage.hints.in_progress
+    type: metric
+    stability: development
+    brief: Number of hints attempting to be sent currently.
+    unit: "{hint}"
+    instrument: updowncounter
+    attributes: []
+
+  - id: metric.cassandra.client.request.latency.p50
+    metric_name: cassandra.client.request.latency.p50
+    type: metric
+    stability: development
+    brief: Request latency 50th percentile by operation.
+    unit: s
+    instrument: gauge
+    attributes:
+      - ref: cassandra.operation
+
+  - id: metric.cassandra.client.request.latency.p99
+    metric_name: cassandra.client.request.latency.p99
+    type: metric
+    stability: development
+    brief: Request latency 99th percentile by operation.
+    unit: s
+    instrument: gauge
+    attributes:
+      - ref: cassandra.operation
+
+  - id: metric.cassandra.client.request.latency.max
+    metric_name: cassandra.client.request.latency.max
+    type: metric
+    stability: development
+    brief: Maximum request latency by operation.
+    unit: s
+    instrument: gauge
+    attributes:
+      - ref: cassandra.operation
+
+  - id: metric.cassandra.client.request.count
+    metric_name: cassandra.client.request.count
+    type: metric
+    stability: development
+    brief: Number of requests by operation.
+    unit: "{request}"
+    instrument: counter
+    attributes:
+      - ref: cassandra.operation
+
+  - id: metric.cassandra.client.request.error
+    metric_name: cassandra.client.request.error
+    type: metric
+    stability: development
+    brief: Number of request errors by operation.
+    unit: "{error}"
+    instrument: counter
+    attributes:
+      - ref: cassandra.operation
+      - ref: cassandra.status
+
+  - id: metric.cassandra.compaction.progress.completed
+    metric_name: cassandra.compaction.progress.completed
+    type: metric
+    stability: development
+    brief: Bytes completed for in-flight compactions.
+    unit: By
+    instrument: gauge
+    attributes:
+      - ref: cassandra.compaction.task_type
+      - ref: cassandra.keyspace
+      - ref: cassandra.table
+
+  - id: metric.cassandra.compaction.progress.size
+    metric_name: cassandra.compaction.progress.size
+    type: metric
+    stability: development
+    brief: Total bytes for in-flight compactions.
+    unit: By
+    instrument: gauge
+    attributes:
+      - ref: cassandra.compaction.task_type
+      - ref: cassandra.keyspace
+      - ref: cassandra.table

@@ -10,6 +10,7 @@ import io.ktor.server.application.*
 import io.ktor.server.application.hooks.CallFailed
 import io.ktor.server.response.respondText
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
+import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -28,8 +29,8 @@ class KtorHttpServerTest : AbstractKtorHttpServerTest() {
     application.apply {
       install(KtorServerTelemetry) {
         setOpenTelemetry(testing.openTelemetry)
-        capturedRequestHeaders(TEST_REQUEST_HEADER)
-        capturedResponseHeaders(TEST_RESPONSE_HEADER)
+        requestHeaders(AbstractHttpServerTest.TEST_HEADERS)
+        responseHeaders(AbstractHttpServerTest.TEST_HEADERS)
       }
 
       install(createRouteScopedPlugin("Failure handler, that can mask exceptions if exception handling is in the wrong phase", ServerEndpoint.EXCEPTION.path, {}) {

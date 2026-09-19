@@ -8,7 +8,9 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 import io.micrometer.core.instrument.MeterRegistry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.AbstractMicrometerBridgeAutoConfigurationTest;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.micrometer.metrics.autoconfigure.CompositeMeterRegistryAutoConfiguration;
 import org.springframework.boot.micrometer.metrics.autoconfigure.MetricsAutoConfiguration;
+import org.springframework.boot.micrometer.metrics.autoconfigure.export.simple.SimpleMetricsExportAutoConfiguration;
 
 class MicrometerBridgeAutoConfigurationTest extends AbstractMicrometerBridgeAutoConfigurationTest {
 
@@ -20,6 +22,16 @@ class MicrometerBridgeAutoConfigurationTest extends AbstractMicrometerBridgeAuto
   @Override
   protected Class<?> getMetricsAutoConfigurationClass() {
     return MetricsAutoConfiguration.class;
+  }
+
+  @Override
+  protected Class<?> getSimpleMetricsExportAutoConfigurationClass() {
+    return SimpleMetricsExportAutoConfiguration.class;
+  }
+
+  @Override
+  protected Class<?> getCompositeMeterRegistryAutoConfigurationClass() {
+    return CompositeMeterRegistryAutoConfiguration.class;
   }
 
   @Override

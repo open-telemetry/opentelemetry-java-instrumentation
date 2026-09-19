@@ -33,17 +33,17 @@ testing {
 }
 
 tasks {
-  check {
-    dependsOn(testing.suites)
-  }
+  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+    .map { suite ->
+      register<Test>("${suite.name}StableSemconv") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
-  }
+        jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+      }
+    }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites, stableSemconvSuites)
   }
 }

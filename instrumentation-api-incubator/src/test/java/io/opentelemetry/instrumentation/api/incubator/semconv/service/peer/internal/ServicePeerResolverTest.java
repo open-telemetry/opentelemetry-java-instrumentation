@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.inte
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableServicePeerSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes.SERVICE_PEER_NAMESPACE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,10 +28,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class ServicePeerResolverTest {
-
-  private static final AttributeKey<String> SERVICE_PEER_NAMESPACE =
-      AttributeKey.stringKey("service.peer.namespace");
-
   // resolver with a rich set of mappings exercising name, namespace, and specificity
   private static final ServicePeerResolver resolver =
       createResolver(

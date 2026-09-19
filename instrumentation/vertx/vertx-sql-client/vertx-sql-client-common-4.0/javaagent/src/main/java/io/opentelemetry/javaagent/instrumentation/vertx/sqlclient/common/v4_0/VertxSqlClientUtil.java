@@ -28,17 +28,18 @@ import javax.annotation.Nullable;
 public class VertxSqlClientUtil {
 
   private static final ThreadLocal<SqlConnectOptions> connectOptions = new ThreadLocal<>();
+  private static final ThreadLocal<String> dbSystem = new ThreadLocal<>();
   private static final VirtualField<Pool, SqlConnectOptions> POOL_CONNECT_OPTIONS =
       VirtualField.find(Pool.class, SqlConnectOptions.class);
   private static final Map<String, String> dbSystemNameByPackage = buildPackageDbSystemNameMap();
   private static final VirtualField<Promise<?>, RequestData> REQUEST_DATA =
       VirtualField.find(Promise.class, RequestData.class);
 
-  public static void setSqlConnectOptions(@Nullable SqlConnectOptions sqlConnectOptions) {
-    if (sqlConnectOptions == null) {
+  public static void setSqlConnectOptions(@Nullable SqlConnectOptions value) {
+    if (value == null) {
       connectOptions.remove();
     } else {
-      connectOptions.set(sqlConnectOptions);
+      connectOptions.set(value);
     }
   }
 
@@ -47,8 +48,21 @@ public class VertxSqlClientUtil {
     return connectOptions.get();
   }
 
-  public static void setPoolConnectOptions(Pool pool, SqlConnectOptions sqlConnectOptions) {
-    POOL_CONNECT_OPTIONS.set(pool, sqlConnectOptions);
+  public static void setDbSystem(@Nullable String value) {
+    if (value == null) {
+      dbSystem.remove();
+    } else {
+      dbSystem.set(value);
+    }
+  }
+
+  @Nullable
+  public static String getDbSystem() {
+    return dbSystem.get();
+  }
+
+  public static void setPoolConnectOptions(Pool pool, SqlConnectOptions value) {
+    POOL_CONNECT_OPTIONS.set(pool, value);
   }
 
   @Nullable
@@ -57,8 +71,11 @@ public class VertxSqlClientUtil {
   }
 
   public static String getDbSystemNameFromClassName(@Nullable Object instance) {
-    if (instance != null) {
-      String className = instance.getClass().getName();
+    return getDbSystemNameFromClassName(instance != null ? instance.getClass().getName() : null);
+  }
+
+  public static String getDbSystemNameFromClassName(@Nullable String className) {
+    if (className != null) {
       for (Map.Entry<String, String> entry : dbSystemNameByPackage.entrySet()) {
         if (className.startsWith(entry.getKey())) {
           return entry.getValue();
@@ -66,6 +83,18 @@ public class VertxSqlClientUtil {
       }
     }
     return OTHER_SQL;
+  }
+
+  public static boolean isKnownDbSystem(String value) {
+    return dbSystemNameByPackage.containsValue(value);
+  }
+
+  public static String resolveDbSystemName(
+      @Nullable SqlConnectOptions connectOptions, @Nullable String declaringTypeName) {
+    String dbSystemName = getDbSystemNameFromClassName(connectOptions);
+    return isKnownDbSystem(dbSystemName)
+        ? dbSystemName
+        : getDbSystemNameFromClassName(declaringTypeName);
   }
 
   // See https://github.com/eclipse-vertx/vertx-sql-client for the full list of supported
@@ -90,12 +119,22 @@ public class VertxSqlClientUtil {
       Instrumenter<VertxSqlClientRequest, Void> instrumenter,
       Promise<?> promise,
       @Nullable Throwable throwable) {
+    Context parentContext = endQuerySpanAndGetParentContext(instrumenter, promise, throwable);
+    return parentContext != null ? parentContext.makeCurrent() : null;
+  }
+
+  @Nullable
+  public static Context endQuerySpanAndGetParentContext(
+      Instrumenter<VertxSqlClientRequest, Void> instrumenter,
+      Promise<?> promise,
+      @Nullable Throwable throwable) {
     RequestData requestData = REQUEST_DATA.get(promise);
     if (requestData == null) {
       return null;
     }
+    REQUEST_DATA.set(promise, null);
     instrumenter.end(requestData.context, requestData.request, null, throwable);
-    return requestData.parentContext.makeCurrent();
+    return requestData.parentContext;
   }
 
   private static class RequestData {

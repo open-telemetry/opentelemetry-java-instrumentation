@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -27,12 +28,23 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 
 class DbClientAttributesExtractorTest {
+
+  @Test
+  void shouldProvideSchemaUrl() {
+    AttributesExtractor<Map<String, String>, Void> extractor =
+        DbClientAttributesExtractor.create(new TestAttributesGetter());
+
+    assertThat(((SchemaUrlProvider) extractor).internalGetSchemaUrl())
+        .isEqualTo(emitStableDatabaseSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_24_0);
+  }
 
   static class TestAttributesGetter implements DbClientAttributesGetter<Map<String, String>, Void> {
     @Override
@@ -163,5 +175,22 @@ class DbClientAttributesExtractorTest {
 
     // then
     assertThat(attributes.build().isEmpty()).isTrue();
+  }
+
+  @Test
+  void shouldUseExceptionClassWhenErrorTypeIsUnavailable() {
+    AttributesExtractor<Map<String, String>, Void> underTest =
+        DbClientAttributesExtractor.create(new TestAttributesGetter());
+    IllegalStateException error = new IllegalStateException();
+
+    AttributesBuilder attributes = Attributes.builder();
+    underTest.onEnd(attributes, Context.root(), emptyMap(), null, error);
+
+    if (emitStableDatabaseSemconv()) {
+      assertThat(attributes.build())
+          .containsOnly(entry(ERROR_TYPE, IllegalStateException.class.getName()));
+    } else {
+      assertThat(attributes.build().isEmpty()).isTrue();
+    }
   }
 }

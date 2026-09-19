@@ -12,6 +12,7 @@ import com.sun.net.httpserver.HttpsExchange;
 import io.opentelemetry.instrumentation.api.internal.HttpProtocolUtil;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import java.net.InetSocketAddress;
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -44,6 +45,11 @@ final class JavaHttpServerAttributesGetter
     return exchange.getRequestHeaders().getOrDefault(name, emptyList());
   }
 
+  @Override
+  public Collection<String> getHttpRequestHeaderNames(HttpExchange exchange) {
+    return exchange.getRequestHeaders().keySet();
+  }
+
   @Nullable
   @Override
   public Integer getHttpResponseStatusCode(
@@ -56,6 +62,12 @@ final class JavaHttpServerAttributesGetter
   public List<String> getHttpResponseHeader(
       HttpExchange exchange, @Nullable HttpExchange res, String name) {
     return exchange.getResponseHeaders().getOrDefault(name, emptyList());
+  }
+
+  @Override
+  public Collection<String> getHttpResponseHeaderNames(
+      HttpExchange exchange, @Nullable HttpExchange res) {
+    return exchange.getResponseHeaders().keySet();
   }
 
   @Override

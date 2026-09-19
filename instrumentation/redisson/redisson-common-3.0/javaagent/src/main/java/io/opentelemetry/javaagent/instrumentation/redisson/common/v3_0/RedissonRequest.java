@@ -15,6 +15,7 @@ import io.netty.buffer.ByteBuf;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -74,14 +75,28 @@ public abstract class RedissonRequest {
     }
   }
 
-  public static RedissonRequest create(@Nullable InetSocketAddress address, Object command) {
-    return new AutoValue_RedissonRequest(address, command);
+  /**
+   * Creates a request with values supplied by version-specific instrumentation when they are not
+   * uniformly exposed across supported Redisson versions.
+   */
+  public static RedissonRequest create(
+      @Nullable InetSocketAddress address,
+      Object command,
+      @Nullable Long databaseIndex,
+      @Nullable RedisServerTarget serverTarget) {
+    return new AutoValue_RedissonRequest(address, command, databaseIndex, serverTarget);
   }
 
   @Nullable
   public abstract InetSocketAddress getAddress();
 
   public abstract Object getCommand();
+
+  @Nullable
+  public abstract Long getDatabaseIndex();
+
+  @Nullable
+  public abstract RedisServerTarget getServerTarget();
 
   @Nullable
   public String getOperationName() {

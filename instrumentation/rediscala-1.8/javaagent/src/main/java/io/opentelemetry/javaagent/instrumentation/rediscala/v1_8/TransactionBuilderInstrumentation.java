@@ -41,8 +41,7 @@ class TransactionBuilderInstrumentation implements TypeInstrumentation {
         @Advice.This RedisClientActorLike client,
         @Advice.Return TransactionBuilder transactionBuilder) {
       if (transactionBuilder != null) {
-        TRANSACTION_ENDPOINT.set(
-            transactionBuilder, new ServerEndpoint(client.host(), client.port()));
+        TRANSACTION_ENDPOINT.set(transactionBuilder, ServerEndpoint.create(client));
       }
     }
   }

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v7_0;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.HIBERNATE_SESSION_ID;
@@ -14,6 +13,9 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_STORED_PROCEDURE_NAME;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -183,16 +185,14 @@ class ProcedureCallTest {
                                     .hasName("exception")
                                     .hasAttributesSatisfyingExactly(
                                         equalTo(
-                                            stringKey("exception.type"),
+                                            EXCEPTION_TYPE,
                                             "org.hibernate.exception.AuthException"),
                                         satisfies(
-                                            stringKey("exception.message"),
+                                            EXCEPTION_MESSAGE,
                                             val ->
                                                 val.startsWithIgnoringCase(
                                                     "could not prepare statement")),
-                                        satisfies(
-                                            stringKey("exception.stacktrace"),
-                                            val -> val.isNotNull())))
+                                        satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())))
                         .hasAttributesSatisfyingExactly(
                             experimentalSatisfies(
                                 HIBERNATE_SESSION_ID,

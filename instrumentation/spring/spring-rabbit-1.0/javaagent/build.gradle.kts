@@ -12,6 +12,8 @@ muzzle {
 }
 
 dependencies {
+  bootstrap(project(":instrumentation:rabbitmq-2.7:bootstrap"))
+
   library("org.springframework.amqp:spring-rabbit:1.0.0.RELEASE")
 
   testInstrumentation(project(":instrumentation:rabbitmq-2.7:javaagent"))
@@ -28,10 +30,32 @@ dependencies {
   }
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("version20Test") {
+      dependencies {
+        implementation("io.opentelemetry:opentelemetry-sdk-testing")
+        implementation("org.testcontainers:testcontainers")
+        implementation("org.springframework.amqp:spring-rabbit:2.0.1.RELEASE")
+      }
+
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.semconv-stability.preview=messaging")
+            systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+          }
+        }
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("collectMetadata", otelProps.collectMetadata)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
   val testMessagingPreview = register<Test>("testMessagingPreview") {
@@ -48,8 +72,15 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
   }
 
+  val testV3Preview = register<Test>("testV3Preview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+  }
+
   check {
-    dependsOn(testMessagingPreview, testBothSemconv)
+    dependsOn(testing.suites, testMessagingPreview, testBothSemconv, testV3Preview)
   }
 }
 

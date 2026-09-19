@@ -5,11 +5,10 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.kafka;
 
-import static java.util.Collections.emptyList;
-
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingConfig;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
 import io.opentelemetry.instrumentation.spring.kafka.v2_7.SpringKafkaTelemetry;
 import org.springframework.beans.factory.ObjectProvider;
@@ -48,10 +47,7 @@ public class KafkaInstrumentationAutoConfiguration {
                 .get("messaging")
                 .get("receive_telemetry/development")
                 .getBoolean("enabled", false))
-        .setCapturedHeaders(
-            commonConfig
-                .get("messaging")
-                .getScalarList("capture_headers/development", String.class, emptyList()))
+        .setHeaders(MessagingConfig.getHeaders(openTelemetry))
         .build();
   }
 

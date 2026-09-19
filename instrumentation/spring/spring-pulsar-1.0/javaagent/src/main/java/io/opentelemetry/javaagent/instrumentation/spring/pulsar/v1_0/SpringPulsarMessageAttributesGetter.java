@@ -9,6 +9,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.Message;
@@ -85,5 +86,10 @@ final class SpringPulsarMessageAttributesGetter
   public List<String> getMessageHeader(Message<?> message, String name) {
     String value = message.getProperty(name);
     return value != null ? singletonList(value) : emptyList();
+  }
+
+  @Override
+  public Collection<String> getMessageHeaderNames(Message<?> message) {
+    return message.getProperties().keySet();
   }
 }

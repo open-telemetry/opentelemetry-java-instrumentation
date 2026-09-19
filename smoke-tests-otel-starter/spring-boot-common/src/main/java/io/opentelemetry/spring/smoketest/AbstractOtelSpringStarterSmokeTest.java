@@ -92,10 +92,6 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
 
   abstract void restTemplateCall(String path);
 
-  protected boolean preferJfr() {
-    return false;
-  }
-
   // can't use @LocalServerPort annotation since it moved packages between Spring Boot 2 and 3
   @Value("${local.server.port}")
   protected int port;
@@ -244,8 +240,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
     double javaVersion = Double.parseDouble(System.getProperty("java.specification.version"));
     // See https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13503
     // Also not available on Windows (getSystemLoadAverage returns -1)
-    // Not available when prefer-jfr is enabled (JMX-only metric with no JFR equivalent)
-    if (javaVersion < 23 && !OS.WINDOWS.isCurrentOs() && !preferJfr()) {
+    if (javaVersion < 23 && !OS.WINDOWS.isCurrentOs()) {
       runtimeMetrics.add("jvm.system.cpu.load_1m");
     }
 

@@ -21,6 +21,7 @@ class BatchRecordsHandler implements Handler<KafkaConsumerRecords<String, String
   static final BatchRecordsHandler INSTANCE = new BatchRecordsHandler();
 
   private static final AtomicInteger lastBatchSize = new AtomicInteger();
+  private static final AtomicInteger remainingRecords = new AtomicInteger();
   private static volatile CountDownLatch messageReceived = new CountDownLatch(0);
 
   private BatchRecordsHandler() {}
@@ -42,6 +43,7 @@ class BatchRecordsHandler implements Handler<KafkaConsumerRecords<String, String
   static void reset(int expectedBatchSize) {
     messageReceived = new CountDownLatch(expectedBatchSize);
     lastBatchSize.set(0);
+    remainingRecords.set(expectedBatchSize);
   }
 
   static void waitForMessages() throws InterruptedException {
@@ -50,5 +52,9 @@ class BatchRecordsHandler implements Handler<KafkaConsumerRecords<String, String
 
   static int getLastBatchSize() {
     return lastBatchSize.get();
+  }
+
+  static boolean recordProcessed() {
+    return remainingRecords.decrementAndGet() == 0;
   }
 }

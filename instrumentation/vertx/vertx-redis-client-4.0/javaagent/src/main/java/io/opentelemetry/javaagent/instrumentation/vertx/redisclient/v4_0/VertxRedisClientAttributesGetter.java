@@ -30,8 +30,7 @@ class VertxRedisClientAttributesGetter
   @Nullable
   public String getDbNamespace(VertxRedisClientRequest request) {
     if (emitStableDatabaseSemconv()) {
-      Long databaseIndex = request.getDatabaseIndex();
-      return databaseIndex == null ? null : String.valueOf(databaseIndex);
+      return request.getDatabaseNamespace();
     }
     return null;
   }

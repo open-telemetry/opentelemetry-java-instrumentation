@@ -24,14 +24,19 @@ final class ConnectionPoolMetrics {
       new ConcurrentHashMap<>();
 
   static void registerMetrics(OpenTelemetry openTelemetry, ViburDBCPDataSource dataSource) {
+    registerMetrics(openTelemetry, dataSource, dataSource.getName());
+  }
+
+  static void registerMetrics(
+      OpenTelemetry openTelemetry, ViburDBCPDataSource dataSource, String poolName) {
     dataSourceMetrics.computeIfAbsent(
-        dataSource, (unused) -> createMeters(openTelemetry, dataSource));
+        dataSource, (unused) -> createMeters(openTelemetry, dataSource, poolName));
   }
 
   private static BatchCallback createMeters(
-      OpenTelemetry openTelemetry, ViburDBCPDataSource dataSource) {
+      OpenTelemetry openTelemetry, ViburDBCPDataSource dataSource, String poolName) {
     DbConnectionPoolMetrics metrics =
-        DbConnectionPoolMetrics.create(openTelemetry, INSTRUMENTATION_NAME, dataSource.getName());
+        DbConnectionPoolMetrics.create(openTelemetry, INSTRUMENTATION_NAME, poolName);
 
     ObservableLongMeasurement connections = metrics.connections();
     ObservableLongMeasurement maxConnections = metrics.maxConnections();

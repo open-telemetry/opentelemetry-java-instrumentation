@@ -4,4 +4,6 @@ library_link: https://spring.io/projects/spring-amqp
 semantic_conventions:
   - MESSAGING_SPANS
 configurations:
+  - ref: messaging.headers.included
+  - ref: messaging.headers.excluded
   - ref: messaging.capture-headers

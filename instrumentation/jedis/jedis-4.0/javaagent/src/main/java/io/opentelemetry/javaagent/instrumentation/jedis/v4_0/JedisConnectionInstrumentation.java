@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v4_0.JedisSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v4_0.JedisSingletons.setConnectionInfo;
 import static java.util.Arrays.asList;
@@ -72,7 +71,7 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
         // span rather than getting their own spans.
         return null;
       }
-      Context parentContext = currentContext();
+      Context parentContext = Context.current();
       if (JedisPipelineContext.capture(request)) {
         // A pipeline or transaction is active, so this command is captured and aggregated into the
         // batch span created at sync()/exec() rather than getting its own span.

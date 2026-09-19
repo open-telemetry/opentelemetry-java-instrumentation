@@ -17,11 +17,12 @@ import org.apache.tomcat.util.descriptor.web.FilterMap;
 
 public class ServletTestUtil {
 
+  @SuppressWarnings("deprecation") // testing deprecated API
   public static Filter newFilter(OpenTelemetry openTelemetry) {
     ServletTelemetryBuilder builder =
         ServletTelemetry.builder(openTelemetry)
-            .setCapturedRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
-            .setCapturedResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER));
+            .setRequestHeaders(AbstractHttpServerTest.TEST_HEADERS)
+            .setResponseHeaders(AbstractHttpServerTest.TEST_HEADERS);
     Experimental.setCaptureRequestParameters(builder, singletonList("test-parameter"));
     Experimental.setTraceIdRequestAttributeEnabled(builder, true);
     return builder.build().createFilter();

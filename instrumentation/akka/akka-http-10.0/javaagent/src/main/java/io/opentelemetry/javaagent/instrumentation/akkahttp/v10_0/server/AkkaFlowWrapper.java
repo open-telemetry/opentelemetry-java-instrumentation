@@ -26,6 +26,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.server.route.AkkaRouteHolder;
+import java.net.InetSocketAddress;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
@@ -44,6 +45,16 @@ public class AkkaFlowWrapper
   public static Flow<HttpRequest, HttpResponse, ?> wrap(
       Flow<HttpRequest, HttpResponse, ?> handler) {
     return handler.join(new AkkaFlowWrapper());
+  }
+
+  public static Flow<HttpRequest, HttpResponse, ?> wrap(
+      Flow<HttpRequest, HttpResponse, ?> handler, InetSocketAddress remoteAddress) {
+    return wrap(handler).addAttributes(withRemoteAddress(Attributes.none(), remoteAddress));
+  }
+
+  public static Attributes withRemoteAddress(
+      Attributes attributes, InetSocketAddress remoteAddress) {
+    return attributes.and(new AkkaHttpServerRemoteAddress(remoteAddress));
   }
 
   @Nullable
@@ -70,14 +81,18 @@ public class AkkaFlowWrapper
 
   @Override
   public GraphStageLogic createLogic(Attributes attributes) {
-    return new TracingLogic();
+    AkkaHttpServerRemoteAddress remoteAddress =
+        attributes.getAttribute(AkkaHttpServerRemoteAddress.class).orElse(null);
+    return new TracingLogic(remoteAddress == null ? null : remoteAddress.remoteAddress());
   }
 
   private class TracingLogic extends GraphStageLogic {
     private final Deque<TracingRequest> requests = new ArrayDeque<>();
+    @Nullable private final InetSocketAddress remoteAddress;
 
-    TracingLogic() {
+    TracingLogic(@Nullable InetSocketAddress remoteAddress) {
       super(shape);
+      this.remoteAddress = remoteAddress;
 
       // server pulls response, pass response from user code to server
       setHandler(
@@ -120,6 +135,9 @@ public class AkkaFlowWrapper
 
               TracingRequest tracingRequest = TracingRequest.EMPTY;
               Context parentContext = Context.current();
+              if (TracingLogic.this.remoteAddress != null) {
+                AkkaHttpServerRequestPeer.set(request, TracingLogic.this.remoteAddress);
+              }
               if (instrumenter().shouldStart(parentContext, request)) {
                 Context context = instrumenter().start(parentContext, request);
                 context = AkkaRouteHolder.init(context);

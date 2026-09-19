@@ -25,12 +25,10 @@ class RocketMqConsumerReceiveAttributeExtractor
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, RocketMqReceiveRequest request) {
-    String consumerGroup = request.getRequest().getGroup().getName();
+    String consumerGroup = request.getConsumerGroup();
     if (emitStableMessagingSemconv()) {
       attributes.put(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup);
-      attributes.put(
-          MESSAGING_ROCKETMQ_NAMESPACE,
-          request.getRequest().getMessageQueue().getTopic().getResourceNamespace());
+      attributes.put(MESSAGING_ROCKETMQ_NAMESPACE, request.getNamespace());
     }
     if (emitOldMessagingSemconv()) {
       attributes.put(MESSAGING_ROCKETMQ_CLIENT_GROUP, consumerGroup);

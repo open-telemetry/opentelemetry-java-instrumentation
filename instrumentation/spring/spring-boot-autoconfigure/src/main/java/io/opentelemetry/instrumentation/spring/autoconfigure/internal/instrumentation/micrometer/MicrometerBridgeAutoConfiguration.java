@@ -8,11 +8,12 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 import io.micrometer.core.instrument.Clock;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.micrometer.v1_5.OpenTelemetryMeterRegistry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
+import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.boot.actuate.autoconfigure.metrics.CompositeMeterRegistryAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration;
+import org.springframework.boot.actuate.autoconfigure.metrics.export.simple.SimpleMetricsExportAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -25,7 +26,14 @@ import org.springframework.context.annotation.Configuration;
  * any time.
  */
 @ConditionalOnEnabledInstrumentation(module = "micrometer", enabledByDefault = false)
-@AutoConfigureAfter({MetricsAutoConfiguration.class, OpenTelemetryAutoConfiguration.class})
+@AutoConfigureAfter({
+  MetricsAutoConfiguration.class,
+  OpenTelemetryAutoConfiguration.class,
+  // configure after the SimpleMeterRegistry has initialized; it is normally the last MeterRegistry
+  // implementation to be configured, as it's used as a fallback
+  // the OTel registry should be added in addition to that fallback and not replace it
+  SimpleMetricsExportAutoConfiguration.class
+})
 @AutoConfigureBefore(CompositeMeterRegistryAutoConfiguration.class)
 @ConditionalOnBean(Clock.class)
 @ConditionalOnClass({
@@ -36,7 +44,8 @@ import org.springframework.context.annotation.Configuration;
 public class MicrometerBridgeAutoConfiguration {
 
   @Bean
-  MeterRegistry otelMeterRegistry(OpenTelemetry openTelemetry, Clock micrometerClock) {
-    return OpenTelemetryMeterRegistry.builder(openTelemetry).setClock(micrometerClock).build();
+  MeterRegistry otelMeterRegistry(
+      OpenTelemetry openTelemetry, Clock micrometerClock, ListableBeanFactory beanFactory) {
+    return OtelMeterRegistryFactory.create(openTelemetry, micrometerClock, beanFactory);
   }
 }

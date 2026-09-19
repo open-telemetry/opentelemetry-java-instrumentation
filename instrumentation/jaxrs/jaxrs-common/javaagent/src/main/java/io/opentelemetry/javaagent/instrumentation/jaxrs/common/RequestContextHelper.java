@@ -13,7 +13,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import javax.annotation.Nullable;
 
 public class RequestContextHelper {
@@ -21,9 +20,9 @@ public class RequestContextHelper {
   public static <T extends HandlerData> Context createOrUpdateAbortSpan(
       Instrumenter<T, Void> instrumenter, T handlerData) {
 
-    Context parentContext = Java8BytecodeBridge.currentContext();
+    Context parentContext = Context.current();
     Span serverSpan = LocalRootSpan.fromContextOrNull(parentContext);
-    Span currentSpan = Java8BytecodeBridge.spanFromContext(parentContext);
+    Span currentSpan = Span.fromContext(parentContext);
 
     HttpServerRoute.update(
         parentContext, HttpServerRouteSource.CONTROLLER, serverSpanName(), handlerData);

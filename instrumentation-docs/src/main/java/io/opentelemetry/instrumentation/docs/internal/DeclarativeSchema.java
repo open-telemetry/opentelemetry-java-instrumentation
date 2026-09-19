@@ -25,9 +25,14 @@ public record DeclarativeSchema(
   /**
    * A single property within a {@link DeclarativeSchema}. This class is internal and is hence not
    * for public use. Its APIs are unstable and can change at any time.
+   *
+   * <p>{@code example} is a sample value used to render the entry shape in the generated
+   * declarative configuration example; when it is absent the generator falls back to {@code
+   * default}, then to a {@code <property-name>} placeholder.
    */
   public record Property(
       String type,
       @Nullable String description,
-      @JsonProperty("default") @Nullable Object defaultValue) {}
+      @JsonProperty("default") @Nullable Object defaultValue,
+      @Nullable Object example) {}
 }

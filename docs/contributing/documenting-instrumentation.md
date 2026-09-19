@@ -245,8 +245,13 @@ system-property form is a scalar or map. For these, keep `type` describing the f
 - `declarative_schema`: the per-item object schema, mirroring the JSON-schema style used by
   [opentelemetry-configuration](https://github.com/open-telemetry/opentelemetry-configuration). It
   consists of `type: object`, a `required` list, and named `properties` (each with `type`, an
-  optional `description`, and an optional `default`). The `required` keys must be a subset of
-  `properties`.
+  optional `description`, an optional `default`, and an optional `example`). The `required` keys
+  must be a subset of `properties`.
+
+The generated `docs/declarative-configuration-example.yaml` emits the empty-list default for a
+structured list and documents the entry shape in the comment above it, using each property's
+`example` (falling back to its `default`, then to a `<property-name>` placeholder) for the sample
+entry.
 
 For example, `service_peer_mapping` is a `host=service` map as a flat property but a list of
 `{peer, service_name}` objects in declarative configuration:
@@ -266,9 +271,11 @@ configurations:
         peer:
           type: string
           description: Host name or IP address to match against.
+          example: host
         service_name:
           type: string
           description: Peer service name to record for matching peers.
+          example: serviceName
 ```
 
 A configuration that exists only in declarative configuration (no flat system property) omits `name`
@@ -288,9 +295,11 @@ configurations:
         pattern:
           type: string
           description: Regular expression matched against the request URL.
+          example: '/users/\d+'
         template:
           type: string
           description: Template used to derive the low-cardinality route.
+          example: '/users/{id}'
         override:
           type: boolean
           default: false

@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
+import static io.opentelemetry.semconv.JvmAttributes.JVM_MEMORY_POOL_NAME;
+import static io.opentelemetry.semconv.JvmAttributes.JVM_MEMORY_TYPE;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 
@@ -57,33 +60,24 @@ public final class Constants {
   public static final String METRIC_DESCRIPTION_GC_DURATION =
       "Duration of JVM garbage collection actions.";
 
-  public static final AttributeKey<String> ATTR_THREAD_NAME = AttributeKey.stringKey("thread.name");
   public static final AttributeKey<String> ATTR_ARENA_NAME = AttributeKey.stringKey("arena");
   public static final AttributeKey<String> ATTR_NETWORK_MODE = AttributeKey.stringKey("mode");
-  public static final AttributeKey<String> ATTR_MEMORY_TYPE =
-      AttributeKey.stringKey("jvm.memory.type");
-  public static final AttributeKey<String> ATTR_MEMORY_POOL =
-      AttributeKey.stringKey("jvm.memory.pool.name");
-  public static final AttributeKey<String> ATTR_GC_NAME = AttributeKey.stringKey("jvm.gc.name");
-  public static final AttributeKey<String> ATTR_GC_ACTION = AttributeKey.stringKey("jvm.gc.action");
-  public static final AttributeKey<Boolean> ATTR_DAEMON =
-      AttributeKey.booleanKey("jvm.thread.daemon");
   public static final Attributes ATTR_PS_EDEN_SPACE =
-      Attributes.of(ATTR_MEMORY_TYPE, HEAP, ATTR_MEMORY_POOL, "PS Eden Space");
+      Attributes.of(JVM_MEMORY_TYPE, HEAP, JVM_MEMORY_POOL_NAME, "PS Eden Space");
   public static final Attributes ATTR_PS_SURVIVOR_SPACE =
-      Attributes.of(ATTR_MEMORY_TYPE, HEAP, ATTR_MEMORY_POOL, "PS Survivor Space");
+      Attributes.of(JVM_MEMORY_TYPE, HEAP, JVM_MEMORY_POOL_NAME, "PS Survivor Space");
   public static final Attributes ATTR_PS_OLD_GEN =
-      Attributes.of(ATTR_MEMORY_TYPE, HEAP, ATTR_MEMORY_POOL, "PS Old Gen");
+      Attributes.of(JVM_MEMORY_TYPE, HEAP, JVM_MEMORY_POOL_NAME, "PS Old Gen");
   public static final Attributes ATTR_G1_SURVIVOR_SPACE =
-      Attributes.of(ATTR_MEMORY_TYPE, HEAP, ATTR_MEMORY_POOL, "G1 Survivor Space");
+      Attributes.of(JVM_MEMORY_TYPE, HEAP, JVM_MEMORY_POOL_NAME, "G1 Survivor Space");
   public static final Attributes ATTR_G1_EDEN_SPACE =
-      Attributes.of(ATTR_MEMORY_TYPE, HEAP, ATTR_MEMORY_POOL, "G1 Eden Space");
+      Attributes.of(JVM_MEMORY_TYPE, HEAP, JVM_MEMORY_POOL_NAME, "G1 Eden Space");
   public static final Attributes ATTR_METASPACE =
-      Attributes.of(ATTR_MEMORY_TYPE, NON_HEAP, ATTR_MEMORY_POOL, "Metaspace");
+      Attributes.of(JVM_MEMORY_TYPE, NON_HEAP, JVM_MEMORY_POOL_NAME, "Metaspace");
   public static final Attributes ATTR_COMPRESSED_CLASS_SPACE =
-      Attributes.of(ATTR_MEMORY_TYPE, NON_HEAP, ATTR_MEMORY_POOL, "Compressed Class Space");
+      Attributes.of(JVM_MEMORY_TYPE, NON_HEAP, JVM_MEMORY_POOL_NAME, "Compressed Class Space");
   public static final Attributes ATTR_CODE_CACHE =
-      Attributes.of(ATTR_MEMORY_TYPE, NON_HEAP, ATTR_MEMORY_POOL, "CodeCache");
+      Attributes.of(JVM_MEMORY_TYPE, NON_HEAP, JVM_MEMORY_POOL_NAME, "CodeCache");
 
   public static final String UNIT_CLASSES = "{class}";
   public static final String UNIT_THREADS = "{thread}";

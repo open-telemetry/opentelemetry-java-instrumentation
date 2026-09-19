@@ -25,7 +25,10 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    jvmArgs("-Dotel.instrumentation.graphql.operation-name-in-span-name.enabled=true")
+    jvmArgs(
+      "-Dotel.instrumentation.graphql.operation-name-in-span-name.enabled=true",
+      "-Dotel.instrumentation.graphql.add-operation-name-to-span-name.enabled=false",
+    )
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 

@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
 import org.apache.pekko.http.scaladsl.model.HttpResponse;
 import org.apache.pekko.http.scaladsl.server.RequestContext;
@@ -37,8 +37,7 @@ public class PekkoRouteWrapper implements Function1<RequestContext, Future<Route
               req ->
                   (HttpRequest) req.addAttribute(PekkoRouteHolder.ATTRIBUTE_KEY, childRouteHolder));
       // RouteHolder needs to be in otel context for PathMatcherStaticInstrumentation
-      try (Scope scope =
-          Java8BytecodeBridge.currentContext().with(childRouteHolder).makeCurrent()) {
+      try (Scope scope = Context.current().with(childRouteHolder).makeCurrent()) {
         return route
             .apply(requestWithChildRouteHolder)
             .transform(

@@ -19,20 +19,65 @@ configurations:
       Enable the capture of experimental span attributes `grpc.received.message_count`,
       `grpc.sent.message_count` and `grpc.canceled`.
     default: false
+  - name: otel.instrumentation.grpc.client.request-metadata.included
+    declarative_name: java.grpc.client.request_metadata.included
+    type: list
+    description: >
+      A comma-separated list of ASCII request metadata key patterns to capture on client spans.
+      Matching is case-insensitive. `?` matches one character and `*` matches zero or more
+      characters.
+    default: ''
+    examples:
+      - "custom-request-header"
+      - "my-*-key,another-metadata-key"
+  - name: otel.instrumentation.grpc.client.request-metadata.excluded
+    declarative_name: java.grpc.client.request_metadata.excluded
+    type: list
+    description: >
+      A comma-separated list of ASCII request metadata key patterns to exclude from client spans.
+      Excluded patterns take precedence over included patterns. Matching is case-insensitive. `?` matches one character and
+      `*` matches zero or more characters. If included is not configured, all non-excluded ASCII
+      metadata is captured, which may expose sensitive information.
+    default: ''
+    examples:
+      - "authorization,*-token"
+  - name: otel.instrumentation.grpc.server.request-metadata.included
+    declarative_name: java.grpc.server.request_metadata.included
+    type: list
+    description: >
+      A comma-separated list of ASCII request metadata key patterns to capture on server spans.
+      Matching is case-insensitive. `?` matches one character and `*` matches zero or more
+      characters.
+    default: ''
+    examples:
+      - "custom-request-header"
+      - "my-*-key,another-metadata-key"
+  - name: otel.instrumentation.grpc.server.request-metadata.excluded
+    declarative_name: java.grpc.server.request_metadata.excluded
+    type: list
+    description: >
+      A comma-separated list of ASCII request metadata key patterns to exclude from server spans.
+      Excluded patterns take precedence over included patterns. Matching is case-insensitive. `?` matches one character and
+      `*` matches zero or more characters. If included is not configured, all non-excluded ASCII
+      metadata is captured, which may expose sensitive information.
+    default: ''
+    examples:
+      - "authorization,*-token"
   - name: otel.instrumentation.grpc.capture-metadata.client.request
     declarative_name: java.grpc.capture_metadata.client.request
     type: list
     description: >
-      A comma-separated list of request metadata keys. gRPC client instrumentation will capture
-      metadata values corresponding to configured keys as span attributes.
+      Deprecated: use `otel.instrumentation.grpc.client.request-metadata.included` instead. A
+      comma-separated list of request metadata keys to capture on client spans. It does not support
+      glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other
+      entry is matched as a literal metadata key.
     default: ''
-    examples:
-      - "custom-request-header"
-      - "my-metadata-key,another-metadata-key"
   - name: otel.instrumentation.grpc.capture-metadata.server.request
     declarative_name: java.grpc.capture_metadata.server.request
     type: list
     description: >
-      A comma-separated list of request metadata keys. gRPC server instrumentation will capture
-      metadata values corresponding to configured keys as span attributes.
+      Deprecated: use `otel.instrumentation.grpc.server.request-metadata.included` instead. A
+      comma-separated list of request metadata keys to capture on server spans. It does not support
+      glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other
+      entry is matched as a literal metadata key.
     default: ''

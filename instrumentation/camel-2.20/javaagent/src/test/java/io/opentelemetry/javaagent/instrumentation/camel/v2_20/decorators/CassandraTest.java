@@ -19,12 +19,20 @@ import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.SchemaUrls.V1_24_0;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_CONSISTENCY_LEVEL;
+import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_COORDINATOR_DC;
+import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_COORDINATOR_ID;
+import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_PAGE_SIZE;
+import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_QUERY_IDEMPOTENT;
+import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_SPECULATIVE_EXECUTION_COUNT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.CASSANDRA;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
@@ -164,7 +172,14 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                               equalTo(
                                   DB_QUERY_TEXT,
                                   "select * from test.users where id=1 ALLOW FILTERING"),
-                              equalTo(DB_QUERY_SUMMARY, "select test.users"))));
+                              equalTo(DB_QUERY_SUMMARY, "select test.users"),
+                              equalTo(CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
+                              equalTo(CASSANDRA_COORDINATOR_DC, "datacenter1"),
+                              satisfies(
+                                  CASSANDRA_COORDINATOR_ID, val -> val.isInstanceOf(String.class)),
+                              equalTo(CASSANDRA_PAGE_SIZE, 5000),
+                              equalTo(CASSANDRA_QUERY_IDEMPOTENT, false),
+                              equalTo(CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0))));
     } else {
       testing.waitAndAssertTraces(
           trace ->
@@ -179,6 +194,10 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                       span.hasName("cql")
                           .hasKind(SpanKind.CLIENT)
                           .hasParent(trace.getSpan(0))
+                          .satisfies(
+                              spanData ->
+                                  assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
+                                      .isEqualTo(V1_24_0))
                           .hasAttributesSatisfyingExactly(
                               equalTo(
                                   stringKey("camel.uri"),

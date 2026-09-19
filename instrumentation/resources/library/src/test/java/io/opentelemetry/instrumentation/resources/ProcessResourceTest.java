@@ -10,6 +10,7 @@ import static io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes.PR
 import static io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes.PROCESS_EXECUTABLE_PATH;
 import static io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes.PROCESS_PID;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.resources.Resource;
@@ -46,6 +47,7 @@ class ProcessResourceTest {
   }
 
   @Test
+  @SetSystemProperty(key = "sun.java.command", value = "app.jar -DappSecret=abc\ndef --other=test")
   void commandAttributesEnabled() {
     Resource resource = ProcessResource.create(true);
     Attributes attributes = resource.getAttributes();
@@ -55,14 +57,29 @@ class ProcessResourceTest {
           .contains(attributes.get(PROCESS_EXECUTABLE_PATH))
           .contains("-DtestSecret=***")
           .contains("-DtestPassword=***")
-          .contains("-DtestNotRedacted=test");
+          .contains("-DtestMultilineSecret=***")
+          .doesNotContain("leaked")
+          .contains("-DtestNotRedacted=test")
+          .endsWith(" app.jar -DappSecret=***");
     } else {
       assertThat(attributes.get(PROCESS_COMMAND_ARGS))
           .contains(attributes.get(PROCESS_EXECUTABLE_PATH))
           .contains("-DtestSecret=***")
           .contains("-DtestPassword=***")
+          .contains("-DtestMultilineSecret=***")
           .contains("-DtestNotRedacted=test");
     }
+  }
+
+  @Test
+  @SetSystemProperty(key = "sun.java.command", value = "app.jar -Dmy secret=abc --other=test")
+  void commandLineScrubsPropertyNameContainingSpaces() {
+    assumeTrue(isJava8() || IS_WINDOWS);
+
+    Resource resource = ProcessResource.create(true);
+    Attributes attributes = resource.getAttributes();
+
+    assertThat(attributes.get(PROCESS_COMMAND_LINE)).endsWith(" app.jar -Dmy secret=***");
   }
 
   private static void assertResource(boolean windows) {

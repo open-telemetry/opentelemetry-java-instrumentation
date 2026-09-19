@@ -10,10 +10,12 @@ import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.DurationUtil;
-import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.RecordedEventHandler;
 import java.time.Duration;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Predicate;
+import javax.annotation.Nullable;
 import jdk.jfr.consumer.RecordedEvent;
 
 /**
@@ -27,6 +29,12 @@ public final class VirtualThreadPinnedHandler implements RecordedEventHandler {
 
   private final DoubleHistogram histogram;
   private final Attributes attributes;
+
+  @Nullable
+  public static VirtualThreadPinnedHandler create(
+      Meter meter, Predicate<String> metricNamePredicate) {
+    return metricNamePredicate.test(METRIC_NAME) ? new VirtualThreadPinnedHandler(meter) : null;
+  }
 
   public VirtualThreadPinnedHandler(Meter meter) {
     histogram =
@@ -45,8 +53,8 @@ public final class VirtualThreadPinnedHandler implements RecordedEventHandler {
   }
 
   @Override
-  public JfrFeature getFeature() {
-    return JfrFeature.VIRTUAL_THREAD_METRICS;
+  public Set<String> getMetricNames() {
+    return Set.of(METRIC_NAME);
   }
 
   @Override

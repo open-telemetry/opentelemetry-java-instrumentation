@@ -144,5 +144,12 @@ public abstract class AbstractDistributionSummaryTest {
                                             equalTo(stringKey("tag"), "value"))
                                         .hasBucketBoundaries(1, 10, 100, 1000)
                                         .hasBucketCounts(1, 1, 1, 1, 0))));
+
+    // micrometer gauge histogram is not emitted
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            "testSummaryWithCustomBuckets.histogram",
+            AbstractIterableAssert::isEmpty);
   }
 }

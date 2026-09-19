@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.RatpackSin
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContext;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContexts;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import ratpack.handling.Context;
 import ratpack.handling.Handler;
 
@@ -27,7 +26,9 @@ public class TracingHandler implements Handler {
     // internally queues events and then drains them in batches, causing executor instrumentation to
     // attach the same context to a batch of events from different requests.
     io.opentelemetry.context.Context parentOtelContext =
-        serverContext != null ? serverContext.context() : Java8BytecodeBridge.currentContext();
+        serverContext != null
+            ? serverContext.context()
+            : io.opentelemetry.context.Context.current();
     io.opentelemetry.context.Context callbackContext;
 
     if (instrumenter().shouldStart(parentOtelContext, INITIAL_SPAN_NAME)) {

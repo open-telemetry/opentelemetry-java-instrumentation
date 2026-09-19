@@ -5,13 +5,19 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.logging;
 
+import static io.opentelemetry.instrumentation.logback.appender.v1_0.internal.AttributeSelectors.split;
+import static java.util.Collections.emptyList;
+
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.spi.AppenderAttachable;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.EarlyConfig;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nullable;
 import org.slf4j.ILoggerFactory;
@@ -22,6 +28,37 @@ import org.springframework.core.env.ConfigurableEnvironment;
 
 class LogbackAppenderInstaller {
   private static final Logger logger = LoggerFactory.getLogger(LogbackAppenderInstaller.class);
+
+  private static final String DEPRECATED_MDC_ATTRIBUTES =
+      "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes";
+  private static final String MDC_ATTRIBUTES_INCLUDED =
+      "otel.instrumentation.logback-appender.experimental.mdc-attributes.included";
+  private static final String MDC_ATTRIBUTES_EXCLUDED =
+      "otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded";
+  private static final String DEPRECATED_LOGGER_CONTEXT_ATTRIBUTES =
+      "otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes";
+  private static final String LOGGER_CONTEXT_ATTRIBUTES_INCLUDED =
+      "otel.instrumentation.logback-appender.experimental.logger-context-attributes.included";
+  private static final String LOGGER_CONTEXT_ATTRIBUTES_EXCLUDED =
+      "otel.instrumentation.logback-appender.experimental.logger-context-attributes.excluded";
+  private static final String DEPRECATED_LOGSTASH_MARKER_ATTRIBUTES =
+      "otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes";
+  private static final String LOGSTASH_MARKER_ATTRIBUTES_INCLUDED =
+      "otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.included";
+  private static final String LOGSTASH_MARKER_ATTRIBUTES_EXCLUDED =
+      "otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.excluded";
+  private static final String DEPRECATED_LOGSTASH_STRUCTURED_ARGUMENTS =
+      "otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments";
+  private static final String LOGSTASH_STRUCTURED_ARGUMENT_ATTRIBUTES_INCLUDED =
+      "otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included";
+  private static final String LOGSTASH_STRUCTURED_ARGUMENT_ATTRIBUTES_EXCLUDED =
+      "otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.excluded";
+  private static final String DEPRECATED_KEY_VALUE_PAIR_ATTRIBUTES =
+      "otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes";
+  private static final String KEY_VALUE_PAIR_ATTRIBUTES_INCLUDED =
+      "otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included";
+  private static final String KEY_VALUE_PAIR_ATTRIBUTES_EXCLUDED =
+      "otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.excluded";
 
   static void install(ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent) {
     Optional<io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender>
@@ -80,6 +117,7 @@ class LogbackAppenderInstaller {
         (ch.qos.logback.classic.Logger)
             LoggerFactory.getILoggerFactory().getLogger(Logger.ROOT_LOGGER_NAME);
     OpenTelemetryAppender openTelemetryAppender = new OpenTelemetryAppender();
+    openTelemetryAppender.setContext(logbackLogger.getLoggerContext());
     initializeOpenTelemetryAppenderFromProperties(
         applicationEnvironmentPreparedEvent, openTelemetryAppender);
     openTelemetryAppender.start();
@@ -112,28 +150,12 @@ class LogbackAppenderInstaller {
       openTelemetryAppender.setCaptureMarkerAttribute(markerAttribute);
     }
 
-    Boolean keyValuePairAttributes =
-        evaluateBooleanProperty(
-            applicationEnvironmentPreparedEvent,
-            "otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes");
-    if (keyValuePairAttributes != null) {
-      openTelemetryAppender.setCaptureKeyValuePairAttributes(keyValuePairAttributes);
-    }
-
     Boolean logAttributes =
         evaluateBooleanProperty(
             applicationEnvironmentPreparedEvent,
             "otel.instrumentation.logback-appender.experimental-log-attributes");
     if (logAttributes != null) {
       openTelemetryAppender.setCaptureExperimentalAttributes(logAttributes);
-    }
-
-    Boolean loggerContextAttributes =
-        evaluateBooleanProperty(
-            applicationEnvironmentPreparedEvent,
-            "otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes");
-    if (loggerContextAttributes != null) {
-      openTelemetryAppender.setCaptureLoggerContext(loggerContextAttributes);
     }
 
     Boolean captureTemplate =
@@ -152,30 +174,220 @@ class LogbackAppenderInstaller {
       openTelemetryAppender.setCaptureArguments(captureArguments);
     }
 
-    Boolean captureLogstashMarkerAttributes =
-        evaluateBooleanProperty(
-            applicationEnvironmentPreparedEvent,
-            "otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes");
-    if (captureLogstashMarkerAttributes != null) {
-      openTelemetryAppender.setCaptureLogstashMarkerAttributes(captureLogstashMarkerAttributes);
+    initializeMdcAttributesFromProperties(
+        applicationEnvironmentPreparedEvent.getEnvironment(), openTelemetryAppender);
+    initializeKeyValuePairAttributesFromProperties(
+        applicationEnvironmentPreparedEvent.getEnvironment(), openTelemetryAppender);
+    initializeLoggerContextAttributesFromProperties(
+        applicationEnvironmentPreparedEvent.getEnvironment(), openTelemetryAppender);
+    initializeLogstashMarkerAttributesFromProperties(
+        applicationEnvironmentPreparedEvent.getEnvironment(), openTelemetryAppender);
+    initializeLogstashStructuredArgumentAttributesFromProperties(
+        applicationEnvironmentPreparedEvent.getEnvironment(), openTelemetryAppender);
+  }
+
+  // the appender resolves the precedence between these settings, ignoring the deprecated one when
+  // a non-empty selector is configured
+  @SuppressWarnings("deprecation") // the deprecated setter preserves the deprecated semantics
+  static void initializeMdcAttributesFromProperties(
+      ConfigurableEnvironment environment, OpenTelemetryAppender openTelemetryAppender) {
+    List<String> included = getLoggingListProperty(environment, MDC_ATTRIBUTES_INCLUDED);
+    List<String> excluded = getLoggingListProperty(environment, MDC_ATTRIBUTES_EXCLUDED);
+    List<String> deprecated = getLoggingListProperty(environment, DEPRECATED_MDC_ATTRIBUTES);
+    // an empty selector property is equivalent to an unset one, matching how the same flat
+    // properties are read outside of Spring, where empty values cannot be distinguished from unset
+    // ones
+    if (isEmpty(included) && isEmpty(excluded) && isEmpty(deprecated)) {
+      return;
     }
 
-    Boolean captureLogstashStructuredArguments =
-        evaluateBooleanProperty(
-            applicationEnvironmentPreparedEvent,
-            "otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments");
-    if (captureLogstashStructuredArguments != null) {
-      openTelemetryAppender.setCaptureLogstashStructuredArguments(
-          captureLogstashStructuredArguments);
+    // configuration properties replace the MDC settings of an appender declared in logback.xml, so
+    // every source the appender resolves is set, including the ones that are not configured
+    openTelemetryAppender.setMdcAttributes(
+        IncludeExclude.builder()
+            .setIncluded(included == null ? emptyList() : included)
+            .setExcluded(excluded == null ? emptyList() : excluded)
+            .build());
+    openTelemetryAppender.setMdcAttributesIncluded(null);
+    openTelemetryAppender.setMdcAttributesExcluded(null);
+    // the deprecated appender setting splits its value on commas, so joining the configured keys
+    // reproduces them exactly, including the single "*" that selects every MDC key
+    openTelemetryAppender.setCaptureMdcAttributes(
+        deprecated == null ? null : String.join(",", deprecated));
+  }
+
+  // the appender resolves the precedence between these settings, ignoring the deprecated one when
+  // a non-empty selector is configured
+  @SuppressWarnings("deprecation") // the deprecated setter preserves the deprecated semantics
+  static void initializeKeyValuePairAttributesFromProperties(
+      ConfigurableEnvironment environment, OpenTelemetryAppender openTelemetryAppender) {
+    List<String> included = getLoggingListProperty(environment, KEY_VALUE_PAIR_ATTRIBUTES_INCLUDED);
+    List<String> excluded = getLoggingListProperty(environment, KEY_VALUE_PAIR_ATTRIBUTES_EXCLUDED);
+    Boolean deprecated = evaluateBooleanProperty(environment, DEPRECATED_KEY_VALUE_PAIR_ATTRIBUTES);
+    // an empty selector property is equivalent to an unset one, matching how the same flat
+    // properties are read outside of Spring, where empty values cannot be distinguished from unset
+    // ones
+    if (isEmpty(included) && isEmpty(excluded) && deprecated == null) {
+      return;
     }
 
-    String mdcAttributeProperty =
-        getLoggingProperty(
-            applicationEnvironmentPreparedEvent.getEnvironment(),
-            "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes");
-    if (mdcAttributeProperty != null) {
-      openTelemetryAppender.setCaptureMdcAttributes(mdcAttributeProperty);
+    // configuration properties replace the key value pair settings of an appender declared in
+    // logback.xml, so every source the appender resolves is set, including the ones that are not
+    // configured
+    openTelemetryAppender.setKeyValuePairAttributes(
+        IncludeExclude.builder()
+            .setIncluded(included == null ? emptyList() : included)
+            .setExcluded(excluded == null ? emptyList() : excluded)
+            .build());
+    openTelemetryAppender.setKeyValuePairAttributesIncluded(null);
+    openTelemetryAppender.setKeyValuePairAttributesExcluded(null);
+    // reaching here with an empty selector implies that the deprecated property is configured, so
+    // the settings declared in logback.xml never survive as a fallback
+    if (deprecated != null) {
+      openTelemetryAppender.setCaptureKeyValuePairAttributes(deprecated);
     }
+  }
+
+  // the appender resolves the precedence between these settings, ignoring the deprecated one when
+  // a non-empty selector is configured
+  @SuppressWarnings("deprecation") // the deprecated setter preserves the deprecated semantics
+  static void initializeLoggerContextAttributesFromProperties(
+      ConfigurableEnvironment environment, OpenTelemetryAppender openTelemetryAppender) {
+    List<String> included = getLoggingListProperty(environment, LOGGER_CONTEXT_ATTRIBUTES_INCLUDED);
+    List<String> excluded = getLoggingListProperty(environment, LOGGER_CONTEXT_ATTRIBUTES_EXCLUDED);
+    Boolean deprecated = evaluateBooleanProperty(environment, DEPRECATED_LOGGER_CONTEXT_ATTRIBUTES);
+    // an empty selector property is equivalent to an unset one, matching how the same flat
+    // properties are read outside of Spring, where empty values cannot be distinguished from unset
+    // ones
+    if (isEmpty(included) && isEmpty(excluded) && deprecated == null) {
+      return;
+    }
+
+    // configuration properties replace the logger context settings of an appender declared in
+    // logback.xml, so every source the appender resolves is set, including the ones that are not
+    // configured
+    openTelemetryAppender.setLoggerContextAttributes(
+        IncludeExclude.builder()
+            .setIncluded(included == null ? emptyList() : included)
+            .setExcluded(excluded == null ? emptyList() : excluded)
+            .build());
+    openTelemetryAppender.setLoggerContextAttributesIncluded(null);
+    openTelemetryAppender.setLoggerContextAttributesExcluded(null);
+    // reaching here with an empty selector implies that the deprecated property is configured, so
+    // the settings declared in logback.xml never survive as a fallback
+    if (deprecated != null) {
+      openTelemetryAppender.setCaptureLoggerContext(deprecated);
+    }
+  }
+
+  // the appender resolves the precedence between these settings, ignoring the deprecated one when
+  // a non-empty selector is configured
+  @SuppressWarnings("deprecation") // the deprecated setter preserves the deprecated semantics
+  static void initializeLogstashMarkerAttributesFromProperties(
+      ConfigurableEnvironment environment, OpenTelemetryAppender openTelemetryAppender) {
+    List<String> included =
+        getLoggingListProperty(environment, LOGSTASH_MARKER_ATTRIBUTES_INCLUDED);
+    List<String> excluded =
+        getLoggingListProperty(environment, LOGSTASH_MARKER_ATTRIBUTES_EXCLUDED);
+    Boolean deprecated =
+        evaluateBooleanProperty(environment, DEPRECATED_LOGSTASH_MARKER_ATTRIBUTES);
+    // an empty selector property is equivalent to an unset one, matching how the same flat
+    // properties are read outside of Spring, where empty values cannot be distinguished from unset
+    // ones
+    if (isEmpty(included) && isEmpty(excluded) && deprecated == null) {
+      return;
+    }
+
+    // configuration properties replace the Logstash marker settings of an appender declared in
+    // logback.xml, so every source the appender resolves is set, including the ones that are not
+    // configured
+    openTelemetryAppender.setLogstashMarkerAttributes(
+        IncludeExclude.builder()
+            .setIncluded(included == null ? emptyList() : included)
+            .setExcluded(excluded == null ? emptyList() : excluded)
+            .build());
+    openTelemetryAppender.setLogstashMarkerAttributesIncluded(null);
+    openTelemetryAppender.setLogstashMarkerAttributesExcluded(null);
+    // reaching here with an empty selector implies that the deprecated property is configured, so
+    // the settings declared in logback.xml never survive as a fallback
+    if (deprecated != null) {
+      openTelemetryAppender.setCaptureLogstashMarkerAttributes(deprecated);
+    }
+  }
+
+  // the appender resolves the precedence between these settings, ignoring the deprecated one when
+  // a non-empty selector is configured
+  @SuppressWarnings("deprecation") // the deprecated setter preserves the deprecated semantics
+  static void initializeLogstashStructuredArgumentAttributesFromProperties(
+      ConfigurableEnvironment environment, OpenTelemetryAppender openTelemetryAppender) {
+    List<String> included =
+        getLoggingListProperty(environment, LOGSTASH_STRUCTURED_ARGUMENT_ATTRIBUTES_INCLUDED);
+    List<String> excluded =
+        getLoggingListProperty(environment, LOGSTASH_STRUCTURED_ARGUMENT_ATTRIBUTES_EXCLUDED);
+    // an empty selector property is equivalent to an unset one, matching how the same flat
+    // properties are read outside of Spring, where empty values cannot be distinguished from unset
+    // ones
+    Boolean deprecated = null;
+    if (isEmpty(included) && isEmpty(excluded)) {
+      deprecated = evaluateBooleanProperty(environment, DEPRECATED_LOGSTASH_STRUCTURED_ARGUMENTS);
+      if (deprecated == null) {
+        return;
+      }
+    }
+
+    // configuration properties replace the Logstash structured argument settings of an appender
+    // declared in logback.xml, so every source the appender resolves is set, including the ones
+    // that are not configured
+    openTelemetryAppender.setLogstashStructuredArgumentAttributes(
+        IncludeExclude.builder()
+            .setIncluded(included == null ? emptyList() : included)
+            .setExcluded(excluded == null ? emptyList() : excluded)
+            .build());
+    openTelemetryAppender.setLogstashStructuredArgumentAttributesIncluded(null);
+    openTelemetryAppender.setLogstashStructuredArgumentAttributesExcluded(null);
+    // reaching here with an empty selector implies that the deprecated property is configured, so
+    // the settings declared in logback.xml never survive as a fallback
+    if (deprecated != null) {
+      openTelemetryAppender.setCaptureLogstashStructuredArguments(deprecated);
+    }
+  }
+
+  private static boolean isEmpty(@Nullable List<String> values) {
+    return values == null || values.isEmpty();
+  }
+
+  /**
+   * Reads a list-valued property, which declarative configuration flattens into indexed properties
+   * (e.g. {@code ...included[0]}) and flat configuration provides as a comma-separated value.
+   * Returns {@code null} when the property is not configured at all.
+   *
+   * <p>{@link org.springframework.boot.context.properties.bind.Binder} is not used here because the
+   * declarative property names contain {@code /}, which is not a valid character in a canonical
+   * Spring configuration property name.
+   */
+  @Nullable
+  private static List<String> getLoggingListProperty(
+      ConfigurableEnvironment environment, String property) {
+    String propertyName = getEnvironmentPropertyName(environment, property);
+    String value = environment.getProperty(propertyName, String.class);
+    if (value != null) {
+      return split(value);
+    }
+
+    List<String> values = new ArrayList<>();
+    boolean configured = false;
+    for (int i = 0; ; i++) {
+      String item = environment.getProperty(propertyName + "[" + i + "]", String.class);
+      if (item == null) {
+        break;
+      }
+      configured = true;
+      item = item.trim();
+      if (!item.isEmpty()) {
+        values.add(item);
+      }
+    }
+    return configured ? values : null;
   }
 
   private static void addMdcAppender(
@@ -272,7 +484,13 @@ class LogbackAppenderInstaller {
   @Nullable
   private static Boolean evaluateBooleanProperty(
       ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent, String property) {
-    ConfigurableEnvironment environment = applicationEnvironmentPreparedEvent.getEnvironment();
+    return evaluateBooleanProperty(applicationEnvironmentPreparedEvent.getEnvironment(), property);
+  }
+
+  /** Evaluates a boolean property, taking into account whether declarative config is in use. */
+  @Nullable
+  private static Boolean evaluateBooleanProperty(
+      ConfigurableEnvironment environment, String property) {
     return environment.getProperty(
         getEnvironmentPropertyName(environment, property), Boolean.class);
   }

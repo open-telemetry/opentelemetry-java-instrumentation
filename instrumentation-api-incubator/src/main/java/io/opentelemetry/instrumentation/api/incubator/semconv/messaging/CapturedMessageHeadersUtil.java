@@ -7,17 +7,26 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.Map;
 
 final class CapturedMessageHeadersUtil {
 
-  private static final ConcurrentMap<String, AttributeKey<List<String>>> attributeKeysCache =
-      new ConcurrentHashMap<>();
+  static Map<String, AttributeKey<List<String>>> createLiteralAttributeKeys(
+      Collection<String> headerNames) {
+    Map<String, AttributeKey<List<String>>> result = new HashMap<>();
+    for (String headerName : headerNames) {
+      result.put(headerName, createKey(headerName));
+    }
+    return result;
+  }
 
-  static AttributeKey<List<String>> attributeKey(String headerName) {
-    return attributeKeysCache.computeIfAbsent(headerName, n -> createKey(n));
+  static AttributeKey<List<String>> attributeKey(
+      String headerName, Map<String, AttributeKey<List<String>>> literalAttributeKeys) {
+    AttributeKey<List<String>> attributeKey = literalAttributeKeys.get(headerName);
+    return attributeKey != null ? attributeKey : createKey(headerName);
   }
 
   private static AttributeKey<List<String>> createKey(String headerName) {

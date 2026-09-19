@@ -10,8 +10,7 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIn
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
-final class LettuceBatchAttributesGetter
-    implements DbClientAttributesGetter<LettuceBatchRequest, Void> {
+class LettuceBatchAttributesGetter implements DbClientAttributesGetter<LettuceBatchRequest, Void> {
 
   @Override
   public String getDbSystemName(LettuceBatchRequest request) {
@@ -21,6 +20,15 @@ final class LettuceBatchAttributesGetter
   @Override
   @Nullable
   public String getDbNamespace(LettuceBatchRequest request) {
+    Integer databaseIndex = request.getDatabaseIndex();
+    return databaseIndex != null ? String.valueOf(databaseIndex) : null;
+  }
+
+  @Deprecated // to be removed in 3.0
+  @Override
+  @Nullable
+  public String getDbName(LettuceBatchRequest request) {
+    // old semconv reports the redis database index as db.redis.database_index, not db.name
     return null;
   }
 

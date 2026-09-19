@@ -36,6 +36,8 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -44,6 +46,15 @@ import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class SqlClientAttributesExtractorTest {
+
+  @Test
+  void shouldProvideSchemaUrl() {
+    AttributesExtractor<Map<String, Object>, Void> extractor =
+        SqlClientAttributesExtractor.create(new TestAttributesGetter());
+
+    assertThat(((SchemaUrlProvider) extractor).internalGetSchemaUrl())
+        .isEqualTo(emitStableDatabaseSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_24_0);
+  }
 
   static class TestAttributesGetter
       implements SqlClientAttributesGetter<Map<String, Object>, Void> {
@@ -120,6 +131,15 @@ class SqlClientAttributesExtractorTest {
         return super.isParameterizedQuery(map, queryIndex);
       }
       return parameterizedQueries.get(queryIndex);
+    }
+  }
+
+  static class TestOldSemconvMultiAttributesGetter extends TestMultiAttributesGetter {
+
+    @Deprecated
+    @Override
+    public Collection<String> getRawQueryTextsForOldSemconv(Map<String, Object> map) {
+      return singleton(read(map, "db.query.text.old"));
     }
   }
 
@@ -455,6 +475,52 @@ class SqlClientAttributesExtractorTest {
     }
 
     assertThat(endAttributes.build().isEmpty()).isTrue();
+  }
+
+  @Test
+  void shouldExtractSemconvSpecificMultiQueryBatchAttributes() {
+    // given
+    Map<String, Object> request = new HashMap<>();
+    request.put("db.namespace", "potatoes");
+    request.put(
+        "db.query.texts", asList("INSERT INTO potato VALUES(1)", "INSERT INTO potato VALUES(2)"));
+    request.put("db.query.text.old", "INSERT INTO potato VALUES(1);\nINSERT INTO potato VALUES(2)");
+    request.put(DB_OPERATION_BATCH_SIZE.getKey(), 2L);
+
+    AttributesExtractor<Map<String, Object>, Void> underTest =
+        SqlClientAttributesExtractor.create(new TestOldSemconvMultiAttributesGetter());
+
+    // when
+    AttributesBuilder attributes = Attributes.builder();
+    underTest.onStart(attributes, Context.root(), request);
+
+    // then
+    if (emitStableDatabaseSemconv() && emitOldDatabaseSemconv()) {
+      assertThat(attributes.build())
+          .containsOnly(
+              entry(DB_NAME, "potatoes"),
+              entry(DB_STATEMENT, "INSERT INTO potato VALUES(?); INSERT INTO potato VALUES(?)"),
+              entry(DB_OPERATION, "INSERT"),
+              entry(DB_SQL_TABLE, "potato"),
+              entry(DB_NAMESPACE, "potatoes"),
+              entry(DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
+              entry(DB_QUERY_SUMMARY, "BATCH INSERT potato"),
+              entry(DB_OPERATION_BATCH_SIZE, 2L));
+    } else if (emitOldDatabaseSemconv()) {
+      assertThat(attributes.build())
+          .containsOnly(
+              entry(DB_NAME, "potatoes"),
+              entry(DB_STATEMENT, "INSERT INTO potato VALUES(?); INSERT INTO potato VALUES(?)"),
+              entry(DB_OPERATION, "INSERT"),
+              entry(DB_SQL_TABLE, "potato"));
+    } else if (emitStableDatabaseSemconv()) {
+      assertThat(attributes.build())
+          .containsOnly(
+              entry(DB_NAMESPACE, "potatoes"),
+              entry(DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
+              entry(DB_QUERY_SUMMARY, "BATCH INSERT potato"),
+              entry(DB_OPERATION_BATCH_SIZE, 2L));
+    }
   }
 
   @Test

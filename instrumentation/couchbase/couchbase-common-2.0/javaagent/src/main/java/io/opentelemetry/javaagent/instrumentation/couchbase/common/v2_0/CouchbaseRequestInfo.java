@@ -13,9 +13,11 @@ import com.google.auto.value.AutoValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import java.net.SocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 @AutoValue
@@ -34,25 +36,32 @@ public abstract class CouchbaseRequestInfo {
 
   @Nullable private String localAddress;
   @Nullable private String operationId;
-  @Nullable private SocketAddress peerAddress;
+  @Nullable private volatile Node node;
 
   public static CouchbaseRequestInfo create(
-      @Nullable String bucket, Class<?> declaringClass, String methodName) {
+      @Nullable String bucket,
+      @Nullable DbServerTarget serverTarget,
+      Class<?> declaringClass,
+      String methodName) {
     String operation =
         methodOperationNames
             .get(declaringClass)
             .computeIfAbsent(methodName, m -> computeOperation(declaringClass, m));
-    return new AutoValue_CouchbaseRequestInfo(bucket, null, null, operation, true);
+    return new AutoValue_CouchbaseRequestInfo(bucket, null, null, operation, true, serverTarget);
   }
 
   @SuppressWarnings("deprecation") // using deprecated old semconv operation
-  public static CouchbaseRequestInfo create(@Nullable String bucket, Object query) {
+  public static CouchbaseRequestInfo create(
+      @Nullable String bucket, @Nullable DbServerTarget serverTarget, Object query) {
     SqlQuery sqlQuery = emitOldDatabaseSemconv() ? CouchbaseQuerySanitizer.analyze(query) : null;
     SqlQuery sqlQueryWithSummary =
         emitStableDatabaseSemconv() ? CouchbaseQuerySanitizer.analyzeWithSummary(query) : null;
     String operation = sqlQuery != null ? sqlQuery.getOperationName() : null;
+    if (operation == null && sqlQueryWithSummary != null) {
+      operation = sqlQueryWithSummary.getOperationName();
+    }
     return new AutoValue_CouchbaseRequestInfo(
-        bucket, sqlQuery, sqlQueryWithSummary, operation, false);
+        bucket, sqlQuery, sqlQueryWithSummary, operation, false, serverTarget);
   }
 
   private static String computeOperation(Class<?> declaringClass, String methodName) {
@@ -85,6 +94,29 @@ public abstract class CouchbaseRequestInfo {
   public abstract boolean isMethodCall();
 
   @Nullable
+  public abstract DbServerTarget getServerTarget();
+
+  // Each subscription needs independent mutable node state.
+  public Supplier<CouchbaseRequestInfo> copySupplier() {
+    return new Supplier<CouchbaseRequestInfo>() {
+      @Override
+      public CouchbaseRequestInfo get() {
+        return copy();
+      }
+    };
+  }
+
+  private CouchbaseRequestInfo copy() {
+    return new AutoValue_CouchbaseRequestInfo(
+        getBucket(),
+        getSqlQuery(),
+        getSqlQueryWithSummary(),
+        getOperation(),
+        isMethodCall(),
+        getServerTarget());
+  }
+
+  @Nullable
   public String getLocalAddress() {
     return localAddress;
   }
@@ -103,11 +135,67 @@ public abstract class CouchbaseRequestInfo {
   }
 
   @Nullable
-  public SocketAddress getPeerAddress() {
-    return peerAddress;
+  public Node getNode() {
+    return node;
   }
 
-  public void setPeerAddress(@Nullable SocketAddress peerAddress) {
-    this.peerAddress = peerAddress;
+  public void setNode(@Nullable SocketAddress peerAddress, @Nullable String backendAddress) {
+    if (peerAddress == null) {
+      return;
+    }
+    // Replace both values atomically so retries cannot pair data from different nodes.
+    node = new Node(peerAddress, backendAddress);
+  }
+
+  public static final class Node {
+
+    private final SocketAddress peerAddress;
+    @Nullable private final String backendAddress;
+    private final int backendPort;
+
+    private Node(SocketAddress peerAddress, @Nullable String backendAddress) {
+      this.peerAddress = peerAddress;
+      if (backendAddress == null) {
+        this.backendAddress = null;
+        this.backendPort = 0;
+        return;
+      }
+      int portSeparator = backendAddress.lastIndexOf(':');
+      if (portSeparator < 0 || (backendAddress.startsWith("[") && backendAddress.endsWith("]"))) {
+        this.backendAddress = stripBrackets(backendAddress);
+        this.backendPort = 0;
+      } else {
+        this.backendAddress = stripBrackets(backendAddress.substring(0, portSeparator));
+        this.backendPort = parsePort(backendAddress.substring(portSeparator + 1));
+      }
+    }
+
+    public SocketAddress getPeerAddress() {
+      return peerAddress;
+    }
+
+    @Nullable
+    public String getBackendAddress() {
+      return backendAddress;
+    }
+
+    public int getBackendPort() {
+      return backendPort;
+    }
+
+    @Nullable
+    private static String stripBrackets(String host) {
+      String stripped =
+          host.startsWith("[") && host.endsWith("]") ? host.substring(1, host.length() - 1) : host;
+      return stripped.isEmpty() ? null : stripped;
+    }
+
+    private static int parsePort(String port) {
+      try {
+        return Integer.parseInt(port);
+      } catch (NumberFormatException ignored) {
+        return 0;
+      }
+    }
   }
 }
