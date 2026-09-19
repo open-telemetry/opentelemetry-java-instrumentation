@@ -13,6 +13,11 @@ else
     | sort -u)
 fi
 
+if [[ -z "$source_dirs" ]]; then
+  echo "ERROR: no Java source directories found"
+  exit 1
+fi
+
 check_source_set() {
   local source_set="$1"
   local expected_prefix="$2"

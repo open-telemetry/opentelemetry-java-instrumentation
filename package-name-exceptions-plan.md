@@ -20,6 +20,7 @@ Updated on 2026-05-28 after PRs 29 and 30 merged upstream together as #18854 and
 Updated on 2026-06-02 after PR 17 merged upstream as #18772 (Akka/Scala forkjoin module renames), and after #18855 moved the `servlet-common` library internal package; both allowlist entries were removed from the checker.
 Updated again on 2026-06-02 after deciding to keep the four self-instrumentation modules' historical packages and document them as self-instrumentation in the checker instead of renaming them (PR 14 / #18747 closed without merging).
 Updated on 2026-08-23 after merging `main`, which brought in `apache-dbcp-2.0`, `hbase-client-common-1.0`, `jedis-4.0`, `tomcat-dbcp-8.0`, and the versioned `opentelemetry-instrumentation-api-1.14` module; their checker exceptions were added and PR 31 was planned.
+Updated on 2026-09-19 after #20070 added Redisson package-private configuration helpers and their checker exceptions.
 
 ## Goal
 
@@ -441,7 +442,7 @@ These are probably not the next easiest wins:
 - `java-http-client` and `java-http-server`: these have published library/testing packages, so package renames need a dedicated public API decision instead of a package-only javaagent cleanup.
 - `jmx-metrics`: current packages are under `jmx`, while the module says `jmx-metrics`. This touches 43 files and may be user-facing enough to deserve a dedicated PR.
 - Library-specific third-party packages: `io.grpc.override`, `io.lettuce.core.protocol`, `io.nats.client.impl`, `rx`, `org.elasticsearch.client`, `org.apache.thrift`, and `org.apache.thrift.server` are likely intentional shims or package-private access points.
-- Advice-native package exceptions: packages under `com.clickhouse`, `com.twitter`, `io.netty`, `org.apache.commons.dbcp2`, `org.apache.hadoop.hbase.ipc`, `org.apache.tomcat.dbcp.dbcp2`, `org.springframework`, `reactor.netty`, `redis.clients.jedis`, and `io.vertx` should stay until each one is proven not to need native package placement.
+- Advice-native package exceptions: packages under `com.clickhouse`, `com.twitter`, `io.netty`, `org.apache.commons.dbcp2`, `org.apache.hadoop.hbase.ipc`, `org.apache.tomcat.dbcp.dbcp2`, `org.redisson.config`, `org.springframework`, `reactor.netty`, `redis.clients.jedis`, and `io.vertx` should stay until each one is proven not to need native package placement.
 - AWS SDK package renames remain deferred.
 - Remaining unversioned module allowlist entries split into policy buckets:
   - JDK/platform modules such as `executors`, `http-url-connection`, `jdbc`, `methods`, `rmi`, and `runtime-telemetry` probably deserve explicit checker allowances instead of version suffixes.
