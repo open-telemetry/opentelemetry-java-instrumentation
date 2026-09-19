@@ -17,24 +17,28 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
 public final class LettuceCommandPeer {
-  private static final String DOMAIN_SOCKET_ADDRESS_CLASS =
-      "io.netty.channel.unix.DomainSocketAddress";
+  @Nullable private static final Class<?> DOMAIN_SOCKET_ADDRESS_CLASS;
+  @Nullable private static final Method DOMAIN_SOCKET_ADDRESS_PATH_METHOD;
 
   private static final VirtualField<RedisCommand<?, ?, ?>, LettuceCommandPeer> COMMAND_PEER =
       VirtualField.find(RedisCommand.class, LettuceCommandPeer.class);
 
-  private static final ClassValue<Method> domainSocketAddressPathMethod =
-      new ClassValue<Method>() {
-        @Nullable
-        @Override
-        protected Method computeValue(Class<?> type) {
-          try {
-            return type.getMethod("path");
-          } catch (NoSuchMethodException | SecurityException ignored) {
-            return null;
-          }
-        }
-      };
+  static {
+    Class<?> domainSocketAddressClass = null;
+    Method domainSocketAddressPathMethod = null;
+    try {
+      domainSocketAddressClass =
+          Class.forName(
+              "io.netty.channel.unix.DomainSocketAddress",
+              false,
+              LettuceCommandPeer.class.getClassLoader());
+      domainSocketAddressPathMethod = domainSocketAddressClass.getMethod("path");
+    } catch (ReflectiveOperationException | SecurityException | LinkageError ignored) {
+      // DomainSocketAddress is optional.
+    }
+    DOMAIN_SOCKET_ADDRESS_CLASS = domainSocketAddressClass;
+    DOMAIN_SOCKET_ADDRESS_PATH_METHOD = domainSocketAddressPathMethod;
+  }
 
   private final AtomicBoolean spanStarted = new AtomicBoolean();
   @Nullable private volatile SocketAddress address;
@@ -112,14 +116,12 @@ public final class LettuceCommandPeer {
       InetSocketAddress inetPeerAddress = (InetSocketAddress) peerAddress;
       return inetPeerAddress.isUnresolved() ? null : inetPeerAddress.getAddress().getHostAddress();
     }
-    if (peerAddress != null
-        && peerAddress.getClass().getName().equals(DOMAIN_SOCKET_ADDRESS_CLASS)) {
-      Method pathMethod = domainSocketAddressPathMethod.get(peerAddress.getClass());
-      if (pathMethod == null) {
+    if (peerAddress != null && peerAddress.getClass() == DOMAIN_SOCKET_ADDRESS_CLASS) {
+      if (DOMAIN_SOCKET_ADDRESS_PATH_METHOD == null) {
         return null;
       }
       try {
-        return (String) pathMethod.invoke(peerAddress);
+        return (String) DOMAIN_SOCKET_ADDRESS_PATH_METHOD.invoke(peerAddress);
       } catch (ReflectiveOperationException
           | IllegalArgumentException
           | ClassCastException ignored) {
