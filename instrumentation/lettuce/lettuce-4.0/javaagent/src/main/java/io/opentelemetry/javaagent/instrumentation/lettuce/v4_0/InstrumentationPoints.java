@@ -38,7 +38,7 @@ public class InstrumentationPoints {
       @Nullable Throwable throwable,
       @Nullable AsyncCommand<?, ?, ?> asyncCommand) {
     if (throwable != null) {
-      instrumenter().end(context, command, null, throwable);
+      endCommand(command, context, throwable, asyncCommand);
     } else if (expectsResponse(command)) {
       asyncCommand.handleAsync(
           (value, ex) -> {
@@ -50,12 +50,28 @@ public class InstrumentationPoints {
               // and don't report this as an error
               ex = null;
             }
-            instrumenter().end(context, command, null, ex);
+            endCommand(command, context, ex, asyncCommand);
             return null;
           });
     } else {
       // No response is expected, so we must finish the span now.
-      instrumenter().end(context, command, null, null);
+      endCommand(command, context, null, asyncCommand);
+    }
+  }
+
+  private static void endCommand(
+      RedisCommand<?, ?, ?> command,
+      Context context,
+      @Nullable Throwable throwable,
+      @Nullable AsyncCommand<?, ?, ?> asyncCommand) {
+    LettuceSingletons.finishCommandPeer(command);
+    try {
+      instrumenter().end(context, command, null, throwable);
+    } finally {
+      LettuceSingletons.clearCommandPeer(command);
+      if (asyncCommand != null) {
+        LettuceSingletons.clearCommandPeer(asyncCommand);
+      }
     }
   }
 
@@ -68,6 +84,7 @@ public class InstrumentationPoints {
       return;
     }
 
+    LettuceSingletons.finishCommandPeer(command);
     Throwable error = null;
     if ("completeExceptionally".equals(methodName)) {
       error = commandError;
