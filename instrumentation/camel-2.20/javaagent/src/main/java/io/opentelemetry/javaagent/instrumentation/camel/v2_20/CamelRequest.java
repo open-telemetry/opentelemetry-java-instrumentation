@@ -5,10 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessageTelemetry.getKafkaDeliveryState;
+import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessageTelemetry.messageTelemetry;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.javaagent.bootstrap.kafka.KafkaRecordDeliveryState;
 import io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators.MessagingSpanDecorator;
 import javax.annotation.Nullable;
 import org.apache.camel.Endpoint;
@@ -123,4 +128,12 @@ abstract class CamelRequest {
   abstract boolean isMessagingDestinationTemporary();
 
   abstract boolean isMessagingSpanContextPropagated();
+
+  boolean hasConsumedMessagesRecorded() {
+    if ("kafka".equals(getMessagingSystem())) {
+      KafkaRecordDeliveryState state = getKafkaDeliveryState(getExchange().getIn());
+      return state != null && state.isConsumedMessagesRecorded();
+    }
+    return messageTelemetry().contains(getExchange().getIn(), RECEIVE, CONSUMED_MESSAGES);
+  }
 }

@@ -5,13 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanSuppression;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.consumerReceiveInstrumenter;
-import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.recordTelemetry;
+import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.recordDeliveryState;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -25,6 +23,7 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
+import io.opentelemetry.javaagent.bootstrap.kafka.KafkaRecordDeliveryState;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.time.Duration;
@@ -111,7 +110,11 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
           KafkaConsumerContextUtil.set(record, consumerContext);
           // The receive span covers the whole batch, so record only the per-message counter here.
           if (receiveOperationStarted && emitStableMessagingSemconv()) {
-            recordTelemetry().add(record, RECEIVE, CONSUMED_MESSAGES);
+            KafkaRecordDeliveryState state = new KafkaRecordDeliveryState();
+            state.markConsumedMessagesRecorded();
+            recordDeliveryState().set(record, state);
+          } else {
+            recordDeliveryState().set(record, null);
           }
         }
         KafkaConsumerBatchStateUtil.recordPoll(records, suppressionAcquired);

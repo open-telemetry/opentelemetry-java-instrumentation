@@ -10,7 +10,6 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.M
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.add;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.enable;
-import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessageTelemetry.messageTelemetry;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
@@ -57,7 +56,7 @@ class CamelProcessMetrics {
     long startNanos = System.nanoTime();
     Context metricsContext = enable(parentContext);
     metricsContext =
-        messageTelemetry().contains(request.getExchange().getIn(), RECEIVE, CONSUMED_MESSAGES)
+        request.hasConsumedMessagesRecorded()
             ? add(metricsContext, RECEIVE, CONSUMED_MESSAGES)
             : metricsContext;
     metricsContext = consumedMessages.onStart(metricsContext, startAttributes, startNanos);

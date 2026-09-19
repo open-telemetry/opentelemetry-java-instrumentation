@@ -5,19 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.SPAN;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaConsumerBatchState;
-import io.opentelemetry.javaagent.bootstrap.messaging.MessagingTelemetryCarrier;
+import io.opentelemetry.javaagent.bootstrap.kafka.KafkaRecordDeliveryState;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -28,8 +25,11 @@ import org.junit.jupiter.api.Test;
 
 class KafkaCamelOwnershipTest {
 
-  private static final MessagingTelemetryCarrier<ConsumerRecord<?, ?>> RECORD_TELEMETRY =
-      KafkaEndpointInstrumentation.CreateExchangeAdvice.recordTelemetry();
+  private static final VirtualField<ConsumerRecord<?, ?>, KafkaRecordDeliveryState>
+      RECORD_DELIVERY_STATE =
+          KafkaEndpointInstrumentation.CreateExchangeAdvice.recordDeliveryState();
+  private static final VirtualField<Message, KafkaRecordDeliveryState> CAMEL_DELIVERY_STATE =
+      KafkaEndpointInstrumentation.CreateExchangeAdvice.camelDeliveryState();
   private static final VirtualField<ConsumerRecords<?, ?>, KafkaConsumerBatchState> BATCH_STATE =
       VirtualField.find(ConsumerRecords.class, KafkaConsumerBatchState.class);
 
@@ -76,31 +76,58 @@ class KafkaCamelOwnershipTest {
   }
 
   @Test
-  void transfersAndConsumesRecordTelemetry() {
+  void transfersRecordDeliveryStateAndClearsSource() {
     ConsumerRecord<?, ?> record = consumerRecord();
-    RECORD_TELEMETRY.add(record, RECEIVE, CONSUMED_MESSAGES);
+    KafkaRecordDeliveryState state = recordedDeliveryState();
+    RECORD_DELIVERY_STATE.set(record, state);
     Message message = mock(Message.class);
-    CamelMessageTelemetry.messageTelemetry().add(message, PROCESS, SPAN);
+    KafkaRecordDeliveryState staleState = recordedDeliveryState();
+    CAMEL_DELIVERY_STATE.set(message, staleState);
     Exchange exchange = mock(Exchange.class);
     when(exchange.getIn()).thenReturn(message);
 
     KafkaEndpointInstrumentation.CreateExchangeAdvice.onExit(record, exchange);
 
-    assertThat(
-            CamelMessageTelemetry.messageTelemetry().contains(message, RECEIVE, CONSUMED_MESSAGES))
-        .isTrue();
-    assertThat(CamelMessageTelemetry.messageTelemetry().contains(message, PROCESS, SPAN)).isFalse();
-    assertThat(RECORD_TELEMETRY.contains(record, RECEIVE, CONSUMED_MESSAGES)).isFalse();
+    assertThat(CAMEL_DELIVERY_STATE.get(message)).isSameAs(state).isNotSameAs(staleState);
+    assertThat(CamelMessageTelemetry.getKafkaDeliveryState(message)).isSameAs(state);
+    assertThat(RECORD_DELIVERY_STATE.get(record)).isNull();
   }
 
   @Test
-  void conversionFailureConsumesRecordTelemetry() {
+  void clearsRecordDeliveryStateWhenExchangeCreationReturnsNull() {
     ConsumerRecord<?, ?> record = consumerRecord();
-    RECORD_TELEMETRY.add(record, RECEIVE, CONSUMED_MESSAGES);
+    RECORD_DELIVERY_STATE.set(record, recordedDeliveryState());
 
     KafkaEndpointInstrumentation.CreateExchangeAdvice.onExit(record, null);
 
-    assertThat(RECORD_TELEMETRY.contains(record, RECEIVE, CONSUMED_MESSAGES)).isFalse();
+    assertThat(RECORD_DELIVERY_STATE.get(record)).isNull();
+  }
+
+  @Test
+  void clearsRecordDeliveryStateWhenMessageLookupFails() {
+    ConsumerRecord<?, ?> record = consumerRecord();
+    RECORD_DELIVERY_STATE.set(record, recordedDeliveryState());
+    Exchange exchange = mock(Exchange.class);
+    when(exchange.getIn()).thenThrow(new IllegalStateException("test"));
+
+    assertThatThrownBy(
+            () -> KafkaEndpointInstrumentation.CreateExchangeAdvice.onExit(record, exchange))
+        .isInstanceOf(IllegalStateException.class);
+
+    assertThat(RECORD_DELIVERY_STATE.get(record)).isNull();
+  }
+
+  @Test
+  void clearsStaleCamelDeliveryStateWhenRecordWasNotCounted() {
+    ConsumerRecord<?, ?> record = consumerRecord();
+    Message message = mock(Message.class);
+    CAMEL_DELIVERY_STATE.set(message, recordedDeliveryState());
+    Exchange exchange = mock(Exchange.class);
+    when(exchange.getIn()).thenReturn(message);
+
+    KafkaEndpointInstrumentation.CreateExchangeAdvice.onExit(record, exchange);
+
+    assertThat(CAMEL_DELIVERY_STATE.get(message)).isNull();
   }
 
   private static ConsumerRecords<?, ?> consumerRecords() {
@@ -110,5 +137,11 @@ class KafkaCamelOwnershipTest {
 
   private static ConsumerRecord<?, ?> consumerRecord() {
     return new ConsumerRecord<>("test", 0, 0, "key", "value");
+  }
+
+  private static KafkaRecordDeliveryState recordedDeliveryState() {
+    KafkaRecordDeliveryState state = new KafkaRecordDeliveryState();
+    state.markConsumedMessagesRecorded();
+    return state;
   }
 }

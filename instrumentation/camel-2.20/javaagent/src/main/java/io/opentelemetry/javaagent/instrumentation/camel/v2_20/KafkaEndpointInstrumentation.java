@@ -5,14 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
-import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessageTelemetry.messageTelemetry;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.bootstrap.messaging.MessagingTelemetryCarrier;
+import io.opentelemetry.javaagent.bootstrap.kafka.KafkaRecordDeliveryState;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -20,6 +18,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.camel.Exchange;
+import org.apache.camel.Message;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 class KafkaEndpointInstrumentation implements TypeInstrumentation {
@@ -41,12 +40,19 @@ class KafkaEndpointInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CreateExchangeAdvice {
 
-    private static final MessagingTelemetryCarrier<ConsumerRecord<?, ?>> recordTelemetry =
-        MessagingTelemetryCarrier.create(
-            VirtualField.find(ConsumerRecord.class, MessagingTelemetrySignals.class));
+    private static final VirtualField<ConsumerRecord<?, ?>, KafkaRecordDeliveryState>
+        RECORD_DELIVERY_STATE =
+            VirtualField.find(ConsumerRecord.class, KafkaRecordDeliveryState.class);
+    private static final VirtualField<Message, KafkaRecordDeliveryState> CAMEL_DELIVERY_STATE =
+        VirtualField.find(Message.class, KafkaRecordDeliveryState.class);
 
-    public static MessagingTelemetryCarrier<ConsumerRecord<?, ?>> recordTelemetry() {
-      return recordTelemetry;
+    public static VirtualField<ConsumerRecord<?, ?>, KafkaRecordDeliveryState>
+        recordDeliveryState() {
+      return RECORD_DELIVERY_STATE;
+    }
+
+    public static VirtualField<Message, KafkaRecordDeliveryState> camelDeliveryState() {
+      return CAMEL_DELIVERY_STATE;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -55,11 +61,10 @@ class KafkaEndpointInstrumentation implements TypeInstrumentation {
         @Advice.Return @Nullable Exchange exchange) {
       try {
         if (exchange != null) {
-          // the exchange is freshly created for this record, so nothing it could keep is stale
-          messageTelemetry().replaceFrom(recordTelemetry(), record, exchange.getIn());
+          camelDeliveryState().set(exchange.getIn(), recordDeliveryState().get(record));
         }
       } finally {
-        recordTelemetry().clear(record);
+        recordDeliveryState().set(record, null);
       }
     }
   }
