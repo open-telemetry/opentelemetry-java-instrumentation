@@ -340,8 +340,7 @@ class LettuceNetworkAttributesGetterTest {
     AsyncCommand<String, String, String> command =
         new AsyncCommand<>(new Command<>(CommandType.GET, null));
 
-    assertThat(LettuceCommandPeer.markSpanStarted(command))
-        .isEqualTo(emitStableDatabaseSemconv());
+    assertThat(LettuceCommandPeer.markSpanStarted(command)).isEqualTo(emitStableDatabaseSemconv());
   }
 
   @Test
