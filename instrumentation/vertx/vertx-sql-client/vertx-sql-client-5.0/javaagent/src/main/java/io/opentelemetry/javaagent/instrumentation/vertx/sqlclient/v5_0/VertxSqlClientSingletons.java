@@ -62,32 +62,29 @@ public class VertxSqlClientSingletons {
       BUILDER_DATABASES = VirtualField.find(ClientBuilderBase.class, List.class);
 
   private static final Logger logger = Logger.getLogger(VertxSqlClientSingletons.class.getName());
-  private static final ClassValue<Method> unwrapMethodCache =
-      new ClassValue<Method>() {
-        @Nullable
-        @Override
-        protected Method computeValue(Class<?> type) {
-          try {
-            return type.getMethod("unwrap");
-          } catch (NoSuchMethodException ignored) {
-            return null;
-          }
-        }
-      };
 
   @Nullable
   private static final VirtualField<Object, Context> COMMAND_CONTEXT =
-      getVersionedVirtualField(
-          "io.vertx.sqlclient.internal.command.CommandBase",
-          "io.vertx.sqlclient.spi.protocol.CommandBase",
+      getVirtualField(
+          loadVersionedClass(
+              "io.vertx.sqlclient.internal.command.CommandBase",
+              "io.vertx.sqlclient.spi.protocol.CommandBase"),
           Context.class);
 
   @Nullable
+  private static final Class<?> CONNECTION_CLASS =
+      loadVersionedClass(
+          "io.vertx.sqlclient.internal.Connection", "io.vertx.sqlclient.spi.connection.Connection");
+
+  @Nullable
   private static final VirtualField<Object, VertxSqlClientInfo> CONNECTION_INFO =
-      getVersionedVirtualField(
-          "io.vertx.sqlclient.internal.Connection",
-          "io.vertx.sqlclient.spi.connection.Connection",
-          VertxSqlClientInfo.class);
+      getVirtualField(CONNECTION_CLASS, VertxSqlClientInfo.class);
+
+  @Nullable private static final Method connectionUnwrapMethod = getUnwrapMethod(CONNECTION_CLASS);
+
+  @Nullable
+  private static final Method sqlConnectionUnwrapMethod =
+      getUnwrapMethod(loadClass("io.vertx.sqlclient.internal.SqlConnectionInternal"));
 
   public static Instrumenter<VertxSqlClientRequest, Void> instrumenter() {
     return instrumenter;
@@ -174,9 +171,8 @@ public class VertxSqlClientSingletons {
   @Nullable
   @NoMuzzle
   @SuppressWarnings("unchecked") // virtual field key type is not known at compile time
-  private static <T> VirtualField<Object, T> getVersionedVirtualField(
-      String firstClassName, String secondClassName, Class<T> fieldClass) {
-    Class<?> carrierClass = loadVersionedClass(firstClassName, secondClassName);
+  private static <T> VirtualField<Object, T> getVirtualField(
+      @Nullable Class<?> carrierClass, Class<T> fieldClass) {
     return carrierClass != null
         ? (VirtualField<Object, T>) VirtualField.find(carrierClass, fieldClass)
         : null;
@@ -335,9 +331,24 @@ public class VertxSqlClientSingletons {
   }
 
   @Nullable
+  private static Method getUnwrapMethod(@Nullable Class<?> connectionClass) {
+    if (connectionClass == null) {
+      return null;
+    }
+    try {
+      return connectionClass.getMethod("unwrap");
+    } catch (NoSuchMethodException ignored) {
+      return null;
+    }
+  }
+
+  @Nullable
   private static Object unwrap(Object candidate) {
-    Method unwrapMethod = unwrapMethodCache.get(candidate.getClass());
-    if (unwrapMethod == null) {
+    Method unwrapMethod = connectionUnwrapMethod;
+    if (unwrapMethod == null || !unwrapMethod.getDeclaringClass().isInstance(candidate)) {
+      unwrapMethod = sqlConnectionUnwrapMethod;
+    }
+    if (unwrapMethod == null || !unwrapMethod.getDeclaringClass().isInstance(candidate)) {
       return null;
     }
     try {

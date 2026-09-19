@@ -12,14 +12,80 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfo;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.PreparedStatement;
+import io.vertx.sqlclient.internal.Connection;
+import io.vertx.sqlclient.internal.SqlConnectionInternal;
 import org.junit.jupiter.api.Test;
 
 class VertxSqlClientSingletonsTest {
   private static boolean initialized;
+
+  @Test
+  void findsAndCachesWrappedConnectionInfo() {
+    Connection connection = mock(Connection.class);
+    Connection wrapper = mock(Connection.class);
+    when(wrapper.unwrap()).thenReturn(connection);
+    VertxSqlClientInfo info = VertxSqlClientInfo.createUnknown("test");
+    VirtualField.find(Connection.class, VertxSqlClientInfo.class).set(connection, info);
+
+    assertThat(VertxSqlClientSingletons.getConnectionInfo(wrapper)).isSameAs(info);
+    assertThat(VertxSqlClientSingletons.getConnectionInfo(wrapper)).isSameAs(info);
+    verify(wrapper).unwrap();
+  }
+
+  @Test
+  void findsAndCachesSqlConnectionInfo() {
+    Connection connection = mock(Connection.class);
+    SqlConnectionInternal wrapper = mock(SqlConnectionInternal.class);
+    when(wrapper.unwrap()).thenReturn(connection);
+    VertxSqlClientInfo info = VertxSqlClientInfo.createUnknown("test");
+    VirtualField.find(Connection.class, VertxSqlClientInfo.class).set(connection, info);
+
+    assertThat(VertxSqlClientSingletons.getConnectionInfo(wrapper)).isSameAs(info);
+    assertThat(VertxSqlClientSingletons.getConnectionInfo(wrapper)).isSameAs(info);
+    verify(wrapper).unwrap();
+  }
+
+  @Test
+  void stopsUnwrappingConnectionReturningItself() {
+    Connection connection = mock(Connection.class);
+    when(connection.unwrap()).thenReturn(connection);
+
+    assertThat(VertxSqlClientSingletons.getConnectionInfo(connection)).isNull();
+    verify(connection).unwrap();
+  }
+
+  @Test
+  void ignoresUnwrapFailure() {
+    Connection connection = mock(Connection.class);
+    when(connection.unwrap()).thenThrow(new IllegalStateException("unwrap failed"));
+
+    assertThat(VertxSqlClientSingletons.getConnectionInfo(connection)).isNull();
+    verify(connection).unwrap();
+  }
+
+  @Test
+  void ignoresSqlConnectionUnwrapFailure() {
+    SqlConnectionInternal connection = mock(SqlConnectionInternal.class);
+    when(connection.unwrap()).thenThrow(new IllegalStateException("unwrap failed"));
+
+    assertThat(VertxSqlClientSingletons.getConnectionInfo(connection)).isNull();
+    verify(connection).unwrap();
+  }
+
+  @Test
+  void ignoresMissingConnectionInfo() {
+    assertThat(VertxSqlClientSingletons.getConnectionInfo(mock(Connection.class))).isNull();
+    assertThat(VertxSqlClientSingletons.getConnectionInfo(mock(SqlConnectionInternal.class)))
+        .isNull();
+    assertThat(VertxSqlClientSingletons.getConnectionInfo(new Object())).isNull();
+  }
 
   @Test
   void loadsVersionedClassWithoutInitializingIt() {
