@@ -67,7 +67,7 @@ public final class LettuceBatchContext {
         state.commands,
         state.asyncCommands,
         state.parentContext,
-        state.getConnectionState(LettuceConnectionState.get(endpoint)));
+        state.resolveConnectionState(endpoint));
   }
 
   private LettuceBatchContext() {}
@@ -163,8 +163,8 @@ public final class LettuceBatchContext {
     }
 
     @Nullable
-    private LettuceConnectionState getConnectionState(
-        @Nullable LettuceConnectionState endpointState) {
+    private LettuceConnectionState resolveConnectionState(DefaultEndpoint endpoint) {
+      LettuceConnectionState endpointState = LettuceConnectionState.get(endpoint);
       if (serverTargetVaries) {
         return LettuceConnectionState.withServerTarget(endpointState, null);
       }
