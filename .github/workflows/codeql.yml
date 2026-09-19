@@ -20,25 +20,73 @@ permissions:
   contents: read
 
 jobs:
-  analyze:
-    name: Analyze (${{ matrix.language }})
+  analyze-actions:
+    name: Analyze (actions)
     permissions:
       contents: read
       actions: read  # for github/codeql-action/init to get workflow details
       security-events: write  # for github/codeql-action/analyze to upload SARIF results
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - language: actions
-          - language: java
-    runs-on: ${{ github.repository == 'open-telemetry/opentelemetry-java-instrumentation' && 'oracle-vm-8cpu-32gb-x86-64' || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      # don't need to free disk space (which takes time) since running on larger machine
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4.38.0
+        with:
+          languages: actions
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4.38.0
+        with:
+          category: "/language:actions"
+
+  analyze-java-none:
+    name: Analyze Java (none)
+    permissions:
+      contents: read
+      actions: read  # for github/codeql-action/init to get workflow details
+      security-events: write  # for github/codeql-action/analyze to upload SARIF results
+    runs-on: ${{ github.repository == 'open-telemetry/opentelemetry-java-instrumentation' && 'cncf-ubuntu-32-128-x86' || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4.38.0
+        with:
+          languages: java-kotlin
+          build-mode: none
+          tools: linked
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4.38.0
+        with:
+          category: "/language:java-none"
+
+      - name: Report Java extraction coverage
+        run: |
+          results_dir="$RUNNER_TEMP/codeql_databases/java/results"
+          extracted_files=$(find "$results_dir" -name SuccessfullyExtractedFiles.bqrs -print -quit)
+          "$CODEQL_DIST/codeql" bqrs decode --format=csv \
+            "$(find "$results_dir" -name LinesOfCodeJava.bqrs -print -quit)"
+          "$CODEQL_DIST/codeql" bqrs decode --format=csv "$extracted_files" > "$RUNNER_TEMP/extracted-files.csv"
+          echo "Extracted Java files: $(grep -Ec '\.java([\",]|$)' "$RUNNER_TEMP/extracted-files.csv" || true)"
+          echo "Extracted Kotlin files: $(grep -Ec '\.kt([\",]|$)' "$RUNNER_TEMP/extracted-files.csv" || true)"
+
+  analyze-kotlin-manual:
+    name: Analyze Kotlin (manual)
+    permissions:
+      contents: read
+      actions: read  # for github/codeql-action/init to get workflow details
+      security-events: write  # for github/codeql-action/analyze to upload SARIF results
+    runs-on: ${{ github.repository == 'open-telemetry/opentelemetry-java-instrumentation' && 'cncf-ubuntu-32-128-x86' || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up JDK 11
         uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
@@ -54,46 +102,81 @@ jobs:
 
       - name: Increase gradle daemon heap size
         run: |
-          # increasing more than other workflows since this is running on a large runner
-          # and so it uses more parallelism which uses more memory
+          # Increase more than other workflows since this runs on a large runner
+          # and uses more parallelism and memory.
           sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx8g /" gradle.properties
 
       - name: Set up Gradle
         # zizmor: ignore[cache-poisoning] This workflow analyzes release branches
         # but does not build or publish release artifacts.
-        if: matrix.language == 'java'
         uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
         with:
           cache-read-only: ${{ github.event_name == 'pull_request' }}
 
+      - name: Prepare Kotlin compiler classpaths
+        run: ./gradlew compileKotlin -Pkotlin.daemon.jvmargs=-Xmx4g
+
       - name: Initialize CodeQL
         uses: github/codeql-action/init@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4.38.0
         with:
-          languages: ${{ matrix.language }}
+          languages: java-kotlin
+          build-mode: manual
           # using "linked" helps to keep up with the linked Kotlin support
           # see https://github.com/github/codeql-action/issues/1555#issuecomment-1452228433
           tools: linked
 
-      - name: Assemble
-        if: matrix.language == 'java'
-        # --no-build-cache is required for codeql to analyze all modules
-        # --no-daemon is required for codeql to observe the compilation
+      - name: Compile production Kotlin
+        # --rerun forces only the requested Kotlin compiler tasks. Their prepared Java
+        # dependencies remain up-to-date and outside CodeQL tracing.
+        # --no-daemon is required for CodeQL to observe the compilation.
         # (see https://docs.github.com/en/code-security/codeql-cli/getting-started-with-the-codeql-cli/preparing-your-code-for-codeql-analysis#specifying-build-commands)
-        run: >
-          ./gradlew assemble -x javadoc
-          --no-build-cache --no-daemon
+        run: |
+          ./gradlew -p gradle-plugins compileKotlin --rerun --no-build-cache --no-daemon -Pkotlin.daemon.jvmargs=-Xmx4g
+          ./gradlew -p conventions compileKotlin --rerun --no-build-cache --no-daemon -Pkotlin.daemon.jvmargs=-Xmx4g
+          ./gradlew compileKotlin --rerun --no-build-cache --no-daemon -Pkotlin.daemon.jvmargs=-Xmx4g
 
       - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4.38.0
         with:
-          category: "/language:${{matrix.language}}"
+          category: "/language:kotlin-manual"
+
+      - name: Report Kotlin extraction coverage
+        run: |
+          results_dir="$RUNNER_TEMP/codeql_databases/java/results"
+          extracted_files=$(find "$results_dir" -name SuccessfullyExtractedFiles.bqrs -print -quit)
+          "$CODEQL_DIST/codeql" bqrs decode --format=csv \
+            "$(find "$results_dir" -name LinesOfCodeJava.bqrs -print -quit)"
+          "$CODEQL_DIST/codeql" bqrs decode --format=csv \
+            "$(find "$results_dir" -name LinesOfCodeKotlin.bqrs -print -quit)"
+          "$CODEQL_DIST/codeql" bqrs decode --format=csv "$extracted_files" > "$RUNNER_TEMP/extracted-files.csv"
+          echo "Extracted Java files: $(grep -Ec '\.java([\",]|$)' "$RUNNER_TEMP/extracted-files.csv" || true)"
+          echo "Extracted Kotlin files: $(grep -Ec '\.kt([\",]|$)' "$RUNNER_TEMP/extracted-files.csv" || true)"
+
+  analyze-java:
+    name: Analyze (java)
+    needs:
+      - analyze-java-none
+      - analyze-kotlin-manual
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Java and Kotlin analysis results
+        env:
+          JAVA_RESULT: ${{ needs.analyze-java-none.result }}
+          KOTLIN_RESULT: ${{ needs.analyze-kotlin-manual.result }}
+        run: |
+          if [[ "$JAVA_RESULT" != "success" || "$KOTLIN_RESULT" != "success" ]]; then
+            echo "Java or Kotlin CodeQL analysis failed"
+            exit 1
+          fi
 
   workflow-notification:
     permissions:
       issues: write
     needs:
-      - analyze
+      - analyze-actions
+      - analyze-java
     if: always() && github.event_name == 'schedule'
     uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@03559ef555db0eae5d85c3c6347d1530243e7aa7 # v0.13.0
     with:
-      success: ${{ needs.analyze.result == 'success' }}
+      success: ${{ needs.analyze-actions.result == 'success' && needs.analyze-java.result == 'success' }}
