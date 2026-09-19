@@ -22,6 +22,14 @@ dependencies {
 
 testing {
   suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation-api-incubator"))
+        implementation("io.vertx:vertx-redis-client:4.4.4")
+      }
+    }
+
     withType<JvmTestSuite>().configureEach {
       sources {
         java {
