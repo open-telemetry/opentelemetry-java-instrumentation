@@ -168,9 +168,16 @@ check_source_set() {
       exit 1
     fi
 
+    if [[ "$package_name" != "$expected_prefix/"* ]]; then
+      echo "ERROR: $dir"
+      exit 1
+    fi
+
     # Module tokens may map to separate package segments, as in elasticsearch-rest and
     # elasticsearch.rest. Match only after consuming a full segment so v4_10 does not match v4_1.
-    expected_package_name_normalized=${expected_package_name//\//}
+    expected_package_name_normalized=${expected_package_name#"$expected_prefix/"}
+    expected_package_name_normalized=${expected_package_name_normalized//\//}
+    package_name=${package_name#"$expected_prefix/"}
     package_name_prefix=
     package_name_matches=false
     IFS='/' read -ra package_parts <<< "$package_name"
