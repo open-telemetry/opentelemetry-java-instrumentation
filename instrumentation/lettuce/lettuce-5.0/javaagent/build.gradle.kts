@@ -128,12 +128,26 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.lettuce.connection-telemetry.enabled=true")
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
-  }
+  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+    .map { suite ->
+      register<Test>("${suite.name}StableSemconv") {
+        val sourceTask = named<Test>(suite.name).get()
+        setJvmArgs(sourceTask.jvmArgs)
+        setSystemProperties(sourceTask.systemProperties)
+
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
+
+        val stableSemconvConfig = "otel.semconv-stability.opt-in=database,service.peer"
+        jvmArgs("-D$stableSemconvConfig")
+        systemProperty(
+          "metadataConfig",
+          listOfNotNull(sourceTask.systemProperties["metadataConfig"], stableSemconvConfig)
+            .joinToString(","),
+        )
+        isEnabled = sourceTask.enabled
+      }
+    }
 
   val testConnectionTelemetryEnabledStableSemconv =
     register<Test>("testConnectionTelemetryEnabledStableSemconv") {
@@ -163,7 +177,7 @@ tasks {
       testing.suites,
       testConnectionTelemetryEnabled,
       testConnectionTelemetryEnabledStableSemconv,
-      testStableSemconv,
+      stableSemconvSuites,
       testExperimental,
       testV3Preview
     )
