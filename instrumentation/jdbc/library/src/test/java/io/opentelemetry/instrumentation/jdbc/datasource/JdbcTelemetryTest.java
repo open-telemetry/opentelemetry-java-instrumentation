@@ -82,7 +82,7 @@ class JdbcTelemetryTest {
 
   @ParameterizedTest
   @MethodSource("errorCodes")
-  void error(int errorCode, String expectedErrorType) throws SQLException {
+  void error(int errorCode, String sqlState, String expectedErrorType) throws SQLException {
     assumeTrue(emitStableDatabaseSemconv());
 
     JdbcTelemetry telemetry = JdbcTelemetry.builder(testing.getOpenTelemetry()).build();
@@ -91,7 +91,7 @@ class JdbcTelemetryTest {
     Statement statement = spy(connection.createStatement());
     when(source.getConnection()).thenReturn(connection);
     when(connection.createStatement()).thenReturn(statement);
-    doThrow(new SQLException("BOOM", "state", errorCode))
+    doThrow(new SQLException("BOOM", sqlState, errorCode))
         .when(statement)
         .execute(Mockito.anyString());
     DataSource dataSource = telemetry.wrap(source);
@@ -141,9 +141,18 @@ class JdbcTelemetryTest {
 
   private static Stream<Arguments> errorCodes() {
     return Stream.of(
-        argumentSet("positive vendor code", 42, "42"),
-        argumentSet("negative vendor code", -42, "-42"),
-        argumentSet("zero falls back to exception class", 0, SQLException.class.getName()));
+        argumentSet("positive vendor code takes precedence", 42, "42601", "42"),
+        argumentSet("negative vendor code", -42, null, "-42"),
+        argumentSet("SQLSTATE with zero vendor code", 0, "42601", "42601"),
+        argumentSet(
+            "null SQLSTATE falls back to exception class", 0, null, SQLException.class.getName()),
+        argumentSet(
+            "empty SQLSTATE falls back to exception class", 0, "", SQLException.class.getName()),
+        argumentSet(
+            "successful completion SQLSTATE falls back to exception class",
+            0,
+            "00000",
+            SQLException.class.getName()));
   }
 
   @Test

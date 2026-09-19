@@ -35,7 +35,7 @@ public final class KafkaUtil {
   private static final String CONSUMER_GROUP = "consumer_group";
   private static final String CLIENT_ID = "client_id";
 
-  private static final VirtualField<Consumer<?, ?>, Map<String, String>> consumerInfoField =
+  private static final VirtualField<Consumer<?, ?>, Map<String, String>> CONSUMER_INFO =
       VirtualField.find(Consumer.class, Map.class);
 
   private static final MethodHandle GET_GROUP_METADATA;
@@ -88,12 +88,12 @@ public final class KafkaUtil {
     if (consumer == null) {
       return emptyMap();
     }
-    Map<String, String> map = consumerInfoField.get(consumer);
+    Map<String, String> map = CONSUMER_INFO.get(consumer);
     if (map == null) {
       map = new HashMap<>();
       map.put(CONSUMER_GROUP, extractConsumerGroup(consumer));
       map.put(CLIENT_ID, extractClientId(consumer));
-      consumerInfoField.set(consumer, map);
+      CONSUMER_INFO.set(consumer, map);
     }
     return map;
   }

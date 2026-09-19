@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -12,6 +13,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
@@ -32,6 +34,11 @@ import org.opensearch.client.opensearch.core.SearchResponse;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
+
+  private static final int MAX_QUERY_BODY_LENGTH = 32 * 1024;
+  private static final String JSON_PREFIX = "{\"query\":{\"match\":{\"";
+  private static final String JSON_SUFFIX = "\":{\"query\":\"?\"}}}}";
+  private static final String NDJSON_PREFIX = "{\"index\":[\"?\"]};" + JSON_PREFIX;
 
   @Test
   void shouldCaptureSearchQueryBody() throws IOException {
@@ -54,14 +61,26 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("POST")
+                        span.hasName(
+                                emitStableDatabaseSemconv()
+                                    ? "POST " + httpHost.getHost() + ":" + httpHost.getPort()
+                                    : "POST")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), "opensearch"),
                                 equalTo(maybeStable(DB_OPERATION), "POST"),
                                 equalTo(
                                     maybeStable(DB_STATEMENT),
-                                    "{\"query\":{\"match\":{\"message\":{\"query\":\"?\"}}}}")),
+                                    "{\"query\":{\"match\":{\"message\":{\"query\":\"?\"}}}}"),
+                                equalTo(NETWORK_TYPE, null),
+                                equalTo(
+                                    SERVER_ADDRESS,
+                                    emitStableDatabaseSemconv() ? httpHost.getHost() : null),
+                                equalTo(
+                                    SERVER_PORT,
+                                    emitStableDatabaseSemconv()
+                                        ? Long.valueOf(httpHost.getPort())
+                                        : null)),
                     span ->
                         span.hasName("POST")
                             .hasKind(SpanKind.CLIENT)
@@ -128,14 +147,26 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("POST")
+                        span.hasName(
+                                emitStableDatabaseSemconv()
+                                    ? "POST " + httpHost.getHost() + ":" + httpHost.getPort()
+                                    : "POST")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), "opensearch"),
                                 equalTo(maybeStable(DB_OPERATION), "POST"),
                                 equalTo(
                                     maybeStable(DB_STATEMENT),
-                                    "{\"index\":[\"?\"]};{\"query\":{\"term\":{\"message\":{\"value\":\"?\"}}}};{\"index\":[\"?\"]};{\"query\":{\"term\":{\"message2\":{\"value\":\"?\"}}}};{\"index\":[\"?\"]};{\"query\":{\"term\":{\"message3\":{\"value\":\"?\"}}}}")),
+                                    "{\"index\":[\"?\"]};{\"query\":{\"term\":{\"message\":{\"value\":\"?\"}}}};{\"index\":[\"?\"]};{\"query\":{\"term\":{\"message2\":{\"value\":\"?\"}}}};{\"index\":[\"?\"]};{\"query\":{\"term\":{\"message3\":{\"value\":\"?\"}}}}"),
+                                equalTo(NETWORK_TYPE, null),
+                                equalTo(
+                                    SERVER_ADDRESS,
+                                    emitStableDatabaseSemconv() ? httpHost.getHost() : null),
+                                equalTo(
+                                    SERVER_PORT,
+                                    emitStableDatabaseSemconv()
+                                        ? Long.valueOf(httpHost.getPort())
+                                        : null)),
                     span ->
                         span.hasName("POST")
                             .hasKind(SpanKind.CLIENT)
@@ -156,6 +187,49 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
   }
 
   @Test
+  void shouldKeepSearchQueryBodyAtLimit() throws IOException {
+    String field = "a".repeat(MAX_QUERY_BODY_LENGTH - JSON_PREFIX.length() - JSON_SUFFIX.length());
+    String expected = JSON_PREFIX + field + JSON_SUFFIX;
+
+    openSearchClient.search(searchRequest(field), TestDocument.class);
+
+    assertQueryBody(expected, "/" + INDEX_NAME + "/_search");
+  }
+
+  @Test
+  void shouldTruncateSearchQueryBodyOverLimit() throws IOException {
+    String field =
+        "a".repeat(MAX_QUERY_BODY_LENGTH - JSON_PREFIX.length() - JSON_SUFFIX.length() + 1);
+    String expected = JSON_PREFIX + field + JSON_SUFFIX;
+
+    openSearchClient.search(searchRequest(field), TestDocument.class);
+
+    assertQueryBody(expected.substring(0, MAX_QUERY_BODY_LENGTH), "/" + INDEX_NAME + "/_search");
+  }
+
+  @Test
+  void shouldKeepMsearchQueryBodyAtLimit() throws IOException {
+    String field =
+        "a".repeat(MAX_QUERY_BODY_LENGTH - NDJSON_PREFIX.length() - JSON_SUFFIX.length());
+    String expected = NDJSON_PREFIX + field + JSON_SUFFIX;
+
+    openSearchClient.msearch(msearchRequest(field), TestDocument.class);
+
+    assertQueryBody(expected, "/_msearch?typed_keys=true");
+  }
+
+  @Test
+  void shouldTruncateMsearchQueryBodyOverLimit() throws IOException {
+    String field =
+        "a".repeat(MAX_QUERY_BODY_LENGTH - NDJSON_PREFIX.length() - JSON_SUFFIX.length() + 1);
+    String expected = NDJSON_PREFIX + field + JSON_SUFFIX;
+
+    openSearchClient.msearch(msearchRequest(field), TestDocument.class);
+
+    assertQueryBody(expected.substring(0, MAX_QUERY_BODY_LENGTH), "/_msearch?typed_keys=true");
+  }
+
+  @Test
   void shouldNotCaptureIndexQueryBody() throws IOException {
     TestDocument testDocument = TestDocument.create("test-doc-2", "index body test message");
     IndexRequest<TestDocument> indexRequest =
@@ -168,12 +242,28 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("POST")
+                        span.hasName(
+                                emitStableDatabaseSemconv()
+                                    ? "POST " + httpHost.getHost() + ":" + httpHost.getPort()
+                                    : "POST")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), "opensearch"),
                                 equalTo(maybeStable(DB_OPERATION), "POST"),
-                                equalTo(maybeStable(DB_STATEMENT), "POST /test-search-index/_doc")),
+                                equalTo(
+                                    maybeStable(DB_STATEMENT),
+                                    emitStableDatabaseSemconv()
+                                        ? null
+                                        : "POST /test-search-index/_doc"),
+                                equalTo(NETWORK_TYPE, null),
+                                equalTo(
+                                    SERVER_ADDRESS,
+                                    emitStableDatabaseSemconv() ? httpHost.getHost() : null),
+                                equalTo(
+                                    SERVER_PORT,
+                                    emitStableDatabaseSemconv()
+                                        ? Long.valueOf(httpHost.getPort())
+                                        : null)),
                     span ->
                         span.hasName("POST")
                             .hasKind(SpanKind.CLIENT)
@@ -190,5 +280,70 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
                                             .startsWith(httpHost + "/" + INDEX_NAME + "/_doc")),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 201L),
                                 equalTo(maybeStablePeerService(), "test-peer-service"))));
+  }
+
+  private void assertQueryBody(String expected, String urlSuffix) {
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName(
+                                emitStableDatabaseSemconv()
+                                    ? "POST " + httpHost.getHost() + ":" + httpHost.getPort()
+                                    : "POST")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(maybeStable(DB_SYSTEM), "opensearch"),
+                                equalTo(maybeStable(DB_OPERATION), "POST"),
+                                equalTo(maybeStable(DB_STATEMENT), expected),
+                                equalTo(NETWORK_TYPE, null),
+                                equalTo(
+                                    SERVER_ADDRESS,
+                                    emitStableDatabaseSemconv() ? httpHost.getHost() : null),
+                                equalTo(
+                                    SERVER_PORT,
+                                    emitStableDatabaseSemconv()
+                                        ? Long.valueOf(httpHost.getPort())
+                                        : null)),
+                    span ->
+                        span.hasName("POST")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                                equalTo(SERVER_PORT, httpHost.getPort()),
+                                equalTo(HTTP_REQUEST_METHOD, "POST"),
+                                satisfies(
+                                    URL_FULL,
+                                    val -> val.asString().startsWith(httpHost + urlSuffix)),
+                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
+                                equalTo(maybeStablePeerService(), "test-peer-service"))));
+  }
+
+  private static SearchRequest searchRequest(String field) {
+    return SearchRequest.of(
+        request ->
+            request
+                .index(INDEX_NAME)
+                .query(
+                    Query.of(
+                        query ->
+                            query.match(
+                                match ->
+                                    match
+                                        .field(field)
+                                        .query(value -> value.stringValue("value"))))));
+  }
+
+  private static MsearchRequest msearchRequest(String field) {
+    return MsearchRequest.of(
+        request ->
+            request.searches(
+                search ->
+                    search
+                        .header(header -> header.index(INDEX_NAME))
+                        .body(body -> body.query(searchRequest(field).query()))));
   }
 }

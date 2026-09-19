@@ -106,6 +106,7 @@ class PlayServerTest extends AbstractHttpServerTest<Server> {
     options.setHasHandlerSpan(unused -> true);
     options.setHttpAttributes(endpoint -> emptySet());
     options.setExpectedException(new IllegalArgumentException(EXCEPTION.getBody()));
+    options.setTestClientAddressFromSocketPeer(false);
     options.disableTestNonStandardHttpMethod();
   }
 

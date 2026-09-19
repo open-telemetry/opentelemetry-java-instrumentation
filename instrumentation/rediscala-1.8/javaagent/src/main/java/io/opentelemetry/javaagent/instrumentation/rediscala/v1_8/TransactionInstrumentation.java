@@ -53,11 +53,7 @@ class TransactionInstrumentation implements TypeInstrumentation {
       public static AdviceScope start(TransactionBuilder transactionBuilder) {
         Queue<Operation<?, ?>> operations = transactionBuilder.operations().result();
         ServerEndpoint endpoint = TRANSACTION_ENDPOINT.get(transactionBuilder);
-        RediscalaRequest request =
-            RediscalaRequest.createTransaction(
-                operations,
-                endpoint != null ? endpoint.getHost() : null,
-                endpoint != null ? endpoint.getPort() : null);
+        RediscalaRequest request = RediscalaRequest.createTransaction(operations, endpoint);
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;

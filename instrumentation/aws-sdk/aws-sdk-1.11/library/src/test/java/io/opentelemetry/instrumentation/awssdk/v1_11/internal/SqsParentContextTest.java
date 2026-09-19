@@ -7,7 +7,9 @@ package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import com.amazonaws.services.sqs.model.SendMessageBatchRequestEntry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
@@ -29,5 +31,24 @@ class SqsParentContextTest {
 
     assertThat(extractedContext.get(TEST_CONTEXT_KEY)).isEqualTo("test-value");
     assertThat(Span.fromContext(extractedContext).getSpanContext().isValid()).isTrue();
+  }
+
+  @Test
+  void readsAndWritesMessageSystemAttribute() {
+    assumeTrue(SqsMessageSystemAttributeAccess.isAvailable());
+
+    SendMessageBatchRequestEntry entry = new SendMessageBatchRequestEntry("id", "body");
+    SendMessageBatchRequestEntry updatedEntry =
+        SqsMessageSystemAttributeAccess.withTraceHeader(entry, TRACE_HEADER);
+    assertThat(updatedEntry).isNotNull();
+    assertThat(SqsMessageSystemAttributeAccess.getTraceHeader(updatedEntry))
+        .isEqualTo(TRACE_HEADER);
+    assertThat(SqsMessageSystemAttributeAccess.withTraceHeader(updatedEntry, "replacement"))
+        .isNull();
+    Context creationContext =
+        SqsParentContext.ofTraceHeader(
+            SqsMessageSystemAttributeAccess.getTraceHeader(updatedEntry));
+    assertThat(Span.fromContext(creationContext).getSpanContext().getSpanId())
+        .isEqualTo("53995c3f42cd8ad8");
   }
 }

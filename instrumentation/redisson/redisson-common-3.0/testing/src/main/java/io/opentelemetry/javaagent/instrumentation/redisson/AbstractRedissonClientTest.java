@@ -14,6 +14,7 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -133,11 +134,6 @@ public abstract class AbstractRedissonClientTest {
   private Config createConfig(
       int database, Integer connectionMinimumIdleSize, boolean singleConnection)
       throws InvocationTargetException, IllegalAccessException {
-    String newAddress = address;
-    if (useRedisProtocol()) {
-      // Newer versions of redisson require scheme, older versions forbid it
-      newAddress = "redis://" + address;
-    }
     Config config = new Config();
     try {
       // script cache is enabled by default in 3.46.0 and that causes hashCommand and lockCommand
@@ -147,7 +143,7 @@ public abstract class AbstractRedissonClientTest {
       // ignored
     }
     SingleServerConfig singleServerConfig = config.useSingleServer();
-    singleServerConfig.setAddress(newAddress);
+    singleServerConfig.setAddress(redisAddressForHost(host));
     singleServerConfig.setTimeout(30_000);
     singleServerConfig.setDatabase(database);
     if (connectionMinimumIdleSize != null) {
@@ -167,6 +163,11 @@ public abstract class AbstractRedissonClientTest {
       // ignored
     }
     return config;
+  }
+
+  private String redisAddressForHost(String serverHost) {
+    // Newer versions of redisson require scheme, older versions forbid it.
+    return (useRedisProtocol() ? "redis://" : "") + serverHost + ":" + port;
   }
 
   @AfterEach
@@ -287,6 +288,77 @@ public abstract class AbstractRedissonClientTest {
     } finally {
       databaseOne.shutdown();
     }
+  }
+
+  @Test
+  void configuredMasterSlaveServerTarget() {
+    String aliasHost = host.equals(ip) ? "localhost" : ip;
+    String configuredServerAddress = host + ":" + port + "," + aliasHost + ":" + port;
+
+    Config config = new Config();
+    config
+        .useMasterSlaveServers()
+        .setMasterAddress(redisAddressForHost(host))
+        .addSlaveAddress(redisAddressForHost(aliasHost));
+    RedissonClient configuredClient = Redisson.create(config);
+    try {
+      if (hasDatabaseIndex()) {
+        testing.waitForTraces(2);
+      }
+      assertConfiguredTarget(
+          configuredClient,
+          emitStableDatabaseSemconv() ? "SET " + configuredServerAddress : "SET",
+          emitStableDatabaseSemconv() ? configuredServerAddress : host,
+          emitStableDatabaseSemconv() ? null : port);
+    } finally {
+      configuredClient.shutdown();
+    }
+  }
+
+  @Test
+  void configuredSingleServerTarget() {
+    String configuredHost = host.equals(ip) ? "localhost" : ip;
+    Config config = new Config();
+    config.useSingleServer().setAddress(redisAddressForHost(configuredHost));
+    RedissonClient configuredClient = Redisson.create(config);
+    try {
+      if (hasDatabaseIndex()) {
+        testing.waitForTraces(1);
+      }
+      assertConfiguredTarget(
+          configuredClient,
+          emitStableDatabaseSemconv() ? "SET " + configuredHost + ":" + port : "SET",
+          configuredHost,
+          port);
+    } finally {
+      configuredClient.shutdown();
+    }
+  }
+
+  private void assertConfiguredTarget(
+      RedissonClient client,
+      String expectedSpanName,
+      String expectedServerAddress,
+      Long expectedServerPort) {
+    testing.clearData();
+    client.getBucket("configured-target").set("value");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(expectedSpanName)
+                        .hasKind(CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(SERVER_ADDRESS, expectedServerAddress),
+                            equalTo(SERVER_PORT, expectedServerPort),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace()),
+                            equalTo(maybeStable(DB_STATEMENT), "SET configured-target ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"))));
   }
 
   @Test

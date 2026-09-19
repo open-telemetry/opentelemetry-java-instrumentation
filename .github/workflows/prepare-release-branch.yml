@@ -26,8 +26,6 @@ jobs:
           fi
 
   create-pull-request-against-release-branch:
-    permissions:
-      contents: write  # for git push to PR branch
     runs-on: ubuntu-latest
     needs:
       - prereqs
@@ -37,10 +35,9 @@ jobs:
           # history is needed to allow fast-forward push below in case
           # re-running this workflow after merging additional PRs to main
           fetch-depth: 0
-          # zizmor: ignore[artipacked] Credentials are required by the branch pushes below.
-          persist-credentials: true
+          persist-credentials: false
 
-      - name: Create release branch
+      - name: Set release branch variables
         run: |
           version=$(.github/scripts/get-version.sh)
           version=${version//-SNAPSHOT/}
@@ -50,8 +47,6 @@ jobs:
             echo "unexpected version: $version"
             exit 1
           fi
-
-          git push origin HEAD:$release_branch_name
 
           echo "VERSION=$version" >> $GITHUB_ENV
           echo "RELEASE_BRANCH_NAME=$release_branch_name" >> $GITHUB_ENV
@@ -74,8 +69,9 @@ jobs:
       - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         id: otelbot-token
         with:
-          client-id: ${{ vars.OTELBOT_CLIENT_ID }}
-          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+          client-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_CLIENT_ID }}
+          private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
+          permission-contents: write
           permission-pull-requests: write
 
       - name: Create pull request against the release branch
@@ -86,6 +82,8 @@ jobs:
           message="Prepare release $VERSION"
           branch="otelbot/prepare-release-${VERSION}"
 
+          gh auth setup-git
+          git push origin HEAD:$RELEASE_BRANCH_NAME
           git checkout -b $branch
           git commit -a -m "$message"
           git push --set-upstream origin $branch
@@ -95,16 +93,13 @@ jobs:
             --base $RELEASE_BRANCH_NAME
 
   create-pull-request-against-main:
-    permissions:
-      contents: write  # for git push to PR branch
     runs-on: ubuntu-latest
     needs:
       - prereqs
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # zizmor: ignore[artipacked] Credentials are required by the branch push below.
-          persist-credentials: true
+          persist-credentials: false
 
       - name: Set environment variables
         run: |
@@ -136,8 +131,9 @@ jobs:
       - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         id: otelbot-token
         with:
-          client-id: ${{ vars.OTELBOT_CLIENT_ID }}
-          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+          client-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_CLIENT_ID }}
+          private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
+          permission-contents: write
           permission-pull-requests: write
 
       - name: Create pull request against main
@@ -149,6 +145,7 @@ jobs:
           body="Update version to \`$NEXT_VERSION\`."
           branch="otelbot/update-version-to-${NEXT_VERSION}"
 
+          gh auth setup-git
           git checkout -b $branch
           git commit -a -m "$message"
           git push --set-upstream origin $branch

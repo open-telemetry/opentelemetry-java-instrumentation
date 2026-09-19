@@ -3,7 +3,7 @@
 ## Quick Reference
 
 - Use when: always — load this file for every review
-- Review focus: engineering correctness, style, naming, semconv, config, testing, new modules
+- Review focus: engineering correctness, performance, style, naming, semconv, config, testing, new modules
 
 ## Review Checklist
 
@@ -14,7 +14,11 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Category     | Rule                                                                                                                                                                                                                                                                                                                                                                                                          | Scope Trigger                                                                                                                                                   | Knowledge File                     |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
 | General      | Logic, correctness, reliability, safety, copy/paste mistakes, incorrect comments                                                                                                                                                                                                                                                                                                                              | Always                                                                                                                                                          | —                                  |
+| Performance  | Precompile production Java regular-expression literals that may be evaluated repeatedly in reusable `static final Pattern` fields                                                                                                                                                                                                                                                                             | Repeated production Java regex literals passed to `String.replaceAll`, `String.matches`, or similar APIs; `String.split` outside the JDK fast path              | —                                  |
+| Performance  | Cache production Java reflective method lookups that may execute repeatedly                                                                                                                                                                                                                                                                                                                                   | Repeated calls to `Class.getMethod`, `Class.getDeclaredMethod`, or equivalent method-handle lookup APIs                                                         | `java-reflection.md`               |
 | Style        | Style guide                                                                                                                                                                                                                                                                                                                                                                                                   | Always                                                                                                                                                          | —                                  |
+| Style        | Reflow avoidable short lines that Spotless creates between consecutive `//` prose-comment lines; allow short lines when the line-length limit requires them                                                                                                                                                                                                                                                   | Multi-line `//` prose comments                                                                                                                                  | —                                  |
+| Style        | Add `// visible for testing` when a production member has broader visibility solely so tests can access it                                                                                                                                                                                                                                                                                                    | Production members accessed directly only by tests                                                                                                              | —                                  |
 | Style        | Uppercase field names should reflect semantic constants or immutable value constants such as `Duration` timeouts/intervals, not simply `static final`                                                                                                                                                                                                                                                         | Always                                                                                                                                                          | —                                  |
 | Style        | Non-private collection constants and escaping private collection constants must be unmodifiable; source sets target Java 8 by default, so use `Collections.unmodifiableList`/`unmodifiableSet`/`unmodifiableMap` there, and prefer `List.of`/`Set.of`/`Map.of` only in source sets targeting Java 9 or later; do not add unmodifiable wrappers to private non-escaping constants                              | Static final collection fields                                                                                                                                  | —                                  |
 | Naming       | Getter naming (`get` / `is`)                                                                                                                                                                                                                                                                                                                                                                                  | Always                                                                                                                                                          | —                                  |
@@ -22,11 +26,14 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Naming       | Module/package naming                                                                                                                                                                                                                                                                                                                                                                                         | New or renamed modules/packages                                                                                                                                 | `module-naming.md`                 |
 | Javaagent    | Advice patterns                                                                                                                                                                                                                                                                                                                                                                                               | `@Advice` classes or methods, helpers called by advice, or `Java8BytecodeBridge` usage                                                                          | `javaagent-advice-patterns.md`     |
 | Javaagent    | Module structure patterns                                                                                                                                                                                                                                                                                                                                                                                     | `InstrumentationModule`, `TypeInstrumentation`                                                                                                                  | `javaagent-module-patterns.md`     |
+| Javaagent    | Per-object state storage and `VirtualField` selection                                                                                                                                                                                                                                                                                                                                                         | `VirtualField`; `WeakReference`; `WeakHashMap`; `Cache.weak()`; identity-keyed, per-object, or `Object`-keyed registries in javaagent or shared bootstrap code  | `javaagent-virtual-fields.md`      |
+| Javaagent    | Lock ownership, critical sections, and safe publication                                                                                                                                                                                                                                                                                                                                                       | Synchronization protecting javaagent or library instrumentation state                                                                                           | `javaagent-locking.md`             |
 | Javaagent    | Singletons patterns                                                                                                                                                                                                                                                                                                                                                                                           | `*Singletons`, `*SpanNaming`, and similar holder classes; singleton accessors; callers of singleton accessors/fields                                            | `javaagent-singletons-patterns.md` |
 | Javaagent    | Incorrect `classLoaderMatcher()`                                                                                                                                                                                                                                                                                                                                                                              | `classLoaderMatcher()` override that is redundant (muzzle already handles it) or missing when needed (muzzle cannot distinguish version range)                  | `javaagent-module-patterns.md`     |
 | Semconv      | Search for an exact name-and-type semconv constant before constructing an `AttributeKey`; follow module-specific import/copy boundaries                                                                                                                                                                                                                                                                       | Semconv-looking `AttributeKey` constants/assertions                                                                                                             | —                                  |
 | Semconv      | Dual semconv testing                                                                                                                                                                                                                                                                                                                                                                                          | `SemconvStability`, `maybeStable`, semconv Gradle tasks                                                                                                         | `testing-semconv-stability.md`     |
 | Testing      | General test patterns                                                                                                                                                                                                                                                                                                                                                                                         | Test files in scope — assertion style, test method signatures and throws clauses, resource cleanup, attribute assertions                                        | `testing-general-patterns.md`      |
+| Testing      | Default instrumentation enablement coverage                                                                                                                                                                                                                                                                                                                                                                   | `DefaultEnablementTest`, `testDisabled`, disabled-by-default instrumentation, or v3-preview default enablement changes                                          | `testing-default-enablement.md`    |
 | Testing      | Experimental flag tests                                                                                                                                                                                                                                                                                                                                                                                       | `testExperimental`, experimental attribute assertions, `experimental` flags in JVM args or system properties                                                    | `testing-experimental-flags.md`    |
 | Testing      | Flag-gated / mode-dependent assertion shape (experimental, `testLatestDeps`, semconv) — shared accessor (`testLatestDeps()`, `emitStable*Semconv()`) or `EXPERIMENTAL_ATTRIBUTES` constant, inline ternary with `null` for "absent"                                                                                                                                                                           | Test classes branching on `EXPERIMENTAL_ATTRIBUTES`, `testLatestDeps()`, or `emitOld*`/`emitStable*`                                                            | `testing-general-patterns.md`      |
 | Library      | TelemetryBuilder/getter/setter patterns                                                                                                                                                                                                                                                                                                                                                                       | Library instrumentation classes                                                                                                                                 | `library-patterns.md`              |
@@ -61,6 +68,19 @@ Flag real defects, including:
 
 Only flag substantive problems, not stylistic preference.
 
+## [Performance] Precompile Reused Regular Expressions
+
+Flag production Java regular-expression literals passed directly to regex-compiling APIs such as
+`String.replaceAll` or `String.matches` when the call may execute repeatedly. Require them to be
+precompiled in reusable `static final Pattern` fields. Do not apply this rule to test code or to a
+call that is provably executed only once, such as one-time startup initialization.
+
+`String.split` compiles a `Pattern` only when its argument misses the JDK fast path, so flag it
+only then. That fast path covers a one-character literal that is not a surrogate, a backslash, or
+one of `.$|()[{^?*+`, and a backslash followed by one character that is neither a surrogate nor
+an ASCII letter or digit. Calls such as `value.split(",")` and `version.split("\\.")` already
+run an `indexOf` loop with no `Pattern`, so precompiling them makes the code slower.
+
 ## [Javaagent] Best-Effort Suppressed Failures
 
 When javaagent runtime code intentionally suppresses a `Throwable` to avoid breaking the
@@ -84,10 +104,32 @@ Do not flag the following patterns (common false positives):
   allocation/performance reasons — it is pure noise. If a PR makes that hoist,
   flag it and recommend reverting to the in-line lambda.
 
+### Reflow avoidable short lines in prose comments
+
+Spotless may wrap overflow from one `//` line onto a short intermediate line without reflowing that
+text into the following `//` line. When the following line has room, move the short fragment to its
+start and reflow the remainder. A single-word line is acceptable when the line-length limit requires
+it.
+
+```java
+// BAD
+// Elasticsearch does not implement ElasticsearchWrapperException, so Elasticsearch does
+// not
+// treat this exception as a wrapper.
+
+// GOOD
+// Elasticsearch does not implement ElasticsearchWrapperException, so Elasticsearch does
+// not treat this exception as a wrapper.
+```
+
 ## [Style] Visibility modifiers
 
 Follow the principle of minimal necessary visibility. Use the most restrictive access modifier that
 still allows the code to function correctly.
+
+When a production member has broader visibility solely so tests can access it directly, add
+`// visible for testing` immediately above its declaration. Do not add the comment when production
+code also requires that visibility.
 
 **Exception — Single public class**: If a module has only one public class then don't change it to
 package-private. Javadoc task fails when module has no public classes.
@@ -172,7 +214,6 @@ variable (`MyGetter g = MyGetter.INSTANCE`), keep the variable and only change t
 right-hand side to `new MyGetter()`.
 
 Convert the class declaration from `enum` / singleton-holder to a plain `class`.
-If the implementation is a private nested class, omit the `final` keyword.
 
 **Exception — Kotlin `object` declarations**: Kotlin `object` is an idiomatic
 language-level singleton. Do not convert `object` declarations to `class`. This
