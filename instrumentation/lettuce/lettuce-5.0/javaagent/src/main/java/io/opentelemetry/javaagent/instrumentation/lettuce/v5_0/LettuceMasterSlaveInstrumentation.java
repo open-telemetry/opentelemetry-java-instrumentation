@@ -100,8 +100,9 @@ class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
       boolean cancelled = delegate.cancel(mayInterruptIfRunning);
       if (cancelled) {
         cancelFromDelegate();
+        return true;
       }
-      return cancelled;
+      return super.cancel(mayInterruptIfRunning);
     }
 
     private void cancelFromDelegate() {
@@ -128,10 +129,14 @@ class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
         future.completeExceptionally(throwable);
         return;
       }
-      if (connection instanceof RedisChannelHandler) {
-        ConnectAdvice.setTarget(connection, target);
+      try {
+        if (connection instanceof RedisChannelHandler) {
+          ConnectAdvice.setTarget(connection, target);
+        }
+        future.complete(connection);
+      } catch (Throwable t) {
+        future.completeExceptionally(t);
       }
-      future.complete(connection);
     }
   }
 }
