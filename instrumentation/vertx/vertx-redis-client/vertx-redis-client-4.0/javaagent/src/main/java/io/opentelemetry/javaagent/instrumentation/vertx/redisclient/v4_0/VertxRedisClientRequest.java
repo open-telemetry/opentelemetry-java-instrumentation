@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSan
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.vertx.core.net.NetSocket;
 import io.vertx.redis.client.Request;
+import io.vertx.redis.client.impl.RedisConnectionManagerUtil;
 import io.vertx.redis.client.impl.RedisURI;
 import io.vertx.redis.client.impl.RequestUtil;
 import java.util.List;
@@ -58,7 +59,8 @@ class VertxRedisClientRequest {
     this.queryText = queryText;
     this.operationBatchSize = operationBatchSize;
     this.redisUri = redisUri;
-    VertxRedisServerTargets.CapturedTarget capturedTarget = VertxRedisServerTargets.get(redisUri);
+    RedisConnectionManagerUtil.CapturedTarget capturedTarget =
+        RedisConnectionManagerUtil.getRedisUriTarget(redisUri);
     this.serverTarget = capturedTarget == null ? null : capturedTarget.getTarget();
     this.serverTargetCaptured = capturedTarget != null;
     this.netSocket = netSocket;
