@@ -28,28 +28,33 @@ class RedissonBatchState {
       RedisCommandSanitizer.create(
           DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "redisson"));
 
-  private static final ClassValue<BatchOptionsAccessor> batchOptionsAccessors =
-      new ClassValue<BatchOptionsAccessor>() {
-        @Override
-        protected BatchOptionsAccessor computeValue(Class<?> type) {
-          try {
-            Method method = type.getMethod("getExecutionMode");
-            return options -> {
-              Object executionMode = method.invoke(options);
-              return executionMode != null && executionMode.toString().endsWith("_ATOMIC");
-            };
-          } catch (NoSuchMethodException ignored) {
-            try {
-              Method method = type.getMethod("isAtomic");
-              return options -> Boolean.TRUE.equals(method.invoke(options));
-            } catch (NoSuchMethodException e) {
-              return options -> {
-                throw e;
-              };
-            }
-          }
-        }
-      };
+  @Nullable
+  private static final BatchOptionsAccessor batchOptionsAccessor = resolveBatchOptionsAccessor();
+
+  @Nullable
+  private static BatchOptionsAccessor resolveBatchOptionsAccessor() {
+    try {
+      Class<?> type =
+          Class.forName(
+              "org.redisson.api.BatchOptions", false, RedissonBatchState.class.getClassLoader());
+      try {
+        Method method = type.getMethod("getExecutionMode");
+        return options -> {
+          Object executionMode = method.invoke(options);
+          return executionMode != null && executionMode.toString().endsWith("_ATOMIC");
+        };
+      } catch (NoSuchMethodException ignored) {
+        Method method = type.getMethod("isAtomic");
+        return options -> Boolean.TRUE.equals(method.invoke(options));
+      }
+    } catch (ClassNotFoundException ignored) {
+      // Older versions pass the atomic flag directly instead of using BatchOptions.
+      return null;
+    } catch (NoSuchMethodException e) {
+      logger.log(FINE, "Failed to read Redisson batch execution mode", e);
+      return null;
+    }
+  }
 
   private final TreeMap<Integer, CapturedCommand> commands = new TreeMap<>();
   private int queryTextLength;
@@ -157,8 +162,11 @@ class RedissonBatchState {
     if (options instanceof Boolean) {
       return (Boolean) options;
     }
+    if (batchOptionsAccessor == null) {
+      return false;
+    }
     try {
-      return batchOptionsAccessors.get(options.getClass()).isAtomic(options);
+      return batchOptionsAccessor.isAtomic(options);
     } catch (ReflectiveOperationException e) {
       logger.log(FINE, "Failed to read Redisson batch execution mode", e);
       return false;
