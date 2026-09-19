@@ -25,6 +25,8 @@ public final class VertxRedisServerTargets {
   private static final String CONSTANT_SUPPLIER_CLASS_NAME =
       "io.vertx.redis.client.ConstantSupplier";
 
+  @Nullable private static final Class<?> CONSTANT_SUPPLIER_CLASS = findConstantSupplierClass();
+
   @Nullable private static final Method GET_TOPOLOGY = findGetTopology();
 
   @Nullable
@@ -47,20 +49,8 @@ public final class VertxRedisServerTargets {
   }
 
   @Nullable
-  public static RedisServerTarget ofConstantSupplier(
-      Object manager, @Nullable Supplier<?> optionsSupplier) {
-    if (optionsSupplier == null) {
-      return null;
-    }
-    Class<?> supplierClass = optionsSupplier.getClass();
-    try {
-      // Vert.x 5 legacy clients use this exact constant supplier; other suppliers may be dynamic.
-      Class<?> constantSupplierClass =
-          Class.forName(CONSTANT_SUPPLIER_CLASS_NAME, false, manager.getClass().getClassLoader());
-      if (supplierClass != constantSupplierClass) {
-        return null;
-      }
-    } catch (ClassNotFoundException ignored) {
+  public static RedisServerTarget ofConstantSupplier(@Nullable Supplier<?> optionsSupplier) {
+    if (optionsSupplier == null || optionsSupplier.getClass() != CONSTANT_SUPPLIER_CLASS) {
       return null;
     }
 
@@ -71,6 +61,16 @@ public final class VertxRedisServerTargets {
     Future<?> optionsFuture = (Future<?>) supplied;
     Object options = optionsFuture.succeeded() ? optionsFuture.result() : null;
     return options instanceof RedisConnectOptions ? of((RedisConnectOptions) options) : null;
+  }
+
+  @Nullable
+  private static Class<?> findConstantSupplierClass() {
+    try {
+      return Class.forName(
+          CONSTANT_SUPPLIER_CLASS_NAME, false, VertxRedisServerTargets.class.getClassLoader());
+    } catch (ClassNotFoundException ignored) {
+      return null;
+    }
   }
 
   private static boolean hasStaticTopology(Object options) {
