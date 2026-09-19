@@ -18,10 +18,14 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
 class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
@@ -39,7 +43,7 @@ class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isPublic()
             .and(isStatic())
-            .and(named("connect"))
+            .and(named("connect").or(named("connectAsync")))
             .and(takesArguments(3))
             .and(
                 takesArgument(2, named("io.lettuce.core.RedisURI"))
@@ -63,15 +67,76 @@ class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
       return new Object[] {LettuceServerTargets.ofMasterSlaveUris(snapshot), snapshot};
     }
 
+    @Advice.AssignReturned.ToReturned(typing = Assigner.Typing.DYNAMIC)
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(
-        @Advice.Enter Object[] enter, @Advice.Return @Nullable Object connection) {
+    public static Object onExit(
+        @Advice.Enter Object[] enter, @Advice.Return @Nullable Object result) {
       RedisServerTarget target = (RedisServerTarget) enter[0];
-      if (!(connection instanceof RedisChannelHandler)) {
-        return;
+      if (result instanceof RedisChannelHandler) {
+        setTarget(result, target);
+      } else if (result instanceof CompletableFuture) {
+        return new SetTargetFuture((CompletableFuture<?>) result, target);
       }
+      return result;
+    }
+
+    public static void setTarget(Object connection, @Nullable RedisServerTarget target) {
       RedisChannelHandler<?, ?> connectionHandler = (RedisChannelHandler<?, ?>) connection;
       LettuceConnectionState.updateServerTarget(connectionHandler, target);
+    }
+  }
+
+  public static class SetTargetFuture extends CompletableFuture<Object> {
+    private final CompletableFuture<?> delegate;
+
+    public SetTargetFuture(
+        CompletableFuture<?> delegate, @Nullable RedisServerTarget serverTarget) {
+      this.delegate = delegate;
+      delegate.whenComplete(new SetTargetConsumer(this, serverTarget));
+    }
+
+    @Override
+    public boolean cancel(boolean mayInterruptIfRunning) {
+      boolean cancelled = delegate.cancel(mayInterruptIfRunning);
+      if (cancelled) {
+        cancelFromDelegate();
+        return true;
+      }
+      return super.cancel(mayInterruptIfRunning);
+    }
+
+    private void cancelFromDelegate() {
+      super.cancel(false);
+    }
+  }
+
+  public static class SetTargetConsumer implements BiConsumer<Object, Throwable> {
+    private final SetTargetFuture future;
+    @Nullable private final RedisServerTarget target;
+
+    public SetTargetConsumer(SetTargetFuture future, @Nullable RedisServerTarget target) {
+      this.future = future;
+      this.target = target;
+    }
+
+    @Override
+    public void accept(@Nullable Object connection, @Nullable Throwable throwable) {
+      if (throwable instanceof CancellationException) {
+        future.cancelFromDelegate();
+        return;
+      }
+      if (throwable != null) {
+        future.completeExceptionally(throwable);
+        return;
+      }
+      try {
+        if (connection instanceof RedisChannelHandler) {
+          ConnectAdvice.setTarget(connection, target);
+        }
+        future.complete(connection);
+      } catch (Throwable t) {
+        future.completeExceptionally(t);
+      }
     }
   }
 }
