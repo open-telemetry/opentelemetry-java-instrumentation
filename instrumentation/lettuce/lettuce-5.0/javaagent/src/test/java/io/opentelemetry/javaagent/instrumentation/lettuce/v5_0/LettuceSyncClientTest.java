@@ -284,8 +284,7 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
       CompletableFuture<StatefulRedisConnection<String, String>> connection =
           (CompletableFuture<StatefulRedisConnection<String, String>>)
               connectAsync.invoke(null, redisClient, StringCodec.UTF8, redisUris);
-      return (StatefulRedisConnection<String, String>)
-          connection.get(10, SECONDS);
+      return (StatefulRedisConnection<String, String>) connection.get(10, SECONDS);
     } catch (ClassNotFoundException | NoSuchMethodException ignored) {
       return MasterSlave.connect(redisClient, StringCodec.UTF8, redisUris);
     }
