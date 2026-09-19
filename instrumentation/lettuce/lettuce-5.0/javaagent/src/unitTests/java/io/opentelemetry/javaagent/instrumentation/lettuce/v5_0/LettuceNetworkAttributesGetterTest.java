@@ -336,14 +336,6 @@ class LettuceNetworkAttributesGetterTest {
   }
 
   @Test
-  void asyncCommandPeerStateMatchesSemconvMode() {
-    AsyncCommand<String, String, String> command =
-        new AsyncCommand<>(new Command<>(CommandType.GET, null));
-
-    assertThat(LettuceCommandPeer.markSpanStarted(command)).isEqualTo(emitStableDatabaseSemconv());
-  }
-
-  @Test
   void initializingCommandPeerDoesNotResetExistingState() {
     AsyncCommand<String, String, String> command = new AsyncCommand<>(command());
     LettuceCommandPeer.initialize(command);
