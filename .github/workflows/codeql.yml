@@ -74,13 +74,13 @@ jobs:
           # see https://github.com/github/codeql-action/issues/1555#issuecomment-1452228433
           tools: linked
 
-      - name: Assemble
+      - name: Compile
         if: matrix.language == 'java'
         # --no-build-cache is required for codeql to analyze all modules
         # --no-daemon is required for codeql to observe the compilation
         # (see https://docs.github.com/en/code-security/codeql-cli/getting-started-with-the-codeql-cli/preparing-your-code-for-codeql-analysis#specifying-build-commands)
         run: >
-          ./gradlew assemble -x javadoc
+          ./gradlew classes
           --no-build-cache --no-daemon
 
       - name: Perform CodeQL analysis
