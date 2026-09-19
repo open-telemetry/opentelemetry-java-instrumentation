@@ -49,6 +49,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -271,16 +272,20 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
 
   @SuppressWarnings("unchecked")
   private StatefulRedisConnection<String, String> connectMasterReplica(List<RedisURI> redisUris)
-      throws ReflectiveOperationException {
+      throws Exception {
     try {
       // This shared test source compiles against 5.0, before the MasterReplica iterable API.
       Class<?> masterReplica =
           Class.forName(
               "io.lettuce.core.masterreplica.MasterReplica", false, getClass().getClassLoader());
-      Method connect =
-          masterReplica.getMethod("connect", RedisClient.class, RedisCodec.class, Iterable.class);
+      Method connectAsync =
+          masterReplica.getMethod(
+              "connectAsync", RedisClient.class, RedisCodec.class, Iterable.class);
+      CompletableFuture<StatefulRedisConnection<String, String>> connection =
+          (CompletableFuture<StatefulRedisConnection<String, String>>)
+              connectAsync.invoke(null, redisClient, StringCodec.UTF8, redisUris);
       return (StatefulRedisConnection<String, String>)
-          connect.invoke(null, redisClient, StringCodec.UTF8, redisUris);
+          connection.get(10, SECONDS);
     } catch (ClassNotFoundException | NoSuchMethodException ignored) {
       return MasterSlave.connect(redisClient, StringCodec.UTF8, redisUris);
     }
