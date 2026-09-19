@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.vertx.redis.client.RedisClientType;
 import io.vertx.redis.client.RedisOptions;
+import io.vertx.redis.client.impl.RedisConnectionManagerUtil;
 import io.vertx.redis.client.impl.RedisURI;
 import org.junit.jupiter.api.Test;
 
@@ -335,7 +336,8 @@ class VertxRedisServerTargetsTest {
 
     VertxRedisServerTargets.set(redisUri, null);
 
-    VertxRedisServerTargets.CapturedTarget capturedTarget = VertxRedisServerTargets.get(redisUri);
+    RedisConnectionManagerUtil.CapturedTarget capturedTarget =
+        RedisConnectionManagerUtil.getRedisUriTarget(redisUri);
     assertThat(capturedTarget).isNotNull();
     assertThat(capturedTarget.getTarget()).isNull();
   }
