@@ -16,10 +16,8 @@ import org.apache.pulsar.client.impl.SendCallback;
 import org.apache.pulsar.client.impl.TopicMessageImpl;
 
 public class VirtualFieldStore {
-  private static final VirtualField<Message<?>, Context> MSG_FIELD =
-      VirtualField.find(Message.class, Context.class);
-  private static final VirtualField<Message<?>, Boolean> MSG_RECEIVE_TELEMETRY_FIELD =
-      VirtualField.find(Message.class, Boolean.class);
+  private static final VirtualField<Message<?>, PulsarMessageState> MESSAGE_STATE_FIELD =
+      VirtualField.find(Message.class, PulsarMessageState.class);
   private static final VirtualField<Producer<?>, ProducerData> PRODUCER_FIELD =
       VirtualField.find(Producer.class, ProducerData.class);
   private static final VirtualField<Consumer<?>, String> CONSUMER_FIELD =
@@ -28,16 +26,6 @@ public class VirtualFieldStore {
       VirtualField.find(SendCallback.class, SendCallbackData.class);
 
   private VirtualFieldStore() {}
-
-  public static void inject(Message<?> instance, @Nullable Context context) {
-    if (instance instanceof TopicMessageImpl<?>) {
-      TopicMessageImpl<?> topicMessage = (TopicMessageImpl<?>) instance;
-      instance = topicMessage.getMessage();
-    }
-    if (instance != null) {
-      MSG_FIELD.set(instance, context);
-    }
-  }
 
   public static void inject(Producer<?> instance, String serviceUrl, String topic) {
     PRODUCER_FIELD.set(instance, ProducerData.create(serviceUrl, topic));
@@ -59,27 +47,35 @@ public class VirtualFieldStore {
       instance = topicMessage.getMessage();
     }
     if (instance != null) {
-      MSG_FIELD.set(instance, null);
-      MSG_RECEIVE_TELEMETRY_FIELD.set(instance, null);
+      MESSAGE_STATE_FIELD.set(instance, null);
     }
   }
 
-  public static void markReceiveTelemetryRecorded(Message<?> instance) {
-    if (instance instanceof TopicMessageImpl<?>) {
-      TopicMessageImpl<?> topicMessage = (TopicMessageImpl<?>) instance;
-      instance = topicMessage.getMessage();
-    }
+  public static void setReceiveState(
+      Message<?> instance, Context processParentContext, boolean consumedMessagesRecorded) {
+    instance = unwrap(instance);
     if (instance != null) {
-      MSG_RECEIVE_TELEMETRY_FIELD.set(instance, true);
+      MESSAGE_STATE_FIELD.set(
+          instance, new PulsarMessageState(processParentContext, consumedMessagesRecorded));
     }
   }
 
-  public static boolean wasReceiveTelemetryRecorded(Message<?> instance) {
+  public static boolean wereConsumedMessagesRecorded(Message<?> instance) {
+    instance = unwrap(instance);
+    if (instance == null) {
+      return false;
+    }
+    PulsarMessageState state = MESSAGE_STATE_FIELD.get(instance);
+    return state != null && state.wereConsumedMessagesRecorded();
+  }
+
+  @Nullable
+  private static Message<?> unwrap(@Nullable Message<?> instance) {
     if (instance instanceof TopicMessageImpl<?>) {
       TopicMessageImpl<?> topicMessage = (TopicMessageImpl<?>) instance;
-      instance = topicMessage.getMessage();
+      return topicMessage.getMessage();
     }
-    return instance != null && Boolean.TRUE.equals(MSG_RECEIVE_TELEMETRY_FIELD.get(instance));
+    return instance;
   }
 
   public static Context extract(Message<?> instance) {
@@ -90,8 +86,8 @@ public class VirtualFieldStore {
     if (instance == null) {
       return Context.current();
     }
-    Context ctx = MSG_FIELD.get(instance);
-    return ctx == null ? Context.current() : ctx;
+    PulsarMessageState state = MESSAGE_STATE_FIELD.get(instance);
+    return state == null ? Context.current() : state.processParentContext();
   }
 
   public static ProducerData extract(Producer<?> instance) {
