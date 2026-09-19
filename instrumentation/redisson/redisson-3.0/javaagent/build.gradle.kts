@@ -119,10 +119,12 @@ tasks {
   }
 
   named<Test>("testRedisson365") {
+    enabled = otelProps.testJavaVersion == null || otelProps.testJavaVersion!!.isJava8
     systemProperty("testLatestDeps", true)
   }
 
   named<Test>("testRedisson371") {
+    enabled = otelProps.testJavaVersion == null || otelProps.testJavaVersion!!.isJava8
     systemProperty("testLatestDeps", true)
   }
 
