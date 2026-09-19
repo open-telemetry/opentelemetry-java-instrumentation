@@ -145,6 +145,46 @@ if (gradle.startParameter.taskNames.contains("listTestsInPartition")) {
   }
 }
 
+if (gradle.startParameter.taskNames.any { it.startsWith("codeqlJar") }) {
+  val codeqlShardCount = 8
+  val codeqlJars = (0..<codeqlShardCount).map { shard ->
+    tasks.register<DefaultTask>("codeqlJar$shard") {
+      group = "Build"
+      description = "Builds JAR shard $shard for CodeQL analysis"
+    }
+  }
+
+  subprojects.forEach {
+    evaluationDependsOn(it.path)
+  }
+
+  fun shardGroup(project: Project): String {
+    val pathParts = project.path.split(":")
+    val shardGroupDepth = if (pathParts.getOrNull(1) == "instrumentation") 3 else 2
+    return pathParts.take(shardGroupDepth).joinToString(":")
+  }
+
+  // Keep large instrumentation families distributed without changing existing assignments when a
+  // project is added.
+  val shardOverrides = mapOf(
+    ":instrumentation:aws-lambda" to 2,
+    ":instrumentation:couchbase" to 3,
+    ":instrumentation:hibernate" to 2,
+    ":instrumentation:redisson" to 0,
+    ":instrumentation:spring" to 5
+  )
+
+  subprojects.forEach { project ->
+    val group = shardGroup(project)
+    val shard = shardOverrides[group] ?: Math.floorMod(group.hashCode(), codeqlShardCount)
+    project.tasks.findByName("jar")?.let { jarTask ->
+      codeqlJars[shard].configure {
+        dependsOn(jarTask)
+      }
+    }
+  }
+}
+
 tasks {
   val stableVersion = version.toString().replace("-alpha", "")
 
