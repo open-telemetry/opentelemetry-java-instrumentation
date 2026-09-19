@@ -120,7 +120,7 @@ class VertxRedisServerTargetsTest {
   }
 
   @Test
-  void clusterExtractsSharedNonDefaultPort() {
+  void clusterKeepsSharedNonDefaultPortInEndpoints() {
     RedisServerTarget target =
         VertxRedisServerTargets.of(
             new RedisClusterConnectOptions()
