@@ -348,6 +348,17 @@ class LettuceNetworkAttributesGetterTest {
   }
 
   @Test
+  void initializingSubscriptionResetsExistingPeer() throws UnknownHostException {
+    RedisCommand<?, ?, ?> command = command();
+    LettuceCommandPeer.record(
+        command, new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT));
+
+    LettuceCommandPeer.initializeForSubscription(command);
+
+    assertThat(LettuceCommandPeer.address(command)).isNull();
+  }
+
+  @Test
   void subclassConstructorInitializesCommandPeerOnce() {
     AsyncCommand<String, String, String> command = new SubclassAsyncCommand(command());
 
