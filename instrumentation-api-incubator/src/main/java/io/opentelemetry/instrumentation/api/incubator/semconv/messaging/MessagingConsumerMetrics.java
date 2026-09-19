@@ -22,8 +22,7 @@ import io.opentelemetry.api.metrics.LongCounterBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricSuppression;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
@@ -45,10 +44,6 @@ public final class MessagingConsumerMetrics implements OperationListener {
       AttributeKey.stringKey("messaging.operation");
   private static final AttributeKey<String> MESSAGING_OPERATION_TYPE =
       AttributeKey.stringKey("messaging.operation.type");
-  // Use RECEIVE as the coordination key because the counter records each delivered message once,
-  // including when a PROCESS operation records it.
-  private static final MessagingOperationType CONSUMED_MESSAGES_OPERATION =
-      MessagingOperationType.RECEIVE;
   private static final Logger logger = Logger.getLogger(MessagingConsumerMetrics.class.getName());
 
   private final ContextKey<MessagingConsumerMetrics.State> messagingConsumerMetricsState =
@@ -155,22 +150,17 @@ public final class MessagingConsumerMetrics implements OperationListener {
     boolean recordClientOperationDuration =
         clientOperationDurationHistogram != null
             && operationType != MessagingOperationType.PROCESS
-            && !MessagingTelemetryState.contains(
-                context, operationType, MessagingTelemetrySignal.CLIENT_OPERATION_DURATION);
+            && !MessagingMetricSuppression.isClientOperationDurationSuppressed(
+                context, operationType);
     boolean recordConsumedMessages =
         consumedMessagesCounter != null
             && (consumedMessagesOnly || operationType == MessagingOperationType.RECEIVE)
-            && !MessagingTelemetryState.contains(
-                context, CONSUMED_MESSAGES_OPERATION, MessagingTelemetrySignal.CONSUMED_MESSAGES);
+            && !MessagingMetricSuppression.isConsumedMessagesSuppressed(context);
     if (recordClientOperationDuration) {
-      context =
-          MessagingTelemetryState.addIfEnabled(
-              context, operationType, MessagingTelemetrySignal.CLIENT_OPERATION_DURATION);
+      context = MessagingMetricSuppression.suppressClientOperationDuration(context, operationType);
     }
     if (recordConsumedMessages) {
-      context =
-          MessagingTelemetryState.addIfEnabled(
-              context, CONSUMED_MESSAGES_OPERATION, MessagingTelemetrySignal.CONSUMED_MESSAGES);
+      context = MessagingMetricSuppression.suppressConsumedMessages(context);
     }
     return context.with(
         messagingConsumerMetricsState,

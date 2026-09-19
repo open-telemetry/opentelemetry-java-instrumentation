@@ -21,8 +21,7 @@ import io.opentelemetry.api.metrics.LongCounterBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricSuppression;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
@@ -130,22 +129,17 @@ public final class MessagingProducerMetrics implements OperationListener {
         MessagingOperationType.fromValue(startAttributes.get(MESSAGING_OPERATION_TYPE));
     boolean recordClientOperationDuration =
         clientOperationDurationHistogram != null
-            && !MessagingTelemetryState.contains(
-                context, operationType, MessagingTelemetrySignal.CLIENT_OPERATION_DURATION);
+            && !MessagingMetricSuppression.isClientOperationDurationSuppressed(
+                context, operationType);
     boolean recordSentMessages =
         sentMessagesCounter != null
             && operationType == MessagingOperationType.SEND
-            && !MessagingTelemetryState.contains(
-                context, MessagingOperationType.SEND, MessagingTelemetrySignal.SENT_MESSAGES);
+            && !MessagingMetricSuppression.isSentMessagesSuppressed(context);
     if (recordClientOperationDuration) {
-      context =
-          MessagingTelemetryState.addIfEnabled(
-              context, operationType, MessagingTelemetrySignal.CLIENT_OPERATION_DURATION);
+      context = MessagingMetricSuppression.suppressClientOperationDuration(context, operationType);
     }
     if (recordSentMessages) {
-      context =
-          MessagingTelemetryState.addIfEnabled(
-              context, MessagingOperationType.SEND, MessagingTelemetrySignal.SENT_MESSAGES);
+      context = MessagingMetricSuppression.suppressSentMessages(context);
     }
     return context.with(
         MESSAGING_PRODUCER_METRICS_STATE,

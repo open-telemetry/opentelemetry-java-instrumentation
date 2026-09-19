@@ -126,7 +126,7 @@ class CamelProcessMetricsTest {
 
   @ParameterizedTest
   @MethodSource("signalsAlreadyPresent")
-  void recordsOnlyAbsentMetric(String operation, String signal, String expectedMetric)
+  void recordsOnlyAbsentMetric(String suppressionMethod, String expectedMetric)
       throws ReflectiveOperationException {
     Exchange exchange = new DefaultExchange(new DefaultCamelContext());
     Endpoint endpoint = mock(Endpoint.class);
@@ -135,17 +135,10 @@ class CamelProcessMetricsTest {
     Class<?> contextClass =
         Class.forName("io.opentelemetry.javaagent.shaded.io.opentelemetry.context.Context");
     Object parentContext = contextClass.getMethod("root").invoke(null);
-    Class<?> telemetryStateClass = shadedApiClass("messaging.internal.MessagingTelemetryState");
-    Class<?> operationTypeClass = shadedApiClass("messaging.MessagingOperationType");
-    Class<?> signalClass = shadedApiClass("messaging.internal.MessagingTelemetrySignal");
+    Class<?> suppressionClass = shadedApiClass("messaging.internal.MessagingMetricSuppression");
+    parentContext = suppressionClass.getMethod("enable", contextClass).invoke(null, parentContext);
     parentContext =
-        telemetryStateClass
-            .getMethod("add", contextClass, operationTypeClass, signalClass)
-            .invoke(
-                null,
-                parentContext,
-                enumConstant(operationTypeClass, operation),
-                enumConstant(signalClass, signal));
+        suppressionClass.getMethod(suppressionMethod, contextClass).invoke(null, parentContext);
 
     Class<?> singletonsClass = camelHelperClass("CamelSingletons");
     Object decorator =
@@ -194,13 +187,11 @@ class CamelProcessMetricsTest {
     return Stream.of(
         argumentSet(
             "consumed messages already present",
-            "RECEIVE",
-            "CONSUMED_MESSAGES",
+            "suppressConsumedMessages",
             "messaging.process.duration"),
         argumentSet(
             "process duration already present",
-            "PROCESS",
-            "PROCESS_DURATION",
+            "suppressProcessDuration",
             "messaging.client.consumed.messages"));
   }
 
