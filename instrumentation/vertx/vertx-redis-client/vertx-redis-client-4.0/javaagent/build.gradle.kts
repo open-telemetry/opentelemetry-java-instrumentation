@@ -30,10 +30,34 @@ testing {
       }
     }
 
-    withType<JvmTestSuite>().configureEach {
+    register<JvmTestSuite>("stableSemconvUnitTests") {
       sources {
         java {
-          srcDir("src/testShared/java")
+          srcDir("src/unitTests/java")
+        }
+      }
+
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation-api-incubator"))
+        implementation("io.vertx:vertx-redis-client:4.4.4")
+      }
+
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.semconv-stability.opt-in=database")
+          }
+        }
+      }
+    }
+
+    withType<JvmTestSuite>().configureEach {
+      if (!name.endsWith("unitTests", true)) {
+        sources {
+          java {
+            srcDir("src/testShared/java")
+          }
         }
       }
     }
@@ -74,6 +98,7 @@ tasks {
   }
 
   val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+    .filter { suite -> !suite.name.endsWith("unitTests", true) }
     .associate { suite ->
       suite.name to register<Test>("${suite.name}StableSemconv") {
         testClassesDirs = suite.sources.output.classesDirs
