@@ -1,0 +1,1 @@
+Expand package-name checks to javaagent modules
