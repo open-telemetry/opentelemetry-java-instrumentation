@@ -3,15 +3,25 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
+package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_4_5;
 
+import static io.vertx.redis.client.RedisReplicationConnectOptions.TestTopology.DISCOVER;
+import static io.vertx.redis.client.RedisReplicationConnectOptions.TestTopology.STATIC;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
-import io.vertx.redis.client.RedisClientType;
-import io.vertx.redis.client.RedisOptions;
-import io.vertx.redis.client.impl.RedisConnectionManagerUtil;
-import io.vertx.redis.client.impl.RedisURI;
+import io.vertx.core.Future;
+import io.vertx.redis.client.RedisClusterConnectOptions;
+import io.vertx.redis.client.RedisConnectOptions;
+import io.vertx.redis.client.RedisReplicationConnectOptions;
+import io.vertx.redis.client.RedisSentinelConnectOptions;
+import io.vertx.redis.client.RedisStandaloneConnectOptions;
+import io.vertx.redis.client.TestConstantSupplier;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
 
 class VertxRedisServerTargetsTest {
@@ -19,7 +29,8 @@ class VertxRedisServerTargetsTest {
   @Test
   void standalone() {
     RedisServerTarget target =
-        VertxRedisServerTargets.of(new RedisOptions().setConnectionString("redis://host:6379"));
+        VertxRedisServerTargets.of(
+            new RedisStandaloneConnectOptions().setConnectionString("redis://host:6379"));
 
     assertThat(target.getAddress()).isEqualTo("host");
     assertThat(target.getPort()).isNull();
@@ -28,7 +39,8 @@ class VertxRedisServerTargetsTest {
   @Test
   void standaloneUsesTheEffectiveDefaultPort() {
     RedisServerTarget target =
-        VertxRedisServerTargets.of(new RedisOptions().setConnectionString("redis://host"));
+        VertxRedisServerTargets.of(
+            new RedisStandaloneConnectOptions().setConnectionString("redis://host"));
 
     assertThat(target.getAddress()).isEqualTo("host");
     assertThat(target.getPort()).isNull();
@@ -38,7 +50,7 @@ class VertxRedisServerTargetsTest {
   void standaloneDropsCredentialsDatabaseAndQuery() {
     RedisServerTarget target =
         VertxRedisServerTargets.of(
-            new RedisOptions()
+            new RedisStandaloneConnectOptions()
                 .setConnectionString("redis://user:secret@host:6379/2?client_name=app#fragment"));
 
     assertThat(target.getAddress()).isEqualTo("host");
@@ -49,7 +61,7 @@ class VertxRedisServerTargetsTest {
   void standaloneIgnoresTheEndpointsItNeverConnectsTo() {
     RedisServerTarget target =
         VertxRedisServerTargets.of(
-            new RedisOptions()
+            new RedisStandaloneConnectOptions()
                 .addConnectionString("redis://host1:6379")
                 .addConnectionString("redis://host2:6380"));
 
@@ -58,19 +70,10 @@ class VertxRedisServerTargetsTest {
   }
 
   @Test
-  void standaloneKeepsItsDefaultMasterNameOut() {
-    RedisServerTarget target =
-        VertxRedisServerTargets.of(
-            new RedisOptions().setConnectionString("redis://host:6379").setMasterName("mymaster"));
-
-    assertThat(target.getAddress()).isEqualTo("host");
-    assertThat(target.getPort()).isNull();
-  }
-
-  @Test
   void standaloneKeepsNonDefaultPortSeparate() {
     RedisServerTarget target =
-        VertxRedisServerTargets.of(new RedisOptions().setConnectionString("redis://host:6380"));
+        VertxRedisServerTargets.of(
+            new RedisStandaloneConnectOptions().setConnectionString("redis://host:6380"));
 
     assertThat(target.getAddress()).isEqualTo("host");
     assertThat(target.getPort()).isEqualTo(6380);
@@ -80,14 +83,12 @@ class VertxRedisServerTargetsTest {
   void clusterEndpointPermutationsRenderIdentically() {
     RedisServerTarget first =
         VertxRedisServerTargets.of(
-            new RedisOptions()
-                .setType(RedisClientType.CLUSTER)
+            new RedisClusterConnectOptions()
                 .addConnectionString("redis://node2:7001")
                 .addConnectionString("redis://node1:7000"));
     RedisServerTarget second =
         VertxRedisServerTargets.of(
-            new RedisOptions()
-                .setType(RedisClientType.CLUSTER)
+            new RedisClusterConnectOptions()
                 .addConnectionString("redis://node1:7000")
                 .addConnectionString("redis://node2:7001"));
 
@@ -100,9 +101,7 @@ class VertxRedisServerTargetsTest {
   void clusterWithOneEndpointKeepsItsPort() {
     RedisServerTarget target =
         VertxRedisServerTargets.of(
-            new RedisOptions()
-                .setType(RedisClientType.CLUSTER)
-                .addConnectionString("redis://node1:7000"));
+            new RedisClusterConnectOptions().addConnectionString("redis://node1:7000"));
 
     assertThat(target.getAddress()).isEqualTo("node1");
     assertThat(target.getPort()).isEqualTo(7000);
@@ -112,8 +111,7 @@ class VertxRedisServerTargetsTest {
   void clusterOmitsSharedDefaultPort() {
     RedisServerTarget target =
         VertxRedisServerTargets.of(
-            new RedisOptions()
-                .setType(RedisClientType.CLUSTER)
+            new RedisClusterConnectOptions()
                 .addConnectionString("redis://node2")
                 .addConnectionString("redis://node1:6379"));
 
@@ -125,8 +123,7 @@ class VertxRedisServerTargetsTest {
   void clusterExtractsSharedNonDefaultPort() {
     RedisServerTarget target =
         VertxRedisServerTargets.of(
-            new RedisOptions()
-                .setType(RedisClientType.CLUSTER)
+            new RedisClusterConnectOptions()
                 .addConnectionString("redis://node2:7000")
                 .addConnectionString("redis://node1:7000"));
 
@@ -138,8 +135,7 @@ class VertxRedisServerTargetsTest {
   void clusterDropsCredentialsAndDatabase() {
     RedisServerTarget target =
         VertxRedisServerTargets.of(
-            new RedisOptions()
-                .setType(RedisClientType.CLUSTER)
+            new RedisClusterConnectOptions()
                 .addConnectionString("redis://user:secret@node1:7000/2")
                 .addConnectionString("redis://node2:7001"));
 
@@ -151,8 +147,7 @@ class VertxRedisServerTargetsTest {
   void clusterUsesTheEffectiveDefaultPort() {
     RedisServerTarget target =
         VertxRedisServerTargets.of(
-            new RedisOptions()
-                .setType(RedisClientType.CLUSTER)
+            new RedisClusterConnectOptions()
                 .addConnectionString("redis://node1")
                 .addConnectionString("redis://node2:7001"));
 
@@ -164,8 +159,7 @@ class VertxRedisServerTargetsTest {
   void clusterKeepsDuplicateEffectiveEndpoints() {
     RedisServerTarget target =
         VertxRedisServerTargets.of(
-            new RedisOptions()
-                .setType(RedisClientType.CLUSTER)
+            new RedisClusterConnectOptions()
                 .addConnectionString("redis://node1")
                 .addConnectionString("redis://node1:6379"));
 
@@ -174,11 +168,51 @@ class VertxRedisServerTargetsTest {
   }
 
   @Test
+  void staticReplicationConnectOptionsPreserveEndpointOrder() {
+    RedisServerTarget target =
+        VertxRedisServerTargets.of(
+            new RedisReplicationConnectOptions(STATIC)
+                .addConnectionString("redis://z-master:6380")
+                .addConnectionString("redis://a-replica:6380"));
+
+    assertThat(target.getAddress()).isEqualTo("z-master:6380,a-replica:6380");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void discoverReplicationSortsBootstrapSeedsThroughRedisConnectOptions() {
+    RedisServerTarget first =
+        VertxRedisServerTargets.of(
+            new RedisReplicationConnectOptions(DISCOVER)
+                .addConnectionString("redis://z-seed:6380")
+                .addConnectionString("redis://a-seed:6380"));
+    RedisServerTarget second =
+        VertxRedisServerTargets.of(
+            new RedisReplicationConnectOptions(DISCOVER)
+                .addConnectionString("redis://a-seed:6380")
+                .addConnectionString("redis://z-seed:6380"));
+
+    assertThat(first.getAddress()).isEqualTo("a-seed:6380,z-seed:6380");
+    assertThat(second.getAddress()).isEqualTo(first.getAddress());
+    assertThat(first.getPort()).isNull();
+  }
+
+  @Test
+  void staticReplicationWithMultipleUnixSocketsIsUnrepresentable() {
+    RedisServerTarget target =
+        VertxRedisServerTargets.of(
+            new RedisReplicationConnectOptions(STATIC)
+                .addConnectionString("unix:///var/run/redis-master.sock")
+                .addConnectionString("unix:///var/run/redis-replica.sock"));
+
+    assertThat(target).isNull();
+  }
+
+  @Test
   void clusterWithMultipleUnixSocketsIsUnrepresentable() {
     RedisServerTarget target =
         VertxRedisServerTargets.of(
-            new RedisOptions()
-                .setType(RedisClientType.CLUSTER)
+            new RedisClusterConnectOptions()
                 .addConnectionString("unix:///var/run/redis2.sock")
                 .addConnectionString("unix:///var/run/redis1.sock"));
 
@@ -189,9 +223,7 @@ class VertxRedisServerTargetsTest {
   void clusterWithOneUnixSocketKeepsItsPath() {
     RedisServerTarget target =
         VertxRedisServerTargets.of(
-            new RedisOptions()
-                .setType(RedisClientType.CLUSTER)
-                .addConnectionString("unix:///var/run/redis.sock"));
+            new RedisClusterConnectOptions().addConnectionString("unix:///var/run/redis.sock"));
 
     assertThat(target.getAddress()).isEqualTo("/var/run/redis.sock");
     assertThat(target.getPort()).isNull();
@@ -201,8 +233,7 @@ class VertxRedisServerTargetsTest {
   void clusterSortsIpv6EndpointsWithoutDoubleBracketing() {
     RedisServerTarget target =
         VertxRedisServerTargets.of(
-            new RedisOptions()
-                .setType(RedisClientType.CLUSTER)
+            new RedisClusterConnectOptions()
                 .addConnectionString("redis://[2001:db8::2]:7001")
                 .addConnectionString("redis://[2001:db8::1]:7000"));
 
@@ -211,31 +242,16 @@ class VertxRedisServerTargetsTest {
   }
 
   @Test
-  void replicationPreservesSeedOrder() {
-    RedisServerTarget target =
-        VertxRedisServerTargets.of(
-            new RedisOptions()
-                .setType(RedisClientType.REPLICATION)
-                .addConnectionString("redis://replica2:7001")
-                .addConnectionString("redis://replica1:7000"));
-
-    assertThat(target.getAddress()).isEqualTo("replica2:7001,replica1:7000");
-    assertThat(target.getPort()).isNull();
-  }
-
-  @Test
   void sentinelsAreScopedByTheirMaster() {
     RedisServerTarget first =
         VertxRedisServerTargets.of(
-            new RedisOptions()
-                .setType(RedisClientType.SENTINEL)
+            new RedisSentinelConnectOptions()
                 .setMasterName("themaster")
                 .addConnectionString("redis://sentinel2:26380")
                 .addConnectionString("redis://sentinel1:26379"));
     RedisServerTarget second =
         VertxRedisServerTargets.of(
-            new RedisOptions()
-                .setType(RedisClientType.SENTINEL)
+            new RedisSentinelConnectOptions()
                 .setMasterName("themaster")
                 .addConnectionString("redis://sentinel1:26379")
                 .addConnectionString("redis://sentinel2:26380"));
@@ -249,8 +265,7 @@ class VertxRedisServerTargetsTest {
   void sentinelPreservesDuplicateDiscoveryEndpoints() {
     RedisServerTarget target =
         VertxRedisServerTargets.of(
-            new RedisOptions()
-                .setType(RedisClientType.SENTINEL)
+            new RedisSentinelConnectOptions()
                 .setMasterName("themaster")
                 .addConnectionString("redis://sentinel:26379")
                 .addConnectionString("redis://sentinel:26379"));
@@ -263,8 +278,7 @@ class VertxRedisServerTargetsTest {
   void sentinelOmitsUnsafeMasterSuffix() {
     RedisServerTarget target =
         VertxRedisServerTargets.of(
-            new RedisOptions()
-                .setType(RedisClientType.SENTINEL)
+            new RedisSentinelConnectOptions()
                 .setMasterName("tenant/master")
                 .addConnectionString("redis://sentinel:26379"));
 
@@ -276,8 +290,7 @@ class VertxRedisServerTargetsTest {
   void invalidClusterEndpointMakesTheTargetUnrepresentable() {
     RedisServerTarget target =
         VertxRedisServerTargets.of(
-            new RedisOptions()
-                .setType(RedisClientType.CLUSTER)
+            new RedisClusterConnectOptions()
                 .addConnectionString("redis://working-cluster-seed:7000")
                 .addConnectionString("redis://"));
 
@@ -288,8 +301,7 @@ class VertxRedisServerTargetsTest {
   void sentinelUsesTheEffectiveDefaultPort() {
     RedisServerTarget target =
         VertxRedisServerTargets.of(
-            new RedisOptions()
-                .setType(RedisClientType.SENTINEL)
+            new RedisSentinelConnectOptions()
                 .setMasterName("themaster")
                 .addConnectionString("redis://sentinel"));
 
@@ -301,8 +313,7 @@ class VertxRedisServerTargetsTest {
   void sentinelWithoutMasterKeepsTheSentinelEndpoints() {
     RedisServerTarget target =
         VertxRedisServerTargets.of(
-            new RedisOptions()
-                .setType(RedisClientType.SENTINEL)
+            new RedisSentinelConnectOptions()
                 .setMasterName("  ")
                 .addConnectionString("redis://sentinel1:26379")
                 .addConnectionString("redis://sentinel2:26380"));
@@ -313,37 +324,89 @@ class VertxRedisServerTargetsTest {
 
   @Test
   void laterOptionChangesDoNotChangeTheTarget() {
-    RedisOptions options =
-        new RedisOptions()
-            .setType(RedisClientType.CLUSTER)
+    RedisConnectOptions options =
+        new RedisClusterConnectOptions()
             .addConnectionString("redis://node1:7000")
             .addConnectionString("redis://node2:7001");
     RedisServerTarget target = VertxRedisServerTargets.of(options);
 
-    options
-        .setType(RedisClientType.SENTINEL)
-        .setMasterName("themaster")
-        .setConnectionString("redis://other:6379");
+    options.setConnectionString("redis://other:6379");
 
     assertThat(target.getAddress()).isEqualTo("node1:7000,node2:7001");
     assertThat(target.getPort()).isNull();
   }
 
   @Test
-  void nullTargetReplacesPreviousTarget() {
-    RedisURI redisUri = new RedisURI("redis://host:6379");
-    VertxRedisServerTargets.set(redisUri, RedisServerTarget.ofEndpoint("host:6379"));
+  void constantSupplier() {
+    Supplier<Future<RedisConnectOptions>> supplier =
+        TestConstantSupplier.create(
+            Future.succeededFuture(
+                new RedisStandaloneConnectOptions().setConnectionString("redis://host:6380")));
 
-    VertxRedisServerTargets.set(redisUri, null);
+    RedisServerTarget target = VertxRedisServerTargets.ofConstantSupplier(supplier);
 
-    RedisConnectionManagerUtil.CapturedTarget capturedTarget =
-        RedisConnectionManagerUtil.getRedisUriTarget(redisUri);
-    assertThat(capturedTarget).isNotNull();
-    assertThat(capturedTarget.getTarget()).isNull();
+    assertThat(target.getAddress()).isEqualTo("host");
+    assertThat(target.getPort()).isEqualTo(6380);
+  }
+
+  @Test
+  void dynamicSupplierIsNotEvaluated() {
+    AtomicBoolean evaluated = new AtomicBoolean();
+    Supplier<Future<RedisConnectOptions>> supplier =
+        () -> {
+          evaluated.set(true);
+          return Future.succeededFuture(
+              new RedisStandaloneConnectOptions().setConnectionString("redis://host:6380"));
+        };
+
+    assertThat(VertxRedisServerTargets.ofConstantSupplier(supplier)).isNull();
+    assertThat(evaluated).isFalse();
+  }
+
+  @Test
+  void constantSupplierClassUnavailable() throws Exception {
+    URL classes = VertxRedisServerTargets.class.getProtectionDomain().getCodeSource().getLocation();
+    ClassLoader parent = VertxRedisServerTargets.class.getClassLoader();
+    try (URLClassLoader classLoader =
+        new URLClassLoader(new URL[] {classes}, parent) {
+          @Override
+          protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+            if (name.equals("io.vertx.redis.client.ConstantSupplier")) {
+              throw new ClassNotFoundException(name);
+            }
+            if (!name.equals(VertxRedisServerTargets.class.getName())) {
+              return super.loadClass(name, resolve);
+            }
+            synchronized (getClassLoadingLock(name)) {
+              Class<?> loadedClass = findLoadedClass(name);
+              if (loadedClass == null) {
+                loadedClass = findClass(name);
+              }
+              if (resolve) {
+                resolveClass(loadedClass);
+              }
+              return loadedClass;
+            }
+          }
+        }) {
+      Class<?> isolatedTargets = classLoader.loadClass(VertxRedisServerTargets.class.getName());
+      Method ofConstantSupplier = isolatedTargets.getMethod("ofConstantSupplier", Supplier.class);
+      AtomicBoolean evaluated = new AtomicBoolean();
+      Supplier<Future<RedisConnectOptions>> supplier =
+          () -> {
+            evaluated.set(true);
+            return Future.succeededFuture(
+                new RedisStandaloneConnectOptions().setConnectionString("redis://host:6380"));
+          };
+
+      assertThat(ofConstantSupplier.invoke(null, supplier)).isNull();
+      assertThat(evaluated).isFalse();
+    }
   }
 
   @Test
   void noOptions() {
-    assertThat(VertxRedisServerTargets.of(null)).isNull();
+    assertThat(VertxRedisServerTargets.of((RedisConnectOptions) null)).isNull();
+    assertThat(VertxRedisServerTargets.ofConstantSupplier(null)).isNull();
   }
 }
