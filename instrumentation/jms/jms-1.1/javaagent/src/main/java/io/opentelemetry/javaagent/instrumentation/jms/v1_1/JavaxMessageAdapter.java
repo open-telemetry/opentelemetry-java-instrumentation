@@ -120,16 +120,10 @@ public class JavaxMessageAdapter implements MessageAdapter {
 
   private JmsMessageDeliveryState getOrCreateDeliveryState() {
     JmsMessageDeliveryState state = DELIVERY_STATE.get(message);
-    if (state != null) {
-      return state;
+    if (state == null) {
+      state = new JmsMessageDeliveryState();
+      DELIVERY_STATE.set(message, state);
     }
-    synchronized (message) {
-      state = DELIVERY_STATE.get(message);
-      if (state == null) {
-        state = new JmsMessageDeliveryState();
-        DELIVERY_STATE.set(message, state);
-      }
-      return state;
-    }
+    return state;
   }
 }

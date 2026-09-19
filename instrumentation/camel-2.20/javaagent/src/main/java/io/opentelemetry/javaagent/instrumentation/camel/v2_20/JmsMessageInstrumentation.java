@@ -66,13 +66,8 @@ class JmsMessageInstrumentation implements TypeInstrumentation {
       }
       JmsMessageDeliveryState state = jmsDeliveryState().get(jmsMessage);
       if (state == null) {
-        synchronized (jmsMessage) {
-          state = jmsDeliveryState().get(jmsMessage);
-          if (state == null) {
-            state = new JmsMessageDeliveryState();
-            jmsDeliveryState().set(jmsMessage, state);
-          }
-        }
+        state = new JmsMessageDeliveryState();
+        jmsDeliveryState().set(jmsMessage, state);
       }
       state.prepareForWrapping();
       // A Camel message is refilled when its JMS message is swapped. Replace the delivery state,

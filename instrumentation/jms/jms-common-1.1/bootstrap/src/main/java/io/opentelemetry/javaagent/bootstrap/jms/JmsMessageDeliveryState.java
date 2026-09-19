@@ -13,12 +13,12 @@ public final class JmsMessageDeliveryState {
   private boolean processingReceivedMessage;
   private int processingDepth;
 
-  public synchronized void prepareForReceive() {
+  public void prepareForReceive() {
     consumedMessagesRecorded = false;
     receivePending = true;
   }
 
-  public synchronized boolean beginProcessing() {
+  public boolean beginProcessing() {
     if (processingDepth == 0) {
       processingReceivedMessage = receivePending;
       receivePending = false;
@@ -30,7 +30,7 @@ public final class JmsMessageDeliveryState {
     return processingReceivedMessage;
   }
 
-  public synchronized boolean endProcessing() {
+  public boolean endProcessing() {
     if (processingDepth == 0) {
       return false;
     }
@@ -42,13 +42,13 @@ public final class JmsMessageDeliveryState {
     return true;
   }
 
-  public synchronized void prepareForWrapping() {
+  public void prepareForWrapping() {
     if (processingDepth == 0 && !receivePending) {
       consumedMessagesRecorded = false;
     }
   }
 
-  public synchronized boolean claimConsumedMessages() {
+  public boolean claimConsumedMessages() {
     if (consumedMessagesRecorded) {
       return false;
     }
