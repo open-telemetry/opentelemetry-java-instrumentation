@@ -6,12 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanSuppression;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -32,18 +31,17 @@ class KafkaFetchRecordsInstrumentation implements TypeInstrumentation {
   public static class RunAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    @Nullable
-    public static Boolean onEnter() {
+    public static boolean onEnter() {
       if (!emitStableMessagingSemconv()) {
-        return null;
+        return false;
       }
-      return KafkaClientsConsumerProcessTracing.setWrappingEnabled(false);
+      return processSpanSuppression().tryAcquire();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter @Nullable Boolean previousValue) {
-      if (previousValue != null) {
-        KafkaClientsConsumerProcessTracing.setWrappingEnabled(previousValue);
+    public static void onExit(@Advice.Enter boolean suppressionAcquired) {
+      if (suppressionAcquired) {
+        processSpanSuppression().release();
       }
     }
   }

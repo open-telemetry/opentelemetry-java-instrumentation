@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.kafka.v2_7;
 
+import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanSuppression;
 import static io.opentelemetry.javaagent.instrumentation.spring.kafka.v2_7.SpringKafkaSingletons.batchProcessInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -36,26 +37,36 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(named("run"), getClass().getName() + "$RunLoopAdvice");
     transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
+    transformer.applyAdviceToMethod(named("doPoll"), getClass().getName() + "$PollAdvice");
+    transformer.applyAdviceToMethod(
+        named("invokeIfHaveRecords")
+            .and(takesArgument(0, named("org.apache.kafka.clients.consumer.ConsumerRecords"))),
+        getClass().getName() + "$ClaimBatchAdvice");
     transformer.applyAdviceToMethod(
         named("invokeBatchOnMessageWithRecordsOrList")
             .and(takesArgument(0, named("org.apache.kafka.clients.consumer.ConsumerRecords"))),
         getClass().getName() + "$InvokeBatchAdvice");
   }
 
-  // this advice suppresses the CONSUMER spans created by the kafka-clients instrumentation
   @SuppressWarnings("unused")
-  public static class RunLoopAdvice {
+  public static class PollAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static boolean onEnter() {
-      return KafkaClientsConsumerProcessTracing.setWrappingEnabled(false);
+      return processSpanSuppression().tryAcquire();
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter boolean previousValue) {
-      KafkaClientsConsumerProcessTracing.setWrappingEnabled(previousValue);
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.Enter boolean suppressionAcquired,
+        @Advice.Return @Nullable ConsumerRecords<?, ?> records) {
+      if (suppressionAcquired) {
+        processSpanSuppression().release();
+      }
+      if (records != null) {
+        SpringKafkaBatchState.claimProcessSpan(records);
+      }
     }
   }
 
@@ -75,6 +86,15 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
+  public static class ClaimBatchAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static void onEnter(@Advice.Argument(0) ConsumerRecords<?, ?> records) {
+      SpringKafkaBatchState.claimProcessSpan(records);
+    }
+  }
+
+  @SuppressWarnings("unused")
   public static class InvokeBatchAdvice {
 
     public static class AdviceScope {
@@ -90,6 +110,7 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
 
       @Nullable
       public static AdviceScope start(ConsumerRecords<?, ?> records, Consumer<?, ?> consumer) {
+        SpringKafkaBatchState.claimProcessSpan(records);
         KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(records);
         Context receiveContext = consumerContext.getContext();
 
@@ -101,6 +122,7 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
           return null;
         }
         Context context = batchProcessInstrumenter().start(parentContext, request);
+        context = KafkaClientsConsumerProcessTracing.markFrameworkProcess(context);
         return new AdviceScope(request, context, context.makeCurrent());
       }
 

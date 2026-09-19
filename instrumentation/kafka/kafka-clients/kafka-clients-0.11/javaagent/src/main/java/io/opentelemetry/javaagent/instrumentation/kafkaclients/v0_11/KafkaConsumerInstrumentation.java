@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.M
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanSuppression;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.consumerReceiveInstrumenter;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.recordTelemetry;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -73,14 +74,16 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
       }
 
       Context parentContext = KafkaConsumerContextUtil.withoutLeakedProcessSpan(currentContext());
+      Context spanSuppressionContext =
+          KafkaClientsConsumerProcessTracing.withoutFrameworkProcessSuppression(parentContext);
       KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumer);
 
       // disable process tracing and store the receive span for each individual record too
-      boolean previousValue = KafkaClientsConsumerProcessTracing.setWrappingEnabled(false);
+      boolean suppressionAcquired = processSpanSuppression().tryAcquire();
       try {
         Context receiveContext = null;
         boolean receiveOperationStarted = false;
-        if (consumerReceiveInstrumenter().shouldStart(parentContext, request)) {
+        if (consumerReceiveInstrumenter().shouldStart(spanSuppressionContext, request)) {
           receiveContext =
               InstrumenterUtil.startAndEnd(
                   consumerReceiveInstrumenter(),
@@ -111,8 +114,11 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
             recordTelemetry().add(record, RECEIVE, CONSUMED_MESSAGES);
           }
         }
+        KafkaConsumerBatchStateUtil.recordPoll(records, suppressionAcquired);
       } finally {
-        KafkaClientsConsumerProcessTracing.setWrappingEnabled(previousValue);
+        if (suppressionAcquired) {
+          processSpanSuppression().release();
+        }
       }
     }
   }
