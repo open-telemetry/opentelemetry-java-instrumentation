@@ -52,7 +52,7 @@ class RedisConnectionManagerInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.This Object manager, @Advice.Argument(3) Supplier<?> optionsSupplier) {
       RedisConnectionManagerUtil.setServerTarget(
-          manager, VertxRedisServerTargets.ofConstantSupplier(manager, optionsSupplier));
+          manager, VertxRedisServerTargets.ofConstantSupplier(optionsSupplier));
     }
   }
 }
