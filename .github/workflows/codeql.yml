@@ -66,6 +66,16 @@ jobs:
         with:
           category: "/language:java-none"
 
+      - name: Report Java extraction coverage
+        run: |
+          results_dir="$RUNNER_TEMP/codeql_databases/java/results"
+          extracted_files=$(find "$results_dir" -name SuccessfullyExtractedFiles.bqrs -print -quit)
+          "$CODEQL_DIST/codeql" bqrs decode --format=csv \
+            "$(find "$results_dir" -name LinesOfCodeJava.bqrs -print -quit)"
+          "$CODEQL_DIST/codeql" bqrs decode --format=csv "$extracted_files" > "$RUNNER_TEMP/extracted-files.csv"
+          echo "Extracted Java files: $(grep -Ec '\.java([\",]|$)' "$RUNNER_TEMP/extracted-files.csv" || true)"
+          echo "Extracted Kotlin files: $(grep -Ec '\.kt([\",]|$)' "$RUNNER_TEMP/extracted-files.csv" || true)"
+
   analyze-kotlin-manual:
     name: Analyze Kotlin (manual)
     permissions:
@@ -129,6 +139,18 @@ jobs:
         uses: github/codeql-action/analyze@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4.38.0
         with:
           category: "/language:kotlin-manual"
+
+      - name: Report Kotlin extraction coverage
+        run: |
+          results_dir="$RUNNER_TEMP/codeql_databases/java/results"
+          extracted_files=$(find "$results_dir" -name SuccessfullyExtractedFiles.bqrs -print -quit)
+          "$CODEQL_DIST/codeql" bqrs decode --format=csv \
+            "$(find "$results_dir" -name LinesOfCodeJava.bqrs -print -quit)"
+          "$CODEQL_DIST/codeql" bqrs decode --format=csv \
+            "$(find "$results_dir" -name LinesOfCodeKotlin.bqrs -print -quit)"
+          "$CODEQL_DIST/codeql" bqrs decode --format=csv "$extracted_files" > "$RUNNER_TEMP/extracted-files.csv"
+          echo "Extracted Java files: $(grep -Ec '\.java([\",]|$)' "$RUNNER_TEMP/extracted-files.csv" || true)"
+          echo "Extracted Kotlin files: $(grep -Ec '\.kt([\",]|$)' "$RUNNER_TEMP/extracted-files.csv" || true)"
 
   analyze-java:
     name: Analyze (java)
