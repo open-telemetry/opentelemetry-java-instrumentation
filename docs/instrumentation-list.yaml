@@ -4546,6 +4546,24 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
+    messaging.client.operation.duration-f4822aab:
+      name: messaging.client.operation.duration
+      description: Duration of messaging operation initiated by a producer or consumer
+        client.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: messaging.consumer.group.name
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
     messaging.client.sent.messages-38a90199:
       name: messaging.client.sent.messages
       description: Number of messages producer attempted to send to the broker.
@@ -5425,6 +5443,7 @@ libraries:
   source_path: instrumentation/alibaba-druid-1.0
   scope:
     name: io.opentelemetry.alibaba-druid-1.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -5478,6 +5497,7 @@ libraries:
   source_path: instrumentation/apache-dbcp-2.0
   scope:
     name: io.opentelemetry.apache-dbcp-2.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -5510,6 +5530,7 @@ libraries:
   source_path: instrumentation/apache-dubbo-2.7
   scope:
     name: io.opentelemetry.apache-dubbo-2.7
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.dubbo:dubbo:[2.7,)
@@ -6480,6 +6501,7 @@ libraries:
   source_path: instrumentation/aws-lambda/aws-lambda-events-2.2
   scope:
     name: io.opentelemetry.aws-lambda-events-2.2
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
   - com.amazonaws:aws-lambda-java-core:[1.0.0,)
@@ -6615,6 +6637,7 @@ libraries:
   source_path: instrumentation/aws-lambda/aws-lambda-events-3.11
   scope:
     name: io.opentelemetry.aws-lambda-events-3.11
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_standalone_library: true
   configuration_refs:
   - otel.instrumentation.aws-lambda.flush-timeout
@@ -6777,6 +6800,7 @@ libraries:
   source_path: instrumentation/aws-sdk/aws-sdk-1.11
   scope:
     name: io.opentelemetry.aws-sdk-1.11
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -7149,6 +7173,7 @@ libraries:
   source_path: instrumentation/aws-sdk/aws-sdk-2.2
   scope:
     name: io.opentelemetry.aws-sdk-2.2
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -7651,6 +7676,7 @@ libraries:
   source_path: instrumentation/c3p0-0.9
   scope:
     name: io.opentelemetry.c3p0-0.9
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -7679,6 +7705,7 @@ libraries:
   source_path: instrumentation/camel-2.20
   scope:
     name: io.opentelemetry.camel-2.20
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.camel:camel-core:[2.19,3)
@@ -7932,6 +7959,7 @@ libraries:
   source_path: instrumentation/cassandra/cassandra-3.0
   scope:
     name: io.opentelemetry.cassandra-3.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - com.datastax.cassandra:cassandra-driver-core:[3.0,4.0)
@@ -8020,6 +8048,7 @@ libraries:
   source_path: instrumentation/cassandra/cassandra-4.0
   scope:
     name: io.opentelemetry.cassandra-4.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - com.datastax.oss:java-driver-core-shaded:[4.0,4.4)
@@ -8114,6 +8143,7 @@ libraries:
   source_path: instrumentation/cassandra/cassandra-4.4
   scope:
     name: io.opentelemetry.cassandra-4.4
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -8211,6 +8241,7 @@ libraries:
   source_path: instrumentation/clickhouse/clickhouse-client-v1-0.5
   scope:
     name: io.opentelemetry.clickhouse-client-v1-0.5
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - com.clickhouse:clickhouse-client:[0.5.0,)
@@ -8268,6 +8299,7 @@ libraries:
   source_path: instrumentation/clickhouse/clickhouse-client-v2-0.8
   scope:
     name: io.opentelemetry.clickhouse-client-v2-0.8
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - com.clickhouse:client-v2:[0.6.4,)
@@ -8325,6 +8357,7 @@ libraries:
   source_path: instrumentation/couchbase/couchbase-2.0
   scope:
     name: io.opentelemetry.couchbase-2.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - com.couchbase.client:java-client:[2,3)
@@ -8813,6 +8846,7 @@ libraries:
   source_path: instrumentation/elasticsearch/elasticsearch-rest-5.0
   scope:
     name: io.opentelemetry.elasticsearch-rest-5.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.elasticsearch.client:elasticsearch-rest-client:[5.0,6.4)
@@ -8864,6 +8898,7 @@ libraries:
   source_path: instrumentation/elasticsearch/elasticsearch-rest-6.4
   scope:
     name: io.opentelemetry.elasticsearch-rest-6.4
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.elasticsearch.client:elasticsearch-rest-client:[6.4,7.0)
@@ -8914,6 +8949,7 @@ libraries:
   source_path: instrumentation/elasticsearch/elasticsearch-rest-7.0
   scope:
     name: io.opentelemetry.elasticsearch-rest-7.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -8965,6 +9001,7 @@ libraries:
   source_path: instrumentation/elasticsearch/elasticsearch-transport-5.0
   scope:
     name: io.opentelemetry.elasticsearch-transport-5.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.elasticsearch.client:transport:[5.0.0,5.3.0)
@@ -9036,6 +9073,8 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
+      - name: server.port
+        type: LONG
 - name: elasticsearch-transport-5.3
   display_name: Elasticsearch Transport Client
   description: |
@@ -9047,6 +9086,7 @@ libraries:
   source_path: instrumentation/elasticsearch/elasticsearch-transport-5.3
   scope:
     name: io.opentelemetry.elasticsearch-transport-5.3
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.elasticsearch.client:transport:[5.3.0,6.0.0)
@@ -9141,6 +9181,7 @@ libraries:
   source_path: instrumentation/elasticsearch/elasticsearch-transport-6.0
   scope:
     name: io.opentelemetry.elasticsearch-transport-6.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.elasticsearch.client:transport:[6.0.0,)
@@ -9303,6 +9344,7 @@ libraries:
   source_path: instrumentation/geode-1.4
   scope:
     name: io.opentelemetry.geode-1.4
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.geode:geode-core:[1.4.0,)
@@ -9572,6 +9614,7 @@ libraries:
   source_path: instrumentation/grpc-1.6
   scope:
     name: io.opentelemetry.grpc-1.6
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -9744,6 +9787,7 @@ libraries:
   source_path: instrumentation/gwt-2.0
   scope:
     name: io.opentelemetry.gwt-2.0
+    schema_url: https://opentelemetry.io/schemas/1.37.0
   has_javaagent: true
   javaagent_target_versions:
   - com.google.gwt:gwt-servlet:[2.0.0,)
@@ -9770,6 +9814,7 @@ libraries:
   source_path: instrumentation/hbase/hbase-client-1.0
   scope:
     name: io.opentelemetry.hbase-client-1.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.hbase:hbase-client:[1.0.0,1.4.0)
@@ -9821,6 +9866,7 @@ libraries:
   source_path: instrumentation/hbase/hbase-client-1.4
   scope:
     name: io.opentelemetry.hbase-client-1.4
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.hbase:hbase-client:[1.4.0,2.0.0)
@@ -9872,6 +9918,7 @@ libraries:
   source_path: instrumentation/hbase/hbase-client-2.0
   scope:
     name: io.opentelemetry.hbase-client-2.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.hbase:hbase-client:[2.0.0, 2.5.0)
@@ -10090,6 +10137,7 @@ libraries:
   source_path: instrumentation/hikaricp-3.0
   scope:
     name: io.opentelemetry.hikaricp-3.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -10241,6 +10289,7 @@ libraries:
   source_path: instrumentation/influxdb-2.4
   scope:
     name: io.opentelemetry.influxdb-2.4
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.influxdb:influxdb-java:[2.4,)
@@ -10904,6 +10953,7 @@ libraries:
   source_path: instrumentation/jdbc
   scope:
     name: io.opentelemetry.jdbc
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -11000,6 +11050,7 @@ libraries:
   source_path: instrumentation/jedis/jedis-1.4
   scope:
     name: io.opentelemetry.jedis-1.4
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - redis.clients:jedis:[1.4.0,2.0.0)
@@ -11052,6 +11103,7 @@ libraries:
   source_path: instrumentation/jedis/jedis-2.0
   scope:
     name: io.opentelemetry.jedis-2.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - redis.clients:jedis:[2.0.0,3.0.0)
@@ -11108,6 +11160,7 @@ libraries:
   source_path: instrumentation/jedis/jedis-3.0
   scope:
     name: io.opentelemetry.jedis-3.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - redis.clients:jedis:[3.0.0,4)
@@ -11174,6 +11227,7 @@ libraries:
   source_path: instrumentation/jedis/jedis-4.0
   scope:
     name: io.opentelemetry.jedis-4.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - redis.clients:jedis:[4.0.0-beta1,)
@@ -11575,6 +11629,7 @@ libraries:
   source_path: instrumentation/jms/jms-1.1
   scope:
     name: io.opentelemetry.jms-1.1
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
   - jakarta.jms:jakarta.jms-api:(,3)
@@ -11674,6 +11729,7 @@ libraries:
   minimum_java_version: 11
   scope:
     name: io.opentelemetry.jms-3.0
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
   - jakarta.jms:jakarta.jms-api:[3.0.0,)
@@ -11957,6 +12013,7 @@ libraries:
   source_path: instrumentation/kafka/kafka-clients/kafka-clients-0.11
   scope:
     name: io.opentelemetry.kafka-clients-0.11
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.kafka:kafka-clients:[0.11.0.0,)
@@ -12299,6 +12356,7 @@ libraries:
   source_path: instrumentation/kafka/kafka-clients/kafka-clients-2.6
   scope:
     name: io.opentelemetry.kafka-clients-2.6
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_standalone_library: true
   telemetry:
   - when: default
@@ -12575,6 +12633,7 @@ libraries:
   source_path: instrumentation/kafka/kafka-connect-2.6
   scope:
     name: io.opentelemetry.kafka-connect-2.6
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.kafka:connect-api:[2.6.0,)
@@ -12592,6 +12651,7 @@ libraries:
   source_path: instrumentation/kafka/kafka-streams-0.11
   scope:
     name: io.opentelemetry.kafka-streams-0.11
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.kafka:kafka-streams:[0.11.0.0,)
@@ -13121,6 +13181,7 @@ libraries:
   source_path: instrumentation/lettuce/lettuce-4.0
   scope:
     name: io.opentelemetry.lettuce-4.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - biz.paluch.redis:lettuce:[4.0.Final,)
@@ -13222,6 +13283,7 @@ libraries:
   source_path: instrumentation/lettuce/lettuce-5.0
   scope:
     name: io.opentelemetry.lettuce-5.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - io.lettuce:lettuce-core:[5.0.0.RELEASE,5.1.0.RELEASE)
@@ -13358,6 +13420,7 @@ libraries:
   source_path: instrumentation/lettuce/lettuce-5.1
   scope:
     name: io.opentelemetry.lettuce-5.1
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -13625,6 +13688,7 @@ libraries:
   source_path: instrumentation/mongo/mongo-3.1
   scope:
     name: io.opentelemetry.mongo-3.1
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -13684,6 +13748,7 @@ libraries:
   source_path: instrumentation/mongo/mongo-3.7
   scope:
     name: io.opentelemetry.mongo-3.7
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.mongodb:mongo-java-driver:[3.7, 4.0)
@@ -13743,6 +13808,7 @@ libraries:
   source_path: instrumentation/mongo/mongo-4.0
   scope:
     name: io.opentelemetry.mongo-4.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.mongodb:mongodb-driver-core:[4.0,)
@@ -13805,6 +13871,7 @@ libraries:
   source_path: instrumentation/mongo/mongo-async-3.3
   scope:
     name: io.opentelemetry.mongo-async-3.3
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.mongodb:mongodb-driver-async:[3.3,)
@@ -13882,6 +13949,7 @@ libraries:
   source_path: instrumentation/nats/nats-2.17
   scope:
     name: io.opentelemetry.nats-2.17
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -14657,6 +14725,7 @@ libraries:
   minimum_java_version: 11
   scope:
     name: io.opentelemetry.opensearch-java-3.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.opensearch.client:opensearch-java:[3.0,)
@@ -14705,6 +14774,7 @@ libraries:
   minimum_java_version: 11
   scope:
     name: io.opentelemetry.opensearch-rest-1.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.opensearch.client:opensearch-rest-client:[1.0,3.0)
@@ -14745,6 +14815,7 @@ libraries:
   minimum_java_version: 11
   scope:
     name: io.opentelemetry.opensearch-rest-3.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.opensearch.client:opensearch-rest-client:[3.0,)
@@ -14783,6 +14854,7 @@ libraries:
   source_path: instrumentation/oracle-ucp-11.2
   scope:
     name: io.opentelemetry.oracle-ucp-11.2
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -15217,6 +15289,7 @@ libraries:
   source_path: instrumentation/pulsar/pulsar-2.8
   scope:
     name: io.opentelemetry.pulsar-2.8
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.pulsar:pulsar-client:[2.8.0,)
@@ -15437,6 +15510,7 @@ libraries:
   source_path: instrumentation/r2dbc-1.0
   scope:
     name: io.opentelemetry.r2dbc-1.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -15505,6 +15579,7 @@ libraries:
   source_path: instrumentation/rabbitmq-2.7
   scope:
     name: io.opentelemetry.rabbitmq-2.7
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
   - com.rabbitmq:amqp-client:[2.7.0,)
@@ -15907,6 +15982,7 @@ libraries:
   source_path: instrumentation/reactor/reactor-kafka-1.0
   scope:
     name: io.opentelemetry.reactor-kafka-1.0
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
   - io.projectreactor.kafka:reactor-kafka:[1.0.0,)
@@ -16091,6 +16167,7 @@ libraries:
   source_path: instrumentation/rediscala-1.8
   scope:
     name: io.opentelemetry.rediscala-1.8
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - com.github.Ma27:rediscala_2.11:[1.8.1,)
@@ -16142,6 +16219,7 @@ libraries:
   source_path: instrumentation/redisson/redisson-3.0
   scope:
     name: io.opentelemetry.redisson-3.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.redisson:redisson:[3.0.0,3.17.0)
@@ -16199,6 +16277,7 @@ libraries:
   source_path: instrumentation/redisson/redisson-3.17
   scope:
     name: io.opentelemetry.redisson-3.17
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.redisson:redisson:[3.17.0,)
@@ -16256,6 +16335,7 @@ libraries:
   source_path: instrumentation/redisson/redisson-metrics-2.3
   scope:
     name: io.opentelemetry.redisson-metrics-2.3
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.redisson:redisson:[2.3.0,3.18.0)
@@ -16283,6 +16363,7 @@ libraries:
   source_path: instrumentation/redisson/redisson-metrics-3.18
   scope:
     name: io.opentelemetry.redisson-metrics-3.18
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.redisson:redisson:[3.18.0,3.26.0)
@@ -16310,6 +16391,7 @@ libraries:
   source_path: instrumentation/redisson/redisson-metrics-3.26
   scope:
     name: io.opentelemetry.redisson-metrics-3.26
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.redisson:redisson:[3.26.0,)
@@ -16471,6 +16553,7 @@ libraries:
   source_path: instrumentation/rmi
   scope:
     name: io.opentelemetry.rmi
+    schema_url: https://opentelemetry.io/schemas/1.37.0
   has_javaagent: true
   javaagent_target_versions:
   - Java 8+
@@ -16503,6 +16586,7 @@ libraries:
   source_path: instrumentation/rocketmq/rocketmq-client-4.8
   scope:
     name: io.opentelemetry.rocketmq-client-4.8
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -16623,6 +16707,7 @@ libraries:
   source_path: instrumentation/rocketmq/rocketmq-client-5.0
   scope:
     name: io.opentelemetry.rocketmq-client-5.0
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.rocketmq:rocketmq-client-java:[5.0.0,)
@@ -16683,7 +16768,7 @@ libraries:
   - when: otel.semconv-stability.preview=messaging
     metric_refs:
     - messaging.client.consumed.messages-73097de6
-    - messaging.client.operation.duration-68138657
+    - messaging.client.operation.duration-f4822aab
     - messaging.client.sent.messages-a16c8de0
     - messaging.process.duration-b45860c7
     spans:
@@ -16900,7 +16985,7 @@ libraries:
   source_path: instrumentation/servlet/servlet-2.2
   scope:
     name: io.opentelemetry.servlet-2.2
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - javax.servlet:servlet-api:[2.2, 3.0)
@@ -16963,7 +17048,7 @@ libraries:
   source_path: instrumentation/servlet/servlet-3.0
   scope:
     name: io.opentelemetry.servlet-3.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -17099,6 +17184,7 @@ libraries:
   source_path: instrumentation/sofa-rpc-5.4
   scope:
     name: io.opentelemetry.sofa-rpc-5.4
+    schema_url: https://opentelemetry.io/schemas/1.37.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -17291,6 +17377,7 @@ libraries:
   source_path: instrumentation/spring/spring-integration-4.1
   scope:
     name: io.opentelemetry.spring-integration-4.1
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -17355,6 +17442,7 @@ libraries:
   source_path: instrumentation/spring/spring-jms/spring-jms-2.0
   scope:
     name: io.opentelemetry.spring-jms-2.0
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
   - org.springframework:spring-jms:[2.0,6)
@@ -17403,6 +17491,7 @@ libraries:
   minimum_java_version: 17
   scope:
     name: io.opentelemetry.spring-jms-6.0
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
   - org.springframework:spring-jms:[6.0.0,)
@@ -17450,6 +17539,7 @@ libraries:
   source_path: instrumentation/spring/spring-kafka-2.7
   scope:
     name: io.opentelemetry.spring-kafka-2.7
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -17550,6 +17640,7 @@ libraries:
   minimum_java_version: 17
   scope:
     name: io.opentelemetry.spring-pulsar-1.0
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
   - org.springframework.pulsar:spring-pulsar:[1.0.0,)
@@ -17600,6 +17691,7 @@ libraries:
   source_path: instrumentation/spring/spring-rabbit-1.0
   scope:
     name: io.opentelemetry.spring-rabbit-1.0
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
   - org.springframework.amqp:spring-rabbit:(,)
@@ -17666,6 +17758,7 @@ libraries:
   source_path: instrumentation/spring/spring-rmi-4.0
   scope:
     name: io.opentelemetry.spring-rmi-4.0
+    schema_url: https://opentelemetry.io/schemas/1.37.0
   has_javaagent: true
   javaagent_target_versions:
   - org.springframework:spring-context:[4.0.0.RELEASE,6)
@@ -18165,6 +18258,7 @@ libraries:
   source_path: instrumentation/spymemcached-2.12
   scope:
     name: io.opentelemetry.spymemcached-2.12
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - net.spy:spymemcached:[2.12.0,)
@@ -18304,6 +18398,7 @@ libraries:
   source_path: instrumentation/thrift-0.13
   scope:
     name: io.opentelemetry.thrift-0.13
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -18536,6 +18631,7 @@ libraries:
   source_path: instrumentation/tomcat/tomcat-dbcp-8.0
   scope:
     name: io.opentelemetry.tomcat-dbcp-8.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.tomcat:tomcat-dbcp:[8.0.3,)
@@ -18564,6 +18660,7 @@ libraries:
   source_path: instrumentation/tomcat/tomcat-jdbc-8.5
   scope:
     name: io.opentelemetry.tomcat-jdbc
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.tomcat:tomcat-jdbc:[8.5.0,)
@@ -18922,6 +19019,7 @@ libraries:
   source_path: instrumentation/vertx/vertx-kafka-client-3.6
   scope:
     name: io.opentelemetry.vertx-kafka-client-3.6
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
   - io.vertx:vertx-kafka-client:[3.5.1,)
@@ -19016,6 +19114,7 @@ libraries:
   source_path: instrumentation/vertx/vertx-redis-client-4.0
   scope:
     name: io.opentelemetry.vertx-redis-client-4.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - io.vertx:vertx-redis-client:[4.0.0,)
@@ -19095,6 +19194,7 @@ libraries:
   source_path: instrumentation/vertx/vertx-sql-client/vertx-sql-client-4.0
   scope:
     name: io.opentelemetry.vertx-sql-client-4.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - io.vertx:vertx-sql-client:[4.0.0,5)
@@ -19157,6 +19257,7 @@ libraries:
   minimum_java_version: 11
   scope:
     name: io.opentelemetry.vertx-sql-client-5.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - io.vertx:vertx-sql-client:[5.0.0,)
@@ -19230,6 +19331,7 @@ libraries:
   source_path: instrumentation/vibur-dbcp-11.0
   scope:
     name: io.opentelemetry.vibur-dbcp-11.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
