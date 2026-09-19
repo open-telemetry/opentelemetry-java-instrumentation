@@ -24,6 +24,7 @@ dependencies {
   implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
 
   bootstrap(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
+  bootstrap(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
 
   // without adding this dependency, javadoc fails:
   //   warning: unknown enum constant XmlAccessType.PROPERTY
@@ -59,6 +60,8 @@ dependencies {
   testImplementation("org.springframework.boot:spring-boot-starter:1.5.17.RELEASE")
 
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
+  testImplementation(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
+  testImplementation(project(":javaagent-extension-api"))
   testImplementation("org.elasticmq:elasticmq-rest-sqs_2.13")
 
   testImplementation("org.testcontainers:testcontainers-cassandra")

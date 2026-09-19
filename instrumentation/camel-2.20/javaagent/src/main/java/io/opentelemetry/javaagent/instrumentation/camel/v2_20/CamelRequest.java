@@ -5,10 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessageTelemetry.getJmsDeliveryState;
+import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessageTelemetry.messageTelemetry;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.javaagent.bootstrap.jms.JmsMessageDeliveryState;
 import io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators.DbSpanDecorator;
 import io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators.MessagingSpanDecorator;
 import javax.annotation.Nullable;
@@ -19,6 +24,20 @@ import org.apache.camel.Exchange;
 abstract class CamelRequest {
 
   static CamelRequest create(
+      SpanDecorator spanDecorator,
+      Exchange exchange,
+      Endpoint endpoint,
+      CamelDirection camelDirection,
+      SpanKind spanKind) {
+    return build(spanDecorator, exchange, endpoint, camelDirection, spanKind);
+  }
+
+  static CamelRequest createInbound(
+      SpanDecorator spanDecorator, Exchange exchange, Endpoint endpoint, SpanKind spanKind) {
+    return build(spanDecorator, exchange, endpoint, CamelDirection.INBOUND, spanKind);
+  }
+
+  private static CamelRequest build(
       SpanDecorator spanDecorator,
       Exchange exchange,
       Endpoint endpoint,
@@ -59,6 +78,16 @@ abstract class CamelRequest {
         messagingSendOperationName,
         messagingDestinationTemporary,
         messagingSpanContextPropagated);
+  }
+
+  private static boolean tryClaimConsumedMessages(Exchange exchange) {
+    if (!emitStableMessagingSemconv()) {
+      return false;
+    }
+    JmsMessageDeliveryState jmsDeliveryState = getJmsDeliveryState(exchange.getIn());
+    return jmsDeliveryState != null
+        ? jmsDeliveryState.claimConsumedMessages()
+        : !messageTelemetry().contains(exchange.getIn(), RECEIVE, CONSUMED_MESSAGES);
   }
 
   @Nullable
@@ -127,4 +156,8 @@ abstract class CamelRequest {
   abstract boolean isMessagingDestinationTemporary();
 
   abstract boolean isMessagingSpanContextPropagated();
+
+  boolean claimConsumedMessages() {
+    return tryClaimConsumedMessages(getExchange());
+  }
 }

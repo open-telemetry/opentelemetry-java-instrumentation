@@ -17,8 +17,7 @@ import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricSuppression;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
@@ -54,18 +53,14 @@ public final class MessagingProcessMetrics implements OperationListener {
       return context;
     }
     boolean recordProcessDuration =
-        !MessagingTelemetryState.contains(
-            context, MessagingOperationType.PROCESS, MessagingTelemetrySignal.PROCESS_DURATION);
+        !MessagingMetricSuppression.isProcessDurationSuppressed(context);
     Context contextWithState =
         context.with(
             MESSAGING_PROCESS_METRICS_STATE,
             new AutoValue_MessagingProcessMetrics_State(
                 startAttributes, startNanos, recordProcessDuration));
     return recordProcessDuration
-        ? MessagingTelemetryState.addIfEnabled(
-            contextWithState,
-            MessagingOperationType.PROCESS,
-            MessagingTelemetrySignal.PROCESS_DURATION)
+        ? MessagingMetricSuppression.suppressProcessDuration(contextWithState)
         : contextWithState;
   }
 

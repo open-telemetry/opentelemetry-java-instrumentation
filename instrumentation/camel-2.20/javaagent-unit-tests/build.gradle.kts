@@ -22,9 +22,12 @@ tasks {
 
 dependencies {
   testImplementation(project(":instrumentation:camel-2.20:javaagent"))
+  testImplementation(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
   testImplementation(project(":instrumentation-api-incubator"))
+  testImplementation(project(":javaagent-bootstrap"))
   testImplementation(project(":javaagent-extension-api"))
 
+  testImplementation("javax.jms:jms-api:1.1-rev-1")
   testImplementation("org.apache.camel:camel-core:2.20.1")
   testImplementation("org.apache.camel:camel-aws:2.20.1")
   testImplementation("org.apache.camel:camel-http:2.20.1")

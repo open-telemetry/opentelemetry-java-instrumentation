@@ -5,13 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms.v1_1;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.SPAN;
-
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.bootstrap.messaging.MessagingTelemetryCarrier;
+import io.opentelemetry.javaagent.bootstrap.jms.JmsMessageDeliveryState;
+import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveContext;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.DestinationAdapter;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageAdapter;
 import java.util.Collections;
@@ -23,9 +19,10 @@ import javax.jms.Message;
 
 public class JavaxMessageAdapter implements MessageAdapter {
 
-  private static final MessagingTelemetryCarrier<Message> messageTelemetry =
-      MessagingTelemetryCarrier.create(
-          VirtualField.find(Message.class, MessagingTelemetrySignals.class));
+  private static final VirtualField<Message, JmsReceiveContext> RECEIVE_CONTEXT =
+      VirtualField.find(Message.class, JmsReceiveContext.class);
+  private static final VirtualField<Message, JmsMessageDeliveryState> DELIVERY_STATE =
+      VirtualField.find(Message.class, JmsMessageDeliveryState.class);
 
   public static MessageAdapter create(Message message) {
     return new JavaxMessageAdapter(message);
@@ -83,17 +80,50 @@ public class JavaxMessageAdapter implements MessageAdapter {
   }
 
   @Override
-  public boolean wereConsumedMessagesRecorded() {
-    return messageTelemetry.contains(message, RECEIVE, CONSUMED_MESSAGES);
+  public void prepareForReceive() {
+    RECEIVE_CONTEXT.set(message, null);
+    JmsMessageDeliveryState state = new JmsMessageDeliveryState();
+    state.prepareForReceive();
+    DELIVERY_STATE.set(message, state);
   }
 
   @Override
-  public void markReceiveSpanRecorded() {
-    messageTelemetry.add(message, RECEIVE, SPAN);
+  public void setReceiveContext(JmsReceiveContext context) {
+    RECEIVE_CONTEXT.set(message, context);
+  }
+
+  @Nullable
+  @Override
+  public JmsReceiveContext getReceiveContext() {
+    return RECEIVE_CONTEXT.get(message);
   }
 
   @Override
-  public void markConsumedMessagesRecorded() {
-    messageTelemetry.add(message, RECEIVE, CONSUMED_MESSAGES);
+  public void beginProcessing() {
+    if (!getOrCreateDeliveryState().beginProcessing()) {
+      RECEIVE_CONTEXT.set(message, null);
+    }
+  }
+
+  @Override
+  public void endProcessing() {
+    JmsMessageDeliveryState state = DELIVERY_STATE.get(message);
+    if (state != null && state.endProcessing()) {
+      RECEIVE_CONTEXT.set(message, null);
+    }
+  }
+
+  @Override
+  public boolean claimConsumedMessages() {
+    return getOrCreateDeliveryState().claimConsumedMessages();
+  }
+
+  private JmsMessageDeliveryState getOrCreateDeliveryState() {
+    JmsMessageDeliveryState state = DELIVERY_STATE.get(message);
+    if (state == null) {
+      state = new JmsMessageDeliveryState();
+      DELIVERY_STATE.set(message, state);
+    }
+    return state;
   }
 }

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms.v1_1;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.jms.v1_1.JmsSingletons.consumerProcessInstrumenter;
@@ -15,8 +16,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageAdapter;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageWithDestination;
 import javax.annotation.Nullable;
 import javax.jms.Message;
@@ -50,6 +53,7 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
     public static class AdviceScope {
       private final Instrumenter<MessageWithDestination, Void> instrumenter;
       private final MessageWithDestination messageWithDestination;
+      private final MessageAdapter messageAdapter;
       @Nullable private final Context context;
       @Nullable private final Scope scope;
       // the message that this callback attached the listener's subscription name to, and that has
@@ -59,11 +63,13 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
       private AdviceScope(
           Instrumenter<MessageWithDestination, Void> instrumenter,
           MessageWithDestination messageWithDestination,
+          MessageAdapter messageAdapter,
           @Nullable Context context,
           @Nullable Scope scope,
           @Nullable Message messageWithListenerSubscriptionName) {
         this.instrumenter = instrumenter;
         this.messageWithDestination = messageWithDestination;
+        this.messageAdapter = messageAdapter;
         this.context = context;
         this.scope = scope;
         this.messageWithListenerSubscriptionName = messageWithListenerSubscriptionName;
@@ -72,31 +78,59 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
       public static AdviceScope start(MessageListener messageListener, Message message) {
         Message messageWithListenerSubscriptionName =
             attachListenerSubscriptionName(messageListener, message);
+        MessageAdapter messageAdapter = JavaxMessageAdapter.create(message);
         MessageWithDestination messageWithDestination =
-            MessageWithDestination.create(
-                JavaxMessageAdapter.create(message), null, JmsSubscriptionNames.get(message));
+            MessageWithDestination.create(messageAdapter, null, JmsSubscriptionNames.get(message));
+        messageAdapter.beginProcessing();
 
-        Context parentContext = Context.current();
-        Instrumenter<MessageWithDestination, Void> instrumenter =
-            consumerProcessInstrumenter(
-                messageWithDestination.message().wereConsumedMessagesRecorded());
-        if (!instrumenter.shouldStart(parentContext, messageWithDestination)) {
-          // an advice scope is still needed, to clear the listener's subscription name on exit
+        try {
+          Context currentContext = Context.current();
+          if (!consumerProcessInstrumenter(true)
+              .shouldStart(currentContext, messageWithDestination)) {
+            return new AdviceScope(
+                consumerProcessInstrumenter(true),
+                messageWithDestination,
+                messageAdapter,
+                null,
+                null,
+                messageWithListenerSubscriptionName);
+          }
+
+          Context parentContext = currentContext;
+          if (!emitStableMessagingSemconv()) {
+            JmsReceiveContext receiveContext = messageAdapter.getReceiveContext();
+            if (receiveContext != null) {
+              parentContext = receiveContext.context();
+            }
+          }
+          Instrumenter<MessageWithDestination, Void> instrumenter =
+              consumerProcessInstrumenter(!messageAdapter.claimConsumedMessages());
+          if (!instrumenter.shouldStart(parentContext, messageWithDestination)) {
+            // an advice scope is still needed, to clear the listener's subscription name on exit
+            return new AdviceScope(
+                instrumenter,
+                messageWithDestination,
+                messageAdapter,
+                null,
+                null,
+                messageWithListenerSubscriptionName);
+          }
+
+          Context context = instrumenter.start(parentContext, messageWithDestination);
           return new AdviceScope(
               instrumenter,
               messageWithDestination,
-              null,
-              null,
+              messageAdapter,
+              context,
+              context.makeCurrent(),
               messageWithListenerSubscriptionName);
+        } catch (Throwable t) {
+          messageAdapter.endProcessingAfterStartFailure(t);
+          if (messageWithListenerSubscriptionName != null) {
+            JmsSubscriptionNames.set(messageWithListenerSubscriptionName, null);
+          }
+          throw t;
         }
-
-        Context context = instrumenter.start(parentContext, messageWithDestination);
-        return new AdviceScope(
-            instrumenter,
-            messageWithDestination,
-            context,
-            context.makeCurrent(),
-            messageWithListenerSubscriptionName);
       }
 
       // a name that a synchronous receive or a Spring dispatch attached to the message wins over
@@ -125,8 +159,12 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
             instrumenter.end(context, messageWithDestination, null, throwable);
           }
         } finally {
-          if (messageWithListenerSubscriptionName != null) {
-            JmsSubscriptionNames.set(messageWithListenerSubscriptionName, null);
+          try {
+            messageAdapter.endProcessing();
+          } finally {
+            if (messageWithListenerSubscriptionName != null) {
+              JmsSubscriptionNames.set(messageWithListenerSubscriptionName, null);
+            }
           }
         }
       }

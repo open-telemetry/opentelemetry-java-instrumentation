@@ -47,8 +47,7 @@ final class CamelRoutePolicy extends RoutePolicySupport {
       Route route, Exchange exchange, SpanDecorator sd, Context parentContext) {
     Span activeSpan = Span.fromContext(parentContext);
     SpanKind spanKind = spanKind(activeSpan, sd);
-    CamelRequest request =
-        CamelRequest.create(sd, exchange, route.getEndpoint(), CamelDirection.INBOUND, spanKind);
+    CamelRequest request = CamelRequest.createInbound(sd, exchange, route.getEndpoint(), spanKind);
     if (!activeSpan.getSpanContext().isValid()
         && !(request.isMessaging() && emitStableMessagingSemconv())) {
       parentContext =

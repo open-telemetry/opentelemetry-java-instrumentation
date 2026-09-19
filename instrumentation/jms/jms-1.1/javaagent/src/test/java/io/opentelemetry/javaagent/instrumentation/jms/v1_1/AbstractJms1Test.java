@@ -52,6 +52,7 @@ import org.assertj.core.api.AbstractAssert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -500,6 +501,60 @@ abstract class AbstractJms1Test {
         "messaging.client.consumed.messages",
         1,
         messagingMetricAttributes("receive", "metricsReceiveAndDispatchQueue"));
+  }
+
+  @Test
+  void shouldCountEachListenerDeliveryWhenMessageIsReused() throws Exception {
+    Destination destination = session.createQueue("reusedListenerMessageQueue");
+    TextMessage message = session.createTextMessage("a message");
+    message.setJMSDestination(destination);
+    MessageListener listener = ignored -> {};
+
+    listener.onMessage(message);
+    listener.onMessage(message);
+
+    testing.waitForTraces(2);
+    if (emitStableMessagingSemconv()) {
+      assertCounter(
+          testing,
+          INSTRUMENTATION_NAME,
+          "messaging.client.consumed.messages",
+          2,
+          messagingMetricAttributes("process", "reusedListenerMessageQueue"));
+    }
+  }
+
+  @Test
+  @EnabledIfSystemProperty(
+      named = "otel.instrumentation.messaging.experimental.receive-telemetry.enabled",
+      matches = "true")
+  void shouldSuppressNestedSynchronousMessageProcessing() throws Exception {
+    Destination destination = session.createQueue("nestedProcessingQueue");
+    MessageProducer producer = session.createProducer(destination);
+    cleanup.deferCleanup(producer::close);
+    MessageConsumer consumer = session.createConsumer(destination);
+    cleanup.deferCleanup(consumer::close);
+
+    producer.send(session.createTextMessage("outer"));
+    producer.send(session.createTextMessage("inner"));
+    Message outerMessage = consumer.receive();
+    Message innerMessage = consumer.receive();
+
+    MessageListener innerListener = message -> {};
+    MessageListener outerListener = message -> innerListener.onMessage(innerMessage);
+    outerListener.onMessage(outerMessage);
+
+    testing.waitForTraces(4);
+    assertThat(testing.spans()).hasSize(5);
+    assertThat(testing.spans())
+        .filteredOn(
+            span ->
+                span.getName()
+                    .equals(
+                        emitStableMessagingSemconv()
+                            ? "process nestedProcessingQueue"
+                            : "nestedProcessingQueue process"))
+        .hasSize(1);
   }
 
   private static Attributes messagingMetricAttributes(String operationName, String destination) {
