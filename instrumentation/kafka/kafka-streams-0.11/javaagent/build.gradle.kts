@@ -24,12 +24,28 @@ dependencies {
   testImplementation("org.testcontainers:testcontainers-kafka")
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
+        implementation(project(":javaagent-bootstrap"))
+        implementation(project(":javaagent-extension-api"))
+        implementation("org.apache.kafka:kafka-streams:0.11.0.0")
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    if (name != "unitTests") {
+      usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+      systemProperty("collectMetadata", otelProps.collectMetadata)
+    }
   }
 
   val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {
@@ -95,6 +111,7 @@ tasks {
   }
 
   check {
+    dependsOn(testing.suites)
     dependsOn(testReceiveSpansDisabled)
     dependsOn(testExperimental)
     dependsOn(testMessagingPreview)
