@@ -13,98 +13,47 @@ A `Method` obtained from an interface or base class can invoke compatible implem
 
 ## Decide from the declaring type
 
-Use this checklist before choosing a cache:
+Choose a cache with this checklist:
 
-1. Find the class or interface that declares the required member. Do not start with the receiver's
-   declared Java type or concrete runtime class.
-2. Check whether lookup selects one fixed optional class or one stable interface for the detected
-   library version. If it does, cache one nullable `static final Method` or `MethodHandle`.
-3. Use `ClassValue` only when the declaring member, signature, or required access lookup truly
-   changes with the concrete runtime class.
+1. Identify the class or interface that declares the member.
+2. For one fixed optional class or one version-selected stable interface, cache one nullable
+   `static final Method` or `MethodHandle`.
+3. Use `ClassValue` only when the required metadata truly varies by concrete runtime class.
 
-An exact class-name check strongly indicates a fixed declaring type. Code that accepts `Object`,
-checks for `io.netty.channel.unix.DomainSocketAddress`, and calls `path()` does not need a cache
-entry for every receiver class.
-
-### Fixed optional declaring class
-
-Do not key the lookup by `address.getClass()` when the code only supports one known optional class:
+For a fixed optional `DomainSocketAddress.path()`, avoid
+`pathMethods.get(address.getClass())`. An exact class-name check strongly indicates one declaring
+type. Load that class once without initialization and cache its method:
 
 ```java
-return pathMethods.get(address.getClass()).invoke(address);
+private static final @Nullable Method DOMAIN_SOCKET_PATH =
+    findMethod("io.netty.channel.unix.DomainSocketAddress", "path");
 ```
 
-Load the optional class once without initializing it, then cache its method:
-
-```java
-private static final @Nullable Method DOMAIN_SOCKET_PATH = findDomainSocketPath();
-
-private static @Nullable Method findDomainSocketPath() {
-  try {
-    Class<?> type =
-        Class.forName(
-            "io.netty.channel.unix.DomainSocketAddress",
-            false,
-            InjectedAddressHelper.class.getClassLoader());
-    return type.getMethod("path");
-  } catch (ReflectiveOperationException | LinkageError ignored) {
-    return null;
-  }
-}
-
-Method path = DOMAIN_SOCKET_PATH;
-return path == null ? null : path.invoke(address);
-```
-
-This cache belongs in a helper whose defining class loader can see the optional class.
-
-### Stable or version-selected interface
-
-Do not resolve `Connection.unwrap()` separately for every implementation:
-
-```java
-Method unwrap = unwrapMethods.get(connection.getClass());
-return unwrap.invoke(connection);
-```
-
-Resolve the supported interface once. The interface method can invoke any compatible
-implementation:
+Likewise, avoid `unwrapMethods.get(connection.getClass())` when a stable `Connection` interface
+declares `unwrap()`. Resolve the interface selected for the detected library version once:
 
 ```java
 private static final @Nullable Method CONNECTION_UNWRAP =
-    findSupportedConnectionInterfaceMethod("unwrap");
-
-Method unwrap = CONNECTION_UNWRAP;
-return unwrap == null ? null : unwrap.invoke(connection);
+    findVersionedInterfaceMethod("Connection", "unwrap");
 ```
 
-This also applies when version detection chooses between a small number of known interface names.
-Version selection changes which fixed method the helper stores, not whether the method depends on
-each receiver's concrete class.
+An interface `Method` can invoke compatible implementations; their concrete classes do not require
+separate entries.
 
-### Runtime-dependent declaring class
-
-Use `ClassValue` when unrelated runtime-generated classes each declare the required method and no
-shared type declares it:
+In contrast, use `ClassValue` when unrelated generated classes each declare the required method and
+no shared type declares it:
 
 ```java
-private static final ClassValue<Method> GENERATED_VALUE_METHODS =
+private static final ClassValue<Method> GENERATED_VALUE_METHOD =
     new ClassValue<Method>() {
       @Override
-      protected Method computeValue(Class<?> generatedClass) {
-        try {
-          return generatedClass.getDeclaredMethod("generatedValue");
-        } catch (NoSuchMethodException e) {
-          throw new IllegalStateException(e);
-        }
+      protected Method computeValue(Class<?> type) {
+        return findGeneratedValueMethod(type);
       }
     };
 
-return GENERATED_VALUE_METHODS.get(receiver.getClass()).invoke(receiver);
+return GENERATED_VALUE_METHOD.get(receiver.getClass()).invoke(receiver);
 ```
-
-Here the required `Method` differs by concrete generated class, so one static `Method` cannot
-represent every lookup.
 
 ## Cache repeated lookup
 
@@ -113,7 +62,8 @@ more than once. Resolve the method once and cache the resulting `Method` or `Met
 `static final` field when the declaring class is fixed.
 
 When a fixed declaring type is optional or unavailable at compile time, load it once by name without
-initializing it and cache the nullable method in a `static final` field.
+initializing it, for example with `Class.forName(name, false, helperClassLoader)`, and cache the
+nullable method in a `static final` field.
 
 When the lookup depends on the runtime class, use `ClassValue` instead of a static map keyed by
 `Class<?>`. Static maps can keep application classloaders alive. Cache missing methods too when
@@ -122,16 +72,9 @@ supported library versions may not provide the method.
 Do not apply this rule to test code or a lookup that is provably executed only once during
 initialization.
 
-## Respect class loader boundaries
-
-An injected helper's static cache is scoped to its defining application class loader. Separate
-applications receive separate helper classes and caches, so the helper can cache the optional type
-visible to that loader.
-
-A bootstrap or otherwise shared helper has one cache across application class loaders. It must not
-cache one application's `Class`, `Method`, or `MethodHandle` in a global static field. Keep the
-cache in the injected helper that can name the application type, or pass a loader-scoped accessor
-to the shared code.
+An injected helper's static cache is scoped to its defining application class loader. A bootstrap
+or shared helper must not cache one application's `Class`, `Method`, or `MethodHandle` globally.
+Keep that cache in the injected helper, or pass a loader-scoped accessor to shared code.
 
 ## Choose the mechanism for the job
 
