@@ -44,7 +44,7 @@ In contrast, use `ClassValue` when unrelated generated classes each declare the 
 no shared type declares it:
 
 ```java
-private static final ClassValue<Method> GENERATED_VALUE_METHOD =
+private static final ClassValue<Method> generatedValueMethod =
     new ClassValue<Method>() {
       @Override
       protected Method computeValue(Class<?> type) {
@@ -52,7 +52,7 @@ private static final ClassValue<Method> GENERATED_VALUE_METHOD =
       }
     };
 
-return GENERATED_VALUE_METHOD.get(receiver.getClass()).invoke(receiver);
+return generatedValueMethod.get(receiver.getClass()).invoke(receiver);
 ```
 
 ## Cache repeated lookup
