@@ -13,6 +13,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import example.GreeterGrpc;
 import example.Helloworld;
@@ -22,7 +23,11 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.Metadata;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.ServerCall;
+import io.grpc.ServerCallHandler;
+import io.grpc.ServerInterceptor;
 import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.MetadataUtils;
 import io.grpc.stub.StreamObserver;
 import io.opentelemetry.api.common.AttributeKey;
@@ -49,14 +54,17 @@ class GrpcTest extends AbstractGrpcTest {
 
   @Override
   protected ServerBuilder<?> configureServer(ServerBuilder<?> server) {
-    return server.intercept(
+    GrpcTelemetry telemetry =
         GrpcTelemetry.builder(testing.getOpenTelemetry())
             .setServerRequestMetadata(
                 IncludeExclude.builder()
                     .setIncluded(singletonList(SERVER_REQUEST_METADATA_KEY))
                     .build())
-            .build()
-            .createServerInterceptor());
+            .build();
+    telemetry.configureServerBuilder(server);
+    // A server can receive both application and Java agent configuration.
+    telemetry.configureServerBuilder(server);
+    return server;
   }
 
   @Override
@@ -74,6 +82,38 @@ class GrpcTest extends AbstractGrpcTest {
   @Override
   protected InstrumentationExtension testing() {
     return testing;
+  }
+
+  @Test
+  void registeredMethodShortCircuitedBeforeTracingInterceptor() throws Exception {
+    ServerBuilder<?> serverBuilder =
+        ServerBuilder.forPort(0).addService(new GreeterGrpc.GreeterImplBase() {});
+    GrpcTelemetry.create(testing.getOpenTelemetry()).configureServerBuilder(serverBuilder);
+    serverBuilder.intercept(
+        new ServerInterceptor() {
+          @Override
+          public <REQUEST, RESPONSE> ServerCall.Listener<REQUEST> interceptCall(
+              ServerCall<REQUEST, RESPONSE> call,
+              Metadata headers,
+              ServerCallHandler<REQUEST, RESPONSE> next) {
+            call.close(Status.UNIMPLEMENTED, new Metadata());
+            return new ServerCall.Listener<REQUEST>() {};
+          }
+        });
+    Server server = serverBuilder.build().start();
+    ManagedChannel channel =
+        createChannel(
+            configureClient(ManagedChannelBuilder.forAddress("localhost", server.getPort())));
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
+    closer.add(() -> server.shutdownNow().awaitTermination());
+
+    GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel);
+    Helloworld.Request request = Helloworld.Request.newBuilder().setName("test").build();
+
+    assertThatThrownBy(() -> client.sayHello(request)).isInstanceOf(StatusRuntimeException.class);
+
+    testing.waitAndAssertTraces(
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasKind(SpanKind.CLIENT)));
   }
 
   @ParameterizedTest
@@ -207,17 +247,14 @@ class GrpcTest extends AbstractGrpcTest {
           }
         };
 
-    Server server =
-        ServerBuilder.forPort(0)
-            .addService(greeter)
-            .intercept(
-                GrpcTelemetry.builder(testing.getOpenTelemetry())
-                    .addAttributesExtractor(new CustomAttributesExtractor())
-                    .addServerAttributeExtractor(new CustomAttributesExtractorV2("serverSideValue"))
-                    .build()
-                    .createServerInterceptor())
-            .build()
-            .start();
+    GrpcTelemetry serverTelemetry =
+        GrpcTelemetry.builder(testing.getOpenTelemetry())
+            .addAttributesExtractor(new CustomAttributesExtractor())
+            .addServerAttributeExtractor(new CustomAttributesExtractorV2("serverSideValue"))
+            .build();
+    ServerBuilder<?> serverBuilder = ServerBuilder.forPort(0).addService(greeter);
+    serverTelemetry.configureServerBuilder(serverBuilder);
+    Server server = serverBuilder.build().start();
 
     ManagedChannel channel =
         createChannel(
