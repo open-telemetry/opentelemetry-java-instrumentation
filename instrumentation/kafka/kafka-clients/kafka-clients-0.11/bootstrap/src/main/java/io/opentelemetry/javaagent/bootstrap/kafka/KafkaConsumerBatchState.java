@@ -10,14 +10,10 @@ import java.util.function.BooleanSupplier;
 /** Process telemetry ownership for one Kafka {@code ConsumerRecords} delivery. */
 public final class KafkaConsumerBatchState implements BooleanSupplier {
 
-  private volatile boolean applicationPoll;
-  private volatile boolean processSpanClaimed;
+  private final boolean applicationPoll;
+  private boolean processSpanClaimed;
 
   public KafkaConsumerBatchState(boolean applicationPoll) {
-    this.applicationPoll = applicationPoll;
-  }
-
-  public void recordPoll(boolean applicationPoll) {
     this.applicationPoll = applicationPoll;
   }
 

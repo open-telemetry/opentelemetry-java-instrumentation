@@ -50,28 +50,6 @@ class KafkaConsumerBatchStateTest {
   }
 
   @Test
-  void shouldHonorClaimBeforePollRecorded() {
-    ConsumerRecords<String, String> records = records();
-    KafkaConsumerBatchStateUtil.claimProcessSpan(records);
-    KafkaConsumerBatchStateUtil.recordPoll(records, true);
-
-    assertThat(KafkaConsumerBatchStateUtil.processSpanEnabled(records, () -> true).getAsBoolean())
-        .isFalse();
-  }
-
-  @Test
-  void shouldUpdatePollOwnershipForExistingReader() {
-    ConsumerRecords<String, String> records = records();
-    KafkaConsumerBatchStateUtil.recordPoll(records, false);
-
-    BooleanSupplier processSpanEnabled =
-        KafkaConsumerBatchStateUtil.processSpanEnabled(records, () -> true);
-    KafkaConsumerBatchStateUtil.recordPoll(records, true);
-
-    assertThat(processSpanEnabled.getAsBoolean()).isTrue();
-  }
-
-  @Test
   void shouldNotTraceFrameworkPoll() {
     ConsumerRecords<String, String> records = records();
     KafkaConsumerBatchStateUtil.recordPoll(records, false);

@@ -20,13 +20,7 @@ public final class KafkaConsumerBatchStateUtil {
       return;
     }
 
-    KafkaConsumerBatchState state = BATCH_STATE.get(records);
-    if (state == null) {
-      state = new KafkaConsumerBatchState(applicationPoll);
-      BATCH_STATE.set(records, state);
-    } else {
-      state.recordPoll(applicationPoll);
-    }
+    BATCH_STATE.set(records, new KafkaConsumerBatchState(applicationPoll));
   }
 
   public static void claimProcessSpan(ConsumerRecords<?, ?> records) {
