@@ -10,11 +10,18 @@ import static io.vertx.redis.client.RedisReplicationConnectOptions.TestTopology.
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
+import io.vertx.core.Future;
 import io.vertx.redis.client.RedisClusterConnectOptions;
 import io.vertx.redis.client.RedisConnectOptions;
 import io.vertx.redis.client.RedisReplicationConnectOptions;
 import io.vertx.redis.client.RedisSentinelConnectOptions;
 import io.vertx.redis.client.RedisStandaloneConnectOptions;
+import io.vertx.redis.client.TestConstantSupplier;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
 
 class VertxRedisServerTargetsTest {
@@ -330,7 +337,76 @@ class VertxRedisServerTargetsTest {
   }
 
   @Test
+  void constantSupplier() {
+    Supplier<Future<RedisConnectOptions>> supplier =
+        TestConstantSupplier.create(
+            Future.succeededFuture(
+                new RedisStandaloneConnectOptions().setConnectionString("redis://host:6380")));
+
+    RedisServerTarget target = VertxRedisServerTargets.ofConstantSupplier(supplier);
+
+    assertThat(target.getAddress()).isEqualTo("host");
+    assertThat(target.getPort()).isEqualTo(6380);
+  }
+
+  @Test
+  void dynamicSupplierIsNotEvaluated() {
+    AtomicBoolean evaluated = new AtomicBoolean();
+    Supplier<Future<RedisConnectOptions>> supplier =
+        () -> {
+          evaluated.set(true);
+          return Future.succeededFuture(
+              new RedisStandaloneConnectOptions().setConnectionString("redis://host:6380"));
+        };
+
+    assertThat(VertxRedisServerTargets.ofConstantSupplier(supplier)).isNull();
+    assertThat(evaluated).isFalse();
+  }
+
+  @Test
+  void constantSupplierClassUnavailable() throws Exception {
+    URL classes = VertxRedisServerTargets.class.getProtectionDomain().getCodeSource().getLocation();
+    ClassLoader parent = VertxRedisServerTargets.class.getClassLoader();
+    try (URLClassLoader classLoader =
+        new URLClassLoader(new URL[] {classes}, parent) {
+          @Override
+          protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+            if (name.equals("io.vertx.redis.client.ConstantSupplier")) {
+              throw new ClassNotFoundException(name);
+            }
+            if (!name.equals(VertxRedisServerTargets.class.getName())) {
+              return super.loadClass(name, resolve);
+            }
+            synchronized (getClassLoadingLock(name)) {
+              Class<?> loadedClass = findLoadedClass(name);
+              if (loadedClass == null) {
+                loadedClass = findClass(name);
+              }
+              if (resolve) {
+                resolveClass(loadedClass);
+              }
+              return loadedClass;
+            }
+          }
+        }) {
+      Class<?> isolatedTargets = classLoader.loadClass(VertxRedisServerTargets.class.getName());
+      Method ofConstantSupplier = isolatedTargets.getMethod("ofConstantSupplier", Supplier.class);
+      AtomicBoolean evaluated = new AtomicBoolean();
+      Supplier<Future<RedisConnectOptions>> supplier =
+          () -> {
+            evaluated.set(true);
+            return Future.succeededFuture(
+                new RedisStandaloneConnectOptions().setConnectionString("redis://host:6380"));
+          };
+
+      assertThat(ofConstantSupplier.invoke(null, supplier)).isNull();
+      assertThat(evaluated).isFalse();
+    }
+  }
+
+  @Test
   void noOptions() {
     assertThat(VertxRedisServerTargets.of((RedisConnectOptions) null)).isNull();
+    assertThat(VertxRedisServerTargets.ofConstantSupplier(null)).isNull();
   }
 }
