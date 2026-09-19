@@ -76,7 +76,7 @@ class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
       }
     }
 
-    private static void setTarget(Object connection, @Nullable RedisServerTarget target) {
+    public static void setTarget(Object connection, @Nullable RedisServerTarget target) {
       RedisChannelHandler<?, ?> connectionHandler = (RedisChannelHandler<?, ?>) connection;
       LettuceConnectionState.updateServerTarget(connectionHandler, target);
     }
