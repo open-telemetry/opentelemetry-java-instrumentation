@@ -72,8 +72,6 @@ jobs:
           codeql=$(find "$RUNNER_TOOL_CACHE/CodeQL" -path "*/x64/codeql/codeql" -print -quit)
           "$codeql" bqrs decode --format=csv \
             "$(find "$results_dir" -name LinesOfCodeJava.bqrs -print -quit)"
-          echo "Extracted Java files: $(find "$RUNNER_TEMP/codeql_databases/java/src" -type f -name "*.java" | wc -l)"
-          echo "Extracted Kotlin files: $(find "$RUNNER_TEMP/codeql_databases/java/src" -type f -name "*.kt" | wc -l)"
 
   analyze-kotlin-manual:
     name: Analyze Kotlin (manual)
@@ -147,8 +145,6 @@ jobs:
             "$(find "$results_dir" -name LinesOfCodeJava.bqrs -print -quit)"
           "$codeql" bqrs decode --format=csv \
             "$(find "$results_dir" -name LinesOfCodeKotlin.bqrs -print -quit)"
-          echo "Extracted Java files: $(find "$RUNNER_TEMP/codeql_databases/java/src" -type f -name "*.java" | wc -l)"
-          echo "Extracted Kotlin files: $(find "$RUNNER_TEMP/codeql_databases/java/src" -type f -name "*.kt" | wc -l)"
 
   analyze-java:
     name: Analyze (java)
