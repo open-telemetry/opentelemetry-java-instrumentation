@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.currentConstructionState;
 import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -87,27 +88,23 @@ class ClientBuilderInstrumentation implements TypeInstrumentation {
     // The returned array contains the handler to install at index 0 and the exit state at index 1.
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToFields(@ToField(value = "connectHandler", index = 0))
-    @Nullable
     public static Object[] onEnter(
         @Advice.This Object clientBuilder,
         @Advice.FieldValue("driver") Object driver,
         @Advice.FieldValue("connectHandler") @Nullable Handler<SqlConnection> connectHandler) {
       List<SqlConnectOptions> databases =
           VertxSqlClientSingletons.getBuilderDatabases(clientBuilder);
-      if (databases == null || databases.isEmpty()) {
-        VertxSqlClientSingletons.setConstructionState(null);
-        return null;
-      }
       VertxSqlClientConstructionState state =
           new VertxSqlClientConstructionState(
-              databases, VertxSqlClientUtil.getDbSystemNameFromClassName(driver));
-      VertxSqlClientSingletons.setConstructionState(state);
+              databases != null && !databases.isEmpty() ? databases : null,
+              VertxSqlClientUtil.getDbSystemNameFromClassName(driver));
+      VertxSqlClientConstructionState previous = currentConstructionState().set(state);
       VertxSqlClientInfo info = state.getInfo();
       return new Object[] {
-        info != null
+        state.getSupplier() == null && info != null
             ? VertxSqlClientSingletons.wrapConnectHandler(connectHandler, info)
             : connectHandler,
-        new BuildState(state, connectHandler)
+        new BuildState(state, connectHandler, previous)
       };
     }
 
@@ -117,12 +114,12 @@ class ClientBuilderInstrumentation implements TypeInstrumentation {
         @Advice.Return @Nullable Object client,
         @Advice.FieldValue("connectHandler") @Nullable Handler<SqlConnection> connectHandler,
         @Advice.Enter @Nullable Object[] enterState) {
-      VertxSqlClientSingletons.setConstructionState(null);
       if (enterState == null) {
         return new Object[] {connectHandler};
       }
 
       BuildState state = (BuildState) enterState[1];
+      currentConstructionState().restore(state.previousConstructionState);
       state.constructionState.complete(client);
       // Restore the original connect handler after onEnter temporarily replaced it.
       return new Object[] {state.connectHandler};
@@ -131,12 +128,15 @@ class ClientBuilderInstrumentation implements TypeInstrumentation {
     public static class BuildState {
       public final VertxSqlClientConstructionState constructionState;
       @Nullable public final Handler<SqlConnection> connectHandler;
+      @Nullable public final VertxSqlClientConstructionState previousConstructionState;
 
       public BuildState(
           VertxSqlClientConstructionState constructionState,
-          @Nullable Handler<SqlConnection> connectHandler) {
+          @Nullable Handler<SqlConnection> connectHandler,
+          @Nullable VertxSqlClientConstructionState previousConstructionState) {
         this.constructionState = constructionState;
         this.connectHandler = connectHandler;
+        this.previousConstructionState = previousConstructionState;
       }
     }
   }

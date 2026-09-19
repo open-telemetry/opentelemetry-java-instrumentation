@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.currentClientInfo;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.currentConstructionState;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.currentQuerySupplier;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -12,7 +15,9 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfo;
 import io.vertx.sqlclient.internal.SqlClientBase;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -35,12 +40,11 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
   public static class ConstructorAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This SqlClientBase sqlClientBase) {
-      VertxSqlClientConstructionState state = VertxSqlClientSingletons.getConstructionState();
+      VertxSqlClientConstructionState state = currentConstructionState().get();
       if (state != null) {
         state.attachClient(sqlClientBase);
       } else {
-        VertxSqlClientSingletons.attachClientInfo(
-            sqlClientBase, VertxSqlClientSingletons.getClientInfo());
+        VertxSqlClientSingletons.attachClientInfo(sqlClientBase, currentClientInfo().get());
       }
     }
   }
@@ -48,23 +52,41 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class QueryAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static CallDepth onEnter(@Advice.This SqlClientBase sqlClientBase) {
+    public static QueryAdviceState onEnter(@Advice.This SqlClientBase sqlClientBase) {
       CallDepth callDepth = CallDepth.forClass(SqlClientBase.class);
       if (callDepth.getAndIncrement() > 0) {
-        return callDepth;
+        return new QueryAdviceState(callDepth, null, null);
       }
 
-      VertxSqlClientSingletons.setClientInfo(VertxSqlClientSingletons.getClientInfo(sqlClientBase));
-      return callDepth;
+      VertxSqlClientInfo previousInfo =
+          currentClientInfo().set(VertxSqlClientSingletons.getClientInfo(sqlClientBase));
+      VertxSqlClientSupplierInfo previousSupplier =
+          currentQuerySupplier().set(VertxSqlClientSingletons.getClientSupplier(sqlClientBase));
+      return new QueryAdviceState(callDepth, previousInfo, previousSupplier);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter CallDepth callDepth) {
-      if (callDepth.decrementAndGet() > 0) {
+    public static void onExit(@Advice.Enter @Nullable QueryAdviceState state) {
+      if (state == null || state.callDepth.decrementAndGet() > 0) {
         return;
       }
+      currentQuerySupplier().restore(state.previousSupplier);
+      currentClientInfo().restore(state.previousInfo);
+    }
 
-      VertxSqlClientSingletons.setClientInfo(null);
+    public static final class QueryAdviceState {
+      public final CallDepth callDepth;
+      @Nullable public final VertxSqlClientInfo previousInfo;
+      @Nullable public final VertxSqlClientSupplierInfo previousSupplier;
+
+      public QueryAdviceState(
+          CallDepth callDepth,
+          @Nullable VertxSqlClientInfo previousInfo,
+          @Nullable VertxSqlClientSupplierInfo previousSupplier) {
+        this.callDepth = callDepth;
+        this.previousInfo = previousInfo;
+        this.previousSupplier = previousSupplier;
+      }
     }
   }
 }
