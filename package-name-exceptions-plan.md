@@ -32,7 +32,7 @@ The remaining exceptions fall into four buckets:
 
 | Bucket | Current signal | Recommendation |
 | --- | --- | --- |
-| Module-wide skips | `jmx-metrics` has 43 files | Do not start here; this needs a broader naming decision. |
+| Module-wide skips | `jmx-metrics` has 57 Java files | Do not start here; this needs a broader naming decision. |
 | Library packages under third-party namespaces | `grpc`, `lettuce`, `nats`, `rxjava`, and `elasticsearch-rest` have 1 file each; `thrift` has 2 | Leave for later; these are likely compatibility/shim packages. |
 | Javaagent advice under instrumented library namespaces | mostly 1 file each | Leave for later; the script already says these must live in the instrumented library namespace. |
 | Historical javaagent packages | 4 module exceptions remain; only HBase common is queued | Complete HBase common; keep Java HTTP client/server and JUL deferred. |
@@ -440,7 +440,7 @@ Suggested verification:
 These are probably not the next easiest wins:
 
 - `java-http-client` and `java-http-server`: these have published library/testing packages, so package renames need a dedicated public API decision instead of a package-only javaagent cleanup.
-- `jmx-metrics`: current packages are under `jmx`, while the module says `jmx-metrics`. This touches 43 files and may be user-facing enough to deserve a dedicated PR.
+- `jmx-metrics`: current packages are under `jmx`, while the module says `jmx-metrics`. This touches 57 Java files and may be user-facing enough to deserve a dedicated PR.
 - Library-specific third-party packages: `io.grpc.override`, `io.lettuce.core.protocol`, `io.nats.client.impl`, `rx`, `org.elasticsearch.client`, `org.apache.thrift`, and `org.apache.thrift.server` are likely intentional shims or package-private access points.
 - Advice-native package exceptions: packages under `com.clickhouse`, `com.twitter`, `io.netty`, `org.apache.commons.dbcp2`, `org.apache.hadoop.hbase.ipc`, `org.apache.tomcat.dbcp.dbcp2`, `org.redisson.config`, `org.springframework`, `reactor.netty`, `redis.clients.jedis`, and `io.vertx` should stay until each one is proven not to need native package placement.
 - AWS SDK package renames remain deferred.
