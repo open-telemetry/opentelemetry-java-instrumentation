@@ -13,8 +13,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import io.lettuce.core.ClientOptions;
-import io.lettuce.core.RedisChannelHandler;
 import io.lettuce.core.RedisURI;
+import io.lettuce.core.StatefulRedisConnectionImpl;
 import io.lettuce.core.cluster.RedisClusterClient;
 import io.lettuce.core.codec.StringCodec;
 import io.lettuce.core.output.StatusOutput;
@@ -122,8 +122,8 @@ class LettuceAttributesGetterTest {
   @Test
   void asynchronousMasterReplicaTargetIsSetBeforeReturnedFutureCompletes() {
     RedisServerTarget target = LettuceServerTargets.of(RedisURI.create("redis://configured:6379"));
-    RedisChannelHandler<?, ?> connection = mock(RedisChannelHandler.class);
-    CompletableFuture<RedisChannelHandler<?, ?>> originalFuture = new CompletableFuture<>();
+    StatefulRedisConnectionImpl<?, ?> connection = mock(StatefulRedisConnectionImpl.class);
+    CompletableFuture<StatefulRedisConnectionImpl<?, ?>> originalFuture = new CompletableFuture<>();
 
     Object result =
         LettuceMasterSlaveInstrumentation.ConnectAdvice.onExit(
