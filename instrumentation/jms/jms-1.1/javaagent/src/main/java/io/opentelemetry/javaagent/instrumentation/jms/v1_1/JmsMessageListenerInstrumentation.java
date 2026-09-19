@@ -126,6 +126,9 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
               messageWithListenerSubscriptionName);
         } catch (Throwable t) {
           messageAdapter.endProcessingAfterStartFailure(t);
+          if (messageWithListenerSubscriptionName != null) {
+            JmsSubscriptionNames.set(messageWithListenerSubscriptionName, null);
+          }
           throw t;
         }
       }

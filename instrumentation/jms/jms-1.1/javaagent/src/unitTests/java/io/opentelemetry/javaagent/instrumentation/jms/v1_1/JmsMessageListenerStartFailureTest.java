@@ -14,6 +14,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageAdapter;
 import java.lang.reflect.Proxy;
 import javax.jms.Message;
+import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import org.junit.jupiter.api.Test;
 
@@ -23,6 +24,9 @@ class JmsMessageListenerStartFailureTest {
   void releasesProcessingWhenListenerSetupFails() {
     Message message = newMessage();
     MessageListener listener = ignored -> {};
+    MessageConsumer consumer = newMessageConsumer();
+    JmsSubscriptionNames.set(consumer, "subscription");
+    JmsSubscriptionNames.copyToListener(consumer, listener);
     IllegalStateException failure = new IllegalStateException("failure");
 
     try (Scope ignored = throwingContext(failure).makeCurrent()) {
@@ -34,6 +38,7 @@ class JmsMessageListenerStartFailureTest {
     }
 
     assertTwoNewDeliveriesCanClaimConsumedMessages(JavaxMessageAdapter.create(message));
+    assertThat(JmsSubscriptionNames.get(message)).isNull();
   }
 
   private static void assertTwoNewDeliveriesCanClaimConsumedMessages(MessageAdapter adapter) {
@@ -62,10 +67,18 @@ class JmsMessageListenerStartFailureTest {
   }
 
   private static Message newMessage() {
-    return (Message)
+    return newProxy(Message.class);
+  }
+
+  private static MessageConsumer newMessageConsumer() {
+    return newProxy(MessageConsumer.class);
+  }
+
+  private static <T> T newProxy(Class<T> type) {
+    return type.cast(
         Proxy.newProxyInstance(
-            Message.class.getClassLoader(),
-            new Class<?>[] {Message.class},
+            type.getClassLoader(),
+            new Class<?>[] {type},
             (proxy, method, args) -> {
               if (method.getName().equals("hashCode")) {
                 return System.identityHashCode(proxy);
@@ -74,6 +87,6 @@ class JmsMessageListenerStartFailureTest {
                 return proxy == args[0];
               }
               return null;
-            });
+            }));
   }
 }
