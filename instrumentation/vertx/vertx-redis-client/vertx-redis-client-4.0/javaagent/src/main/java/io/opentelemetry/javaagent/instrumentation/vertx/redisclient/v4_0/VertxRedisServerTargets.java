@@ -6,19 +6,14 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.vertx.core.net.SocketAddress;
 import io.vertx.redis.client.RedisClientType;
 import io.vertx.redis.client.RedisOptions;
+import io.vertx.redis.client.impl.RedisConnectionManagerUtil;
 import io.vertx.redis.client.impl.RedisURI;
-import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 
 public final class VertxRedisServerTargets {
-
-  private static final VirtualField<RedisURI, CapturedTarget> TARGET_FIELD =
-      VirtualField.find(RedisURI.class, CapturedTarget.class);
 
   @Nullable
   public static RedisServerTarget of(@Nullable RedisOptions options) {
@@ -39,43 +34,17 @@ public final class VertxRedisServerTargets {
   }
 
   public static List<String> discoveryEndpoints(List<String> connectionStrings) {
-    List<String> endpoints = new ArrayList<>(connectionStrings.size());
-    for (String connectionString : connectionStrings) {
-      try {
-        RedisURI redisUri = new RedisURI(connectionString);
-        SocketAddress address = redisUri.socketAddress();
-        endpoints.add(
-            address.isInetSocket()
-                ? RedisServerTarget.endpoint(address.host(), address.port())
-                : connectionString);
-      } catch (IllegalArgumentException ignored) {
-        endpoints.add(connectionString);
-      }
-    }
-    return endpoints;
+    return RedisConnectionManagerUtil.discoveryEndpoints(connectionStrings);
   }
 
   public static void set(RedisURI redisUri, @Nullable RedisServerTarget target) {
-    TARGET_FIELD.set(redisUri, new CapturedTarget(target));
+    RedisConnectionManagerUtil.setRedisUriTarget(redisUri, target);
   }
 
   @Nullable
-  public static CapturedTarget get(@Nullable RedisURI redisUri) {
-    return redisUri == null ? null : TARGET_FIELD.get(redisUri);
+  public static RedisConnectionManagerUtil.CapturedTarget get(@Nullable RedisURI redisUri) {
+    return RedisConnectionManagerUtil.getRedisUriTarget(redisUri);
   }
 
   private VertxRedisServerTargets() {}
-
-  static final class CapturedTarget {
-    @Nullable private final RedisServerTarget target;
-
-    private CapturedTarget(@Nullable RedisServerTarget target) {
-      this.target = target;
-    }
-
-    @Nullable
-    RedisServerTarget getTarget() {
-      return target;
-    }
-  }
 }
