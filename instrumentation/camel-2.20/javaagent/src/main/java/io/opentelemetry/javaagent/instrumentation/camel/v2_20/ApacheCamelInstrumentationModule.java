@@ -21,10 +21,7 @@ public class ApacheCamelInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(
-        new CamelContextInstrumentation(),
-        new KafkaFetchRecordsInstrumentation(),
-        new SendProcessorInstrumentation());
+    return asList(new CamelContextInstrumentation(), new SendProcessorInstrumentation());
   }
 
   @Override
