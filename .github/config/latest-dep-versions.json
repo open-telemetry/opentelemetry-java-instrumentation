@@ -151,7 +151,7 @@
     "io.grpc:grpc-protobuf#+": "1.84.0",
     "io.grpc:grpc-services#+": "1.84.0",
     "io.grpc:grpc-stub#+": "1.84.0",
-    "io.helidon.webserver:helidon-webserver#+": "27.0.0",
+    "io.helidon.webserver:helidon-webserver#+": "4.5.5",
     "io.javalin:javalin#+": "7.2.3",
     "io.javalin:javalin#6.+": "6.7.0",
     "io.ktor:ktor-client-cio#+": "3.6.0",
