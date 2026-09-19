@@ -60,7 +60,7 @@ final class TracingServerStreamTracer extends ServerStreamTracer {
   static void markCurrentCallHandled() {
     CallState callState = STREAM_TRACER_STATE_KEY.get();
     if (callState != null) {
-      callState.markInterceptorHandled();
+      callState.markHandled();
     }
   }
 
@@ -76,6 +76,9 @@ final class TracingServerStreamTracer extends ServerStreamTracer {
 
   @Override
   public void serverCallStarted(ServerCall<?, ?> call) {
+    // gRPC creates a ServerCall only after resolving a registered method. Mark it handled here in
+    // case another interceptor short-circuits the call before the tracing interceptor runs.
+    callState.markHandled();
     if (peerAddress == null) {
       SocketAddress addr = call.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR);
       if (addr != null) {
@@ -110,7 +113,7 @@ final class TracingServerStreamTracer extends ServerStreamTracer {
   private static final class CallState {
     private final AtomicBoolean handledOrSpanStarted = new AtomicBoolean();
 
-    void markInterceptorHandled() {
+    void markHandled() {
       handledOrSpanStarted.set(true);
     }
 
