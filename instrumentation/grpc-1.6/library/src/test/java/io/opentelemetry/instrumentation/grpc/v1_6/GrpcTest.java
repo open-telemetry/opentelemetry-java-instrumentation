@@ -103,8 +103,7 @@ class GrpcTest extends AbstractGrpcTest {
     Server server = serverBuilder.build().start();
     ManagedChannel channel =
         createChannel(
-            configureClient(
-                ManagedChannelBuilder.forAddress("localhost", server.getPort())));
+            configureClient(ManagedChannelBuilder.forAddress("localhost", server.getPort())));
     closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
     closer.add(() -> server.shutdownNow().awaitTermination());
 
