@@ -756,8 +756,7 @@ public abstract class AbstractRedissonClientTest {
   void atomicBatchDiscard() throws ReflectiveOperationException {
     assumeStableAtomicBatchSupport();
     // Redisson 4.7.0 throws UnsupportedOperationException when discarding a Redis-based batch.
-    Assumptions.assumeFalse(
-        "4.7.0".equals(Redisson.class.getPackage().getImplementationVersion()));
+    Assumptions.assumeFalse("4.7.0".equals(Redisson.class.getPackage().getImplementationVersion()));
     try {
       RBatch.class.getMethod("discard");
     } catch (NoSuchMethodException ignored) {
