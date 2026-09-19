@@ -139,6 +139,20 @@ class LettuceAttributesGetterTest {
     assertThat(LettuceConnectionState.serverTarget(command)).isSameAs(target);
   }
 
+  @Test
+  void cancellingAsynchronousMasterReplicaConnectionCancelsOriginalFuture() {
+    CompletableFuture<StatefulRedisConnectionImpl<?, ?>> originalFuture = new CompletableFuture<>();
+
+    Object result =
+        LettuceMasterSlaveInstrumentation.ConnectAdvice.onExit(
+            new Object[] {null, null}, originalFuture);
+    CompletableFuture<?> returnedFuture = (CompletableFuture<?>) result;
+
+    assertThat(returnedFuture.cancel(true)).isTrue();
+    assertThat(returnedFuture).isCancelled();
+    assertThat(originalFuture).isCancelled();
+  }
+
   private static RedisCommand<String, String, String> command() {
     return new Command<>(CommandType.GET, new StatusOutput<>(StringCodec.UTF8));
   }
