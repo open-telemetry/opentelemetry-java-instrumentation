@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -41,6 +42,9 @@ class LettuceCommandEncoderInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
         @Advice.Argument(0) ChannelHandlerContext context, @Advice.Argument(1) Object message) {
+      if (!emitStableDatabaseSemconv()) {
+        return;
+      }
       SocketAddress remoteAddress = context.channel().remoteAddress();
       if (remoteAddress == null) {
         return;
