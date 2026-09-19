@@ -425,6 +425,8 @@
   ],
   customDatasources: {
     'azul-zulu-openjdk': {
+      // The Docker datasource scans thousands of tags and can hit Docker Hub rate limits.
+      // This filtered datasource returns only major versions, without digests, for scalar Java markers.
       defaultRegistryUrlTemplate: 'https://hub.docker.com/v2/repositories/azul/zulu-openjdk/tags?page_size=100&name=-latest',
       transformTemplates: [
         '{"releases": results[$match(name, /^\\d+-latest$/)].{"version": $substringBefore(name, "-latest")}}',
