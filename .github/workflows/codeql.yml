@@ -32,7 +32,7 @@ jobs:
         include:
           - language: actions
           - language: java
-    runs-on: ${{ github.repository == 'open-telemetry/opentelemetry-java-instrumentation' && 'oracle-vm-8cpu-32gb-x86-64' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'open-telemetry/opentelemetry-java-instrumentation' && 'cncf-ubuntu-32-128-x86' || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -74,13 +74,13 @@ jobs:
           # see https://github.com/github/codeql-action/issues/1555#issuecomment-1452228433
           tools: linked
 
-      - name: Compile
+      - name: Assemble
         if: matrix.language == 'java'
         # --no-build-cache is required for codeql to analyze all modules
         # --no-daemon is required for codeql to observe the compilation
         # (see https://docs.github.com/en/code-security/codeql-cli/getting-started-with-the-codeql-cli/preparing-your-code-for-codeql-analysis#specifying-build-commands)
         run: >
-          ./gradlew classes
+          ./gradlew assemble -x javadoc
           --no-build-cache --no-daemon
 
       - name: Perform CodeQL analysis
