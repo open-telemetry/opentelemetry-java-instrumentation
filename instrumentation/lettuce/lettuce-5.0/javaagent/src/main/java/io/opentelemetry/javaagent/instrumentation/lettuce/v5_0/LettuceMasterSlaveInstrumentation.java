@@ -19,11 +19,12 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
 class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
@@ -65,15 +66,17 @@ class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
       return new Object[] {LettuceServerTargets.ofMasterSlaveUris(snapshot), snapshot};
     }
 
+    @Advice.AssignReturned.ToReturned(typing = Assigner.Typing.DYNAMIC)
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(
+    public static Object onExit(
         @Advice.Enter Object[] enter, @Advice.Return @Nullable Object result) {
       RedisServerTarget target = (RedisServerTarget) enter[0];
       if (result instanceof RedisChannelHandler) {
         setTarget(result, target);
       } else if (result instanceof CompletableFuture) {
-        ((CompletableFuture<?>) result).thenAccept(new SetTargetConsumer(target));
+        return ((CompletableFuture<?>) result).thenApply(new SetTargetFunction(target));
       }
+      return result;
     }
 
     public static void setTarget(Object connection, @Nullable RedisServerTarget target) {
@@ -82,18 +85,19 @@ class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
     }
   }
 
-  public static class SetTargetConsumer implements Consumer<Object> {
+  public static class SetTargetFunction implements Function<Object, Object> {
     @Nullable private final RedisServerTarget target;
 
-    public SetTargetConsumer(@Nullable RedisServerTarget target) {
+    public SetTargetFunction(@Nullable RedisServerTarget target) {
       this.target = target;
     }
 
     @Override
-    public void accept(Object connection) {
+    public Object apply(Object connection) {
       if (connection instanceof RedisChannelHandler) {
         ConnectAdvice.setTarget(connection, target);
       }
+      return connection;
     }
   }
 }
