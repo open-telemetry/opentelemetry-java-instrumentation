@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.lettuce.core.RedisChannelHandler;
 import io.lettuce.core.RedisURI;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
@@ -93,6 +94,7 @@ class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
     }
 
     @Override
+    @CanIgnoreReturnValue
     public Object apply(Object connection) {
       if (connection instanceof RedisChannelHandler) {
         ConnectAdvice.setTarget(connection, target);
