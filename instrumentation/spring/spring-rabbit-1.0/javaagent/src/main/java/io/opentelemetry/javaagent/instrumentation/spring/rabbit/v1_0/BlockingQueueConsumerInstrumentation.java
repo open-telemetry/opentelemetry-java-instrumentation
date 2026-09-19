@@ -5,8 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
-import static io.opentelemetry.javaagent.bootstrap.rabbitmq.RabbitMqConsumerProcessTracing.isWrappingEnabled;
-import static io.opentelemetry.javaagent.bootstrap.rabbitmq.RabbitMqConsumerProcessTracing.setWrappingEnabled;
+import static io.opentelemetry.javaagent.bootstrap.rabbitmq.RabbitMqConsumerProcessTracing.processSpanSuppression;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -27,9 +26,7 @@ class BlockingQueueConsumerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("start")
-            .and(takesArguments(0))
-            .or(named("consumeFromQueue").and(takesArguments(String.class))),
+        named("consumeFromQueue").and(takesArguments(String.class)),
         getClass().getName() + "$ConsumerRegistrationAdvice");
   }
 
@@ -38,16 +35,17 @@ class BlockingQueueConsumerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static boolean onEnter(@Advice.This BlockingQueueConsumer consumer) {
-      boolean previous = isWrappingEnabled();
-      if (SpringRabbitListenerUtil.isSpringListenerConsumer(consumer)) {
-        setWrappingEnabled(false);
+      if (!SpringRabbitListenerUtil.isSpringListenerConsumer(consumer)) {
+        return false;
       }
-      return previous;
+      return processSpanSuppression().tryAcquire();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter boolean previous) {
-      setWrappingEnabled(previous);
+    public static void onExit(@Advice.Enter boolean suppressionAcquired) {
+      if (suppressionAcquired) {
+        processSpanSuppression().release();
+      }
     }
   }
 }
