@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db.internal;
 
 import static java.util.Collections.emptyList;
+import static java.util.Comparator.comparing;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,6 +62,31 @@ public final class RedisServerTarget {
   @Nullable
   public static RedisServerTarget ofUnorderedEndpoints(@Nullable List<String> endpoints) {
     return createFromEndpoints(endpoints, true);
+  }
+
+  /**
+   * Returns a target that keeps {@code endpoint} in front, such as the master of a master and
+   * replicas deployment, and sorts {@code otherEndpoints} so that permutations of the same
+   * deployment render identically.
+   */
+  @Nullable
+  public static RedisServerTarget ofEndpointAndUnorderedEndpoints(
+      @Nullable String endpoint, @Nullable List<String> otherEndpoints) {
+    int otherEndpointCount = otherEndpoints == null ? 0 : otherEndpoints.size();
+    List<String> endpoints = new ArrayList<>(otherEndpointCount + 1);
+    endpoints.add(endpoint);
+    if (otherEndpoints != null) {
+      endpoints.addAll(otherEndpoints);
+    }
+    List<Endpoint> parsed = parseConfiguredEndpoints(endpoints, false);
+    if (parsed == null || parsed.isEmpty()) {
+      return null;
+    }
+    if (parsed.size() == 1) {
+      return directTarget(parsed.get(0));
+    }
+    parsed.subList(1, parsed.size()).sort(comparing(Endpoint::renderConfigured));
+    return networkTarget(parsed, false);
   }
 
   @Nullable
