@@ -14,18 +14,8 @@ final class LettuceCommandPeer {
   private static final String DOMAIN_SOCKET_ADDRESS_CLASS =
       "io.netty.channel.unix.DomainSocketAddress";
 
-  private static final ClassValue<Method> domainSocketAddressPathMethod =
-      new ClassValue<Method>() {
-        @Nullable
-        @Override
-        protected Method computeValue(Class<?> type) {
-          try {
-            return type.getMethod("path");
-          } catch (NoSuchMethodException | SecurityException ignored) {
-            return null;
-          }
-        }
-      };
+  @Nullable
+  private static final Method domainSocketAddressPathMethod = getDomainSocketAddressPathMethod();
 
   // Completion and outbound writes can race on different threads.
   @Nullable private SocketAddress address;
@@ -54,12 +44,11 @@ final class LettuceCommandPeer {
     }
     if (peerAddress != null
         && peerAddress.getClass().getName().equals(DOMAIN_SOCKET_ADDRESS_CLASS)) {
-      Method pathMethod = domainSocketAddressPathMethod.get(peerAddress.getClass());
-      if (pathMethod == null) {
+      if (domainSocketAddressPathMethod == null) {
         return null;
       }
       try {
-        return (String) pathMethod.invoke(peerAddress);
+        return (String) domainSocketAddressPathMethod.invoke(peerAddress);
       } catch (ReflectiveOperationException
           | IllegalArgumentException
           | ClassCastException ignored) {
@@ -76,5 +65,16 @@ final class LettuceCommandPeer {
     }
     InetSocketAddress inetPeerAddress = (InetSocketAddress) peerAddress;
     return inetPeerAddress.isUnresolved() ? null : inetPeerAddress.getPort();
+  }
+
+  @Nullable
+  private static Method getDomainSocketAddressPathMethod() {
+    try {
+      return Class.forName(
+              DOMAIN_SOCKET_ADDRESS_CLASS, false, LettuceCommandPeer.class.getClassLoader())
+          .getMethod("path");
+    } catch (ReflectiveOperationException | LinkageError | SecurityException ignored) {
+      return null;
+    }
   }
 }
