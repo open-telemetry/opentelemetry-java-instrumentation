@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.rx;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceInstrumentationUtil.expectsResponse;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.instrumenter;
 
@@ -35,7 +36,9 @@ public abstract class LettuceReactiveCommandHandler {
   public final void onCommand(RedisCommand<?, ?, ?> command) {
     this.command = command;
     expectsResponse = expectsResponse(command);
-    LettuceCommandPeer.initializeForSubscription(command);
+    if (emitStableDatabaseSemconv()) {
+      LettuceCommandPeer.initializeForSubscription(command);
+    }
     LettuceConnectionState.copy(connection, command);
     context = instrumenter().start(Context.current(), command);
     if (!expectsResponse) {
