@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_4_5;
 
-import static io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0.VertxRedisServerTargets.discoveryEndpoints;
+import static io.vertx.redis.client.impl.RedisConnectionManagerUtil.discoveryEndpoints;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;

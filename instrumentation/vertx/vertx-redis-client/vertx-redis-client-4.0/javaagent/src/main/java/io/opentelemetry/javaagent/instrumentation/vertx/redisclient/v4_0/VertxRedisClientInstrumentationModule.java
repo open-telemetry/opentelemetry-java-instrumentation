@@ -22,7 +22,7 @@ public class VertxRedisClientInstrumentationModule extends InstrumentationModule
   @Override
   public boolean isHelperClass(String className) {
     return className.equals("io.vertx.redis.client.impl.RequestUtil")
-        || className.equals("io.vertx.redis.client.impl.RedisConnectionManagerUtil");
+        || className.startsWith("io.vertx.redis.client.impl.RedisConnectionManagerUtil");
   }
 
   @Override
