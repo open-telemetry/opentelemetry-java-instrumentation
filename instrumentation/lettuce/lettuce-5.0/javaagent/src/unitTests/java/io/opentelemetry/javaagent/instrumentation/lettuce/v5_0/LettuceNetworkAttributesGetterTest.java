@@ -256,7 +256,8 @@ class LettuceNetworkAttributesGetterTest {
     LettuceCommandEncoderInstrumentation.EncodeAdvice.onEnter(context, command);
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
-    assertThat(LettuceCommandPeer.address(command)).isEqualTo(address);
+    assertThat(LettuceCommandPeer.address(command))
+        .isEqualTo(emitStableDatabaseSemconv() ? address : null);
     assertThat(getter.getNetworkPeerAddress(command, null))
         .isEqualTo(emitStableDatabaseSemconv() ? "/var/run/redis.sock" : null);
     assertThat(getter.getNetworkPeerPort(command, null)).isNull();
@@ -277,7 +278,8 @@ class LettuceNetworkAttributesGetterTest {
     LettuceCommandEncoderInstrumentation.EncodeAdvice.onEnter(context, singletonList(wrapper));
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
-    assertThat(LettuceCommandPeer.address(wrapper)).isEqualTo(address);
+    assertThat(LettuceCommandPeer.address(wrapper))
+        .isEqualTo(emitStableDatabaseSemconv() ? address : null);
     assertThat(getter.getNetworkPeerAddress(wrapper, null))
         .isEqualTo(emitStableDatabaseSemconv() ? "10.1.2.3" : null);
     assertThat(getter.getNetworkPeerPort(wrapper, null))
@@ -296,7 +298,8 @@ class LettuceNetworkAttributesGetterTest {
 
     LettuceCommandEncoderInstrumentation.EncodeAdvice.onEnter(context, command);
 
-    assertThat(LettuceCommandPeer.address(command)).isEqualTo(address);
+    assertThat(LettuceCommandPeer.address(command))
+        .isEqualTo(emitStableDatabaseSemconv() ? address : null);
   }
 
   @Test
@@ -330,6 +333,15 @@ class LettuceNetworkAttributesGetterTest {
       release.countDown();
       executor.shutdownNow();
     }
+  }
+
+  @Test
+  void asyncCommandPeerStateMatchesSemconvMode() {
+    AsyncCommand<String, String, String> command =
+        new AsyncCommand<>(new Command<>(CommandType.GET, null));
+
+    assertThat(LettuceCommandPeer.markSpanStarted(command))
+        .isEqualTo(emitStableDatabaseSemconv());
   }
 
   @Test
@@ -370,7 +382,8 @@ class LettuceNetworkAttributesGetterTest {
     AsyncCommand<String, String, String> replayWrapper = new AsyncCommand<>(command);
     LettuceCommandPeer.initialize(replayWrapper);
 
-    assertThat(LettuceCommandPeer.address(firstWrapper)).isEqualTo(first);
+    assertThat(LettuceCommandPeer.address(firstWrapper))
+        .isEqualTo(emitStableDatabaseSemconv() ? first : null);
     assertThat(LettuceCommandPeer.address(replayWrapper)).isNull();
 
     Channel secondChannel = mock(Channel.class);
@@ -380,8 +393,10 @@ class LettuceNetworkAttributesGetterTest {
     LettuceCommandEncoderInstrumentation.EncodeAdvice.onEnter(
         secondContext, singletonList(replayWrapper));
 
-    assertThat(LettuceCommandPeer.address(firstWrapper)).isEqualTo(first);
-    assertThat(LettuceCommandPeer.address(replayWrapper)).isEqualTo(second);
+    assertThat(LettuceCommandPeer.address(firstWrapper))
+        .isEqualTo(emitStableDatabaseSemconv() ? first : null);
+    assertThat(LettuceCommandPeer.address(replayWrapper))
+        .isEqualTo(emitStableDatabaseSemconv() ? second : null);
   }
 
   private static RedisCommand<String, String, String> command() {
