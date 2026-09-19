@@ -46,9 +46,7 @@ public final class LettuceCommandPeer {
   }
 
   public static void initializeForSubscription(RedisCommand<?, ?, ?> command) {
-    if (find(command) == null) {
-      COMMAND_PEER.set(command, new LettuceCommandPeer());
-    }
+    COMMAND_PEER.set(command, new LettuceCommandPeer());
   }
 
   public static void record(RedisCommand<?, ?, ?> command, SocketAddress peerAddress) {
