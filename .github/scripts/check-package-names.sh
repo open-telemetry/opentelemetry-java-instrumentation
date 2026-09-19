@@ -51,10 +51,12 @@ check_source_set() {
       if [[ "$dir" == "instrumentation/thrift-0.13/library/src/main/java/org/apache/thrift/server" ]]; then
         continue
       fi
-      if [[ "$dir" == instrumentation/java-http-client/library/src/main/java/io/opentelemetry/instrumentation/javahttpclient* ]]; then
+      if [[ "$dir" == "instrumentation/java-http-client/library/src/main/java/io/opentelemetry/instrumentation/javahttpclient"
+        || "$dir" == instrumentation/java-http-client/library/src/main/java/io/opentelemetry/instrumentation/javahttpclient/* ]]; then
         continue
       fi
-      if [[ "$dir" == instrumentation/java-http-server/library/src/main/java/io/opentelemetry/instrumentation/javahttpserver* ]]; then
+      if [[ "$dir" == "instrumentation/java-http-server/library/src/main/java/io/opentelemetry/instrumentation/javahttpserver"
+        || "$dir" == instrumentation/java-http-server/library/src/main/java/io/opentelemetry/instrumentation/javahttpserver/* ]]; then
         continue
       fi
     fi
@@ -64,18 +66,18 @@ check_source_set() {
       # namespace, so that they can reach package-private library types and members
       case "$dir" in
         instrumentation/apache-dbcp-2.0/javaagent/src/main/java/org/apache/commons/dbcp2) continue ;;
-        instrumentation/clickhouse/clickhouse-client-v1-0.5/javaagent/src/main/java/com/clickhouse/client*) continue ;;
-        instrumentation/finagle-http-23.11/javaagent/src/main/java/com/twitter/finagle*) continue ;;
-        instrumentation/finagle-http-23.11/javaagent/src/main/java/io/netty/channel*) continue ;;
+        instrumentation/clickhouse/clickhouse-client-v1-0.5/javaagent/src/main/java/com/clickhouse/client | instrumentation/clickhouse/clickhouse-client-v1-0.5/javaagent/src/main/java/com/clickhouse/client/*) continue ;;
+        instrumentation/finagle-http-23.11/javaagent/src/main/java/com/twitter/finagle | instrumentation/finagle-http-23.11/javaagent/src/main/java/com/twitter/finagle/*) continue ;;
+        instrumentation/finagle-http-23.11/javaagent/src/main/java/io/netty/channel | instrumentation/finagle-http-23.11/javaagent/src/main/java/io/netty/channel/*) continue ;;
         instrumentation/hbase/hbase-client-common-1.0/javaagent/src/main/java/org/apache/hadoop/hbase/ipc) continue ;;
         instrumentation/jedis/jedis-4.0/javaagent/src/main/java/redis/clients/jedis) continue ;;
-        instrumentation/reactor/reactor-netty/reactor-netty-1.0/javaagent/src/main/java/reactor/netty/http/client*) continue ;;
+        instrumentation/reactor/reactor-netty/reactor-netty-1.0/javaagent/src/main/java/reactor/netty/http/client | instrumentation/reactor/reactor-netty/reactor-netty-1.0/javaagent/src/main/java/reactor/netty/http/client/*) continue ;;
         instrumentation/spring/spring-boot-resources/javaagent/src/main/java/io/opentelemetry/instrumentation/spring/resources) continue ;;
-        instrumentation/spring/spring-webmvc/spring-webmvc-3.1/javaagent/src/main/java/org/springframework/web/servlet/v3_1*) continue ;;
-        instrumentation/spring/spring-webmvc/spring-webmvc-6.0/javaagent/src/main/java/org/springframework/web/servlet/v6_0*) continue ;;
+        instrumentation/spring/spring-webmvc/spring-webmvc-3.1/javaagent/src/main/java/org/springframework/web/servlet/v3_1 | instrumentation/spring/spring-webmvc/spring-webmvc-3.1/javaagent/src/main/java/org/springframework/web/servlet/v3_1/*) continue ;;
+        instrumentation/spring/spring-webmvc/spring-webmvc-6.0/javaagent/src/main/java/org/springframework/web/servlet/v6_0 | instrumentation/spring/spring-webmvc/spring-webmvc-6.0/javaagent/src/main/java/org/springframework/web/servlet/v6_0/*) continue ;;
         instrumentation/tomcat/tomcat-dbcp-8.0/javaagent/src/main/java/org/apache/tomcat/dbcp/dbcp2) continue ;;
-        instrumentation/vertx/vertx-redis-client-4.0/javaagent/src/main/java/io/vertx/redis/client/impl*) continue ;;
-        instrumentation/vertx/vertx-sql-client/vertx-sql-client-common-4.0/javaagent/src/main/java/io/vertx/sqlclient/impl*) continue ;;
+        instrumentation/vertx/vertx-redis-client-4.0/javaagent/src/main/java/io/vertx/redis/client/impl | instrumentation/vertx/vertx-redis-client-4.0/javaagent/src/main/java/io/vertx/redis/client/impl/*) continue ;;
+        instrumentation/vertx/vertx-sql-client/vertx-sql-client-common-4.0/javaagent/src/main/java/io/vertx/sqlclient/impl | instrumentation/vertx/vertx-sql-client/vertx-sql-client-common-4.0/javaagent/src/main/java/io/vertx/sqlclient/impl/*) continue ;;
       esac
 
       # self-instrumentation modules: these instrument OpenTelemetry's own code,
