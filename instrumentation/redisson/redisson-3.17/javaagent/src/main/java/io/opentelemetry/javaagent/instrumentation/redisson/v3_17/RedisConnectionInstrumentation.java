@@ -15,6 +15,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.EndOperationListener;
 import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.PromiseWrapper;
+import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.RedissonBatchContext;
 import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.RedissonRequest;
 import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.RedissonServerTargets;
 import java.net.InetSocketAddress;
@@ -62,6 +63,12 @@ class RedisConnectionInstrumentation implements TypeInstrumentation {
                 arg,
                 databaseIndex(connection),
                 RedissonServerTargets.get(connection));
+        if (RedissonBatchContext.shouldSuppress(connection, request)) {
+          return null;
+        }
+        if (RedissonBatchContext.isActive(parentContext)) {
+          return null;
+        }
         PromiseWrapper<?> promise = request.getPromiseWrapper();
         if (promise == null) {
           return null;

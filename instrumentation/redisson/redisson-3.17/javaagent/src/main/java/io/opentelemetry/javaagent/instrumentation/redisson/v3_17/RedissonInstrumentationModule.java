@@ -12,6 +12,7 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.RedissonBatchCommandDataInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -31,6 +32,8 @@ public class RedissonInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
+        new CommandBatchServiceInstrumentation(),
+        new RedissonBatchCommandDataInstrumentation(),
         new MasterSlaveConnectionManagerInstrumentation(),
         new RedisExecutorConnectionFutureInstrumentation(),
         new RedisConnectionInstrumentation(),
