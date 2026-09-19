@@ -11,7 +11,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.lettuce.core.RedisChannelHandler;
 import io.lettuce.core.RedisURI;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
@@ -19,8 +18,9 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
+import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
@@ -75,7 +75,7 @@ class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
       if (result instanceof RedisChannelHandler) {
         setTarget(result, target);
       } else if (result instanceof CompletableFuture) {
-        return ((CompletableFuture<?>) result).thenApply(new SetTargetFunction(target));
+        return new SetTargetFuture((CompletableFuture<?>) result, target);
       }
       return result;
     }
@@ -86,20 +86,52 @@ class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
     }
   }
 
-  public static class SetTargetFunction implements Function<Object, Object> {
+  public static class SetTargetFuture extends CompletableFuture<Object> {
+    private final CompletableFuture<?> delegate;
+
+    public SetTargetFuture(
+        CompletableFuture<?> delegate, @Nullable RedisServerTarget serverTarget) {
+      this.delegate = delegate;
+      delegate.whenComplete(new SetTargetConsumer(this, serverTarget));
+    }
+
+    @Override
+    public boolean cancel(boolean mayInterruptIfRunning) {
+      boolean cancelled = delegate.cancel(mayInterruptIfRunning);
+      if (cancelled) {
+        cancelFromDelegate();
+      }
+      return cancelled;
+    }
+
+    private void cancelFromDelegate() {
+      super.cancel(false);
+    }
+  }
+
+  public static class SetTargetConsumer implements BiConsumer<Object, Throwable> {
+    private final SetTargetFuture future;
     @Nullable private final RedisServerTarget target;
 
-    public SetTargetFunction(@Nullable RedisServerTarget target) {
+    public SetTargetConsumer(SetTargetFuture future, @Nullable RedisServerTarget target) {
+      this.future = future;
       this.target = target;
     }
 
     @Override
-    @CanIgnoreReturnValue
-    public Object apply(Object connection) {
+    public void accept(@Nullable Object connection, @Nullable Throwable throwable) {
+      if (throwable instanceof CancellationException) {
+        future.cancelFromDelegate();
+        return;
+      }
+      if (throwable != null) {
+        future.completeExceptionally(throwable);
+        return;
+      }
       if (connection instanceof RedisChannelHandler) {
         ConnectAdvice.setTarget(connection, target);
       }
-      return connection;
+      future.complete(connection);
     }
   }
 }
