@@ -13,6 +13,7 @@ import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMess
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveMetrics;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
+import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanEnabledSupplier;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
@@ -32,6 +33,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
@@ -57,6 +59,7 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,6 +69,8 @@ import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 import reactor.kafka.receiver.KafkaReceiver;
 import reactor.kafka.receiver.ReceiverOptions;
 import reactor.kafka.sender.KafkaSender;
@@ -156,7 +161,11 @@ public abstract class AbstractReactorKafkaTest {
   protected void testSingleRecordProcess(
       Function<Consumer<ConsumerRecord<String, String>>, Disposable> subscriptionFunction) {
     Disposable disposable =
-        subscriptionFunction.apply(record -> testing.runWithSpan("consumer", () -> {}));
+        subscriptionFunction.apply(
+            record -> {
+              assertThat(processSpanEnabledSupplier().getAsBoolean()).isTrue();
+              testing.runWithSpan("consumer", () -> {});
+            });
     cleanup.deferCleanup(disposable::dispose);
 
     SenderRecord<String, String, Object> record =
@@ -169,6 +178,19 @@ public abstract class AbstractReactorKafkaTest {
     } else {
       assertWithoutReceiveTelemetry(record);
     }
+  }
+
+  @Test
+  void testReceiveAutoAckAfterAsyncHandoff() {
+    Scheduler scheduler = Schedulers.newSingle("kafka-handoff");
+    cleanup.deferCleanup(scheduler::dispose);
+    testSingleRecordProcess(
+        recordConsumer ->
+            receiver
+                .receiveAutoAck()
+                .publishOn(scheduler)
+                .concatMap(records -> records)
+                .subscribe(recordConsumer));
   }
 
   private static void assertWithReceiveTelemetry(SenderRecord<String, String, Object> record) {

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.kafka;
 
+import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanEnabledSupplier;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -28,6 +29,7 @@ class BatchRecordsHandler implements Handler<KafkaConsumerRecords<String, String
 
   @Override
   public void handle(KafkaConsumerRecords<String, String> records) {
+    assertThat(processSpanEnabledSupplier().getAsBoolean()).isTrue();
     lastBatchSize.set(records.size());
     IntStream.range(0, records.size()).forEach(it -> messageReceived.countDown());
 
