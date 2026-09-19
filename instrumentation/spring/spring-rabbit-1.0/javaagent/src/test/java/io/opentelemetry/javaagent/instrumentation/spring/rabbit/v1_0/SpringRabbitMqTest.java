@@ -49,6 +49,7 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetAddress;
@@ -539,12 +540,26 @@ class SpringRabbitMqTest {
         });
     cleanup.deferCleanup(container::stop);
     container.start();
+    testing.waitForTraces(3);
+    testing.clearData();
 
     applicationContext.getBean(AmqpTemplate.class).convertAndSend(queue, "test");
 
     assertThat(errorHandled.await(10, SECONDS)).isTrue();
     assertThat(errorHandlerSpanContext.get()).isNotNull();
     assertThat(errorHandlerSpanContext.get().isValid()).isTrue();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactlyInAnyOrder(
+                span -> span.hasKind(SpanKind.PRODUCER),
+                span -> span.hasKind(SpanKind.CONSUMER).hasStatus(StatusData.error())),
+        trace -> trace.hasSpansSatisfyingExactly(SpringRabbitMqTest::verifyNackSpan));
+    assertProcessMetrics(
+        testing,
+        queue,
+        testLatestDeps()
+            ? "org.springframework.amqp.rabbit.support.ListenerExecutionFailedException"
+            : "org.springframework.amqp.rabbit.listener.exception.ListenerExecutionFailedException");
   }
 
   @ParameterizedTest
@@ -583,8 +598,16 @@ class SpringRabbitMqTest {
         trace -> trace.hasSpansSatisfyingExactly(SpringRabbitMqTest::verifyAckSpan));
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   private static void verifyAckSpan(SpanDataAssert span) {
+    verifySettleSpan(span, "ack");
+  }
+
+  private static void verifyNackSpan(SpanDataAssert span) {
+    verifySettleSpan(span, "nack");
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  private static void verifySettleSpan(SpanDataAssert span, String operation) {
     boolean stable = emitStableMessagingSemconv();
     List<AttributeAssertion> assertions =
         new ArrayList<>(
@@ -596,7 +619,7 @@ class SpringRabbitMqTest {
     if (stable) {
       assertions.add(equalTo(SERVER_ADDRESS, ip));
       assertions.add(satisfies(SERVER_PORT, AbstractLongAssert::isNotNegative));
-      assertions.add(equalTo(MESSAGING_OPERATION_NAME, "ack"));
+      assertions.add(equalTo(MESSAGING_OPERATION_NAME, operation));
       assertions.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
       assertions.add(
           satisfies(MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG, AbstractLongAssert::isPositive));
@@ -604,7 +627,7 @@ class SpringRabbitMqTest {
         assertions.add(equalTo(MESSAGING_OPERATION, "settle"));
       }
     }
-    span.hasName(stable ? "ack" : "basic.ack")
+    span.hasName(stable ? operation : "basic." + operation)
         .hasKind(SpanKind.CLIENT)
         .hasAttributesSatisfyingExactly(assertions);
   }
