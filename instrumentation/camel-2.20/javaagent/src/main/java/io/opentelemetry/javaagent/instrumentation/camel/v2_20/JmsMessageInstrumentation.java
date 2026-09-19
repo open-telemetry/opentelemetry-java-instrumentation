@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
+import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessageTelemetry.messageTelemetry;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -58,6 +59,7 @@ class JmsMessageInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.This org.apache.camel.Message camelMessage,
         @Advice.Argument(0) @Nullable Message jmsMessage) {
+      messageTelemetry().clear(camelMessage);
       if (jmsMessage == null) {
         camelDeliveryState().set(camelMessage, null);
         return;

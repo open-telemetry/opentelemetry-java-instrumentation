@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -46,10 +48,15 @@ class JmsMessageInstrumentationTest {
   void clearsDeliveryStateWhenCamelMessageIsCleared() {
     org.apache.camel.Message camelMessage = mock(org.apache.camel.Message.class);
     JmsMessageInstrumentation.StoreReceiveTelemetryAdvice.onExit(camelMessage, mock(Message.class));
+    CamelMessageTelemetry.messageTelemetry().add(camelMessage, RECEIVE, CONSUMED_MESSAGES);
 
     JmsMessageInstrumentation.StoreReceiveTelemetryAdvice.onExit(camelMessage, null);
 
     assertThat(CamelMessageTelemetry.getJmsDeliveryState(camelMessage)).isNull();
+    assertThat(
+            CamelMessageTelemetry.messageTelemetry()
+                .contains(camelMessage, RECEIVE, CONSUMED_MESSAGES))
+        .isFalse();
   }
 
   @Test
