@@ -69,12 +69,11 @@ jobs:
       - name: Report Java extraction coverage
         run: |
           results_dir="$RUNNER_TEMP/codeql_databases/java/results"
-          extracted_files=$(find "$results_dir" -name SuccessfullyExtractedFiles.bqrs -print -quit)
-          "$CODEQL_DIST/codeql" bqrs decode --format=csv \
+          codeql=$(find "$RUNNER_TOOL_CACHE/CodeQL" -path "*/x64/codeql/codeql" -print -quit)
+          "$codeql" bqrs decode --format=csv \
             "$(find "$results_dir" -name LinesOfCodeJava.bqrs -print -quit)"
-          "$CODEQL_DIST/codeql" bqrs decode --format=csv "$extracted_files" > "$RUNNER_TEMP/extracted-files.csv"
-          echo "Extracted Java files: $(grep -Ec '\.java([\",]|$)' "$RUNNER_TEMP/extracted-files.csv" || true)"
-          echo "Extracted Kotlin files: $(grep -Ec '\.kt([\",]|$)' "$RUNNER_TEMP/extracted-files.csv" || true)"
+          echo "Extracted Java files: $(find "$RUNNER_TEMP/codeql_databases/java/src" -type f -name "*.java" | wc -l)"
+          echo "Extracted Kotlin files: $(find "$RUNNER_TEMP/codeql_databases/java/src" -type f -name "*.kt" | wc -l)"
 
   analyze-kotlin-manual:
     name: Analyze Kotlin (manual)
@@ -143,14 +142,13 @@ jobs:
       - name: Report Kotlin extraction coverage
         run: |
           results_dir="$RUNNER_TEMP/codeql_databases/java/results"
-          extracted_files=$(find "$results_dir" -name SuccessfullyExtractedFiles.bqrs -print -quit)
-          "$CODEQL_DIST/codeql" bqrs decode --format=csv \
+          codeql=$(find "$RUNNER_TOOL_CACHE/CodeQL" -path "*/x64/codeql/codeql" -print -quit)
+          "$codeql" bqrs decode --format=csv \
             "$(find "$results_dir" -name LinesOfCodeJava.bqrs -print -quit)"
-          "$CODEQL_DIST/codeql" bqrs decode --format=csv \
+          "$codeql" bqrs decode --format=csv \
             "$(find "$results_dir" -name LinesOfCodeKotlin.bqrs -print -quit)"
-          "$CODEQL_DIST/codeql" bqrs decode --format=csv "$extracted_files" > "$RUNNER_TEMP/extracted-files.csv"
-          echo "Extracted Java files: $(grep -Ec '\.java([\",]|$)' "$RUNNER_TEMP/extracted-files.csv" || true)"
-          echo "Extracted Kotlin files: $(grep -Ec '\.kt([\",]|$)' "$RUNNER_TEMP/extracted-files.csv" || true)"
+          echo "Extracted Java files: $(find "$RUNNER_TEMP/codeql_databases/java/src" -type f -name "*.java" | wc -l)"
+          echo "Extracted Kotlin files: $(find "$RUNNER_TEMP/codeql_databases/java/src" -type f -name "*.kt" | wc -l)"
 
   analyze-java:
     name: Analyze (java)
