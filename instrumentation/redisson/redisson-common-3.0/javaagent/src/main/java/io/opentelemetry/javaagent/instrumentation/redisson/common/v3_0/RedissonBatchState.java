@@ -56,12 +56,17 @@ class RedissonBatchState {
     }
   }
 
+  private final RedissonFutureMarker futureMarker;
   private final TreeMap<Integer, CapturedCommand> commands = new TreeMap<>();
   private int queryTextLength;
   private int queryTextCommandCount;
   private int queryTextCutoff = Integer.MAX_VALUE;
   private boolean finished;
   private boolean atomic;
+
+  RedissonBatchState(RedissonFutureMarker futureMarker) {
+    this.futureMarker = futureMarker;
+  }
 
   public void add(
       Object batchCommand,
@@ -75,10 +80,10 @@ class RedissonBatchState {
       if (finished) {
         if (atomic) {
           RedissonBatchContext.markCapturedCommand(batchCommand);
-          RedissonBatchContext.markFuture(future);
+          futureMarker.mark(future);
         } else {
           RedissonBatchContext.unmarkCapturedCommand(batchCommand);
-          RedissonBatchContext.unmarkFuture(future);
+          futureMarker.unmark(future);
         }
         return;
       }
@@ -149,7 +154,7 @@ class RedissonBatchState {
     boolean captureQueryText = true;
     for (CapturedCommand command : commands.values()) {
       RedissonBatchContext.markCapturedCommand(command.batchCommand);
-      RedissonBatchContext.markFuture(command.future);
+      futureMarker.mark(command.future);
       commandNames.add(command.name);
       @Nullable String queryText = command.queryText;
       if (captureQueryText && queryText == null) {
@@ -174,7 +179,7 @@ class RedissonBatchState {
   private void unmarkCommands() {
     for (CapturedCommand command : commands.values()) {
       RedissonBatchContext.unmarkCapturedCommand(command.batchCommand);
-      RedissonBatchContext.unmarkFuture(command.future);
+      futureMarker.unmark(command.future);
     }
   }
 

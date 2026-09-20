@@ -88,7 +88,7 @@ class RedissonBatchStateTest {
 
   @Test
   void retryDoesNotConsumeQueryTextBudgetTwice() {
-    RedissonBatchState state = new RedissonBatchState();
+    RedissonBatchState state = new RedissonBatchState(mock(RedissonFutureMarker.class));
     RedisCommand<?> command = mock(RedisCommand.class);
     when(command.getName()).thenReturn("GET");
     String key = String.join("", Collections.nCopies(20_000, "a"));
@@ -101,7 +101,7 @@ class RedissonBatchStateTest {
 
   @Test
   void codecDecodingDoesNotBlockConcurrentEnqueue() throws Exception {
-    RedissonBatchState state = new RedissonBatchState();
+    RedissonBatchState state = new RedissonBatchState(mock(RedissonFutureMarker.class));
     RedisCommand<?> command = mock(RedisCommand.class);
     when(command.getName()).thenReturn("SET");
     Codec codec = mock(Codec.class, RETURNS_DEEP_STUBS);
@@ -145,7 +145,7 @@ class RedissonBatchStateTest {
 
   @Test
   void codecDecodingDoesNotBlockFinish() throws Exception {
-    RedissonBatchState state = new RedissonBatchState();
+    RedissonBatchState state = new RedissonBatchState(mock(RedissonFutureMarker.class));
     RedisCommand<?> command = mock(RedisCommand.class);
     when(command.getName()).thenReturn("SET");
     Codec codec = mock(Codec.class, RETURNS_DEEP_STUBS);

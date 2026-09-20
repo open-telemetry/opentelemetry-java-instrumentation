@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0;
 
 import javax.annotation.Nullable;
 
-final class RedissonBatchMarker {
+public final class RedissonBatchMarker {
   @Nullable private final Object identity;
 
   RedissonBatchMarker() {

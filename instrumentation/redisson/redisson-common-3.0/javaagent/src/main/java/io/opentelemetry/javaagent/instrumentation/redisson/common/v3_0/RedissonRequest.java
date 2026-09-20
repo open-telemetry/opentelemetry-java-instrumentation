@@ -237,18 +237,18 @@ public abstract class RedissonRequest {
     return null;
   }
 
-  public boolean isMarkedBatchCommand() {
+  public boolean isMarkedBatchCommand(RedissonFutureMarker futureMarker) {
     if (RedissonBatchContext.isMarkedCommand(getCommand())) {
       return true;
     }
     CompletionStage<?> promise = getPromise();
-    if (RedissonBatchContext.isMarkedFuture(promise)) {
+    if (futureMarker.isMarked(promise)) {
       return true;
     }
     Object command = getCommand();
     if (command instanceof CommandsData) {
       for (CommandData<?, ?> singleCommand : ((CommandsData) command).getCommands()) {
-        if (RedissonBatchContext.isMarkedFuture(getPromise(singleCommand))) {
+        if (futureMarker.isMarked(getPromise(singleCommand))) {
           return true;
         }
       }

@@ -25,16 +25,19 @@ public class RedissonBatchAdviceScope {
   private final RedissonBatchRequest request;
   private final Context context;
   private final Scope scope;
+  private final RedissonFutureMarker futureMarker;
 
   private RedissonBatchAdviceScope(
       Instrumenter<RedissonBatchRequest, Void> instrumenter,
       RedissonBatchRequest request,
       Context context,
-      Context parentContext) {
+      Context parentContext,
+      RedissonFutureMarker futureMarker) {
     this.instrumenter = instrumenter;
     this.request = request;
     this.context = context;
     this.scope = RedissonBatchContext.mark(parentContext).makeCurrent();
+    this.futureMarker = futureMarker;
   }
 
   @Nullable
@@ -53,9 +56,10 @@ public class RedissonBatchAdviceScope {
     return RedissonBatchContext.startCapture(state, command, codec, parameters);
   }
 
-  public static void initialize(CommandBatchService service) {
+  public static void initialize(
+      CommandBatchService service, RedissonFutureMarker futureMarker) {
     if (emitStableDatabaseSemconv() && BATCH_STATE_FIELD.get(service) == null) {
-      BATCH_STATE_FIELD.set(service, new RedissonBatchState());
+      BATCH_STATE_FIELD.set(service, new RedissonBatchState(futureMarker));
     }
   }
 
@@ -70,7 +74,8 @@ public class RedissonBatchAdviceScope {
   public static RedissonBatchAdviceScope start(
       CommandBatchService service,
       Object options,
-      Instrumenter<RedissonBatchRequest, Void> instrumenter) {
+      Instrumenter<RedissonBatchRequest, Void> instrumenter,
+      RedissonFutureMarker futureMarker) {
     if (!emitStableDatabaseSemconv()) {
       return null;
     }
@@ -88,7 +93,8 @@ public class RedissonBatchAdviceScope {
       return null;
     }
     Context context = instrumenter.start(parentContext, request);
-    return new RedissonBatchAdviceScope(instrumenter, request, context, parentContext);
+    return new RedissonBatchAdviceScope(
+        instrumenter, request, context, parentContext, futureMarker);
   }
 
   public void end(@Nullable CompletionStage<?> result, @Nullable Throwable throwable) {
@@ -97,7 +103,7 @@ public class RedissonBatchAdviceScope {
       instrumenter.end(context, request, null, throwable);
       return;
     }
-    RedissonBatchContext.markFuture(result);
+    futureMarker.mark(result);
     result.whenComplete((unused, error) -> instrumenter.end(context, request, null, error));
   }
 }

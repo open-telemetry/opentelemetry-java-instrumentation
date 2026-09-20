@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.redisson.v3_17;
 
 import static io.opentelemetry.javaagent.instrumentation.redisson.v3_17.RedissonSingletons.batchInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.redisson.v3_17.RedissonSingletons.futureMarker;
 import static net.bytebuddy.matcher.ElementMatchers.declaresField;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -41,7 +42,7 @@ class CommandBatchServiceInstrumentation implements TypeInstrumentation {
   public static class ConstructorAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This CommandBatchService service) {
-      RedissonBatchAdviceScope.initialize(service);
+      RedissonBatchAdviceScope.initialize(service, futureMarker());
     }
   }
 
@@ -80,7 +81,8 @@ class CommandBatchServiceInstrumentation implements TypeInstrumentation {
     public static RedissonBatchAdviceScope onEnter(
         @Advice.This CommandBatchService service,
         @Advice.FieldValue("options") @Nullable Object options) {
-      return RedissonBatchAdviceScope.start(service, options, batchInstrumenter());
+      return RedissonBatchAdviceScope.start(
+          service, options, batchInstrumenter(), futureMarker());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

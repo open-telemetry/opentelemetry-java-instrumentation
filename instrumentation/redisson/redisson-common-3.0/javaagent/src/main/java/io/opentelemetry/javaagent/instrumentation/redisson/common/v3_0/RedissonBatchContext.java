@@ -11,7 +11,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import java.util.concurrent.CompletionStage;
 import javax.annotation.Nullable;
 import org.redisson.client.RedisConnection;
 import org.redisson.client.codec.Codec;
@@ -24,8 +23,6 @@ public final class RedissonBatchContext {
       ContextKey.named("opentelemetry-redisson-atomic-batch");
   private static final ContextKey<CommandCapture> CAPTURE_KEY =
       ContextKey.named("opentelemetry-redisson-batch-command-capture");
-  private static final VirtualField<CompletionStage<?>, RedissonBatchMarker> FUTURE_MARKER_FIELD =
-      VirtualField.find(CompletionStage.class, RedissonBatchMarker.class);
   private static final VirtualField<CommandData<?, ?>, RedissonBatchMarker> COMMAND_MARKER_FIELD =
       VirtualField.find(CommandData.class, RedissonBatchMarker.class);
   private static final VirtualField<RedisConnection, RedissonBatchMarker> CONNECTION_MARKER_FIELD =
@@ -111,7 +108,8 @@ public final class RedissonBatchContext {
     return false;
   }
 
-  public static boolean shouldSuppress(RedisConnection connection, RedissonRequest request) {
+  public static boolean shouldSuppress(
+      RedisConnection connection, RedissonRequest request, RedissonFutureMarker futureMarker) {
     if (!emitStableDatabaseSemconv()) {
       return false;
     }
@@ -123,9 +121,9 @@ public final class RedissonBatchContext {
     }
     if (request.isTransactionCompletion()) {
       CONNECTION_MARKER_FIELD.set(connection, null);
-      return connectionMarked || request.isMarkedBatchCommand();
+      return connectionMarked || request.isMarkedBatchCommand(futureMarker);
     }
-    if (request.isMarkedBatchCommand()) {
+    if (request.isMarkedBatchCommand(futureMarker)) {
       CONNECTION_MARKER_FIELD.set(connection, new RedissonBatchMarker(channel));
       return true;
     }
@@ -133,23 +131,6 @@ public final class RedissonBatchContext {
       return true;
     }
     return false;
-  }
-
-  public static void markFuture(Object future) {
-    if (emitStableDatabaseSemconv() && future instanceof CompletionStage) {
-      FUTURE_MARKER_FIELD.set((CompletionStage<?>) future, new RedissonBatchMarker());
-    }
-  }
-
-  static void unmarkFuture(Object future) {
-    if (future instanceof CompletionStage) {
-      FUTURE_MARKER_FIELD.set((CompletionStage<?>) future, null);
-    }
-  }
-
-  public static boolean isMarkedFuture(Object future) {
-    return future instanceof CompletionStage
-        && FUTURE_MARKER_FIELD.get((CompletionStage<?>) future) != null;
   }
 
   private static class CommandCapture {

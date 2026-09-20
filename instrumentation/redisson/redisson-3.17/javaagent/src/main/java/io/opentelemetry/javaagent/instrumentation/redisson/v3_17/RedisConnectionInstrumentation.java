@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.redisson.v3_17;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.javaagent.instrumentation.redisson.v3_17.RedissonSingletons.futureMarker;
 import static io.opentelemetry.javaagent.instrumentation.redisson.v3_17.RedissonSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -63,7 +64,7 @@ class RedisConnectionInstrumentation implements TypeInstrumentation {
                 arg,
                 databaseIndex(connection),
                 RedissonServerTargets.get(connection));
-        if (RedissonBatchContext.shouldSuppress(connection, request)) {
+        if (RedissonBatchContext.shouldSuppress(connection, request, futureMarker())) {
           return null;
         }
         if (RedissonBatchContext.isActive(parentContext)) {
