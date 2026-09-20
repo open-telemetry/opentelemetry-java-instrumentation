@@ -429,6 +429,7 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
     Flux<Integer> publish =
         Flux.create(
             sink -> {
+              assertThat(Context.current().get(TEST_CONTEXT_KEY)).isEqualTo("test-context-value");
               for (int i = 0; i < 2; i++) {
                 int index = i;
                 testing.runWithSpan(
@@ -460,7 +461,10 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
         throw new IllegalStateException("Unsupported retry kind " + retryKind);
     }
 
-    flux.subscribe();
+    try (Scope ignored =
+        Context.root().with(TEST_CONTEXT_KEY, "test-context-value").makeCurrent()) {
+      flux.subscribe();
+    }
 
     testing.waitAndAssertSortedTraces(
         orderByRootSpanName(

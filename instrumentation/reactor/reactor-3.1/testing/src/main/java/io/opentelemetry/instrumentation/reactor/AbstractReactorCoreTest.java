@@ -11,12 +11,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -25,10 +29,13 @@ import org.junit.jupiter.api.TestInstance;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.Mono;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractReactorCoreTest {
+
+  protected static final ContextKey<String> TEST_CONTEXT_KEY = ContextKey.named("test-context-key");
 
   private final InstrumentationExtension testing;
 
@@ -198,6 +205,73 @@ public abstract class AbstractReactorCoreTest {
                 span -> span.hasName("parent").hasNoParent(),
                 span -> span.hasName("add one").hasParent(trace.getSpan(0)),
                 span -> span.hasName("add one").hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void propagatesContextValuesFromExternallyDrivenPublisher() {
+    AtomicReference<FluxSink<String>> sink = new AtomicReference<>();
+    AtomicReference<String> observedContextValue = new AtomicReference<>();
+    AtomicReference<Span> observedSpan = new AtomicReference<>();
+    Flux<String> publisher = Flux.create(sink::set);
+
+    try (Scope ignored =
+        Context.root().with(TEST_CONTEXT_KEY, "test-context-value").makeCurrent()) {
+      publisher.subscribe(
+          unused -> {
+            observedContextValue.set(Context.current().get(TEST_CONTEXT_KEY));
+            observedSpan.set(Span.current());
+          });
+    }
+
+    testing.runWithSpan(
+        "producer",
+        () -> {
+          Span producerSpan = Span.current();
+          sink.get().next("message");
+          assertThat(Context.current().get(TEST_CONTEXT_KEY)).isNull();
+          assertThat(Span.current().getSpanContext()).isEqualTo(producerSpan.getSpanContext());
+          assertThat(observedSpan.get().getSpanContext()).isEqualTo(producerSpan.getSpanContext());
+        });
+    sink.get().complete();
+
+    assertThat(observedContextValue.get()).isEqualTo("test-context-value");
+    assertThat(Context.current().get(TEST_CONTEXT_KEY)).isNull();
+
+    testing.waitAndAssertTraces(
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("producer").hasNoParent()));
+  }
+
+  @Test
+  void preservesExplicitlyClearedSpanFromExternallyDrivenPublisher() {
+    AtomicReference<FluxSink<String>> sink = new AtomicReference<>();
+    AtomicReference<String> observedContextValue = new AtomicReference<>();
+    AtomicReference<Span> observedSpan = new AtomicReference<>();
+    Flux<String> publisher = Flux.create(sink::set);
+
+    Context context =
+        Context.root().with(TEST_CONTEXT_KEY, "test-context-value").with(Span.getInvalid());
+    try (Scope ignored = context.makeCurrent()) {
+      publisher.subscribe(
+          unused -> {
+            observedContextValue.set(Context.current().get(TEST_CONTEXT_KEY));
+            observedSpan.set(Span.current());
+          });
+    }
+
+    testing.runWithSpan(
+        "producer",
+        () -> {
+          Span producerSpan = Span.current();
+          sink.get().next("message");
+          assertThat(Span.current().getSpanContext()).isEqualTo(producerSpan.getSpanContext());
+        });
+    sink.get().complete();
+
+    assertThat(observedContextValue.get()).isEqualTo("test-context-value");
+    assertThat(observedSpan.get().getSpanContext().isValid()).isFalse();
+
+    testing.waitAndAssertTraces(
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("producer").hasNoParent()));
   }
 
   @Test

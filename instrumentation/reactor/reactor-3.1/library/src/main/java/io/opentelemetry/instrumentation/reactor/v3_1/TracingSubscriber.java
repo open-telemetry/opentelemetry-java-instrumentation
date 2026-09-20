@@ -43,6 +43,8 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
   private final Subscriber<? super T> subscriber;
   private final Context context;
   private final boolean hasContextToPropagate;
+  private final boolean hasExplicitSpan;
+  private final boolean hasSpanToPropagate;
 
   public TracingSubscriber(Subscriber<? super T> subscriber, Context ctx) {
     this(subscriber, ctx, io.opentelemetry.context.Context.current());
@@ -56,6 +58,9 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
     this.context = ctx;
     this.traceContext = ContextPropagationOperator.getOpenTelemetryContext(ctx, contextToPropagate);
     this.hasContextToPropagate =
+        traceContext != null && traceContext != io.opentelemetry.context.Context.root();
+    this.hasExplicitSpan = traceContext != null && Span.fromContextOrNull(traceContext) != null;
+    this.hasSpanToPropagate =
         traceContext != null && Span.fromContext(traceContext).getSpanContext().isValid();
   }
 
@@ -76,12 +81,15 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
   @Override
   public void onError(Throwable throwable) {
     Supplier<Scope> scopeSupplier;
-    if (!hasContextToPropagate
+    if (!hasSpanToPropagate
         && (fluxRetrySubscriberClass == subscriber.getClass()
             || fluxRetryWhenSubscriberClass == subscriber.getClass())) {
       // clear context for retry to avoid having retried operations run with currently active
       // context as parent context
-      scopeSupplier = () -> openScope(io.opentelemetry.context.Context.root());
+      scopeSupplier =
+          () ->
+              openScope(
+                  hasContextToPropagate ? traceContext : io.opentelemetry.context.Context.root());
     } else {
       scopeSupplier = () -> openScope();
     }
@@ -104,7 +112,14 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
 
   @Nullable
   private Scope openScope() {
-    return openScope(hasContextToPropagate ? traceContext : null);
+    if (!hasContextToPropagate) {
+      return null;
+    }
+    Span currentSpan = Span.current();
+    if (!hasExplicitSpan && currentSpan.getSpanContext().isValid()) {
+      return openScope(traceContext.with(currentSpan));
+    }
+    return openScope(traceContext);
   }
 
   @Nullable
