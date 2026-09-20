@@ -8,10 +8,14 @@ package io.opentelemetry.javaagent.instrumentation.jms.v3_0;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -79,9 +83,14 @@ class Jms3SuppressReceiveSpansTest extends AbstractJms3Test {
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName(
                                 producerDestinationName, actualDestinationName),
-                            oldOperation("publish"),
-                            operationName("send"),
-                            operationType("send"),
+                            equalTo(
+                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_NAME,
+                                emitStableMessagingSemconv() ? "send" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_TYPE,
+                                emitStableMessagingSemconv() ? "send" : null),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary)));
             publishSpan.set(trace.getSpan(1));
@@ -101,9 +110,15 @@ class Jms3SuppressReceiveSpansTest extends AbstractJms3Test {
                               equalTo(MESSAGING_SYSTEM, "jms"),
                               messagingDestinationName(
                                   actualDestinationName, actualDestinationName),
-                              oldOperation("receive"),
-                              operationName("receive"),
-                              operationType("receive"),
+                              equalTo(
+                                  MESSAGING_OPERATION,
+                                  emitOldMessagingSemconv() ? "receive" : null),
+                              equalTo(
+                                  MESSAGING_OPERATION_NAME,
+                                  emitStableMessagingSemconv() ? "receive" : null),
+                              equalTo(
+                                  MESSAGING_OPERATION_TYPE,
+                                  emitStableMessagingSemconv() ? "receive" : null),
                               equalTo(MESSAGING_MESSAGE_ID, messageId))));
       return;
     }
@@ -120,9 +135,14 @@ class Jms3SuppressReceiveSpansTest extends AbstractJms3Test {
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName(
                                 producerDestinationName, actualDestinationName),
-                            oldOperation("publish"),
-                            operationName("send"),
-                            operationType("send"),
+                            equalTo(
+                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_NAME,
+                                emitStableMessagingSemconv() ? "send" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_TYPE,
+                                emitStableMessagingSemconv() ? "send" : null),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary)),
                 span ->
@@ -133,9 +153,14 @@ class Jms3SuppressReceiveSpansTest extends AbstractJms3Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName(actualDestinationName, actualDestinationName),
-                            oldOperation("receive"),
-                            operationName("receive"),
-                            operationType("receive"),
+                            equalTo(
+                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_NAME,
+                                emitStableMessagingSemconv() ? "receive" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_TYPE,
+                                emitStableMessagingSemconv() ? "receive" : null),
                             equalTo(MESSAGING_MESSAGE_ID, messageId))),
         trace ->
             trace.hasSpansSatisfyingExactly(span -> span.hasName("consumer parent").hasNoParent()));
@@ -182,9 +207,14 @@ class Jms3SuppressReceiveSpansTest extends AbstractJms3Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
-                            oldOperation("publish"),
-                            operationName("send"),
-                            operationType("send"),
+                            equalTo(
+                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_NAME,
+                                emitStableMessagingSemconv() ? "send" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_TYPE,
+                                emitStableMessagingSemconv() ? "send" : null),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(false)));
             publishSpan.set(trace.getSpan(1));
@@ -200,9 +230,15 @@ class Jms3SuppressReceiveSpansTest extends AbstractJms3Test {
                           .hasAttributesSatisfyingExactly(
                               equalTo(MESSAGING_SYSTEM, "jms"),
                               equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
-                              oldOperation("receive"),
-                              operationName("receive"),
-                              operationType("receive"),
+                              equalTo(
+                                  MESSAGING_OPERATION,
+                                  emitOldMessagingSemconv() ? "receive" : null),
+                              equalTo(
+                                  MESSAGING_OPERATION_NAME,
+                                  emitStableMessagingSemconv() ? "receive" : null),
+                              equalTo(
+                                  MESSAGING_OPERATION_TYPE,
+                                  emitStableMessagingSemconv() ? "receive" : null),
                               equalTo(MESSAGING_MESSAGE_ID, messageId))));
       return;
     }
@@ -220,9 +256,14 @@ class Jms3SuppressReceiveSpansTest extends AbstractJms3Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
-                            oldOperation("publish"),
-                            operationName("send"),
-                            operationType("send"),
+                            equalTo(
+                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_NAME,
+                                emitStableMessagingSemconv() ? "send" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_TYPE,
+                                emitStableMessagingSemconv() ? "send" : null),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(false)),
                 span ->
@@ -233,9 +274,14 @@ class Jms3SuppressReceiveSpansTest extends AbstractJms3Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
-                            oldOperation("receive"),
-                            operationName("receive"),
-                            operationType("receive"),
+                            equalTo(
+                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_NAME,
+                                emitStableMessagingSemconv() ? "receive" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_TYPE,
+                                emitStableMessagingSemconv() ? "receive" : null),
                             equalTo(MESSAGING_MESSAGE_ID, messageId))),
         trace ->
             trace.hasSpansSatisfyingExactly(span -> span.hasName("consumer parent").hasNoParent()));

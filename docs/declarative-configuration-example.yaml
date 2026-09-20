@@ -399,6 +399,20 @@ instrumentation/development:
 
       # Enables collection of JMX metrics.
       enabled: true
+      metrics:
+        # Comma-separated list of case-sensitive glob patterns for metric names not to collect. "*"
+        # matches any number of characters and "?" matches one character. Excluded patterns take
+        # precedence over included patterns. When no included patterns are configured, all metrics
+        # that are not excluded are collected. With neither selector property configured, all
+        # metrics are collected.
+        excluded: []
+
+        # Comma-separated list of case-sensitive glob patterns for metric names to collect. "*"
+        # matches any number of characters and "?" matches one character. Excluded patterns take
+        # precedence over included patterns. When no included patterns are configured, all metrics
+        # that are not excluded are collected. With neither selector property configured, all
+        # metrics are collected.
+        included: []
       target:
         # List of predefined JMX target systems to collect metrics for.
         system: []

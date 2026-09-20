@@ -19,6 +19,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.SchemaUrls.V1_24_0;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_CONSISTENCY_LEVEL;
@@ -31,6 +32,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.CASSANDRA;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
@@ -192,6 +194,10 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                       span.hasName("cql")
                           .hasKind(SpanKind.CLIENT)
                           .hasParent(trace.getSpan(0))
+                          .satisfies(
+                              spanData ->
+                                  assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
+                                      .isEqualTo(V1_24_0))
                           .hasAttributesSatisfyingExactly(
                               equalTo(
                                   stringKey("camel.uri"),

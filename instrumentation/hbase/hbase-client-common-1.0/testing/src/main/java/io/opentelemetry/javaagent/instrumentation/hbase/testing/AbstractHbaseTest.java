@@ -149,7 +149,7 @@ public abstract class AbstractHbaseTest {
     return 1;
   }
 
-  protected String putOperation() {
+  protected String oldPutOperation() {
     return MUTATE;
   }
 
@@ -288,7 +288,11 @@ public abstract class AbstractHbaseTest {
     }
     testing()
         .waitAndAssertTraces(
-            traceAssertConsumer(TABLE_NAME, putOperation(), REGION_SERVER_PORT, true));
+            traceAssertConsumer(
+                TABLE_NAME,
+                emitStableDatabaseSemconv() ? MUTATE : oldPutOperation(),
+                REGION_SERVER_PORT,
+                true));
   }
 
   @Test

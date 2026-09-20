@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.hbase.client.v1_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.instrumentation.hbase.testing.AbstractHbaseTest;
@@ -57,8 +55,8 @@ class HbaseClient10Test extends AbstractHbaseTest {
   }
 
   @Override
-  protected String putOperation() {
-    return emitStableDatabaseSemconv() ? MUTATE : MULTI;
+  protected String oldPutOperation() {
+    return MULTI;
   }
 
   @Override

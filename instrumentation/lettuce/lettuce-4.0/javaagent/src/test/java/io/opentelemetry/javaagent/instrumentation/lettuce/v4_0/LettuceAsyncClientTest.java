@@ -646,7 +646,11 @@ class LettuceAsyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, expectedNonDefaultNamespace()),
+                            equalTo(
+                                DB_NAMESPACE,
+                                emitStableDatabaseSemconv()
+                                    ? String.valueOf(NON_DEFAULT_DB_INDEX)
+                                    : null),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
@@ -677,7 +681,11 @@ class LettuceAsyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, expectedNonDefaultNamespace()),
+                            equalTo(
+                                DB_NAMESPACE,
+                                emitStableDatabaseSemconv()
+                                    ? String.valueOf(NON_DEFAULT_DB_INDEX)
+                                    : null),
                             equalTo(maybeStable(DB_OPERATION), "PIPELINE SET"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
@@ -712,15 +720,15 @@ class LettuceAsyncClientTest {
                   .hasKind(SpanKind.CLIENT)
                   .hasAttributesSatisfyingExactly(
                       equalTo(maybeStable(DB_SYSTEM), REDIS),
-                      equalTo(DB_NAMESPACE, expectedNonDefaultNamespace()),
+                      equalTo(
+                          DB_NAMESPACE,
+                          emitStableDatabaseSemconv()
+                              ? String.valueOf(NON_DEFAULT_DB_INDEX)
+                              : null),
                       equalTo(maybeStable(DB_OPERATION), "SELECT"),
                       equalTo(SERVER_ADDRESS, host),
                       equalTo(SERVER_PORT, port));
             });
-  }
-
-  private static String expectedNonDefaultNamespace() {
-    return emitStableDatabaseSemconv() ? String.valueOf(NON_DEFAULT_DB_INDEX) : null;
   }
 
   private static Stream<Arguments> deferredFlushScenarios() {

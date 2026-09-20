@@ -12,6 +12,14 @@
 - Do not use AssertJ `.as(...)` descriptions or `.withFailMessage(...)` in tests.
   Prefer direct assertions whose failure output shows the unexpected values.
 
+### Scala assertion imports
+
+In Scala tests, import `assertThat` from `org.assertj.core.api.Assertions`. Qualify
+`OpenTelemetryAssertions.assertThat(...)` where the OpenTelemetry-specific assertion is needed,
+and import individual helpers such as `equalTo` separately. Scala does not expose AssertJ's
+inherited Java static methods through `OpenTelemetryAssertions`, so the Java convention of using
+that class as the single `assertThat` entry point does not apply.
+
 ## Parameterized Tests
 
 - When the same test logic is repeated for multiple input/output cases, prefer
