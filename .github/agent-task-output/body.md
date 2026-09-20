@@ -1,0 +1,1 @@
+Consumes each legacy MongoDB SRV target when the driver builds `ClusterSettings` instead of restoring it when the scope closes. This prevents a completed outer scope from leaking its target into a later settings build.
