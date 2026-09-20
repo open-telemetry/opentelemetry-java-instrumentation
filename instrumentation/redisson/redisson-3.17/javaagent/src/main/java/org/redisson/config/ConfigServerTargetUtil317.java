@@ -23,6 +23,9 @@ public class ConfigServerTargetUtil317 {
   private static final Logger logger = Logger.getLogger(ConfigServerTargetUtil317.class.getName());
 
   @Nullable private static final MethodHandle SERVICE_MANAGER_GET_CFG = findServiceManagerGetCfg();
+  @Nullable
+  private static final MethodHandle CLUSTER_SERVERS_CONFIG_GET_DATABASE =
+      findClusterServersConfigGetDatabase();
 
   @Nullable
   private static MethodHandle findServiceManagerGetCfg() {
@@ -37,6 +40,18 @@ public class ConfigServerTargetUtil317 {
     } catch (ReflectiveOperationException ignored) {
       // redisson only routes the configuration through a service manager between 3.20 and 3.27
       return null;
+    }
+
+    @Nullable
+    private static MethodHandle findClusterServersConfigGetDatabase() {
+      try {
+        return MethodHandles.publicLookup()
+            .findVirtual(
+                ClusterServersConfig.class, "getDatabase", MethodType.methodType(int.class));
+      } catch (ReflectiveOperationException ignored) {
+        // Cluster database support was added in Redisson 4.7.
+        return null;
+      }
     }
   }
 
@@ -87,7 +102,7 @@ public class ConfigServerTargetUtil317 {
     }
     ClusterServersConfig clusterConfig = config.getClusterServersConfig();
     if (clusterConfig != null) {
-      return 0L;
+      return clusterDatabaseIndex(clusterConfig);
     }
     ReplicatedServersConfig replicatedConfig = config.getReplicatedServersConfig();
     if (replicatedConfig != null) {
@@ -95,6 +110,18 @@ public class ConfigServerTargetUtil317 {
     }
     MasterSlaveServersConfig masterSlaveConfig = config.getMasterSlaveServersConfig();
     return masterSlaveConfig != null ? (long) masterSlaveConfig.getDatabase() : null;
+  }
+
+  private static long clusterDatabaseIndex(ClusterServersConfig clusterConfig) {
+    if (CLUSTER_SERVERS_CONFIG_GET_DATABASE == null) {
+      return 0;
+    }
+    try {
+      return (int) CLUSTER_SERVERS_CONFIG_GET_DATABASE.invoke(clusterConfig);
+    } catch (Throwable t) {
+      logger.log(FINE, "Failed to read the Redisson cluster database index", t);
+      return 0;
+    }
   }
 
   @Nullable
