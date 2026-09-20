@@ -15,14 +15,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.netty.buffer.ByteBuf;
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -88,8 +85,7 @@ class RedissonBatchStateTest {
   }
 
   @Test
-  void codecDecodingDoesNotBlockConcurrentEnqueue()
-      throws ExecutionException, IOException, InterruptedException, TimeoutException {
+  void codecDecodingDoesNotBlockConcurrentEnqueue() throws Exception {
     RedissonBatchState state = new RedissonBatchState();
     RedisCommand<?> command = mock(RedisCommand.class);
     when(command.getName()).thenReturn("SET");
@@ -130,8 +126,7 @@ class RedissonBatchStateTest {
   }
 
   @Test
-  void codecDecodingDoesNotBlockFinish()
-      throws ExecutionException, IOException, InterruptedException, TimeoutException {
+  void codecDecodingDoesNotBlockFinish() throws Exception {
     RedissonBatchState state = new RedissonBatchState();
     RedisCommand<?> command = mock(RedisCommand.class);
     when(command.getName()).thenReturn("SET");
