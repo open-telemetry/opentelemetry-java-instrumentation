@@ -54,6 +54,13 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Set up Gradle
+        # zizmor: ignore[cache-poisoning] This workflow analyzes release branches
+        # but does not build or publish release artifacts.
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        with:
+          cache-read-only: ${{ github.event_name == 'pull_request' }}
+
       - name: Initialize CodeQL
         uses: github/codeql-action/init@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4.38.0
         with:
@@ -67,6 +74,7 @@ jobs:
           category: "/language:java-none"
 
       - name: Report Java extraction coverage
+        if: github.event_name == 'pull_request'
         run: |
           results_dir="$RUNNER_TEMP/codeql_databases/java/results"
           codeql=$(find "$RUNNER_TOOL_CACHE/CodeQL" -path "*/x64/codeql/codeql" -print -quit)
