@@ -21,7 +21,8 @@ final class RedissonBatchDbAttributesGetter
   @Nullable
   @Override
   public String getDbNamespace(RedissonBatchRequest request) {
-    return null;
+    Long databaseIndex = request.getDatabaseIndex();
+    return databaseIndex != null ? String.valueOf(databaseIndex) : null;
   }
 
   @Nullable

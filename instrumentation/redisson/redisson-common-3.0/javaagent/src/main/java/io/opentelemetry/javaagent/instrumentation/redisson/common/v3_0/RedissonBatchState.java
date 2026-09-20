@@ -57,6 +57,7 @@ class RedissonBatchState {
   }
 
   private final RedissonFutureMarker futureMarker;
+  @Nullable private final Long databaseIndex;
   private final TreeMap<Integer, CapturedCommand> commands = new TreeMap<>();
   private int queryTextLength;
   private int queryTextCommandCount;
@@ -65,7 +66,12 @@ class RedissonBatchState {
   private boolean atomic;
 
   RedissonBatchState(RedissonFutureMarker futureMarker) {
+    this(futureMarker, null);
+  }
+
+  RedissonBatchState(RedissonFutureMarker futureMarker, @Nullable Long databaseIndex) {
     this.futureMarker = futureMarker;
+    this.databaseIndex = databaseIndex;
   }
 
   public void add(
@@ -164,7 +170,8 @@ class RedissonBatchState {
         queryTexts.add(queryText);
       }
     }
-    RedissonBatchRequest request = RedissonBatchRequest.create(commandNames, queryTexts);
+    RedissonBatchRequest request =
+        RedissonBatchRequest.create(commandNames, queryTexts, databaseIndex);
     clear();
     return request;
   }

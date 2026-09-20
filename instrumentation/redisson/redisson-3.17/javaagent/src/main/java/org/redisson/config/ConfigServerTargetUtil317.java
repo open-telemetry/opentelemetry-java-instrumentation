@@ -45,6 +45,7 @@ public class ConfigServerTargetUtil317 {
     if (config == null) {
       return null;
     }
+
     SingleServerConfig singleServerConfig = config.getSingleServerConfig();
     if (singleServerConfig != null) {
       return RedisServerTarget.ofEndpoint(singleServerConfig.getAddress());
@@ -72,12 +73,49 @@ public class ConfigServerTargetUtil317 {
   }
 
   @Nullable
+  public static Long databaseIndex(@Nullable Config config) {
+    if (config == null) {
+      return null;
+    }
+    SingleServerConfig singleServerConfig = config.getSingleServerConfig();
+    if (singleServerConfig != null) {
+      return (long) singleServerConfig.getDatabase();
+    }
+    SentinelServersConfig sentinelConfig = config.getSentinelServersConfig();
+    if (sentinelConfig != null) {
+      return (long) sentinelConfig.getDatabase();
+    }
+    ClusterServersConfig clusterConfig = config.getClusterServersConfig();
+    if (clusterConfig != null) {
+      return 0L;
+    }
+    ReplicatedServersConfig replicatedConfig = config.getReplicatedServersConfig();
+    if (replicatedConfig != null) {
+      return (long) replicatedConfig.getDatabase();
+    }
+    MasterSlaveServersConfig masterSlaveConfig = config.getMasterSlaveServersConfig();
+    return masterSlaveConfig != null ? (long) masterSlaveConfig.getDatabase() : null;
+  }
+
+  @Nullable
   public static RedisServerTarget ofServiceManager(@Nullable Object serviceManager) {
+    Config config = configOfServiceManager(serviceManager);
+    return of(config);
+  }
+
+  @Nullable
+  public static Long databaseIndexOfServiceManager(@Nullable Object serviceManager) {
+    Config config = configOfServiceManager(serviceManager);
+    return databaseIndex(config);
+  }
+
+  @Nullable
+  private static Config configOfServiceManager(@Nullable Object serviceManager) {
     if (serviceManager == null || SERVICE_MANAGER_GET_CFG == null) {
       return null;
     }
     try {
-      return of((Config) SERVICE_MANAGER_GET_CFG.invoke(serviceManager));
+      return (Config) SERVICE_MANAGER_GET_CFG.invoke(serviceManager);
     } catch (Throwable t) {
       logger.log(FINE, "Failed to read the Redisson configuration from the service manager", t);
       return null;

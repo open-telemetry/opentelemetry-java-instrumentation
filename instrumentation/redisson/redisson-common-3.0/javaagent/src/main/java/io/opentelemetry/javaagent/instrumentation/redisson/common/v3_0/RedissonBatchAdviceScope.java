@@ -56,10 +56,16 @@ public class RedissonBatchAdviceScope {
     return RedissonBatchContext.startCapture(state, command, codec, parameters);
   }
 
+  public static void initialize(CommandBatchService service, RedissonFutureMarker futureMarker) {
+    initialize(service, futureMarker, null);
+  }
+
   public static void initialize(
-      CommandBatchService service, RedissonFutureMarker futureMarker) {
+      CommandBatchService service,
+      RedissonFutureMarker futureMarker,
+      @Nullable Long databaseIndex) {
     if (emitStableDatabaseSemconv() && BATCH_STATE_FIELD.get(service) == null) {
-      BATCH_STATE_FIELD.set(service, new RedissonBatchState(futureMarker));
+      BATCH_STATE_FIELD.set(service, new RedissonBatchState(futureMarker, databaseIndex));
     }
   }
 

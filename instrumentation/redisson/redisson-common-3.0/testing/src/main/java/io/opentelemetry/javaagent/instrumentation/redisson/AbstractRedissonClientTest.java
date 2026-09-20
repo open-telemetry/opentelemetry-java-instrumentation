@@ -291,6 +291,25 @@ public abstract class AbstractRedissonClientTest {
   }
 
   @Test
+  void configuredDatabaseIndexOnAtomicBatch()
+      throws InvocationTargetException, IllegalAccessException {
+    assumeStableAtomicBatchSupport();
+    RedissonClient databaseOne = Redisson.create(createConfig(1, null, false));
+    try {
+      testing.clearData();
+      RBatch batch =
+          databaseOne.createBatch(
+              BatchOptions.defaults().executionMode(BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC));
+      batch.getBucket("batch1").setAsync("v1");
+      batch.execute();
+
+      assertStableAtomicBatch("MULTI SET", null, "SET batch1 ?", "1");
+    } finally {
+      databaseOne.shutdown();
+    }
+  }
+
+  @Test
   void configuredMasterSlaveServerTarget() {
     String aliasHost = host.equals(ip) ? "localhost" : ip;
     String configuredServerAddress = host + ":" + port + "," + aliasHost + ":" + port;
@@ -564,7 +583,7 @@ public abstract class AbstractRedissonClientTest {
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("parent").hasNoParent().hasKind(INTERNAL),
                   span ->
-                      span.hasName("MULTI SET")
+                      span.hasName(hasDatabaseIndex() ? "MULTI SET 0" : "MULTI SET")
                           .hasKind(CLIENT)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
@@ -572,6 +591,7 @@ public abstract class AbstractRedissonClientTest {
                               equalTo(DB_OPERATION_NAME, "MULTI SET"),
                               equalTo(DB_OPERATION_BATCH_SIZE, 2L),
                               equalTo(DB_QUERY_TEXT, "SET batch1 ?; SET batch2 ?"),
+                              equalTo(DB_NAMESPACE, dbNamespace()),
                               equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? REDIS : null),
                               equalTo(DB_OPERATION, emitOldDatabaseSemconv() ? "MULTI SET" : null),
                               equalTo(
@@ -837,7 +857,7 @@ public abstract class AbstractRedissonClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("MULTI")
+                    span.hasName(hasDatabaseIndex() ? "MULTI 0" : "MULTI")
                         .hasKind(CLIENT)
                         .hasStatus(StatusData.error())
                         .hasException(error)
@@ -847,6 +867,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(DB_OPERATION_BATCH_SIZE, 2L),
                             equalTo(ERROR_TYPE, error.getClass().getName()),
                             equalTo(DB_QUERY_TEXT, "HGET wrongtype field; SET after ?"),
+                            equalTo(DB_NAMESPACE, dbNamespace()),
                             equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? REDIS : null),
                             equalTo(DB_OPERATION, emitOldDatabaseSemconv() ? "MULTI" : null),
                             equalTo(
@@ -881,19 +902,27 @@ public abstract class AbstractRedissonClientTest {
     }
   }
 
-  private static void assertStableAtomicBatch(
-      String operationName, Long batchSize, String queryText) {
+  private void assertStableAtomicBatch(String operationName, Long batchSize, String queryText) {
+    assertStableAtomicBatch(operationName, batchSize, queryText, "0");
+  }
+
+  private void assertStableAtomicBatch(
+      String operationName, Long batchSize, String queryText, String databaseIndex) {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(operationName)
+                    span.hasName(
+                            dbNamespace(databaseIndex) != null
+                                ? operationName + " " + databaseIndex
+                                : operationName)
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, REDIS),
                             equalTo(DB_OPERATION_NAME, operationName),
                             equalTo(DB_OPERATION_BATCH_SIZE, batchSize),
                             equalTo(DB_QUERY_TEXT, queryText),
+                            equalTo(DB_NAMESPACE, dbNamespace(databaseIndex)),
                             equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? REDIS : null),
                             equalTo(DB_OPERATION, emitOldDatabaseSemconv() ? operationName : null),
                             equalTo(DB_STATEMENT, emitOldDatabaseSemconv() ? queryText : null))));

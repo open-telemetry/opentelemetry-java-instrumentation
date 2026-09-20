@@ -330,7 +330,7 @@ public abstract class AbstractRedissonAsyncClientTest {
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                   span ->
-                      span.hasName("MULTI SET")
+                      span.hasName(hasDatabaseIndex() ? "MULTI SET 0" : "MULTI SET")
                           .hasKind(CLIENT)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
@@ -338,6 +338,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                               equalTo(DB_OPERATION_NAME, "MULTI SET"),
                               equalTo(DB_OPERATION_BATCH_SIZE, 2L),
                               equalTo(DB_QUERY_TEXT, "SET batch1 ?; SET batch2 ?"),
+                              equalTo(DB_NAMESPACE, dbNamespace()),
                               equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? REDIS : null),
                               equalTo(DB_OPERATION, emitOldDatabaseSemconv() ? "MULTI SET" : null),
                               equalTo(
@@ -481,14 +482,15 @@ public abstract class AbstractRedissonAsyncClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("MULTI SET")
+                    span.hasName(hasDatabaseIndex() ? "MULTI SET 0" : "MULTI SET")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, REDIS),
                             equalTo(DB_OPERATION_NAME, "MULTI SET"),
                             equalTo(DB_OPERATION_BATCH_SIZE, 2L),
-                            equalTo(DB_QUERY_TEXT, "SET batch1 ?; SET batch2 ?")),
+                            equalTo(DB_QUERY_TEXT, "SET batch1 ?; SET batch2 ?"),
+                            equalTo(DB_NAMESPACE, dbNamespace())),
                 span ->
                     span.hasName("GET " + address)
                         .hasKind(CLIENT)

@@ -14,8 +14,10 @@ public class RedissonBatchRequest {
   private final String operationName;
   @Nullable private final String queryText;
   @Nullable private final Long operationBatchSize;
+  @Nullable private final Long databaseIndex;
 
-  public static RedissonBatchRequest create(List<String> commandNames, List<String> queryTexts) {
+  public static RedissonBatchRequest create(
+      List<String> commandNames, List<String> queryTexts, @Nullable Long databaseIndex) {
     String firstCommandName = commandNames.get(0);
     String operationName = "MULTI " + firstCommandName;
     for (int i = 1; i < commandNames.size(); i++) {
@@ -36,14 +38,19 @@ public class RedissonBatchRequest {
     return new RedissonBatchRequest(
         operationName,
         queryText.length() == 0 ? null : queryText.toString(),
-        commandNames.size() > 1 ? (long) commandNames.size() : null);
+        commandNames.size() > 1 ? (long) commandNames.size() : null,
+        databaseIndex);
   }
 
   private RedissonBatchRequest(
-      String operationName, @Nullable String queryText, @Nullable Long operationBatchSize) {
+      String operationName,
+      @Nullable String queryText,
+      @Nullable Long operationBatchSize,
+      @Nullable Long databaseIndex) {
     this.operationName = operationName;
     this.queryText = queryText;
     this.operationBatchSize = operationBatchSize;
+    this.databaseIndex = databaseIndex;
   }
 
   public String getOperationName() {
@@ -58,5 +65,10 @@ public class RedissonBatchRequest {
   @Nullable
   public Long getOperationBatchSize() {
     return operationBatchSize;
+  }
+
+  @Nullable
+  public Long getDatabaseIndex() {
+    return databaseIndex;
   }
 }

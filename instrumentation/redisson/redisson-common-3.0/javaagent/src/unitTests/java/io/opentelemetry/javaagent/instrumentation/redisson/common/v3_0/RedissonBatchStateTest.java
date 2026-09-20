@@ -88,7 +88,7 @@ class RedissonBatchStateTest {
 
   @Test
   void retryDoesNotConsumeQueryTextBudgetTwice() {
-    RedissonBatchState state = new RedissonBatchState(mock(RedissonFutureMarker.class));
+    RedissonBatchState state = new RedissonBatchState(mock(RedissonFutureMarker.class), 1L);
     RedisCommand<?> command = mock(RedisCommand.class);
     when(command.getName()).thenReturn("GET");
     String key = String.join("", Collections.nCopies(20_000, "a"));
@@ -96,7 +96,9 @@ class RedissonBatchStateTest {
     state.add(new Object(), new Object(), 0, command, mock(Codec.class), new Object[] {key});
     state.add(new Object(), new Object(), 0, command, mock(Codec.class), new Object[] {key});
 
-    assertThat(state.finish(true).getQueryText()).isEqualTo("GET " + key);
+    RedissonBatchRequest request = state.finish(true);
+    assertThat(request.getQueryText()).isEqualTo("GET " + key);
+    assertThat(request.getDatabaseIndex()).isEqualTo(1);
   }
 
   @Test

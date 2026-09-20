@@ -10,8 +10,7 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 public final class RedissonFutureMarker {
   private final VirtualField<PromiseWrapper<?>, RedissonBatchMarker> markerField;
 
-  public RedissonFutureMarker(
-      VirtualField<PromiseWrapper<?>, RedissonBatchMarker> markerField) {
+  public RedissonFutureMarker(VirtualField<PromiseWrapper<?>, RedissonBatchMarker> markerField) {
     this.markerField = markerField;
   }
 
@@ -28,7 +27,6 @@ public final class RedissonFutureMarker {
   }
 
   boolean isMarked(Object future) {
-    return future instanceof PromiseWrapper
-        && markerField.get((PromiseWrapper<?>) future) != null;
+    return future instanceof PromiseWrapper && markerField.get((PromiseWrapper<?>) future) != null;
   }
 }
