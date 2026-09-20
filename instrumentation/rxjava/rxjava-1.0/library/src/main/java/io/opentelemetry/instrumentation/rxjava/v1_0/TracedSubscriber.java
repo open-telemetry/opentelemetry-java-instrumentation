@@ -17,16 +17,19 @@ final class TracedSubscriber<T, REQUEST> extends Subscriber<T> {
   private final Instrumenter<REQUEST, ?> instrumenter;
   private final AtomicReference<Context> contextRef;
   private final REQUEST request;
+  private final Context parentContext;
 
   TracedSubscriber(
       Subscriber<? super T> delegate,
       Instrumenter<REQUEST, ?> instrumenter,
       AtomicReference<Context> contextRef,
-      REQUEST request) {
+      REQUEST request,
+      Context parentContext) {
     this.delegate = delegate;
     this.instrumenter = instrumenter;
     this.contextRef = contextRef;
     this.request = request;
+    this.parentContext = parentContext;
 
     delegate.add(new SpanFinishingSubscription<>(instrumenter, contextRef, request));
   }
@@ -76,8 +79,11 @@ final class TracedSubscriber<T, REQUEST> extends Subscriber<T> {
     Context context = contextRef.getAndSet(null);
     if (context != null) {
       instrumenter.end(context, request, null, e);
+      try (Scope ignored = parentContext.makeCurrent()) {
+        delegate.onError(e);
+      }
+    } else {
+      delegate.onError(e);
     }
-    // TODO (trask) should this be wrapped in parent of context(?)
-    delegate.onError(e);
   }
 }
