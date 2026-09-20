@@ -90,9 +90,9 @@ final class TracingServerStreamTracer extends ServerStreamTracer {
   @Override
   public void streamClosed(Status status) {
     // A ServerCall starts only for a method that is registered on the server, and gRPC closes a
-    // stream whose method it could not find with UNIMPLEMENTED. Requiring both keeps a registered
-    // method that was cancelled or aborted before the interceptor ran from being reported here.
-    if (status.getCode() != Status.Code.UNIMPLEMENTED || callState.isHandledOrSpanStarted()) {
+    // stream whose method it could not find with a specific UNIMPLEMENTED status. Requiring both
+    // keeps other failures that occur before the ServerCall is created from being reported here.
+    if (!isUnknownMethod(status) || callState.isHandledOrSpanStarted()) {
       return;
     }
     GrpcRequest request = new GrpcRequest(UNKNOWN_METHOD_SPAN_NAME, fullMethodName, headers);
@@ -108,6 +108,11 @@ final class TracingServerStreamTracer extends ServerStreamTracer {
       InstrumenterUtil.startAndEnd(
           instrumenter, extracted, request, status, status.getCause(), startTime, Instant.now());
     }
+  }
+
+  private boolean isUnknownMethod(Status status) {
+    return status.getCode() == Status.Code.UNIMPLEMENTED
+        && ("Method not found: " + fullMethodName).equals(status.getDescription());
   }
 
   private static final class CallState {

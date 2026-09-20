@@ -51,6 +51,8 @@ class GrpcTest extends AbstractGrpcTest {
 
   private static final Metadata.Key<String> CUSTOM_METADATA_KEY =
       Metadata.Key.of("customMetadataKey", Metadata.ASCII_STRING_MARSHALLER);
+  private static final Metadata.Key<String> GRPC_ENCODING_KEY =
+      Metadata.Key.of("grpc-encoding", Metadata.ASCII_STRING_MARSHALLER);
 
   @Override
   protected ServerBuilder<?> configureServer(ServerBuilder<?> server) {
@@ -108,6 +110,32 @@ class GrpcTest extends AbstractGrpcTest {
     closer.add(() -> server.shutdownNow().awaitTermination());
 
     GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel);
+    Helloworld.Request request = Helloworld.Request.newBuilder().setName("test").build();
+
+    assertThatThrownBy(() -> client.sayHello(request)).isInstanceOf(StatusRuntimeException.class);
+
+    testing.waitAndAssertTraces(
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasKind(SpanKind.CLIENT)));
+  }
+
+  @Test
+  void registeredMethodWithUnsupportedMessageEncoding() throws Exception {
+    Server server =
+        configureServer(
+                ServerBuilder.forPort(0).addService(new GreeterGrpc.GreeterImplBase() {}))
+            .build()
+            .start();
+    ManagedChannel channel =
+        createChannel(
+            configureClient(ManagedChannelBuilder.forAddress("localhost", server.getPort())));
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
+    closer.add(() -> server.shutdownNow().awaitTermination());
+
+    Metadata metadata = new Metadata();
+    metadata.put(GRPC_ENCODING_KEY, "unsupported");
+    GreeterGrpc.GreeterBlockingStub client =
+        GreeterGrpc.newBlockingStub(channel)
+            .withInterceptors(MetadataUtils.newAttachHeadersInterceptor(metadata));
     Helloworld.Request request = Helloworld.Request.newBuilder().setName("test").build();
 
     assertThatThrownBy(() -> client.sayHello(request)).isInstanceOf(StatusRuntimeException.class);
