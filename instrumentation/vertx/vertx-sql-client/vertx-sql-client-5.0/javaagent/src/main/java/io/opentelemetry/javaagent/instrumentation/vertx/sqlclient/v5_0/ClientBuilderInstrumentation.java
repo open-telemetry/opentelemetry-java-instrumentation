@@ -14,7 +14,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfo;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil;
 import io.vertx.core.Handler;
 import io.vertx.sqlclient.SqlConnectOptions;
@@ -99,10 +98,10 @@ class ClientBuilderInstrumentation implements TypeInstrumentation {
               databases != null && !databases.isEmpty() ? databases : null,
               VertxSqlClientUtil.getDbSystemNameFromClassName(driver));
       VertxSqlClientConstructionState previous = currentConstructionState().set(state);
-      VertxSqlClientInfo info = state.getInfo();
+      VertxSqlClientState clientState = state.getState();
       return new Object[] {
-        state.getSupplier() == null && info != null
-            ? VertxSqlClientSingletons.wrapConnectHandler(connectHandler, info)
+        clientState != null && !clientState.isSupplier()
+            ? VertxSqlClientSingletons.wrapConnectHandler(connectHandler, clientState)
             : connectHandler,
         new BuildState(state, connectHandler, previous)
       };

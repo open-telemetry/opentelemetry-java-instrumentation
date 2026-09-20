@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientQueryState.QUERY_STATE;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.currentAcquisition;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.currentSubmission;
 
 import io.opentelemetry.context.Context;
@@ -25,9 +24,10 @@ public final class VertxSqlClientConnectionPoolState {
       VirtualField.find(PoolWaiter.class, VertxSqlClientQueryState.class);
 
   public static void attachSupplier(ConnectionPool<?> pool) {
-    VertxSqlClientConstructionState state =
+    VertxSqlClientConstructionState constructionState =
         VertxSqlClientSingletons.currentConstructionState().get();
-    if (state != null && state.getSupplier() != null) {
+    VertxSqlClientState state = constructionState != null ? constructionState.getState() : null;
+    if (state != null && state.isSupplier()) {
       POOL_SUPPLIER.set(pool, state.getInfo());
     }
   }
@@ -40,21 +40,21 @@ public final class VertxSqlClientConnectionPoolState {
   }
 
   @Nullable
-  public static Acquisition createAcquisition(ConnectionPool<?> pool, Completable<?> handler) {
+  public static Submission beginAcquisition(ConnectionPool<?> pool, Completable<?> handler) {
     Submission current = currentSubmission().get();
     if (current != null && current.pool == pool && !current.claimed) {
       current.claimed = true;
-      return new Acquisition(handler, current.query);
+      current.handler = handler;
+      return current;
     }
     return null;
   }
 
   public static void attachWaiter(PoolWaiter<?> waiter, Completable<?> handler) {
-    Acquisition current = currentAcquisition().get();
-    // The acquisition advice restores its previous value. Claim this one-shot handoff so only the
-    // waiter created for this handler consumes the query.
-    if (current != null && current.handler == handler && !current.claimed) {
-      current.claimed = true;
+    Submission current = currentSubmission().get();
+    // Acquire is constructed synchronously before the pool submits work to its combiner.
+    if (current != null && current.handler != null && current.handler == handler) {
+      current.handler = null;
       WAITER_QUERY.set(waiter, current.query);
     }
   }
@@ -76,21 +76,15 @@ public final class VertxSqlClientConnectionPoolState {
     private final ConnectionPool<?> pool;
     private final VertxSqlClientQueryState query;
     private boolean claimed;
+    @Nullable private Completable<?> handler;
 
     private Submission(ConnectionPool<?> pool, VertxSqlClientQueryState query) {
       this.pool = pool;
       this.query = query;
     }
-  }
 
-  public static final class Acquisition {
-    private final Completable<?> handler;
-    private final VertxSqlClientQueryState query;
-    private boolean claimed;
-
-    private Acquisition(Completable<?> handler, VertxSqlClientQueryState query) {
-      this.handler = handler;
-      this.query = query;
+    public void endAcquisition() {
+      handler = null;
     }
   }
 

@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientQueryState.QUERY_STATE;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
@@ -17,7 +16,6 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientDeferredRequest;
-import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfo;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientRequest;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil;
 import io.vertx.core.Promise;
@@ -38,41 +36,48 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf("executeSimpleQuery", "executeExtendedQuery", "executeBatchQuery"),
         getClass().getName() + "$QueryAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class ConstructorAdvice {
-
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.This Object queryExecutor) {
-      VertxSqlClientSingletons.captureQueryExecutorInfo(queryExecutor);
-    }
-  }
-
-  @SuppressWarnings("unused")
   public static class QueryAdvice {
     public static class AdviceScope {
       private final CallDepth callDepth;
-      @Nullable private Promise<?> promise;
-      @Nullable private Scope scope;
+      @Nullable private final Promise<?> promise;
+      @Nullable private final Scope scope;
 
       private AdviceScope(CallDepth callDepth) {
         this.callDepth = callDepth;
+        this.promise = null;
+        this.scope = null;
       }
 
-      public static AdviceScope start(Object queryExecutor, String methodName, Object[] arguments) {
+      private AdviceScope(CallDepth callDepth, @Nullable Promise<?> promise, Context context) {
+        this.callDepth = callDepth;
+        this.promise = promise;
+        this.scope = context.makeCurrent();
+      }
+
+      public static AdviceScope start(
+          Object queryExecutor,
+          Object scheduler,
+          @Nullable Object cursorId,
+          String methodName,
+          Object[] arguments) {
         CallDepth callDepth = CallDepth.forClass(queryExecutor.getClass());
         if (callDepth.getAndIncrement() > 0) {
           return new AdviceScope(callDepth);
         }
-        AdviceScope adviceScope = new AdviceScope(callDepth);
         Context parentContext = Context.current();
-        if (parentContext.get(QUERY_STATE) != null) {
-          adviceScope.scope = parentContext.with(QUERY_STATE, null).makeCurrent();
+        Context context =
+            parentContext.get(QUERY_STATE) != null
+                ? parentContext.with(QUERY_STATE, null)
+                : parentContext;
+        // Cursor fetches are not traced as separate query executions.
+        if (cursorId != null) {
+          return new AdviceScope(callDepth, null, context);
         }
 
         // The parameter we need are in different positions, we are not going to have separate
@@ -99,24 +104,24 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
           }
         }
         if (sql == null || promiseInternal == null) {
-          return adviceScope;
+          return new AdviceScope(callDepth, null, context);
         }
 
-        VertxSqlClientInfo info = VertxSqlClientSingletons.getQueryExecutorInfo(queryExecutor);
-        if (info == null) {
-          return adviceScope;
+        VertxSqlClientState state = VertxSqlClientSingletons.getClientState(scheduler);
+        if (state == null) {
+          return new AdviceScope(callDepth, null, context);
         }
 
         VertxSqlClientRequest otelRequest =
-            VertxSqlClientSingletons.isSupplierQuery(queryExecutor)
-                ? new VertxSqlClientDeferredRequest(sql, info, parameterizedQuery, batchSize)
-                : new VertxSqlClientRequest(sql, info, parameterizedQuery, batchSize);
+            state.isSupplier()
+                ? new VertxSqlClientDeferredRequest(
+                    sql, state.getInfo(), parameterizedQuery, batchSize)
+                : new VertxSqlClientRequest(sql, state.getInfo(), parameterizedQuery, batchSize);
         if (!instrumenter().shouldStart(parentContext, otelRequest)) {
-          return adviceScope;
+          return new AdviceScope(callDepth, null, context);
         }
 
-        Context context = instrumenter().start(parentContext, otelRequest);
-        adviceScope.promise = promiseInternal;
+        context = instrumenter().start(context, otelRequest);
         VertxSqlClientUtil.attachRequest(promiseInternal, otelRequest, context, parentContext);
         if (otelRequest instanceof VertxSqlClientDeferredRequest) {
           context =
@@ -124,14 +129,8 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
                   QUERY_STATE,
                   new VertxSqlClientQueryState(
                       (VertxSqlClientDeferredRequest) otelRequest, promiseInternal, context));
-        } else if (context.get(QUERY_STATE) != null) {
-          context = context.with(QUERY_STATE, null);
         }
-        if (adviceScope.scope != null) {
-          adviceScope.scope.close();
-        }
-        adviceScope.scope = context.makeCurrent();
-        return adviceScope;
+        return new AdviceScope(callDepth, promiseInternal, context);
       }
 
       public void end(@Nullable Throwable throwable) {
@@ -139,30 +138,23 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
           return;
         }
 
-        Scope executionScope = scope;
-        scope = null;
-        if (executionScope != null) {
-          executionScope.close();
+        if (scope != null) {
+          scope.close();
         }
-        if (throwable != null) {
-          endSpan(throwable);
+        if (throwable != null && promise != null) {
+          VertxSqlClientUtil.endQuerySpanAndGetParentContext(instrumenter(), promise, throwable);
         }
-      }
-
-      private void endSpan(@Nullable Throwable throwable) {
-        if (promise == null) {
-          return;
-        }
-        VertxSqlClientUtil.endQuerySpanAndGetParentContext(instrumenter(), promise, throwable);
       }
     }
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.This Object queryExecutor,
+        @Advice.Argument(0) Object scheduler,
+        @Advice.Argument(value = 6, optional = true) @Nullable Object cursorId,
         @Advice.Origin("#m") String methodName,
         @Advice.AllArguments Object[] arguments) {
-      return AdviceScope.start(queryExecutor, methodName, arguments);
+      return AdviceScope.start(queryExecutor, scheduler, cursorId, methodName, arguments);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

@@ -64,6 +64,7 @@ import io.vertx.pgclient.PgConnectOptions;
 import io.vertx.pgclient.PgException;
 import io.vertx.pgclient.spi.PgDriver;
 import io.vertx.sqlclient.ClientBuilder;
+import io.vertx.sqlclient.Cursor;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
 import io.vertx.sqlclient.PreparedQuery;
@@ -1486,9 +1487,10 @@ class VertxSqlClientTest {
     testing.waitAndAssertTraces(VertxSqlClientTest::assertDirectTarget);
   }
 
-  @Test
-  void testExplicitPreparedStatementWithServerListReportsTheWholeConfiguredTarget()
-      throws Exception {
+  @ParameterizedTest
+  @MethodSource("preparedQueryFactories")
+  void testExplicitPreparedStatementWithServerListReportsTheWholeConfiguredTarget(
+      Function<PreparedStatement, PreparedQuery<?>> preparedQueryFactory) throws Exception {
     PgConnectOptions first = connectOptions();
     PgConnectOptions second = new PgConnectOptions(first).setPort(port + 1);
     Pool listPool =
@@ -1500,7 +1502,7 @@ class VertxSqlClientTest {
     cleanup.deferCleanup(listPool::close);
     String query = "select * from test where id = $1";
 
-    executePreparedStatement(listPool, query, Tuple.of(1), PreparedStatement::query)
+    executePreparedStatement(listPool, query, Tuple.of(1), preparedQueryFactory)
         .toCompletionStage()
         .toCompletableFuture()
         .get(30, SECONDS);
@@ -1509,6 +1511,93 @@ class VertxSqlClientTest {
         trace ->
             assertServerListTarget(
                 trace, query, host + ":" + port + "," + host + ":" + (port + 1)));
+  }
+
+  @ParameterizedTest
+  @MethodSource("preparedQueryFactories")
+  void testExplicitPreparedSupplierQueriesKeepTheirConnectionTarget(
+      Function<PreparedStatement, PreparedQuery<?>> preparedQueryFactory) throws Exception {
+    Pool supplierPool =
+        PgBuilder.pool()
+            .using(vertx)
+            .connectingTo(() -> Future.succeededFuture(connectOptions()))
+            .with(new PoolOptions().setMaxSize(1))
+            .build();
+    cleanup.deferCleanup(supplierPool::close);
+
+    testing
+        .runWithSpan(
+            "parent",
+            () ->
+                executePreparedStatement(
+                    supplierPool,
+                    "select * from test where id = $1",
+                    Tuple.of(1),
+                    preparedQueryFactory))
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(30, SECONDS);
+
+    assertPreparedSelect();
+  }
+
+  private static Stream<Arguments> preparedQueryFactories() {
+    return Stream.of(
+        argumentSet(
+            "plain", (Function<PreparedStatement, PreparedQuery<?>>) PreparedStatement::query),
+        argumentSet(
+            "mapped",
+            (Function<PreparedStatement, PreparedQuery<?>>)
+                statement -> statement.query().mapping(row -> row.getInteger("id"))),
+        argumentSet(
+            "collected",
+            (Function<PreparedStatement, PreparedQuery<?>>)
+                statement -> statement.query().collecting(counting())));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testCursorReadsDoNotCreateQuerySpans(boolean supplier) throws Exception {
+    ClientBuilder<Pool> builder =
+        PgBuilder.pool().using(vertx).with(new PoolOptions().setMaxSize(1));
+    Pool cursorPool =
+        (supplier
+                ? builder.connectingTo(() -> Future.succeededFuture(connectOptions()))
+                : builder.connectingTo(connectOptions()))
+            .build();
+    cleanup.deferCleanup(cursorPool::close);
+
+    testing
+        .runWithSpan(
+            "parent",
+            () ->
+                cursorPool.withTransaction(
+                    connection ->
+                        connection
+                            .prepare("select * from test order by id")
+                            .compose(
+                                statement -> {
+                                  Cursor cursor = statement.cursor(Tuple.tuple());
+                                  return cursor
+                                      .read(1)
+                                      .compose(
+                                          first -> {
+                                            assertThat(first).hasSize(1);
+                                            assertThat(cursor.hasMore()).isTrue();
+                                            return cursor.read(1);
+                                          })
+                                      .onSuccess(second -> assertThat(second).hasSize(1))
+                                      .eventually(cursor::close)
+                                      .eventually(statement::close);
+                                })))
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(30, SECONDS);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent()));
   }
 
   @Test
