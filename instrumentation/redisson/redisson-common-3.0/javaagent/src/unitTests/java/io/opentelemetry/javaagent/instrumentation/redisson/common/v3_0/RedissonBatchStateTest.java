@@ -129,6 +129,50 @@ class RedissonBatchStateTest {
     }
   }
 
+  @Test
+  void codecDecodingDoesNotBlockFinish()
+      throws ExecutionException, IOException, InterruptedException, TimeoutException {
+    RedissonBatchState state = new RedissonBatchState();
+    RedisCommand<?> command = mock(RedisCommand.class);
+    when(command.getName()).thenReturn("SET");
+    Codec codec = mock(Codec.class, RETURNS_DEEP_STUBS);
+    CountDownLatch decodingStarted = new CountDownLatch(1);
+    CountDownLatch releaseDecoder = new CountDownLatch(1);
+    when(codec.getValueDecoder().decode(any(), any()))
+        .thenAnswer(
+            invocation -> {
+              decodingStarted.countDown();
+              assertThat(releaseDecoder.await(10, SECONDS)).isTrue();
+              return "value";
+            });
+
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+    Future<?> decoding =
+        executor.submit(
+            () ->
+                state.add(
+                    new Object(),
+                    new Object(),
+                    0,
+                    command,
+                    codec,
+                    new Object[] {mock(ByteBuf.class)}));
+    try {
+      assertThat(decodingStarted.await(10, SECONDS)).isTrue();
+      state.add(new Object(), new Object(), 1, command, codec, new Object[] {"later"});
+
+      RedissonBatchRequest request = state.finish(true);
+
+      assertThat(request.getOperationName()).isEqualTo("MULTI SET");
+      assertThat(request.getOperationBatchSize()).isEqualTo(2);
+      assertThat(request.getQueryText()).isEmpty();
+    } finally {
+      releaseDecoder.countDown();
+      decoding.get(10, SECONDS);
+      executor.shutdownNow();
+    }
+  }
+
   private static Class<?> batchOptionsClass() {
     try {
       return Class.forName("org.redisson.api.BatchOptions");

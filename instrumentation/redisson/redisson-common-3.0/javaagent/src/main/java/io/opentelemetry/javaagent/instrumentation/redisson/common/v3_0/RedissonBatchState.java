@@ -60,7 +60,6 @@ class RedissonBatchState {
   private int queryTextLength;
   private int queryTextCommandCount;
   private int queryTextCutoff = Integer.MAX_VALUE;
-  private int pendingQueryTextCount;
   private boolean finished;
   private boolean atomic;
 
@@ -92,7 +91,6 @@ class RedissonBatchState {
       if (index >= queryTextCutoff) {
         return;
       }
-      pendingQueryTextCount++;
     }
 
     String queryText = null;
@@ -105,7 +103,6 @@ class RedissonBatchState {
 
   private synchronized void commitQueryText(
       int index, CapturedCommand capturedCommand, @Nullable String queryText) {
-    pendingQueryTextCount--;
     if (queryText != null && commands.get(index) == capturedCommand && index < queryTextCutoff) {
       capturedCommand.queryText = queryText;
       queryTextLength += queryText.length();
@@ -127,7 +124,6 @@ class RedissonBatchState {
         queryTextCutoff = removedEntry.getKey();
       }
     }
-    notifyAll();
   }
 
   public synchronized RedissonBatchRequest finish(Object options) {
@@ -136,7 +132,6 @@ class RedissonBatchState {
     }
     finished = true;
     atomic = isAtomic(options);
-    waitForPendingQueryTexts();
     if (!atomic || commands.isEmpty()) {
       unmarkCommands();
       clear();
@@ -144,31 +139,22 @@ class RedissonBatchState {
     }
     List<String> commandNames = new ArrayList<>(commands.size());
     List<String> queryTexts = new ArrayList<>(commands.size());
+    boolean captureQueryText = true;
     for (CapturedCommand command : commands.values()) {
       RedissonBatchContext.markCapturedCommand(command.batchCommand);
       RedissonBatchContext.markFuture(command.future);
       commandNames.add(command.name);
-      if (command.queryText != null) {
-        queryTexts.add(command.queryText);
+      @Nullable String queryText = command.queryText;
+      if (captureQueryText && queryText == null) {
+        captureQueryText = false;
+      }
+      if (captureQueryText && queryText != null) {
+        queryTexts.add(queryText);
       }
     }
     RedissonBatchRequest request = RedissonBatchRequest.create(commandNames, queryTexts);
     clear();
     return request;
-  }
-
-  private void waitForPendingQueryTexts() {
-    boolean interrupted = false;
-    while (pendingQueryTextCount > 0) {
-      try {
-        wait();
-      } catch (InterruptedException ignored) {
-        interrupted = true;
-      }
-    }
-    if (interrupted) {
-      Thread.currentThread().interrupt();
-    }
   }
 
   synchronized void discard() {
