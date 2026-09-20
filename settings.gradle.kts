@@ -2,7 +2,7 @@ pluginManagement {
   plugins {
     id("com.github.jk1.dependency-license-report") version "3.1.4"
     id("com.google.cloud.tools.jib") version "3.5.4"
-    id("com.gradle.plugin-publish") version "2.1.1"
+    id("com.gradle.plugin-publish") version "2.2.1"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
     id("org.jetbrains.kotlin.jvm") version "2.4.10"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
@@ -22,7 +22,7 @@ plugins {
   // ./gradlew :smoke-tests:images:servlet:pushLinuxImages -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:pushWindowsImages -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "10.0.0" apply false
-  id("com.gradle.develocity") version "4.5.0"
+  id("com.gradle.develocity") version "4.5.1"
 }
 
 dependencyResolutionManagement {
@@ -76,9 +76,9 @@ val shouldDisableLocalBuildCache =
   isRemoteBuildCachePushEnabled && System.getenv("GITHUB_REF_NAME") == "main"
 
 develocity {
+  projectId = "OpenTelemetry"
   if (develocityAccessKey.isNotEmpty()) {
     server = develocityServer
-    projectId = "OpenTelemetry"
   }
 
   buildScan {
@@ -116,7 +116,6 @@ buildCache {
   local {
     isEnabled = !shouldDisableLocalBuildCache
   }
-
   remote(develocity.buildCache) {
     server = develocityServer
     isPush = isRemoteBuildCachePushEnabled
@@ -307,7 +306,6 @@ include(":instrumentation:executors:javaagent")
 include(":instrumentation:executors:jdk21-testing")
 include(":instrumentation:executors:testing")
 include(":instrumentation:external-annotations:javaagent")
-include(":instrumentation:external-annotations:javaagent-unit-tests")
 include(":instrumentation:failsafe-3.0:library")
 include(":instrumentation:finagle-http-23.11:compile-stub")
 include(":instrumentation:finagle-http-23.11:javaagent")
@@ -442,7 +440,6 @@ include(":instrumentation:jms:jms-1.1:javaagent")
 include(":instrumentation:jms:jms-3.0:javaagent")
 include(":instrumentation:jms:jms-common-1.1:bootstrap")
 include(":instrumentation:jms:jms-common-1.1:javaagent")
-include(":instrumentation:jms:jms-common-1.1:javaagent-unit-tests")
 include(":instrumentation:jmx-metrics:javaagent")
 include(":instrumentation:jmx-metrics:library")
 include(":instrumentation:jmx-metrics:testing-apps:camel-testing-app")
@@ -464,7 +461,6 @@ include(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:testing")
 include(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library")
 include(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library")
 include(":instrumentation:kafka:kafka-connect-2.6:javaagent")
-include(":instrumentation:kafka:kafka-connect-2.6:javaagent-unit-tests")
 include(":instrumentation:kafka:kafka-connect-2.6:testing")
 include(":instrumentation:kafka:kafka-streams-0.11:javaagent")
 include(":instrumentation:kotlinx-coroutines:kotlinx-coroutines-1.0:javaagent")
@@ -624,7 +620,9 @@ include(":instrumentation:reactor:reactor-netty:reactor-netty-1.0:javaagent")
 include(":instrumentation:reactor:reactor-netty:reactor-netty-1.0:javaagent-unit-tests")
 include(":instrumentation:rediscala-1.8:javaagent")
 include(":instrumentation:redisson:redisson-3.0:javaagent")
+include(":instrumentation:redisson:redisson-3.0:javaagent-unit-tests")
 include(":instrumentation:redisson:redisson-3.17:javaagent")
+include(":instrumentation:redisson:redisson-3.17:javaagent-unit-tests")
 include(":instrumentation:redisson:redisson-common-3.0:javaagent")
 include(":instrumentation:redisson:redisson-common-3.0:testing")
 include(":instrumentation:redisson:redisson-metrics-2.3:javaagent")

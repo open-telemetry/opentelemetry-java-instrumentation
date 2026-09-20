@@ -6,11 +6,23 @@ Prefer a direct Java call when supported library versions expose a compatible me
 Java access works. This gives the compiler and muzzle a clear view of the dependency. Use reflection
 only when compatibility, access, or runtime discovery requires it.
 
+Before treating a lookup as runtime-class-dependent, identify the member's actual declaring type.
+A receiver typed as `Object`, or existing code that calls `receiver.getClass()`, does not prove that
+each implementation needs a separate lookup. Check whether a stable interface or base class
+declares the member. A `Method` obtained from that type can invoke compatible implementations.
+
 ## Cache repeated lookup
 
 Flag production Java code that repeats the same reflective method lookup on a path that may execute
 more than once. Resolve the method once and cache the resulting `Method` or `MethodHandle`. Use a
 `static final` field when the declaring class is fixed.
+
+When a fixed declaring type is optional or unavailable at compile time, load it once by name without
+initializing it and cache the nullable method in a `static final` field. In javaagent code, first
+verify the helper-loading strategy. An injected helper or isolated instrumentation-module helper is
+scoped to the instrumented class loader and can load an application type through its defining class
+loader. A bootstrap or otherwise shared helper cannot assume that one application class is valid
+for every caller.
 
 When the lookup depends on the runtime class, use `ClassValue` instead of a static map keyed by
 `Class<?>`. Static maps can keep application classloaders alive. Cache missing methods too when
@@ -24,6 +36,8 @@ initialization.
 | Situation | Preferred approach |
 | --- | --- |
 | Supported versions expose a compatible member and normal access works | Direct Java call |
+| A fixed declaring type is optional or unavailable at compile time | Static cached `Method` or `MethodHandle` resolved by class name |
+| The declaring type or required method metadata depends on the concrete runtime class | `ClassValue` containing the cached accessor |
 | The exact signature is known and typed or adapted invocation helps, or several member kinds need one invocation abstraction | Cached `MethodHandle` |
 | Access requires a target-associated lookup, or `CallSite` linking is part of the design | `MethodHandle` |
 | Setup performs a one-time call, construction, or field access | `Method`, `Constructor`, or `Field` |

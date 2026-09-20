@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.StringUtils.truncate;
 import static java.util.Arrays.asList;
 
 import com.mongodb.MongoException;
@@ -238,13 +239,11 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
       new BsonDocumentCodec().encode(jsonWriter, command, EncoderContext.builder().build());
     }
 
-    // If using MongoDB driver >= 3.7, the substring invocation will be a no-op due to use of
+    // If using MongoDB driver >= 3.7, truncation will generally be a no-op due to use of
     // JsonWriterSettings.Builder.maxLength in the static initializer for JSON_WRITER_SETTINGS
-    StringBuilder buf = stringWriter.getBuilder();
-    if (buf.length() <= maxNormalizedQueryLength) {
-      return buf.toString();
-    }
-    return buf.substring(0, maxNormalizedQueryLength);
+    StringBuilder buffer = stringWriter.getBuilder();
+    truncate(buffer, maxNormalizedQueryLength);
+    return buffer.toString();
   }
 
   @Nullable
@@ -276,7 +275,12 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
                 .filter(method -> method.getName().equals("maxLength"))
                 .findFirst();
         if (maxLengthMethod.isPresent()) {
-          maxLengthMethod.get().invoke(builder, maxNormalizedQueryLength);
+          // Keep one extra code unit so truncation can detect a surrogate pair across the boundary.
+          int writerMaxLength =
+              maxNormalizedQueryLength == Integer.MAX_VALUE
+                  ? maxNormalizedQueryLength
+                  : maxNormalizedQueryLength + 1;
+          maxLengthMethod.get().invoke(builder, writerMaxLength);
         }
         settings =
             (JsonWriterSettings)
