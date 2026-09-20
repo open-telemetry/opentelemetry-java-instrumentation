@@ -97,16 +97,15 @@ class McpClientSessionInstrumentationTest {
         new TestMcpClientTransport(TestMcpClientTransport.ToolResponse.SUCCESS);
     McpClientSession session = newSession(transport);
 
-    McpSchema.InitializeResult initializeResult =
-        session.sendRequest(McpSchema.METHOD_INITIALIZE, null, INITIALIZE_RESULT_TYPE).block();
-    assertThat(initializeResult).isNotNull();
-
-    session
-        .sendRequest(
+    Mono<McpSchema.InitializeResult> initialize =
+        session.sendRequest(McpSchema.METHOD_INITIALIZE, null, INITIALIZE_RESULT_TYPE);
+    Mono<McpSchema.CallToolResult> callTool =
+        session.sendRequest(
             McpSchema.METHOD_TOOLS_CALL,
             new McpSchema.CallToolRequest("lookup", Map.of(), null),
-            CALL_TOOL_RESULT_TYPE)
-        .block();
+            CALL_TOOL_RESULT_TYPE);
+
+    assertThat(initialize.then(callTool).block()).isNotNull();
 
     testing.waitAndAssertTraces(
         trace ->

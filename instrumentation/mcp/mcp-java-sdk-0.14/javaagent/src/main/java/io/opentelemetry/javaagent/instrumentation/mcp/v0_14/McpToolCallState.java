@@ -21,10 +21,12 @@ public final class McpToolCallState {
   private static final Logger logger = Logger.getLogger(McpToolCallState.class.getName());
   private static final ThreadLocal<McpToolCallState> currentState = new ThreadLocal<>();
 
-  private final McpToolCallRequest request;
+  private final McpClientSession session;
+  private final String toolName;
   private final McpSchema.CallToolRequest requestParameters;
   private final Map<String, Object> propagationMeta;
   @Nullable private final McpToolCallState previousState;
+  @Nullable private volatile String requestId;
 
   @Nullable
   public static McpToolCallState prepare(
@@ -39,7 +41,8 @@ public final class McpToolCallState {
           callToolRequest.meta() == null ? new HashMap<>() : new HashMap<>(callToolRequest.meta());
       McpToolCallState state =
           new McpToolCallState(
-              new McpToolCallRequest(callToolRequest.name(), McpProtocolVersionState.get(session)),
+              session,
+              callToolRequest.name(),
               new McpSchema.CallToolRequest(
                   callToolRequest.name(), callToolRequest.arguments(), meta),
               meta,
@@ -53,11 +56,13 @@ public final class McpToolCallState {
   }
 
   private McpToolCallState(
-      McpToolCallRequest request,
+      McpClientSession session,
+      String toolName,
       McpSchema.CallToolRequest requestParameters,
       Map<String, Object> propagationMeta,
       @Nullable McpToolCallState previousState) {
-    this.request = request;
+    this.session = session;
+    this.toolName = toolName;
     this.requestParameters = requestParameters;
     this.propagationMeta = propagationMeta;
     this.previousState = previousState;
@@ -66,7 +71,7 @@ public final class McpToolCallState {
   public static void captureRequestId(String requestId) {
     McpToolCallState state = currentState.get();
     if (state != null) {
-      state.request.setRequestId(requestId);
+      state.requestId = requestId;
     }
   }
 
@@ -74,7 +79,12 @@ public final class McpToolCallState {
     return requestParameters;
   }
 
-  McpToolCallRequest getRequest() {
+  McpToolCallRequest createRequest() {
+    McpToolCallRequest request =
+        new McpToolCallRequest(toolName, McpProtocolVersionState.get(session));
+    if (requestId != null) {
+      request.setRequestId(requestId);
+    }
     return request;
   }
 
