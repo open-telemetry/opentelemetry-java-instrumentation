@@ -1,0 +1,1 @@
+Report supplier-provided Vert.x SQL 5 targets
