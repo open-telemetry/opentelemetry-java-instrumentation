@@ -9,23 +9,10 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 
-import com.couchbase.client.core.msg.Request;
 import com.couchbase.client.core.msg.RequestContext;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_0.CouchbaseSpan;
-import javax.annotation.Nullable;
 
 public final class CouchbaseConfiguredTarget {
-
-  private static final VirtualField<Request<?>, CouchbaseServerTarget> REQUEST_TARGETS =
-      VirtualField.find(Request.class, CouchbaseServerTarget.class);
-
-  public static void registerRequestTarget(
-      Request<?> request, @Nullable CouchbaseServerTarget target) {
-    if (target != null) {
-      REQUEST_TARGETS.set(request, target);
-    }
-  }
 
   public static void capture(
       CouchbaseSpan span, CouchbaseSpanName spanName, RequestContext requestContext) {
@@ -33,9 +20,6 @@ public final class CouchbaseConfiguredTarget {
       return;
     }
     CouchbaseServerTarget target = CouchbaseServerTargets.get(requestContext.core());
-    if (target == null) {
-      target = REQUEST_TARGETS.get(requestContext.request());
-    }
     spanName.captureServerTarget(target);
     if (target == null) {
       return;
