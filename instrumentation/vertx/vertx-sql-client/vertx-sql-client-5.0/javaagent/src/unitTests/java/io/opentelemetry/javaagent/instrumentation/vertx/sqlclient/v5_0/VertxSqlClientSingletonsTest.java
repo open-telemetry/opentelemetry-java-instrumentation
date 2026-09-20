@@ -5,9 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.currentClientInfo;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.currentConstructionState;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.currentQuerySupplier;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doThrow;
@@ -18,8 +16,9 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfo;
 import io.vertx.core.Future;
-import io.vertx.sqlclient.PreparedStatement;
 import io.vertx.sqlclient.internal.Connection;
+import io.vertx.sqlclient.internal.SqlClientBase;
+import io.vertx.sqlclient.internal.SqlConnectionBase;
 import io.vertx.sqlclient.internal.SqlConnectionInternal;
 import org.junit.jupiter.api.Test;
 
@@ -27,28 +26,30 @@ class VertxSqlClientSingletonsTest {
   private static boolean initialized;
 
   @Test
-  void findsAndCachesWrappedConnectionInfo() {
+  void findsAndCachesWrappedConnectionState() {
     Connection connection = mock(Connection.class);
     Connection wrapper = mock(Connection.class);
     when(wrapper.unwrap()).thenReturn(connection);
-    VertxSqlClientInfo info = VertxSqlClientInfo.createUnknown("test");
-    VirtualField.find(Connection.class, VertxSqlClientInfo.class).set(connection, info);
+    VertxSqlClientState state =
+        new VertxSqlClientState(VertxSqlClientInfo.createUnknown("test"), false);
+    VirtualField.find(Connection.class, VertxSqlClientState.class).set(connection, state);
 
-    assertThat(VertxSqlClientSingletons.getConnectionInfo(wrapper)).isSameAs(info);
-    assertThat(VertxSqlClientSingletons.getConnectionInfo(wrapper)).isSameAs(info);
+    assertThat(VertxSqlClientSingletons.getClientState(wrapper)).isSameAs(state);
+    assertThat(VertxSqlClientSingletons.getClientState(wrapper)).isSameAs(state);
     verify(wrapper).unwrap();
   }
 
   @Test
-  void findsAndCachesSqlConnectionInfo() {
+  void findsAndCachesSqlConnectionState() {
     Connection connection = mock(Connection.class);
-    SqlConnectionInternal wrapper = mock(SqlConnectionInternal.class);
+    SqlConnectionBase<?> wrapper = mock(SqlConnectionBase.class);
     when(wrapper.unwrap()).thenReturn(connection);
-    VertxSqlClientInfo info = VertxSqlClientInfo.createUnknown("test");
-    VirtualField.find(Connection.class, VertxSqlClientInfo.class).set(connection, info);
+    VertxSqlClientState state =
+        new VertxSqlClientState(VertxSqlClientInfo.createUnknown("test"), false);
+    VirtualField.find(Connection.class, VertxSqlClientState.class).set(connection, state);
 
-    assertThat(VertxSqlClientSingletons.getConnectionInfo(wrapper)).isSameAs(info);
-    assertThat(VertxSqlClientSingletons.getConnectionInfo(wrapper)).isSameAs(info);
+    assertThat(VertxSqlClientSingletons.getClientState(wrapper)).isSameAs(state);
+    assertThat(VertxSqlClientSingletons.getClientState(wrapper)).isSameAs(state);
     verify(wrapper).unwrap();
   }
 
@@ -57,7 +58,7 @@ class VertxSqlClientSingletonsTest {
     Connection connection = mock(Connection.class);
     when(connection.unwrap()).thenReturn(connection);
 
-    assertThat(VertxSqlClientSingletons.getConnectionInfo(connection)).isNull();
+    assertThat(VertxSqlClientSingletons.getClientState(connection)).isNull();
     verify(connection).unwrap();
   }
 
@@ -66,7 +67,7 @@ class VertxSqlClientSingletonsTest {
     Connection connection = mock(Connection.class);
     when(connection.unwrap()).thenThrow(new IllegalStateException("unwrap failed"));
 
-    assertThat(VertxSqlClientSingletons.getConnectionInfo(connection)).isNull();
+    assertThat(VertxSqlClientSingletons.getClientState(connection)).isNull();
     verify(connection).unwrap();
   }
 
@@ -75,16 +76,15 @@ class VertxSqlClientSingletonsTest {
     SqlConnectionInternal connection = mock(SqlConnectionInternal.class);
     when(connection.unwrap()).thenThrow(new IllegalStateException("unwrap failed"));
 
-    assertThat(VertxSqlClientSingletons.getConnectionInfo(connection)).isNull();
+    assertThat(VertxSqlClientSingletons.getClientState(connection)).isNull();
     verify(connection).unwrap();
   }
 
   @Test
-  void ignoresMissingConnectionInfo() {
-    assertThat(VertxSqlClientSingletons.getConnectionInfo(mock(Connection.class))).isNull();
-    assertThat(VertxSqlClientSingletons.getConnectionInfo(mock(SqlConnectionInternal.class)))
-        .isNull();
-    assertThat(VertxSqlClientSingletons.getConnectionInfo(new Object())).isNull();
+  void ignoresMissingClientState() {
+    assertThat(VertxSqlClientSingletons.getClientState(mock(Connection.class))).isNull();
+    assertThat(VertxSqlClientSingletons.getClientState(mock(SqlConnectionInternal.class))).isNull();
+    assertThat(VertxSqlClientSingletons.getClientState(new Object())).isNull();
   }
 
   @Test
@@ -107,42 +107,73 @@ class VertxSqlClientSingletonsTest {
   }
 
   @Test
-  void restoresNestedPreparedStatementState() {
-    VertxSqlClientInfo ambientInfo = VertxSqlClientInfo.createUnknown("ambient");
-    VertxSqlClientInfo firstInfo = VertxSqlClientInfo.createUnknown("first");
-    VertxSqlClientInfo secondInfo = VertxSqlClientInfo.createUnknown("second");
-    VertxSqlClientSupplierInfo ambientSupplier = new VertxSqlClientSupplierInfo(ambientInfo);
-    PreparedStatement firstStatement = mock(PreparedStatement.class);
-    PreparedStatement secondStatement = mock(PreparedStatement.class);
-    VertxSqlClientSingletons.attachPreparedStatementInfo(
-        Future.succeededFuture(firstStatement), firstInfo);
-    VertxSqlClientSingletons.attachPreparedStatementInfo(
-        Future.succeededFuture(secondStatement), secondInfo);
+  void keepsClientMetadataAndSupplierModeTogether() {
+    SqlClientBase first = mock(SqlClientBase.class);
+    SqlClientBase second = mock(SqlClientBase.class);
+    VertxSqlClientState supplier =
+        new VertxSqlClientState(VertxSqlClientInfo.createUnknown("first"), true);
+    VertxSqlClientState fixed =
+        new VertxSqlClientState(VertxSqlClientInfo.createUnknown("second"), false);
+    VertxSqlClientSingletons.attachClientState(first, supplier);
+    VertxSqlClientSingletons.attachClientState(second, fixed);
 
-    VertxSqlClientInfo initialInfo = currentClientInfo().set(ambientInfo);
-    VertxSqlClientSupplierInfo initialSupplier = currentQuerySupplier().set(ambientSupplier);
-    try {
-      PreparedStatementInstrumentation.QueryAdvice.QueryAdviceState firstState =
-          PreparedStatementInstrumentation.QueryAdvice.onEnter(firstStatement);
-      assertThat(currentClientInfo().get()).isSameAs(firstInfo);
-      assertThat(currentQuerySupplier().get()).isNull();
+    assertThat(VertxSqlClientSingletons.getClientState(first)).isSameAs(supplier);
+    assertThat(VertxSqlClientSingletons.getClientState(second)).isSameAs(fixed);
+    VertxSqlClientSingletons.attachClientState(first, fixed);
+    assertThat(VertxSqlClientSingletons.getClientState(first)).isSameAs(fixed);
+    VertxSqlClientSingletons.attachClientState(first, null);
+    assertThat(VertxSqlClientSingletons.getClientState(first)).isNull();
+  }
 
-      PreparedStatementInstrumentation.QueryAdvice.QueryAdviceState secondState =
-          PreparedStatementInstrumentation.QueryAdvice.onEnter(secondStatement);
-      assertThat(currentClientInfo().get()).isSameAs(secondInfo);
-      assertThat(currentQuerySupplier().get()).isNull();
+  @Test
+  void publishesFixedConfigurationToThePreparedQueryConnection() {
+    SqlConnectionBase<?> client = mock(SqlConnectionBase.class);
+    Connection connection = mock(Connection.class);
+    when(client.unwrap()).thenReturn(connection);
+    VertxSqlClientState selected =
+        new VertxSqlClientState(VertxSqlClientInfo.createUnknown("selected"), false);
+    VertxSqlClientState configured =
+        new VertxSqlClientState(VertxSqlClientInfo.createUnknown("configured"), false);
+    VirtualField.find(Connection.class, VertxSqlClientState.class).set(connection, selected);
 
-      PreparedStatementInstrumentation.QueryAdvice.onExit(secondState);
-      assertThat(currentClientInfo().get()).isSameAs(firstInfo);
-      assertThat(currentQuerySupplier().get()).isNull();
+    assertThat(
+            VertxSqlClientSingletons.attachClientState(Future.succeededFuture(client), configured)
+                .result())
+        .isSameAs(client);
+    assertThat(VertxSqlClientSingletons.getClientState(client)).isSameAs(configured);
+    assertThat(VertxSqlClientSingletons.getClientState(connection)).isSameAs(configured);
+  }
 
-      PreparedStatementInstrumentation.QueryAdvice.onExit(firstState);
-      assertThat(currentClientInfo().get()).isSameAs(ambientInfo);
-      assertThat(currentQuerySupplier().get()).isSameAs(ambientSupplier);
-    } finally {
-      currentQuerySupplier().restore(initialSupplier);
-      currentClientInfo().restore(initialInfo);
-    }
+  @Test
+  void resolvesSupplierStateFromTheAcquiredConnection() {
+    SqlConnectionBase<?> client = mock(SqlConnectionBase.class);
+    Connection connection = mock(Connection.class);
+    when(client.unwrap()).thenReturn(connection);
+    VertxSqlClientState supplied =
+        new VertxSqlClientState(VertxSqlClientInfo.createUnknown("supplied"), false);
+    VertxSqlClientState unresolved =
+        new VertxSqlClientState(VertxSqlClientInfo.createUnknown("unresolved"), true);
+    VirtualField.find(Connection.class, VertxSqlClientState.class).set(connection, supplied);
+
+    assertThat(
+            VertxSqlClientSingletons.attachClientState(Future.succeededFuture(client), unresolved)
+                .result())
+        .isSameAs(client);
+    assertThat(VertxSqlClientSingletons.getClientState(client)).isSameAs(supplied);
+    assertThat(VertxSqlClientSingletons.getClientState(connection)).isSameAs(supplied);
+  }
+
+  @Test
+  void acquiredConnectionDoesNotKeepThePoolSupplierMarker() {
+    SqlConnectionBase<?> client = mock(SqlConnectionBase.class);
+    VertxSqlClientInfo info = VertxSqlClientInfo.createUnknown("postgresql");
+    VertxSqlClientState unresolved = new VertxSqlClientState(info, true);
+
+    VertxSqlClientSingletons.attachClientState(Future.succeededFuture(client), unresolved);
+
+    VertxSqlClientState state = VertxSqlClientSingletons.getClientState(client);
+    assertThat(state.getInfo()).isSameAs(info);
+    assertThat(state.isSupplier()).isFalse();
   }
 
   @Test
