@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.mongodb.MongoClientURI;
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoClusterSettings;
+import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoClusterSettings.LegacySrvTargetScope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -37,15 +38,13 @@ class MongoClientUriInstrumentation implements TypeInstrumentation {
   public static class CreateClusterAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static boolean onEnter(@Advice.Argument(0) MongoClientURI clientUri) {
-      return MongoClusterSettings.setLegacySrvTarget(clientUri.getURI());
+    public static LegacySrvTargetScope onEnter(@Advice.Argument(0) MongoClientURI clientUri) {
+      return MongoClusterSettings.openLegacySrvTargetScope(clientUri.getURI());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter boolean legacySrvTargetSet) {
-      if (legacySrvTargetSet) {
-        MongoClusterSettings.clearLegacySrvTarget();
-      }
+    public static void onExit(@Advice.Enter LegacySrvTargetScope scope) {
+      scope.close();
     }
   }
 }

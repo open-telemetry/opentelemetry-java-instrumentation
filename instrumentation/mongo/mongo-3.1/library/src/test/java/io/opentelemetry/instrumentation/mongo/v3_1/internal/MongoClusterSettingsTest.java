@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.mongodb.ServerAddress;
 import com.mongodb.connection.ClusterSettings;
+import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoClusterSettings.LegacySrvTargetScope;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -47,57 +48,100 @@ class MongoClusterSettingsTest {
 
   @Test
   void nestedLegacySrvTargetDoesNotRestoreConsumedOuterTarget() {
-    assertThat(MongoClusterSettings.setLegacySrvTarget("mongodb+srv://outer.example.com/database"))
-        .isTrue();
+    LegacySrvTargetScope outerScope =
+        MongoClusterSettings.openLegacySrvTargetScope("mongodb+srv://outer.example.com/database");
     try {
       assertThat(configuredTarget(directBuilder()).getAddress())
           .isEqualTo("mongodb+srv://outer.example.com");
 
-      assertThat(
-              MongoClusterSettings.setLegacySrvTarget("mongodb+srv://inner.example.com/database"))
-          .isTrue();
+      LegacySrvTargetScope innerScope =
+          MongoClusterSettings.openLegacySrvTargetScope("mongodb+srv://inner.example.com/database");
       try {
         assertThat(configuredTarget(directBuilder()).getAddress())
             .isEqualTo("mongodb+srv://inner.example.com");
       } finally {
-        MongoClusterSettings.clearLegacySrvTarget();
+        innerScope.close();
       }
 
       MongoServerTarget target = configuredTarget(directBuilder());
       assertThat(target.getAddress()).isEqualTo("direct.example");
       assertThat(target.getPort()).isEqualTo(27018);
     } finally {
-      MongoClusterSettings.clearLegacySrvTarget();
+      outerScope.close();
     }
   }
 
   @Test
-  void legacySrvTargetIsConsumedBeforeNonSrvReentry() {
-    assertThat(MongoClusterSettings.setLegacySrvTarget("mongodb+srv://outer.example.com/database"))
-        .isTrue();
+  void nestedLegacySrvTargetPreservesUnconsumedOuterTarget() {
+    LegacySrvTargetScope outerScope =
+        MongoClusterSettings.openLegacySrvTargetScope("mongodb+srv://outer.example.com/database");
     try {
+      LegacySrvTargetScope innerScope =
+          MongoClusterSettings.openLegacySrvTargetScope("mongodb+srv://inner.example.com/database");
+      try {
+        assertThat(configuredTarget(directBuilder()).getAddress())
+            .isEqualTo("mongodb+srv://inner.example.com");
+      } finally {
+        innerScope.close();
+      }
+
       assertThat(configuredTarget(directBuilder()).getAddress())
           .isEqualTo("mongodb+srv://outer.example.com");
-
-      assertThat(MongoClusterSettings.setLegacySrvTarget("mongodb://nested.example.com/database"))
-          .isFalse();
-      MongoServerTarget target = configuredTarget(directBuilder());
-      assertThat(target.getAddress()).isEqualTo("direct.example");
-      assertThat(target.getPort()).isEqualTo(27018);
     } finally {
-      MongoClusterSettings.clearLegacySrvTarget();
+      outerScope.close();
+    }
+  }
+
+  @Test
+  void nestedNonSrvTargetMasksAndPreservesUnconsumedOuterTarget() {
+    LegacySrvTargetScope outerScope =
+        MongoClusterSettings.openLegacySrvTargetScope("mongodb+srv://outer.example.com/database");
+    try {
+      LegacySrvTargetScope innerScope =
+          MongoClusterSettings.openLegacySrvTargetScope("mongodb://nested.example.com/database");
+      try {
+        MongoServerTarget target = configuredTarget(directBuilder());
+        assertThat(target.getAddress()).isEqualTo("direct.example");
+        assertThat(target.getPort()).isEqualTo(27018);
+      } finally {
+        innerScope.close();
+      }
+
+      assertThat(configuredTarget(directBuilder()).getAddress())
+          .isEqualTo("mongodb+srv://outer.example.com");
+    } finally {
+      outerScope.close();
     }
   }
 
   @Test
   void legacySrvTargetIsRemovedWhenBuildDoesNotComplete() {
-    assertThat(MongoClusterSettings.setLegacySrvTarget("mongodb+srv://failed.example.com/database"))
-        .isTrue();
-    MongoClusterSettings.clearLegacySrvTarget();
+    LegacySrvTargetScope scope =
+        MongoClusterSettings.openLegacySrvTargetScope("mongodb+srv://failed.example.com/database");
+    scope.close();
 
     MongoServerTarget target = configuredTarget(directBuilder());
     assertThat(target.getAddress()).isEqualTo("direct.example");
     assertThat(target.getPort()).isEqualTo(27018);
+  }
+
+  @Test
+  void builtPreservesFirstConfiguration() {
+    LegacySrvTargetScope scope =
+        MongoClusterSettings.openLegacySrvTargetScope(
+            "mongodb+srv://cluster0.example.com/database");
+    try {
+      ClusterSettings.Builder builder = directBuilder();
+      ClusterSettings settings = builder.build();
+
+      MongoClusterSettings.built(builder, settings);
+      MongoClusterSettings.built(builder, settings);
+
+      assertThat(requireNonNull(MongoClusterSettings.configuredTarget(settings)).getAddress())
+          .isEqualTo("mongodb+srv://cluster0.example.com");
+    } finally {
+      scope.close();
+    }
   }
 
   private static ClusterSettings.Builder directBuilder() {
