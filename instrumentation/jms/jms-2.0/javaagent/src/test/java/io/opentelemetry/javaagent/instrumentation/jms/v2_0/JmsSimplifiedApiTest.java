@@ -5,8 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms.v2_0;
 
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -130,15 +132,19 @@ class JmsSimplifiedApiTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("producer parent").hasNoParent(),
                 span ->
-                    span.hasName("someQueue publish")
+                    span.hasName(
+                            emitStableMessagingSemconv() ? "send someQueue" : "someQueue publish")
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("consumer parent").hasNoParent(),
                 span ->
-                    span.hasName("someQueue receive")
-                        .hasKind(CONSUMER)
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "receive someQueue"
+                                : "someQueue receive")
+                        .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
                         .hasParent(trace.getSpan(0))));
   }
 

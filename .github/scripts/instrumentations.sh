@@ -187,6 +187,8 @@ readonly INSTRUMENTATIONS=(
   "jetty-httpclient:jetty-httpclient-9.2:javaagent:testStableSemconv"
   "jms:jms-1.1:javaagent:test"
   "jms:jms-1.1:javaagent:testMessagingPreview"
+  "jms:jms-2.0:javaagent:test"
+  "jms:jms-2.0:javaagent:testMessagingPreview"
   "jodd-http-4.2:javaagent:test"
   "jodd-http-4.2:javaagent:testStableSemconv"
   "jsf:jsf-mojarra-1.2:javaagent:mojarra2Test"
