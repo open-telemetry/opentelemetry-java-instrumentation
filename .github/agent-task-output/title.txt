@@ -1,0 +1,1 @@
+Use configured Redis targets for Lettuce 5.0+ spans
