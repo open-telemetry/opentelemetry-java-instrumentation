@@ -254,6 +254,9 @@ class LettuceClusterClientTest {
     cleanup.deferCleanup(() -> client.shutdown(0, 15, SECONDS));
     StatefulRedisClusterConnection<String, String> redirectConnection = client.connect();
     cleanup.deferCleanup(redirectConnection);
+    testing.waitForTraces(1);
+    testing.clearData();
+
     assertThat(redirectConnection.sync().set("REDIRECT_WARMUP_KEY", "value")).isEqualTo("OK");
     testing.waitForTraces(emitStableDatabaseSemconv() ? 1 : 2);
     source.resetRedirect();
