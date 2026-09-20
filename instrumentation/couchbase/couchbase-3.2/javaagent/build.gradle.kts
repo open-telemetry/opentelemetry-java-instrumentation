@@ -44,7 +44,9 @@ testing {
     register<JvmTestSuite>("legacyProtostellarTest") {
       dependencies {
         implementation(project())
+        implementation(project(":instrumentation:couchbase:couchbase-common-3.1:javaagent"))
         implementation("com.couchbase.client:java-client:3.4.3")
+        implementation("org.objenesis:objenesis")
       }
     }
   }
