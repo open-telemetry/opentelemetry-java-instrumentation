@@ -242,7 +242,9 @@ class CouchbaseClient32Test {
 
   private static Stream<Arguments> protostellarTargets() {
     return Stream.of(
-        argumentSet("default port", "", null), argumentSet("non-default port", ":18099", 18099L));
+        argumentSet("implicit default port", "", null),
+        argumentSet("explicit default port", ":18098", null),
+        argumentSet("non-default port", ":18099", 18099L));
   }
 
   private static <T> T oldOrExperimental(T value) {
