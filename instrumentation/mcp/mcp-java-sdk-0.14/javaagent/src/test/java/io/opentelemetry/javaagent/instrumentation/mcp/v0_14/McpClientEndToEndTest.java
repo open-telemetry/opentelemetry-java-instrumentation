@@ -6,11 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.mcp.v0_14;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static io.opentelemetry.semconv.incubating.McpIncubatingAttributes.MCP_PROTOCOL_VERSION;
 
 import io.modelcontextprotocol.client.McpAsyncClient;
 import io.modelcontextprotocol.client.McpClient;
 import io.modelcontextprotocol.client.McpSyncClient;
 import io.modelcontextprotocol.spec.McpSchema;
+import io.modelcontextprotocol.spec.ProtocolVersions;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.Map;
@@ -22,19 +24,26 @@ class McpClientEndToEndTest {
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Test
-  void tracesAsyncClientToolCall() {
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  void tracesComposedAsyncClientInitializationAndToolCall() {
     TestMcpClientTransport transport =
         new TestMcpClientTransport(TestMcpClientTransport.ToolResponse.SUCCESS);
     McpAsyncClient client = McpClient.async(transport).build();
-    client.initialize().block();
+
+    // Construct both publishers before initialization completes to verify that the negotiated
+    // protocol version is resolved when the tool-call publisher is subscribed.
+    var initializeAndCallTool =
+        client
+            .initialize()
+            .then(
+                client.callTool(
+                    new McpSchema.CallToolRequest("async-tool", Map.of("secret", "value"), null)));
 
     testing.runWithSpan(
         "parent",
-        () ->
-            client
-                .callTool(
-                    new McpSchema.CallToolRequest("async-tool", Map.of("secret", "value"), null))
-                .block());
+        () -> {
+          initializeAndCallTool.block();
+        });
 
     testing.waitAndAssertTraces(
         trace ->
@@ -43,7 +52,8 @@ class McpClientEndToEndTest {
                 span ->
                     span.hasName("tools/call async-tool")
                         .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(0))));
+                        .hasParent(trace.getSpan(0))
+                        .hasAttribute(MCP_PROTOCOL_VERSION, ProtocolVersions.MCP_2024_11_05)));
   }
 
   @Test

@@ -27,23 +27,20 @@ final class McpToolCallMono {
             Context parentContext =
                 ContextPropagationOperator.getOpenTelemetryContextFromContextView(
                     reactorContext, Context.current());
-            if (!instrumenter().shouldStart(parentContext, state.getRequest())) {
+            McpToolCallRequest request = state.createRequest();
+            if (!instrumenter().shouldStart(parentContext, request)) {
               return publisher;
             }
 
-            Context context = instrumenter().start(parentContext, state.getRequest());
+            Context context = instrumenter().start(parentContext, request);
             state.inject(context);
             try {
               return (Mono<?>)
                   endStrategy.end(
-                      instrumenter(),
-                      context,
-                      state.getRequest(),
-                      publisher,
-                      McpSchema.CallToolResult.class);
+                      instrumenter(), context, request, publisher, McpSchema.CallToolResult.class);
             } catch (Throwable t) {
               logger.log(FINE, "Failed to wrap MCP tool call publisher", t);
-              endSpan(context, state);
+              endSpan(context, request);
             }
           } catch (Throwable t) {
             logger.log(FINE, "Failed to trace MCP tool call", t);
@@ -53,9 +50,9 @@ final class McpToolCallMono {
         });
   }
 
-  private static void endSpan(Context context, McpToolCallState state) {
+  private static void endSpan(Context context, McpToolCallRequest request) {
     try {
-      instrumenter().end(context, state.getRequest(), null, null);
+      instrumenter().end(context, request, null, null);
     } catch (Throwable t) {
       logger.log(FINE, "Failed to end MCP tool call span", t);
       // Ignore instrumentation failures to preserve application behavior.
