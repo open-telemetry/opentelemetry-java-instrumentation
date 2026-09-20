@@ -107,21 +107,24 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
       }
       JedisClusterCommandContext clusterCommandContext = currentCommandContext().get();
       if (clusterCommandContext != null) {
-        if (clusterCommandContext.isAcquiringConnection()
-            && CONNECTION_HEALTH_CHECK_COMMAND.equals(request.getOperationName())) {
-          // Jedis validates a pooled cluster connection with a health check command before handing
-          // it out; that command belongs to getting the connection rather than being an operation
-          // of its own. Anything else sent while getting a connection, such as the slot cache
-          // refresh a missing slot triggers, is an operation of its own.
-          return null;
-        }
-        if (clusterCommandContext.isExecuting()
+        if (clusterCommandContext.isAcquiringConnection()) {
+          if (CONNECTION_HEALTH_CHECK_COMMAND.equals(request.getOperationName())) {
+            // Jedis validates a pooled cluster connection with a health check command before
+            // handing
+            // it out; that command belongs to getting the connection rather than being an operation
+            // of its own.
+            return null;
+          }
+          // A missing slot can refresh the slot cache while the cluster command is executing. The
+          // refresh commands are operations of their own rather than attempts of the cluster
+          // command.
+          clusterCommandContext = null;
+        } else if (clusterCommandContext.isExecuting()
             && clusterCommandContext.matchesCapturedRequest(request)) {
           // A retry or a redirection re-sends the same command to another node, so it updates the
           // peer of the span already started for this cluster command instead of adding one.
           return new AdviceScope(null, null, request, clusterCommandContext);
-        }
-        if (!clusterCommandContext.isExecuting() || clusterCommandContext.hasRequest()) {
+        } else if (!clusterCommandContext.isExecuting() || clusterCommandContext.hasRequest()) {
           // Slot cache refreshes and ASKING redirections are sent around the cluster command rather
           // than by it, so they get their own spans.
           clusterCommandContext = null;

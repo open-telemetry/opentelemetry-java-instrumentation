@@ -29,6 +29,7 @@ import java.lang.reflect.Field;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -177,6 +178,34 @@ class JedisAggregateTargetTest {
                         }
                       });
             });
+  }
+
+  @Test
+  void clusterCommandWithMissingSlotKeepsConfiguredTarget() throws Exception {
+    assumeTrue(emitStableDatabaseSemconv());
+
+    String key = "missing-slot";
+    int slot =
+        (int)
+            Class.forName("redis.clients.util.JedisClusterCRC16")
+                .getMethod("getSlot", String.class)
+                .invoke(null, key);
+    assumeTrue(removeSlot(clusterHandler, slot));
+
+    cluster.getClass().getMethod("set", String.class, String.class).invoke(cluster, key, "value");
+
+    testing.waitForTraces(2);
+    assertThat(testing.spans())
+        .filteredOn(span -> span.getName().startsWith("SET"))
+        .singleElement()
+        .satisfies(
+            span -> {
+              assertThat(span.getAttributes().get(SERVER_ADDRESS)).isEqualTo(clusterTarget);
+              assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
+              assertThat(span.getAttributes().get(NETWORK_PEER_ADDRESS)).isEqualTo("127.0.0.1");
+              assertThat(span.getAttributes().get(NETWORK_PEER_PORT)).isEqualTo((long) clusterPort);
+            });
+    assertThat(testing.spans()).filteredOn(span -> span.getName().startsWith("CLUSTER")).hasSize(1);
   }
 
   @Test
@@ -381,6 +410,23 @@ class JedisAggregateTargetTest {
           .getMethod("assignSlotToNode", int.class, node.getClass())
           .invoke(cache, slot, node);
     }
+  }
+
+  private static boolean removeSlot(Object handler, int slot) throws Exception {
+    Field cacheField;
+    try {
+      cacheField =
+          Class.forName("redis.clients.jedis.JedisClusterConnectionHandler")
+              .getDeclaredField("cache");
+    } catch (NoSuchFieldException ignored) {
+      return false;
+    }
+    cacheField.setAccessible(true);
+    Object cache = cacheField.get(handler);
+    Field slotsField = cache.getClass().getDeclaredField("slots");
+    slotsField.setAccessible(true);
+    ((Map<?, ?>) slotsField.get(cache)).remove(slot);
+    return true;
   }
 
   private static boolean classPresent(String className) {
