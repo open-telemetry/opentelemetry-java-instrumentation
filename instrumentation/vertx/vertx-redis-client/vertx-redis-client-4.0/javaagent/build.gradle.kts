@@ -23,10 +23,20 @@ dependencies {
 testing {
   suites {
     withType<JvmTestSuite>().configureEach {
-      sources {
-        java {
-          srcDir("src/testShared/java")
+      if (name != "unitTests") {
+        sources {
+          java {
+            srcDir("src/testShared/java")
+          }
         }
+      }
+    }
+
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation-api-incubator"))
+        implementation("io.vertx:vertx-redis-client:4.4.4")
       }
     }
 
