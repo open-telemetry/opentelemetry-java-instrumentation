@@ -31,7 +31,9 @@ public final class CouchbaseProtostellarTargets {
   }
 
   public static void registerCore(Core core, Set<SeedNode> seedNodes) {
-    CouchbaseServerTargets.registerFromSeedNodes(core, seedNodes, core.context().environment());
+    if (CouchbaseServerTargets.get(core) == null) {
+      CouchbaseServerTargets.registerFromSeedNodes(core, seedNodes, core.context().environment());
+    }
   }
 
   public static void captureRequestSpan(Core core, RequestSpan span) {
