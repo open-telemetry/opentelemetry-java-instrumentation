@@ -34,9 +34,11 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -303,7 +305,8 @@ class LettuceNetworkAttributesGetterTest {
   }
 
   @Test
-  void concurrentSpanStartHasOneWinner() throws Exception {
+  void concurrentSpanStartHasOneWinner()
+      throws ExecutionException, InterruptedException, TimeoutException {
     AsyncCommand<String, String, String> command = new AsyncCommand<>(command());
     CountDownLatch ready = new CountDownLatch(2);
     CountDownLatch release = new CountDownLatch(1);
