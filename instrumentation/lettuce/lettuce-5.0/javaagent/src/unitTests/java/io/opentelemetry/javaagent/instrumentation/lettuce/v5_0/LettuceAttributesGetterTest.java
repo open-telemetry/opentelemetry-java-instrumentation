@@ -11,6 +11,7 @@ import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import io.lettuce.core.ClientOptions;
 import io.lettuce.core.RedisURI;
@@ -26,6 +27,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisS
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
 
@@ -148,12 +150,62 @@ class LettuceAttributesGetterTest {
             new Object[] {null, null}, originalFuture);
     CompletableFuture<?> returnedFuture = (CompletableFuture<?>) result;
 
-    assertThat(returnedFuture.cancel(true)).isTrue();
+    assertThat(returnedFuture.cancel(false)).isTrue();
     assertThat(returnedFuture).isCancelled();
     assertThat(originalFuture).isCancelled();
   }
 
+  @Test
+  void targetAttachmentFailureDoesNotFailAsynchronousMasterReplicaConnection() {
+    RedisServerTarget initialTarget =
+        LettuceServerTargets.of(RedisURI.create("redis://initial:6379"));
+    RedisServerTarget failingTarget = mock(RedisServerTarget.class);
+    when(failingTarget.getAddress()).thenThrow(new IllegalStateException("test"));
+    StatefulRedisConnectionImpl<?, ?> connection = mock(StatefulRedisConnectionImpl.class);
+    LettuceConnectionState.updateServerTarget(connection, initialTarget);
+    CompletableFuture<StatefulRedisConnectionImpl<?, ?>> originalFuture = new CompletableFuture<>();
+
+    CompletableFuture<?> returnedFuture =
+        (CompletableFuture<?>)
+            LettuceMasterSlaveInstrumentation.ConnectAdvice.onExit(
+                new Object[] {failingTarget, null}, originalFuture);
+    originalFuture.complete(connection);
+
+    assertThat(returnedFuture.join()).isSameAs(connection);
+  }
+
+  @Test
+  void cancellingAfterDelegateCompletionDoesNotCancelReturnedFuture() {
+    DelayedCompletionFuture<StatefulRedisConnectionImpl<?, ?>> originalFuture =
+        new DelayedCompletionFuture<>();
+    StatefulRedisConnectionImpl<?, ?> connection = mock(StatefulRedisConnectionImpl.class);
+
+    CompletableFuture<?> returnedFuture =
+        (CompletableFuture<?>)
+            LettuceMasterSlaveInstrumentation.ConnectAdvice.onExit(
+                new Object[] {null, null}, originalFuture);
+    originalFuture.complete(connection);
+
+    assertThat(returnedFuture.cancel(false)).isFalse();
+    originalFuture.runCompletion();
+    assertThat(returnedFuture.join()).isSameAs(connection);
+  }
+
   private static RedisCommand<String, String, String> command() {
     return new Command<>(CommandType.GET, new StatusOutput<>(StringCodec.UTF8));
+  }
+
+  private static class DelayedCompletionFuture<T> extends CompletableFuture<T> {
+    private BiConsumer<? super T, ? super Throwable> completion;
+
+    @Override
+    public CompletableFuture<T> whenComplete(BiConsumer<? super T, ? super Throwable> completion) {
+      this.completion = completion;
+      return this;
+    }
+
+    void runCompletion() {
+      completion.accept(join(), null);
+    }
   }
 }

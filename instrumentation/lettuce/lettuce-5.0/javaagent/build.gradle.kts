@@ -30,6 +30,36 @@ dependencies {
 
 testing {
   suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation-api-incubator"))
+        implementation(project(":javaagent-extension-api"))
+        implementation("io.lettuce:lettuce-core:5.0.0.RELEASE")
+      }
+    }
+
+    register<JvmTestSuite>("testStableSemconvUnitTests") {
+      sources {
+        java {
+          setSrcDirs(listOf("src/unitTests/java"))
+        }
+      }
+
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation-api-incubator"))
+        implementation(project(":javaagent-extension-api"))
+        implementation("io.lettuce:lettuce-core:5.0.0.RELEASE")
+      }
+
+      targets.all {
+        testTask.configure {
+          jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
+        }
+      }
+    }
+
     register<JvmTestSuite>("v3PreviewLettuce51Test") {
       sources {
         java {
@@ -129,6 +159,7 @@ tasks {
   }
 
   val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+    .filter { !it.name.endsWith("unitTests", true) }
     .map { suite ->
       register<Test>("${suite.name}StableSemconv") {
         val sourceTask = named<Test>(suite.name).get()

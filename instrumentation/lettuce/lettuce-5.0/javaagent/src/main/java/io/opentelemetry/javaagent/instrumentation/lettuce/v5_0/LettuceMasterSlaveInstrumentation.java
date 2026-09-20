@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import static java.util.logging.Level.FINE;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -21,6 +22,7 @@ import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
@@ -102,7 +104,7 @@ class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
         cancelFromDelegate();
         return true;
       }
-      return super.cancel(mayInterruptIfRunning);
+      return false;
     }
 
     private void cancelFromDelegate() {
@@ -111,6 +113,8 @@ class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
   }
 
   public static class SetTargetConsumer implements BiConsumer<Object, Throwable> {
+    private static final Logger logger = Logger.getLogger(SetTargetConsumer.class.getName());
+
     private final SetTargetFuture future;
     @Nullable private final RedisServerTarget target;
 
@@ -133,10 +137,10 @@ class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
         if (connection instanceof RedisChannelHandler) {
           ConnectAdvice.setTarget(connection, target);
         }
-        future.complete(connection);
       } catch (Throwable t) {
-        future.completeExceptionally(t);
+        logger.log(FINE, "Failed to attach Lettuce server target", t);
       }
+      future.complete(connection);
     }
   }
 }
