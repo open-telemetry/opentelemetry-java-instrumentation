@@ -8,15 +8,26 @@ muzzle {
     module.set("java-client")
     versions.set("[3.2.0,)")
     assertInverse.set(true)
+
+    excludeInstrumentationName("couchbase-3.4.4-protostellar")
+  }
+  pass {
+    name.set("Couchbase Protostellar instrumentation")
+    group.set("com.couchbase.client")
+    module.set("java-client")
+    versions.set("[3.4.4,)")
+    assertInverse.set(true)
+
+    excludeInstrumentationName("couchbase-3.2-core")
   }
 }
 
 dependencies {
   implementation(project(":instrumentation:couchbase:couchbase-common-3.0:javaagent"))
   implementation(project(":instrumentation:couchbase:couchbase-common-3.1:javaagent"))
-  compileOnly(project(":muzzle")) // For @NoMuzzle
 
   library("com.couchbase.client:java-client:3.2.0")
+  compileOnly("com.couchbase.client:core-io:2.4.4") // For Protostellar constructors added in 3.4.4
 
   testImplementation("org.testcontainers:testcontainers-couchbase")
 

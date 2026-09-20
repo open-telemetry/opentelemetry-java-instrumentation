@@ -136,7 +136,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
       delegate.setStatus(openTelemetryStatus);
     }
 
-    @SuppressWarnings({"EffectivelyPrivate", "UnusedMethod"})
+    @Override
     public void recordException(Throwable throwable) {
       delegate.recordException(throwable);
     }
@@ -151,11 +151,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
 
     @Override
     public void requestContext(RequestContext requestContext) {
-      CouchbaseConfiguredTarget.capture(
-          delegate,
-          spanName,
-          requestContext,
-          CouchbaseProtostellarTargets.getRequestTarget(requestContext.request()));
+      CouchbaseConfiguredTarget.capture(delegate, spanName, requestContext);
     }
   }
 }
