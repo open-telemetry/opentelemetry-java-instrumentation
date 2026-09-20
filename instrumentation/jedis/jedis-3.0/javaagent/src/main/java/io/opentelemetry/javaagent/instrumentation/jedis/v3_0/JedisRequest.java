@@ -33,7 +33,7 @@ public abstract class JedisRequest {
     String operationName = operationName(command);
     return new AutoValue_JedisRequest(
         connection,
-        JedisConfiguredTargets.connectionTarget(connection),
+        emitStableDatabaseSemconv() ? JedisConfiguredTargets.connectionTarget(connection) : null,
         operationName,
         sanitizer.sanitize(operationName, args),
         null);
