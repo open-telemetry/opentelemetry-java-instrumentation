@@ -60,6 +60,7 @@ class RedissonBatchState {
   private int queryTextLength;
   private int queryTextCommandCount;
   private int queryTextCutoff = Integer.MAX_VALUE;
+  private int pendingQueryTextCount;
   private boolean finished;
   private boolean atomic;
 
@@ -91,13 +92,21 @@ class RedissonBatchState {
       if (index >= queryTextCutoff) {
         return;
       }
+      pendingQueryTextCount++;
     }
 
-    String queryText = sanitize(command, codec, parameters);
-    synchronized (this) {
-      if (finished || commands.get(index) != capturedCommand || index >= queryTextCutoff) {
-        return;
-      }
+    String queryText = null;
+    try {
+      queryText = sanitize(command, codec, parameters);
+    } finally {
+      commitQueryText(index, capturedCommand, queryText);
+    }
+  }
+
+  private synchronized void commitQueryText(
+      int index, CapturedCommand capturedCommand, @Nullable String queryText) {
+    pendingQueryTextCount--;
+    if (queryText != null && commands.get(index) == capturedCommand && index < queryTextCutoff) {
       capturedCommand.queryText = queryText;
       queryTextLength += queryText.length();
       if (queryTextCommandCount > 0) {
@@ -118,6 +127,7 @@ class RedissonBatchState {
         queryTextCutoff = removedEntry.getKey();
       }
     }
+    notifyAll();
   }
 
   public synchronized RedissonBatchRequest finish(Object options) {
@@ -125,12 +135,13 @@ class RedissonBatchState {
       return null;
     }
     finished = true;
-    if (!isAtomic(options) || commands.isEmpty()) {
+    atomic = isAtomic(options);
+    waitForPendingQueryTexts();
+    if (!atomic || commands.isEmpty()) {
       unmarkCommands();
       clear();
       return null;
     }
-    atomic = true;
     List<String> commandNames = new ArrayList<>(commands.size());
     List<String> queryTexts = new ArrayList<>(commands.size());
     for (CapturedCommand command : commands.values()) {
@@ -144,6 +155,20 @@ class RedissonBatchState {
     RedissonBatchRequest request = RedissonBatchRequest.create(commandNames, queryTexts);
     clear();
     return request;
+  }
+
+  private void waitForPendingQueryTexts() {
+    boolean interrupted = false;
+    while (pendingQueryTextCount > 0) {
+      try {
+        wait();
+      } catch (InterruptedException ignored) {
+        interrupted = true;
+      }
+    }
+    if (interrupted) {
+      Thread.currentThread().interrupt();
+    }
   }
 
   synchronized void discard() {

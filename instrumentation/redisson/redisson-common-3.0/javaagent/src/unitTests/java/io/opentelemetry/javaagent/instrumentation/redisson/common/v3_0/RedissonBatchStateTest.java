@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.abort;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
@@ -14,12 +15,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.netty.buffer.ByteBuf;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -85,7 +88,8 @@ class RedissonBatchStateTest {
   }
 
   @Test
-  void codecDecodingDoesNotBlockConcurrentEnqueue() throws Exception {
+  void codecDecodingDoesNotBlockConcurrentEnqueue()
+      throws ExecutionException, IOException, InterruptedException, TimeoutException {
     RedissonBatchState state = new RedissonBatchState();
     RedisCommand<?> command = mock(RedisCommand.class);
     when(command.getName()).thenReturn("SET");
@@ -96,7 +100,7 @@ class RedissonBatchStateTest {
         .thenAnswer(
             invocation -> {
               decodingStarted.countDown();
-              assertThat(releaseDecoder.await(10, TimeUnit.SECONDS)).isTrue();
+              assertThat(releaseDecoder.await(10, SECONDS)).isTrue();
               return "value";
             });
 
@@ -112,21 +116,15 @@ class RedissonBatchStateTest {
                     codec,
                     new Object[] {mock(ByteBuf.class)}));
     try {
-      assertThat(decodingStarted.await(10, TimeUnit.SECONDS)).isTrue();
+      assertThat(decodingStarted.await(10, SECONDS)).isTrue();
       Future<?> concurrentEnqueue =
           executor.submit(
               () ->
-                  state.add(
-                      new Object(),
-                      new Object(),
-                      1,
-                      command,
-                      codec,
-                      new Object[] {"value"}));
-      concurrentEnqueue.get(10, TimeUnit.SECONDS);
+                  state.add(new Object(), new Object(), 1, command, codec, new Object[] {"value"}));
+      concurrentEnqueue.get(10, SECONDS);
     } finally {
       releaseDecoder.countDown();
-      decoding.get(10, TimeUnit.SECONDS);
+      decoding.get(10, SECONDS);
       executor.shutdownNow();
     }
   }
