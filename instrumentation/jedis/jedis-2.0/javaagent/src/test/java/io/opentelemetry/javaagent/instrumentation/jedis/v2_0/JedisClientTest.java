@@ -468,17 +468,16 @@ class JedisClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                   span.hasName(
-                           emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "EXEC")
-                       .hasKind(SpanKind.CLIENT)
-                       .hasAttributesSatisfyingExactly(
-                           equalTo(maybeStable(DB_SYSTEM), REDIS),
-                           equalTo(
-                               maybeStable(DB_STATEMENT),
-                               emitStableDatabaseSemconv() ? "SET tx1 ?" : "EXEC"),
-                           equalTo(
-                               maybeStable(DB_OPERATION),
-                               emitStableDatabaseSemconv() ? "SET" : "EXEC"),
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "EXEC")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                emitStableDatabaseSemconv() ? "SET tx1 ?" : "EXEC"),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? "SET" : "EXEC"),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),

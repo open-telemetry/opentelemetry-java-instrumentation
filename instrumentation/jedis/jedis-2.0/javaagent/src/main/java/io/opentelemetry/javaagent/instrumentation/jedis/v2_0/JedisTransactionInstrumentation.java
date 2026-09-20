@@ -34,8 +34,7 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("exec"), getClass().getName() + "$ExecAdvice");
+    transformer.applyAdviceToMethod(named("exec"), getClass().getName() + "$ExecAdvice");
     if (emitStableDatabaseSemconv()) {
       transformer.applyAdviceToMethod(
           named("execGetResponse"), getClass().getName() + "$ExecAdvice");
