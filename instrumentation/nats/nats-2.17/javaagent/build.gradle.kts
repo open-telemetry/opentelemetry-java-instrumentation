@@ -16,6 +16,7 @@ dependencies {
 
   implementation(project(":instrumentation:nats:nats-2.17:library"))
   testImplementation(project(":instrumentation:nats:nats-2.17:testing"))
+  testImplementation("net.bytebuddy:byte-buddy")
 }
 
 tasks {

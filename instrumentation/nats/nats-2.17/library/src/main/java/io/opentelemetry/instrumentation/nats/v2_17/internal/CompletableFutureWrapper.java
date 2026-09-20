@@ -54,6 +54,9 @@ public final class CompletableFutureWrapper<T> extends CompletableFuture<T> {
 
   @Override
   public boolean cancel(boolean mayInterruptIfRunning) {
-    return sourceFuture.cancel(mayInterruptIfRunning);
+    if (isDone()) {
+      return isCancelled();
+    }
+    return sourceFuture.cancel(mayInterruptIfRunning) && isCancelled();
   }
 }

@@ -7,13 +7,16 @@ package io.opentelemetry.instrumentation.nats.v2_17.internal;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
@@ -29,6 +32,25 @@ class CompletableFutureWrapperTest {
     assertThat(wrapped.cancel(false)).isTrue();
     assertThat(wrapped).isCancelled();
     assertThat(sourceFuture).isCancelled();
+  }
+
+  @Test
+  void repeatedCancellationDoesNotCancelSourceAgain() {
+    AtomicInteger cancellationCount = new AtomicInteger();
+    CompletableFuture<String> sourceFuture =
+        new CompletableFuture<String>() {
+          @Override
+          public boolean cancel(boolean mayInterruptIfRunning) {
+            cancellationCount.incrementAndGet();
+            return super.cancel(mayInterruptIfRunning);
+          }
+        };
+    CompletableFuture<String> wrapped =
+        CompletableFutureWrapper.wrap(sourceFuture, Context.root(), (result, error) -> {});
+
+    assertThat(wrapped.cancel(false)).isTrue();
+    assertThat(wrapped.cancel(false)).isTrue();
+    assertThat(cancellationCount).hasValue(1);
   }
 
   @Test
@@ -123,6 +145,68 @@ class CompletableFutureWrapperTest {
 
     assertThat(completionCount).hasValue(1);
     assertThat(wrapped).isCompletedWithValue("result");
+  }
+
+  @Test
+  void doesNotCancelSourceAfterManualCompletion() {
+    CompletableFuture<String> sourceFuture = new CompletableFuture<>();
+    CompletableFuture<String> wrapped =
+        CompletableFutureWrapper.wrap(sourceFuture, Context.root(), (result, error) -> {});
+
+    assertThat(wrapped.complete("manual")).isTrue();
+    assertThat(wrapped.cancel(false)).isFalse();
+    assertThat(sourceFuture).isNotCancelled();
+
+    sourceFuture.complete("source");
+
+    assertThat(wrapped).isCompletedWithValue("manual");
+  }
+
+  @Test
+  void doesNotCancelSourceAfterManualExceptionalCompletion() {
+    CompletableFuture<String> sourceFuture = new CompletableFuture<>();
+    CompletableFuture<String> wrapped =
+        CompletableFutureWrapper.wrap(sourceFuture, Context.root(), (result, error) -> {});
+
+    assertThat(wrapped.completeExceptionally(new IllegalStateException("manual"))).isTrue();
+    assertThat(wrapped.cancel(false)).isFalse();
+    assertThat(sourceFuture).isNotCancelled();
+
+    sourceFuture.complete("source");
+
+    assertThatThrownBy(wrapped::join)
+        .isInstanceOf(CompletionException.class)
+        .hasCauseInstanceOf(IllegalStateException.class)
+        .hasRootCauseMessage("manual");
+  }
+
+  @Test
+  void completionCallbackDoesNotHoldWrapperMonitor() {
+    CountDownLatch callbackCompletion = new CountDownLatch(1);
+    AtomicBoolean completedWhileCallbackActive = new AtomicBoolean();
+    CompletableFuture<String> sourceFuture = new CompletableFuture<>();
+    CompletableFuture<String> wrapped =
+        CompletableFutureWrapper.wrap(sourceFuture, Context.root(), (result, error) -> {});
+    wrapped.whenComplete(
+        (result, error) -> {
+          Thread completer =
+              new Thread(
+                  () -> {
+                    wrapped.complete("manual");
+                    callbackCompletion.countDown();
+                  });
+          completer.start();
+          try {
+            completedWhileCallbackActive.set(callbackCompletion.await(10, SECONDS));
+          } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new AssertionError(e);
+          }
+        });
+
+    assertThat(wrapped.cancel(false)).isTrue();
+
+    assertThat(completedWhileCallbackActive).isTrue();
   }
 
   @Test
