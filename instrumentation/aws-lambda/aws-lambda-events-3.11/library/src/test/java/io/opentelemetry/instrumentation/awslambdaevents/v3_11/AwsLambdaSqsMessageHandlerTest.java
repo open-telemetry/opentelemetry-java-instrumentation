@@ -227,6 +227,26 @@ class AwsLambdaSqsMessageHandlerTest {
   }
 
   @Test
+  void reusedEventStartsNewProcessing() {
+    SQSEvent.SQSMessage message = newMessage();
+    message.setAttributes(emptyMap());
+    message.setMessageId("message1");
+    message.setEventSource("aws:sqs");
+    message.setEventSourceArn("arn:aws:sqs:us-east-2:123456789012:queue1");
+
+    SQSEvent event = new SQSEvent();
+    event.setRecords(asList(message));
+
+    TestHandler handler = new TestHandler(testing.getOpenTelemetrySdk());
+    handler.handleRequest(event, context);
+    assertMetrics(testing, TracingSqsEventHandler.INSTRUMENTATION_NAME, "queue1", 2, 1, null);
+    testing.clearData();
+
+    handler.handleRequest(event, context);
+    assertMetrics(testing, TracingSqsEventHandler.INSTRUMENTATION_NAME, "queue1", 2, 1, null);
+  }
+
+  @Test
   void missingEventSource() {
     SQSEvent.SQSMessage message = newMessage();
     message.setMessageId("message1");
@@ -253,6 +273,24 @@ class AwsLambdaSqsMessageHandlerTest {
 
   @Test
   void nestedProcessSpan() {
+    String messagingPreview = System.getProperty("otel.semconv-stability.preview");
+    String v3Preview = System.getProperty("otel.instrumentation.common.v3-preview");
+    if ("true".equals(v3Preview)) {
+      assertThat(messagingPreview).isNull();
+      assertThat(emitOldMessagingSemconv()).isFalse();
+      assertThat(emitStableMessagingSemconv()).isTrue();
+    } else if ("messaging".equals(messagingPreview)) {
+      assertThat(emitOldMessagingSemconv()).isFalse();
+      assertThat(emitStableMessagingSemconv()).isTrue();
+    } else if ("messaging/dup".equals(messagingPreview)) {
+      assertThat(emitOldMessagingSemconv()).isTrue();
+      assertThat(emitStableMessagingSemconv()).isTrue();
+    } else {
+      assertThat(messagingPreview).isNull();
+      assertThat(emitOldMessagingSemconv()).isTrue();
+      assertThat(emitStableMessagingSemconv()).isFalse();
+    }
+
     SQSEvent.SQSMessage message = newMessage();
     message.setAttributes(singletonMap("AWSTraceHeader", AWS_TRACE_HEADER1));
     message.setMessageId("message1");
@@ -270,18 +308,14 @@ class AwsLambdaSqsMessageHandlerTest {
     new TestHandler(openTelemetrySdk, eventInstrumenter).handleRequest(event, context);
 
     testing.waitAndAssertTraces(
-        trace -> {
-          if (emitStableMessagingSemconv()) {
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("my_function"),
-                span -> span.hasName("custom process").hasKind(SpanKind.CONSUMER));
-          } else {
+        trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("my_function"),
                 span -> span.hasName("custom process").hasKind(SpanKind.CONSUMER),
-                span -> span.hasName("aws:sqs process").hasKind(SpanKind.CONSUMER));
-          }
-        });
+                span ->
+                    span.hasName(
+                            emitStableMessagingSemconv() ? "process queue1" : "aws:sqs process")
+                        .hasKind(SpanKind.CONSUMER)));
   }
 
   // Constructor private in early versions.

@@ -51,7 +51,7 @@ public final class AwsLambdaSqsInstrumenterFactory {
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
-  public static Instrumenter<SQSMessage, Void> forMessage(
+  public static Instrumenter<SQSMessage, Void> forSelectedMessageProcessing(
       OpenTelemetry openTelemetry, String instrumentationName) {
     SqsMessageAttributesGetter getter = new SqsMessageAttributesGetter();
     InstrumenterBuilder<SQSMessage, Void> builder =
@@ -63,12 +63,9 @@ public final class AwsLambdaSqsInstrumenterFactory {
                         getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME)
                     : message -> message.getEventSource() + " process")
             .addAttributesExtractor(
-                emitStableMessagingSemconv()
-                    ? MessagingAttributesExtractor.create(
-                        getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME)
-                    : new SpanKeyOmittingAttributesExtractor<>(
-                        MessagingAttributesExtractor.create(
-                            getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME)))
+                new SpanKeyOmittingAttributesExtractor<>(
+                    MessagingAttributesExtractor.create(
+                        getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME)))
             .addOperationMetrics(MessagingProcessMetrics.get());
     setMessagingProcessExceptionEventExtractor(builder);
     return MessagingProcessInstrumenterFactory.create(
