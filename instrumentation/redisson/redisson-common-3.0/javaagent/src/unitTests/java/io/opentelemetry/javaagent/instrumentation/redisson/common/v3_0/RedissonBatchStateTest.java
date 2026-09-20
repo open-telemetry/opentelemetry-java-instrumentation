@@ -29,6 +29,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.redisson.client.codec.Codec;
 import org.redisson.client.protocol.RedisCommand;
 
+@SuppressWarnings("InterruptedExceptionSwallowed")
 class RedissonBatchStateTest {
 
   @ParameterizedTest
