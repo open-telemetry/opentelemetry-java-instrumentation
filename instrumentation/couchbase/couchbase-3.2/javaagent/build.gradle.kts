@@ -41,7 +41,7 @@ dependencies {
 
 testing {
   suites {
-    register<JvmTestSuite>("legacyProtostellarTest") {
+    register<JvmTestSuite>("legacyProtostellarUnitTests") {
       dependencies {
         implementation(project())
         implementation(project(":instrumentation:couchbase:couchbase-common-3.1:javaagent"))
