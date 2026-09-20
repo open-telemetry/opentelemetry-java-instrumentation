@@ -301,7 +301,7 @@ public class CamelMessagingMetricsAssertions {
         testing, "messaging.process.duration", "process", system, destination);
   }
 
-  private static void assertConsumedMessageCount(
+  public static void assertConsumedMessageCount(
       InstrumentationExtension testing, String system, String destination, long expectedCount) {
     long count =
         testing.metrics().stream()

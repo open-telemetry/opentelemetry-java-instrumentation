@@ -5,16 +5,18 @@
 
 package io.opentelemetry.javaagent.bootstrap.jms;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /** Tracks whether a JMS message delivery has been counted. */
 public final class JmsMessageDeliveryState {
 
-  private boolean consumedMessagesRecorded;
+  private final AtomicBoolean consumedMessagesRecorded = new AtomicBoolean();
   private boolean receivePending;
   private boolean processingReceivedMessage;
   private int processingDepth;
 
   public void prepareForReceive() {
-    consumedMessagesRecorded = false;
+    consumedMessagesRecorded.set(false);
     receivePending = true;
   }
 
@@ -23,7 +25,7 @@ public final class JmsMessageDeliveryState {
       processingReceivedMessage = receivePending;
       receivePending = false;
       if (!processingReceivedMessage) {
-        consumedMessagesRecorded = false;
+        consumedMessagesRecorded.set(false);
       }
     }
     processingDepth++;
@@ -44,15 +46,11 @@ public final class JmsMessageDeliveryState {
 
   public void prepareForWrapping() {
     if (processingDepth == 0 && !receivePending) {
-      consumedMessagesRecorded = false;
+      consumedMessagesRecorded.set(false);
     }
   }
 
   public boolean claimConsumedMessages() {
-    if (consumedMessagesRecorded) {
-      return false;
-    }
-    consumedMessagesRecorded = true;
-    return true;
+    return consumedMessagesRecorded.compareAndSet(false, true);
   }
 }

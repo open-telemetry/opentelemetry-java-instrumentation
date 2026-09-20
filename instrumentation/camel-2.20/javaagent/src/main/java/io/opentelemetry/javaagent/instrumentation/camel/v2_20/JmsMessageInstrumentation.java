@@ -35,6 +35,9 @@ class JmsMessageInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("setJmsMessage").and(takesArgument(0, named("javax.jms.Message"))),
         getClass().getName() + "$StoreReceiveTelemetryAdvice");
+    transformer.applyAdviceToMethod(
+        named("copyFrom").and(takesArgument(0, named("org.apache.camel.Message"))),
+        getClass().getName() + "$CopyDeliveryStateAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -73,6 +76,20 @@ class JmsMessageInstrumentation implements TypeInstrumentation {
       // A Camel message is refilled when its JMS message is swapped. Replace the delivery state,
       // without copying the receive context or retaining the previous message's accounting.
       camelDeliveryState().set(camelMessage, state);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class CopyDeliveryStateAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This org.apache.camel.Message target,
+        @Advice.Argument(0) org.apache.camel.Message source) {
+      if (target != source) {
+        StoreReceiveTelemetryAdvice.camelDeliveryState()
+            .set(target, StoreReceiveTelemetryAdvice.camelDeliveryState().get(source));
+      }
     }
   }
 }

@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessagingMetricsAssertions.assertConsumedMessageCount;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessagingMetricsAssertions.assertSendAndProcessMetrics;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.ExperimentalTest.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -53,6 +54,7 @@ class JmsCamelTest {
   private static BrokerService broker;
   private static CamelContext camelContext;
   private static final CountDownLatch errorProcessed = new CountDownLatch(1);
+  private static final CountDownLatch parallelProcessed = new CountDownLatch(2);
 
   @BeforeAll
   static void setUp() throws Exception {
@@ -80,6 +82,13 @@ class JmsCamelTest {
                       errorProcessed.countDown();
                       throw new IllegalStateException("test");
                     });
+            from("direct:parallelInput").to("jms:queue:parallelQueue");
+            from("jms:queue:parallelQueue")
+                .multicast()
+                .parallelProcessing()
+                .to("direct:parallelOne", "direct:parallelTwo");
+            from("direct:parallelOne").process(exchange -> parallelProcessed.countDown());
+            from("direct:parallelTwo").process(exchange -> parallelProcessed.countDown());
           }
         });
 
@@ -113,6 +122,18 @@ class JmsCamelTest {
     testing.waitForTraces(emitStableMessagingSemconv() ? 2 : 1);
     assertSendAndProcessMetrics(
         testing, "jms", "errorQueue", IllegalStateException.class.getName());
+  }
+
+  @Test
+  void parallelMulticastCountsJmsMessageOnce() throws Exception {
+    ProducerTemplate template = camelContext.createProducerTemplate();
+    template.sendBody("direct:parallelInput", "test message");
+
+    assertThat(parallelProcessed.await(1, MINUTES)).isTrue();
+    testing.waitForTraces(emitStableMessagingSemconv() ? 2 : 1);
+    if (emitStableMessagingSemconv()) {
+      assertConsumedMessageCount(testing, "jms", "parallelQueue", 1);
+    }
   }
 
   private static void assertJmsReceiveTrace(TraceAssert trace) {

@@ -73,4 +73,17 @@ class JmsMessageInstrumentationTest {
     assertThat(CamelMessageTelemetry.getJmsDeliveryState(secondCamelMessage)).isSameAs(state);
     assertThat(state.claimConsumedMessages()).isTrue();
   }
+
+  @Test
+  void copiesDeliveryStateBetweenCamelMessages() {
+    org.apache.camel.Message source = mock(org.apache.camel.Message.class);
+    org.apache.camel.Message target = mock(org.apache.camel.Message.class);
+    Message jmsMessage = mock(Message.class);
+    JmsMessageInstrumentation.StoreReceiveTelemetryAdvice.onExit(source, jmsMessage);
+
+    JmsMessageInstrumentation.CopyDeliveryStateAdvice.onExit(target, source);
+
+    assertThat(CamelMessageTelemetry.getJmsDeliveryState(target))
+        .isSameAs(CamelMessageTelemetry.getJmsDeliveryState(source));
+  }
 }
