@@ -28,7 +28,11 @@ class OperationMetricsUtilTest {
     OperationMetrics operationMetrics =
         OperationMetricsUtil.create(
             "test metrics", meter -> null, (s, doubleHistogramBuilder) -> warning.set(true));
-    operationMetrics.create(testing.getOpenTelemetry().getMeter("test"));
+    assertThat(operationMetrics.create(testing.getOpenTelemetry().getMeter("test"))).isNull();
+    assertThat(
+            OperationMetricsUtil.supportsMetricsAdvice(
+                "test metrics", testing.getOpenTelemetry().getMeter("test")))
+        .isTrue();
 
     assertThat(warning).isFalse();
   }
@@ -39,7 +43,11 @@ class OperationMetricsUtilTest {
     OperationMetrics operationMetrics =
         OperationMetricsUtil.create(
             "test metrics", meter -> null, (s, doubleHistogramBuilder) -> warning.set(true));
-    operationMetrics.create(MeterProvider.noop().get("test"));
+    assertThat(operationMetrics.create(MeterProvider.noop().get("test"))).isNull();
+    assertThat(
+            OperationMetricsUtil.supportsMetricsAdvice(
+                "test metrics", MeterProvider.noop().get("test")))
+        .isTrue();
 
     assertThat(warning).isFalse();
   }
@@ -47,9 +55,15 @@ class OperationMetricsUtilTest {
   @Test
   void warning() {
     AtomicBoolean warning = new AtomicBoolean(false);
+    AtomicBoolean created = new AtomicBoolean(false);
     OperationMetrics operationMetrics =
         OperationMetricsUtil.create(
-            "test metrics", meter -> null, (s, doubleHistogramBuilder) -> warning.set(true));
+            "test metrics",
+            meter -> {
+              created.set(true);
+              return null;
+            },
+            (s, doubleHistogramBuilder) -> warning.set(true));
     Meter defaultMeter = MeterProvider.noop().get("test");
     Meter meter =
         (Meter)
@@ -64,9 +78,11 @@ class OperationMetricsUtilTest {
                   }
                   return method.invoke(defaultMeter, args);
                 });
-    operationMetrics.create(meter);
+    assertThat(operationMetrics.create(meter))
+        .isSameAs(OperationMetricsUtil.NOOP_OPERATION_LISTENER);
 
     assertThat(warning).isTrue();
+    assertThat(created).isFalse();
   }
 
   private static DoubleHistogramBuilder proxyDoubleHistogramBuilder(Meter meter) {

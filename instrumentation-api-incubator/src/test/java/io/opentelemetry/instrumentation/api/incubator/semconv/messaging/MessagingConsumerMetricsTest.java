@@ -41,6 +41,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class MessagingConsumerMetricsTest {
@@ -493,8 +494,9 @@ class MessagingConsumerMetricsTest {
         .isZero();
   }
 
-  @Test
-  void zeroBatchDoesNotCountReceivedMessages() {
+  @ParameterizedTest
+  @ValueSource(longs = {0, -1, Long.MIN_VALUE})
+  void nonpositiveBatchDoesNotCountReceivedMessages(long count) {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
@@ -508,13 +510,14 @@ class MessagingConsumerMetricsTest {
             .put(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null)
             .put(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "receive" : null)
             .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "receive" : null)
-            .put(MESSAGING_BATCH_MESSAGE_COUNT, 0)
+            .put(MESSAGING_BATCH_MESSAGE_COUNT, count)
             .build();
     Context context = listener.onStart(Context.root(), attributes, nanos(100));
     listener.onEnd(context, Attributes.empty(), nanos(300));
 
     assertThat(metricReader.collectAllMetrics())
-        .noneSatisfy(metric -> assertThat(metric).hasName("messaging.receive.messages"));
+        .noneSatisfy(metric -> assertThat(metric).hasName("messaging.receive.messages"))
+        .noneSatisfy(metric -> assertThat(metric).hasName("messaging.client.consumed.messages"));
   }
 
   private static Stream<Arguments> nonReceiveOperations() {

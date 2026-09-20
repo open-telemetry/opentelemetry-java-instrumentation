@@ -60,7 +60,7 @@ public final class MessagingConsumerMetrics implements OperationListener {
   @Nullable private final DoubleHistogram receiveDurationHistogram;
   @Nullable private final LongCounter receiveMessageCount;
   @Nullable private final DoubleHistogram clientOperationDurationHistogram;
-  @Nullable private final LongCounter consumedMessagesCounter;
+  @Nullable private final MessagingConsumedMessagesRecorder consumedMessagesRecorder;
 
   private MessagingConsumerMetrics(Meter meter, Variant variant) {
     supportsStableSemconv = variant != Variant.LEGACY;
@@ -82,13 +82,15 @@ public final class MessagingConsumerMetrics implements OperationListener {
         !consumedMessagesOnly && emitStableSemconv
             ? MessagingMetricsAdvice.buildClientOperationDuration(meter)
             : null;
-    consumedMessagesCounter =
-        !clientOperationDurationOnly && emitStableSemconv ? buildConsumedMessages(meter) : null;
+    consumedMessagesRecorder =
+        !clientOperationDurationOnly && emitStableSemconv
+            ? MessagingConsumedMessagesRecorder.create(meter)
+            : null;
     enabled =
         receiveDurationHistogram != null
             || receiveMessageCount != null
             || clientOperationDurationHistogram != null
-            || consumedMessagesCounter != null;
+            || consumedMessagesRecorder != null;
   }
 
   /**
@@ -158,7 +160,7 @@ public final class MessagingConsumerMetrics implements OperationListener {
             && !MessagingTelemetryState.contains(
                 context, operationType, MessagingTelemetrySignal.CLIENT_OPERATION_DURATION);
     boolean recordConsumedMessages =
-        consumedMessagesCounter != null
+        consumedMessagesRecorder != null
             && (consumedMessagesOnly || operationType == MessagingOperationType.RECEIVE)
             && !MessagingTelemetryState.contains(
                 context, CONSUMED_MESSAGES_OPERATION, MessagingTelemetrySignal.CONSUMED_MESSAGES);
@@ -205,12 +207,9 @@ public final class MessagingConsumerMetrics implements OperationListener {
     // Metric view attribute advice can only select keys statically. The concrete destination name
     // must be omitted when a template is available or the destination is temporary or anonymous,
     // so this conditional requirement must be enforced before recording.
-    Attributes filteredAttributes =
-        clientOperationDurationHistogram != null || consumedMessagesCounter != null
-            ? MessagingMetricsAdvice.filterAttributes(attributes)
-            : attributes;
     if (clientOperationDurationHistogram != null && state.recordClientOperationDuration()) {
-      clientOperationDurationHistogram.record(duration, filteredAttributes, context);
+      clientOperationDurationHistogram.record(
+          duration, MessagingMetricsAdvice.filterAttributes(attributes), context);
     }
 
     Long batchMessageCount = attributes.get(MESSAGING_BATCH_MESSAGE_COUNT);
@@ -220,11 +219,12 @@ public final class MessagingConsumerMetrics implements OperationListener {
         receiveMessageCount.add(receiveMessagesCount, attributes, context);
       }
     }
-    if (consumedMessagesCounter != null && state.recordConsumedMessages()) {
+    if (consumedMessagesRecorder != null && state.recordConsumedMessages()) {
       long consumedMessagesCount =
           getConsumedMessagesCount(attributes, batchMessageCount, consumedMessagesOnly);
       if (consumedMessagesCount > 0) {
-        consumedMessagesCounter.add(consumedMessagesCount, filteredAttributes, context);
+        consumedMessagesRecorder.record(
+            consumedMessagesCount, attributes, Attributes.empty(), context);
       }
     }
   }
@@ -255,16 +255,6 @@ public final class MessagingConsumerMetrics implements OperationListener {
             .setDescription("Measures the number of received messages.")
             .setUnit("{message}");
     MessagingMetricsAdvice.applyOldMessagesAdvice(builder);
-    return builder.build();
-  }
-
-  private static LongCounter buildConsumedMessages(Meter meter) {
-    LongCounterBuilder builder =
-        meter
-            .counterBuilder("messaging.client.consumed.messages")
-            .setDescription("Number of messages that were delivered to the application.")
-            .setUnit("{message}");
-    MessagingMetricsAdvice.applyConsumedMessagesAdvice(builder);
     return builder.build();
   }
 

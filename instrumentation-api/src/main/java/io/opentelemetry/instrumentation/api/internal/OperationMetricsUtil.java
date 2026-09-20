@@ -38,9 +38,25 @@ public class OperationMetricsUtil {
 
   public static OperationMetrics create(
       String description, Function<Meter, OperationListener> factory) {
-    return create(
+    return meter ->
+        supportsMetricsAdvice(description, meter) ? factory.apply(meter) : NOOP_OPERATION_LISTENER;
+  }
+
+  // visible for testing
+  static OperationMetrics create(
+      String description,
+      Function<Meter, OperationListener> factory,
+      BiConsumer<String, DoubleHistogramBuilder> warningEmitter) {
+    return meter ->
+        supportsMetricsAdvice(description, meter, warningEmitter)
+            ? factory.apply(meter)
+            : NOOP_OPERATION_LISTENER;
+  }
+
+  public static boolean supportsMetricsAdvice(String description, Meter meter) {
+    return supportsMetricsAdvice(
         description,
-        factory,
+        meter,
         (s, histogramBuilder) ->
             logger.log(
                 WARNING,
@@ -54,20 +70,15 @@ public class OperationMetricsUtil {
                 }));
   }
 
-  // visible for testing
-  static OperationMetrics create(
-      String description,
-      Function<Meter, OperationListener> factory,
-      BiConsumer<String, DoubleHistogramBuilder> warningEmitter) {
-    return meter -> {
-      DoubleHistogramBuilder histogramBuilder = meter.histogramBuilder("compatibility-test");
-      if (!(histogramBuilder instanceof ExtendedDoubleHistogramBuilder)
-          && !histogramBuilder.getClass().getName().contains("NoopDoubleHistogram")) {
-        warningEmitter.accept(description, histogramBuilder);
-        return NOOP_OPERATION_LISTENER;
-      }
-      return factory.apply(meter);
-    };
+  private static boolean supportsMetricsAdvice(
+      String description, Meter meter, BiConsumer<String, DoubleHistogramBuilder> warningEmitter) {
+    DoubleHistogramBuilder histogramBuilder = meter.histogramBuilder("compatibility-test");
+    if (!(histogramBuilder instanceof ExtendedDoubleHistogramBuilder)
+        && !histogramBuilder.getClass().getName().contains("NoopDoubleHistogram")) {
+      warningEmitter.accept(description, histogramBuilder);
+      return false;
+    }
+    return true;
   }
 
   private OperationMetricsUtil() {}
