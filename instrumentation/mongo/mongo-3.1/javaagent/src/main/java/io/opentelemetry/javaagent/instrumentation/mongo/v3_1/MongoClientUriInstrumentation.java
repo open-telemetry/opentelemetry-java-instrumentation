@@ -11,10 +11,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.mongodb.MongoClientURI;
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoClusterSettings;
-import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoClusterSettings.LegacySrvTargetScope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -39,15 +37,14 @@ class MongoClientUriInstrumentation implements TypeInstrumentation {
   public static class CreateClusterAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    @Nullable
-    public static LegacySrvTargetScope onEnter(@Advice.Argument(0) MongoClientURI clientUri) {
-      return MongoClusterSettings.openLegacySrvTargetScope(clientUri.getURI());
+    public static boolean onEnter(@Advice.Argument(0) MongoClientURI clientUri) {
+      return MongoClusterSettings.setLegacySrvTarget(clientUri.getURI());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter @Nullable LegacySrvTargetScope scope) {
-      if (scope != null) {
-        scope.close();
+    public static void onExit(@Advice.Enter boolean legacySrvTargetSet) {
+      if (legacySrvTargetSet) {
+        MongoClusterSettings.clearLegacySrvTarget();
       }
     }
   }

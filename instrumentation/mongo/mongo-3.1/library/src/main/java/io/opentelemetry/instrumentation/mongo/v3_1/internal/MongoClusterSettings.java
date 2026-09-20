@@ -35,8 +35,8 @@ public class MongoClusterSettings {
       VirtualField.find(ClusterSettings.class, Configuration.class);
 
   // Mongo#createCluster advice produces this one-shot handoff for ClusterSettings.Builder#build
-  // advice, which consumes it in built(). If the build does not complete,
-  // LegacySrvTargetScope.close() removes it when createCluster exits.
+  // advice, which consumes it in built(). If the build does not complete, createCluster exit
+  // advice removes it.
   private static final ThreadLocal<MongoServerTarget> legacySrvTarget = new ThreadLocal<>();
 
   public static void initialize(ClusterSettings.Builder builder) {
@@ -110,16 +110,17 @@ public class MongoClusterSettings {
     return MongoServerTarget.seeds(settings.getHosts());
   }
 
-  @Nullable
-  public static LegacySrvTargetScope openLegacySrvTargetScope(@Nullable String connectionString) {
+  public static boolean setLegacySrvTarget(@Nullable String connectionString) {
     MongoServerTarget target = srvConnectionString(connectionString);
     if (target == null) {
-      return null;
+      return false;
     }
-    // The legacy driver builds ClusterSettings before it can invoke user callbacks, so this target
-    // is consumed before a reentrant MongoClient construction can replace it.
     legacySrvTarget.set(target);
-    return new LegacySrvTargetScope();
+    return true;
+  }
+
+  public static void clearLegacySrvTarget() {
+    legacySrvTarget.remove();
   }
 
   @Nullable
@@ -167,19 +168,6 @@ public class MongoClusterSettings {
       return ClusterSettings.class.getMethod("getSrvHost");
     } catch (NoSuchMethodException ignored) {
       return null;
-    }
-  }
-
-  /**
-   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
-   * any time.
-   */
-  public static class LegacySrvTargetScope {
-
-    private LegacySrvTargetScope() {}
-
-    public void close() {
-      legacySrvTarget.remove();
     }
   }
 
