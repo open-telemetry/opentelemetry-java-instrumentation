@@ -20,7 +20,7 @@ public class CouchbaseProtostellarInstrumentationModule extends InstrumentationM
     super(
         "couchbase",
         expandDeprecatedNames(
-            "couchbase-3.2|deprecated:couchbase-3.4", "couchbase", "couchbase-3.4.4-protostellar"));
+            "couchbase-3.2|deprecated:couchbase-3.4", "couchbase", "couchbase-3.4.3-protostellar"));
   }
 
   @Override
