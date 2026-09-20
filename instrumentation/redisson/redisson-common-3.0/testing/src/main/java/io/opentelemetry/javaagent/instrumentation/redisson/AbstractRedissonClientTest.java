@@ -291,8 +291,7 @@ public abstract class AbstractRedissonClientTest {
   }
 
   @Test
-  void configuredDatabaseIndexOnAtomicBatch()
-      throws InvocationTargetException, IllegalAccessException {
+  void configuredDatabaseIndexOnAtomicBatch() throws ReflectiveOperationException {
     assumeStableAtomicBatchSupport();
     RedissonClient databaseOne = Redisson.create(createConfig(1, null, false));
     try {
