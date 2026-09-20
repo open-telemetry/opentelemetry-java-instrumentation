@@ -45,10 +45,10 @@ public abstract class JedisRequest {
   }
 
   public static JedisRequest createTransaction(
-      List<JedisRequest> requests, @Nullable JedisRequest multiRequest) {
+      List<JedisRequest> requests, @Nullable InetSocketAddress multiPeerAddress) {
     JedisRequest request = createBatch(requests, "MULTI");
-    if (request.peerAddress == null && multiRequest != null) {
-      request.peerAddress = multiRequest.peerAddress;
+    if (request.peerAddress == null) {
+      request.peerAddress = multiPeerAddress;
     }
     return request;
   }

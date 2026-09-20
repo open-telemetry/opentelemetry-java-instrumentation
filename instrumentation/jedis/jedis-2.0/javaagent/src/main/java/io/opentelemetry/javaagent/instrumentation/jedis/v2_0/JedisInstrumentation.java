@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisPipelineContext.captureTransactionFramingRequest;
+import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisPipelineContext.captureTransactionFramingPeerAddress;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisPipelineContext.transactionFraming;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSingletons.currentTransactionFraming;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -89,7 +89,7 @@ class JedisInstrumentation implements TypeInstrumentation {
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) @Nullable Object transaction,
         @Advice.Enter @Nullable TransactionFraming previous) {
       try {
-        captureTransactionFramingRequest(transaction);
+        captureTransactionFramingPeerAddress(transaction);
       } finally {
         currentTransactionFraming().restore(previous);
       }

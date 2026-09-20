@@ -17,7 +17,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.util.List;
+import io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisPipelineContext.BatchState;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -87,13 +87,13 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
 
       @Nullable
       public static AdviceScope start(Object pipeline) {
-        List<JedisRequest> requests = JedisPipelineContext.getAndClearCapturedRequests(pipeline);
-        if (requests.isEmpty()) {
+        BatchState batchState = JedisPipelineContext.takeBatchState(pipeline);
+        if (batchState == null || batchState.getRequests().isEmpty()) {
           // An empty pipeline sends nothing to the server, and with no captured request there is no
           // connection to derive server attributes from, so it is not reported as a batch span.
           return null;
         }
-        JedisRequest request = JedisRequest.createPipeline(requests);
+        JedisRequest request = JedisRequest.createPipeline(batchState.getRequests());
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;
