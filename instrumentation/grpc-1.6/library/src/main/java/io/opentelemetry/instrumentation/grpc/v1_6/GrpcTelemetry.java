@@ -88,9 +88,10 @@ public final class GrpcTelemetry {
   /**
    * Configures the given {@link ManagedChannelBuilder} with OpenTelemetry tracing instrumentation.
    *
-   * <p>On gRPC 1.64.0+, this method automatically captures the channel's target string for
-   * populating {@code server.address} and {@code server.port} attributes. On older gRPC versions,
-   * it falls back to using the channel's authority.
+   * <p>On gRPC 1.64.0+, this method captures the channel's target string for populating {@code
+   * server.address} and {@code server.port} attributes when the builder supports target-aware
+   * interception. Custom builders that do not support it, and older gRPC versions, fall back to
+   * using the channel's authority.
    *
    * <p>This is the recommended way to instrument a gRPC channel, instead of calling {@link
    * #createClientInterceptor()} and adding the interceptor manually.
@@ -107,7 +108,7 @@ public final class GrpcTelemetry {
       }
     }
 
-    // Fallback for gRPC < 1.64.0: add interceptor without target info
+    // Fallback for gRPC < 1.64.0 or builders without target interception: omit target info
     builder.intercept(newTracingClientInterceptor(null));
   }
 
