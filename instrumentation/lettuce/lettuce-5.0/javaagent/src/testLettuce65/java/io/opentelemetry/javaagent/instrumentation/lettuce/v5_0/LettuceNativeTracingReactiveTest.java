@@ -60,7 +60,7 @@ class LettuceNativeTracingReactiveTest extends AbstractLettuceClientTest {
 
     redisClient = RedisClient.create(resources, embeddedDbUri);
     redisClient.setOptions(CLIENT_OPTIONS);
-    cleanup.deferCleanup(redisClient::shutdown);
+    cleanup.deferCleanup(() -> shutdown(redisClient));
     connection = redisClient.connect();
     cleanup.deferCleanup(connection);
     reactiveCommands = connection.reactive();
