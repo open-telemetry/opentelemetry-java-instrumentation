@@ -165,7 +165,7 @@ class RedissonBatchStateTest {
 
       assertThat(request.getOperationName()).isEqualTo("MULTI SET");
       assertThat(request.getOperationBatchSize()).isEqualTo(2);
-      assertThat(request.getQueryText()).isEmpty();
+      assertThat(request.getQueryText()).isNull();
     } finally {
       releaseDecoder.countDown();
       decoding.get(10, SECONDS);

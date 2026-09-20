@@ -12,7 +12,7 @@ public class RedissonBatchRequest {
   static final int QUERY_TEXT_LIMIT = 32 * 1024;
 
   private final String operationName;
-  private final String queryText;
+  @Nullable private final String queryText;
   @Nullable private final Long operationBatchSize;
 
   public static RedissonBatchRequest create(List<String> commandNames, List<String> queryTexts) {
@@ -35,12 +35,12 @@ public class RedissonBatchRequest {
     }
     return new RedissonBatchRequest(
         operationName,
-        queryText.toString(),
+        queryText.length() == 0 ? null : queryText.toString(),
         commandNames.size() > 1 ? (long) commandNames.size() : null);
   }
 
   private RedissonBatchRequest(
-      String operationName, String queryText, @Nullable Long operationBatchSize) {
+      String operationName, @Nullable String queryText, @Nullable Long operationBatchSize) {
     this.operationName = operationName;
     this.queryText = queryText;
     this.operationBatchSize = operationBatchSize;
@@ -50,6 +50,7 @@ public class RedissonBatchRequest {
     return operationName;
   }
 
+  @Nullable
   public String getQueryText() {
     return queryText;
   }

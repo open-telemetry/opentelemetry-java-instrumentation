@@ -24,6 +24,7 @@ final class RedissonBatchDbAttributesGetter
     return null;
   }
 
+  @Nullable
   @Override
   public String getDbQueryText(RedissonBatchRequest request) {
     return request.getQueryText();
