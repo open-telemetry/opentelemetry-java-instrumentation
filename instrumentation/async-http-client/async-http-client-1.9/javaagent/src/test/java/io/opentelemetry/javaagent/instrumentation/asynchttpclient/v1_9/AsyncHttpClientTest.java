@@ -106,6 +106,11 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
     optionsBuilder.spanEndsAfterBody();
     optionsBuilder.disableTestRedirects();
 
+    // Netty 3 does not complete the TLS handshake on Java 27 and later
+    if (Double.parseDouble(System.getProperty("java.specification.version")) >= 27) {
+      optionsBuilder.disableTestHttps();
+    }
+
     // disable read timeout test for non latest because it is flaky with 1.9.0
     if (!testLatestDeps()) {
       optionsBuilder.disableTestReadTimeout();
