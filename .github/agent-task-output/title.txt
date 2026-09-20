@@ -1,0 +1,1 @@
+Capture Jedis 2.x socket peer attributes
