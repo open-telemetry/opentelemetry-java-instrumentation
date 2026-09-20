@@ -23,6 +23,7 @@ public class ConfigServerTargetUtil317 {
   private static final Logger logger = Logger.getLogger(ConfigServerTargetUtil317.class.getName());
 
   @Nullable private static final MethodHandle SERVICE_MANAGER_GET_CFG = findServiceManagerGetCfg();
+
   @Nullable
   private static final MethodHandle CLUSTER_SERVERS_CONFIG_GET_DATABASE =
       findClusterServersConfigGetDatabase();
@@ -41,17 +42,16 @@ public class ConfigServerTargetUtil317 {
       // redisson only routes the configuration through a service manager between 3.20 and 3.27
       return null;
     }
+  }
 
-    @Nullable
-    private static MethodHandle findClusterServersConfigGetDatabase() {
-      try {
-        return MethodHandles.publicLookup()
-            .findVirtual(
-                ClusterServersConfig.class, "getDatabase", MethodType.methodType(int.class));
-      } catch (ReflectiveOperationException ignored) {
-        // Cluster database support was added in Redisson 4.7.
-        return null;
-      }
+  @Nullable
+  private static MethodHandle findClusterServersConfigGetDatabase() {
+    try {
+      return MethodHandles.publicLookup()
+          .findVirtual(ClusterServersConfig.class, "getDatabase", MethodType.methodType(int.class));
+    } catch (ReflectiveOperationException ignored) {
+      // Cluster database support was added in Redisson 4.7.
+      return null;
     }
   }
 
