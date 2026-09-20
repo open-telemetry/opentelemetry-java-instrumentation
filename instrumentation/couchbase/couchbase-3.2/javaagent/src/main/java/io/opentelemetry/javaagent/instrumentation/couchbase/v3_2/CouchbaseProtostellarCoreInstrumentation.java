@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import com.couchbase.client.core.CoreProtostellar;
 import com.couchbase.client.core.util.ConnectionString;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -38,7 +39,7 @@ class CouchbaseProtostellarCoreInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.This Object core, @Advice.Argument(2) ConnectionString connectionString) {
+        @Advice.This CoreProtostellar core, @Advice.Argument(2) ConnectionString connectionString) {
       CouchbaseProtostellarTargets.registerCore(core, connectionString);
     }
   }
