@@ -33,7 +33,9 @@ public class CouchbaseConnectionStrings {
     }
     try {
       String scheme = connectionString.scheme().toString();
-      if (connectionString.isValidDnsSrv() && !scheme.equalsIgnoreCase("couchbase2")) {
+      if (connectionString.isValidDnsSrv()
+          && !scheme.equalsIgnoreCase("couchbase2")
+          && !scheme.equalsIgnoreCase("protostellar")) {
         Iterator<ConnectionString.UnresolvedSocket> seeds = connectionString.hosts().iterator();
         if (!seeds.hasNext()) {
           return null;

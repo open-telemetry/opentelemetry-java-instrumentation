@@ -50,7 +50,7 @@ public class CouchbaseServerTarget {
     if ("couchbases".equalsIgnoreCase(scheme)) {
       return COUCHBASES_DEFAULT_PORT;
     }
-    if ("couchbase2".equalsIgnoreCase(scheme)) {
+    if ("couchbase2".equalsIgnoreCase(scheme) || "protostellar".equalsIgnoreCase(scheme)) {
       return COUCHBASE2_DEFAULT_PORT;
     }
     return -1;
