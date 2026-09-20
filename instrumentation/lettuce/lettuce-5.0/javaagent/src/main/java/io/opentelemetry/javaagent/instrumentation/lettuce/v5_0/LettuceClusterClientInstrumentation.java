@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
-import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static java.util.logging.Level.FINE;
+import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -31,9 +31,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 import reactor.core.publisher.Mono;
 
 class LettuceClusterClientInstrumentation implements TypeInstrumentation {
-
-  private static final Logger logger =
-      Logger.getLogger(LettuceClusterClientInstrumentation.class.getName());
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -104,6 +101,8 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
 
   public static class AttachEndpointHelper {
 
+    private static final Logger logger = Logger.getLogger(AttachEndpointHelper.class.getName());
+
     public static Object attach(
         RedisClusterClient client,
         Object connection,
@@ -128,6 +127,15 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
       return socketAddressSource;
     }
 
+    public static void captureAddress(
+        DefaultEndpoint endpoint, InetSocketAddress serverAddress) {
+      try {
+        LettuceConnectionState.updateServerAddress(endpoint, serverAddress);
+      } catch (Throwable t) {
+        logger.log(FINE, "Failed to attach Lettuce server address", t);
+      }
+    }
+
     private AttachEndpointHelper() {}
   }
 
@@ -144,7 +152,7 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
     public SocketAddress get() {
       Object address = delegate.get();
       if (address instanceof InetSocketAddress) {
-        captureAddress(endpoint, (InetSocketAddress) address);
+        AttachEndpointHelper.captureAddress(endpoint, (InetSocketAddress) address);
       }
       return (SocketAddress) address;
     }
@@ -160,17 +168,8 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
     @Override
     public void accept(Object address) {
       if (address instanceof InetSocketAddress) {
-        captureAddress(endpoint, (InetSocketAddress) address);
+        AttachEndpointHelper.captureAddress(endpoint, (InetSocketAddress) address);
       }
-    }
-  }
-
-  private static void captureAddress(
-      DefaultEndpoint endpoint, InetSocketAddress serverAddress) {
-    try {
-      LettuceConnectionState.updateServerAddress(endpoint, serverAddress);
-    } catch (Throwable t) {
-      logger.log(FINE, "Failed to attach Lettuce server address", t);
     }
   }
 }
