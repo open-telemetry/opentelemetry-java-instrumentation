@@ -107,8 +107,7 @@ jobs:
 
       - name: Increase gradle daemon heap size
         run: |
-          # Increase more than other workflows since this runs on a large runner
-          # and uses more parallelism and memory.
+          # Leave enough heap for CodeQL-traced Kotlin compilation.
           sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx8g /" gradle.properties
 
       - name: Set up Gradle
