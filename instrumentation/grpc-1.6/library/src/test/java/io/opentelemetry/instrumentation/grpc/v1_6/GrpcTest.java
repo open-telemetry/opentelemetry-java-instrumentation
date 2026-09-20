@@ -121,8 +121,7 @@ class GrpcTest extends AbstractGrpcTest {
   @Test
   void registeredMethodWithUnsupportedMessageEncoding() throws Exception {
     Server server =
-        configureServer(
-                ServerBuilder.forPort(0).addService(new GreeterGrpc.GreeterImplBase() {}))
+        configureServer(ServerBuilder.forPort(0).addService(new GreeterGrpc.GreeterImplBase() {}))
             .build()
             .start();
     ManagedChannel channel =
