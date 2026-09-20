@@ -10,10 +10,13 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import com.couchbase.client.core.Core;
 import com.couchbase.client.core.CoreProtostellar;
+import com.couchbase.client.core.env.SeedNode;
 import com.couchbase.client.core.util.ConnectionString;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.Set;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -30,12 +33,28 @@ class CouchbaseProtostellarCoreInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isConstructor()
             .and(takesArguments(3))
+            .and(takesArgument(0, named("com.couchbase.client.core.Core")))
+            .and(takesArgument(2, named("java.util.Set"))),
+        getClass().getName() + "$LegacyConstructorAdvice");
+    transformer.applyAdviceToMethod(
+        isConstructor()
+            .and(takesArguments(3))
             .and(takesArgument(2, named("com.couchbase.client.core.util.ConnectionString"))),
-        getClass().getName() + "$ConstructorAdvice");
+        getClass().getName() + "$CurrentConstructorAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class ConstructorAdvice {
+  public static class LegacyConstructorAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.Argument(0) Core core, @Advice.Argument(2) Set<SeedNode> seedNodes) {
+      CouchbaseProtostellarTargets.registerCore(core, seedNodes);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class CurrentConstructorAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
