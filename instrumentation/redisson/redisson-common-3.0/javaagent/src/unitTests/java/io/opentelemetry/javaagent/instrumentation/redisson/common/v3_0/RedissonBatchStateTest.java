@@ -16,6 +16,7 @@ import static org.mockito.Mockito.when;
 
 import io.netty.buffer.ByteBuf;
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -83,6 +84,19 @@ class RedissonBatchStateTest {
 
     assertThat(RedissonBatchState.isAtomic(options)).isEqualTo(expected);
     assertThat(RedissonBatchState.isAtomic(type.getMethod("defaults").invoke(null))).isFalse();
+  }
+
+  @Test
+  void retryDoesNotConsumeQueryTextBudgetTwice() {
+    RedissonBatchState state = new RedissonBatchState();
+    RedisCommand<?> command = mock(RedisCommand.class);
+    when(command.getName()).thenReturn("GET");
+    String key = String.join("", Collections.nCopies(20_000, "a"));
+
+    state.add(new Object(), new Object(), 0, command, mock(Codec.class), new Object[] {key});
+    state.add(new Object(), new Object(), 0, command, mock(Codec.class), new Object[] {key});
+
+    assertThat(state.finish(true).getQueryText()).isEqualTo("GET " + key);
   }
 
   @Test

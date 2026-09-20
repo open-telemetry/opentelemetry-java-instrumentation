@@ -87,7 +87,10 @@ class RedissonBatchState {
         return;
       }
       capturedCommand = new CapturedCommand(batchCommand, future, command.getName());
-      commands.put(index, capturedCommand);
+      CapturedCommand previousCommand = commands.put(index, capturedCommand);
+      if (previousCommand != null) {
+        removeQueryText(previousCommand);
+      }
       if (index >= queryTextCutoff) {
         return;
       }
@@ -113,16 +116,20 @@ class RedissonBatchState {
       while (queryTextLength > RedissonBatchRequest.QUERY_TEXT_LIMIT) {
         Map.Entry<Integer, CapturedCommand> removedEntry = commands.lowerEntry(queryTextCutoff);
         CapturedCommand removed = removedEntry.getValue();
-        if (removed.queryText != null) {
-          queryTextLength -= removed.queryText.length();
-          queryTextCommandCount--;
-          if (queryTextCommandCount > 0) {
-            queryTextLength -= 2;
-          }
-          removed.queryText = null;
-        }
+        removeQueryText(removed);
         queryTextCutoff = removedEntry.getKey();
       }
+    }
+  }
+
+  private void removeQueryText(CapturedCommand command) {
+    if (command.queryText != null) {
+      queryTextLength -= command.queryText.length();
+      queryTextCommandCount--;
+      if (queryTextCommandCount > 0) {
+        queryTextLength -= 2;
+      }
+      command.queryText = null;
     }
   }
 
