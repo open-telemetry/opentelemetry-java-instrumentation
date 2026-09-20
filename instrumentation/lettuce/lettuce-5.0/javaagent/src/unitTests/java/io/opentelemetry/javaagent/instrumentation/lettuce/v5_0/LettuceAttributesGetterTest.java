@@ -10,6 +10,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -119,6 +120,20 @@ class LettuceAttributesGetterTest {
       endpoint.close();
       client.shutdown(0, 15, SECONDS);
     }
+  }
+
+  @Test
+  void clusterAddressWrappersDoNotPropagateCaptureFailures() {
+    Supplier<SocketAddress> addressSupplier =
+        new LettuceClusterClientInstrumentation.EndpointAddressSupplier(
+            () -> SELECTED_ADDRESS, null);
+
+    assertThat(addressSupplier.get()).isEqualTo(SELECTED_ADDRESS);
+    assertThatCode(
+            () ->
+                new LettuceClusterClientInstrumentation.EndpointAddressConsumer(null)
+                    .accept(SELECTED_ADDRESS))
+        .doesNotThrowAnyException();
   }
 
   @Test
