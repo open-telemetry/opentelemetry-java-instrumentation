@@ -123,7 +123,7 @@ public final class GrpcRequest {
   @Deprecated // may be removed in the next minor release
   @Nullable
   public String getLogicalHost() {
-    return serverAddress;
+    return getServerAddress();
   }
 
   /**
@@ -131,7 +131,8 @@ public final class GrpcRequest {
    */
   @Deprecated // may be removed in the next minor release
   public int getLogicalPort() {
-    return serverPort != null ? serverPort : -1;
+    Integer port = getServerPort();
+    return port != null ? port : -1;
   }
 
   @Nullable
