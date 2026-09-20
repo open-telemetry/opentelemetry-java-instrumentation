@@ -65,11 +65,27 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
           Object scheduler,
           @Nullable Object cursorId,
           String methodName,
-          Object[] arguments) {
+          Object[] arguments)
+          throws Throwable {
         CallDepth callDepth = CallDepth.forClass(queryExecutor.getClass());
-        if (callDepth.getAndIncrement() > 0) {
-          return new AdviceScope(callDepth);
+        int previousCallDepth = callDepth.getAndIncrement();
+        try {
+          if (previousCallDepth > 0) {
+            return new AdviceScope(callDepth);
+          }
+          return start(callDepth, scheduler, cursorId, methodName, arguments);
+        } catch (Throwable t) {
+          callDepth.decrementAndGet();
+          throw t;
         }
+      }
+
+      private static AdviceScope start(
+          CallDepth callDepth,
+          Object scheduler,
+          @Nullable Object cursorId,
+          String methodName,
+          Object[] arguments) {
         Context parentContext = Context.current();
         Context context =
             parentContext.get(QUERY_STATE) != null
@@ -153,7 +169,8 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) Object scheduler,
         @Advice.Argument(value = 6, optional = true) @Nullable Object cursorId,
         @Advice.Origin("#m") String methodName,
-        @Advice.AllArguments Object[] arguments) {
+        @Advice.AllArguments Object[] arguments)
+        throws Throwable {
       return AdviceScope.start(queryExecutor, scheduler, cursorId, methodName, arguments);
     }
 
