@@ -27,6 +27,7 @@ import static io.opentelemetry.semconv.incubating.NetIncubatingAttributes.NET_HO
 import static io.opentelemetry.semconv.incubating.NetIncubatingAttributes.NET_PEER_NAME;
 import static io.opentelemetry.semconv.incubating.NetIncubatingAttributes.NET_PEER_PORT;
 import static io.opentelemetry.semconv.incubating.NetIncubatingAttributes.NET_TRANSPORT;
+import static java.util.Collections.emptyMap;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.mock;
@@ -34,7 +35,8 @@ import static org.mockito.Mockito.mock;
 import com.couchbase.client.core.cnc.RequestSpan;
 import com.couchbase.client.core.cnc.RequestTracer;
 import com.couchbase.client.core.error.DocumentNotFoundException;
-import com.couchbase.client.core.msg.RequestContext;
+import com.couchbase.client.core.retry.RetryStrategy;
+import com.couchbase.client.core.service.ServiceType;
 import com.couchbase.client.core.util.ConnectionString;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
@@ -49,6 +51,8 @@ import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -183,25 +187,43 @@ class CouchbaseClient32Test {
 
     Object core =
         protostellar.async().getClass().getMethod("couchbaseOps").invoke(protostellar.async());
-    Class<?> requestClass =
-        Class.forName("com.couchbase.client.core.protostellar.ProtostellarBaseRequest");
     Class<?> protostellarRequestClass =
         Class.forName("com.couchbase.client.core.protostellar.ProtostellarRequest");
-    Object protostellarRequest = mock(protostellarRequestClass);
-    Object request =
-        requestClass
-            .getConstructor(core.getClass(), protostellarRequestClass)
-            .newInstance(core, protostellarRequest);
-    RequestContext requestContext =
-        (RequestContext) requestClass.getMethod("context").invoke(request);
 
     Object coreResources =
         cluster.core().getClass().getMethod("coreResources").invoke(cluster.core());
     RequestTracer requestTracer =
         (RequestTracer) coreResources.getClass().getMethod("requestTracer").invoke(coreResources);
     RequestSpan requestSpan = requestTracer.requestSpan("get", null);
-    requestSpan.requestContext(requestContext);
-    requestSpan.end();
+    Object protostellarRequest =
+        protostellarRequestClass
+            .getConstructor(
+                Object.class,
+                core.getClass(),
+                ServiceType.class,
+                String.class,
+                RequestSpan.class,
+                Duration.class,
+                boolean.class,
+                RetryStrategy.class,
+                Map.class,
+                long.class,
+                Consumer.class)
+            .newInstance(
+                null,
+                core,
+                ServiceType.KV,
+                "get",
+                requestSpan,
+                Duration.ofSeconds(1),
+                true,
+                mock(RetryStrategy.class),
+                emptyMap(),
+                0L,
+                null);
+    protostellarRequestClass
+        .getMethod("raisedResponseToUser", Throwable.class)
+        .invoke(protostellarRequest, (Object) null);
 
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace ->

@@ -5,13 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v3_2;
 
+import com.couchbase.client.core.Core;
 import com.couchbase.client.core.CoreProtostellar;
-import com.couchbase.client.core.protostellar.ProtostellarBaseRequest;
+import com.couchbase.client.core.cnc.RequestSpan;
+import com.couchbase.client.core.env.SeedNode;
 import com.couchbase.client.core.util.ConnectionString;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseConfiguredTarget;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseConnectionStrings;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseServerTarget;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseServerTargets;
+import java.util.Set;
 import javax.annotation.Nullable;
 
 public final class CouchbaseProtostellarTargets {
@@ -27,9 +30,16 @@ public final class CouchbaseProtostellarTargets {
     }
   }
 
-  public static void registerRequest(ProtostellarBaseRequest request, CoreProtostellar core) {
-    CouchbaseServerTarget target = CORE_TARGETS.get(core);
-    CouchbaseConfiguredTarget.registerRequestTarget(request, target);
+  public static void registerCore(Core core, Set<SeedNode> seedNodes) {
+    CouchbaseServerTargets.registerFromSeedNodes(core, seedNodes, core.context().environment());
+  }
+
+  public static void captureRequestSpan(Core core, RequestSpan span) {
+    CouchbaseRequestTracer.captureServerTarget(span, CouchbaseServerTargets.get(core));
+  }
+
+  public static void captureRequestSpan(CoreProtostellar core, RequestSpan span) {
+    CouchbaseRequestTracer.captureServerTarget(span, CORE_TARGETS.get(core));
   }
 
   private CouchbaseProtostellarTargets() {}
