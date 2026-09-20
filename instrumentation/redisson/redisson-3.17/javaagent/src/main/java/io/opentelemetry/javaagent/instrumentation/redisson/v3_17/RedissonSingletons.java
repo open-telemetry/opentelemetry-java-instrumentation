@@ -10,7 +10,7 @@ import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.RedissonB
 import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.RedissonInstrumenterFactory;
 import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.RedissonRequest;
 
-class RedissonSingletons {
+public class RedissonSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.redisson-3.17";
 
   private static final Instrumenter<RedissonRequest, Void> instrumenter =
