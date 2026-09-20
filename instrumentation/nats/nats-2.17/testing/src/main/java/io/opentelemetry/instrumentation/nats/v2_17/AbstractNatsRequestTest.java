@@ -12,6 +12,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.nats.client.Dispatcher;
 import io.nats.client.Message;
@@ -65,7 +66,31 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
                             .hasAttributesSatisfyingExactly(
                                 messagingAttributes("request", "sub", clientId))));
     assertTraceparentHeader(subscription);
+    assertThat(subscription.nextMessage(Duration.ofMillis(100))).isNull();
     assertProducerMetrics("request", "sub", null);
+  }
+
+  @Test
+  void testRequestMessageTimeout() throws InterruptedException {
+    NatsMessage request = NatsMessage.builder().subject("sub").data("x").build();
+
+    Message response =
+        testing().runWithSpan("parent", () -> connection.request(request, Duration.ofSeconds(1)));
+
+    assertThat(response).isNull();
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasNoParent(),
+                    span ->
+                        span.hasName(emitStableMessagingSemconv() ? "request sub" : "sub publish")
+                            .hasKind(SpanKind.PRODUCER)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                messagingAttributes("request", "sub", clientId))));
+    assertTraceparentHeader(subscription);
+    assertThat(subscription.nextMessage(Duration.ofMillis(100))).isNull();
   }
 
   @Test
@@ -167,6 +192,98 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
     assertPublishReceiveSpansSameTrace();
     assertTraceparentHeader(subscription);
     assertThat(message).isCompletedWithValueMatching(Objects::nonNull);
+  }
+
+  @Test
+  void testRequestFutureCallbackUsesParentContext() throws InterruptedException {
+    Dispatcher dispatcher =
+        connection
+            .createDispatcher(m -> connection.publish(m.getReplyTo(), m.getData()))
+            .subscribe("sub");
+    cleanup.deferCleanup(() -> connection.closeDispatcher(dispatcher));
+
+    CompletableFuture<Void> callback =
+        testing()
+            .runWithSpan(
+                "parent",
+                () ->
+                    connection
+                        .request("sub", new byte[] {0})
+                        .thenRun(() -> testing().runWithSpan("callback", () -> {})));
+
+    callback.join();
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasNoParent(),
+                    span ->
+                        span.hasName(emitStableMessagingSemconv() ? "request sub" : "sub publish")
+                            .hasKind(SpanKind.PRODUCER)
+                            .hasParent(trace.getSpan(0)),
+                    span ->
+                        span.hasName(emitStableMessagingSemconv() ? "process sub" : "sub process")
+                            .hasKind(SpanKind.CONSUMER)
+                            .hasParent(trace.getSpan(1)),
+                    span ->
+                        span.hasName(
+                                emitStableMessagingSemconv()
+                                    ? "publish _INBOX."
+                                    : "(temporary) publish")
+                            .hasKind(SpanKind.PRODUCER)
+                            .hasParent(trace.getSpan(2)),
+                    span ->
+                        span.hasName(
+                                emitStableMessagingSemconv()
+                                    ? "process _INBOX."
+                                    : "(temporary) process")
+                            .hasKind(SpanKind.CONSUMER)
+                            .hasParent(trace.getSpan(3)),
+                    span -> span.hasName("callback").hasParent(trace.getSpan(0))));
+    assertTraceparentHeader(subscription);
+  }
+
+  @Test
+  void testRequestFutureCancellationEndsRequest() throws InterruptedException {
+    CompletableFuture<Message> response =
+        testing().runWithSpan("parent", () -> connection.request("sub", new byte[] {0}));
+    Message request = subscription.nextMessage(Duration.ofSeconds(10));
+
+    assertThat(request).isNotNull();
+    assertThat(request.getHeaders().get("traceparent")).isNotEmpty();
+    assertThat(response.cancel(false)).isTrue();
+    assertThat(response).isCancelled();
+
+    testing()
+        .runWithSpan("responder", () -> connection.publish(request.getReplyTo(), new byte[] {0}));
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasNoParent(),
+                    span ->
+                        span.hasName(emitStableMessagingSemconv() ? "request sub" : "sub publish")
+                            .hasKind(SpanKind.PRODUCER)
+                            .hasParent(trace.getSpan(0))
+                            .hasException(new CancellationException())),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("responder").hasNoParent(),
+                    span ->
+                        span.hasName(
+                                emitStableMessagingSemconv()
+                                    ? "publish _INBOX."
+                                    : "(temporary) publish")
+                            .hasKind(SpanKind.PRODUCER)
+                            .hasParent(trace.getSpan(0)),
+                    span ->
+                        span.hasName(
+                                emitStableMessagingSemconv()
+                                    ? "process _INBOX."
+                                    : "(temporary) process")
+                            .hasKind(SpanKind.CONSUMER)
+                            .hasParent(trace.getSpan(1))));
   }
 
   @Test
@@ -296,6 +413,12 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
     assertCancellationPublishSpan();
     assertTraceparentHeader(subscription);
     assertThat(response).isCompletedExceptionally();
+  }
+
+  @Test
+  void testRequestTimeoutFutureRejectsNullMessage() {
+    assertThatThrownBy(() -> connection.requestWithTimeout((Message) null, Duration.ofSeconds(1)))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   private void assertPublishReceiveSpansSameTrace() {

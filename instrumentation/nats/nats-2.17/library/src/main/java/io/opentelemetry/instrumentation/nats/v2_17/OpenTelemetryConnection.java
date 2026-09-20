@@ -15,6 +15,7 @@ import io.nats.client.impl.Headers;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.nats.v2_17.internal.CompletableFutureWrapper;
 import io.opentelemetry.instrumentation.nats.v2_17.internal.NatsMessageWritableHeaders;
 import io.opentelemetry.instrumentation.nats.v2_17.internal.NatsRequest;
 import io.opentelemetry.instrumentation.nats.v2_17.internal.OpenTelemetryMessageHandler;
@@ -335,7 +336,9 @@ final class OpenTelemetryConnection implements InvocationHandler {
       throw t;
     }
 
-    return future.whenComplete(
+    return CompletableFutureWrapper.wrap(
+        future,
+        parentContext,
         (result, exception) -> {
           if (result != null) {
             NatsRequest response = NatsRequest.create(delegate, result);
