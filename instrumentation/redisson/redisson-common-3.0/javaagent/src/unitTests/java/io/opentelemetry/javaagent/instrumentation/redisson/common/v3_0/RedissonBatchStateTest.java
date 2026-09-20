@@ -121,8 +121,11 @@ class RedissonBatchStateTest {
       concurrentEnqueue.get(10, SECONDS);
     } finally {
       releaseDecoder.countDown();
-      decoding.get(10, SECONDS);
-      executor.shutdownNow();
+      try {
+        decoding.get(10, SECONDS);
+      } finally {
+        executor.shutdownNow();
+      }
     }
   }
 
@@ -164,8 +167,11 @@ class RedissonBatchStateTest {
       assertThat(request.getQueryText()).isNull();
     } finally {
       releaseDecoder.countDown();
-      decoding.get(10, SECONDS);
-      executor.shutdownNow();
+      try {
+        decoding.get(10, SECONDS);
+      } finally {
+        executor.shutdownNow();
+      }
     }
   }
 
