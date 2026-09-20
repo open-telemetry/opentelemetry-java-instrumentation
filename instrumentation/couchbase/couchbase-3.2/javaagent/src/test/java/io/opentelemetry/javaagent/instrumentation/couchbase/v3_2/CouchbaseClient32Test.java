@@ -232,12 +232,11 @@ class CouchbaseClient32Test {
                     span.hasKind(CLIENT)
                         .hasName(
                             emitStableDatabaseSemconv()
-                                ? "get "
-                                    + seedAddress
-                                    + (expectedPort == null ? "" : portSuffix)
+                                ? "get " + seedAddress + (expectedPort == null ? "" : portSuffix)
                                 : "get")
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), "couchbase"),
+                            equalTo(longKey("db.couchbase.retries"), oldOrExperimental(0L)),
                             equalTo(
                                 SERVER_ADDRESS, emitStableDatabaseSemconv() ? seedAddress : null),
                             equalTo(
