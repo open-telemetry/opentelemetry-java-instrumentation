@@ -39,6 +39,17 @@ dependencies {
   latestDepTestLibrary("com.couchbase.client:java-client:+")
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("legacyProtostellarTest") {
+      dependencies {
+        implementation(project())
+        implementation("com.couchbase.client:java-client:3.4.3")
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
@@ -67,7 +78,7 @@ tasks {
   }
 
   check {
-    dependsOn(testStableSemconv, testStableSemconvExperimental)
+    dependsOn(testing.suites, testStableSemconv, testStableSemconvExperimental)
   }
 
   if (otelProps.denyUnsafe) {
