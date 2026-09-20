@@ -22,7 +22,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfo;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.SqlConnectOptions;
@@ -132,8 +131,8 @@ class PoolInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Future<SqlConnection> onExit(
         @Advice.This Pool pool, @Advice.Return Future<SqlConnection> future) {
-      VertxSqlClientInfo info = VertxSqlClientSingletons.getPoolClientInfo(pool);
-      return wrapContext(VertxSqlClientSingletons.attachClientInfo(future, info));
+      VertxSqlClientState state = VertxSqlClientSingletons.getPoolClientState(pool);
+      return wrapContext(VertxSqlClientSingletons.attachClientState(future, state));
     }
   }
 }

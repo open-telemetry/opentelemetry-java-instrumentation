@@ -18,8 +18,7 @@ import javax.annotation.Nullable;
 public final class VertxSqlClientConstructionState {
   @Nullable private final List<SqlConnectOptions> databases;
   private final List<SqlClientBase> clients = new ArrayList<>();
-  @Nullable private VertxSqlClientInfo info;
-  @Nullable private VertxSqlClientSupplierInfo supplier;
+  @Nullable private VertxSqlClientState state;
 
   public VertxSqlClientConstructionState(
       @Nullable List<SqlConnectOptions> databases, String dbSystemName) {
@@ -28,28 +27,22 @@ public final class VertxSqlClientConstructionState {
   }
 
   @Nullable
-  public VertxSqlClientInfo getInfo() {
-    return info;
-  }
-
-  @Nullable
-  public VertxSqlClientSupplierInfo getSupplier() {
-    return supplier;
+  public VertxSqlClientState getState() {
+    return state;
   }
 
   public void setDbSystemName(String dbSystemName) {
-    if (info == null || !VertxSqlClientUtil.isKnownDbSystem(info.getDbSystemName())) {
+    if (state == null || !VertxSqlClientUtil.isKnownDbSystem(state.getInfo().getDbSystemName())) {
       updateInfo(dbSystemName);
     }
   }
 
   private void updateInfo(String dbSystemName) {
-    if (databases == null) {
-      info = VertxSqlClientInfo.createUnknown(dbSystemName);
-      supplier = new VertxSqlClientSupplierInfo(info);
-    } else {
-      info = VertxSqlClientInfo.create(databases, dbSystemName);
-    }
+    VertxSqlClientInfo info =
+        databases == null
+            ? VertxSqlClientInfo.createUnknown(dbSystemName)
+            : VertxSqlClientInfo.create(databases, dbSystemName);
+    state = info != null ? new VertxSqlClientState(info, databases == null) : null;
   }
 
   public void attachClient(SqlClientBase client) {
@@ -64,12 +57,11 @@ public final class VertxSqlClientConstructionState {
       publish(constructedClient);
     }
     if (client instanceof Pool) {
-      VertxSqlClientSingletons.setPoolClientInfo((Pool) client, info);
+      VertxSqlClientSingletons.setPoolClientState((Pool) client, state);
     }
   }
 
   private void publish(SqlClientBase client) {
-    VertxSqlClientSingletons.attachClientInfo(client, info);
-    VertxSqlClientSingletons.setClientSupplier(client, supplier);
+    VertxSqlClientSingletons.attachClientState(client, state);
   }
 }

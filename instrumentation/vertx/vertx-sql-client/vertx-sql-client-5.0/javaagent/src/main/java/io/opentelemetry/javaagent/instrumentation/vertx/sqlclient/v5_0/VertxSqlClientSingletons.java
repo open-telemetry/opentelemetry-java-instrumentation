@@ -16,18 +16,15 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfo;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientRequest;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlInstrumenterFactory;
-import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientConnectionPoolState.Acquisition;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientConnectionPoolState.Submission;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.sqlclient.Pool;
-import io.vertx.sqlclient.PreparedStatement;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.impl.ClientBuilderBase;
-import io.vertx.sqlclient.impl.QueryExecutorUtil;
 import io.vertx.sqlclient.internal.SqlClientBase;
 import java.lang.reflect.Method;
 import java.util.List;
@@ -39,25 +36,15 @@ public class VertxSqlClientSingletons {
   private static final Instrumenter<VertxSqlClientRequest, Void> instrumenter =
       VertxSqlInstrumenterFactory.createInstrumenter(INSTRUMENTATION_NAME);
 
-  private static final ScopedThreadValue<VertxSqlClientInfo> currentClientInfo =
-      new ScopedThreadValue<>();
-  private static final ScopedThreadValue<VertxSqlClientSupplierInfo> currentQuerySupplier =
-      new ScopedThreadValue<>();
   private static final ScopedThreadValue<VertxSqlClientConstructionState> currentConstructionState =
       new ScopedThreadValue<>();
   private static final ScopedThreadValue<Submission> currentSubmission = new ScopedThreadValue<>();
-  private static final ScopedThreadValue<Acquisition> currentAcquisition =
-      new ScopedThreadValue<>();
   private static final ScopedThreadValue<ConnectionAttempt> currentConnectionAttempt =
       new ScopedThreadValue<>();
-  private static final VirtualField<PreparedStatement, VertxSqlClientInfo> PREPARED_STATEMENT_INFO =
-      VirtualField.find(PreparedStatement.class, VertxSqlClientInfo.class);
-  private static final VirtualField<Pool, VertxSqlClientInfo> POOL_CLIENT_INFO =
-      VirtualField.find(Pool.class, VertxSqlClientInfo.class);
-  private static final VirtualField<SqlClientBase, VertxSqlClientInfo> CLIENT_INFO =
-      VirtualField.find(SqlClientBase.class, VertxSqlClientInfo.class);
-  private static final VirtualField<SqlClientBase, VertxSqlClientSupplierInfo> CLIENT_SUPPLIER =
-      VirtualField.find(SqlClientBase.class, VertxSqlClientSupplierInfo.class);
+  private static final VirtualField<Pool, VertxSqlClientState> POOL_CLIENT_STATE =
+      VirtualField.find(Pool.class, VertxSqlClientState.class);
+  private static final VirtualField<SqlClientBase, VertxSqlClientState> CLIENT_STATE =
+      VirtualField.find(SqlClientBase.class, VertxSqlClientState.class);
   private static final VirtualField<ClientBuilderBase<?>, List<SqlConnectOptions>>
       BUILDER_DATABASES = VirtualField.find(ClientBuilderBase.class, List.class);
 
@@ -77,8 +64,8 @@ public class VertxSqlClientSingletons {
           "io.vertx.sqlclient.internal.Connection", "io.vertx.sqlclient.spi.connection.Connection");
 
   @Nullable
-  private static final VirtualField<Object, VertxSqlClientInfo> CONNECTION_INFO =
-      getVirtualField(CONNECTION_CLASS, VertxSqlClientInfo.class);
+  private static final VirtualField<Object, VertxSqlClientState> CONNECTION_STATE =
+      getVirtualField(CONNECTION_CLASS, VertxSqlClientState.class);
 
   @Nullable private static final Method connectionUnwrapMethod = getUnwrapMethod(CONNECTION_CLASS);
 
@@ -90,14 +77,6 @@ public class VertxSqlClientSingletons {
     return instrumenter;
   }
 
-  public static ScopedThreadValue<VertxSqlClientInfo> currentClientInfo() {
-    return currentClientInfo;
-  }
-
-  public static ScopedThreadValue<VertxSqlClientSupplierInfo> currentQuerySupplier() {
-    return currentQuerySupplier;
-  }
-
   public static ScopedThreadValue<VertxSqlClientConstructionState> currentConstructionState() {
     return currentConstructionState;
   }
@@ -106,66 +85,17 @@ public class VertxSqlClientSingletons {
     return currentSubmission;
   }
 
-  public static ScopedThreadValue<Acquisition> currentAcquisition() {
-    return currentAcquisition;
-  }
-
   public static ScopedThreadValue<ConnectionAttempt> currentConnectionAttempt() {
     return currentConnectionAttempt;
   }
 
-  @Nullable
-  public static VertxSqlClientInfo getClientInfo(SqlClientBase sqlClientBase) {
-    return CLIENT_INFO.get(sqlClientBase);
-  }
-
-  public static void captureQueryExecutorInfo(Object queryExecutor) {
-    VertxSqlClientSupplierInfo supplier = currentQuerySupplier.get();
-    QueryExecutorUtil.setData(queryExecutor, supplier != null ? supplier : currentClientInfo.get());
+  public static void setPoolClientState(Pool pool, @Nullable VertxSqlClientState state) {
+    POOL_CLIENT_STATE.set(pool, state);
   }
 
   @Nullable
-  public static VertxSqlClientInfo getQueryExecutorInfo(Object queryExecutor) {
-    Object data = QueryExecutorUtil.getData(queryExecutor);
-    return data instanceof VertxSqlClientSupplierInfo
-        ? ((VertxSqlClientSupplierInfo) data).getInfo()
-        : (VertxSqlClientInfo) data;
-  }
-
-  public static boolean isSupplierQuery(Object queryExecutor) {
-    return QueryExecutorUtil.getData(queryExecutor) instanceof VertxSqlClientSupplierInfo;
-  }
-
-  public static VertxSqlClientSupplierInfo getClientSupplier(SqlClientBase client) {
-    return CLIENT_SUPPLIER.get(client);
-  }
-
-  public static void setClientSupplier(
-      SqlClientBase client, @Nullable VertxSqlClientSupplierInfo supplier) {
-    CLIENT_SUPPLIER.set(client, supplier);
-  }
-
-  public static void setPoolClientInfo(Pool pool, @Nullable VertxSqlClientInfo info) {
-    POOL_CLIENT_INFO.set(pool, info);
-  }
-
-  @Nullable
-  public static VertxSqlClientInfo getPoolClientInfo(Pool pool) {
-    return POOL_CLIENT_INFO.get(pool);
-  }
-
-  public static Future<PreparedStatement> attachPreparedStatementInfo(
-      Future<PreparedStatement> future, VertxSqlClientInfo info) {
-    return future.map(
-        preparedStatement -> {
-          PREPARED_STATEMENT_INFO.set(preparedStatement, info);
-          return preparedStatement;
-        });
-  }
-
-  @Nullable
-  public static VertxSqlClientInfo getPreparedStatementInfo(PreparedStatement preparedStatement) {
-    return PREPARED_STATEMENT_INFO.get(preparedStatement);
+  public static VertxSqlClientState getPoolClientState(Pool pool) {
+    return POOL_CLIENT_STATE.get(pool);
   }
 
   @Nullable
@@ -215,30 +145,39 @@ public class VertxSqlClientSingletons {
     if (query == null) {
       return null;
     }
-    VertxSqlClientInfo info = getConnectionInfo(connection);
-    if (info == null) {
+    VertxSqlClientState state = getClientState(connection);
+    if (state == null || state.isSupplier()) {
       return null;
     }
-    query.capture(info);
+    query.capture(state.getInfo());
     Context executionContext = context.with(QUERY_STATE, null);
     setCommandContext(command, executionContext);
     return executionContext;
   }
 
-  public static void attachClientInfo(
-      SqlClientBase sqlClientBase, @Nullable VertxSqlClientInfo info) {
-    CLIENT_INFO.set(sqlClientBase, info);
-    CLIENT_SUPPLIER.set(sqlClientBase, null);
+  public static void attachClientState(
+      SqlClientBase sqlClientBase, @Nullable VertxSqlClientState state) {
+    CLIENT_STATE.set(sqlClientBase, state);
   }
 
-  public static Future<SqlConnection> attachClientInfo(
-      Future<SqlConnection> future, @Nullable VertxSqlClientInfo info) {
+  public static Future<SqlConnection> attachClientState(
+      Future<SqlConnection> future, @Nullable VertxSqlClientState poolState) {
     return future.transform(
         result -> {
           if (result.succeeded() && result.result() instanceof SqlClientBase) {
             SqlClientBase sqlClientBase = (SqlClientBase) result.result();
-            VertxSqlClientInfo connectionInfo = getConnectionInfo(sqlClientBase);
-            attachClientInfo(sqlClientBase, connectionInfo != null ? connectionInfo : info);
+            VertxSqlClientState state = poolState;
+            if (state == null || state.isSupplier()) {
+              VertxSqlClientState connectionState = getClientState(sqlClientBase);
+              if (connectionState != null) {
+                state = connectionState;
+              }
+            }
+            cacheConnectionState(
+                sqlClientBase,
+                state != null && state.isSupplier()
+                    ? new VertxSqlClientState(state.getInfo(), false)
+                    : state);
           }
           return copyResult(result);
         });
@@ -246,13 +185,13 @@ public class VertxSqlClientSingletons {
 
   @Nullable
   public static Handler<SqlConnection> wrapConnectHandler(
-      @Nullable Handler<SqlConnection> handler, VertxSqlClientInfo info) {
+      @Nullable Handler<SqlConnection> handler, VertxSqlClientState state) {
     if (handler == null) {
       return null;
     }
     return connection -> {
       if (connection instanceof SqlClientBase) {
-        attachClientInfo((SqlClientBase) connection, info);
+        cacheConnectionState(connection, state);
       }
       handler.handle(connection);
     };
@@ -282,7 +221,7 @@ public class VertxSqlClientSingletons {
             VertxSqlClientInfo info = connectionAttempt.info;
             if (info != null) {
               if (result.succeeded()) {
-                cacheConnectionInfo(result.result(), info);
+                cacheConnectionState(result.result(), new VertxSqlClientState(info, false));
               } else {
                 connectionAttempt.captureFailureInfo(info);
               }
@@ -300,34 +239,52 @@ public class VertxSqlClientSingletons {
         : Future.failedFuture(result.cause());
   }
 
-  private static void cacheConnectionInfo(Object connection, VertxSqlClientInfo info) {
-    if (CONNECTION_INFO == null) {
-      return;
-    }
+  private static void cacheConnectionState(
+      @Nullable Object connection, @Nullable VertxSqlClientState state) {
+    // Explicit prepared queries execute on the underlying connection, not the client wrapper.
     Object candidate = connection;
     while (candidate != null) {
-      CONNECTION_INFO.set(candidate, info);
+      setClientState(candidate, state);
       candidate = unwrap(candidate);
     }
   }
 
   @Nullable
-  public static VertxSqlClientInfo getConnectionInfo(Object connection) {
-    if (CONNECTION_INFO == null) {
-      return null;
-    }
-    Object candidate = connection;
+  public static VertxSqlClientState getClientState(Object client) {
+    Object candidate = client;
     while (candidate != null) {
-      VertxSqlClientInfo info = CONNECTION_INFO.get(candidate);
-      if (info != null) {
-        if (candidate != connection) {
-          CONNECTION_INFO.set(connection, info);
+      VertxSqlClientState state = getStoredClientState(candidate);
+      if (state != null) {
+        if (candidate != client) {
+          setClientState(client, state);
         }
-        return info;
+        return state;
       }
       candidate = unwrap(candidate);
     }
     return null;
+  }
+
+  @Nullable
+  private static VertxSqlClientState getStoredClientState(Object client) {
+    if (client instanceof SqlClientBase) {
+      return CLIENT_STATE.get((SqlClientBase) client);
+    }
+    return CONNECTION_STATE != null
+            && CONNECTION_CLASS != null
+            && CONNECTION_CLASS.isInstance(client)
+        ? CONNECTION_STATE.get(client)
+        : null;
+  }
+
+  private static void setClientState(Object client, @Nullable VertxSqlClientState state) {
+    if (client instanceof SqlClientBase) {
+      CLIENT_STATE.set((SqlClientBase) client, state);
+    } else if (CONNECTION_STATE != null
+        && CONNECTION_CLASS != null
+        && CONNECTION_CLASS.isInstance(client)) {
+      CONNECTION_STATE.set(client, state);
+    }
   }
 
   @Nullable
