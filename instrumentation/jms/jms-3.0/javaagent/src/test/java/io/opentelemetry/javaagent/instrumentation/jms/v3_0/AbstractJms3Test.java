@@ -27,6 +27,7 @@ import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.opentelemetry.api.common.Attributes;
@@ -550,6 +551,16 @@ abstract class AbstractJms3Test {
         arguments(queue, receive),
         arguments(topic, receiveNoWait),
         arguments(queue, receiveNoWait));
+  }
+
+  // each case gets its own queue so the runs can't see each other's messages
+  static Stream<Arguments> jmsConsumerReceiveArguments() {
+    JmsConsumerReceiver receiveWithTimeout = consumer -> consumer.receive(SECONDS.toMillis(10));
+    JmsConsumerReceiver receiveWithoutTimeout = JMSConsumer::receive;
+
+    return Stream.of(
+        argumentSet("receive(timeout)", "jmsConsumerQueue", receiveWithTimeout),
+        argumentSet("receive()", "jmsConsumerNoTimeoutQueue", receiveWithoutTimeout));
   }
 
   private static Stream<Arguments> destinationArguments() {

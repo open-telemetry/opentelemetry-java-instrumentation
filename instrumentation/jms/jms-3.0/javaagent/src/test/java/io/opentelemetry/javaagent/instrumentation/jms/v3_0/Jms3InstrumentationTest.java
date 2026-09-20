@@ -603,11 +603,12 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
         throws JMSException;
   }
 
-  @Test
-  void testJmsConsumerReceive() throws JMSException {
+  @ParameterizedTest
+  @MethodSource("jmsConsumerReceiveArguments")
+  void testJmsConsumerReceive(String queueName, JmsConsumerReceiver receiver) throws JMSException {
 
     // given
-    Destination destination = session.createQueue("jmsConsumerQueue");
+    Destination destination = session.createQueue(queueName);
     TextMessage sentMessage = session.createTextMessage("hello there");
 
     MessageProducer producer = session.createProducer(destination);
@@ -623,8 +624,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
     // when
     testing.runWithSpan("producer parent", () -> producer.send(sentMessage));
     TextMessage receivedMessage =
-        (TextMessage)
-            testing.runWithSpan("consumer parent", () -> consumer.receive(SECONDS.toMillis(10)));
+        (TextMessage) testing.runWithSpan("consumer parent", () -> receiver.receive(consumer));
 
     // then
     assertThat(receivedMessage.getText()).isEqualTo(sentMessage.getText());

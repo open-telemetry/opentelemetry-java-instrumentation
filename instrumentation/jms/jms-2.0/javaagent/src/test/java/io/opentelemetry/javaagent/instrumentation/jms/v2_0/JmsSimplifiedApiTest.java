@@ -11,6 +11,7 @@ import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -18,6 +19,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.HashSet;
+import java.util.stream.Stream;
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSConsumer;
@@ -44,6 +46,9 @@ import org.hornetq.jms.client.HornetQConnectionFactory;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 /**
  * Exercises the JMS 2.0 simplified API ({@code JMSContext} / {@code JMSProducer} / {@code
@@ -92,6 +97,7 @@ class JmsSimplifiedApiTest {
     ClientSessionFactory sf = serverLocator.createSessionFactory();
     ClientSession clientSession = sf.createSession(false, false, false);
     clientSession.createQueue("jms.queue.someQueue", "jms.queue.someQueue", true);
+    clientSession.createQueue("jms.queue.someNoTimeoutQueue", "jms.queue.someNoTimeoutQueue", true);
     clientSession.createQueue("jms.topic.someTopic", "jms.topic.someTopic", true);
     clientSession.close();
     sf.close();
@@ -110,9 +116,11 @@ class JmsSimplifiedApiTest {
     cleanup.deferAfterAll(session);
   }
 
-  @Test
-  void producerSendAndConsumerReceiveEachEmitExactlyOneSpan() throws JMSException {
-    Destination destination = session.createQueue("someQueue");
+  @ParameterizedTest
+  @MethodSource("consumerReceiveArguments")
+  void producerSendAndConsumerReceiveEachEmitExactlyOneSpan(
+      String queueName, JmsConsumerReceiver receiver) throws JMSException {
+    Destination destination = session.createQueue(queueName);
     TextMessage sentMessage = session.createTextMessage("hello there");
 
     JMSContext context = connectionFactory.createContext();
@@ -123,7 +131,7 @@ class JmsSimplifiedApiTest {
     testing.runWithSpan(
         "producer parent", () -> context.createProducer().send(destination, sentMessage));
 
-    Message received = testing.runWithSpan("consumer parent", () -> consumer.receive(10_000));
+    Message received = testing.runWithSpan("consumer parent", () -> receiver.receive(consumer));
     assertThat(received).isNotNull();
     assertThat(((TextMessage) received).getText()).isEqualTo("hello there");
 
@@ -133,7 +141,9 @@ class JmsSimplifiedApiTest {
                 span -> span.hasName("producer parent").hasNoParent(),
                 span ->
                     span.hasName(
-                            emitStableMessagingSemconv() ? "send someQueue" : "someQueue publish")
+                            emitStableMessagingSemconv()
+                                ? "send " + queueName
+                                : queueName + " publish")
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))),
         trace ->
@@ -142,8 +152,8 @@ class JmsSimplifiedApiTest {
                 span ->
                     span.hasName(
                             emitStableMessagingSemconv()
-                                ? "receive someQueue"
-                                : "someQueue receive")
+                                ? "receive " + queueName
+                                : queueName + " receive")
                         .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
                         .hasParent(trace.getSpan(0))));
   }
@@ -161,5 +171,21 @@ class JmsSimplifiedApiTest {
     assertThat(consumer.receiveNoWait()).isNull();
 
     testing.waitForTraces(0);
+  }
+
+  // each case gets its own queue so the runs can't see each other's messages
+  private static Stream<Arguments> consumerReceiveArguments() {
+    JmsConsumerReceiver receiveWithTimeout = consumer -> consumer.receive(10_000);
+    JmsConsumerReceiver receiveWithoutTimeout = JMSConsumer::receive;
+
+    return Stream.of(
+        argumentSet("receive(timeout)", "someQueue", receiveWithTimeout),
+        argumentSet("receive()", "someNoTimeoutQueue", receiveWithoutTimeout));
+  }
+
+  @FunctionalInterface
+  interface JmsConsumerReceiver {
+
+    Message receive(JMSConsumer consumer);
   }
 }
