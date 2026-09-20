@@ -127,8 +127,7 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
       return socketAddressSource;
     }
 
-    public static void captureAddress(
-        DefaultEndpoint endpoint, InetSocketAddress serverAddress) {
+    public static void captureAddress(DefaultEndpoint endpoint, InetSocketAddress serverAddress) {
       try {
         LettuceConnectionState.updateServerAddress(endpoint, serverAddress);
       } catch (Throwable t) {
