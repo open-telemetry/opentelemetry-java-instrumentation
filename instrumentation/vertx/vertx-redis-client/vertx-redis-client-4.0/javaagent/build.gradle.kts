@@ -23,7 +23,7 @@ dependencies {
 testing {
   suites {
     withType<JvmTestSuite>().configureEach {
-      if (name != "unitTests") {
+      if (!name.endsWith("unitTests", true)) {
         sources {
           java {
             srcDir("src/testShared/java")
@@ -37,6 +37,28 @@ testing {
         implementation(project())
         implementation(project(":instrumentation-api-incubator"))
         implementation("io.vertx:vertx-redis-client:4.4.4")
+      }
+    }
+
+    register<JvmTestSuite>("stableSemconvUnitTests") {
+      sources {
+        java {
+          srcDir("src/unitTests/java")
+        }
+      }
+
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation-api-incubator"))
+        implementation("io.vertx:vertx-redis-client:4.4.4")
+      }
+
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
+          }
+        }
       }
     }
 
@@ -76,6 +98,7 @@ tasks {
   }
 
   val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+    .filter { !it.name.endsWith("unitTests", true) }
     .associate { suite ->
       suite.name to register<Test>("${suite.name}StableSemconv") {
         testClassesDirs = suite.sources.output.classesDirs
@@ -87,6 +110,7 @@ tasks {
     }
 
   check {
+    dependsOn(testing.suites.named("unitTests"), testing.suites.named("stableSemconvUnitTests"))
     if (otelProps.testLatestDeps) {
       dependsOn(stableSemconvSuites.getValue("test"))
     } else {
