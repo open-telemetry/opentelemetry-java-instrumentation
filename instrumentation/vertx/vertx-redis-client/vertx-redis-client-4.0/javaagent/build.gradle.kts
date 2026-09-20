@@ -8,15 +8,27 @@ muzzle {
     module.set("vertx-redis-client")
     versions.set("[4.0.0,)")
     assertInverse.set(true)
+
+    excludeInstrumentationName("vertx-redis-client-4.4.5")
+  }
+  pass {
+    // instrumentation-docs:ignore - verification only, the directive above is the range we document
+    name.set("Vert.x Redis 4.4.5 target instrumentation")
+    group.set("io.vertx")
+    module.set("vertx-redis-client")
+    versions.set("[4.4.5,)")
+    assertInverse.set(true)
+
+    excludeInstrumentationName("vertx-redis-client-4.0")
   }
 }
 
 dependencies {
   library("io.vertx:vertx-redis-client:4.0.0")
-  compileOnly("io.vertx:vertx-codegen:4.0.0")
+  compileOnly("io.vertx:vertx-redis-client:4.4.5") // For RedisConnectOptions added in 4.4.5
+  compileOnly("io.vertx:vertx-codegen:4.4.5")
 
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
-  testInstrumentation(project(":instrumentation:vertx:vertx-redis-client:vertx-redis-client-4.4.5:javaagent"))
 
   testLibrary("io.vertx:vertx-codegen:4.0.0")
 }
@@ -37,7 +49,7 @@ testing {
       dependencies {
         implementation(project())
         implementation(project(":instrumentation-api-incubator"))
-        implementation("io.vertx:vertx-redis-client:4.4.4")
+        implementation("io.vertx:vertx-redis-client:4.4.5")
       }
     }
 
@@ -51,7 +63,7 @@ testing {
       dependencies {
         implementation(project())
         implementation(project(":instrumentation-api-incubator"))
-        implementation("io.vertx:vertx-redis-client:4.4.4")
+        implementation("io.vertx:vertx-redis-client:4.4.5")
       }
 
       targets {
