@@ -48,7 +48,7 @@ jobs:
       contents: read
       actions: read  # for github/codeql-action/init to get workflow details
       security-events: write  # for github/codeql-action/analyze to upload SARIF results
-    runs-on: ${{ github.repository == 'open-telemetry/opentelemetry-java-instrumentation' && 'cncf-ubuntu-32-128-x86' || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -87,7 +87,7 @@ jobs:
       contents: read
       actions: read  # for github/codeql-action/init to get workflow details
       security-events: write  # for github/codeql-action/analyze to upload SARIF results
-    runs-on: ${{ github.repository == 'open-telemetry/opentelemetry-java-instrumentation' && 'cncf-ubuntu-32-128-x86' || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
