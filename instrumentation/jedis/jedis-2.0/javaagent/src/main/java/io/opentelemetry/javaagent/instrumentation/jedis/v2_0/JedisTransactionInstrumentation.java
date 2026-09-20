@@ -16,8 +16,8 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisPipelineContext.BatchState;
 import io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisPipelineContext.TransactionFraming;
-import java.util.List;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -64,13 +64,13 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceState onEnter(@Advice.This Object transaction) {
-      List<JedisRequest> requests = JedisPipelineContext.getAndClearCapturedRequests(transaction);
-      JedisRequest multiRequest =
-          JedisPipelineContext.getAndClearTransactionFramingRequest(transaction);
+      BatchState batchState = JedisPipelineContext.takeBatchState(transaction);
       @Nullable JedisRequest request = null;
       @Nullable Context context = null;
-      if (!requests.isEmpty()) {
-        request = JedisRequest.createTransaction(requests, multiRequest);
+      if (batchState != null && !batchState.getRequests().isEmpty()) {
+        request =
+            JedisRequest.createTransaction(
+                batchState.getRequests(), batchState.getTransactionFramingPeerAddress());
         Context parentContext = Java8BytecodeBridge.currentContext();
         if (instrumenter().shouldStart(parentContext, request)) {
           context = instrumenter().start(parentContext, request);

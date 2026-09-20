@@ -18,13 +18,13 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisClusterCommandInstrumentation.CommandAdvice.AdviceState;
+import io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisPipelineContext.BatchState;
 import io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisPipelineContext.TransactionFraming;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
-import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -381,8 +381,10 @@ class JedisNetworkAttributesGetterTest {
       currentBatch().restore(previous);
     }
 
-    List<JedisRequest> requests = JedisPipelineContext.getAndClearCapturedRequests(pipeline);
-    assertThat(JedisRequest.createPipeline(requests).getPeerAddress()).isEqualTo(second);
+    BatchState batchState = JedisPipelineContext.takeBatchState(pipeline);
+    assertThat(batchState).isNotNull();
+    assertThat(JedisRequest.createPipeline(batchState.getRequests()).getPeerAddress())
+        .isEqualTo(second);
   }
 
   @Test
@@ -410,15 +412,108 @@ class JedisNetworkAttributesGetterTest {
       currentBatch().restore(outerPrevious);
     }
 
-    assertThat(JedisPipelineContext.getAndClearCapturedRequests(outer))
+    assertThat(JedisPipelineContext.takeBatchState(outer).getRequests())
         .containsExactly(outerFirst, outerSecond);
-    assertThat(JedisPipelineContext.getAndClearCapturedRequests(inner))
+    assertThat(JedisPipelineContext.takeBatchState(inner).getRequests())
         .containsExactly(innerRequest);
     assertThat(currentBatch().get()).isNull();
     assertThat(
             JedisPipelineContext.capture(
                 JedisRequest.create(new Connection(), Protocol.Command.GET)))
         .isFalse();
+  }
+
+  @Test
+  void takingBatchStateClearsRequestsAndTransactionPeer() {
+    Transaction transaction = new Transaction();
+    InetSocketAddress multiPeer = new InetSocketAddress(InetAddress.getLoopbackAddress(), 6379);
+    JedisRequest multiRequest = requestWithPeer(multiPeer);
+    multiRequest.capturePeerAddress();
+
+    TransactionFraming previousFraming = JedisInstrumentation.MultiAdvice.onEnter();
+    try {
+      JedisPipelineContext.captureTransactionFramingPeer(multiRequest);
+    } finally {
+      JedisInstrumentation.MultiAdvice.onExit(transaction, previousFraming);
+    }
+
+    JedisRequest first = JedisRequest.create(new Connection(), Protocol.Command.GET);
+    JedisRequest second = JedisRequest.create(new Connection(), Protocol.Command.SET);
+    BatchState firstState;
+    Queable previousBatch = currentBatch().set(transaction);
+    try {
+      assertThat(JedisPipelineContext.capture(first)).isTrue();
+      firstState = JedisPipelineContext.takeBatchState(transaction);
+      assertThat(JedisPipelineContext.takeBatchState(transaction)).isNull();
+
+      assertThat(JedisPipelineContext.capture(second)).isTrue();
+    } finally {
+      currentBatch().restore(previousBatch);
+    }
+
+    assertThat(firstState).isNotNull();
+    assertThat(firstState.getRequests()).containsExactly(first);
+    assertThat(firstState.getTransactionFramingPeerAddress()).isEqualTo(multiPeer);
+    assertThat(
+            JedisRequest.createTransaction(
+                    firstState.getRequests(), firstState.getTransactionFramingPeerAddress())
+                .getPeerAddress())
+        .isEqualTo(multiPeer);
+
+    BatchState secondState = JedisPipelineContext.takeBatchState(transaction);
+    assertThat(secondState).isNotNull().isNotSameAs(firstState);
+    assertThat(secondState.getRequests()).containsExactly(second);
+    assertThat(secondState.getTransactionFramingPeerAddress()).isNull();
+    assertThat(JedisPipelineContext.takeBatchState(transaction)).isNull();
+  }
+
+  @Test
+  void nestedMultiFramingPreservesPeerAddress() {
+    Transaction transaction = new Transaction();
+    InetSocketAddress multiPeer = new InetSocketAddress(InetAddress.getLoopbackAddress(), 6379);
+    JedisRequest multiRequest = requestWithPeer(multiPeer);
+    multiRequest.capturePeerAddress();
+
+    TransactionFraming outerPrevious = JedisInstrumentation.MultiAdvice.onEnter();
+    try {
+      TransactionFraming innerPrevious = JedisInstrumentation.MultiAdvice.onEnter();
+      try {
+        JedisPipelineContext.captureTransactionFramingPeer(multiRequest);
+      } finally {
+        JedisInstrumentation.MultiAdvice.onExit(transaction, innerPrevious);
+      }
+    } finally {
+      JedisInstrumentation.MultiAdvice.onExit(transaction, outerPrevious);
+    }
+
+    BatchState batchState = JedisPipelineContext.takeBatchState(transaction);
+    assertThat(batchState).isNotNull();
+    assertThat(batchState.getTransactionFramingPeerAddress()).isEqualTo(multiPeer);
+  }
+
+  @Test
+  void emptyTransactionConsumesFramingPeer() {
+    Transaction transaction = new Transaction();
+    JedisRequest multiRequest =
+        requestWithPeer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 6379));
+    multiRequest.capturePeerAddress();
+
+    TransactionFraming previous = JedisInstrumentation.MultiAdvice.onEnter();
+    try {
+      JedisPipelineContext.captureTransactionFramingPeer(multiRequest);
+    } finally {
+      JedisInstrumentation.MultiAdvice.onExit(transaction, previous);
+    }
+
+    JedisTransactionInstrumentation.ExecAdvice.AdviceState adviceState =
+        JedisTransactionInstrumentation.ExecAdvice.onEnter(transaction);
+    try {
+      assertThat(JedisPipelineContext.takeBatchState(transaction)).isNull();
+    } finally {
+      JedisTransactionInstrumentation.ExecAdvice.stopSpan(null, adviceState);
+    }
+
+    assertThat(JedisPipelineContext.inTransactionFraming()).isFalse();
   }
 
   @ParameterizedTest
@@ -447,16 +542,16 @@ class JedisNetworkAttributesGetterTest {
   }
 
   @Test
-  void ordinaryCommandDoesNotBecomeTransactionFramingRequest() {
+  void ordinaryCommandDoesNotBecomeTransactionFramingPeer() {
     JedisRequest request =
         requestWithPeer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 6379));
     request.capturePeerAddress();
     Transaction transaction = new Transaction();
 
     JedisPipelineContext.captureTransactionFramingPeer(request);
-    JedisPipelineContext.captureTransactionFramingRequest(transaction);
+    JedisPipelineContext.captureTransactionFramingPeerAddress(transaction);
 
-    assertThat(JedisPipelineContext.getAndClearTransactionFramingRequest(transaction)).isNull();
+    assertThat(JedisPipelineContext.takeBatchState(transaction)).isNull();
   }
 
   @Test
@@ -491,10 +586,8 @@ class JedisNetworkAttributesGetterTest {
     InetSocketAddress queuedPeer = new InetSocketAddress(InetAddress.getLoopbackAddress(), 6379);
     JedisRequest queuedRequest = requestWithPeer(queuedPeer);
     queuedRequest.capturePeerAddress();
-    JedisRequest multiRequest = requestWithPeer(queuedPeer);
-    multiRequest.capturePeerAddress();
     JedisRequest transactionRequest =
-        JedisRequest.createTransaction(singletonList(queuedRequest), multiRequest);
+        JedisRequest.createTransaction(singletonList(queuedRequest), queuedPeer);
 
     InetSocketAddress execPeer = new InetSocketAddress(InetAddress.getLoopbackAddress(), 6380);
     JedisRequest execRequest = requestWithPeer(execPeer);
@@ -554,10 +647,8 @@ class JedisNetworkAttributesGetterTest {
     InetSocketAddress queuedPeer = new InetSocketAddress(InetAddress.getLoopbackAddress(), 6379);
     JedisRequest queuedRequest = requestWithPeer(queuedPeer);
     queuedRequest.capturePeerAddress();
-    JedisRequest multiRequest = requestWithPeer(queuedPeer);
-    multiRequest.capturePeerAddress();
     JedisRequest transactionRequest =
-        JedisRequest.createTransaction(singletonList(queuedRequest), multiRequest);
+        JedisRequest.createTransaction(singletonList(queuedRequest), queuedPeer);
 
     JedisRequest execRequest = requestWithPeer(queuedPeer);
 
@@ -579,11 +670,8 @@ class JedisNetworkAttributesGetterTest {
     queuedRequest.capturePeerAddress();
 
     InetSocketAddress multiPeer = new InetSocketAddress(InetAddress.getLoopbackAddress(), 6380);
-    JedisRequest multiRequest = requestWithPeer(multiPeer);
-    multiRequest.capturePeerAddress();
-
     JedisRequest transactionRequest =
-        JedisRequest.createTransaction(singletonList(queuedRequest), multiRequest);
+        JedisRequest.createTransaction(singletonList(queuedRequest), multiPeer);
 
     assertThat(transactionRequest.getPeerAddress()).isEqualTo(queuedPeer);
   }
