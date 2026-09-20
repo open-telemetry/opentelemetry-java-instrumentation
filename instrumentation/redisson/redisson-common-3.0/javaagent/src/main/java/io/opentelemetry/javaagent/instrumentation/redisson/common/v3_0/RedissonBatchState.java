@@ -63,51 +63,60 @@ class RedissonBatchState {
   private boolean finished;
   private boolean atomic;
 
-  public synchronized void add(
+  public void add(
       Object batchCommand,
       Object future,
       int index,
       RedisCommand<?> command,
       Codec codec,
       Object[] parameters) {
-    if (finished) {
-      if (atomic) {
-        RedissonBatchContext.markCapturedCommand(batchCommand);
-        RedissonBatchContext.markFuture(future);
-      } else {
-        RedissonBatchContext.unmarkCapturedCommand(batchCommand);
-        RedissonBatchContext.unmarkFuture(future);
+    CapturedCommand capturedCommand;
+    synchronized (this) {
+      if (finished) {
+        if (atomic) {
+          RedissonBatchContext.markCapturedCommand(batchCommand);
+          RedissonBatchContext.markFuture(future);
+        } else {
+          RedissonBatchContext.unmarkCapturedCommand(batchCommand);
+          RedissonBatchContext.unmarkFuture(future);
+        }
+        return;
       }
-      return;
-    }
-    if ("DISCARD".equals(command.getName())) {
-      discard();
-      return;
-    }
-    CapturedCommand capturedCommand = new CapturedCommand(batchCommand, future, command.getName());
-    commands.put(index, capturedCommand);
-    if (index >= queryTextCutoff) {
-      return;
+      if ("DISCARD".equals(command.getName())) {
+        discard();
+        return;
+      }
+      capturedCommand = new CapturedCommand(batchCommand, future, command.getName());
+      commands.put(index, capturedCommand);
+      if (index >= queryTextCutoff) {
+        return;
+      }
     }
 
-    capturedCommand.queryText = sanitize(command, codec, parameters);
-    queryTextLength += capturedCommand.queryText.length();
-    if (queryTextCommandCount > 0) {
-      queryTextLength += 2;
-    }
-    queryTextCommandCount++;
-    while (queryTextLength > RedissonBatchRequest.QUERY_TEXT_LIMIT) {
-      Map.Entry<Integer, CapturedCommand> removedEntry = commands.lowerEntry(queryTextCutoff);
-      CapturedCommand removed = removedEntry.getValue();
-      if (removed.queryText != null) {
-        queryTextLength -= removed.queryText.length();
-        queryTextCommandCount--;
+    String queryText = sanitize(command, codec, parameters);
+    synchronized (this) {
+      if (finished || commands.get(index) != capturedCommand || index >= queryTextCutoff) {
+        return;
       }
+      capturedCommand.queryText = queryText;
+      queryTextLength += queryText.length();
       if (queryTextCommandCount > 0) {
-        queryTextLength -= 2;
+        queryTextLength += 2;
       }
-      removed.queryText = null;
-      queryTextCutoff = removedEntry.getKey();
+      queryTextCommandCount++;
+      while (queryTextLength > RedissonBatchRequest.QUERY_TEXT_LIMIT) {
+        Map.Entry<Integer, CapturedCommand> removedEntry = commands.lowerEntry(queryTextCutoff);
+        CapturedCommand removed = removedEntry.getValue();
+        if (removed.queryText != null) {
+          queryTextLength -= removed.queryText.length();
+          queryTextCommandCount--;
+          if (queryTextCommandCount > 0) {
+            queryTextLength -= 2;
+          }
+          removed.queryText = null;
+        }
+        queryTextCutoff = removedEntry.getKey();
+      }
     }
   }
 
