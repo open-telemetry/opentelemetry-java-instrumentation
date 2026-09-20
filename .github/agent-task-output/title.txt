@@ -1,0 +1,1 @@
+Capture spans for unregistered gRPC server requests
