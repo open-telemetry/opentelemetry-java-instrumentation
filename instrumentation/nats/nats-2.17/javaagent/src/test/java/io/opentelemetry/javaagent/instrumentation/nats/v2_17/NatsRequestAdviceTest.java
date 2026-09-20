@@ -164,8 +164,7 @@ class NatsRequestAdviceTest {
             .intercept(InvocationHandlerAdapter.toField("handler"))
             .make()
             .load(
-                NatsRequestAdviceTest.class.getClassLoader(),
-                ClassLoadingStrategy.Default.INJECTION)
+                NatsRequestAdviceTest.class.getClassLoader(), ClassLoadingStrategy.Default.WRAPPER)
             .getLoaded()
             .asSubclass(Connection.class);
     return connectionClass.getConstructor(InvocationHandler.class).newInstance(handler);
