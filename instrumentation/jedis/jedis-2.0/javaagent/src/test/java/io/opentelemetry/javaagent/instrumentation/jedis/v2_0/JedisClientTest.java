@@ -454,7 +454,7 @@ class JedisClientTest {
   }
 
   @Test
-  void transactionExecGetResponseUsesBatchSpan() throws Exception {
+  void transactionExecGetResponsePreservesLegacySpan() throws Exception {
     assumeTrue(
         Stream.of(Transaction.class.getMethods())
             .anyMatch(method -> method.getName().equals("execGetResponse")));
@@ -468,12 +468,17 @@ class JedisClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SET tx1 ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                   span.hasName(
+                           emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "EXEC")
+                       .hasKind(SpanKind.CLIENT)
+                       .hasAttributesSatisfyingExactly(
+                           equalTo(maybeStable(DB_SYSTEM), REDIS),
+                           equalTo(
+                               maybeStable(DB_STATEMENT),
+                               emitStableDatabaseSemconv() ? "SET tx1 ?" : "EXEC"),
+                           equalTo(
+                               maybeStable(DB_OPERATION),
+                               emitStableDatabaseSemconv() ? "SET" : "EXEC"),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
