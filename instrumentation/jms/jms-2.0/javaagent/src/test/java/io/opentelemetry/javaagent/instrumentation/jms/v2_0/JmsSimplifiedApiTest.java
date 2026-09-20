@@ -16,6 +16,7 @@ import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.HashSet;
@@ -59,6 +60,8 @@ import org.junit.jupiter.params.provider.MethodSource;
  * receive would produce two spans.
  */
 class JmsSimplifiedApiTest {
+
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jms-2.0";
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -145,7 +148,8 @@ class JmsSimplifiedApiTest {
                                 ? "send " + queueName
                                 : queueName + " publish")
                         .hasKind(PRODUCER)
-                        .hasParent(trace.getSpan(0))),
+                        .hasParent(trace.getSpan(0))
+                        .satisfies(JmsSimplifiedApiTest::assertScope)),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("consumer parent").hasNoParent(),
@@ -155,7 +159,8 @@ class JmsSimplifiedApiTest {
                                 ? "receive " + queueName
                                 : queueName + " receive")
                         .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
-                        .hasParent(trace.getSpan(0))));
+                        .hasParent(trace.getSpan(0))
+                        .satisfies(JmsSimplifiedApiTest::assertScope)));
   }
 
   @Test
@@ -171,6 +176,12 @@ class JmsSimplifiedApiTest {
     assertThat(consumer.receiveNoWait()).isNull();
 
     testing.waitForTraces(0);
+  }
+
+  // the classic jms-1.1 advice emits an identical span, so the scope is what shows that the
+  // simplified-API instrumentation is the one that ran
+  private static void assertScope(SpanData span) {
+    assertThat(span.getInstrumentationScopeInfo().getName()).isEqualTo(INSTRUMENTATION_NAME);
   }
 
   // each case gets its own queue so the runs can't see each other's messages
