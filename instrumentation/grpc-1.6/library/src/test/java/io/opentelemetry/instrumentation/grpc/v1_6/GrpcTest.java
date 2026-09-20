@@ -14,6 +14,8 @@ import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import example.GreeterGrpc;
 import example.Helloworld;
@@ -34,8 +36,10 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.util.List;
@@ -51,8 +55,6 @@ class GrpcTest extends AbstractGrpcTest {
 
   private static final Metadata.Key<String> CUSTOM_METADATA_KEY =
       Metadata.Key.of("customMetadataKey", Metadata.ASCII_STRING_MARSHALLER);
-  private static final Metadata.Key<String> GRPC_ENCODING_KEY =
-      Metadata.Key.of("grpc-encoding", Metadata.ASCII_STRING_MARSHALLER);
 
   @Override
   protected ServerBuilder<?> configureServer(ServerBuilder<?> server) {
@@ -118,29 +120,22 @@ class GrpcTest extends AbstractGrpcTest {
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasKind(SpanKind.CLIENT)));
   }
 
+  @SuppressWarnings("unchecked")
   @Test
-  void registeredMethodWithUnsupportedMessageEncoding() throws Exception {
-    Server server =
-        configureServer(ServerBuilder.forPort(0).addService(new GreeterGrpc.GreeterImplBase() {}))
-            .build()
-            .start();
-    ManagedChannel channel =
-        createChannel(
-            configureClient(ManagedChannelBuilder.forAddress("localhost", server.getPort())));
-    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
-    closer.add(() -> server.shutdownNow().awaitTermination());
+  void nonMethodUnimplementedStatusDoesNotStartSpan() {
+    Instrumenter<GrpcRequest, Status> instrumenter = mock(Instrumenter.class);
+    TracingServerStreamTracer tracer =
+        new TracingServerStreamTracer(
+            instrumenter,
+            ContextPropagators.noop(),
+            "example.Greeter/SayHello",
+            new Metadata(),
+            Context.root());
 
-    Metadata metadata = new Metadata();
-    metadata.put(GRPC_ENCODING_KEY, "unsupported");
-    GreeterGrpc.GreeterBlockingStub client =
-        GreeterGrpc.newBlockingStub(channel)
-            .withInterceptors(MetadataUtils.newAttachHeadersInterceptor(metadata));
-    Helloworld.Request request = Helloworld.Request.newBuilder().setName("test").build();
+    tracer.streamClosed(
+        Status.UNIMPLEMENTED.withDescription("Can't find decompressor for unsupported"));
 
-    assertThatThrownBy(() -> client.sayHello(request)).isInstanceOf(StatusRuntimeException.class);
-
-    testing.waitAndAssertTraces(
-        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasKind(SpanKind.CLIENT)));
+    verifyNoInteractions(instrumenter);
   }
 
   @ParameterizedTest
