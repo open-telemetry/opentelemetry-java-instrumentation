@@ -665,7 +665,11 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, expectedNonDefaultNamespace()),
+                            equalTo(
+                                DB_NAMESPACE,
+                                emitStableDatabaseSemconv()
+                                    ? String.valueOf(NON_DEFAULT_DB_INDEX)
+                                    : null),
                             equalTo(maybeStable(DB_STATEMENT), "SET NONDEFAULTKEY ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"))));
   }
@@ -697,7 +701,11 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, expectedNonDefaultNamespace()),
+                            equalTo(
+                                DB_NAMESPACE,
+                                emitStableDatabaseSemconv()
+                                    ? String.valueOf(NON_DEFAULT_DB_INDEX)
+                                    : null),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 emitStableDatabaseSemconv()
@@ -739,7 +747,11 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                       equalTo(SERVER_ADDRESS, host),
                       equalTo(SERVER_PORT, port),
                       equalTo(maybeStable(DB_SYSTEM), REDIS),
-                      equalTo(DB_NAMESPACE, expectedNonDefaultNamespace()),
+                      equalTo(
+                          DB_NAMESPACE,
+                          emitStableDatabaseSemconv()
+                              ? String.valueOf(NON_DEFAULT_DB_INDEX)
+                              : null),
                       equalTo(maybeStable(DB_STATEMENT), "SELECT " + NON_DEFAULT_DB_INDEX),
                       equalTo(maybeStable(DB_OPERATION), "SELECT"));
             });
@@ -749,10 +761,6 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
     String version = RedisClient.class.getPackage().getImplementationVersion();
     // Implementation-Version is absent from the Lettuce 5.0 and 5.1 artifacts.
     return version == null || version.startsWith("5.");
-  }
-
-  private static String expectedNonDefaultNamespace() {
-    return emitStableDatabaseSemconv() ? String.valueOf(NON_DEFAULT_DB_INDEX) : null;
   }
 
   private static Stream<Arguments> deferredFlushScenarios() {

@@ -192,6 +192,35 @@ check {
 }
 ```
 
+## Javaagent unit test suites
+
+Tests that exercise javaagent helper or instrumentation classes directly should use a
+`JvmTestSuite` whose name ends with `unitTests`. The javaagent testing convention runs these suites
+without installing the agent and keeps javaagent classes on the test classpath. Prefer this over a
+separate `javaagent-unit-tests` project or reflection used only to bypass the normal agent test
+class-loader separation.
+
+```kotlin
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+      }
+    }
+  }
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
+  }
+}
+```
+
+Put the tests under `src/unitTests`. Declare test-only dependencies inside the suite's
+`dependencies` block.
+
 ### Variant tasks in modules with custom `JvmTestSuite`s
 
 `testing.suites` includes the built-in `test` suite alongside any suite the module registers
@@ -354,8 +383,8 @@ These system properties support the metadata collection pipeline. They are not r
 test correctness and are being added as a separate migration — **do not add them during
 review**. Only verify correctness when they are already present.
 
-Do not add `collectMetadata` or `metadataConfig` to `javaagent-unit-tests` projects. These are
-unit tests, and metadata collection should not run there.
+Do not add `collectMetadata` or `metadataConfig` to `unitTests` suites or legacy
+`javaagent-unit-tests` projects. These are unit tests, and metadata collection should not run there.
 
 | Property          | Type            | Value                                                                                            |
 | ----------------- | --------------- | ------------------------------------------------------------------------------------------------ |

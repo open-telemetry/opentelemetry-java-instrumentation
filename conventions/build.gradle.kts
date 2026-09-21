@@ -66,12 +66,12 @@ dependencies {
     exclude("org.codehaus.plexus", "plexus-xml")
   }
   implementation("org.apache.httpcomponents:httpclient:4.5.14")
-  implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:4.5.0")
-  implementation("org.sonatype.gradle.plugins:scan-gradle-plugin:4.0.0")
+  implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:4.5.1")
+  implementation("org.sonatype.gradle.plugins:scan-gradle-plugin:4.1.0-02")
   implementation("ru.vyarus:gradle-animalsniffer-plugin:2.0.1")
   implementation("org.spdx:spdx-gradle-plugin:0.12.0")
   // When updating, also update dependencyManagement/build.gradle.kts
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.18.13")
+  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.18.14")
   // Generates OSGi bundle metadata for published library artifacts (see otel.osgi-conventions)
   implementation("biz.aQute.bnd:biz.aQute.bnd.gradle:7.4.0")
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.6")

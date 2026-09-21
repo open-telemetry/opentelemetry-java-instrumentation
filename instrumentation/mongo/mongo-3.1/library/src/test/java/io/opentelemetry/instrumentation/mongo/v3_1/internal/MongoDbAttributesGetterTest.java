@@ -112,6 +112,20 @@ class MongoDbAttributesGetterTest {
         .isIn("{\"cmd\": \"c\", \"f1\": [\"?\", \"?", "{\"cmd\": \"c\", \"f1\": [\"?\",");
   }
 
+  @Test
+  void shouldNotSplitSurrogatePairWhenTruncating() {
+    MongoDbAttributesGetter extractor = new MongoDbAttributesGetter(true, 20);
+
+    String normalized =
+        sanitizeQueryAcrossVersions(
+            extractor, new BsonDocument("cmd", new BsonString("aaaaaaaaaa😀")));
+
+    assertThat(normalized)
+        .hasSizeLessThanOrEqualTo(20)
+        .startsWith("{\"cmd\": \"")
+        .doesNotContain(String.valueOf((char) 0xd83d), String.valueOf((char) 0xde00));
+  }
+
   @ParameterizedTest
   @MethodSource("errorTypes")
   void getErrorTypeReturnsServerCodeOrFallsBack(Throwable error, String expectedErrorType) {

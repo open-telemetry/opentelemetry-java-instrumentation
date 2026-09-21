@@ -8,8 +8,52 @@ only when compatibility, access, or runtime discovery requires it.
 
 Before treating a lookup as runtime-class-dependent, identify the member's actual declaring type.
 A receiver typed as `Object`, or existing code that calls `receiver.getClass()`, does not prove that
-each implementation needs a separate lookup. Check whether a stable interface or base class
-declares the member. A `Method` obtained from that type can invoke compatible implementations.
+each implementation needs a separate lookup. An existing `ClassValue` does not prove it either.
+A `Method` obtained from an interface or base class can invoke compatible implementations.
+
+## Decide from the declaring type
+
+Choose a cache with this checklist:
+
+1. Identify the class or interface that declares the member.
+2. For one fixed optional class or one version-selected stable interface, cache one nullable
+   `static final Method` or `MethodHandle`.
+3. Use `ClassValue` only when the required metadata truly varies by concrete runtime class.
+
+For a fixed optional `DomainSocketAddress.path()`, avoid
+`pathMethods.get(address.getClass())`. An exact class-name check strongly indicates one declaring
+type. Load that class once without initialization and cache its method:
+
+```java
+private static final @Nullable Method DOMAIN_SOCKET_PATH =
+    findMethod("io.netty.channel.unix.DomainSocketAddress", "path");
+```
+
+Likewise, avoid `unwrapMethods.get(connection.getClass())` when a stable `Connection` interface
+declares `unwrap()`. Resolve the interface selected for the detected library version once:
+
+```java
+private static final @Nullable Method CONNECTION_UNWRAP =
+    findVersionedInterfaceMethod("Connection", "unwrap");
+```
+
+An interface `Method` can invoke compatible implementations; their concrete classes do not require
+separate entries.
+
+In contrast, use `ClassValue` when unrelated generated classes each declare the required method and
+no shared type declares it:
+
+```java
+private static final ClassValue<Method> generatedValueMethod =
+    new ClassValue<Method>() {
+      @Override
+      protected Method computeValue(Class<?> type) {
+        return findGeneratedValueMethod(type);
+      }
+    };
+
+return generatedValueMethod.get(receiver.getClass()).invoke(receiver);
+```
 
 ## Cache repeated lookup
 
@@ -18,11 +62,8 @@ more than once. Resolve the method once and cache the resulting `Method` or `Met
 `static final` field when the declaring class is fixed.
 
 When a fixed declaring type is optional or unavailable at compile time, load it once by name without
-initializing it and cache the nullable method in a `static final` field. In javaagent code, first
-verify the helper-loading strategy. An injected helper or isolated instrumentation-module helper is
-scoped to the instrumented class loader and can load an application type through its defining class
-loader. A bootstrap or otherwise shared helper cannot assume that one application class is valid
-for every caller.
+initializing it, for example with `Class.forName(name, false, helperClassLoader)`, and cache the
+nullable method in a `static final` field.
 
 When the lookup depends on the runtime class, use `ClassValue` instead of a static map keyed by
 `Class<?>`. Static maps can keep application classloaders alive. Cache missing methods too when
@@ -31,12 +72,16 @@ supported library versions may not provide the method.
 Do not apply this rule to test code or a lookup that is provably executed only once during
 initialization.
 
+An injected helper's static cache is scoped to its defining application class loader. A bootstrap
+or shared helper must not cache one application's `Class`, `Method`, or `MethodHandle` globally.
+Keep that cache in the injected helper, or pass a loader-scoped accessor to shared code.
+
 ## Choose the mechanism for the job
 
 | Situation | Preferred approach |
 | --- | --- |
 | Supported versions expose a compatible member and normal access works | Direct Java call |
-| A fixed declaring type is optional or unavailable at compile time | Static cached `Method` or `MethodHandle` resolved by class name |
+| A fixed optional class or version-selected stable interface declares the member | One nullable static cached `Method` or `MethodHandle` |
 | The declaring type or required method metadata depends on the concrete runtime class | `ClassValue` containing the cached accessor |
 | The exact signature is known and typed or adapted invocation helps, or several member kinds need one invocation abstraction | Cached `MethodHandle` |
 | Access requires a target-associated lookup, or `CallSite` linking is part of the design | `MethodHandle` |

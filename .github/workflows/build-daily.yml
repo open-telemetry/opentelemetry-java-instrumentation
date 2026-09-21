@@ -11,20 +11,20 @@ permissions:
 
 jobs:
   common:
-    uses: ./.github/workflows/build-common.yml
+    uses: $/.github/workflows/build-common.yml
     secrets:
       DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
 
   test-latest-deps:
-    uses: ./.github/workflows/reusable-test-latest-deps.yml
+    uses: $/.github/workflows/reusable-test-latest-deps.yml
     secrets:
       DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
 
   muzzle:
-    uses: ./.github/workflows/reusable-muzzle.yml
+    uses: $/.github/workflows/reusable-muzzle.yml
 
   lint:
-    uses: ./.github/workflows/reusable-lint-check.yml
+    uses: $/.github/workflows/reusable-lint-check.yml
 
   publish-snapshots:
     environment: protected
@@ -80,7 +80,7 @@ jobs:
       - lint
       - publish-snapshots
     if: always()
-    uses: ./.github/workflows/reusable-workflow-notification.yml
+    uses: $/.github/workflows/reusable-workflow-notification.yml
     with:
       success: >-
         ${{
