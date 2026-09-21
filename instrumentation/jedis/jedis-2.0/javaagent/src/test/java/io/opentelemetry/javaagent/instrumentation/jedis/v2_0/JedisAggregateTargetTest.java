@@ -64,11 +64,14 @@ class JedisAggregateTargetTest {
         poolClass
             .getConstructor(String.class, Set.class)
             .newInstance(MASTER_NAME, singleton(sentinelEndpoint));
-    Object jedis = poolClass.getMethod("getResource").invoke(pool);
     try {
-      jedis.getClass().getMethod("set", String.class, String.class).invoke(jedis, "key", "value");
+      Object jedis = poolClass.getMethod("getResource").invoke(pool);
+      try {
+        jedis.getClass().getMethod("set", String.class, String.class).invoke(jedis, "key", "value");
+      } finally {
+        jedis.getClass().getMethod("close").invoke(jedis);
+      }
     } finally {
-      jedis.getClass().getMethod("close").invoke(jedis);
       poolClass.getMethod("destroy").invoke(pool);
     }
 
