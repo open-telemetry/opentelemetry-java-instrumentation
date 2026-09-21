@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import redis.clients.jedis.Jedis;
@@ -36,12 +37,14 @@ class JedisSentinel30ClientTest {
   @RegisterExtension
   private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
+  private static GenericContainer<?> sentinelServer;
+  private static int sentinelPort;
   private static String sentinelEndpoint;
 
   @BeforeAll
   static void setup() {
     int masterPort = PortUtils.findOpenPort();
-    int sentinelPort = PortUtils.findOpenPort();
+    sentinelPort = PortUtils.findOpenPort();
     String sentinelConfig =
         "port "
             + sentinelPort
@@ -50,7 +53,7 @@ class JedisSentinel30ClientTest {
             + " 127.0.0.1 "
             + masterPort
             + " 1\\n";
-    GenericContainer<?> sentinelServer =
+    sentinelServer =
         new GenericContainer<>("redis:6.2.3-alpine")
             .withExposedPorts(masterPort, sentinelPort)
             .withCommand(
@@ -75,9 +78,11 @@ class JedisSentinel30ClientTest {
     Jedis jedis = pool.getResource();
     try {
       jedis.set("key", "value");
+      waitForSentinelSubscription();
     } finally {
       jedis.close();
       pool.destroy();
+      waitForSentinelListenerToStop();
     }
 
     await()
@@ -138,6 +143,7 @@ class JedisSentinel30ClientTest {
     JedisSentinelPool pool =
         new JedisSentinelPool(MASTER_NAME, singleton(sentinelEndpoint), config, 2000, null, 1);
     cleanup.deferCleanup(pool);
+    waitForSentinelSubscription();
     await().untilAsserted(() -> assertThat(pool.getNumIdle()).isEqualTo(1));
 
     try (Jedis jedis = pool.getResource()) {
@@ -178,5 +184,31 @@ class JedisSentinel30ClientTest {
                         }
                       });
             });
+  }
+
+  private static void waitForSentinelSubscription() {
+    await()
+        .untilAsserted(
+            () -> {
+              Container.ExecResult result =
+                  sentinelServer.execInContainer(
+                      "redis-cli", "-p", Integer.toString(sentinelPort), "--raw", "CLIENT", "LIST");
+              assertThat(result.getExitCode()).isZero();
+              assertThat(result.getStdout()).contains("cmd=subscribe");
+            });
+  }
+
+  private static void waitForSentinelListenerToStop() {
+    await()
+        .untilAsserted(
+            () ->
+                assertThat(Thread.getAllStackTraces().keySet())
+                    .noneMatch(
+                        thread ->
+                            thread.isAlive()
+                                && thread
+                                    .getName()
+                                    .startsWith("MasterListener-" + MASTER_NAME + "-")
+                                && thread.getName().endsWith(":" + sentinelPort + "]")));
   }
 }
