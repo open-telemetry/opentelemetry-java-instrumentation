@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getDbSystemNameFromClassName;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.resolveDbSystemName;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.wrapContext;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.unwrapPool;
 import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -89,7 +90,7 @@ class PoolInstrumentation implements TypeInstrumentation {
       VertxSqlClientSingletons.setConstructionState(null);
       if (constructionState != null) {
         if (pool != null) {
-          constructionState.setDbSystemName(getDbSystemNameFromClassName(pool));
+          constructionState.setDbSystemName(getDbSystemNameFromClassName(unwrapPool(pool)));
         }
         constructionState.complete(pool);
       }

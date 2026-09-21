@@ -21,6 +21,8 @@ import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.impl.ClientBuilderBase;
 import io.vertx.sqlclient.impl.QueryExecutorUtil;
 import io.vertx.sqlclient.internal.SqlClientBase;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -40,6 +42,10 @@ public class VertxSqlClientSingletons {
       VirtualField.find(SqlClientBase.class, VertxSqlClientInfo.class);
   private static final VirtualField<ClientBuilderBase<?>, List<SqlConnectOptions>>
       BUILDER_DATABASES = VirtualField.find(ClientBuilderBase.class, List.class);
+  private static final VirtualField<Pool, Pool> WRAPPED_POOL =
+      VirtualField.find(Pool.class, Pool.class);
+  private static final Class<?> CLOSEABLE_RESOURCE_CLASS = findCloseableResourceClass();
+  private static final Method CLOSEABLE_RESOURCE_GET = findGetMethod(CLOSEABLE_RESOURCE_CLASS);
 
   @Nullable
   private static final VirtualField<Object, Context> COMMAND_CONTEXT =
@@ -189,6 +195,54 @@ public class VertxSqlClientSingletons {
     return clientBuilder instanceof ClientBuilderBase
         ? BUILDER_DATABASES.get((ClientBuilderBase<?>) clientBuilder)
         : null;
+  }
+
+  public static Pool unwrapPool(Pool pool) {
+    Pool unwrapped;
+    do {
+      unwrapped = WRAPPED_POOL.get(pool);
+      if (unwrapped != null) {
+        pool = unwrapped;
+      }
+    } while (unwrapped != null);
+    return pool;
+  }
+
+  public static void attachWrappedPool(Pool pool, Object closeableResource) {
+    if (CLOSEABLE_RESOURCE_GET == null
+        || CLOSEABLE_RESOURCE_CLASS == null
+        || !CLOSEABLE_RESOURCE_CLASS.isInstance(closeableResource)) {
+      return;
+    }
+
+    try {
+      Object wrapped = CLOSEABLE_RESOURCE_GET.invoke(closeableResource);
+      if (wrapped instanceof Pool) {
+        WRAPPED_POOL.set(pool, (Pool) wrapped);
+      }
+    } catch (InvocationTargetException | IllegalAccessException ignored) {
+      // ignore
+    }
+  }
+
+  private static Class<?> findCloseableResourceClass() {
+    try {
+      return Class.forName("io.vertx.core.internal.CloseableResource");
+    } catch (ClassNotFoundException e) {
+      return null;
+    }
+  }
+
+  private static Method findGetMethod(Class<?> clazz) {
+    if (clazz == null) {
+      return null;
+    }
+
+    try {
+      return clazz.getMethod("get");
+    } catch (NoSuchMethodException e) {
+      return null;
+    }
   }
 
   private VertxSqlClientSingletons() {}
