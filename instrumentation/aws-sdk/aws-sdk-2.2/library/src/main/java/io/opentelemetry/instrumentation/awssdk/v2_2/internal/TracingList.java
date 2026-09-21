@@ -5,11 +5,16 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import static java.util.Objects.requireNonNull;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import java.util.AbstractList;
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Spliterator;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
@@ -26,21 +31,26 @@ public final class TracingList extends ArrayList<Message> {
   private final ExecutionAttributes request;
   private final Response response;
   private final TracingExecutionInterceptor config;
+  private final IdentityHashMap<Message, SqsMessage> tracingMessages;
   @Nullable private final Context processParentContext;
+  private boolean processingSelected;
   private boolean firstIterator = true;
 
   public static TracingList wrap(
       List<Message> messages,
+      List<SqsMessage> tracingMessages,
       Instrumenter<SqsProcessRequest, Response> instrumenter,
       ExecutionAttributes request,
       Response response,
       TracingExecutionInterceptor config,
       @Nullable Context processParentContext) {
-    return new TracingList(messages, instrumenter, request, response, config, processParentContext);
+    return new TracingList(
+        messages, tracingMessages, instrumenter, request, response, config, processParentContext);
   }
 
   private TracingList(
       List<Message> messages,
+      List<SqsMessage> tracingMessages,
       Instrumenter<SqsProcessRequest, Response> instrumenter,
       ExecutionAttributes request,
       Response response,
@@ -52,34 +62,69 @@ public final class TracingList extends ArrayList<Message> {
     this.response = response;
     this.config = config;
     this.processParentContext = processParentContext;
+    this.tracingMessages = new IdentityHashMap<>();
+    for (int i = 0; i < messages.size(); i++) {
+      this.tracingMessages.put(messages.get(i), tracingMessages.get(i));
+    }
   }
 
-  public void disableTracing() {
-    // only the first call to iterator() is traced
-    firstIterator = false;
+  public void selectListenerProcessing() {
+    processingSelected = true;
+  }
+
+  boolean isListenerProcessingSelected() {
+    return processingSelected;
   }
 
   @Override
   public Iterator<Message> iterator() {
-    Iterator<Message> it;
-    // We should only return one iterator with tracing.
+    return tracingIterator(super.iterator());
+  }
+
+  @Override
+  public Spliterator<Message> spliterator() {
+    return tracingSpliterator(super.spliterator());
+  }
+
+  @Override
+  public List<Message> subList(int fromIndex, int toIndex) {
+    return new TracingListView(super.subList(fromIndex, toIndex), this);
+  }
+
+  private Iterator<Message> tracingIterator(Iterator<Message> delegateIterator) {
+    if (shouldTraceTraversal()) {
+      return TracingIterator.wrap(delegateIterator, this);
+    }
+    return delegateIterator;
+  }
+
+  private Spliterator<Message> tracingSpliterator(Spliterator<Message> delegateSpliterator) {
+    if (shouldTraceTraversal()) {
+      return TracingSpliterator.wrap(delegateSpliterator, this);
+    }
+    return delegateSpliterator;
+  }
+
+  private boolean shouldTraceTraversal() {
+    // We should only return one traversal with tracing.
     // However, this is not thread-safe, but usually the first (hopefully only) traversal of
     // List is performed in the same thread that called receiveMessage()
-    if (firstIterator) {
-      it = TracingIterator.wrap(super.iterator(), this);
-      firstIterator = false;
-    } else {
-      it = super.iterator();
-    }
+    boolean shouldTrace = !processingSelected && firstIterator;
+    firstIterator = false;
+    return shouldTrace;
+  }
 
-    return it;
+  private Consumer<? super Message> tracingAction(Consumer<? super Message> action) {
+    requireNonNull(action);
+    if (shouldTraceTraversal()) {
+      return message -> TracingIterator.processCallback(this, message, action);
+    }
+    return action;
   }
 
   @Override
   public void forEach(Consumer<? super Message> action) {
-    for (Message message : this) {
-      action.accept(message);
-    }
+    super.forEach(tracingAction(action));
   }
 
   public Instrumenter<SqsProcessRequest, Response> getInstrumenter() {
@@ -99,7 +144,67 @@ public final class TracingList extends ArrayList<Message> {
   }
 
   @Nullable
+  public SqsMessage getTracingMessage(Message message) {
+    return tracingMessages.get(message);
+  }
+
+  @Nullable
   public Context getProcessParentContext() {
     return processParentContext;
+  }
+
+  private static final class TracingListView extends AbstractList<Message> {
+    private final List<Message> delegate;
+    private final TracingList tracingList;
+
+    private TracingListView(List<Message> delegate, TracingList tracingList) {
+      this.delegate = delegate;
+      this.tracingList = tracingList;
+    }
+
+    @Override
+    public Message get(int index) {
+      return delegate.get(index);
+    }
+
+    @Override
+    public int size() {
+      return delegate.size();
+    }
+
+    @Override
+    public Message set(int index, Message element) {
+      return delegate.set(index, element);
+    }
+
+    @Override
+    public void add(int index, Message element) {
+      delegate.add(index, element);
+    }
+
+    @Override
+    public Message remove(int index) {
+      return delegate.remove(index);
+    }
+
+    @Override
+    public Iterator<Message> iterator() {
+      return tracingList.tracingIterator(delegate.iterator());
+    }
+
+    @Override
+    public Spliterator<Message> spliterator() {
+      return tracingList.tracingSpliterator(delegate.spliterator());
+    }
+
+    @Override
+    public void forEach(Consumer<? super Message> action) {
+      delegate.forEach(tracingList.tracingAction(action));
+    }
+
+    @Override
+    public List<Message> subList(int fromIndex, int toIndex) {
+      return new TracingListView(delegate.subList(fromIndex, toIndex), tracingList);
+    }
   }
 }

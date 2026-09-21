@@ -5,46 +5,62 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 
+import io.awspring.cloud.sqs.listener.ContainerOptions;
+import io.awspring.cloud.sqs.listener.ListenerMode;
+import io.awspring.cloud.sqs.listener.source.AbstractMessageConvertingMessageSource;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.Response;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsMessage;
-import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsMessageImpl;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsParentContext;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsProcessRequest;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInterceptor;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingList;
 import java.util.Collection;
+import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 import org.springframework.messaging.Message;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 
 public class SpringAwsUtil {
-  private static final ThreadLocal<TracingList> context = new ThreadLocal<>();
+  private static final ScopedThreadValue<TracingList> currentTracingList =
+      new ScopedThreadValue<>();
+  private static final VirtualField<AbstractMessageConvertingMessageSource<?, ?>, ListenerMode>
+      PROCESSING_SELECTION =
+          VirtualField.find(AbstractMessageConvertingMessageSource.class, ListenerMode.class);
   private static final VirtualField<Message<?>, TracingContext> TRACING_CONTEXT =
       VirtualField.find(Message.class, TracingContext.class);
 
-  // put the TracingList into thread local, so we can use it in attachTracingState method
-  public static void initialize(Collection<?> messages) {
-    if (messages instanceof TracingList tracingList) {
-      // disable tracing in the iterator of TracingList, we'll do the tracing when message handler
-      // is called
-      tracingList.disableTracing();
-      context.set(tracingList);
-    }
+  public static void setProcessingSelection(
+      AbstractMessageConvertingMessageSource<?, ?> messageSource,
+      ContainerOptions<?, ?> containerOptions) {
+    PROCESSING_SELECTION.set(messageSource, containerOptions.getListenerMode());
   }
 
-  public static void clear() {
-    context.remove();
+  @Nullable
+  public static TracingList initialize(
+      AbstractMessageConvertingMessageSource<?, ?> messageSource, Collection<?> messages) {
+    TracingList tracingList =
+        messages instanceof TracingList currentTracingList ? currentTracingList : null;
+    if (tracingList != null
+        && PROCESSING_SELECTION.get(messageSource) == ListenerMode.SINGLE_MESSAGE) {
+      tracingList.selectListenerProcessing();
+    }
+    return currentTracingList.set(tracingList);
+  }
+
+  public static void restore(@Nullable TracingList previous) {
+    currentTracingList.restore(previous);
   }
 
   // copy tracing state from the sqs message to spring message, we'll use that state when the
   // message handler is called
   public static void attachTracingState(Object originalMessage, Message<?> convertedMessage) {
-    TracingList tracingList = context.get();
+    TracingList tracingList = currentTracingList.get();
     if (tracingList == null) {
       return;
     }
@@ -52,7 +68,10 @@ public class SpringAwsUtil {
       return;
     }
 
-    TRACING_CONTEXT.set(convertedMessage, new TracingContext(tracingList, message));
+    SqsMessage tracingMessage = tracingList.getTracingMessage(message);
+    if (tracingMessage != null) {
+      TRACING_CONTEXT.set(convertedMessage, new TracingContext(tracingList, tracingMessage));
+    }
   }
 
   public static void copyTracingState(Message<?> original, Message<?> transformed) {
@@ -64,7 +83,7 @@ public class SpringAwsUtil {
   }
 
   @Nullable
-  public static MessageScope handleMessage(Message<?> message) {
+  public static ProcessingInvocation handleMessage(Message<?> message) {
     TracingContext tracingContext = TRACING_CONTEXT.get(message);
     if (tracingContext == null) {
       return null;
@@ -84,8 +103,7 @@ public class SpringAwsUtil {
     if (tracingContext == null) {
       return null;
     }
-    SqsMessage wrappedMessage =
-        SqsMessageImpl.wrap(tracingContext.sqsMessage, tracingContext.config);
+    SqsMessage wrappedMessage = tracingContext.sqsMessage;
     Context parentContext = tracingContext.processParentContext;
     if (parentContext == null) {
       parentContext = wrappedMessage.getCreationContext();
@@ -96,14 +114,14 @@ public class SpringAwsUtil {
     return parentContext.makeCurrent();
   }
 
-  public static class MessageScope {
+  public static class ProcessingInvocation {
     private final Instrumenter<SqsProcessRequest, Response> instrumenter;
     private final Context context;
     private final SqsProcessRequest request;
     private final Response response;
     private final Scope scope;
 
-    private MessageScope(
+    private ProcessingInvocation(
         Instrumenter<SqsProcessRequest, Response> instrumenter,
         Context context,
         SqsProcessRequest request,
@@ -115,9 +133,21 @@ public class SpringAwsUtil {
       this.scope = context.makeCurrent();
     }
 
-    public void close(@Nullable Throwable throwable) {
+    public void end(@Nullable Throwable throwable) {
       scope.close();
       instrumenter.end(context, request, response, throwable);
+    }
+
+    public void endWhenComplete(
+        @Nullable CompletableFuture<?> future, @Nullable Throwable throwable) {
+      scope.close();
+      if (future == null || throwable != null) {
+        instrumenter.end(context, request, response, throwable);
+        return;
+      }
+      future.whenComplete(
+          (unused, completionError) ->
+              instrumenter.end(context, request, response, completionError));
     }
   }
 
@@ -127,10 +157,9 @@ public class SpringAwsUtil {
     private final Instrumenter<SqsProcessRequest, Response> instrumenter;
     private final TracingExecutionInterceptor config;
     @Nullable private final Context processParentContext;
-    private final software.amazon.awssdk.services.sqs.model.Message sqsMessage;
+    private final SqsMessage sqsMessage;
 
-    private TracingContext(
-        TracingList tracingList, software.amazon.awssdk.services.sqs.model.Message sqsMessage) {
+    private TracingContext(TracingList tracingList, SqsMessage sqsMessage) {
       this.request = tracingList.getRequest();
       this.response = tracingList.getResponse();
       this.instrumenter = tracingList.getInstrumenter();
@@ -140,8 +169,8 @@ public class SpringAwsUtil {
     }
 
     @Nullable
-    MessageScope trace() {
-      SqsMessage wrappedMessage = SqsMessageImpl.wrap(sqsMessage, config);
+    ProcessingInvocation trace() {
+      SqsMessage wrappedMessage = sqsMessage;
       Context parentContext = processParentContext;
       if (parentContext == null) {
         parentContext = wrappedMessage.getCreationContext();
@@ -151,7 +180,7 @@ public class SpringAwsUtil {
         return null;
       }
       Context context = instrumenter.start(parentContext, processRequest);
-      return new MessageScope(instrumenter, context, processRequest, response);
+      return new ProcessingInvocation(instrumenter, context, processRequest, response);
     }
   }
 

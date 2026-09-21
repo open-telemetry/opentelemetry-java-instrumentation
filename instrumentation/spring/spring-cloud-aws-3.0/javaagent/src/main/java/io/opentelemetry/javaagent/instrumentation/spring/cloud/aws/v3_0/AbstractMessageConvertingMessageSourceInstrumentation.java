@@ -9,9 +9,13 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.awspring.cloud.sqs.listener.ContainerOptions;
+import io.awspring.cloud.sqs.listener.source.AbstractMessageConvertingMessageSource;
+import io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingList;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Collection;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -27,6 +31,10 @@ class AbstractMessageConvertingMessageSourceInstrumentation implements TypeInstr
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
+        named("configure")
+            .and(takesArgument(0, named("io.awspring.cloud.sqs.listener.ContainerOptions"))),
+        getClass().getName() + "$ConfigureAdvice");
+    transformer.applyAdviceToMethod(
         named("convertMessages")
             .and(takesArgument(0, Collection.class))
             .and(returns(Collection.class)),
@@ -39,15 +47,28 @@ class AbstractMessageConvertingMessageSourceInstrumentation implements TypeInstr
   }
 
   @SuppressWarnings("unused")
+  public static class ConfigureAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void methodExit(
+        @Advice.This AbstractMessageConvertingMessageSource<?, ?> messageSource,
+        @Advice.Argument(0) ContainerOptions<?, ?> containerOptions) {
+      SpringAwsUtil.setProcessingSelection(messageSource, containerOptions);
+    }
+  }
+
+  @SuppressWarnings("unused")
   public static class ConvertMessagesAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void methodEnter(@Advice.Argument(0) Collection<?> messages) {
-      SpringAwsUtil.initialize(messages);
+    @Nullable
+    public static TracingList methodEnter(
+        @Advice.This AbstractMessageConvertingMessageSource<?, ?> messageSource,
+        @Advice.Argument(0) Collection<?> messages) {
+      return SpringAwsUtil.initialize(messageSource, messages);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void methodExit() {
-      SpringAwsUtil.clear();
+    public static void methodExit(@Advice.Enter @Nullable TracingList previous) {
+      SpringAwsUtil.restore(previous);
     }
   }
 

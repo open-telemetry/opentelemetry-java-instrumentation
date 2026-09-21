@@ -28,6 +28,7 @@ public class SpringAwsSqsInstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new AbstractMessageConvertingMessageSourceInstrumentation(),
+        new AsyncMessagingMessageListenerAdapterInstrumentation(),
         new MessagingMessageListenerAdapterInstrumentation(),
         new SqsTemplateInstrumentation(),
         new AcknowledgementExecutionContextInstrumentation(),

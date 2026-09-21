@@ -32,22 +32,32 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SE
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
+import io.awspring.cloud.sqs.MessageHeaderUtils;
+import io.awspring.cloud.sqs.listener.adapter.AsyncMessagingMessageListenerAdapter;
+import io.awspring.cloud.sqs.listener.adapter.MessagingMessageListenerAdapter;
 import io.awspring.cloud.sqs.operations.SqsTemplate;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.StatusData;
+import java.lang.reflect.Method;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.apache.pekko.http.scaladsl.Http;
 import org.assertj.core.api.AbstractStringAssert;
 import org.elasticmq.rest.sqs.SQSRestServer;
 import org.elasticmq.rest.sqs.SQSRestServerBuilder;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.handler.invocation.InvocableHandlerMethod;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 @SpringBootTest(
@@ -75,17 +85,23 @@ class AwsSqsTest {
     }
   }
 
+  @AfterEach
+  void resetHandlers() {
+    AwsSqsTestApplication.messageHandler = null;
+    AwsSqsTestApplication.batchMessageHandler = null;
+  }
+
   @Test
   void sqsListener() throws Exception {
     String messageContent = "hello";
-    CompletableFuture<String> messageFuture = new CompletableFuture<>();
+    CompletableFuture<Message<String>> messageFuture = new CompletableFuture<>();
     AwsSqsTestApplication.messageHandler =
-        string -> testing.runWithSpan("callback", () -> messageFuture.complete(string));
+        message -> testing.runWithSpan("callback", () -> messageFuture.complete(message));
 
     testing.runWithSpan("parent", () -> sqsTemplate.send("test-queue", messageContent));
 
-    String result = messageFuture.get(10, SECONDS);
-    assertThat(result).isEqualTo(messageContent);
+    Message<String> result = messageFuture.get(10, SECONDS);
+    assertThat(result.getPayload()).isEqualTo(messageContent);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -234,6 +250,104 @@ class AwsSqsTest {
                                 emitStableMessagingSemconv() ? Long.valueOf(1) : null),
                             satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)))));
     assertConsumedMessages();
+
+    if (emitStableMessagingSemconv()) {
+      testing.clearData();
+      AwsSqsTestApplication.messageHandler = null;
+
+      Message<String> retainedMessage = MessageHeaderUtils.addHeaderIfAbsent(result, "retry", true);
+      RetriedMessageHandler handler = new RetriedMessageHandler();
+      Method method = RetriedMessageHandler.class.getDeclaredMethod("handle");
+      new MessagingMessageListenerAdapter<String>(new InvocableHandlerMethod(handler, method))
+          .onMessage(retainedMessage);
+
+      assertThat(handler.invoked).isTrue();
+      await()
+          .untilAsserted(
+              () ->
+                  assertThat(testing.spans())
+                      .singleElement()
+                      .satisfies(
+                          span ->
+                              assertThat(span)
+                                  .hasName("process test-queue")
+                                  .hasKind(SpanKind.CONSUMER)
+                                  .hasAttributesSatisfyingExactly(
+                                      equalTo(RPC_SYSTEM, "aws-api"),
+                                      equalTo(RPC_METHOD, "ReceiveMessage"),
+                                      equalTo(RPC_SERVICE, "Sqs"),
+                                      equalTo(HTTP_REQUEST_METHOD, POST),
+                                      equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                      equalTo(SERVER_ADDRESS, "localhost"),
+                                      equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
+                                      satisfies(
+                                          URL_FULL,
+                                          val ->
+                                              val.startsWith(
+                                                  "http://localhost:"
+                                                      + AwsSqsTestApplication.sqsPort)),
+                                      equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                                      satisfies(
+                                          MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
+                                      equalTo(
+                                          MESSAGING_OPERATION,
+                                          emitOldMessagingSemconv() ? "process" : null),
+                                      equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                      equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                                      equalTo(MESSAGING_DESTINATION_NAME, "test-queue"))));
+      testing.waitAndAssertMetrics(
+          "io.opentelemetry.aws-sdk-2.2",
+          "messaging.process.duration",
+          metrics -> metrics.hasSize(1));
+
+      assertAsyncCompletion(retainedMessage, AsyncCompletion.SUCCESS);
+      assertAsyncCompletion(retainedMessage, AsyncCompletion.ERROR);
+      assertAsyncCompletion(retainedMessage, AsyncCompletion.CANCELLATION);
+    }
+  }
+
+  @Test
+  void batchListenerKeepsSdkProcessingFallback() throws Exception {
+    CompletableFuture<List<String>> messageFuture = new CompletableFuture<>();
+    AwsSqsTestApplication.batchMessageHandler = messageFuture::complete;
+
+    sqsTemplate.send("batch-queue", "hello");
+
+    assertThat(messageFuture.get(10, SECONDS)).containsExactly("hello");
+    assertThat(testing.spans())
+        .filteredOn(
+            span ->
+                span.getName()
+                    .equals(
+                        emitStableMessagingSemconv()
+                            ? "process batch-queue"
+                            : "batch-queue process"))
+        .hasSize(1);
+    if (!emitStableMessagingSemconv()) {
+      return;
+    }
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.aws-sdk-2.2",
+        "messaging.client.consumed.messages",
+        metrics ->
+            metrics.satisfiesExactly(
+                metric ->
+                    assertThat(metric)
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(1)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                                                equalTo(ERROR_TYPE, null),
+                                                equalTo(MESSAGING_DESTINATION_NAME, "batch-queue"),
+                                                equalTo(SERVER_ADDRESS, "localhost"),
+                                                equalTo(
+                                                    SERVER_PORT,
+                                                    AwsSqsTestApplication.sqsPort))))));
   }
 
   private static void assertConsumedMessages() {
@@ -273,5 +387,64 @@ class AwsSqsTest {
                                                 equalTo(
                                                     SERVER_PORT,
                                                     AwsSqsTestApplication.sqsPort))))));
+  }
+
+  private static void assertAsyncCompletion(
+      Message<String> retainedMessage, AsyncCompletion completion) throws Exception {
+    testing.clearData();
+    AsyncRetriedMessageHandler handler = new AsyncRetriedMessageHandler();
+    Method method = AsyncRetriedMessageHandler.class.getDeclaredMethod("handle");
+    CompletableFuture<Void> listenerResult =
+        new AsyncMessagingMessageListenerAdapter<String>(
+                new InvocableHandlerMethod(handler, method))
+            .onMessage(retainedMessage);
+
+    assertThat(testing.spans())
+        .filteredOn(span -> span.getName().equals("process test-queue"))
+        .isEmpty();
+    switch (completion) {
+      case SUCCESS -> handler.result.complete(null);
+      case ERROR ->
+          handler.result.completeExceptionally(new IllegalStateException("listener failed"));
+      case CANCELLATION -> listenerResult.cancel(false);
+    }
+
+    StatusData expectedStatus =
+        completion == AsyncCompletion.SUCCESS ? StatusData.unset() : StatusData.error();
+    await()
+        .untilAsserted(
+            () ->
+                assertThat(testing.spans())
+                    .singleElement()
+                    .satisfies(
+                        span ->
+                            assertThat(span)
+                                .hasName("process test-queue")
+                                .hasKind(SpanKind.CONSUMER)
+                                .hasStatus(expectedStatus)));
+  }
+
+  private static class RetriedMessageHandler {
+    private boolean invoked;
+
+    @SuppressWarnings("unused")
+    void handle() {
+      invoked = true;
+    }
+  }
+
+  private static class AsyncRetriedMessageHandler {
+    private final CompletableFuture<Void> result = new CompletableFuture<>();
+
+    @SuppressWarnings("unused")
+    CompletableFuture<Void> handle() {
+      return result;
+    }
+  }
+
+  private enum AsyncCompletion {
+    SUCCESS,
+    ERROR,
+    CANCELLATION
   }
 }

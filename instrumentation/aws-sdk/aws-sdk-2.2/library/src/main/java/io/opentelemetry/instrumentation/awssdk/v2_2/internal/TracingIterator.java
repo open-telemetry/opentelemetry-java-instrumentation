@@ -5,9 +5,14 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import static java.util.Objects.requireNonNull;
+
+import io.opentelemetry.api.impl.InstrumentationUtil;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.util.Iterator;
+import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.services.sqs.model.Message;
 
@@ -45,22 +50,23 @@ class TracingIterator implements Iterator<Message> {
     // in case they didn't call hasNext()...
     closeScopeAndEndSpan();
 
-    // it's important not to suppress consumer span creation here using Instrumenter.shouldStart()
-    // because this instrumentation can leak the context and so there may be a leaked consumer span
-    // in the context, in which case it's important to overwrite the leaked span instead of
-    // suppressing the correct span
-    // (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1947)
     Message next = delegateIterator.next();
-    if (next != null) {
-      SqsMessage sqsMessage = SqsMessageImpl.wrap(next, tracingList.getConfig());
+    if (next != null && !tracingList.isListenerProcessingSelected()) {
+      SqsMessage sqsMessage = tracingList.getTracingMessage(next);
+      if (sqsMessage == null) {
+        return next;
+      }
       Context parentContext = tracingList.getProcessParentContext();
       if (parentContext == null) {
         parentContext = sqsMessage.getCreationContext();
       }
 
-      currentRequest = SqsProcessRequest.create(tracingList.getRequest(), sqsMessage);
-      currentContext = tracingList.getInstrumenter().start(parentContext, currentRequest);
-      currentScope = currentContext.makeCurrent();
+      SqsProcessRequest request = SqsProcessRequest.create(tracingList.getRequest(), sqsMessage);
+      if (shouldStartProcessing(tracingList, parentContext, request)) {
+        currentRequest = request;
+        currentContext = tracingList.getInstrumenter().start(parentContext, request);
+        currentScope = currentContext.makeCurrent();
+      }
     }
     return next;
   }
@@ -75,6 +81,61 @@ class TracingIterator implements Iterator<Message> {
       currentRequest = null;
       currentContext = null;
     }
+  }
+
+  static void processCallback(
+      TracingList tracingList, Message message, Consumer<? super Message> action) {
+    requireNonNull(action);
+    if (message == null || tracingList.isListenerProcessingSelected()) {
+      action.accept(message);
+      return;
+    }
+
+    SqsMessage sqsMessage = tracingList.getTracingMessage(message);
+    if (sqsMessage == null) {
+      action.accept(message);
+      return;
+    }
+
+    Context parentContext = tracingList.getProcessParentContext();
+    if (parentContext == null) {
+      parentContext = sqsMessage.getCreationContext();
+    }
+    SqsProcessRequest request = SqsProcessRequest.create(tracingList.getRequest(), sqsMessage);
+    if (!shouldStartProcessing(tracingList, parentContext, request)) {
+      action.accept(message);
+      return;
+    }
+
+    Context context = tracingList.getInstrumenter().start(parentContext, request);
+    Throwable error = null;
+    try (Scope ignored = context.makeCurrent()) {
+      action.accept(message);
+    } catch (RuntimeException | Error e) {
+      error = e;
+      throw e;
+    } finally {
+      tracingList.getInstrumenter().end(context, request, tracingList.getResponse(), error);
+    }
+  }
+
+  private static boolean shouldStartProcessing(
+      TracingList tracingList, Context parentContext, SqsProcessRequest request) {
+    if (InstrumentationUtil.shouldSuppressInstrumentation(Context.current())) {
+      return false;
+    }
+
+    // Iterator spans can leak if traversal is abandoned. Do not inherit ambient consumer
+    // suppression when selecting another message, but retain the captured processing parent span.
+    Context suppressionContext = Context.root().with(Span.fromContext(parentContext));
+    return tracingList.getInstrumenter().shouldStart(suppressionContext, request);
+  }
+
+  @Override
+  public void forEachRemaining(Consumer<? super Message> action) {
+    requireNonNull(action);
+    closeScopeAndEndSpan();
+    delegateIterator.forEachRemaining(message -> processCallback(tracingList, message, action));
   }
 
   @Override

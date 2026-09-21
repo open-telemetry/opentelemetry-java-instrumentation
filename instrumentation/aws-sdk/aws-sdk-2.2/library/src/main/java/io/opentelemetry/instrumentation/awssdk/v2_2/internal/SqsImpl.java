@@ -94,9 +94,9 @@ public final class SqsImpl {
     Instrumenter<SqsReceiveRequest, Response> consumerReceiveInstrumenter =
         config.getConsumerReceiveInstrumenter();
     io.opentelemetry.context.Context receiveContext = null;
+    List<SqsMessage> tracingMessages = SqsMessageImpl.wrap(response.messages(), config);
     SqsReceiveRequest receiveRequest =
-        SqsReceiveRequest.create(
-            executionAttributes, SqsMessageImpl.wrap(response.messages(), config));
+        SqsReceiveRequest.create(executionAttributes, tracingMessages);
     if (timer != null && consumerReceiveInstrumenter.shouldStart(parentContext, receiveRequest)) {
       receiveContext =
           InstrumenterUtil.startAndEnd(
@@ -126,6 +126,7 @@ public final class SqsImpl {
     TracingList tracingList =
         TracingList.wrap(
             response.messages(),
+            tracingMessages,
             config.getConsumerProcessInstrumenter(),
             copy,
             new Response(context.httpResponse(), response),
