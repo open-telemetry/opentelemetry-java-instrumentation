@@ -38,8 +38,8 @@ public class SpringJmsSingletons {
   }
 
   public static Instrumenter<MessageWithDestination, Void> listenerInstrumenter(
-      boolean receiveTelemetryRecorded) {
-    return receiveTelemetryRecorded
+      boolean consumedMessagesRecorded) {
+    return consumedMessagesRecorded
         ? listenerInstrumenter
         : listenerInstrumenterWithConsumedMessages;
   }

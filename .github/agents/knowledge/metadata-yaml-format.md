@@ -29,6 +29,10 @@ Each configuration entry includes:
 - `declarative_schema` (optional): Per-item object schema, required when
   `declarative_type: structured_list` (see Structured Lists).
 
+When a module-specific configuration overrides a referenced common configuration, list the
+module-specific entry immediately before the common `ref`. This keeps the override and fallback
+together and makes their precedence clear.
+
 ## Structured Lists
 
 Some declarative configs are **lists of objects** even though their flat form is a scalar/map. The

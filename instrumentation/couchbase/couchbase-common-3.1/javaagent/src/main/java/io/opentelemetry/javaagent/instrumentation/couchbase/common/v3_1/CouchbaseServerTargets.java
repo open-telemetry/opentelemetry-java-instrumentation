@@ -1,0 +1,123 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1;
+
+import com.couchbase.client.core.Core;
+import com.couchbase.client.core.env.CoreEnvironment;
+import com.couchbase.client.core.env.SeedNode;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import javax.annotation.Nullable;
+
+// Targets are attached to each core because clusters with different targets can share an
+// environment.
+public class CouchbaseServerTargets {
+
+  private static final VirtualField<SeedNode, CouchbaseServerTarget> SEED_NODE_TARGETS =
+      VirtualField.find(SeedNode.class, CouchbaseServerTarget.class);
+
+  private static final VirtualField<Core, CouchbaseServerTarget> CORE_TARGETS =
+      VirtualField.find(Core.class, CouchbaseServerTarget.class);
+
+  public static void registerSeedNodes(
+      Set<SeedNode> seedNodes, @Nullable CouchbaseServerTarget target) {
+    if (target != null) {
+      for (SeedNode seedNode : seedNodes) {
+        if (seedNode != null) {
+          SEED_NODE_TARGETS.set(seedNode, target);
+        }
+      }
+    }
+  }
+
+  public static void register(
+      Core core, @Nullable CouchbaseServerTarget target, @Nullable CoreEnvironment environment) {
+    if (target != null) {
+      if (environment != null && !environment.ioConfig().dnsSrvEnabled()) {
+        target = target.asDirect();
+      }
+      CORE_TARGETS.set(core, target);
+    }
+  }
+
+  public static void registerFromSeedNodes(
+      Core core, @Nullable Set<SeedNode> seedNodes, @Nullable CoreEnvironment environment) {
+    if (seedNodes == null) {
+      return;
+    }
+    CouchbaseServerTarget target = null;
+    for (SeedNode seedNode : seedNodes) {
+      if (seedNode != null) {
+        target = SEED_NODE_TARGETS.get(seedNode);
+        if (target != null) {
+          break;
+        }
+      }
+    }
+    if (environment != null) {
+      if (target == null) {
+        target = target(seedNodes, environment.securityConfig().tlsEnabled());
+      }
+    }
+    register(core, target, environment);
+  }
+
+  @Nullable
+  static CouchbaseServerTarget target(Set<SeedNode> seedNodes, boolean tlsEnabled) {
+    int defaultPort = CouchbaseServerTarget.defaultPort(tlsEnabled ? "couchbases" : "couchbase");
+    DbServerTargetBuilder target = DbServerTarget.builder(defaultPort).setSorted(true);
+    Map<String, Set<Integer>> portsByAddress = new HashMap<>();
+    for (SeedNode seedNode : seedNodes) {
+      if (seedNode == null) {
+        addSeed(target, portsByAddress, null, 0, defaultPort);
+      } else {
+        Optional<Integer> kvPort = seedNode.kvPort();
+        Optional<Integer> clusterManagerPort = seedNode.clusterManagerPort();
+        if (!kvPort.isPresent() && !clusterManagerPort.isPresent()) {
+          addSeed(target, portsByAddress, seedNode.address(), 0, defaultPort);
+        } else {
+          if (kvPort.isPresent()) {
+            addSeed(target, portsByAddress, seedNode.address(), kvPort.get(), defaultPort);
+          }
+          if (clusterManagerPort.isPresent() && !clusterManagerPort.equals(kvPort)) {
+            addSeed(
+                target, portsByAddress, seedNode.address(), clusterManagerPort.get(), defaultPort);
+          }
+        }
+      }
+    }
+    return CouchbaseServerTarget.direct(target.build());
+  }
+
+  private static void addSeed(
+      DbServerTargetBuilder target,
+      Map<String, Set<Integer>> portsByAddress,
+      @Nullable String address,
+      int port,
+      int defaultPort) {
+    if (address == null) {
+      target.addEndpoint(null, port > 0 ? port : -1);
+      return;
+    }
+    Set<Integer> ports = portsByAddress.computeIfAbsent(address, ignored -> new HashSet<>());
+    if (ports.add(port > 0 ? port : defaultPort)) {
+      target.addEndpoint(address, port > 0 ? port : -1);
+    }
+  }
+
+  @Nullable
+  public static CouchbaseServerTarget get(@Nullable Core core) {
+    return core == null ? null : CORE_TARGETS.get(core);
+  }
+
+  private CouchbaseServerTargets() {}
+}

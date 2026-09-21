@@ -74,7 +74,7 @@ class SnsCamelTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    AwsSpanAssertions.sqs(span, "SQS.DeleteMessage", metaData.queueUrl)
+                    AwsSpanAssertions.sqs(span, "SQS.DeleteMessage", metaData.queueUrl, queueName)
                         .hasNoParent()));
 
     try {
@@ -125,7 +125,9 @@ class SnsCamelTest {
                     CamelSpanAssertions.sqsConsume(span, queueName).hasParent(trace.getSpan(2))),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sqs(span, "SQS.DeleteMessage", queueUrl).hasNoParent()));
+                span ->
+                    AwsSpanAssertions.sqs(span, "SQS.DeleteMessage", queueUrl, queueName)
+                        .hasNoParent()));
 
     try {
       awsConnector.purgeQueue(queueUrl);

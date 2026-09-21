@@ -21,11 +21,16 @@ public class LettuceInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
+        new LettuceAbstractRedisClientInstrumentation(),
         new LettuceAsyncCommandInstrumentation(),
         new LettuceAsyncCommandsInstrumentation(),
+        new LettuceCommandHandlerInstrumentation(),
+        new LettuceCommandWrapperInstrumentation(),
         new LettuceConnectionInstrumentation(),
         new LettuceReactiveCommandDispatcherInstrumentation(),
         new LettuceObservableCommandInstrumentation(),
-        new LettuceConnectInstrumentation());
+        new LettuceConnectInstrumentation(),
+        new LettuceClusterClientInstrumentation(),
+        new LettuceMasterSlaveInstrumentation());
   }
 }

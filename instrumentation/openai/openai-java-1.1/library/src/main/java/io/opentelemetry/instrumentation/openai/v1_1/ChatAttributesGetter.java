@@ -148,11 +148,39 @@ final class ChatAttributesGetter
 
   @Override
   @Nullable
+  public Long getUsageCacheReadInputTokens(
+      ChatCompletionRequest request, @Nullable ChatCompletion response) {
+    if (response == null) {
+      return null;
+    }
+    return response
+        .usage()
+        .flatMap(CompletionUsage::promptTokensDetails)
+        .flatMap(CompletionUsage.PromptTokensDetails::cachedTokens)
+        .orElse(null);
+  }
+
+  @Override
+  @Nullable
   public Long getUsageOutputTokens(
       ChatCompletionRequest request, @Nullable ChatCompletion response) {
     if (response == null) {
       return null;
     }
     return response.usage().map(CompletionUsage::completionTokens).orElse(null);
+  }
+
+  @Override
+  @Nullable
+  public Long getUsageReasoningOutputTokens(
+      ChatCompletionRequest request, @Nullable ChatCompletion response) {
+    if (response == null) {
+      return null;
+    }
+    return response
+        .usage()
+        .flatMap(CompletionUsage::completionTokensDetails)
+        .flatMap(CompletionUsage.CompletionTokensDetails::reasoningTokens)
+        .orElse(null);
   }
 }

@@ -47,13 +47,13 @@ class TelemetryParser {
             entry(
                 "io.opentelemetry.jaxrs-3.0-resteasy-6.0",
                 singleton("io.opentelemetry.jaxrs-3.0-annotations")),
-            // couchbase-3.x instrumentations are auto-instrumentation shims
+            entry(
+                "io.opentelemetry.couchbase-3.0",
+                singleton("io.opentelemetry.javaagent.couchbase-3.0")),
             entry(
                 "io.opentelemetry.couchbase-3.1",
-                singleton("io.opentelemetry.javaagent.couchbase-3.1")),
-            entry("io.opentelemetry.couchbase-3.1.6", singleton("com.couchbase.client.jvm")),
+                Set.of("io.opentelemetry.javaagent.couchbase-3.1", "com.couchbase.client.jvm")),
             entry("io.opentelemetry.couchbase-3.2", singleton("com.couchbase.client.jvm")),
-            entry("io.opentelemetry.couchbase-3.4", singleton("com.couchbase.client.jvm")),
             // servlet-5.0 tests use jetty-12.0 instrumentation
             entry("io.opentelemetry.servlet-5.0", singleton("io.opentelemetry.jetty-12.0")),
             // runtime-telemetry library tests use a meter named "test"

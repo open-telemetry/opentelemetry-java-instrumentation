@@ -168,7 +168,7 @@ class TomcatJdbcInstrumentationTest {
         AbstractIterableAssert::isEmpty);
     testing.waitAndAssertMetrics(
         "io.opentelemetry.tomcat-jdbc",
-        emitStableDatabaseSemconv() ? "db.client.connection.max" : "db.client.connections.max",
+        emitStableDatabaseSemconv() ? "db.client.connection.limit" : "db.client.connections.max",
         AbstractIterableAssert::isEmpty);
     testing.waitAndAssertMetrics(
         "io.opentelemetry.tomcat-jdbc",
