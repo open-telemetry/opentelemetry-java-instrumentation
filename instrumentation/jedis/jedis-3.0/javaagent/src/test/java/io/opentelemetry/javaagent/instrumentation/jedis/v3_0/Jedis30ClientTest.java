@@ -41,11 +41,13 @@ import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIf;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.testcontainers.containers.GenericContainer;
+import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Pipeline;
@@ -147,6 +149,61 @@ class Jedis30ClientTest {
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
+  }
+
+  @Test
+  void directHostAndPortCommandUsesOriginalTarget() {
+    HostAndPort endpoint = HostAndPort.parseString("localhost:" + port);
+    try (Jedis direct = new Jedis(endpoint)) {
+      direct.set("direct-host-and-port", "value");
+    }
+
+    assertHostAndPortTarget(endpoint);
+  }
+
+  @Test
+  @EnabledIf("supportsHostAndPortPool")
+  void pooledHostAndPortCommandUsesOriginalTarget() throws ReflectiveOperationException {
+    HostAndPort endpoint = HostAndPort.parseString("localhost:" + port);
+    Class<?> clientConfigClass = Class.forName("redis.clients.jedis.JedisClientConfig");
+    Class<?> defaultClientConfigClass =
+        Class.forName("redis.clients.jedis.DefaultJedisClientConfig");
+    Object builder = defaultClientConfigClass.getMethod("builder").invoke(null);
+    Object clientConfig = builder.getClass().getMethod("build").invoke(builder);
+    JedisPool pool =
+        (JedisPool)
+            JedisPool.class
+                .getConstructor(HostAndPort.class, clientConfigClass)
+                .newInstance(endpoint, clientConfig);
+    cleanup.deferCleanup(pool);
+
+    try (Jedis pooled = pool.getResource()) {
+      pooled.set("pooled-host-and-port", "value");
+    }
+
+    assertHostAndPortTarget(endpoint);
+  }
+
+  private static boolean supportsHostAndPortPool() {
+    try {
+      Class<?> clientConfigClass = Class.forName("redis.clients.jedis.JedisClientConfig");
+      JedisPool.class.getConstructor(HostAndPort.class, clientConfigClass);
+      return true;
+    } catch (ClassNotFoundException | NoSuchMethodException ignored) {
+      return false;
+    }
+  }
+
+  private static void assertHostAndPortTarget(HostAndPort endpoint) {
+    testing.waitForTraces(1);
+    assertThat(testing.spans())
+        .singleElement()
+        .satisfies(
+            span -> {
+              assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                  .isEqualTo(emitStableDatabaseSemconv() ? "localhost" : endpoint.getHost());
+              assertThat(span.getAttributes().get(SERVER_PORT)).isEqualTo((long) port);
+            });
   }
 
   @Test

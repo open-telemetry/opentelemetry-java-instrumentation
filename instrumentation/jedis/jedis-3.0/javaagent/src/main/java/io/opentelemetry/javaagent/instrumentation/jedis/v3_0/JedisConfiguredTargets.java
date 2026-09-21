@@ -113,6 +113,11 @@ public class JedisConfiguredTargets {
         : RedisServerTarget.normalizeHostAndPort(originalEndpoint.value);
   }
 
+  @Nullable
+  public static RedisServerTarget hostAndPortTarget(@Nullable HostAndPort endpoint) {
+    return endpoint == null ? null : RedisServerTarget.ofEndpoint(endpoint(endpoint));
+  }
+
   public static void setClusterTarget(
       JedisClusterConnectionHandler handler, @Nullable RedisServerTarget target) {
     CLUSTER_TARGET.set(handler, ConfiguredTarget.create(target));

@@ -11,6 +11,8 @@ import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.not;
+import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -20,6 +22,8 @@ import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import redis.clients.jedis.BinaryJedis;
+import redis.clients.jedis.HostAndPort;
 
 class JedisInstrumentation implements TypeInstrumentation {
   @Override
@@ -29,6 +33,9 @@ class JedisInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
+        isConstructor().and(takesArgument(0, HostAndPort.class)),
+        getClass().getName() + "$HostAndPortConstructorAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(isMethod())
@@ -51,6 +58,17 @@ class JedisInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$JedisMethodAdvice");
     transformer.applyAdviceToMethod(
         named("multi").and(takesArguments(0)), getClass().getName() + "$MultiAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class HostAndPortConstructorAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This BinaryJedis jedis, @Advice.Argument(0) @Nullable HostAndPort endpoint) {
+      JedisConfiguredTargets.setConnectionTarget(
+          jedis.getClient(), JedisConfiguredTargets.hostAndPortTarget(endpoint));
+    }
   }
 
   @SuppressWarnings("unused")
