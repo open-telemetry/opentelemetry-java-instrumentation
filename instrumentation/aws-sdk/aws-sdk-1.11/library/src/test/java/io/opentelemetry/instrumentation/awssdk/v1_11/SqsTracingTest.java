@@ -13,11 +13,14 @@ import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.handlers.RequestHandler2;
 import com.amazonaws.services.sqs.AmazonSQSAsync;
 import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
+import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.amazonaws.services.sqs.model.SendMessageBatchRequest;
 import com.amazonaws.services.sqs.model.SendMessageBatchRequestEntry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.awssdk.v1_11.internal.SqsProcessTracing;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -56,6 +59,37 @@ class SqsTracingTest extends AbstractSqsTracingTest {
                     .build())
             .build()
             .createRequestHandler());
+  }
+
+  @Test
+  void testFrameworkSelectionDisablesRawProcessSpansForResponse() {
+    assumeTrue(emitStableMessagingSemconv());
+    AmazonSQSAsync client = configureClient(newClientBuilder()).build();
+    cleanup.deferCleanup(client::shutdown);
+    String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
+    client.createQueue("testSdkSqs");
+    client.sendMessage(queueUrl, "message");
+    testing().waitForTraces(2);
+    testing().clearData();
+
+    ReceiveMessageResult response = client.receiveMessage(queueUrl);
+    SqsProcessTracing.selectFrameworkProcessing(response.getMessages());
+    testing()
+        .runWithSpan(
+            "framework",
+            () -> {
+              String frameworkSpanId = Span.current().getSpanContext().getSpanId();
+              response
+                  .getMessages()
+                  .forEach(
+                      message ->
+                          assertThat(Span.current().getSpanContext().getSpanId())
+                              .isEqualTo(frameworkSpanId));
+            });
+    testing()
+        .waitAndAssertTraces(
+            trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("receive testSdkSqs")),
+            trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("framework")));
   }
 
   @Test
