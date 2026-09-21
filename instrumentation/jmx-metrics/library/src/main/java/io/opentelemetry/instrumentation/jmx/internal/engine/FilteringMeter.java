@@ -45,7 +45,7 @@ class FilteringMeter implements Meter {
     if (metrics.matches(metricName)) {
       return delegate;
     }
-    logger.log(FINE, "Metric is filtered out by configuration: " + metricName);
+    logger.log(FINE, "Metric is filtered out by configuration: {0}", metricName);
     return NOOP_METER;
   }
 
