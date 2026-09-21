@@ -14,6 +14,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import java.util.Set;
+import org.apache.commons.pool2.BasePooledObjectFactory;
+import org.apache.commons.pool2.PooledObject;
+import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -77,6 +80,28 @@ class JedisConfiguredTargetsTest {
     JedisConfiguredTargets.setPoolTarget(pool, RedisServerTarget.ofEndpoint("configured:6379"));
 
     assertThat(JedisConfiguredTargets.factoryTargetContext(factory)).isNotNull();
+  }
+
+  @Test
+  void ignoresUnrelatedPoolFactory() {
+    JedisPoolAbstract pool = new JedisPoolAbstract();
+    BasePooledObjectFactory<Object> factory =
+        new BasePooledObjectFactory<Object>() {
+          @Override
+          public Object create() {
+            return new Object();
+          }
+
+          @Override
+          public PooledObject<Object> wrap(Object object) {
+            return new DefaultPooledObject<>(object);
+          }
+        };
+
+    JedisConfiguredTargets.capturePoolFactory(pool, factory);
+    JedisConfiguredTargets.setPoolTarget(pool, RedisServerTarget.ofEndpoint("configured:6379"));
+
+    assertThat(JedisConfiguredTargets.factoryTargetContext(factory)).isNull();
   }
 
   @Test

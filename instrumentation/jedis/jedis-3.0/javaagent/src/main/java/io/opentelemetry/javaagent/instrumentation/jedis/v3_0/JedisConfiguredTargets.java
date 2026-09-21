@@ -18,6 +18,7 @@ import redis.clients.jedis.BinaryJedis;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisClusterConnectionHandler;
+import redis.clients.jedis.JedisFactoryTarget;
 import redis.clients.jedis.util.Pool;
 
 public class JedisConfiguredTargets {
@@ -30,9 +31,6 @@ public class JedisConfiguredTargets {
 
   private static final VirtualField<Pool<?>, PoolFactory> POOL_FACTORY =
       VirtualField.find(Pool.class, PoolFactory.class);
-
-  private static final VirtualField<PooledObjectFactory<?>, ConfiguredTarget> FACTORY_TARGET =
-      VirtualField.find(PooledObjectFactory.class, ConfiguredTarget.class);
 
   private static final VirtualField<HostAndPort, OriginalEndpoint> ORIGINAL_ENDPOINT =
       VirtualField.find(HostAndPort.class, OriginalEndpoint.class);
@@ -49,7 +47,7 @@ public class JedisConfiguredTargets {
     POOL_TARGET.set(pool, configuredTarget);
     PoolFactory poolFactory = POOL_FACTORY.get(pool);
     if (poolFactory != null) {
-      FACTORY_TARGET.set(poolFactory.factory, configuredTarget);
+      JedisFactoryTarget.set(poolFactory.factory, configuredTarget);
     }
   }
 
@@ -59,7 +57,7 @@ public class JedisConfiguredTargets {
   }
 
   public static void capturePoolFactory(Pool<?> pool, PooledObjectFactory<?> factory) {
-    if (factory == null || !isJedisFactory(factory.getClass())) {
+    if (factory == null || !JedisFactoryTarget.isInstance(factory)) {
       return;
     }
     POOL_FACTORY.set(pool, new PoolFactory(factory));
@@ -70,19 +68,8 @@ public class JedisConfiguredTargets {
       POOL_TARGET.set(pool, configuredTarget);
     }
     if (configuredTarget != null) {
-      FACTORY_TARGET.set(factory, configuredTarget);
+      JedisFactoryTarget.set(factory, configuredTarget);
     }
-  }
-
-  private static boolean isJedisFactory(Class<?> factoryClass) {
-    Class<?> currentClass = factoryClass;
-    while (currentClass != null) {
-      if (currentClass.getName().equals("redis.clients.jedis.JedisFactory")) {
-        return true;
-      }
-      currentClass = currentClass.getSuperclass();
-    }
-    return false;
   }
 
   public static void captureOriginalEndpoint(
@@ -142,7 +129,7 @@ public class JedisConfiguredTargets {
 
   @Nullable
   public static Context factoryTargetContext(PooledObjectFactory<?> factory) {
-    ConfiguredTarget configuredTarget = FACTORY_TARGET.get(factory);
+    ConfiguredTarget configuredTarget = (ConfiguredTarget) JedisFactoryTarget.get(factory);
     return configuredTarget != null ? configuredTargetContext(configuredTarget.target) : null;
   }
 
