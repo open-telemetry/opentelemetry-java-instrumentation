@@ -624,3 +624,4 @@ vertx-sql-client-common-4.0:javaagent-unit-tests
 redisson-3.0:javaagent-unit-tests
 redisson-3.17:javaagent-unit-tests
 rediscala-1.8:javaagent-unit-tests
+lettuce-4.0:javaagent-unit-tests
