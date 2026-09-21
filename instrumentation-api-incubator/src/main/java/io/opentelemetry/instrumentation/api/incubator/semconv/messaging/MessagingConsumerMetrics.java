@@ -90,7 +90,7 @@ public final class MessagingConsumerMetrics implements OperationListener {
         receiveDurationHistogram != null
             || receiveMessageCount != null
             || clientOperationDurationHistogram != null
-            || consumedMessagesRecorder != null;
+            || isConsumedMessagesRecorderEnabled();
   }
 
   /**
@@ -160,7 +160,7 @@ public final class MessagingConsumerMetrics implements OperationListener {
             && !MessagingTelemetryState.contains(
                 context, operationType, MessagingTelemetrySignal.CLIENT_OPERATION_DURATION);
     boolean recordConsumedMessages =
-        consumedMessagesRecorder != null
+        isConsumedMessagesRecorderEnabled()
             && (consumedMessagesOnly || operationType == MessagingOperationType.RECEIVE)
             && !MessagingTelemetryState.contains(
                 context, CONSUMED_MESSAGES_OPERATION, MessagingTelemetrySignal.CONSUMED_MESSAGES);
@@ -227,6 +227,10 @@ public final class MessagingConsumerMetrics implements OperationListener {
             consumedMessagesCount, attributes, Attributes.empty(), context);
       }
     }
+  }
+
+  private boolean isConsumedMessagesRecorderEnabled() {
+    return consumedMessagesRecorder != null && consumedMessagesRecorder.isEnabled();
   }
 
   private static long getConsumedMessagesCount(

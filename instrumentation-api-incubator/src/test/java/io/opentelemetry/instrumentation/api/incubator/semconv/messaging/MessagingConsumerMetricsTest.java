@@ -26,14 +26,18 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
+import static org.mockito.Mockito.mock;
 
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.metrics.LongCounterBuilder;
+import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
+import java.lang.reflect.Proxy;
 import java.util.Collection;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -262,6 +266,61 @@ class MessagingConsumerMetricsTest {
       assertThat(metrics)
           .extracting(metric -> metric.getInstrumentationScopeInfo().getName())
           .containsExactlyInAnyOrder("outer", "outer", "inner", "inner");
+    } else {
+      assertThat(metrics).isEmpty();
+    }
+  }
+
+  @Test
+  void disabledConsumedMessagesRecorderDoesNotSuppressNestedRecorder() {
+    InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
+    SdkMeterProvider meterProvider =
+        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
+    Meter delegate = meterProvider.get("outer");
+    LongCounterBuilder incompatibleBuilder = mock(LongCounterBuilder.class);
+    Meter incompatibleMeter =
+        (Meter)
+            Proxy.newProxyInstance(
+                Meter.class.getClassLoader(),
+                new Class<?>[] {Meter.class},
+                (proxy, method, args) -> {
+                  if ("counterBuilder".equals(method.getName())
+                      && "messaging.client.consumed.messages".equals(args[0])) {
+                    return incompatibleBuilder;
+                  }
+                  return method.invoke(delegate, args);
+                });
+    OperationListener outer =
+        MessagingConsumerMetrics.getConsumedMessages().create(incompatibleMeter);
+    OperationListener inner =
+        MessagingConsumerMetrics.getConsumedMessages().create(meterProvider.get("inner"));
+    Attributes attributes =
+        Attributes.builder()
+            .put(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "receive" : null)
+            .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "receive" : null)
+            .build();
+
+    Context outerContext = outer.onStart(enable(Context.root()), attributes, nanos(100));
+    assertThat(contains(outerContext, RECEIVE, CONSUMED_MESSAGES)).isFalse();
+    Context innerContext = inner.onStart(outerContext, attributes, nanos(150));
+    assertThat(contains(innerContext, RECEIVE, CONSUMED_MESSAGES))
+        .isEqualTo(emitStableMessagingSemconv());
+    inner.onEnd(innerContext, Attributes.empty(), nanos(200));
+    outer.onEnd(outerContext, Attributes.empty(), nanos(250));
+
+    Collection<MetricData> metrics = metricReader.collectAllMetrics();
+    if (emitStableMessagingSemconv()) {
+      assertThat(metrics)
+          .singleElement()
+          .satisfies(
+              metric -> {
+                assertThat(metric.getInstrumentationScopeInfo().getName()).isEqualTo("inner");
+                assertThat(metric)
+                    .hasName("messaging.client.consumed.messages")
+                    .hasLongSumSatisfying(
+                        sum -> sum.hasPointsSatisfying(point -> point.hasValue(1)));
+              });
     } else {
       assertThat(metrics).isEmpty();
     }

@@ -57,6 +57,10 @@ public final class MessagingConsumedMessagesRecorder {
     this.counter = counter;
   }
 
+  boolean isEnabled() {
+    return counter != null;
+  }
+
   /**
    * Records {@code count} delivered messages, using the supplied context for exemplar correlation
    * without making it current.
