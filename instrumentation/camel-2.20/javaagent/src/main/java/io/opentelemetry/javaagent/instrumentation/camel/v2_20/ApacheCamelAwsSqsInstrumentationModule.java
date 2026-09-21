@@ -5,23 +5,26 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
+import net.bytebuddy.matcher.ElementMatcher;
 
-/**
- * Muzzle evaluates all library references in an {@link InstrumentationModule} together. This module
- * isolates the optional JMS references so the core Camel instrumentation can load without the JMS
- * API.
- */
 @AutoService(InstrumentationModule.class)
-public class ApacheCamelJmsInstrumentationModule extends InstrumentationModule {
+public class ApacheCamelAwsSqsInstrumentationModule extends InstrumentationModule {
 
-  public ApacheCamelJmsInstrumentationModule() {
-    super("camel", "camel-2.20", "camel-jms");
+  public ApacheCamelAwsSqsInstrumentationModule() {
+    super("camel", "camel-2.20", "camel-aws-sqs");
+  }
+
+  @Override
+  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    return hasClassesNamed("org.apache.camel.component.aws.sqs.SqsConsumer")
+        .and(hasClassesNamed("com.amazonaws.services.sqs.model.Message"));
   }
 
   @Override
@@ -31,6 +34,6 @@ public class ApacheCamelJmsInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new CamelMuzzleInstrumentation(), new JmsMessageInstrumentation());
+    return asList(new CamelMuzzleInstrumentation(), new SqsConsumerInstrumentation());
   }
 }
