@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
+import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -23,7 +24,7 @@ class JedisFactoryInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("redis.clients.jedis.JedisFactory");
+    return hasSuperType(named("redis.clients.jedis.JedisFactory"));
   }
 
   @Override

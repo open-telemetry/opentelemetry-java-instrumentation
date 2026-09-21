@@ -54,8 +54,7 @@ public class JedisConfiguredTargets {
   }
 
   public static void capturePoolFactory(Pool<?> pool, PooledObjectFactory<?> factory) {
-    if (factory == null
-        || !factory.getClass().getName().equals("redis.clients.jedis.JedisFactory")) {
+    if (factory == null || !isJedisFactory(factory.getClass())) {
       return;
     }
     POOL_FACTORY.set(pool, new PoolFactory(factory));
@@ -68,6 +67,17 @@ public class JedisConfiguredTargets {
     if (configuredTarget != null) {
       FACTORY_TARGET.set(factory, configuredTarget);
     }
+  }
+
+  private static boolean isJedisFactory(Class<?> factoryClass) {
+    Class<?> currentClass = factoryClass;
+    while (currentClass != null) {
+      if (currentClass.getName().equals("redis.clients.jedis.JedisFactory")) {
+        return true;
+      }
+      currentClass = currentClass.getSuperclass();
+    }
+    return false;
   }
 
   public static void captureOriginalEndpoint(

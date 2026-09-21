@@ -19,7 +19,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.HostAndPort;
+import redis.clients.jedis.JedisPoolAbstract;
 import redis.clients.jedis.Protocol;
+import redis.clients.jedis.TestJedisFactory;
 
 class JedisConfiguredTargetsTest {
 
@@ -64,6 +66,17 @@ class JedisConfiguredTargetsTest {
     assertThat(JedisConfiguredTargets.connectionTarget(connection))
         .extracting(RedisServerTarget::getAddress)
         .isEqualTo("direct");
+  }
+
+  @Test
+  void capturesJedisFactorySubclass() {
+    JedisPoolAbstract pool = new JedisPoolAbstract();
+    TestJedisFactory factory = new TestJedisFactory();
+
+    JedisConfiguredTargets.capturePoolFactory(pool, factory);
+    JedisConfiguredTargets.setPoolTarget(pool, RedisServerTarget.ofEndpoint("configured:6379"));
+
+    assertThat(JedisConfiguredTargets.factoryTargetContext(factory)).isNotNull();
   }
 
   @Test
