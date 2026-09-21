@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
+import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.not;
-import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -34,7 +34,7 @@ class JedisInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor().and(takesArgument(0, HostAndPort.class)),
+        isConstructor().and(takesArgument(0, named("redis.clients.jedis.HostAndPort"))),
         getClass().getName() + "$HostAndPortConstructorAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
@@ -66,7 +66,7 @@ class JedisInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This BinaryJedis jedis, @Advice.Argument(0) @Nullable HostAndPort endpoint) {
-      JedisConfiguredTargets.setConnectionTarget(
+      JedisConfiguredTargets.captureConnectionTarget(
           jedis.getClient(), JedisConfiguredTargets.hostAndPortTarget(endpoint));
     }
   }

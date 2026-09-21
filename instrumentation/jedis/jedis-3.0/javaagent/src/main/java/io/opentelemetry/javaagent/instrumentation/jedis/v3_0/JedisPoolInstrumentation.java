@@ -28,10 +28,10 @@ class JedisPoolInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor().and(takesArgument(0, HostAndPort.class)),
+        isConstructor().and(takesArgument(0, named("redis.clients.jedis.HostAndPort"))),
         getClass().getName() + "$FirstArgumentAdvice");
     transformer.applyAdviceToMethod(
-        isConstructor().and(takesArgument(1, HostAndPort.class)),
+        isConstructor().and(takesArgument(1, named("redis.clients.jedis.HostAndPort"))),
         getClass().getName() + "$SecondArgumentAdvice");
   }
 
@@ -41,7 +41,7 @@ class JedisPoolInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This Pool<?> pool, @Advice.Argument(0) @Nullable HostAndPort endpoint) {
-      JedisConfiguredTargets.setPoolTarget(
+      JedisConfiguredTargets.capturePoolTarget(
           pool, JedisConfiguredTargets.hostAndPortTarget(endpoint));
     }
   }
@@ -52,7 +52,7 @@ class JedisPoolInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This Pool<?> pool, @Advice.Argument(1) @Nullable HostAndPort endpoint) {
-      JedisConfiguredTargets.setPoolTarget(
+      JedisConfiguredTargets.capturePoolTarget(
           pool, JedisConfiguredTargets.hostAndPortTarget(endpoint));
     }
   }

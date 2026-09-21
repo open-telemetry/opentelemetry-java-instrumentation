@@ -171,10 +171,9 @@ class Jedis30ClientTest {
     Object builder = defaultClientConfigClass.getMethod("builder").invoke(null);
     Object clientConfig = builder.getClass().getMethod("build").invoke(builder);
     JedisPool pool =
-        (JedisPool)
-            JedisPool.class
-                .getConstructor(HostAndPort.class, clientConfigClass)
-                .newInstance(endpoint, clientConfig);
+        JedisPool.class
+            .getConstructor(HostAndPort.class, clientConfigClass)
+            .newInstance(endpoint, clientConfig);
     cleanup.deferCleanup(pool);
 
     try (Jedis pooled = pool.getResource()) {
@@ -184,11 +183,11 @@ class Jedis30ClientTest {
     assertHostAndPortTarget(endpoint);
   }
 
+  @SuppressWarnings("UnusedMethod")
   private static boolean supportsHostAndPortPool() {
     try {
       Class<?> clientConfigClass = Class.forName("redis.clients.jedis.JedisClientConfig");
-      JedisPool.class.getConstructor(HostAndPort.class, clientConfigClass);
-      return true;
+      return JedisPool.class.getConstructor(HostAndPort.class, clientConfigClass) != null;
     } catch (ClassNotFoundException | NoSuchMethodException ignored) {
       return false;
     }

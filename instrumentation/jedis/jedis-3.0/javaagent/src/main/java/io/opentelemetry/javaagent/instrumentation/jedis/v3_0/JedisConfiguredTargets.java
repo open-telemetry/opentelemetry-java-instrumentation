@@ -53,6 +53,11 @@ public class JedisConfiguredTargets {
     }
   }
 
+  public static void capturePoolTarget(Pool<?> pool, @Nullable RedisServerTarget fallbackTarget) {
+    ConfiguredTarget configuredTarget = Context.current().get(CURRENT_CONFIGURED_TARGET);
+    setPoolTarget(pool, configuredTarget == null ? fallbackTarget : configuredTarget.target);
+  }
+
   public static void capturePoolFactory(Pool<?> pool, PooledObjectFactory<?> factory) {
     if (factory == null || !isJedisFactory(factory.getClass())) {
       return;
