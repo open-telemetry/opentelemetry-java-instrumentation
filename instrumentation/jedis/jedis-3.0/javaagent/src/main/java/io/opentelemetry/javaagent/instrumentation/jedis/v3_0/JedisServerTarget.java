@@ -36,8 +36,7 @@ public class JedisServerTarget {
     }
     List<String> endpoints = new ArrayList<>(nodes.size());
     for (HostAndPort node : nodes) {
-      endpoints.add(
-          node == null ? null : RedisServerTarget.endpoint(node.getHost(), node.getPort()));
+      endpoints.add(node == null ? null : JedisConfiguredTargets.endpoint(node));
     }
     return RedisServerTarget.ofUnorderedEndpoints(endpoints);
   }

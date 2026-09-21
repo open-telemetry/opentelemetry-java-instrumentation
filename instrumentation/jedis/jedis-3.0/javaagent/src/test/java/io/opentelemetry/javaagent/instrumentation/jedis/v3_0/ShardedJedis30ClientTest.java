@@ -7,11 +7,14 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -144,6 +147,33 @@ class ShardedJedis30ClientTest {
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, shardIp),
                             satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
+
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.jedis-3.0",
+        DB_SYSTEM_NAME,
+        DB_NAMESPACE,
+        DB_OPERATION_NAME,
+        SERVER_ADDRESS,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT);
+    if (emitStableDatabaseSemconv()) {
+      testing.waitAndAssertMetrics(
+          "io.opentelemetry.jedis-3.0",
+          metric ->
+              metric
+                  .hasName("db.client.operation.duration")
+                  .hasHistogramSatisfying(
+                      histogram ->
+                          histogram.hasPointsSatisfying(
+                             point ->
+                                 point
+                                     .hasAttribute(SERVER_ADDRESS, configuredTarget)
+                                     .hasAttributesSatisfying(
+                                         attributes ->
+                                             assertThat(attributes.asMap())
+                                                 .doesNotContainKey(SERVER_PORT)))));
+    }
   }
 
   @Test

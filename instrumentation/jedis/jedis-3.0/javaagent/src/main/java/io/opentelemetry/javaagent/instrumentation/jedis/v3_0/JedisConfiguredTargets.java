@@ -85,7 +85,7 @@ public class JedisConfiguredTargets {
       endpoints = new ArrayList<>(sentinels.size());
       for (Object sentinel : sentinels) {
         if (sentinel instanceof HostAndPort) {
-          endpoints.add(sentinelEndpoint((HostAndPort) sentinel));
+          endpoints.add(endpoint((HostAndPort) sentinel));
         } else if (sentinel instanceof String) {
           endpoints.add(RedisServerTarget.normalizeHostAndPort((String) sentinel));
         } else {
@@ -96,10 +96,10 @@ public class JedisConfiguredTargets {
     return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(endpoints, masterName);
   }
 
-  private static String sentinelEndpoint(HostAndPort sentinel) {
-    OriginalEndpoint originalEndpoint = ORIGINAL_ENDPOINT.get(sentinel);
+  static String endpoint(HostAndPort endpoint) {
+    OriginalEndpoint originalEndpoint = ORIGINAL_ENDPOINT.get(endpoint);
     return originalEndpoint == null
-        ? RedisServerTarget.endpoint(sentinel.getHost(), sentinel.getPort())
+        ? RedisServerTarget.endpoint(endpoint.getHost(), endpoint.getPort())
         : RedisServerTarget.normalizeHostAndPort(originalEndpoint.value);
   }
 

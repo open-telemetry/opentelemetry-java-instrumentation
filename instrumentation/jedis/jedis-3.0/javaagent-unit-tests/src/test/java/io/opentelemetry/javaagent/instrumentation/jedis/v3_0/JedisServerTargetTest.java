@@ -65,6 +65,17 @@ class JedisServerTargetTest {
   }
 
   @Test
+  void parsedClusterNodeUsesOriginalEndpoint() {
+    HostAndPort parsedNode = new HostAndPort("127.0.0.1", 7000);
+    JedisConfiguredTargets.captureOriginalEndpoint(parsedNode, "localhost:7000");
+
+    RedisServerTarget target = JedisServerTarget.ofNodes(singletonList(parsedNode));
+
+    assertThat(target.getAddress()).isEqualTo("localhost");
+    assertThat(target.getPort()).isEqualTo(7000);
+  }
+
+  @Test
   void clusterNodesIncludeAtMostFirstFiveAfterSorting() {
     RedisServerTarget target =
         JedisServerTarget.ofNodes(
