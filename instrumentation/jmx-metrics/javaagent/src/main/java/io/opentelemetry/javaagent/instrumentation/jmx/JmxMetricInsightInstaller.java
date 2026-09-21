@@ -86,7 +86,8 @@ public class JmxMetricInsightInstaller implements AgentListener {
       InternalMetricsDefinitions metricsDefinitions =
           new InternalMetricsDefinitions(JmxMetricInsightInstaller.class.getClassLoader());
 
-      List<String> systemsConfig = config.get("target").getScalarList("system", String.class, emptyList());
+      List<String> systemsConfig =
+          config.get("target").getScalarList("system", String.class, emptyList());
       if (!systemsConfig.isEmpty()) {
         logger.log(
             WARNING,
