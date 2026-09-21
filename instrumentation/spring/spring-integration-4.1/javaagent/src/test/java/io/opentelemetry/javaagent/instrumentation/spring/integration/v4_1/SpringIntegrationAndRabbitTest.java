@@ -108,8 +108,7 @@ class SpringIntegrationAndRabbitTest {
                             satisfies(
                                 MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
                                 val -> val.isInstanceOf(String.class))),
-                // the rabbitmq CONSUMER span is suppressed for Spring listener containers (see
-                // RabbitMqConsumerProcessTracing), so spring-rabbit creates the single process span
+                // Spring listener registration selects spring-rabbit for the process span.
                 span ->
                     span.satisfies(
                             spanData ->
