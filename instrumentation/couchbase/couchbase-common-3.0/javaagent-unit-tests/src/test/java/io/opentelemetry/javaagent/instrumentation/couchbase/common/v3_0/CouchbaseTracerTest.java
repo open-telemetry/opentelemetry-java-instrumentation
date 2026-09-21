@@ -109,6 +109,15 @@ class CouchbaseTracerTest {
     assertThat(spanData.getEvents()).extracting(event -> event.getName()).contains("exception");
   }
 
+  @Test
+  void updatesSpanName() {
+    CouchbaseSpan span = new CouchbaseTracer(tracer, false, INTERNAL, false).startSpan("get", null);
+    span.updateName("get _default");
+    span.end();
+
+    assertThat(findSpan("get _default").getName()).isEqualTo("get _default");
+  }
+
   private SpanData findSpan(String name) {
     List<SpanData> spans = exporter.getFinishedSpanItems();
     return spans.stream()

@@ -334,6 +334,34 @@ We parse gradle files in order to determine several pieces of metadata:
 - Standalone Library versions are identified, but we do not try and parse version ranges
 - Minimum Java version is determined by the `otelJava` configurations
 
+#### Excluding a muzzle directive from the docs
+
+Every `pass { ... }` block contributes a line to `javaagent_target_versions`. Some pass blocks exist
+only to verify a sub-range or an alternate dependency set, and publishing their version range
+alongside the module's real range is misleading. Add a `// instrumentation-docs:ignore` comment
+inside such a block to leave it out of the generated documentation:
+
+```kotlin
+muzzle {
+  pass {
+    group.set("com.couchbase.client")
+    module.set("java-client")
+    versions.set("[2,3)")
+  }
+  pass {
+    // instrumentation-docs:ignore - verification only, the [2,3) directive above is the range we document
+    name.set("Pre-2.6 network instrumentation")
+    group.set("com.couchbase.client")
+    module.set("java-client")
+    versions.set("[2,2.6)")
+  }
+}
+```
+
+The comment must appear inside the `pass` block; placing it first is recommended. A comment above
+`pass {` is not honored.
+The marker has no effect on muzzle itself, only on the generated `instrumentation-list.yaml`.
+
 ### Scope
 
 For now, the scope name is the only value that is implemented in our instrumentations. The scope

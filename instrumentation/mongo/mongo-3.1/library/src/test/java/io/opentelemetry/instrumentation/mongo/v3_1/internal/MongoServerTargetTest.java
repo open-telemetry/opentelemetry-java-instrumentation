@@ -228,6 +228,25 @@ class MongoServerTargetTest {
   }
 
   @Test
+  void srvHostOmitsCredentialsPathQueryAndFragment() {
+    MongoServerTarget target =
+        MongoClusterSettings.srvConnectionString(
+            "mongodb+srv://user:password@cluster0.example.com/database?tls=true#fragment");
+
+    assertThat(target.getAddress()).isEqualTo("mongodb+srv://cluster0.example.com");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void unsafeEncodedSrvIdentityIsNotReported() {
+    assertThat(
+            MongoClusterSettings.srvConnectionString(
+                "mongodb+srv://user%3Apassword%40cluster0.example.com"))
+        .isNull();
+    assertThat(MongoClusterSettings.srvConnectionString("mongodb://cluster0.example.com")).isNull();
+  }
+
+  @Test
   void srvHostOnlyAcceptsAnExtractedHostname() {
     assertThat(MongoServerTarget.srvHost("mongodb+srv://cluster0.example.com")).isNull();
     assertThat(MongoServerTarget.srvHost("cluster0.example.com/database")).isNull();
@@ -264,6 +283,8 @@ class MongoServerTargetTest {
     assertThat(MongoServerTarget.seeds(singletonList(seedWithHost("apiKey=secret", 27017))))
         .isNull();
     assertThat(MongoServerTarget.seeds(singletonList(seedWithHost("abc:def:123", 27017)))).isNull();
+    assertThat(MongoServerTarget.seeds(singletonList(seedWithHost("[::1%3Apassword]", 27017))))
+        .isNull();
   }
 
   @Test

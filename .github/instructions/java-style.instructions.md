@@ -18,6 +18,13 @@ Follow `docs/contributing/style-guide.md`.
 - **`equals` operand order**: prefer `value.equals(CONSTANT)` over
   `CONSTANT.equals(value)`. Do not flip operand order solely as a defensive
   null-safety cleanup; only flip when `value` can actually be null.
+- **Byte Buddy `isDeclaredBy` matchers**: do not add `isDeclaredBy` by default.
+  Use it when a `TypeInstrumentation` type matcher covers multiple types and an
+  advice intentionally applies only to a member declared by one specific type.
+  Do not add it as speculative future-proofing when the method name and required
+  signature already identify the target. As with method parameter matching,
+  avoid restrictions that correctness, advice binding, or intended behavior do
+  not require.
 - **Class organization**: static fields → static initializer → instance fields
   → constructors → methods → nested classes. Place calling methods above the
   methods they call.

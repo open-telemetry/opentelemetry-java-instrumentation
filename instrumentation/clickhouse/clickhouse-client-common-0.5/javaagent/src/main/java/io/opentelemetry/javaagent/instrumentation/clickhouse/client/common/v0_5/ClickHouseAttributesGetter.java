@@ -79,4 +79,16 @@ class ClickHouseAttributesGetter implements SqlClientAttributesGetter<ClickHouse
     }
     return request.getPort();
   }
+
+  @Nullable
+  @Override
+  public String getNetworkPeerAddress(ClickHouseDbRequest request, @Nullable Void response) {
+    return emitStableDatabaseSemconv() ? request.getPeerAddress() : null;
+  }
+
+  @Nullable
+  @Override
+  public Integer getNetworkPeerPort(ClickHouseDbRequest request, @Nullable Void response) {
+    return emitStableDatabaseSemconv() ? request.getPeerPort() : null;
+  }
 }

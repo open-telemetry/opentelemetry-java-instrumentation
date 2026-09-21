@@ -1423,6 +1423,24 @@ definitions:
       description: Enables collection of JMX metrics.
       type: boolean
       default: true
+    otel.jmx.metrics.excluded:
+      name: otel.jmx.metrics.excluded
+      declarative_name: java.jmx.metrics.excluded
+      description: |
+        Comma-separated list of case-sensitive glob patterns for metric names not to collect. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. When no included patterns are configured, all metrics that are not excluded are collected. With neither selector property configured, all metrics are collected.
+      type: list
+      default: ''
+      examples:
+      - jvm.memory.limit,kafka.connect.*
+    otel.jmx.metrics.included:
+      name: otel.jmx.metrics.included
+      declarative_name: java.jmx.metrics.included
+      description: |
+        Comma-separated list of case-sensitive glob patterns for metric names to collect. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. When no included patterns are configured, all metrics that are not excluded are collected. With neither selector property configured, all metrics are collected.
+      type: list
+      default: ''
+      examples:
+      - jvm.memory.*,jvm.thread.count
     otel.jmx.target.system:
       name: otel.jmx.target.system
       declarative_name: java.jmx.target.system
@@ -1533,8 +1551,8 @@ definitions:
       attributes:
       - name: db.client.connection.pool.name
         type: STRING
-    db.client.connection.max-c7917942:
-      name: db.client.connection.max
+    db.client.connection.limit-12f711ee:
+      name: db.client.connection.limit
       description: The maximum number of open connections allowed.
       instrument: updowncounter
       data_type: LONG_SUM
@@ -1718,6 +1736,27 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
+    db.client.operation.duration-499ab06d:
+      name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: db.collection.name
+        type: STRING
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: server.address
+        type: STRING
     db.client.operation.duration-4f486dc3:
       name: db.client.operation.duration
       description: Duration of database client operations.
@@ -1772,6 +1811,40 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
+    db.client.operation.duration-64e6fadd:
+      name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: server.address
+        type: STRING
+    db.client.operation.duration-6614b2d6:
+      name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: db.collection.name
+        type: STRING
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
     db.client.operation.duration-6dc4ed81:
       name: db.client.operation.duration
       description: Duration of database client operations.
@@ -1865,6 +1938,27 @@ definitions:
         type: STRING
       - name: db.system.name
         type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    db.client.operation.duration-ec9463db:
+      name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: db.namespace
+        type: STRING
+      - name: db.query.summary
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
       - name: server.address
         type: STRING
       - name: server.port
@@ -5309,6 +5403,7 @@ libraries:
   source_path: instrumentation/alibaba-druid-1.0
   scope:
     name: io.opentelemetry.alibaba-druid-1.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -5328,7 +5423,7 @@ libraries:
     - db.client.connection.count-2e6ba9b7
     - db.client.connection.idle.max-b95e4f5c
     - db.client.connection.idle.min-73bdafbc
-    - db.client.connection.max-c7917942
+    - db.client.connection.limit-12f711ee
     - db.client.connection.pending_requests-a0f41111
 - name: apache-commons-pool-2.0
   display_name: Apache Commons Pool
@@ -5362,6 +5457,7 @@ libraries:
   source_path: instrumentation/apache-dbcp-2.0
   scope:
     name: io.opentelemetry.apache-dbcp-2.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -5380,7 +5476,7 @@ libraries:
     - db.client.connection.count-2e6ba9b7
     - db.client.connection.idle.max-b95e4f5c
     - db.client.connection.idle.min-73bdafbc
-    - db.client.connection.max-c7917942
+    - db.client.connection.limit-12f711ee
 - name: apache-dubbo-2.7
   display_name: Apache Dubbo
   description: |
@@ -5394,6 +5490,7 @@ libraries:
   source_path: instrumentation/apache-dubbo-2.7
   scope:
     name: io.opentelemetry.apache-dubbo-2.7
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.dubbo:dubbo:[2.7,)
@@ -6364,6 +6461,7 @@ libraries:
   source_path: instrumentation/aws-lambda/aws-lambda-events-2.2
   scope:
     name: io.opentelemetry.aws-lambda-events-2.2
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
   - com.amazonaws:aws-lambda-java-core:[1.0.0,)
@@ -6499,6 +6597,7 @@ libraries:
   source_path: instrumentation/aws-lambda/aws-lambda-events-3.11
   scope:
     name: io.opentelemetry.aws-lambda-events-3.11
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_standalone_library: true
   configuration_refs:
   - otel.instrumentation.aws-lambda.flush-timeout
@@ -6661,6 +6760,7 @@ libraries:
   source_path: instrumentation/aws-sdk/aws-sdk-1.11
   scope:
     name: io.opentelemetry.aws-sdk-1.11
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -7033,6 +7133,7 @@ libraries:
   source_path: instrumentation/aws-sdk/aws-sdk-2.2
   scope:
     name: io.opentelemetry.aws-sdk-2.2
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -7061,6 +7162,8 @@ libraries:
     - span_kind: CLIENT
       attributes:
       - name: aws.agent
+        type: STRING
+      - name: aws.bedrock.guardrail.id
         type: STRING
       - name: aws.dynamodb.consumed_capacity
         type: STRING_ARRAY
@@ -7533,6 +7636,7 @@ libraries:
   source_path: instrumentation/c3p0-0.9
   scope:
     name: io.opentelemetry.c3p0-0.9
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -7561,6 +7665,7 @@ libraries:
   source_path: instrumentation/camel-2.20
   scope:
     name: io.opentelemetry.camel-2.20
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.camel:camel-core:[2.19,3)
@@ -7814,6 +7919,7 @@ libraries:
   source_path: instrumentation/cassandra/cassandra-3.0
   scope:
     name: io.opentelemetry.cassandra-3.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - com.datastax.cassandra:cassandra-driver-core:[3.0,4.0)
@@ -7902,8 +8008,10 @@ libraries:
   source_path: instrumentation/cassandra/cassandra-4.0
   scope:
     name: io.opentelemetry.cassandra-4.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
+  - com.datastax.oss:java-driver-core-shaded:[4.0,4.4)
   - com.datastax.oss:java-driver-core:[4.0,4.4)
   configuration_refs:
   - common.db.query-sanitization.enabled
@@ -7995,9 +8103,11 @@ libraries:
   source_path: instrumentation/cassandra/cassandra-4.4
   scope:
     name: io.opentelemetry.cassandra-4.4
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
+  - com.datastax.oss:java-driver-core-shaded:[4.4,)
   - com.datastax.oss:java-driver-core:[4.4,)
   - org.apache.cassandra:java-driver-core:(,)
   configuration_refs:
@@ -8091,6 +8201,7 @@ libraries:
   source_path: instrumentation/clickhouse/clickhouse-client-v1-0.5
   scope:
     name: io.opentelemetry.clickhouse-client-v1-0.5
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - com.clickhouse:clickhouse-client:[0.5.0,)
@@ -8115,7 +8226,7 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
-    - db.client.operation.duration-d4212042
+    - db.client.operation.duration-ec9463db
     spans:
     - span_kind: CLIENT
       attributes:
@@ -8129,6 +8240,10 @@ libraries:
         type: STRING
       - name: error.type
         type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
       - name: server.address
         type: STRING
       - name: server.port
@@ -8144,6 +8259,7 @@ libraries:
   source_path: instrumentation/clickhouse/clickhouse-client-v2-0.8
   scope:
     name: io.opentelemetry.clickhouse-client-v2-0.8
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - com.clickhouse:client-v2:[0.6.4,)
@@ -8168,7 +8284,7 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
-    - db.client.operation.duration-d4212042
+    - db.client.operation.duration-ec9463db
     spans:
     - span_kind: CLIENT
       attributes:
@@ -8182,6 +8298,10 @@ libraries:
         type: STRING
       - name: error.type
         type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
       - name: server.address
         type: STRING
       - name: server.port
@@ -8197,6 +8317,7 @@ libraries:
   source_path: instrumentation/couchbase/couchbase-2.0
   scope:
     name: io.opentelemetry.couchbase-2.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - com.couchbase.client:java-client:[2,3)
@@ -8216,9 +8337,21 @@ libraries:
         type: STRING
       - name: db.system
         type: STRING
+  - when: otel.instrumentation.couchbase.experimental-span-attributes=true
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: db.name
+        type: STRING
+      - name: db.operation
+        type: STRING
+      - name: db.statement
+        type: STRING
+      - name: db.system
+        type: STRING
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
-    - db.client.operation.duration-55295033
+    - db.client.operation.duration-64e6fadd
     spans:
     - span_kind: CLIENT
       attributes:
@@ -8231,6 +8364,12 @@ libraries:
       - name: db.query.text
         type: STRING
       - name: db.system.name
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: server.address
         type: STRING
 - name: couchbase-2.6
   display_name: Couchbase Client
@@ -8300,7 +8439,7 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
-    - db.client.operation.duration-bfd9d23c
+    - db.client.operation.duration-64e6fadd
     spans:
     - span_kind: CLIENT
       attributes:
@@ -8320,23 +8459,61 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
-      - name: server.port
-        type: LONG
-- name: couchbase-3.1
+- name: couchbase-3.0
   display_name: Couchbase Client
   description: |
-    Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
+    This instrumentation uses the Couchbase tracing SPI to create spans for Couchbase Java SDK 3.0.
   semantic_conventions:
   - DATABASE_CLIENT_SPANS
   library_link: https://github.com/couchbase/couchbase-java-client
-  features:
-  - AUTO_INSTRUMENTATION_SHIM
+  source_path: instrumentation/couchbase/couchbase-3.0
+  scope:
+    name: io.opentelemetry.couchbase-3.0
+  has_javaagent: true
+  javaagent_target_versions:
+  - com.couchbase.client:java-client:[3.0,3.1)
+  telemetry:
+  - when: default
+    spans:
+    - span_kind: INTERNAL
+      attributes:
+      - name: couchbase.client_context.request_id
+        type: STRING
+      - name: couchbase.document_id
+        type: STRING
+      - name: couchbase.operation_id
+        type: STRING
+      - name: peer.latency
+        type: LONG
+      - name: peer.service
+        type: STRING
+  - when: otel.semconv-stability.opt-in=database
+    spans:
+    - span_kind: INTERNAL
+      attributes:
+      - name: couchbase.client_context.request_id
+        type: STRING
+      - name: couchbase.document_id
+        type: STRING
+      - name: couchbase.operation_id
+        type: STRING
+      - name: peer.latency
+        type: LONG
+      - name: peer.service
+        type: STRING
+- name: couchbase-3.1
+  display_name: Couchbase Client
+  description: |
+    This instrumentation uses the Couchbase tracing SPI to create database client spans for Couchbase Java SDK 3.1.
+  semantic_conventions:
+  - DATABASE_CLIENT_SPANS
+  library_link: https://github.com/couchbase/couchbase-java-client
   source_path: instrumentation/couchbase/couchbase-3.1
   scope:
     name: io.opentelemetry.couchbase-3.1
   has_javaagent: true
   javaagent_target_versions:
-  - com.couchbase.client:java-client:[3.1,3.1.6)
+  - com.couchbase.client:java-client:[3.1,3.2)
   configuration_refs:
   - otel.instrumentation.couchbase.experimental-span-attributes-6c36d22e
   telemetry:
@@ -8382,12 +8559,16 @@ libraries:
         type: STRING
       - name: db.operation.name
         type: STRING
+      - name: db.query.text
+        type: STRING
       - name: db.system.name
         type: STRING
       - name: network.peer.address
         type: STRING
       - name: network.peer.port
         type: LONG
+      - name: server.address
+        type: STRING
   - when: otel.semconv-stability.opt-in=database,otel.instrumentation.couchbase.experimental-span-attributes=true
     spans:
     - span_kind: INTERNAL
@@ -8397,103 +8578,9 @@ libraries:
       - name: db.couchbase.local_id
         type: STRING
       - name: db.couchbase.operation_id
-        type: LONG
-      - name: db.couchbase.scope
-        type: STRING
-      - name: db.couchbase.server_duration
-        type: LONG
-      - name: db.couchbase.service
-        type: STRING
-      - name: db.namespace
-        type: STRING
-      - name: db.operation.name
-        type: STRING
-      - name: db.system.name
-        type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-- name: couchbase-3.1.6
-  display_name: Couchbase Client
-  description: |
-    Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
-  semantic_conventions:
-  - DATABASE_CLIENT_SPANS
-  library_link: https://github.com/couchbase/couchbase-java-client
-  features:
-  - AUTO_INSTRUMENTATION_SHIM
-  source_path: instrumentation/couchbase/couchbase-3.1.6
-  scope:
-    name: io.opentelemetry.couchbase-3.1.6
-  has_javaagent: true
-  javaagent_target_versions:
-  - com.couchbase.client:java-client:[3.1.6,3.2.0)
-  configuration_refs:
-  - otel.instrumentation.couchbase.experimental-span-attributes-6c36d22e
-  telemetry:
-  - when: default
-    spans:
-    - span_kind: INTERNAL
-      attributes:
-      - name: db.couchbase.collection
-        type: STRING
-      - name: db.couchbase.local_id
         type: STRING
       - name: db.couchbase.operation_id
         type: LONG
-      - name: db.couchbase.retries
-        type: LONG
-      - name: db.couchbase.scope
-        type: STRING
-      - name: db.couchbase.server_duration
-        type: LONG
-      - name: db.couchbase.service
-        type: STRING
-      - name: db.name
-        type: STRING
-      - name: db.operation
-        type: STRING
-      - name: db.system
-        type: STRING
-      - name: net.host.name
-        type: STRING
-      - name: net.host.port
-        type: LONG
-      - name: net.peer.name
-        type: STRING
-      - name: net.peer.port
-        type: LONG
-      - name: net.transport
-        type: STRING
-  - when: otel.semconv-stability.opt-in=database
-    spans:
-    - span_kind: INTERNAL
-      attributes:
-      - name: db.collection.name
-        type: STRING
-      - name: db.namespace
-        type: STRING
-      - name: db.operation.name
-        type: STRING
-      - name: db.system.name
-        type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-  - when: otel.semconv-stability.opt-in=database,otel.instrumentation.couchbase.experimental-span-attributes=true
-    spans:
-    - span_kind: INTERNAL
-      attributes:
-      - name: db.collection.name
-        type: STRING
-      - name: db.couchbase.local_id
-        type: STRING
-      - name: db.couchbase.operation_id
-        type: LONG
-      - name: db.couchbase.retries
-        type: LONG
       - name: db.couchbase.scope
         type: STRING
       - name: db.couchbase.server_duration
@@ -8504,27 +8591,29 @@ libraries:
         type: STRING
       - name: db.operation.name
         type: STRING
+      - name: db.query.text
+        type: STRING
       - name: db.system.name
         type: STRING
       - name: network.peer.address
         type: STRING
       - name: network.peer.port
         type: LONG
+      - name: server.address
+        type: STRING
 - name: couchbase-3.2
   display_name: Couchbase Client
   description: |
-    Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
+    This instrumentation uses the Couchbase tracing SPI to create database client spans for Couchbase Java SDK 3.2 and later.
   semantic_conventions:
   - DATABASE_CLIENT_SPANS
   library_link: https://github.com/couchbase/couchbase-java-client
-  features:
-  - AUTO_INSTRUMENTATION_SHIM
   source_path: instrumentation/couchbase/couchbase-3.2
   scope:
     name: io.opentelemetry.couchbase-3.2
   has_javaagent: true
   javaagent_target_versions:
-  - com.couchbase.client:java-client:[3.2.0,3.4.0)
+  - com.couchbase.client:java-client:[3.2.0,)
   configuration_refs:
   - otel.instrumentation.couchbase.experimental-span-attributes-6c36d22e
   telemetry:
@@ -8580,6 +8669,10 @@ libraries:
         type: STRING
       - name: network.peer.port
         type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
   - when: otel.semconv-stability.opt-in=database,otel.instrumentation.couchbase.experimental-span-attributes=true
     spans:
     - span_kind: INTERNAL
@@ -8610,105 +8703,9 @@ libraries:
         type: STRING
       - name: network.peer.port
         type: LONG
-- name: couchbase-3.4
-  display_name: Couchbase Client
-  description: |
-    Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
-  semantic_conventions:
-  - DATABASE_CLIENT_SPANS
-  library_link: https://github.com/couchbase/couchbase-java-client
-  features:
-  - AUTO_INSTRUMENTATION_SHIM
-  source_path: instrumentation/couchbase/couchbase-3.4
-  scope:
-    name: io.opentelemetry.couchbase-3.4
-  has_javaagent: true
-  javaagent_target_versions:
-  - com.couchbase.client:java-client:[3.4.0,)
-  configuration_refs:
-  - otel.instrumentation.couchbase.experimental-span-attributes-6c36d22e
-  telemetry:
-  - when: default
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: db.couchbase.collection
+      - name: server.address
         type: STRING
-      - name: db.couchbase.document_id
-        type: STRING
-      - name: db.couchbase.local_id
-        type: STRING
-      - name: db.couchbase.operation_id
-        type: LONG
-      - name: db.couchbase.retries
-        type: LONG
-      - name: db.couchbase.scope
-        type: STRING
-      - name: db.couchbase.server_duration
-        type: LONG
-      - name: db.couchbase.service
-        type: STRING
-      - name: db.name
-        type: STRING
-      - name: db.operation
-        type: STRING
-      - name: db.system
-        type: STRING
-      - name: net.host.name
-        type: STRING
-      - name: net.host.port
-        type: LONG
-      - name: net.peer.name
-        type: STRING
-      - name: net.peer.port
-        type: LONG
-      - name: net.transport
-        type: STRING
-  - when: otel.semconv-stability.opt-in=database
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: db.collection.name
-        type: STRING
-      - name: db.namespace
-        type: STRING
-      - name: db.operation.name
-        type: STRING
-      - name: db.system.name
-        type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-  - when: otel.semconv-stability.opt-in=database,otel.instrumentation.couchbase.experimental-span-attributes=true
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: db.collection.name
-        type: STRING
-      - name: db.couchbase.document_id
-        type: STRING
-      - name: db.couchbase.local_id
-        type: STRING
-      - name: db.couchbase.operation_id
-        type: LONG
-      - name: db.couchbase.retries
-        type: LONG
-      - name: db.couchbase.scope
-        type: STRING
-      - name: db.couchbase.server_duration
-        type: LONG
-      - name: db.couchbase.service
-        type: STRING
-      - name: db.namespace
-        type: STRING
-      - name: db.operation.name
-        type: STRING
-      - name: db.system.name
-        type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
+      - name: server.port
         type: LONG
 - name: dropwizard-metrics-4.0
   display_name: Dropwizard Metrics
@@ -8809,6 +8806,7 @@ libraries:
   source_path: instrumentation/elasticsearch/elasticsearch-rest-5.0
   scope:
     name: io.opentelemetry.elasticsearch-rest-5.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.elasticsearch.client:elasticsearch-rest-client:[5.0,6.4)
@@ -8860,6 +8858,7 @@ libraries:
   source_path: instrumentation/elasticsearch/elasticsearch-rest-6.4
   scope:
     name: io.opentelemetry.elasticsearch-rest-6.4
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.elasticsearch.client:elasticsearch-rest-client:[6.4,7.0)
@@ -8901,8 +8900,8 @@ libraries:
         type: STRING
 - name: elasticsearch-rest-7.0
   display_name: Elasticsearch REST Client
-  description: This instrumentation enables database client spans and database client
-    metrics for Elasticsearch REST clients.
+  description: |
+    This instrumentation enables database client spans and database client metrics for Elasticsearch REST clients. The library artifacts are deprecated and will be removed in 3.0. Elasticsearch Java API Client users should use its native OpenTelemetry support (https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/8.10/opentelemetry.html), available in 7.17.20+ on the 7.x line and 8.10+. Applications that use the REST Client directly have no drop-in library replacement; they can use the javaagent or migrate to the Java API Client.
   semantic_conventions:
   - DATABASE_CLIENT_SPANS
   - DATABASE_CLIENT_METRICS
@@ -8910,6 +8909,7 @@ libraries:
   source_path: instrumentation/elasticsearch/elasticsearch-rest-7.0
   scope:
     name: io.opentelemetry.elasticsearch-rest-7.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -8961,6 +8961,7 @@ libraries:
   source_path: instrumentation/elasticsearch/elasticsearch-transport-5.0
   scope:
     name: io.opentelemetry.elasticsearch-transport-5.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.elasticsearch.client:transport:[5.0.0,5.3.0)
@@ -9030,6 +9031,8 @@ libraries:
         type: STRING
       - name: network.peer.port
         type: LONG
+      - name: server.address
+        type: STRING
 - name: elasticsearch-transport-5.3
   display_name: Elasticsearch Transport Client
   description: |
@@ -9041,6 +9044,7 @@ libraries:
   source_path: instrumentation/elasticsearch/elasticsearch-transport-5.3
   scope:
     name: io.opentelemetry.elasticsearch-transport-5.3
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.elasticsearch.client:transport:[5.3.0,6.0.0)
@@ -9120,6 +9124,8 @@ libraries:
         type: STRING
       - name: network.peer.port
         type: LONG
+      - name: server.address
+        type: STRING
 - name: elasticsearch-transport-6.0
   display_name: Elasticsearch Transport Client
   description: |
@@ -9131,6 +9137,7 @@ libraries:
   source_path: instrumentation/elasticsearch/elasticsearch-transport-6.0
   scope:
     name: io.opentelemetry.elasticsearch-transport-6.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.elasticsearch.client:transport:[6.0.0,)
@@ -9206,6 +9213,8 @@ libraries:
         type: STRING
       - name: network.peer.port
         type: LONG
+      - name: server.address
+        type: STRING
 - name: executors
   display_name: Java Executors
   description: |
@@ -9289,6 +9298,7 @@ libraries:
   source_path: instrumentation/geode-1.4
   scope:
     name: io.opentelemetry.geode-1.4
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.geode:geode-core:[1.4.0,)
@@ -9558,6 +9568,7 @@ libraries:
   source_path: instrumentation/grpc-1.6
   scope:
     name: io.opentelemetry.grpc-1.6
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -9730,6 +9741,7 @@ libraries:
   source_path: instrumentation/gwt-2.0
   scope:
     name: io.opentelemetry.gwt-2.0
+    schema_url: https://opentelemetry.io/schemas/1.37.0
   has_javaagent: true
   javaagent_target_versions:
   - com.google.gwt:gwt-servlet:[2.0.0,)
@@ -9756,6 +9768,7 @@ libraries:
   source_path: instrumentation/hbase/hbase-client-1.0
   scope:
     name: io.opentelemetry.hbase-client-1.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.hbase:hbase-client:[1.0.0,1.4.0)
@@ -9778,7 +9791,7 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
-    - db.client.operation.duration-e36c6087
+    - db.client.operation.duration-6614b2d6
     spans:
     - span_kind: CLIENT
       attributes:
@@ -9796,8 +9809,6 @@ libraries:
         type: STRING
       - name: server.address
         type: STRING
-      - name: server.port
-        type: LONG
 - name: hbase-client-1.4
   display_name: HBase Client
   description: |
@@ -9809,6 +9820,7 @@ libraries:
   source_path: instrumentation/hbase/hbase-client-1.4
   scope:
     name: io.opentelemetry.hbase-client-1.4
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.hbase:hbase-client:[1.4.0,2.0.0)
@@ -9831,7 +9843,7 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
-    - db.client.operation.duration-e36c6087
+    - db.client.operation.duration-6614b2d6
     spans:
     - span_kind: CLIENT
       attributes:
@@ -9849,8 +9861,6 @@ libraries:
         type: STRING
       - name: server.address
         type: STRING
-      - name: server.port
-        type: LONG
 - name: hbase-client-2.0
   display_name: HBase Client
   description: |
@@ -9862,6 +9872,7 @@ libraries:
   source_path: instrumentation/hbase/hbase-client-2.0
   scope:
     name: io.opentelemetry.hbase-client-2.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.hbase:hbase-client:[2.0.0, 2.5.0)
@@ -9884,7 +9895,7 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
-    - db.client.operation.duration-e36c6087
+    - db.client.operation.duration-499ab06d
     spans:
     - span_kind: CLIENT
       attributes:
@@ -9900,10 +9911,12 @@ libraries:
         type: STRING
       - name: error.type
         type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
       - name: server.address
         type: STRING
-      - name: server.port
-        type: LONG
 - name: helidon-4.3
   display_name: Helidon
   description: This instrumentation enables HTTP server spans and HTTP server metrics
@@ -10078,6 +10091,7 @@ libraries:
   source_path: instrumentation/hikaricp-3.0
   scope:
     name: io.opentelemetry.hikaricp-3.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -10098,7 +10112,7 @@ libraries:
     - db.client.connection.count-2e6ba9b7
     - db.client.connection.create_time-4f586679
     - db.client.connection.idle.min-73bdafbc
-    - db.client.connection.max-c7917942
+    - db.client.connection.limit-12f711ee
     - db.client.connection.pending_requests-a0f41111
     - db.client.connection.timeouts-d2dbfa58
     - db.client.connection.use_time-a06760eb
@@ -10229,6 +10243,7 @@ libraries:
   source_path: instrumentation/influxdb-2.4
   scope:
     name: io.opentelemetry.influxdb-2.4
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.influxdb:influxdb-java:[2.4,)
@@ -10892,6 +10907,7 @@ libraries:
   source_path: instrumentation/jdbc
   scope:
     name: io.opentelemetry.jdbc
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -10988,6 +11004,7 @@ libraries:
   source_path: instrumentation/jedis/jedis-1.4
   scope:
     name: io.opentelemetry.jedis-1.4
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - redis.clients:jedis:[1.4.0,2.0.0)
@@ -11040,6 +11057,7 @@ libraries:
   source_path: instrumentation/jedis/jedis-2.0
   scope:
     name: io.opentelemetry.jedis-2.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - redis.clients:jedis:[2.0.0,3.0.0)
@@ -11096,6 +11114,7 @@ libraries:
   source_path: instrumentation/jedis/jedis-3.0
   scope:
     name: io.opentelemetry.jedis-3.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - redis.clients:jedis:[3.0.0,4)
@@ -11162,6 +11181,7 @@ libraries:
   source_path: instrumentation/jedis/jedis-4.0
   scope:
     name: io.opentelemetry.jedis-4.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - redis.clients:jedis:[4.0.0-beta1,)
@@ -11563,6 +11583,7 @@ libraries:
   source_path: instrumentation/jms/jms-1.1
   scope:
     name: io.opentelemetry.jms-1.1
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
   - jakarta.jms:jakarta.jms-api:(,3)
@@ -11662,6 +11683,7 @@ libraries:
   minimum_java_version: 11
   scope:
     name: io.opentelemetry.jms-3.0
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
   - jakarta.jms:jakarta.jms-api:[3.0.0,)
@@ -11945,6 +11967,7 @@ libraries:
   source_path: instrumentation/kafka/kafka-clients/kafka-clients-0.11
   scope:
     name: io.opentelemetry.kafka-clients-0.11
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.kafka:kafka-clients:[0.11.0.0,)
@@ -12287,6 +12310,7 @@ libraries:
   source_path: instrumentation/kafka/kafka-clients/kafka-clients-2.6
   scope:
     name: io.opentelemetry.kafka-clients-2.6
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_standalone_library: true
   telemetry:
   - when: default
@@ -12563,6 +12587,7 @@ libraries:
   source_path: instrumentation/kafka/kafka-connect-2.6
   scope:
     name: io.opentelemetry.kafka-connect-2.6
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.kafka:connect-api:[2.6.0,)
@@ -12580,6 +12605,7 @@ libraries:
   source_path: instrumentation/kafka/kafka-streams-0.11
   scope:
     name: io.opentelemetry.kafka-streams-0.11
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.kafka:kafka-streams:[0.11.0.0,)
@@ -13109,6 +13135,7 @@ libraries:
   source_path: instrumentation/lettuce/lettuce-4.0
   scope:
     name: io.opentelemetry.lettuce-4.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - biz.paluch.redis:lettuce:[4.0.Final,)
@@ -13210,6 +13237,7 @@ libraries:
   source_path: instrumentation/lettuce/lettuce-5.0
   scope:
     name: io.opentelemetry.lettuce-5.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - io.lettuce:lettuce-core:[5.0.0.RELEASE,5.1.0.RELEASE)
@@ -13346,6 +13374,7 @@ libraries:
   source_path: instrumentation/lettuce/lettuce-5.1
   scope:
     name: io.opentelemetry.lettuce-5.1
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -13613,6 +13642,7 @@ libraries:
   source_path: instrumentation/mongo/mongo-3.1
   scope:
     name: io.opentelemetry.mongo-3.1
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -13672,6 +13702,7 @@ libraries:
   source_path: instrumentation/mongo/mongo-3.7
   scope:
     name: io.opentelemetry.mongo-3.7
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.mongodb:mongo-java-driver:[3.7, 4.0)
@@ -13731,6 +13762,7 @@ libraries:
   source_path: instrumentation/mongo/mongo-4.0
   scope:
     name: io.opentelemetry.mongo-4.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.mongodb:mongodb-driver-core:[4.0,)
@@ -13774,6 +13806,10 @@ libraries:
         type: STRING
       - name: db.system.name
         type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
       - name: server.address
         type: STRING
       - name: server.port
@@ -13789,6 +13825,7 @@ libraries:
   source_path: instrumentation/mongo/mongo-async-3.3
   scope:
     name: io.opentelemetry.mongo-async-3.3
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.mongodb:mongodb-driver-async:[3.3,)
@@ -13866,6 +13903,7 @@ libraries:
   source_path: instrumentation/nats/nats-2.17
   scope:
     name: io.opentelemetry.nats-2.17
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -14641,6 +14679,7 @@ libraries:
   minimum_java_version: 11
   scope:
     name: io.opentelemetry.opensearch-java-3.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.opensearch.client:opensearch-java:[3.0,)
@@ -14661,7 +14700,7 @@ libraries:
         type: STRING
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
-    - db.client.operation.duration-55295033
+    - db.client.operation.duration-32559b79
     spans:
     - span_kind: CLIENT
       attributes:
@@ -14673,6 +14712,10 @@ libraries:
         type: STRING
       - name: error.type
         type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
 - name: opensearch-rest-1.0
   display_name: OpenSearch REST Client
   description: |
@@ -14685,6 +14728,7 @@ libraries:
   minimum_java_version: 11
   scope:
     name: io.opentelemetry.opensearch-rest-1.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.opensearch.client:opensearch-rest-client:[1.0,3.0)
@@ -14701,16 +14745,18 @@ libraries:
         type: STRING
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
-    - db.client.operation.duration-55295033
+    - db.client.operation.duration-32559b79
     spans:
     - span_kind: CLIENT
       attributes:
       - name: db.operation.name
         type: STRING
-      - name: db.query.text
-        type: STRING
       - name: db.system.name
         type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
 - name: opensearch-rest-3.0
   display_name: OpenSearch REST Client
   description: |
@@ -14723,6 +14769,7 @@ libraries:
   minimum_java_version: 11
   scope:
     name: io.opentelemetry.opensearch-rest-3.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.opensearch.client:opensearch-rest-client:[3.0,)
@@ -14739,16 +14786,18 @@ libraries:
         type: STRING
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
-    - db.client.operation.duration-55295033
+    - db.client.operation.duration-32559b79
     spans:
     - span_kind: CLIENT
       attributes:
       - name: db.operation.name
         type: STRING
-      - name: db.query.text
-        type: STRING
       - name: db.system.name
         type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
 - name: oracle-ucp-11.2
   display_name: Oracle UCP
   description: |
@@ -14759,6 +14808,7 @@ libraries:
   source_path: instrumentation/oracle-ucp-11.2
   scope:
     name: io.opentelemetry.oracle-ucp-11.2
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -14772,7 +14822,7 @@ libraries:
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
     - db.client.connection.count-2e6ba9b7
-    - db.client.connection.max-c7917942
+    - db.client.connection.limit-12f711ee
     - db.client.connection.pending_requests-a0f41111
 - name: oshi-5.0
   display_name: OSHI
@@ -15193,6 +15243,7 @@ libraries:
   source_path: instrumentation/pulsar/pulsar-2.8
   scope:
     name: io.opentelemetry.pulsar-2.8
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.pulsar:pulsar-client:[2.8.0,)
@@ -15413,6 +15464,7 @@ libraries:
   source_path: instrumentation/r2dbc-1.0
   scope:
     name: io.opentelemetry.r2dbc-1.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -15481,6 +15533,7 @@ libraries:
   source_path: instrumentation/rabbitmq-2.7
   scope:
     name: io.opentelemetry.rabbitmq-2.7
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
   - com.rabbitmq:amqp-client:[2.7.0,)
@@ -15883,6 +15936,7 @@ libraries:
   source_path: instrumentation/reactor/reactor-kafka-1.0
   scope:
     name: io.opentelemetry.reactor-kafka-1.0
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
   - io.projectreactor.kafka:reactor-kafka:[1.0.0,)
@@ -16067,6 +16121,7 @@ libraries:
   source_path: instrumentation/rediscala-1.8
   scope:
     name: io.opentelemetry.rediscala-1.8
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - com.github.Ma27:rediscala_2.11:[1.8.1,)
@@ -16118,6 +16173,7 @@ libraries:
   source_path: instrumentation/redisson/redisson-3.0
   scope:
     name: io.opentelemetry.redisson-3.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.redisson:redisson:[3.0.0,3.17.0)
@@ -16175,6 +16231,7 @@ libraries:
   source_path: instrumentation/redisson/redisson-3.17
   scope:
     name: io.opentelemetry.redisson-3.17
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.redisson:redisson:[3.17.0,)
@@ -16232,6 +16289,7 @@ libraries:
   source_path: instrumentation/redisson/redisson-metrics-2.3
   scope:
     name: io.opentelemetry.redisson-metrics-2.3
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.redisson:redisson:[2.3.0,3.18.0)
@@ -16248,7 +16306,7 @@ libraries:
     metric_refs:
     - db.client.connection.count-2e6ba9b7
     - db.client.connection.idle.min-73bdafbc
-    - db.client.connection.max-c7917942
+    - db.client.connection.limit-12f711ee
     - db.client.connection.pending_requests-a0f41111
 - name: redisson-metrics-3.18
   display_name: Redisson
@@ -16259,6 +16317,7 @@ libraries:
   source_path: instrumentation/redisson/redisson-metrics-3.18
   scope:
     name: io.opentelemetry.redisson-metrics-3.18
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.redisson:redisson:[3.18.0,3.26.0)
@@ -16275,7 +16334,7 @@ libraries:
     metric_refs:
     - db.client.connection.count-2e6ba9b7
     - db.client.connection.idle.min-73bdafbc
-    - db.client.connection.max-c7917942
+    - db.client.connection.limit-12f711ee
     - db.client.connection.pending_requests-a0f41111
 - name: redisson-metrics-3.26
   display_name: Redisson
@@ -16286,6 +16345,7 @@ libraries:
   source_path: instrumentation/redisson/redisson-metrics-3.26
   scope:
     name: io.opentelemetry.redisson-metrics-3.26
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.redisson:redisson:[3.26.0,)
@@ -16302,7 +16362,7 @@ libraries:
     metric_refs:
     - db.client.connection.count-2e6ba9b7
     - db.client.connection.idle.min-73bdafbc
-    - db.client.connection.max-c7917942
+    - db.client.connection.limit-12f711ee
     - db.client.connection.pending_requests-a0f41111
 - name: resources
   display_name: Resource Detectors
@@ -16447,6 +16507,7 @@ libraries:
   source_path: instrumentation/rmi
   scope:
     name: io.opentelemetry.rmi
+    schema_url: https://opentelemetry.io/schemas/1.37.0
   has_javaagent: true
   javaagent_target_versions:
   - Java 8+
@@ -16479,6 +16540,7 @@ libraries:
   source_path: instrumentation/rocketmq/rocketmq-client-4.8
   scope:
     name: io.opentelemetry.rocketmq-client-4.8
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -16599,6 +16661,7 @@ libraries:
   source_path: instrumentation/rocketmq/rocketmq-client-5.0
   scope:
     name: io.opentelemetry.rocketmq-client-5.0
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.rocketmq:rocketmq-client-java:[5.0.0,)
@@ -16876,7 +16939,7 @@ libraries:
   source_path: instrumentation/servlet/servlet-2.2
   scope:
     name: io.opentelemetry.servlet-2.2
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - javax.servlet:servlet-api:[2.2, 3.0)
@@ -16939,7 +17002,7 @@ libraries:
   source_path: instrumentation/servlet/servlet-3.0
   scope:
     name: io.opentelemetry.servlet-3.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -17075,6 +17138,7 @@ libraries:
   source_path: instrumentation/sofa-rpc-5.4
   scope:
     name: io.opentelemetry.sofa-rpc-5.4
+    schema_url: https://opentelemetry.io/schemas/1.37.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -17267,6 +17331,7 @@ libraries:
   source_path: instrumentation/spring/spring-integration-4.1
   scope:
     name: io.opentelemetry.spring-integration-4.1
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -17331,6 +17396,7 @@ libraries:
   source_path: instrumentation/spring/spring-jms/spring-jms-2.0
   scope:
     name: io.opentelemetry.spring-jms-2.0
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
   - org.springframework:spring-jms:[2.0,6)
@@ -17379,6 +17445,7 @@ libraries:
   minimum_java_version: 17
   scope:
     name: io.opentelemetry.spring-jms-6.0
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
   - org.springframework:spring-jms:[6.0.0,)
@@ -17426,6 +17493,7 @@ libraries:
   source_path: instrumentation/spring/spring-kafka-2.7
   scope:
     name: io.opentelemetry.spring-kafka-2.7
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -17526,6 +17594,7 @@ libraries:
   minimum_java_version: 17
   scope:
     name: io.opentelemetry.spring-pulsar-1.0
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
   - org.springframework.pulsar:spring-pulsar:[1.0.0,)
@@ -17576,6 +17645,7 @@ libraries:
   source_path: instrumentation/spring/spring-rabbit-1.0
   scope:
     name: io.opentelemetry.spring-rabbit-1.0
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
   - org.springframework.amqp:spring-rabbit:(,)
@@ -17642,6 +17712,7 @@ libraries:
   source_path: instrumentation/spring/spring-rmi-4.0
   scope:
     name: io.opentelemetry.spring-rmi-4.0
+    schema_url: https://opentelemetry.io/schemas/1.37.0
   has_javaagent: true
   javaagent_target_versions:
   - org.springframework:spring-context:[4.0.0.RELEASE,6)
@@ -18141,6 +18212,7 @@ libraries:
   source_path: instrumentation/spymemcached-2.12
   scope:
     name: io.opentelemetry.spymemcached-2.12
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - net.spy:spymemcached:[2.12.0,)
@@ -18177,7 +18249,7 @@ libraries:
         type: STRING
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
-    - db.client.operation.duration-32559b79
+    - db.client.operation.duration-bfd9d23c
     spans:
     - span_kind: CLIENT
       attributes:
@@ -18187,6 +18259,10 @@ libraries:
         type: STRING
       - name: error.type
         type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
       - name: server.address
         type: STRING
       - name: server.port
@@ -18276,6 +18352,7 @@ libraries:
   source_path: instrumentation/thrift-0.13
   scope:
     name: io.opentelemetry.thrift-0.13
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -18508,6 +18585,7 @@ libraries:
   source_path: instrumentation/tomcat/tomcat-dbcp-8.0
   scope:
     name: io.opentelemetry.tomcat-dbcp-8.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.tomcat:tomcat-dbcp:[8.0.3,)
@@ -18525,7 +18603,7 @@ libraries:
     - db.client.connection.count-2e6ba9b7
     - db.client.connection.idle.max-b95e4f5c
     - db.client.connection.idle.min-73bdafbc
-    - db.client.connection.max-c7917942
+    - db.client.connection.limit-12f711ee
 - name: tomcat-jdbc-8.5
   display_name: Tomcat JDBC
   description: |
@@ -18536,6 +18614,7 @@ libraries:
   source_path: instrumentation/tomcat/tomcat-jdbc-8.5
   scope:
     name: io.opentelemetry.tomcat-jdbc
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.tomcat:tomcat-jdbc:[8.5.0,)
@@ -18554,7 +18633,7 @@ libraries:
     - db.client.connection.count-2e6ba9b7
     - db.client.connection.idle.max-b95e4f5c
     - db.client.connection.idle.min-73bdafbc
-    - db.client.connection.max-c7917942
+    - db.client.connection.limit-12f711ee
     - db.client.connection.pending_requests-a0f41111
 - name: twilio-6.6
   display_name: Twilio
@@ -18894,6 +18973,7 @@ libraries:
   source_path: instrumentation/vertx/vertx-kafka-client-3.6
   scope:
     name: io.opentelemetry.vertx-kafka-client-3.6
+    schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
   - io.vertx:vertx-kafka-client:[3.5.1,)
@@ -18988,6 +19068,7 @@ libraries:
   source_path: instrumentation/vertx/vertx-redis-client-4.0
   scope:
     name: io.opentelemetry.vertx-redis-client-4.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - io.vertx:vertx-redis-client:[4.0.0,)
@@ -19067,6 +19148,7 @@ libraries:
   source_path: instrumentation/vertx/vertx-sql-client/vertx-sql-client-4.0
   scope:
     name: io.opentelemetry.vertx-sql-client-4.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - io.vertx:vertx-sql-client:[4.0.0,5)
@@ -19129,6 +19211,7 @@ libraries:
   minimum_java_version: 11
   scope:
     name: io.opentelemetry.vertx-sql-client-5.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - io.vertx:vertx-sql-client:[5.0.0,)
@@ -19202,6 +19285,7 @@ libraries:
   source_path: instrumentation/vibur-dbcp-11.0
   scope:
     name: io.opentelemetry.vibur-dbcp-11.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -19214,7 +19298,7 @@ libraries:
   - when: otel.semconv-stability.opt-in=database
     metric_refs:
     - db.client.connection.count-2e6ba9b7
-    - db.client.connection.max-c7917942
+    - db.client.connection.limit-12f711ee
 - name: wicket-8.0
   display_name: Apache Wicket
   description: |
@@ -19381,7 +19465,7 @@ custom:
 - name: jmx-metrics
   display_name: JMX Metrics
   description: |
-    Collects and reports metrics exposed through Java Management Extensions (JMX). It can be configured to extract JVM and application-level telemetry data from JMX MBeans such as memory usage, thread counts, and garbage collection statistics, and translate these measurements into OpenTelemetry metrics.
+    Collects and reports metrics exposed through Java Management Extensions (JMX). It can be configured to extract JVM and application-level telemetry data from JMX MBeans such as memory usage, thread counts, and garbage collection statistics, and translate these measurements into OpenTelemetry metrics. Collected metrics can be filtered by name using include and exclude patterns.
   source_path: instrumentation/jmx-metrics
   scope:
     name: io.opentelemetry.jmx-metrics
@@ -19391,6 +19475,8 @@ custom:
   - otel.jmx.config
   - otel.jmx.discovery.delay
   - otel.jmx.enabled
+  - otel.jmx.metrics.excluded
+  - otel.jmx.metrics.included
   - otel.jmx.target.system
 - name: methods
   display_name: Methods

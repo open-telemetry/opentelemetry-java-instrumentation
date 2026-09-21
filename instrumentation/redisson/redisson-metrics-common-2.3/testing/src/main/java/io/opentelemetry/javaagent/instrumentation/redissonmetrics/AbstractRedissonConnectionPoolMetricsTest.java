@@ -143,7 +143,7 @@ public abstract class AbstractRedissonConnectionPoolMetricsTest {
         subscriptionPool,
         SUBSCRIPTION_MIN_IDLE);
     assertPoolSizeMetric(
-        "db.client.connection.max",
+        "db.client.connection.limit",
         "db.client.connections.max",
         "The maximum number of open connections allowed.",
         regularPool,

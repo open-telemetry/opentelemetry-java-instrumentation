@@ -13,6 +13,8 @@ import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
@@ -127,6 +129,11 @@ class ClickHouseClientV2Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
                             equalTo(
                                 DB_QUERY_SUMMARY,
@@ -141,8 +148,22 @@ class ClickHouseClientV2Test {
         DB_SYSTEM_NAME,
         DB_QUERY_SUMMARY,
         DB_NAMESPACE,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT,
         SERVER_ADDRESS,
         SERVER_PORT);
+  }
+
+  @Test
+  void testCapturedPeerFollowsEachContactedEndpoint() throws Exception {
+    Object request = createDbRequest();
+    assertCapturedPeer(request, null, null);
+
+    capturePeer(request, new TestEndpoint("first.example", 9123));
+    assertCapturedPeer(request, "first.example", 9123);
+
+    capturePeer(request, new TestEndpoint("second.example", 9124));
+    assertCapturedPeer(request, "second.example", 9124);
   }
 
   @Test
@@ -165,6 +186,16 @@ class ClickHouseClientV2Test {
   @Test
   void testConfiguredEndpointsExtractPortFromLegacyUnbracketedIpv6() throws Exception {
     assertServerTarget(new HashSet<>(asList("http://2001:db8::1:9123")), "2001:db8::1", 9123);
+  }
+
+  @Test
+  void testInitialPeerUsesEffectivePort() throws Exception {
+    assertCurrentPeer(new HashSet<>(asList("http://single.example")), "single.example", 8123);
+  }
+
+  @Test
+  void testInitialPeerWithoutKnownPortIsOmitted() throws Exception {
+    assertCurrentPeer(new HashSet<>(asList("custom://single.example")), null, null);
   }
 
   @ParameterizedTest
@@ -204,6 +235,11 @@ class ClickHouseClientV2Test {
   }
 
   @Test
+  void testUnsafePeerEndpointIsOmitted() throws Exception {
+    assertCurrentPeer(new HashSet<>(asList("http://host.example%3fsecret:8123")), null, null);
+  }
+
+  @Test
   void testQueryWithStringQuery() throws Exception {
     testing.runWithSpan(
         "parent",
@@ -233,6 +269,11 @@ class ClickHouseClientV2Test {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
+                            equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "insert into " + TABLE_NAME + " values(?)(?)(?)"),
                             equalTo(
@@ -253,6 +294,11 @@ class ClickHouseClientV2Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
                             equalTo(
                                 DB_QUERY_SUMMARY,
@@ -291,6 +337,11 @@ class ClickHouseClientV2Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
                             equalTo(
                                 DB_QUERY_SUMMARY,
@@ -327,6 +378,11 @@ class ClickHouseClientV2Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
                             equalTo(maybeStable(DB_STATEMENT), "select * from non_existent_table"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
@@ -343,6 +399,8 @@ class ClickHouseClientV2Test {
         DB_QUERY_SUMMARY,
         DB_NAMESPACE,
         ERROR_TYPE,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT,
         SERVER_ADDRESS,
         SERVER_PORT);
     if (emitStableDatabaseSemconv()) {
@@ -386,6 +444,11 @@ class ClickHouseClientV2Test {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
+                            equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "select * from " + TABLE_NAME + " limit ?"),
                             equalTo(
@@ -421,6 +484,11 @@ class ClickHouseClientV2Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "select * from " + TABLE_NAME + " limit ?"),
@@ -464,6 +532,11 @@ class ClickHouseClientV2Test {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
+                            equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "insert into " + TABLE_NAME + " values(?)"),
                             equalTo(
@@ -484,6 +557,11 @@ class ClickHouseClientV2Test {
                             equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "select * from " + TABLE_NAME + " limit ?"),
@@ -530,6 +608,11 @@ class ClickHouseClientV2Test {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
+                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? (long) port : null),
+                            equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "select * from " + TABLE_NAME + " where value={param_s: String}"),
                             equalTo(
@@ -552,10 +635,78 @@ class ClickHouseClientV2Test {
       assertThat(serverTarget).isNull();
       return;
     }
+
     assertThat(serverTarget).isNotNull();
     Class<?> serverTargetType = serverTarget.getClass().getSuperclass();
     assertThat(serverTargetType.getMethod("getAddress").invoke(serverTarget)).isEqualTo(address);
     assertThat(serverTargetType.getMethod("getPort").invoke(serverTarget)).isEqualTo(port);
+  }
+
+  private static void assertCurrentPeer(Set<String> endpoints, String address, Integer port)
+      throws Exception {
+    Class<?> singletons = singletons();
+    Class<?> currentServerInfo =
+        Class.forName(
+            singletons.getName() + "$CurrentServerInfo", true, singletons.getClassLoader());
+    Method of = currentServerInfo.getDeclaredMethod("of", Set.class);
+    of.setAccessible(true);
+    Object info = of.invoke(null, endpoints);
+    Object peer = currentServerInfo.getMethod("getPeer").invoke(info);
+
+    if (address == null) {
+      assertThat(peer).isNull();
+      return;
+    }
+
+    assertThat(peer).isNotNull();
+    assertThat(peer.getClass().getSuperclass().getMethod("getAddress").invoke(peer))
+        .isEqualTo(address);
+    assertThat(peer.getClass().getSuperclass().getMethod("getPort").invoke(peer)).isEqualTo(port);
+  }
+
+  private static Object createDbRequest() throws Exception {
+    return uniqueMethod(dbRequestClass(), "create")
+        .invoke(
+            null,
+            "initial.example",
+            8123,
+            null,
+            null,
+            DATABASE_NAME,
+            "select * from " + TABLE_NAME);
+  }
+
+  private static void capturePeer(Object request, Object contactedEndpoint) throws Exception {
+    uniqueMethod(singletons(), "capturePeer").invoke(null, request, contactedEndpoint);
+  }
+
+  /**
+   * Returns the only method of {@code owner} with this name. The parameter types cannot be named
+   * here, because the instrumentation classes are loaded by the agent rather than by the test class
+   * loader.
+   */
+  private static Method uniqueMethod(Class<?> owner, String name) {
+    for (Method method : owner.getDeclaredMethods()) {
+      if (name.equals(method.getName())) {
+        return method;
+      }
+    }
+    throw new AssertionError(owner.getName() + " has no method named " + name);
+  }
+
+  private static void assertCapturedPeer(Object request, String address, Integer port)
+      throws Exception {
+    Class<?> requestClass = dbRequestClass();
+    assertThat(requestClass.getMethod("getPeerAddress").invoke(request)).isEqualTo(address);
+    assertThat(requestClass.getMethod("getPeerPort").invoke(request)).isEqualTo(port);
+  }
+
+  private static Class<?> dbRequestClass() throws Exception {
+    return Class.forName(
+        "io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5."
+            + "ClickHouseDbRequest",
+        true,
+        singletons().getClassLoader());
   }
 
   private static Class<?> singletons() throws Exception {
@@ -578,6 +729,29 @@ class ClickHouseClientV2Test {
                       + "ClickHouseClientV2InstrumentationModule",
                   Client.class.getClassLoader());
       return Class.forName(singletonsName, true, instrumentationClassLoader);
+    }
+  }
+
+  /**
+   * Stands in for the node or endpoint object that the ClickHouse client hands to its HTTP helper
+   * for a single attempt. The instrumentation reads the host and the port off it reflectively,
+   * because the library names that object differently across the supported versions.
+   */
+  public static class TestEndpoint {
+    private final String host;
+    private final int port;
+
+    TestEndpoint(String host, int port) {
+      this.host = host;
+      this.port = port;
+    }
+
+    public String getHost() {
+      return host;
+    }
+
+    public int getPort() {
+      return port;
     }
   }
 }
