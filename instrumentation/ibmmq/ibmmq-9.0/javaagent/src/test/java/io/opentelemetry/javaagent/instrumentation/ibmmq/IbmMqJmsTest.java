@@ -21,6 +21,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import java.lang.reflect.Proxy;
 import java.time.Duration;
 import java.util.Enumeration;
 import java.util.List;
@@ -229,6 +230,58 @@ class IbmMqJmsTest {
     }
   }
 
+  @Test
+  void messageKeyedQmidTakesPrecedenceOverStaleListenerAssociation() {
+    // A unit-level check (no broker span involved): the message-keyed QMID captured by receive()
+    // must win over the listener's own consumer association, even though that association is
+    // still present -- it can go stale in a way the message-keyed value cannot. For example: a
+    // listener detached via setMessageListener(null) (which never clears CONSUMER, by design, so
+    // a later delivery can retry a failed read) and afterwards driven by a different consumer's
+    // receive() call, or a Spring-style container that dispatches via receive() plus direct
+    // invocation without ever calling setMessageListener at all. If precedence regressed back to
+    // consulting CONSUMER first, this would observe a read on the stale consumer below.
+    AtomicInteger staleReads = new AtomicInteger();
+    AtomicInteger receiveReads = new AtomicInteger();
+    Object staleConsumer = fixedQmidConsumer("STALE_QMID", staleReads);
+    Object receiveConsumer = fixedQmidConsumer("RECEIVE_QMID", receiveReads);
+    CountingListener listener = new CountingListener(new CountDownLatch(1));
+    Message message = fakeMessage();
+
+    IbmMqJmsListenerQmid.associate(staleConsumer, listener);
+    IbmMqJmsListenerQmid.captureFromReceive(receiveConsumer, message);
+    assertThat(receiveReads.get()).isEqualTo(EXPERIMENTAL_ATTRIBUTES ? 1 : 0);
+
+    IbmMqJmsListenerQmid.stamp(listener, message);
+
+    // Load-bearing: the stale consumer must never be read once message-keyed state exists.
+    assertThat(staleReads.get()).isZero();
+  }
+
+  /** A fake JMS message, used only as an identity key for the message-keyed QMID virtual field. */
+  private static Message fakeMessage() {
+    return (Message)
+        Proxy.newProxyInstance(
+            IbmMqJmsTest.class.getClassLoader(),
+            new Class<?>[] {Message.class},
+            (proxy, method, args) -> {
+              throw new UnsupportedOperationException();
+            });
+  }
+
+  /** A fake IBM MQ consumer/connection whose resolved QMID is a fixed value, read-counted. */
+  private static Object fixedQmidConsumer(String qmid, AtomicInteger reads) {
+    return Proxy.newProxyInstance(
+        IbmMqJmsTest.class.getClassLoader(),
+        new Class<?>[] {JmsReadablePropertyContext.class},
+        (proxy, method, args) -> {
+          if ("getStringProperty".equals(method.getName())) {
+            reads.incrementAndGet();
+            return qmid;
+          }
+          throw new UnsupportedOperationException();
+        });
+  }
+
   private static void assertQmid(SpanData span) {
     if (EXPERIMENTAL_ATTRIBUTES) {
       assertThat(span.getAttributes().get(QUEUE_MANAGER_ID)).isEqualTo(expectedQmid);
@@ -287,14 +340,7 @@ class IbmMqJmsTest {
                       .filter(span -> asList(span.getName().split(" ")).contains(operation))
                       .findFirst()
                       .orElse(null);
-              assertThat(match)
-                  .describedAs(
-                      "span with operation token '%s' among: %s",
-                      operation,
-                      testing.spans().stream()
-                          .map(s -> s.getKind() + "/" + s.getName())
-                          .collect(toList()))
-                  .isNotNull();
+              assertThat(match).isNotNull();
               found.set(match);
             });
     return found.get();

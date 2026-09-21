@@ -45,21 +45,25 @@ public class IbmMqJakartaJmsListenerQmid {
     if (!IbmMqQmidSupport.enabled() || listener == null) {
       return;
     }
+    // Per-message state wins over the listener association: it is captured at the exact
+    // receive() call that produced this message, so it cannot go stale the way the
+    // association can (e.g. a listener detached via setMessageListener(null) -- which never
+    // clears CONSUMER -- and later driven by a different consumer's receive() call, or a
+    // Spring-style container that dispatches via receive() plus direct invocation without ever
+    // calling setMessageListener). RECEIVED_QMID is only ever populated from a receive() call
+    // on a genuine IBM MQ consumer, so the system value is known here too.
+    if (message != null) {
+      IbmMqQmid qmid = RECEIVED_QMID.get(message);
+      if (qmid != null) {
+        IbmMqQmidSupport.stampMessagingSystem();
+        IbmMqQmidSupport.stampMessagingSpan(qmid.value());
+        return;
+      }
+    }
     IbmMqConsumerHolder holder = CONSUMER.get(listener);
     Object consumer = holder == null ? null : holder.consumer();
     if (consumer != null) {
       IbmMqJakartaJmsQmid.stampMessagingSpan(consumer);
-      return;
-    }
-    if (message == null) {
-      return;
-    }
-    IbmMqQmid qmid = RECEIVED_QMID.get(message);
-    if (qmid != null) {
-      // RECEIVED_QMID is only ever populated from a receive() call on a genuine IBM MQ consumer,
-      // so the system value is known here too.
-      IbmMqQmidSupport.stampMessagingSystem();
-      IbmMqQmidSupport.stampMessagingSpan(qmid.value());
     }
   }
 
