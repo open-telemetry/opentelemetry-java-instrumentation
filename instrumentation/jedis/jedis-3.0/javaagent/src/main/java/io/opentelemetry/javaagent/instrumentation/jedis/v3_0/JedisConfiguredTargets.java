@@ -31,8 +31,8 @@ public class JedisConfiguredTargets {
   private static final VirtualField<Pool<?>, PoolFactory> POOL_FACTORY =
       VirtualField.find(Pool.class, PoolFactory.class);
 
-  private static final VirtualField<JedisFactory, ConfiguredTarget> FACTORY_TARGET =
-      VirtualField.find(JedisFactory.class, ConfiguredTarget.class);
+  private static final VirtualField<PooledObjectFactory<?>, ConfiguredTarget> FACTORY_TARGET =
+      VirtualField.find(PooledObjectFactory.class, ConfiguredTarget.class);
 
   private static final VirtualField<HostAndPort, OriginalEndpoint> ORIGINAL_ENDPOINT =
       VirtualField.find(HostAndPort.class, OriginalEndpoint.class);
@@ -54,11 +54,11 @@ public class JedisConfiguredTargets {
   }
 
   public static void capturePoolFactory(Pool<?> pool, PooledObjectFactory<?> factory) {
-    if (!(factory instanceof JedisFactory)) {
+    if (factory == null
+        || !factory.getClass().getName().equals("redis.clients.jedis.JedisFactory")) {
       return;
     }
-    JedisFactory jedisFactory = (JedisFactory) factory;
-    POOL_FACTORY.set(pool, new PoolFactory(jedisFactory));
+    POOL_FACTORY.set(pool, new PoolFactory(factory));
     ConfiguredTarget configuredTarget = Context.current().get(CURRENT_CONFIGURED_TARGET);
     if (configuredTarget == null) {
       configuredTarget = POOL_TARGET.get(pool);
@@ -66,7 +66,7 @@ public class JedisConfiguredTargets {
       POOL_TARGET.set(pool, configuredTarget);
     }
     if (configuredTarget != null) {
-      FACTORY_TARGET.set(jedisFactory, configuredTarget);
+      FACTORY_TARGET.set(factory, configuredTarget);
     }
   }
 
@@ -121,7 +121,7 @@ public class JedisConfiguredTargets {
   }
 
   @Nullable
-  public static Context factoryTargetContext(JedisFactory factory) {
+  public static Context factoryTargetContext(PooledObjectFactory<?> factory) {
     ConfiguredTarget configuredTarget = FACTORY_TARGET.get(factory);
     return configuredTarget != null ? configuredTargetContext(configuredTarget.target) : null;
   }
@@ -168,9 +168,9 @@ public class JedisConfiguredTargets {
   private JedisConfiguredTargets() {}
 
   private static final class PoolFactory {
-    private final JedisFactory factory;
+    private final PooledObjectFactory<?> factory;
 
-    private PoolFactory(JedisFactory factory) {
+    private PoolFactory(PooledObjectFactory<?> factory) {
       this.factory = factory;
     }
   }

@@ -147,33 +147,6 @@ class ShardedJedis30ClientTest {
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, shardIp),
                             satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
-
-    assertDurationMetric(
-        testing,
-        "io.opentelemetry.jedis-3.0",
-        DB_SYSTEM_NAME,
-        DB_NAMESPACE,
-        DB_OPERATION_NAME,
-        SERVER_ADDRESS,
-        NETWORK_PEER_ADDRESS,
-        NETWORK_PEER_PORT);
-    if (emitStableDatabaseSemconv()) {
-      testing.waitAndAssertMetrics(
-          "io.opentelemetry.jedis-3.0",
-          metric ->
-              metric
-                  .hasName("db.client.operation.duration")
-                  .hasHistogramSatisfying(
-                      histogram ->
-                          histogram.hasPointsSatisfying(
-                             point ->
-                                 point
-                                     .hasAttribute(SERVER_ADDRESS, configuredTarget)
-                                     .hasAttributesSatisfying(
-                                         attributes ->
-                                             assertThat(attributes.asMap())
-                                                 .doesNotContainKey(SERVER_PORT)))));
-    }
   }
 
   @Test
@@ -207,5 +180,32 @@ class ShardedJedis30ClientTest {
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, shardIp),
                             satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
+
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.jedis-3.0",
+        DB_SYSTEM_NAME,
+        DB_NAMESPACE,
+        DB_OPERATION_NAME,
+        SERVER_ADDRESS,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT);
+    if (emitStableDatabaseSemconv()) {
+      testing.waitAndAssertMetrics(
+          "io.opentelemetry.jedis-3.0",
+          metric ->
+              metric
+                  .hasName("db.client.operation.duration")
+                  .hasHistogramSatisfying(
+                      histogram ->
+                          histogram.hasPointsSatisfying(
+                              point ->
+                                  point
+                                      .hasAttribute(SERVER_ADDRESS, configuredTarget)
+                                      .hasAttributesSatisfying(
+                                          attributes ->
+                                              assertThat(attributes.asMap())
+                                                  .doesNotContainKey(SERVER_PORT)))));
+    }
   }
 }
