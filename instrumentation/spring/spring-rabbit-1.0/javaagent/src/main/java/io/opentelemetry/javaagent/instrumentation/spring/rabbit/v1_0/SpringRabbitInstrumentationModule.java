@@ -22,8 +22,7 @@ public class SpringRabbitInstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new AbstractMessageListenerContainerInstrumentation(),
-        new BlockingQueueConsumerInstrumentation(),
-        new DirectMessageListenerContainerInstrumentation(),
+        new SpringRabbitConsumerInstrumentation(),
         new SimpleMessageListenerContainerInstrumentation());
   }
 }

@@ -42,8 +42,8 @@ class SimpleMessageListenerContainerInstrumentation implements TypeInstrumentati
     public static void onExit(
         @Advice.This AbstractMessageListenerContainer container,
         @Advice.Return @Nullable BlockingQueueConsumer consumer) {
-      if (consumer != null && SpringRabbitListenerUtil.shouldTraceListenerProcess(container)) {
-        SpringRabbitListenerUtil.markSpringListenerConsumer(consumer);
+      if (consumer != null && SpringRabbitListenerUtil.isListenerProcessingSelected(container)) {
+        SpringRabbitListenerUtil.selectListenerProcessing(consumer);
       }
     }
   }
