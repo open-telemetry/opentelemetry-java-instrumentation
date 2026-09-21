@@ -78,8 +78,9 @@ final class TracedSubscriber<T, REQUEST> extends Subscriber<T> {
   public void onError(Throwable e) {
     Context context = contextRef.getAndSet(null);
     if (context != null) {
+      Context callbackContext = Context.current() == context ? context : parentContext;
       instrumenter.end(context, request, null, e);
-      try (Scope ignored = parentContext.makeCurrent()) {
+      try (Scope ignored = callbackContext.makeCurrent()) {
         delegate.onError(e);
       }
     } else {

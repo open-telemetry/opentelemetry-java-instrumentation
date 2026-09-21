@@ -105,6 +105,29 @@ class TracedOnSubscribeTest {
   }
 
   @Test
+  void preservesOperationContextForSynchronousError() {
+    TestRequest request = new TestRequest("request");
+    IllegalStateException error = new IllegalStateException("failure");
+    Context parentContext = Context.root().with(CALLBACK_CONTEXT, "parent");
+    Context operationContext = parentContext.with(OPERATION_CONTEXT, "operation");
+    when(instrumenter.start(parentContext, request)).thenReturn(operationContext);
+
+    TracedOnSubscribe<String, TestRequest> traced;
+    try (Scope ignored = parentContext.makeCurrent()) {
+      traced = new TracedOnSubscribe<>(Observable.error(error), instrumenter, request);
+    }
+    RecordingSubscriber subscriber = new RecordingSubscriber();
+
+    traced.call(subscriber);
+
+    assertThat(subscriber.error).isSameAs(error);
+    assertThat(subscriber.onErrorContext).isSameAs(operationContext);
+    verify(instrumenter).start(parentContext, request);
+    verify(instrumenter).end(operationContext, request, null, error);
+    verifyNoMoreInteractions(instrumenter);
+  }
+
+  @Test
   void endsOnceWhenCancelledBeforeCompletion() {
     TestSource source = new TestSource();
     TestRequest request = new TestRequest("request");

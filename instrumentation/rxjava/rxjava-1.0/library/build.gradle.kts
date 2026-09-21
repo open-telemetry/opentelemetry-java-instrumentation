@@ -5,5 +5,5 @@ plugins {
 dependencies {
   library("io.reactivex:rxjava:1.0.7")
 
-  latestDepTestLibrary("io.reactivex:rxjava:1.+")
+  latestDepTestLibrary("io.reactivex:rxjava:1.+") // see rxjava-2.0 module
 }
