@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
+import static java.util.Objects.requireNonNull;
+
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import com.amazonaws.internal.SdkInternalList;
@@ -12,8 +14,12 @@ import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.Message;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import java.util.AbstractList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.Spliterator;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
@@ -24,7 +30,7 @@ class TracingList extends SdkInternalList<Message> {
   private final transient Request<?> request;
   private final transient Response<?> response;
   @Nullable private final transient Context processParentContext;
-  private boolean firstIterator = true;
+  private volatile boolean frameworkProcessingSelected;
 
   static SdkInternalList<Message> wrap(
       List<Message> messages,
@@ -50,18 +56,29 @@ class TracingList extends SdkInternalList<Message> {
 
   @Override
   public Iterator<Message> iterator() {
-    Iterator<Message> it;
-    // We should only return one iterator with tracing.
-    // However, this is not thread-safe, but usually the first (hopefully only) traversal of
-    // List is performed in the same thread that called receiveMessage()
-    if (firstIterator && !inAwsClient()) {
-      it = TracingIterator.wrap(super.iterator(), this);
-      firstIterator = false;
-    } else {
-      it = super.iterator();
-    }
+    return listIterator();
+  }
 
-    return it;
+  @Override
+  public ListIterator<Message> listIterator() {
+    return listIterator(0);
+  }
+
+  @Override
+  public ListIterator<Message> listIterator(int index) {
+    ListIterator<Message> iterator = super.listIterator(index);
+    return inAwsClient() ? iterator : TracingIterator.wrap(iterator, this);
+  }
+
+  @Override
+  public List<Message> subList(int fromIndex, int toIndex) {
+    return new TracingListView(super.subList(fromIndex, toIndex), this);
+  }
+
+  @Override
+  public Spliterator<Message> spliterator() {
+    Spliterator<Message> spliterator = super.spliterator();
+    return inAwsClient() ? spliterator : new TracingSpliterator(spliterator, this);
   }
 
   Instrumenter<SqsProcessRequest, Response<?>> getInstrumenter() {
@@ -81,11 +98,21 @@ class TracingList extends SdkInternalList<Message> {
     return processParentContext;
   }
 
+  boolean isFrameworkProcessingSelected() {
+    return frameworkProcessingSelected;
+  }
+
+  static void selectFrameworkProcessing(List<?> messages) {
+    if (messages instanceof TracingList) {
+      ((TracingList) messages).frameworkProcessingSelected = true;
+    } else if (messages instanceof TracingListView) {
+      ((TracingListView) messages).tracingList.frameworkProcessingSelected = true;
+    }
+  }
+
   @Override
   public void forEach(Consumer<? super Message> action) {
-    for (Message message : this) {
-      action.accept(message);
-    }
+    iterator().forEachRemaining(action);
   }
 
   private static boolean inAwsClient() {
@@ -100,6 +127,125 @@ class TracingList extends SdkInternalList<Message> {
   private Object writeReplace() {
     // serialize this object to SdkInternalList
     return new SdkInternalList<>(this);
+  }
+
+  private static final class TracingListView extends AbstractList<Message> {
+    private final List<Message> delegate;
+    private final TracingList tracingList;
+
+    private TracingListView(List<Message> delegate, TracingList tracingList) {
+      this.delegate = delegate;
+      this.tracingList = tracingList;
+    }
+
+    @Override
+    public Message get(int index) {
+      return delegate.get(index);
+    }
+
+    @Override
+    public int size() {
+      return delegate.size();
+    }
+
+    @Override
+    public Object[] toArray() {
+      return delegate.toArray();
+    }
+
+    @Override
+    public <T> T[] toArray(T[] array) {
+      return delegate.toArray(array);
+    }
+
+    @Override
+    public Message set(int index, Message element) {
+      return delegate.set(index, element);
+    }
+
+    @Override
+    public void add(int index, Message element) {
+      delegate.add(index, element);
+    }
+
+    @Override
+    public Message remove(int index) {
+      return delegate.remove(index);
+    }
+
+    @Override
+    public Iterator<Message> iterator() {
+      return listIterator();
+    }
+
+    @Override
+    public ListIterator<Message> listIterator(int index) {
+      ListIterator<Message> iterator = delegate.listIterator(index);
+      return inAwsClient() ? iterator : TracingIterator.wrap(iterator, tracingList);
+    }
+
+    @Override
+    public List<Message> subList(int fromIndex, int toIndex) {
+      return new TracingListView(delegate.subList(fromIndex, toIndex), tracingList);
+    }
+
+    @Override
+    public void forEach(Consumer<? super Message> action) {
+      iterator().forEachRemaining(action);
+    }
+
+    @Override
+    public Spliterator<Message> spliterator() {
+      Spliterator<Message> spliterator = delegate.spliterator();
+      return inAwsClient() ? spliterator : new TracingSpliterator(spliterator, tracingList);
+    }
+  }
+
+  private static final class TracingSpliterator implements Spliterator<Message> {
+    private final Spliterator<Message> delegate;
+    private final TracingList tracingList;
+
+    private TracingSpliterator(Spliterator<Message> delegate, TracingList tracingList) {
+      this.delegate = delegate;
+      this.tracingList = tracingList;
+    }
+
+    @Override
+    public boolean tryAdvance(Consumer<? super Message> action) {
+      requireNonNull(action);
+      return delegate.tryAdvance(
+          message -> TracingIterator.processCallback(tracingList, message, action));
+    }
+
+    @Override
+    public void forEachRemaining(Consumer<? super Message> action) {
+      requireNonNull(action);
+      delegate.forEachRemaining(
+          message -> TracingIterator.processCallback(tracingList, message, action));
+    }
+
+    @Override
+    @Nullable
+    public Spliterator<Message> trySplit() {
+      Spliterator<Message> split = delegate.trySplit();
+      return split == null ? null : new TracingSpliterator(split, tracingList);
+    }
+
+    @Override
+    public long estimateSize() {
+      return delegate.estimateSize();
+    }
+
+    @Override
+    public int characteristics() {
+      return delegate.characteristics();
+    }
+
+    @Override
+    @Nullable
+    public Comparator<? super Message> getComparator() {
+      return delegate.getComparator();
+    }
   }
 
   private static class CallerClass extends SecurityManager {
