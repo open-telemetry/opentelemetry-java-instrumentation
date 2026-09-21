@@ -58,12 +58,6 @@ abstract class AbstractHttpServerInstrumentationTest
 
     options.setTestException(false)
     options.setTestPathParam(true)
-    options.setHttpAttributes(
-      new Function[ServerEndpoint, util.Set[AttributeKey[_]]] {
-        override def apply(v1: ServerEndpoint): util.Set[AttributeKey[_]] =
-          HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES
-      }
-    )
     options.setExpectedHttpRoute(
       new BiFunction[ServerEndpoint, String, String] {
         override def apply(
