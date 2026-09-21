@@ -8,6 +8,8 @@ muzzle {
     module.set("reactor-kafka")
     versions.set("[1.0.0,)")
     assertInverse.set(true)
+    excludeInstrumentationName("kafka-clients")
+    excludeInstrumentationName("kafka-clients-metrics")
   }
 }
 
@@ -20,6 +22,7 @@ dependencies {
   bootstrap(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
 
   implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
+  implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent"))
   implementation(project(":instrumentation:reactor:reactor-3.1:library"))
 
   // using 1.3 to be able to implement several new KafkaReceiver methods added in 1.3.3 and 1.3.21
@@ -37,6 +40,28 @@ dependencies {
 
 testing {
   suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
+        implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
+        implementation(project(":instrumentation:reactor:reactor-3.1:library"))
+        implementation(project(":javaagent-bootstrap"))
+        implementation(project(":javaagent-extension-api"))
+        implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+        implementation("io.projectreactor.kafka:reactor-kafka:1.0.0.RELEASE")
+      }
+
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+            jvmArgs("-Dotel.semconv-stability.preview=messaging")
+          }
+        }
+      }
+    }
+
     register<JvmTestSuite>("testV1_3_3") {
       dependencies {
         implementation(project(":instrumentation:reactor:reactor-kafka-1.0:testing"))
@@ -79,11 +104,16 @@ testing {
 
 tasks {
   withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+    if (name != "unitTests") {
+      usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+      systemProperty("collectMetadata", otelProps.collectMetadata)
+    }
   }
 
-  val experimentalSuites = testing.suites.withType(JvmTestSuite::class)
+  val agentTestSuites = testing.suites.withType(JvmTestSuite::class)
+    .matching { it.name != "unitTests" }
+
+  val experimentalSuites = agentTestSuites
     .map { suite ->
       register<Test>("${suite.name}Experimental") {
         val sourceTask = named<Test>(suite.name).get()
@@ -110,7 +140,7 @@ tasks {
     systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
   }
 
-  val messagingPreviewSuites = testing.suites.withType(JvmTestSuite::class)
+  val messagingPreviewSuites = agentTestSuites
     .map { suite ->
       register<Test>("${suite.name}MessagingPreview") {
         val sourceTask = named<Test>(suite.name).get()
@@ -131,7 +161,7 @@ tasks {
       }
     }
 
-  val bothSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+  val bothSemconvSuites = agentTestSuites
     .map { suite ->
       register<Test>("${suite.name}BothSemconv") {
         val sourceTask = named<Test>(suite.name).get()
@@ -153,7 +183,7 @@ tasks {
     }
 
   val messagingPreviewReceiveSpansDisabledSuites =
-    testing.suites.withType(JvmTestSuite::class)
+    agentTestSuites
       .map { suite ->
         register<Test>("${suite.name}MessagingPreviewReceiveSpansDisabled") {
           val sourceTask = named<Test>(suite.name).get()
