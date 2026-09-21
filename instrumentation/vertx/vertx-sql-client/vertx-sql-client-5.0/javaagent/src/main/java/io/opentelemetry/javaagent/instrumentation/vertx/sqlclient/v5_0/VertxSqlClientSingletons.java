@@ -228,7 +228,7 @@ public class VertxSqlClientSingletons {
   private static Class<?> findCloseableResourceClass() {
     try {
       return Class.forName("io.vertx.core.internal.CloseableResource");
-    } catch (ClassNotFoundException e) {
+    } catch (ClassNotFoundException ignored) {
       return null;
     }
   }
@@ -240,7 +240,7 @@ public class VertxSqlClientSingletons {
 
     try {
       return clazz.getMethod("get");
-    } catch (NoSuchMethodException e) {
+    } catch (NoSuchMethodException ignored) {
       return null;
     }
   }
