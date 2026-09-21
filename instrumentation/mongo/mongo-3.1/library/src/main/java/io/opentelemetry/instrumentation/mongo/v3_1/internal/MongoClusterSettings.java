@@ -34,7 +34,10 @@ public class MongoClusterSettings {
   private static final VirtualField<ClusterSettings, Configuration> SETTINGS_CONFIGURATION =
       VirtualField.find(ClusterSettings.class, Configuration.class);
 
-  private static final ThreadLocal<MongoServerTarget> legacySrvTarget = new ThreadLocal<>();
+  // Mongo#createCluster advice produces this one-shot handoff for ClusterSettings.Builder#build
+  // advice, which consumes it in built(). If the build does not complete,
+  // LegacySrvTargetScope.close() removes it when createCluster exits.
+  private static final ThreadLocal<LegacySrvTargetScope> legacySrvTargetScope = new ThreadLocal<>();
 
   public static void initialize(ClusterSettings.Builder builder) {
     BUILDER_CONFIGURATION.set(builder, DIRECT_CONFIGURATION);
@@ -74,7 +77,14 @@ public class MongoClusterSettings {
   }
 
   public static void built(ClusterSettings.Builder builder, ClusterSettings settings) {
-    MongoServerTarget scopedSrvTarget = legacySrvTarget.get();
+    if (SETTINGS_CONFIGURATION.get(settings) != null) {
+      return;
+    }
+    LegacySrvTargetScope scope = legacySrvTargetScope.get();
+    if (scope != null) {
+      legacySrvTargetScope.remove();
+    }
+    MongoServerTarget scopedSrvTarget = scope == null ? null : scope.target;
     Configuration configuration =
         scopedSrvTarget == null
             ? BUILDER_CONFIGURATION.get(builder)
@@ -106,15 +116,11 @@ public class MongoClusterSettings {
     return MongoServerTarget.seeds(settings.getHosts());
   }
 
-  @Nullable
   public static LegacySrvTargetScope openLegacySrvTargetScope(@Nullable String connectionString) {
     MongoServerTarget target = srvConnectionString(connectionString);
-    if (target == null) {
-      return null;
-    }
-    MongoServerTarget previous = legacySrvTarget.get();
-    legacySrvTarget.set(target);
-    return new LegacySrvTargetScope(previous);
+    LegacySrvTargetScope scope = new LegacySrvTargetScope(legacySrvTargetScope.get(), target);
+    legacySrvTargetScope.set(scope);
+    return scope;
   }
 
   @Nullable
@@ -171,17 +177,20 @@ public class MongoClusterSettings {
    */
   public static class LegacySrvTargetScope {
 
-    @Nullable private final MongoServerTarget previous;
+    @Nullable private final LegacySrvTargetScope previous;
+    @Nullable private final MongoServerTarget target;
 
-    private LegacySrvTargetScope(@Nullable MongoServerTarget previous) {
+    private LegacySrvTargetScope(
+        @Nullable LegacySrvTargetScope previous, @Nullable MongoServerTarget target) {
       this.previous = previous;
+      this.target = target;
     }
 
     public void close() {
       if (previous == null) {
-        legacySrvTarget.remove();
+        legacySrvTargetScope.remove();
       } else {
-        legacySrvTarget.set(previous);
+        legacySrvTargetScope.set(previous);
       }
     }
   }

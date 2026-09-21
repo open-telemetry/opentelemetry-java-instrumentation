@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.databaseSchemaUrl;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -42,6 +43,7 @@ public final class DbConnectionPoolMetrics {
     if (version != null) {
       meterBuilder.setInstrumentationVersion(version);
     }
+    meterBuilder.setSchemaUrl(databaseSchemaUrl());
     return create(meterBuilder.build(), poolName);
   }
 
