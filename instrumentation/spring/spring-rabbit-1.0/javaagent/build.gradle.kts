@@ -12,8 +12,6 @@ muzzle {
 }
 
 dependencies {
-  bootstrap(project(":instrumentation:rabbitmq-2.7:bootstrap"))
-
   library("org.springframework.amqp:spring-rabbit:1.0.0.RELEASE")
 
   testInstrumentation(project(":instrumentation:rabbitmq-2.7:javaagent"))
@@ -32,6 +30,31 @@ dependencies {
 
 testing {
   suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":javaagent-extension-api"))
+        implementation("org.springframework.amqp:spring-rabbit:2.1.7.RELEASE")
+      }
+    }
+
+    register<JvmTestSuite>("version11Test") {
+      dependencies {
+        implementation("io.opentelemetry:opentelemetry-sdk-testing")
+        implementation("org.testcontainers:testcontainers")
+        implementation("org.springframework.amqp:spring-rabbit:1.1.0.RELEASE")
+      }
+
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.semconv-stability.preview=messaging")
+            systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+          }
+        }
+      }
+    }
+
     register<JvmTestSuite>("version20Test") {
       dependencies {
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
@@ -53,9 +76,17 @@ testing {
 
 tasks {
   withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+    if (!name.endsWith("unitTests", ignoreCase = true)) {
+      if (name != "testSpringDisabled") {
+        usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+      }
+      systemProperty("collectMetadata", otelProps.collectMetadata)
+    }
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
+  }
+
+  named<Test>("unitTests") {
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
   }
 
   val testMessagingPreview = register<Test>("testMessagingPreview") {
@@ -79,8 +110,23 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
   }
 
+  val testSpringDisabled = register<Test>("testSpringDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*SpringRabbitRegistrationTest")
+      includeTestsMatching("*SpringRabbitTemplateTest")
+    }
+    jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=false")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.spring-rabbit.enabled=false,otel.semconv-stability.preview=messaging",
+    )
+  }
+
   check {
-    dependsOn(testing.suites, testMessagingPreview, testBothSemconv, testV3Preview)
+    dependsOn(testing.suites, testMessagingPreview, testBothSemconv, testV3Preview, testSpringDisabled)
   }
 }
 
