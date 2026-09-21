@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.i
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
@@ -31,6 +32,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadSuppression;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
@@ -66,7 +68,10 @@ public class PulsarSingletons {
   private static final Instrumenter<PulsarRequest, Void> producerInstrumenter =
       createProducerInstrumenter();
 
-  private static final ThreadLocal<Boolean> suppressReceive = new ThreadLocal<>();
+  private static final ScopedThreadSuppression listenerProcessingSelection =
+      new ScopedThreadSuppression();
+  private static final ScopedThreadSuppression internalReceiveSpanSuppression =
+      new ScopedThreadSuppression();
 
   public static Instrumenter<PulsarRequest, Void> consumerProcessInstrumenter() {
     return consumerProcessInstrumenter;
@@ -74,6 +79,14 @@ public class PulsarSingletons {
 
   public static Instrumenter<PulsarRequest, Void> producerInstrumenter() {
     return producerInstrumenter;
+  }
+
+  public static ScopedThreadSuppression listenerProcessingSelection() {
+    return listenerProcessingSelection;
+  }
+
+  public static ScopedThreadSuppression internalReceiveSpanSuppression() {
+    return internalReceiveSpanSuppression;
   }
 
   private static Instrumenter<PulsarRequest, Void> createConsumerReceiveInstrumenter() {
@@ -199,7 +212,8 @@ public class PulsarSingletons {
     if (!receiveInstrumentationEnabled) {
       // suppress receive span when receive telemetry is not enabled and message is going to be
       // processed by a listener
-      if (MessageListenerContext.isProcessing()) {
+      if (listenerProcessingSelection.isActive()) {
+        VirtualFieldStore.setProcessParentContext(message, parent);
         return null;
       }
       if (!emitStableMessagingSemconv()) {
@@ -219,10 +233,9 @@ public class PulsarSingletons {
             timer.startTime(),
             timer.now());
     Context processParentContext = emitStableMessagingSemconv() ? parent : receiveContext;
-    VirtualFieldStore.markReceiveTelemetryRecorded(message);
     // injected context is used in MessageListenerInstrumentation and also in the spring-pulsar
     // instrumentation
-    VirtualFieldStore.inject(message, processParentContext);
+    VirtualFieldStore.setProcessParentContext(message, processParentContext);
     return processParentContext;
   }
 
@@ -254,8 +267,7 @@ public class PulsarSingletons {
     // injected context is used in MessageListenerInstrumentation and also in the spring-pulsar
     // instrumentation
     for (Message<?> message : messages) {
-      VirtualFieldStore.markReceiveTelemetryRecorded(message);
-      VirtualFieldStore.inject(message, processParentContext);
+      VirtualFieldStore.setProcessParentContext(message, processParentContext);
     }
     return processParentContext;
   }
@@ -280,11 +292,11 @@ public class PulsarSingletons {
 
   public static CompletableFuture<Message<?>> wrap(
       CompletableFuture<Message<?>> future, Timer timer, Consumer<?> consumer) {
-    if (isSuppressingReceive()) {
+    if (internalReceiveSpanSuppression.isActive()) {
       return future;
     }
 
-    boolean listenerContextActive = MessageListenerContext.isProcessing();
+    boolean processingSelected = listenerProcessingSelection.isActive();
     Context parent = Context.current();
     CompletableFuture<Message<?>> result = new CompletableFuture<>();
     future.whenComplete(
@@ -292,9 +304,9 @@ public class PulsarSingletons {
           // we create a "receive" span when receive telemetry is enabled or when we know that
           // this message will not be passed to a listener that would create the "process" span
           Context context =
-              receiveInstrumentationEnabled || !listenerContextActive
+              receiveInstrumentationEnabled || !processingSelected
                   ? startAndEndConsumerReceive(parent, message, timer, consumer, throwable)
-                  : parent;
+                  : prepareListenerContext(parent, message);
           runWithContext(
               context,
               () -> {
@@ -311,7 +323,7 @@ public class PulsarSingletons {
 
   public static CompletableFuture<Messages<?>> wrapBatch(
       CompletableFuture<Messages<?>> future, Timer timer, Consumer<?> consumer) {
-    if (isSuppressingReceive()) {
+    if (internalReceiveSpanSuppression.isActive()) {
       return future;
     }
 
@@ -335,26 +347,22 @@ public class PulsarSingletons {
     return result;
   }
 
+  @CanIgnoreReturnValue
+  private static Context prepareListenerContext(Context parent, @Nullable Message<?> message) {
+    if (message != null) {
+      VirtualFieldStore.setProcessParentContext(message, parent);
+    }
+    return parent;
+  }
+
   private static void runWithContext(@Nullable Context context, Runnable runnable) {
-    if (context != null) {
-      try (Scope ignored = context.makeCurrent()) {
-        runnable.run();
-      }
-    } else {
+    if (context == null) {
+      runnable.run();
+      return;
+    }
+    try (Scope ignored = context.makeCurrent()) {
       runnable.run();
     }
-  }
-
-  public static void startSuppressingReceive() {
-    suppressReceive.set(true);
-  }
-
-  public static void endSuppressingReceive() {
-    suppressReceive.remove();
-  }
-
-  private static boolean isSuppressingReceive() {
-    return Boolean.TRUE.equals(suppressReceive.get());
   }
 
   private PulsarSingletons() {}
