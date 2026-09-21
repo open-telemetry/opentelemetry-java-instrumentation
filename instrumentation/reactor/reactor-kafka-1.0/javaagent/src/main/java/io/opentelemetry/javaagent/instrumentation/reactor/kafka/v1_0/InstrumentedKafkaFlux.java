@@ -69,7 +69,8 @@ final class InstrumentedKafkaFlux<R extends ConsumerRecord<?, ?>> extends FluxOp
       Context parentContext = receiveContext != null ? receiveContext : currentContext;
 
       KafkaProcessRequest request = KafkaProcessRequest.create(consumerContext, record);
-      if (!processInstrumenter().shouldStart(parentContext, request)) {
+      if (!processInstrumenter()
+          .shouldStart(KafkaConsumerContextUtil.spanSuppressionContext(parentContext), request)) {
         actual.onNext(record);
         return;
       }
