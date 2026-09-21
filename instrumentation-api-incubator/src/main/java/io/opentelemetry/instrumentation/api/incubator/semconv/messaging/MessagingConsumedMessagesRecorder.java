@@ -38,15 +38,16 @@ public final class MessagingConsumedMessagesRecorder {
    */
   public static MessagingConsumedMessagesRecorder create(Meter meter) {
     requireNonNull(meter, "meter");
-    if (!emitStableMessagingSemconv()
-        || !OperationMetricsUtil.supportsMetricsAdvice("messaging consumed messages", meter)) {
+    if (!emitStableMessagingSemconv()) {
       return NOOP;
     }
-    LongCounterBuilder builder =
-        meter
-            .counterBuilder("messaging.client.consumed.messages")
-            .setDescription("Number of messages that were delivered to the application.")
-            .setUnit("{message}");
+    LongCounterBuilder builder = meter.counterBuilder("messaging.client.consumed.messages");
+    if (!OperationMetricsUtil.supportsMetricsAdvice("messaging consumed messages", builder)) {
+      return NOOP;
+    }
+    builder
+        .setDescription("Number of messages that were delivered to the application.")
+        .setUnit("{message}");
     MessagingMetricsAdvice.applyConsumedMessagesAdvice(builder);
     return new MessagingConsumedMessagesRecorder(builder.build());
   }

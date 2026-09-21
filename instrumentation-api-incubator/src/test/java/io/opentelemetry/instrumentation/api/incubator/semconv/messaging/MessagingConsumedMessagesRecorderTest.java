@@ -27,7 +27,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static java.util.logging.Level.WARNING;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -37,9 +36,9 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder;
-import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
+import io.opentelemetry.api.incubator.metrics.ExtendedLongCounterBuilder;
 import io.opentelemetry.api.metrics.LongCounter;
+import io.opentelemetry.api.metrics.LongCounterBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterProvider;
 import io.opentelemetry.api.trace.Span;
@@ -378,10 +377,10 @@ class MessagingConsumedMessagesRecorderTest {
   }
 
   @Test
-  void incompatibleMeterUsesExistingWarningAndDoesNotBuildCounter() {
+  void incompatibleCounterBuilderUsesExistingWarningAndDoesNotBuildCounter() {
     Meter meter = mock(Meter.class);
-    DoubleHistogramBuilder builder = mock(DoubleHistogramBuilder.class);
-    when(meter.histogramBuilder("compatibility-test")).thenReturn(builder);
+    LongCounterBuilder builder = mock(LongCounterBuilder.class);
+    when(meter.counterBuilder("messaging.client.consumed.messages")).thenReturn(builder);
     List<LogRecord> warnings = new ArrayList<>();
     Handler handler =
         new Handler() {
@@ -404,8 +403,8 @@ class MessagingConsumedMessagesRecorderTest {
     assertThat(recorder.record(2, Attributes.empty(), Attributes.empty(), Context.root()))
         .isFalse();
 
-    verify(meter, never()).counterBuilder(anyString());
     if (emitStableMessagingSemconv()) {
+      verify(builder, never()).build();
       assertThat(warnings)
           .satisfiesExactly(
               warning -> {
@@ -419,7 +418,7 @@ class MessagingConsumedMessagesRecorderTest {
                     .containsExactly(
                         "messaging consumed messages",
                         builder.getClass().getName(),
-                        ExtendedDoubleHistogramBuilder.class.getName());
+                        ExtendedLongCounterBuilder.class.getName());
               });
     } else {
       verifyNoInteractions(meter);

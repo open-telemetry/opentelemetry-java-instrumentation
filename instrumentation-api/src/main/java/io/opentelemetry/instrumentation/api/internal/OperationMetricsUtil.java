@@ -9,7 +9,9 @@ import static java.util.logging.Level.WARNING;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder;
+import io.opentelemetry.api.incubator.metrics.ExtendedLongCounterBuilder;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
+import io.opentelemetry.api.metrics.LongCounterBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
@@ -56,29 +58,46 @@ public class OperationMetricsUtil {
   public static boolean supportsMetricsAdvice(String description, Meter meter) {
     return supportsMetricsAdvice(
         description,
-        meter,
-        (s, histogramBuilder) ->
-            logger.log(
-                WARNING,
-                "Disabling {0} metrics because {1} does not implement {2}. This prevents using "
-                    + "metrics advice, which could result in {0} metrics having high cardinality "
-                    + "attributes.",
-                new Object[] {
-                  description,
-                  histogramBuilder.getClass().getName(),
-                  ExtendedDoubleHistogramBuilder.class.getName()
-                }));
+        meter.histogramBuilder("compatibility-test"),
+        ExtendedDoubleHistogramBuilder.class,
+        "NoopDoubleHistogram");
+  }
+
+  public static boolean supportsMetricsAdvice(
+      String description, LongCounterBuilder counterBuilder) {
+    return supportsMetricsAdvice(
+        description, counterBuilder, ExtendedLongCounterBuilder.class, "NoopLongCounter");
   }
 
   private static boolean supportsMetricsAdvice(
       String description, Meter meter, BiConsumer<String, DoubleHistogramBuilder> warningEmitter) {
     DoubleHistogramBuilder histogramBuilder = meter.histogramBuilder("compatibility-test");
-    if (!(histogramBuilder instanceof ExtendedDoubleHistogramBuilder)
-        && !histogramBuilder.getClass().getName().contains("NoopDoubleHistogram")) {
+    if (!supportsMetricsAdvice(
+        histogramBuilder, ExtendedDoubleHistogramBuilder.class, "NoopDoubleHistogram")) {
       warningEmitter.accept(description, histogramBuilder);
       return false;
     }
     return true;
+  }
+
+  private static boolean supportsMetricsAdvice(
+      String description, Object builder, Class<?> extendedBuilderType, String noopClassName) {
+    if (!supportsMetricsAdvice(builder, extendedBuilderType, noopClassName)) {
+      logger.log(
+          WARNING,
+          "Disabling {0} metrics because {1} does not implement {2}. This prevents using "
+              + "metrics advice, which could result in {0} metrics having high cardinality "
+              + "attributes.",
+          new Object[] {description, builder.getClass().getName(), extendedBuilderType.getName()});
+      return false;
+    }
+    return true;
+  }
+
+  private static boolean supportsMetricsAdvice(
+      Object builder, Class<?> extendedBuilderType, String noopClassName) {
+    return extendedBuilderType.isInstance(builder)
+        || builder.getClass().getName().contains(noopClassName);
   }
 
   private OperationMetricsUtil() {}
