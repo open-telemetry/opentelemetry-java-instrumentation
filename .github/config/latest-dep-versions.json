@@ -281,6 +281,7 @@
     "org.apache.camel:camel-http-starter#2.+": "2.25.4",
     "org.apache.camel:camel-jaxb-starter#2.+": "2.25.4",
     "org.apache.camel:camel-jetty-starter#2.+": "2.25.4",
+    "org.apache.camel:camel-rabbitmq#2.+": "2.25.4",
     "org.apache.camel:camel-spring-boot-starter#2.+": "2.25.4",
     "org.apache.camel:camel-undertow#2.+": "2.25.4",
     "org.apache.cassandra:java-driver-core#+": "4.19.3",
