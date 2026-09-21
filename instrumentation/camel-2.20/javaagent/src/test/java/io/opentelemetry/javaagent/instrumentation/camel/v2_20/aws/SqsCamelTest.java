@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20.aws;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessagingMetricsAssertions.assertProcessMetrics;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessagingMetricsAssertions.assertSendAndProcessMetrics;
@@ -18,6 +19,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import org.junit.jupiter.api.AfterAll;
@@ -61,24 +63,7 @@ class SqsCamelTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> AwsSpanAssertions.sqs(span, "SQS.ListQueues").hasNoParent()),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> CamelSpanAssertions.direct(span, "input"),
-                span -> CamelSpanAssertions.sqsProduce(span, queueName).hasParent(trace.getSpan(0)),
-                span ->
-                    AwsSpanAssertions.sqs(
-                            span, "sqsCamelTest publish", queueUrl, queueName, SpanKind.PRODUCER)
-                        .hasParent(trace.getSpan(1)),
-                span ->
-                    AwsSpanAssertions.sqs(
-                            span, "sqsCamelTest process", queueUrl, queueName, SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(2)),
-                span -> {
-                  CamelSpanAssertions.sqsConsume(span, queueName).hasParent(trace.getSpan(2));
-                  if (emitStableMessagingSemconv()) {
-                    span.hasLinks(propagatedLink(trace.getSpan(2)));
-                  }
-                }),
+        trace -> assertCamelProducedConsumerTrace(trace, queueUrl, queueName),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -90,6 +75,7 @@ class SqsCamelTest {
 
   @Test
   void awsSdkSqsProducerToCamelSqsConsumer() {
+    assertMessagingSemconvMode();
     String queueName = "sqsCamelTest";
     String queueUrl = awsConnector.createQueue(queueName);
     waitAndClearSetupTraces(queueUrl, queueName);
@@ -105,28 +91,15 @@ class SqsCamelTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> AwsSpanAssertions.sqs(span, "SQS.ListQueues").hasNoParent()),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    AwsSpanAssertions.sqs(
-                            span, "sqsCamelTest publish", queueUrl, queueName, SpanKind.PRODUCER)
-                        .hasNoParent(),
-                span ->
-                    AwsSpanAssertions.sqs(
-                            span, "sqsCamelTest process", queueUrl, queueName, SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(0)),
-                span -> {
-                  CamelSpanAssertions.sqsConsume(span, queueName).hasParent(trace.getSpan(0));
-                  if (emitStableMessagingSemconv()) {
-                    span.hasLinks(propagatedLink(trace.getSpan(0)));
-                  }
-                }),
+        trace -> assertSdkProducedConsumerTrace(trace, queueUrl, queueName),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     AwsSpanAssertions.sqs(span, "SQS.DeleteMessage", queueUrl, queueName)
                         .hasNoParent()));
-    assertProcessMetrics(testing, "aws_sqs", queueName);
+    if (!Boolean.getBoolean("testCamelDisabled")) {
+      assertProcessMetrics(testing, "aws_sqs", queueName);
+    }
     camelApp.stop();
   }
 
@@ -177,6 +150,74 @@ class SqsCamelTest {
     camelApp.stop();
   }
 
+  private static void assertCamelProducedConsumerTrace(
+      TraceAssert trace, String queueUrl, String queueName) {
+    if (emitStableMessagingSemconv()) {
+      trace.hasSpansSatisfyingExactly(
+          span -> CamelSpanAssertions.direct(span, "input"),
+          span -> CamelSpanAssertions.sqsProduce(span, queueName).hasParent(trace.getSpan(0)),
+          span ->
+              AwsSpanAssertions.sqs(
+                      span, "sqsCamelTest publish", queueUrl, queueName, SpanKind.PRODUCER)
+                  .hasParent(trace.getSpan(1)),
+          span ->
+              CamelSpanAssertions.sqsConsume(span, queueName)
+                  .hasParent(trace.getSpan(2))
+                  .hasLinks(propagatedLink(trace.getSpan(2))));
+      return;
+    }
+    trace.hasSpansSatisfyingExactly(
+        span -> CamelSpanAssertions.direct(span, "input"),
+        span -> CamelSpanAssertions.sqsProduce(span, queueName).hasParent(trace.getSpan(0)),
+        span ->
+            AwsSpanAssertions.sqs(
+                    span, "sqsCamelTest publish", queueUrl, queueName, SpanKind.PRODUCER)
+                .hasParent(trace.getSpan(1)),
+        span ->
+            AwsSpanAssertions.sqs(
+                    span, "sqsCamelTest process", queueUrl, queueName, SpanKind.CONSUMER)
+                .hasParent(trace.getSpan(2)),
+        span -> CamelSpanAssertions.sqsConsume(span, queueName).hasParent(trace.getSpan(2)));
+  }
+
+  private static void assertSdkProducedConsumerTrace(
+      TraceAssert trace, String queueUrl, String queueName) {
+    if (Boolean.getBoolean("testCamelDisabled")) {
+      trace.hasSpansSatisfyingExactly(
+          span ->
+              AwsSpanAssertions.sqs(
+                      span, "sqsCamelTest publish", queueUrl, queueName, SpanKind.PRODUCER)
+                  .hasNoParent(),
+          span ->
+              AwsSpanAssertions.sqs(
+                      span, "sqsCamelTest process", queueUrl, queueName, SpanKind.CONSUMER)
+                  .hasParent(trace.getSpan(0)));
+      return;
+    }
+    if (emitStableMessagingSemconv()) {
+      trace.hasSpansSatisfyingExactly(
+          span ->
+              AwsSpanAssertions.sqs(
+                      span, "sqsCamelTest publish", queueUrl, queueName, SpanKind.PRODUCER)
+                  .hasNoParent(),
+          span ->
+              CamelSpanAssertions.sqsConsume(span, queueName)
+                  .hasParent(trace.getSpan(0))
+                  .hasLinks(propagatedLink(trace.getSpan(0))));
+      return;
+    }
+    trace.hasSpansSatisfyingExactly(
+        span ->
+            AwsSpanAssertions.sqs(
+                    span, "sqsCamelTest publish", queueUrl, queueName, SpanKind.PRODUCER)
+                .hasNoParent(),
+        span ->
+            AwsSpanAssertions.sqs(
+                    span, "sqsCamelTest process", queueUrl, queueName, SpanKind.CONSUMER)
+                .hasParent(trace.getSpan(0)),
+        span -> CamelSpanAssertions.sqsConsume(span, queueName).hasParent(trace.getSpan(0)));
+  }
+
   private static LinkData propagatedLink(SpanData producerSpan) {
     SpanContext producerContext = producerSpan.getSpanContext();
     return LinkData.create(
@@ -185,5 +226,20 @@ class SqsCamelTest {
             producerContext.getSpanId(),
             TraceFlags.getSampled(),
             producerContext.getTraceState()));
+  }
+
+  private static void assertMessagingSemconvMode() {
+    if (Boolean.getBoolean("otel.instrumentation.common.v3-preview")) {
+      return;
+    }
+    String optIn = System.getProperty("otel.semconv-stability.opt-in");
+    if (optIn == null) {
+      assertThat(emitOldMessagingSemconv()).isTrue();
+      assertThat(emitStableMessagingSemconv()).isFalse();
+    } else {
+      assertThat(optIn).isEqualTo("database,messaging");
+      assertThat(emitOldMessagingSemconv()).isFalse();
+      assertThat(emitStableMessagingSemconv()).isTrue();
+    }
   }
 }
