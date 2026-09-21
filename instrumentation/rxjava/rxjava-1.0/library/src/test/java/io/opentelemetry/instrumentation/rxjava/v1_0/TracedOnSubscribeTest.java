@@ -13,6 +13,9 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.TraceFlags;
+import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
@@ -34,6 +37,8 @@ class TracedOnSubscribeTest {
       ContextKey.named("test-callback-context");
   private static final ContextKey<String> OPERATION_CONTEXT =
       ContextKey.named("test-operation-context");
+  private static final ContextKey<String> DERIVED_CONTEXT =
+      ContextKey.named("test-derived-context");
 
   @Mock private Instrumenter<TestRequest, Void> instrumenter;
 
@@ -122,6 +127,89 @@ class TracedOnSubscribeTest {
 
     assertThat(subscriber.error).isSameAs(error);
     assertThat(subscriber.onErrorContext).isSameAs(operationContext);
+    verify(instrumenter).start(parentContext, request);
+    verify(instrumenter).end(operationContext, request, null, error);
+    verifyNoMoreInteractions(instrumenter);
+  }
+
+  @Test
+  void preservesOperationContextForErrorFromDerivedOperationContext() {
+    TestSource source = new TestSource();
+    TestRequest request = new TestRequest("request");
+    IllegalStateException error = new IllegalStateException("failure");
+    Context parentContext = Context.root().with(CALLBACK_CONTEXT, "parent");
+    Span operationSpan =
+        Span.wrap(
+            SpanContext.create(
+                "00000000000000000000000000000001",
+                "0000000000000001",
+                TraceFlags.getSampled(),
+                TraceState.getDefault()));
+    Context operationContext =
+        parentContext.with(operationSpan).with(OPERATION_CONTEXT, "operation");
+    Context derivedOperationContext = operationContext.with(DERIVED_CONTEXT, "derived");
+    when(instrumenter.start(parentContext, request)).thenReturn(operationContext);
+
+    TracedOnSubscribe<String, TestRequest> traced =
+        tracedOnSubscribe(source, request, parentContext);
+    RecordingSubscriber subscriber = new RecordingSubscriber();
+    traced.call(subscriber);
+
+    try (Scope ignored = derivedOperationContext.makeCurrent()) {
+      source.subscribers.get(0).onError(error);
+      assertThat(Context.current()).isSameAs(derivedOperationContext);
+    }
+
+    assertThat(subscriber.error).isSameAs(error);
+    assertThat(subscriber.onErrorContext).isSameAs(operationContext);
+    assertThat(subscriber.onErrorContext.get(DERIVED_CONTEXT)).isNull();
+    verify(instrumenter).start(parentContext, request);
+    verify(instrumenter).end(operationContext, request, null, error);
+    verifyNoMoreInteractions(instrumenter);
+  }
+
+  @Test
+  void restoresParentContextForErrorFromUnrelatedValidSpanContext() {
+    TestSource source = new TestSource();
+    TestRequest request = new TestRequest("request");
+    IllegalStateException error = new IllegalStateException("failure");
+    Context parentContext = Context.root().with(CALLBACK_CONTEXT, "parent");
+    Span operationSpan =
+        Span.wrap(
+            SpanContext.create(
+                "00000000000000000000000000000001",
+                "0000000000000001",
+                TraceFlags.getSampled(),
+                TraceState.getDefault()));
+    Context operationContext =
+        parentContext.with(operationSpan).with(OPERATION_CONTEXT, "operation");
+    Span emitterSpan =
+        Span.wrap(
+            SpanContext.create(
+                "00000000000000000000000000000002",
+                "0000000000000002",
+                TraceFlags.getSampled(),
+                TraceState.getDefault()));
+    Context emitterContext =
+        Context.root()
+            .with(emitterSpan)
+            .with(CALLBACK_CONTEXT, "emitter")
+            .with(OPERATION_CONTEXT, "emitter-operation");
+    when(instrumenter.start(parentContext, request)).thenReturn(operationContext);
+
+    TracedOnSubscribe<String, TestRequest> traced =
+        tracedOnSubscribe(source, request, parentContext);
+    RecordingSubscriber subscriber = new RecordingSubscriber();
+    traced.call(subscriber);
+
+    try (Scope ignored = emitterContext.makeCurrent()) {
+      source.subscribers.get(0).onError(error);
+      assertThat(Context.current()).isSameAs(emitterContext);
+    }
+
+    assertThat(subscriber.error).isSameAs(error);
+    assertThat(subscriber.onErrorContext).isSameAs(parentContext);
+    assertThat(Span.fromContext(subscriber.onErrorContext).getSpanContext().isValid()).isFalse();
     verify(instrumenter).start(parentContext, request);
     verify(instrumenter).end(operationContext, request, null, error);
     verifyNoMoreInteractions(instrumenter);

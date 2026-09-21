@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.rxjava.v1_0;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -78,7 +80,15 @@ final class TracedSubscriber<T, REQUEST> extends Subscriber<T> {
   public void onError(Throwable e) {
     Context context = contextRef.getAndSet(null);
     if (context != null) {
-      Context callbackContext = Context.current() == context ? context : parentContext;
+      Context currentContext = Context.current();
+      SpanContext operationSpanContext = Span.fromContext(context).getSpanContext();
+      Context callbackContext =
+          currentContext == context
+                  || (operationSpanContext.isValid()
+                      && operationSpanContext.equals(
+                          Span.fromContext(currentContext).getSpanContext()))
+              ? context
+              : parentContext;
       instrumenter.end(context, request, null, e);
       try (Scope ignored = callbackContext.makeCurrent()) {
         delegate.onError(e);

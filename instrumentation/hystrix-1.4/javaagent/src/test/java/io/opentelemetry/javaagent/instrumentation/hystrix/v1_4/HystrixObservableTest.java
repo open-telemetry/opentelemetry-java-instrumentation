@@ -294,8 +294,7 @@ class HystrixObservableTest {
                             equalTo(booleanKey("hystrix.circuit_open"), experimental(false))),
                 span ->
                     span.hasName("ExampleGroup.TestCommand.fallback")
-                        .hasParent(
-                            trace.getSpan(parameter.deliversErrorOnOperationContext() ? 1 : 0))
+                        .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(stringKey("hystrix.command"), experimental("TestCommand")),
                             equalTo(stringKey("hystrix.group"), experimental("ExampleGroup")),
@@ -393,8 +392,7 @@ class HystrixObservableTest {
                             equalTo(booleanKey("hystrix.circuit_open"), experimental(false))),
                 span ->
                     span.hasName("FailingGroup.TestCommand.fallback")
-                        .hasParent(
-                            trace.getSpan(parameter.deliversErrorOnOperationContext() ? 1 : 0))
+                        .hasParent(trace.getSpan(1))
                         .hasException(hystrixRuntimeException.getFallbackException())
                         .hasAttributesSatisfyingExactly(
                             equalTo(stringKey("hystrix.command"), experimental("TestCommand")),
@@ -467,16 +465,6 @@ class HystrixObservableTest {
       this.observeOn = observeOn;
       this.subscribeOn = subscribeOn;
       this.operation = operation;
-    }
-
-    private boolean deliversErrorOnOperationContext() {
-      return isCurrentThreadScheduler(observeOn) && isCurrentThreadScheduler(subscribeOn);
-    }
-
-    private static boolean isCurrentThreadScheduler(Scheduler scheduler) {
-      return scheduler == null
-          || scheduler == Schedulers.immediate()
-          || scheduler == Schedulers.trampoline();
     }
   }
 }
