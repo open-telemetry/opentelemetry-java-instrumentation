@@ -20,6 +20,7 @@ dependencies {
 
   implementation(project(":instrumentation:jedis:jedis-common-1.4:javaagent"))
 
+  testLibrary("redis.clients:jedis:3.6.1")
   testInstrumentation(project(":instrumentation:jedis:jedis-1.4:javaagent"))
   testInstrumentation(project(":instrumentation:jedis:jedis-2.0:javaagent"))
   testInstrumentation(project(":instrumentation:jedis:jedis-4.0:javaagent"))

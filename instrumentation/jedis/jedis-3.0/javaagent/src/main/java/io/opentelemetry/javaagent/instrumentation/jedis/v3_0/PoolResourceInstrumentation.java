@@ -5,7 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
+import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
@@ -29,9 +31,24 @@ class PoolResourceInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
+        isConstructor()
+            .and(takesArgument(0, named("org.apache.commons.pool2.impl.GenericObjectPoolConfig")))
+            .and(takesArgument(1, named("org.apache.commons.pool2.PooledObjectFactory"))),
+        getClass().getName() + "$ConstructorAdvice");
+    transformer.applyAdviceToMethod(
         named("initPool").and(takesArguments(2)), getClass().getName() + "$InitPoolAdvice");
     transformer.applyAdviceToMethod(
         named("getResource").and(takesArguments(0)), getClass().getName() + "$GetResourceAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class ConstructorAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This Pool<?> pool, @Advice.Argument(1) PooledObjectFactory<?> factory) {
+      JedisConfiguredTargets.capturePoolFactory(pool, factory);
+    }
   }
 
   @SuppressWarnings("unused")
