@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
+package io.opentelemetry.instrumentation.spring.autoconfigure;
 
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
@@ -21,11 +21,7 @@ import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
 
-/**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- */
-public class EmbeddedConfigFile {
+class EmbeddedConfigFile {
 
   private static final Pattern ARRAY_PATTERN = Pattern.compile("(.+)\\[(\\d+)]$");
 
@@ -49,7 +45,7 @@ public class EmbeddedConfigFile {
 
   private EmbeddedConfigFile() {}
 
-  public static OpenTelemetryConfigurationModel extractModel(ConfigurableEnvironment environment) {
+  static OpenTelemetryConfigurationModel extractModel(ConfigurableEnvironment environment) {
     Map<String, String> props = extractSpringProperties(environment);
     return convertToOpenTelemetryConfigurationModel(props);
   }

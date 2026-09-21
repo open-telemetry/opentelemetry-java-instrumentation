@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
+package io.opentelemetry.instrumentation.spring.autoconfigure;
 
 import static java.util.Collections.emptyMap;
 
@@ -15,18 +15,20 @@ import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryC
 import java.util.Map;
 
 /**
- * Spring flavor of {@code SdkConfigProvider} that tries to coerce types, because spring doesn't
- * tell what the original type was.
+ * Adapts Spring-resolved configuration so each typed getter converts to the consumer's requested
+ * type. Values resolved from properties, placeholders, and system-property overrides can be
+ * Strings.
+ *
+ * <p>Runtime consumers share the provider built from the final SDK configuration. Bootstrap model
+ * customizers use a separate view of their current model because the final provider is not yet
+ * available and later customizers may still change the configuration.
  *
  * <p>The entire class is a copy of <a
  * href="https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/declarative-config/src/main/java/io/opentelemetry/sdk/autoconfigure/declarativeconfig/SdkConfigProvider.java">SdkConfigProvider</a>
  * which uses {@link SpringDeclarativeConfigProperties} instead of {@link
  * io.opentelemetry.sdk.autoconfigure.declarativeconfig.YamlDeclarativeConfigProperties}.
- *
- * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
- * at any time.
  */
-public final class SpringConfigProvider implements ConfigProvider {
+final class SpringConfigProvider implements ConfigProvider {
 
   private final DeclarativeConfigProperties instrumentationConfig;
 
@@ -52,13 +54,13 @@ public final class SpringConfigProvider implements ConfigProvider {
    * @param componentLoader the component loader
    * @return the {@link SpringConfigProvider}
    */
-  public static SpringConfigProvider create(
+  static SpringConfigProvider create(
       OpenTelemetryConfigurationModel model, ComponentLoader componentLoader) {
     DeclarativeConfigProperties configProperties = toConfigProperties(model, componentLoader);
     return new SpringConfigProvider(configProperties.get("instrumentation/development"));
   }
 
-  public static SpringConfigProvider create(DeclarativeConfigProperties instrumentationConfig) {
+  static SpringConfigProvider create(DeclarativeConfigProperties instrumentationConfig) {
     return new SpringConfigProvider(
         SpringDeclarativeConfigProperties.create(
             DeclarativeConfigProperties.toMap(instrumentationConfig),

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
+package io.opentelemetry.instrumentation.spring.autoconfigure;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -26,8 +26,10 @@ import javax.annotation.Nullable;
 
 /**
  * Spring flavor of {@link
- * io.opentelemetry.sdk.autoconfigure.declarativeconfig.YamlDeclarativeConfigProperties}, that tries
- * to coerce types, because spring doesn't tell what the original type was.
+ * io.opentelemetry.sdk.autoconfigure.declarativeconfig.YamlDeclarativeConfigProperties}. Typed
+ * getters convert Spring-resolved values to the requested type rather than requiring the stored
+ * scalar to already have that type. This also handles String-valued placeholders and
+ * system-property overrides.
  *
  * <p>The entire class is a copy of <a
  * href="https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/declarative-config/src/main/java/io/opentelemetry/sdk/autoconfigure/declarativeconfig/YamlDeclarativeConfigProperties.java">YamlDeclarativeConfigProperties</a>
