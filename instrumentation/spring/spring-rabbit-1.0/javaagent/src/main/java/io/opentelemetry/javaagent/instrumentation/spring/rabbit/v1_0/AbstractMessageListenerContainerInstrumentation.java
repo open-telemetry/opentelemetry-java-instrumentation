@@ -13,9 +13,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.rabbitmq.client.Channel;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -33,14 +33,6 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("executeListener")
-            .and(
-                takesArguments(2)
-                    .and(
-                        takesArgument(1, Object.class)
-                            .or(takesArgument(1, named("org.springframework.amqp.core.Message"))))),
-        getClass().getName() + "$ExecuteListenerAdvice");
-    transformer.applyAdviceToMethod(
         named("invokeListener")
             .and(
                 takesArguments(2)
@@ -51,23 +43,68 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
   }
 
   @SuppressWarnings("unused")
-  public static class ExecuteListenerAdvice {
+  public static class InvokeListenerAdvice {
 
     public static class AdviceScope {
       private final Context context;
       private final Scope scope;
       private final SpringRabbitRequest request;
 
-      public AdviceScope(Context context, SpringRabbitRequest request) {
+      @Nullable
+      public static AdviceScope start(
+          AbstractMessageListenerContainer container, Channel channel, Object data) {
+        if (!SpringRabbitListenerUtil.isListenerProcessingSelected(container)) {
+          return null;
+        }
+
+        SpringRabbitRequest request;
+        if (data instanceof Message) {
+          request = new SpringRabbitRequest(channel, (Message) data);
+        } else if (data instanceof List
+            && !((List<?>) data).isEmpty()
+            && ((List<?>) data).get(0) instanceof Message) {
+          List<Message> messages = new ArrayList<>();
+          for (Object message : (List<?>) data) {
+            if (!(message instanceof Message)) {
+              return null;
+            }
+            messages.add((Message) message);
+          }
+          request = new SpringRabbitRequest(channel, messages);
+        } else {
+          return null;
+        }
+
+        Context parentContext = Context.current();
+        if (!instrumenter().shouldStart(parentContext, request)) {
+          return null;
+        }
+        Context context;
+        try (Scope ignored = Context.root().makeCurrent()) {
+          context = instrumenter().start(parentContext, request);
+        }
+        request.installProcessingContext(context);
+        try {
+          return new AdviceScope(context, request);
+        } catch (RuntimeException | Error e) {
+          request.restoreProcessingContext(context);
+          throw e;
+        }
+      }
+
+      private AdviceScope(Context context, SpringRabbitRequest request) {
         this.context = context;
-        this.scope = context.makeCurrent();
         this.request = request;
+        this.scope = context.makeCurrent();
       }
 
       public void end(@Nullable Throwable throwable) {
-        scope.close();
-        instrumenter()
-            .end(context, request, null, SpringRabbitErrorHolder.getOrDefault(context, throwable));
+        try {
+          scope.close();
+        } finally {
+          request.restoreProcessingContext(context);
+        }
+        instrumenter().end(context, request, null, throwable);
       }
     }
 
@@ -77,28 +114,7 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
         @Advice.This AbstractMessageListenerContainer container,
         @Advice.Argument(0) Channel channel,
         @Advice.Argument(1) Object data) {
-      if (!SpringRabbitListenerUtil.shouldTraceListenerProcess(container)) {
-        return null;
-      }
-
-      SpringRabbitRequest request;
-      if (data instanceof Message) {
-        request = new SpringRabbitRequest(channel, (Message) data);
-      } else if (data instanceof List
-          && !((List<?>) data).isEmpty()
-          && ((List<?>) data).get(0) instanceof Message) {
-        List<?> messages = (List<?>) data;
-        request = new SpringRabbitRequest(channel, (Message) messages.get(0), messages.size());
-      } else {
-        return null;
-      }
-
-      Context parentContext = Java8BytecodeBridge.currentContext();
-      if (!instrumenter().shouldStart(parentContext, request)) {
-        return null;
-      }
-      Context context = instrumenter().start(parentContext, request);
-      return new AdviceScope(context, request);
+      return AdviceScope.start(container, channel, data);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
@@ -109,17 +125,6 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
         return;
       }
       adviceScope.end(throwable);
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class InvokeListenerAdvice {
-
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
-    public static void onExit(@Advice.Thrown @Nullable Throwable throwable) {
-      if (throwable != null) {
-        SpringRabbitErrorHolder.set(Java8BytecodeBridge.currentContext(), throwable);
-      }
     }
   }
 }
