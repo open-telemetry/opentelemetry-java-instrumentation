@@ -17,7 +17,6 @@ import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.apache.commons.pool2.PooledObjectFactory;
 
 class JedisFactoryInstrumentation implements TypeInstrumentation {
 
@@ -39,7 +38,7 @@ class JedisFactoryInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Scope onEnter(@Advice.This PooledObjectFactory<?> factory) {
+    public static Scope onEnter(@Advice.This JedisFactory factory) {
       Context context = JedisConfiguredTargets.factoryTargetContext(factory);
       return context == null ? null : context.makeCurrent();
     }
