@@ -65,18 +65,6 @@ public class JmxMetricInsightInstaller implements AgentListener {
         .map(Paths::get)
         .forEach(path -> addFileRules(path, jmx));
 
-    List<String> systemsConfig = emptyList();
-    if (!v3Preview) {
-      systemsConfig = config.get("target").getScalarList("system", String.class, emptyList());
-      if (!systemsConfig.isEmpty()) {
-        logger.log(
-            WARNING,
-            "'otel.jmx.target.system' is deprecated and will be removed in 3.0."
-                + " Stable metrics are enabled automatically; use 'otel.jmx.metrics.experimental.included'"
-                + " to opt in to unstable metrics.");
-      }
-    }
-
     if (v3Preview) {
       // include all stable metrics excepted for jvm metrics as they overlap runtime-telemetry
       jmx.internalMetricsSystemFilter(IncludeExclude.builder().setExcluded("jvm").build());
@@ -97,6 +85,15 @@ public class JmxMetricInsightInstaller implements AgentListener {
       // pre-v3 compatibility
       InternalMetricsDefinitions metricsDefinitions =
           new InternalMetricsDefinitions(JmxMetricInsightInstaller.class.getClassLoader());
+
+      List<String> systemsConfig = config.get("target").getScalarList("system", String.class, emptyList());
+      if (!systemsConfig.isEmpty()) {
+        logger.log(
+            WARNING,
+            "'otel.jmx.target.system' is deprecated and will be removed in 3.0."
+                + " Stable metrics are enabled automatically; use 'otel.jmx.metrics.experimental.included'"
+                + " to opt in to unstable metrics.");
+      }
 
       // mapping of 'experimental-' deprecated prefix in target system
       systemsConfig =
