@@ -9,8 +9,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import org.junit.jupiter.api.Test;
 import redis.clients.jedis.Connection;
+import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
 class JedisSingletonsTest {
@@ -62,6 +64,32 @@ class JedisSingletonsTest {
         assertThat(JedisSingletons.connectionTarget(connection)).isNull();
       }
     } finally {
+      pool.destroy();
+    }
+  }
+
+  @Test
+  void borrowedPoolResourceReplacesPreviouslyCapturedTarget() {
+    JedisPool pool = new JedisPool("localhost", 6379);
+    Jedis jedis = new Jedis("selected", 6380);
+    try {
+      JedisSingletons.captureConnectionTarget(jedis.getClient());
+      assertThat(JedisSingletons.connectionTarget(jedis.getClient()).getAddress())
+          .isEqualTo("selected");
+
+      JedisSingletons.setPoolTarget(pool, RedisServerTarget.ofHostAndPort("configured", 6381));
+      Context context = JedisSingletons.configuredPoolTargetContext(pool);
+      assertThat(context).isNotNull();
+
+      try (Scope ignored = context.makeCurrent()) {
+        JedisSingletons.captureJedisTarget(jedis);
+      }
+
+      RedisServerTarget target = JedisSingletons.connectionTarget(jedis.getClient());
+      assertThat(target.getAddress()).isEqualTo("configured");
+      assertThat(target.getPort()).isEqualTo(6381);
+    } finally {
+      jedis.disconnect();
       pool.destroy();
     }
   }

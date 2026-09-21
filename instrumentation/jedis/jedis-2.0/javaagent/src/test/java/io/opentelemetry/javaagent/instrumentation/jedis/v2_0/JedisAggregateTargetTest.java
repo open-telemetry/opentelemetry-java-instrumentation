@@ -65,6 +65,7 @@ class JedisAggregateTargetTest {
             .getConstructor(String.class, Set.class)
             .newInstance(MASTER_NAME, singleton(sentinelEndpoint));
     try {
+      poolClass.getMethod("addObjects", int.class).invoke(pool, 1);
       Object jedis = poolClass.getMethod("getResource").invoke(pool);
       try {
         jedis.getClass().getMethod("set", String.class, String.class).invoke(jedis, "key", "value");

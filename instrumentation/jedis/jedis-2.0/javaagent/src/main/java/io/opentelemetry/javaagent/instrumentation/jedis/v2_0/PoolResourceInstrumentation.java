@@ -17,6 +17,7 @@ import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import redis.clients.jedis.Jedis;
 import redis.clients.util.Pool;
 
 class PoolResourceInstrumentation implements TypeInstrumentation {
@@ -53,9 +54,16 @@ class PoolResourceInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+    public static void onExit(
+        @Advice.Enter @Nullable Scope scope, @Advice.Return @Nullable Object resource) {
       if (scope != null) {
-        scope.close();
+        try {
+          if (resource instanceof Jedis) {
+            JedisSingletons.captureJedisTarget((Jedis) resource);
+          }
+        } finally {
+          scope.close();
+        }
       }
     }
   }

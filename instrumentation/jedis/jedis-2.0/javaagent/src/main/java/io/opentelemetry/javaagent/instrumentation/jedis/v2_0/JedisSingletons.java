@@ -22,6 +22,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import javax.annotation.Nullable;
 import redis.clients.jedis.Connection;
+import redis.clients.jedis.Jedis;
 import redis.clients.util.Pool;
 
 public class JedisSingletons {
@@ -77,6 +78,10 @@ public class JedisSingletons {
             ? RedisServerTarget.ofHostAndPort(connection.getHost(), connection.getPort())
             : configuredTarget.target;
     CONNECTION_TARGET.set(connection, target);
+  }
+
+  public static void captureJedisTarget(Jedis jedis) {
+    captureConnectionTarget(jedis.getClient());
   }
 
   public static void capturePoolTarget(Pool<?> pool) {
