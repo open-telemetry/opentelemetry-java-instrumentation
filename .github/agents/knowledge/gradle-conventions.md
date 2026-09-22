@@ -34,6 +34,38 @@ muzzle {
 Use `fail` blocks for versions that must NOT be instrumented. Use `skip()` for specific
 broken/incompatible versions.
 
+### Compatibility range ownership
+
+Versioned javaagent Gradle projects for the same component and target artifact should ideally own
+disjoint compatibility ranges. Create a new versioned project when the baseline implementation
+changes incompatibly and the old and new implementations are mutually exclusive, or when a real
+build or dependency boundary prevents one project from compiling both implementations.
+
+When behavior is additive, optional, or starts in a higher subrange while the baseline remains
+compatible, keep the independently selected `InstrumentationModule` classes in the existing
+javaagent project. Give each module a unique module-specific instrumentation name as described in
+[Javaagent module structure patterns](javaagent-module-patterns.md#multiple-modules-in-one-gradle-project).
+Configure one Muzzle `pass` per range and target artifact. Each pass must use
+`excludeInstrumentationName(...)` to exclude every unrelated module in the project. Keep the
+baseline library dependency and add newer or optional referenced types with `compileOnly` when
+appropriate.
+
+Multiple Scala or artifact-name variants, a separate enablement name, a different test matrix, or
+dependencies on separate library, testing, helper, generated-code, or language-specific projects do
+not by themselves require another javaagent project. Those auxiliary projects may remain separate,
+but they should not own an overlapping `InstrumentationModule` unless the javaagent selector cannot
+share the build.
+
+Narrow exceptions include incompatible toolchains or plugins and version-specific generated or
+shaded compile classpaths. The `opentelemetry-api-*` family is one example: each layer compiles
+against a distinct shaded API configuration. Kotlin Flow has a different boundary. Its
+`javaagent-kotlin` helper must remain separate because Muzzle generation does not correctly handle
+that Kotlin source, but its `InstrumentationModule` can still share the baseline javaagent owner.
+
+Muzzle verifies generated symbol references, not whether every Byte Buddy method matcher matches.
+A pass lower bound may therefore start when the referenced types exist even when a more precise
+runtime matcher activates the behavior only in a later version.
+
 ### Important: do not remove existing `assertInverse` or `skip`
 
 - Never remove an existing `assertInverse.set(true)` from a `pass` block.
