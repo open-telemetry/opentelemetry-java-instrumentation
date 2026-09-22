@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spring.kafka.v2_7;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -16,6 +17,13 @@ import java.util.List;
 public class SpringKafkaInstrumentationModule extends InstrumentationModule {
   public SpringKafkaInstrumentationModule() {
     super("spring-kafka", "spring-kafka-2.7");
+  }
+
+  @Override
+  public List<String> getAdditionalHelperClassNames() {
+    // ThreadState is used only by callbacks added after the minimum supported Spring version.
+    return singletonList(
+        "io.opentelemetry.instrumentation.spring.kafka.v2_7.InstrumentedRecordInterceptor$ThreadState");
   }
 
   @Override

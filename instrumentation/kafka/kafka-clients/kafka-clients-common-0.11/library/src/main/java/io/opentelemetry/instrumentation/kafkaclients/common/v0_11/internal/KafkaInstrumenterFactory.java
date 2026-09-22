@@ -36,7 +36,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import java.util.function.ToLongFunction;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 /**
@@ -278,10 +277,9 @@ public final class KafkaInstrumenterFactory {
       InstrumenterBuilder<KafkaReceiveRequest, Void> builder) {
     builder
         .addContextCustomizer(
-            (context, request, startAttributes) -> {
-              return context.with(
-                  CONSUMED_MESSAGES_COUNT_KEY, countConsumedMessages(request.getRecords()));
-            })
+            (context, request, startAttributes) ->
+                context.with(
+                    CONSUMED_MESSAGES_COUNT_KEY, countConsumedMessages(request.getRecordList())))
         .addOperationMetrics(consumedMessagesMetrics);
   }
 
@@ -294,7 +292,7 @@ public final class KafkaInstrumenterFactory {
   }
 
   /** Counts the records of a batch individually, so that they can be deduplicated one by one. */
-  private static long countConsumedMessages(ConsumerRecords<?, ?> records) {
+  private static long countConsumedMessages(Iterable<? extends ConsumerRecord<?, ?>> records) {
     long consumedMessagesCount = 0;
     for (ConsumerRecord<?, ?> record : records) {
       consumedMessagesCount += countConsumedMessages(record);
@@ -321,7 +319,7 @@ public final class KafkaInstrumenterFactory {
             .addOperationMetrics(MessagingProcessMetrics.get())
             .setErrorCauseExtractor(errorCauseExtractor);
     addConsumedMessagesIfNoReceiveOperation(
-        builder, request -> countConsumedMessages(request.getRecords()));
+        builder, request -> countConsumedMessages(request.getRecordList()));
     setMessagingProcessExceptionEventExtractor(builder);
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
