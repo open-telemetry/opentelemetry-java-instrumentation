@@ -10,12 +10,12 @@ import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
-import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import io.opentelemetry.javaagent.bootstrap.spring.SpringSchedulingTaskTracing;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -36,26 +36,26 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(named("run"), getClass().getName() + "$RunLoopAdvice");
     transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
+    transformer.applyAdviceToMethod(named("doPoll"), getClass().getName() + "$PollAdvice");
+    transformer.applyAdviceToMethod(
+        named("invokeIfHaveRecords")
+            .and(takesArgument(0, named("org.apache.kafka.clients.consumer.ConsumerRecords"))),
+        getClass().getName() + "$SelectListenerProcessingAdvice");
     transformer.applyAdviceToMethod(
         named("invokeBatchOnMessageWithRecordsOrList")
             .and(takesArgument(0, named("org.apache.kafka.clients.consumer.ConsumerRecords"))),
         getClass().getName() + "$InvokeBatchAdvice");
   }
 
-  // this advice suppresses the CONSUMER spans created by the kafka-clients instrumentation
   @SuppressWarnings("unused")
-  public static class RunLoopAdvice {
-
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static boolean onEnter() {
-      return KafkaClientsConsumerProcessTracing.setWrappingEnabled(false);
-    }
+  public static class PollAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter boolean previousValue) {
-      KafkaClientsConsumerProcessTracing.setWrappingEnabled(previousValue);
+    public static void onExit(@Advice.Return @Nullable ConsumerRecords<?, ?> records) {
+      if (records != null) {
+        SpringKafkaProcessingSelection.selectListenerProcessing(records);
+      }
     }
   }
 
@@ -75,6 +75,15 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
+  public static class SelectListenerProcessingAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static void onEnter(@Advice.Argument(0) ConsumerRecords<?, ?> records) {
+      SpringKafkaProcessingSelection.selectListenerProcessing(records);
+    }
+  }
+
+  @SuppressWarnings("unused")
   public static class InvokeBatchAdvice {
 
     public static class AdviceScope {
@@ -90,6 +99,7 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
 
       @Nullable
       public static AdviceScope start(ConsumerRecords<?, ?> records, Consumer<?, ?> consumer) {
+        SpringKafkaProcessingSelection.selectListenerProcessing(records);
         KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(records);
         Context receiveContext = consumerContext.getContext();
 
@@ -97,7 +107,8 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
         Context parentContext = receiveContext != null ? receiveContext : Context.current();
         KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumer);
 
-        if (!batchProcessInstrumenter().shouldStart(parentContext, request)) {
+        if (InstrumentationUtil.shouldSuppressInstrumentation(Context.current())
+            || !batchProcessInstrumenter().shouldStart(parentContext, request)) {
           return null;
         }
         Context context = batchProcessInstrumenter().start(parentContext, request);
