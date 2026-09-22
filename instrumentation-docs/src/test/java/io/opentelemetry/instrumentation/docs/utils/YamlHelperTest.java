@@ -15,6 +15,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationOption;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationType;
+import io.opentelemetry.instrumentation.docs.internal.EmittedEvents;
 import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
 import io.opentelemetry.instrumentation.docs.internal.EmittedSpans;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationClassification;
@@ -559,6 +560,151 @@ class YamlHelperTest {
         """;
 
     assertThat(result).isEqualTo(expectedYaml);
+  }
+
+  @Test
+  void testEventParsing() throws Exception {
+    List<InstrumentationModule> modules = new ArrayList<>();
+
+    EmittedEvents.Event exceptionEvent =
+        new EmittedEvents.Event(
+            "db.client.operation.exception",
+            "WARN",
+            List.of(
+                new TelemetryAttribute("db.system.name", "STRING"),
+                new TelemetryAttribute("exception.type", "STRING")));
+
+    // an event with no severity, to confirm the key is omitted rather than emitted as null
+    EmittedEvents.Event packageInfo =
+        new EmittedEvents.Event(
+            "package.info", null, List.of(new TelemetryAttribute("package.name", "STRING")));
+
+    modules.add(
+        new InstrumentationModule.Builder()
+            .srcPath("instrumentation/mylib/mylib-core-2.3")
+            .instrumentationName("mylib-2.3")
+            .namespace("mylib")
+            .hasStandaloneLibrary(true)
+            .group("mylib")
+            .events(Map.of("default", List.of(exceptionEvent, packageInfo)))
+            .build());
+
+    String result = generateInstrumentationYaml(modules);
+    String expectedYaml =
+        """
+        definitions:
+          events:
+            db.client.operation.exception-e1a80bbd:
+              name: db.client.operation.exception
+              severity: WARN
+              attributes:
+              - name: db.system.name
+                type: STRING
+              - name: exception.type
+                type: STRING
+            package.info-ba4a9905:
+              name: package.info
+              attributes:
+              - name: package.name
+                type: STRING
+        libraries:
+        - name: mylib-2.3
+          source_path: instrumentation/mylib/mylib-core-2.3
+          scope:
+            name: io.opentelemetry.mylib-2.3
+          has_standalone_library: true
+          telemetry:
+          - when: default
+            event_refs:
+            - db.client.operation.exception-e1a80bbd
+            - package.info-ba4a9905
+        """;
+
+    assertThat(result).isEqualTo(expectedYaml);
+  }
+
+  @Test
+  void testEventOnlyTelemetryGroupIsEmitted() throws Exception {
+    // A `when` group carrying only events must not be suppressed.
+    EmittedEvents.Event event = new EmittedEvents.Event("gen_ai.choice", null, emptyList());
+
+    List<InstrumentationModule> modules =
+        List.of(
+            new InstrumentationModule.Builder("mylib-1.0")
+                .srcPath("instrumentation/mylib-1.0")
+                .events(Map.of("otel.semconv.exception.signal.preview=logs", List.of(event)))
+                .build());
+
+    String result = generateInstrumentationYaml(modules);
+
+    assertThat(result).contains("- when: otel.semconv.exception.signal.preview=logs");
+    assertThat(result).contains("event_refs:");
+  }
+
+  @Test
+  void testSharedEventDefinitionIsDeduplicatedAcrossModules() throws Exception {
+    // The exception events are emitted identically by many modules; catalog them once.
+    EmittedEvents.Event event =
+        new EmittedEvents.Event(
+            "exception", "WARN", List.of(new TelemetryAttribute("exception.type", "STRING")));
+
+    List<InstrumentationModule> modules = new ArrayList<>();
+    for (String name : List.of("alpha-1.0", "beta-1.0")) {
+      modules.add(
+          new InstrumentationModule.Builder(name)
+              .srcPath("instrumentation/" + name)
+              .events(Map.of("default", List.of(event)))
+              .build());
+    }
+
+    String result = generateInstrumentationYaml(modules);
+
+    long definitionCount =
+        result
+            .lines()
+            .filter(l -> l.trim().startsWith("exception-") && l.trim().endsWith(":"))
+            .count();
+    long refCount = result.lines().filter(l -> l.trim().startsWith("- exception-")).count();
+
+    assertThat(definitionCount).isEqualTo(1);
+    assertThat(refCount).isEqualTo(2);
+  }
+
+  @Test
+  void testSameEventNameWithDifferentSeveritiesGetsSeparateDefinitions() throws Exception {
+    // One scope can emit the same event at two severities - the default exception event is ERROR
+    // for server and consumer operations and WARN for client and producer ones - and each is a
+    // distinct shape that has to survive into the catalog.
+    EmittedEvents.Event serverException =
+        new EmittedEvents.Event(
+            "exception", "ERROR", List.of(new TelemetryAttribute("exception.type", "STRING")));
+    EmittedEvents.Event clientException =
+        new EmittedEvents.Event(
+            "exception", "WARN", List.of(new TelemetryAttribute("exception.type", "STRING")));
+
+    List<InstrumentationModule> modules =
+        List.of(
+            new InstrumentationModule.Builder("sofa-rpc-5.4")
+                .srcPath("instrumentation/sofa-rpc-5.4")
+                .events(
+                    Map.of(
+                        "otel.semconv.exception.signal.preview=logs",
+                        List.of(serverException, clientException)))
+                .build());
+
+    String result = generateInstrumentationYaml(modules);
+
+    long definitionCount =
+        result
+            .lines()
+            .filter(l -> l.trim().startsWith("exception-") && l.trim().endsWith(":"))
+            .count();
+    long refCount = result.lines().filter(l -> l.trim().startsWith("- exception-")).count();
+
+    assertThat(definitionCount).isEqualTo(2);
+    assertThat(refCount).isEqualTo(2);
+    assertThat(result).contains("severity: ERROR");
+    assertThat(result).contains("severity: WARN");
   }
 
   @Test

@@ -9,10 +9,25 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static java.util.Map.entry;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 class TelemetryParser {
+
+  // Attributes that only exist because of how the tests are written, and should not be documented
+  // as telemetry the instrumentation emits.
+  private static final List<String> EXCLUDED_ATTRIBUTES =
+      List.of(
+          "asdf",
+          "x-test-",
+          "test-parameter",
+          "test-baggage-",
+          "test_message",
+          "Test_Message",
+          "Test-Message",
+          "some-client-key",
+          "some-server-key");
 
   // Key is the scope of the module being analyzed, value is a set of additional allowed scopes.
   private static final Map<String, Set<String>> scopeAllowList;
@@ -75,6 +90,17 @@ class TelemetryParser {
   static boolean scopeIsValid(String telemetryScope, String moduleScope) {
     return telemetryScope.equals(moduleScope)
         || scopeAllowList.getOrDefault(moduleScope, emptySet()).contains(telemetryScope);
+  }
+
+  /**
+   * Checks whether the given attribute name is test scaffolding rather than real instrumentation
+   * telemetry, and should therefore be left out of the generated documentation.
+   *
+   * @param attributeName the name of the attribute
+   * @return true if the attribute should be excluded, false otherwise
+   */
+  static boolean isExcludedAttribute(String attributeName) {
+    return EXCLUDED_ATTRIBUTES.stream().anyMatch(attributeName::contains);
   }
 
   /**
