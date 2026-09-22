@@ -116,6 +116,50 @@ class CompletableFutureWrapperTest {
   }
 
   @Test
+  void waitsForConcurrentCancellationCompletion() throws Exception {
+    CountDownLatch completionStarted = new CountDownLatch(1);
+    CountDownLatch allowCompletion = new CountDownLatch(1);
+    CompletableFuture<String> sourceFuture =
+        new CompletableFuture<String>() {
+          @Override
+          public boolean cancel(boolean mayInterruptIfRunning) {
+            new Thread(() -> super.cancel(mayInterruptIfRunning)).start();
+            try {
+              return completionStarted.await(10, SECONDS);
+            } catch (InterruptedException e) {
+              Thread.currentThread().interrupt();
+              throw new AssertionError(e);
+            }
+          }
+        };
+    CompletableFuture<String> wrapped =
+        CompletableFutureWrapper.wrap(
+            sourceFuture,
+            Context.root(),
+            (result, error) -> {
+              completionStarted.countDown();
+              try {
+                allowCompletion.await();
+              } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new AssertionError(e);
+              }
+            });
+
+    CompletableFuture<Boolean> cancellationResult =
+        CompletableFuture.supplyAsync(() -> wrapped.cancel(false));
+    try {
+      assertThat(completionStarted.await(10, SECONDS)).isTrue();
+      assertThat(cancellationResult).isNotDone();
+    } finally {
+      allowCompletion.countDown();
+    }
+
+    assertThat(cancellationResult.get(10, SECONDS)).isTrue();
+    assertThat(wrapped).isCancelled();
+  }
+
+  @Test
   void cancellingDerivedStageDoesNotCancelSource() {
     CompletableFuture<String> sourceFuture = new CompletableFuture<>();
     CompletableFuture<String> wrapped =
