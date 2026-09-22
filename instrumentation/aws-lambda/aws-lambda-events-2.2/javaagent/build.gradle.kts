@@ -2,6 +2,10 @@ plugins {
   id("otel.javaagent-instrumentation")
 }
 
+// A nested Lambda handler intentionally extracts a new invocation context while the outer handler's
+// processing span is current.
+extra["failOnContextLeak"] = false
+
 muzzle {
   pass {
     group.set("com.amazonaws")

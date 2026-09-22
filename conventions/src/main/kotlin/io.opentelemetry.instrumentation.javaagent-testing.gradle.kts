@@ -10,7 +10,9 @@ plugins {
 
 val failOnContextLeakProperty = providers.gradleProperty("failOnContextLeak")
   .map { it != "false" }
-  .orElse(true)
+  .orElse(providers.provider {
+    if (extra.has("failOnContextLeak")) extra["failOnContextLeak"] != false else true
+  })
 
 val testIndyProperty = providers.gradleProperty("testIndy")
   .map { it == "true" }
