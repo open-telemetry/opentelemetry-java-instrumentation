@@ -136,8 +136,10 @@ final class GeodeServerProcess implements AutoCloseable {
     attributes.put(Attributes.Name.MANIFEST_VERSION, "1.0");
     attributes.put(Attributes.Name.CLASS_PATH, manifestClasspath());
 
-    try (OutputStream output = Files.newOutputStream(classpathJar);
-        JarOutputStream ignored = new JarOutputStream(output, manifest)) {}
+    try (JarOutputStream output =
+        new JarOutputStream(Files.newOutputStream(classpathJar), manifest)) {
+      output.flush();
+    }
   }
 
   private static String manifestClasspath() {
