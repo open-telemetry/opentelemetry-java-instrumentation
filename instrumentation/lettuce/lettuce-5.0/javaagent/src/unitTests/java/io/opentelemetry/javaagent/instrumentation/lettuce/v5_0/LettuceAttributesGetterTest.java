@@ -40,8 +40,7 @@ class LettuceAttributesGetterTest {
   @Test
   void commandWithoutTargetUsesSelectedAddressOnlyForLegacySemconv() {
     RedisCommand<String, String, String> command = command();
-    DefaultEndpoint endpoint = new DefaultEndpoint(ClientOptions.create());
-    try {
+    try (DefaultEndpoint endpoint = new DefaultEndpoint(ClientOptions.create())) {
       LettuceConnectionState.captureEndpoint(endpoint, SELECTED_ADDRESS, null, null);
       LettuceConnectionState.copy(endpoint, command, null);
 
@@ -51,8 +50,6 @@ class LettuceAttributesGetterTest {
           .isEqualTo(emitStableDatabaseSemconv() ? null : "selected-node");
       assertThat(getter.getServerPort(command))
           .isEqualTo(emitStableDatabaseSemconv() ? null : 6379);
-    } finally {
-      endpoint.close();
     }
   }
 
@@ -104,8 +101,7 @@ class LettuceAttributesGetterTest {
   void clusterEndpointWithoutTargetDoesNotUseSelectedRedisUri() {
     RedisURI selectedRedisUri = RedisURI.create("redis://selected-node:6379");
     RedisClusterClient client = RedisClusterClient.create(selectedRedisUri);
-    DefaultEndpoint endpoint = new DefaultEndpoint(ClientOptions.create());
-    try {
+    try (DefaultEndpoint endpoint = new DefaultEndpoint(ClientOptions.create())) {
       Supplier<SocketAddress> addressSupplier = () -> SELECTED_ADDRESS;
 
       Object wrappedAddressSource =
@@ -117,7 +113,6 @@ class LettuceAttributesGetterTest {
       assertThat(((Supplier<?>) wrappedAddressSource).get()).isEqualTo(SELECTED_ADDRESS);
       assertThat(LettuceConnectionState.serverAddress(endpoint)).isEqualTo(SELECTED_ADDRESS);
     } finally {
-      endpoint.close();
       client.shutdown(0, 15, SECONDS);
     }
   }
