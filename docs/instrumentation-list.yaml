@@ -23,8 +23,9 @@ definitions:
     common.peer-service-mapping:
       name: otel.instrumentation.common.peer-service-mapping
       declarative_name: java.common.service_peer_mapping
-      description: Used to specify a mapping from host names or IP addresses to peer
-        services.
+      description: Used to specify a mapping from server addresses or configured targets
+        to peer services. Configured targets containing commas or equals signs can
+        only be mapped with declarative `service_peer_mapping`.
       type: map
       default: ''
       declarative_type: structured_list
@@ -36,7 +37,7 @@ definitions:
         properties:
           peer:
             type: string
-            description: Host name or IP address to match against.
+            description: Server address or configured target to match against.
             example: host
           service_name:
             type: string
@@ -271,6 +272,20 @@ definitions:
         Specifies the key name used to store the span ID in the logging context.
       type: string
       default: span_id
+    otel.instrumentation.common.logging.structured-attributes.excluded:
+      name: otel.instrumentation.common.logging.structured-attributes.excluded
+      declarative_name: java.common.logging.structured_attributes.excluded
+      description: |
+        Comma-separated list of case-sensitive glob patterns for event-local structured log attribute keys not to capture. Applies to Log4j MapMessage entries, SLF4J key-value pairs, Logback Logstash markers, and Logstash structured arguments. Excluded patterns take precedence over included patterns. An exclude-only selector captures every key not excluded; "*" captures no structured attributes. This does not affect otel.event.name, MDC, or logger context.
+      type: list
+      default: ''
+    otel.instrumentation.common.logging.structured-attributes.included:
+      name: otel.instrumentation.common.logging.structured-attributes.included
+      declarative_name: java.common.logging.structured_attributes.included
+      description: |
+        Comma-separated list of case-sensitive glob patterns for event-local structured log attribute keys to capture. Applies to Log4j MapMessage entries, SLF4J key-value pairs, Logback Logstash markers, and Logstash structured arguments. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence. An exclude-only selector captures every key not excluded. Under v3-preview, an absent or empty selector captures all structured attributes by default. MDC and logger-context attributes remain separate and opt-in.
+      type: list
+      default: ''
     otel.instrumentation.common.logging.trace-flags-key:
       name: otel.instrumentation.common.logging.trace-flags-key
       declarative_name: java.common.logging.trace_flags_key
@@ -308,18 +323,25 @@ definitions:
         is disabled.
       type: boolean
       default: false
-    otel.instrumentation.couchbase.experimental-span-attributes-6c36d22e:
-      name: otel.instrumentation.couchbase.experimental-span-attributes
-      declarative_name: java.couchbase.experimental_span_attributes/development
-      description: Enables experimental span attributes emitted from the underlying
-        Couchbase library.
+    otel.instrumentation.couchbase.emit-experimental-telemetry-0f4c9e50:
+      name: otel.instrumentation.couchbase.emit-experimental-telemetry
+      declarative_name: java.couchbase.emit_experimental_telemetry/development
+      description: |
+        Enables experimental span attributes `couchbase.operation_id` and `couchbase.local.address`. Different operation types receive different experimental attributes.
       type: boolean
       default: false
-    otel.instrumentation.couchbase.experimental-span-attributes-a850037a:
+    otel.instrumentation.couchbase.emit-experimental-telemetry-28ea332f:
+      name: otel.instrumentation.couchbase.emit-experimental-telemetry
+      declarative_name: java.couchbase.emit_experimental_telemetry/development
+      description: |
+        Enables experimental span attributes emitted from the underlying Couchbase library. When v3 preview is enabled, also enables the request_encoding and dispatch_to_server internal spans.
+      type: boolean
+      default: false
+    otel.instrumentation.couchbase.experimental-span-attributes:
       name: otel.instrumentation.couchbase.experimental-span-attributes
       declarative_name: java.couchbase.experimental_span_attributes/development
       description: |
-        Enables experimental span attributes `couchbase.operation_id` and `couchbase.local.address`. Different operation types receive different experimental attributes.
+        Deprecated and will be removed in the next minor release. Use otel.instrumentation.couchbase.emit-experimental-telemetry instead.
       type: boolean
       default: false
     otel.instrumentation.elasticsearch.capture-search-query:
@@ -736,7 +758,7 @@ definitions:
       name: otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes
       declarative_name: java.log4j_appender.capture_map_message_attributes/development
       description: |
-        Deprecated boolean alias for otel.instrumentation.log4j-appender.experimental.map-message-attributes.included, where true captures all MapMessage attributes and false captures none. It is ignored when an included or excluded pattern is configured, and it may be removed in the next minor release.
+        Deprecated; use otel.instrumentation.common.logging.structured-attributes.included instead. This setting is ignored under v3-preview and will be removed in 3.0. Outside v3-preview, true captures all MapMessage attributes and false captures none. It is ignored when a source-specific included or excluded pattern is configured.
       type: boolean
       default: false
     otel.instrumentation.log4j-appender.experimental.capture-marker-attribute:
@@ -777,7 +799,7 @@ definitions:
       name: otel.instrumentation.log4j-appender.experimental.map-message-attributes.excluded
       declarative_name: java.log4j_appender.map_message_attributes/development.excluded
       description: |
-        Comma-separated list of case-sensitive glob patterns for MapMessage keys not to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No MapMessage attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes setting is configured; configuring only excluded patterns captures all MapMessage attributes that do not match them. Captured MapMessage attributes may contain sensitive information.
+        Deprecated; use otel.instrumentation.common.logging.structured-attributes.excluded instead. This setting is ignored under v3-preview and will be removed in 3.0. Comma-separated list of case-sensitive glob patterns for MapMessage keys not to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No MapMessage attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes setting is configured; configuring only excluded patterns captures all MapMessage attributes that do not match them. Captured MapMessage attributes may contain sensitive information.
       type: list
       default: ''
       examples:
@@ -787,7 +809,7 @@ definitions:
       name: otel.instrumentation.log4j-appender.experimental.map-message-attributes.included
       declarative_name: java.log4j_appender.map_message_attributes/development.included
       description: |
-        Comma-separated list of case-sensitive glob patterns for MapMessage keys to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No MapMessage attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes setting is configured; configuring only excluded patterns captures all MapMessage attributes that do not match them. Captured MapMessage attributes may contain sensitive information.
+        Deprecated; use otel.instrumentation.common.logging.structured-attributes.included instead. This setting is ignored under v3-preview and will be removed in 3.0. Comma-separated list of case-sensitive glob patterns for MapMessage keys to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No MapMessage attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes setting is configured; configuring only excluded patterns captures all MapMessage attributes that do not match them. Captured MapMessage attributes may contain sensitive information.
       type: list
       default: ''
       examples:
@@ -865,7 +887,7 @@ definitions:
       name: otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes
       declarative_name: java.logback_appender.capture_key_value_pair_attributes/development
       description: |
-        Deprecated setting that enables the capture of all attributes from Logback key value pairs. It is ignored when otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included or otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.excluded is configured, and it may be removed in the next minor release. Use otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included instead.
+        Deprecated; use otel.instrumentation.common.logging.structured-attributes.included instead. This setting is ignored under v3-preview and will be removed in 3.0. Outside v3-preview, it enables capture of all Logback key-value pair attributes unless a source-specific included or excluded pattern is configured.
       type: boolean
       default: false
     otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes:
@@ -879,14 +901,14 @@ definitions:
       name: otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes
       declarative_name: java.logback_appender.capture_logstash_marker_attributes/development
       description: |
-        Deprecated setting that enables the capture of all attributes from Logstash markers, supported are those added to logs via Markers.append(), Markers.appendEntries(), Markers.appendArray() and Markers.appendRaw() methods. It is ignored when otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.included or otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.excluded is configured, and it may be removed in the next minor release. Use otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.included instead.
+        Deprecated; use otel.instrumentation.common.logging.structured-attributes.included instead. This setting is ignored under v3-preview and will be removed in 3.0. Outside v3-preview, it enables capture of attributes added via Markers.append(), Markers.appendEntries(), Markers.appendArray(), and Markers.appendRaw() unless a source-specific included or excluded pattern is configured.
       type: boolean
       default: false
     otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments:
       name: otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments
       declarative_name: java.logback_appender.capture_logstash_structured_arguments/development
       description: |
-        Deprecated setting that enables the capture of all attributes from Logstash structured arguments (e.g., StructuredArguments.v() and StructuredArguments.keyValue()). It is ignored when otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included or otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.excluded is configured, and it may be removed in the next minor release. Use otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included instead.
+        Deprecated; use otel.instrumentation.common.logging.structured-attributes.included instead. This setting is ignored under v3-preview and will be removed in 3.0. Outside v3-preview, it enables capture of Logstash structured arguments unless a source-specific included or excluded pattern is configured.
       type: boolean
       default: false
     otel.instrumentation.logback-appender.experimental.capture-marker-attribute:
@@ -917,7 +939,7 @@ definitions:
       name: otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.excluded
       declarative_name: java.logback_appender.key_value_pair_attributes/development.excluded
       description: |
-        Comma-separated list of case-sensitive glob patterns for Logback key value pair keys not to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No key value pair attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes setting is configured; configuring only excluded patterns captures all key value pair attributes that do not match them. Captured key value pair attributes may contain sensitive information.
+        Deprecated; use otel.instrumentation.common.logging.structured-attributes.excluded instead. This setting is ignored under v3-preview and will be removed in 3.0. Comma-separated list of case-sensitive glob patterns for Logback key value pair keys not to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No key value pair attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes setting is configured; configuring only excluded patterns captures all key value pair attributes that do not match them. Captured key value pair attributes may contain sensitive information.
       type: list
       default: ''
       examples:
@@ -927,7 +949,7 @@ definitions:
       name: otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included
       declarative_name: java.logback_appender.key_value_pair_attributes/development.included
       description: |
-        Comma-separated list of case-sensitive glob patterns for Logback key value pair keys to capture as log attributes. "*" matches any number of characters and "?" matches one character, so "*" captures all key value pair attributes. Excluded patterns take precedence over included patterns. No key value pair attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes setting is configured; configuring only excluded patterns captures all key value pair attributes that do not match them. Captured key value pair attributes may contain sensitive information.
+        Deprecated; use otel.instrumentation.common.logging.structured-attributes.included instead. This setting is ignored under v3-preview and will be removed in 3.0. Comma-separated list of case-sensitive glob patterns for Logback key value pair keys to capture as log attributes. "*" matches any number of characters and "?" matches one character, so "*" captures all key value pair attributes. Excluded patterns take precedence over included patterns. No key value pair attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes setting is configured; configuring only excluded patterns captures all key value pair attributes that do not match them. Captured key value pair attributes may contain sensitive information.
       type: list
       default: ''
       examples:
@@ -957,7 +979,7 @@ definitions:
       name: otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.excluded
       declarative_name: java.logback_appender.logstash_marker_attributes/development.excluded
       description: |
-        Comma-separated list of case-sensitive glob patterns for Logstash marker keys not to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No Logstash marker attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes setting is configured; configuring only excluded patterns captures all Logstash marker attributes that do not match them. Captured Logstash marker attributes may contain sensitive information.
+        Deprecated; use otel.instrumentation.common.logging.structured-attributes.excluded instead. This setting is ignored under v3-preview and will be removed in 3.0. Comma-separated list of case-sensitive glob patterns for Logstash marker keys not to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No Logstash marker attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes setting is configured; configuring only excluded patterns captures all Logstash marker attributes that do not match them. Captured Logstash marker attributes may contain sensitive information.
       type: list
       default: ''
       examples:
@@ -967,7 +989,7 @@ definitions:
       name: otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.included
       declarative_name: java.logback_appender.logstash_marker_attributes/development.included
       description: |
-        Comma-separated list of case-sensitive glob patterns for Logstash marker keys to capture as log attributes. "*" matches any number of characters and "?" matches one character, so "*" captures all Logstash marker attributes. Excluded patterns take precedence over included patterns. No Logstash marker attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes setting is configured; configuring only excluded patterns captures all Logstash marker attributes that do not match them. Captured Logstash marker attributes may contain sensitive information.
+        Deprecated; use otel.instrumentation.common.logging.structured-attributes.included instead. This setting is ignored under v3-preview and will be removed in 3.0. Comma-separated list of case-sensitive glob patterns for Logstash marker keys to capture as log attributes. "*" matches any number of characters and "?" matches one character, so "*" captures all Logstash marker attributes. Excluded patterns take precedence over included patterns. No Logstash marker attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes setting is configured; configuring only excluded patterns captures all Logstash marker attributes that do not match them. Captured Logstash marker attributes may contain sensitive information.
       type: list
       default: ''
       examples:
@@ -977,7 +999,7 @@ definitions:
       name: otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.excluded
       declarative_name: java.logback_appender.logstash_structured_argument_attributes/development.excluded
       description: |
-        Comma-separated list of case-sensitive glob patterns for Logstash structured argument keys not to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No Logstash structured argument attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments setting is configured; configuring only excluded patterns captures all Logstash structured argument attributes that do not match them. Captured Logstash structured argument attributes may contain sensitive information.
+        Deprecated; use otel.instrumentation.common.logging.structured-attributes.excluded instead. This setting is ignored under v3-preview and will be removed in 3.0. Comma-separated list of case-sensitive glob patterns for Logstash structured argument keys not to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No Logstash structured argument attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments setting is configured; configuring only excluded patterns captures all Logstash structured argument attributes that do not match them. Captured Logstash structured argument attributes may contain sensitive information.
       type: list
       default: ''
       examples:
@@ -987,7 +1009,7 @@ definitions:
       name: otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included
       declarative_name: java.logback_appender.logstash_structured_argument_attributes/development.included
       description: |
-        Comma-separated list of case-sensitive glob patterns for Logstash structured argument keys to capture as log attributes. "*" matches any number of characters and "?" matches one character, so "*" captures all Logstash structured argument attributes. Excluded patterns take precedence over included patterns. No Logstash structured argument attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments setting is configured; configuring only excluded patterns captures all Logstash structured argument attributes that do not match them. Captured Logstash structured argument attributes may contain sensitive information.
+        Deprecated; use otel.instrumentation.common.logging.structured-attributes.included instead. This setting is ignored under v3-preview and will be removed in 3.0. Comma-separated list of case-sensitive glob patterns for Logstash structured argument keys to capture as log attributes. "*" matches any number of characters and "?" matches one character, so "*" captures all Logstash structured argument attributes. Excluded patterns take precedence over included patterns. No Logstash structured argument attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments setting is configured; configuring only excluded patterns captures all Logstash structured argument attributes that do not match them. Captured Logstash structured argument attributes may contain sensitive information.
       type: list
       default: ''
       examples:
@@ -4513,6 +4535,28 @@ definitions:
       unit: s
       attributes:
       - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    messaging.client.operation.duration-df200871:
+      name: messaging.client.operation.duration
+      description: Duration of messaging operation initiated by a producer or consumer
+        client.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.subscription.name
         type: STRING
       - name: messaging.operation.name
         type: STRING
@@ -8323,7 +8367,8 @@ libraries:
   - com.couchbase.client:java-client:[2,3)
   configuration_refs:
   - common.db.query-sanitization.enabled
-  - otel.instrumentation.couchbase.experimental-span-attributes-a850037a
+  - otel.instrumentation.couchbase.emit-experimental-telemetry-0f4c9e50
+  - otel.instrumentation.couchbase.experimental-span-attributes
   telemetry:
   - when: default
     spans:
@@ -8337,7 +8382,7 @@ libraries:
         type: STRING
       - name: db.system
         type: STRING
-  - when: otel.instrumentation.couchbase.experimental-span-attributes=true
+  - when: otel.instrumentation.couchbase.emit-experimental-telemetry=true
     spans:
     - span_kind: CLIENT
       attributes:
@@ -8387,7 +8432,8 @@ libraries:
   - com.couchbase.client:java-client:[2.6.0,3)
   configuration_refs:
   - common.db.query-sanitization.enabled
-  - otel.instrumentation.couchbase.experimental-span-attributes-a850037a
+  - otel.instrumentation.couchbase.emit-experimental-telemetry-0f4c9e50
+  - otel.instrumentation.couchbase.experimental-span-attributes
   telemetry:
   - when: default
     spans:
@@ -8411,7 +8457,7 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
-  - when: otel.instrumentation.couchbase.experimental-span-attributes=true
+  - when: otel.instrumentation.couchbase.emit-experimental-telemetry=true
     spans:
     - span_kind: CLIENT
       attributes:
@@ -8472,6 +8518,9 @@ libraries:
   has_javaagent: true
   javaagent_target_versions:
   - com.couchbase.client:java-client:[3.0,3.1)
+  configuration_refs:
+  - otel.instrumentation.couchbase.emit-experimental-telemetry-28ea332f
+  - otel.instrumentation.couchbase.experimental-span-attributes
   telemetry:
   - when: default
     spans:
@@ -8515,7 +8564,8 @@ libraries:
   javaagent_target_versions:
   - com.couchbase.client:java-client:[3.1,3.2)
   configuration_refs:
-  - otel.instrumentation.couchbase.experimental-span-attributes-6c36d22e
+  - otel.instrumentation.couchbase.emit-experimental-telemetry-28ea332f
+  - otel.instrumentation.couchbase.experimental-span-attributes
   telemetry:
   - when: default
     spans:
@@ -8569,7 +8619,7 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
-  - when: otel.semconv-stability.opt-in=database,otel.instrumentation.couchbase.experimental-span-attributes=true
+  - when: otel.semconv-stability.opt-in=database,otel.instrumentation.couchbase.emit-experimental-telemetry=true
     spans:
     - span_kind: INTERNAL
       attributes:
@@ -8615,7 +8665,8 @@ libraries:
   javaagent_target_versions:
   - com.couchbase.client:java-client:[3.2.0,)
   configuration_refs:
-  - otel.instrumentation.couchbase.experimental-span-attributes-6c36d22e
+  - otel.instrumentation.couchbase.emit-experimental-telemetry-28ea332f
+  - otel.instrumentation.couchbase.experimental-span-attributes
   telemetry:
   - when: default
     spans:
@@ -8673,7 +8724,7 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
-  - when: otel.semconv-stability.opt-in=database,otel.instrumentation.couchbase.experimental-span-attributes=true
+  - when: otel.semconv-stability.opt-in=database,otel.instrumentation.couchbase.emit-experimental-telemetry=true
     spans:
     - span_kind: INTERNAL
       attributes:
@@ -13172,7 +13223,7 @@ libraries:
         type: LONG
   - when: otel.instrumentation.lettuce.connection-telemetry.enabled=true,otel.semconv-stability.opt-in=database,service.peer
     metric_refs:
-    - db.client.operation.duration-fce1854c
+    - db.client.operation.duration-8ae2b8ce
     spans:
     - span_kind: CLIENT
       attributes:
@@ -13186,6 +13237,10 @@ libraries:
         type: STRING
       - name: error.type
         type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
       - name: server.address
         type: STRING
       - name: server.port
@@ -13208,7 +13263,7 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.opt-in=database,service.peer
     metric_refs:
-    - db.client.operation.duration-fce1854c
+    - db.client.operation.duration-8ae2b8ce
     spans:
     - span_kind: CLIENT
       attributes:
@@ -13222,6 +13277,10 @@ libraries:
         type: STRING
       - name: error.type
         type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
       - name: server.address
         type: STRING
       - name: server.port
@@ -13499,6 +13558,8 @@ libraries:
   javaagent_target_versions:
   - org.apache.logging.log4j:log4j-core:[2.0,)
   configuration_refs:
+  - otel.instrumentation.common.logging.structured-attributes.excluded
+  - otel.instrumentation.common.logging.structured-attributes.included
   - otel.instrumentation.log4j-appender.experimental-log-attributes
   - otel.instrumentation.log4j-appender.experimental.capture-arguments
   - otel.instrumentation.log4j-appender.experimental.capture-code-attributes
@@ -13575,6 +13636,8 @@ libraries:
   javaagent_target_versions:
   - ch.qos.logback:logback-classic:[0.9.16,)
   configuration_refs:
+  - otel.instrumentation.common.logging.structured-attributes.excluded
+  - otel.instrumentation.common.logging.structured-attributes.included
   - otel.instrumentation.logback-appender.experimental-log-attributes
   - otel.instrumentation.logback-appender.experimental.capture-arguments
   - otel.instrumentation.logback-appender.experimental.capture-code-attributes
@@ -15347,7 +15410,7 @@ libraries:
   - when: otel.semconv-stability.preview=messaging
     metric_refs:
     - messaging.client.consumed.messages-5c21579f
-    - messaging.client.operation.duration-dab7c60a
+    - messaging.client.operation.duration-df200871
     - messaging.client.sent.messages-38a90199
     - messaging.process.duration-9ee3dd0a
     spans:
