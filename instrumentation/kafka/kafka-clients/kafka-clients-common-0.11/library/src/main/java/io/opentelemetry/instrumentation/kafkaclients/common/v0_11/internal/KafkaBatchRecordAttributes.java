@@ -33,10 +33,10 @@ final class KafkaBatchRecordAttributes {
   private boolean destinationVaries;
   private boolean partitionVaries;
 
-  static KafkaBatchRecordAttributes create(ConsumerRecords<?, ?> records) {
+  static KafkaBatchRecordAttributes create(KafkaReceiveRequest request) {
     KafkaBatchRecordAttributes attributes = new KafkaBatchRecordAttributes();
-    attributes.destinationVaries = destinationVaries(records);
-    for (ConsumerRecord<?, ?> record : records) {
+    attributes.destinationVaries = destinationVaries(request.getRecords());
+    for (ConsumerRecord<?, ?> record : request.getRecordList()) {
       attributes.accept(record);
     }
     return attributes;
