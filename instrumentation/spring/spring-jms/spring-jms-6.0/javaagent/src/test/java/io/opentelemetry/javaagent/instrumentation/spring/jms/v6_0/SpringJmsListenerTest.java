@@ -13,6 +13,7 @@ import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertCounter;
+import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertHistogram;
 import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertNoMetric;
 import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertNoStableMetrics;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
@@ -588,8 +589,6 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
                 span -> assertProcessSpanWithSubscription(span),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(0))));
 
-    // the jms instrumentation that would create the receive operation is disabled, so the process
-    // operation counts the consumed message
     Attributes processAttributes =
         Attributes.builder()
             .put(MESSAGING_OPERATION_NAME, "process")
@@ -597,11 +596,10 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
             .put(MESSAGING_DESTINATION_NAME, "spring-jms-listener")
             .put(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "durable-subscription")
             .build();
-    assertCounter(
+    assertHistogram(
         testing,
         "io.opentelemetry.spring-jms-6.0",
-        "messaging.client.consumed.messages",
-        1,
+        "messaging.process.duration",
         processAttributes);
   }
 

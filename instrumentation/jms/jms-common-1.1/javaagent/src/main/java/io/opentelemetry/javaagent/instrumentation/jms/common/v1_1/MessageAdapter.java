@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms.common.v1_1;
 
+import io.opentelemetry.javaagent.bootstrap.jms.JmsMessageProcessingState;
+import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveContext;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -29,12 +31,34 @@ public interface MessageAdapter {
   @Nullable
   String getJmsMessageId() throws Exception;
 
-  /** Tells whether the consumed messages metric was already recorded for this message. */
-  boolean wereConsumedMessagesRecorded();
+  /** Starts a new delivery for a message returned by a receive operation. */
+  JmsMessageProcessingState prepareForReceive();
 
-  /** Remembers that a receive span was recorded for this message. */
-  void markReceiveSpanRecorded();
+  /** Attaches the context created for the receive operation to this message. */
+  void setReceiveContext(JmsReceiveContext context);
 
-  /** Remembers that the consumed messages metric was recorded for this message. */
-  void markConsumedMessagesRecorded();
+  /** Returns the context created for this message's receive operation, if there was one. */
+  @Nullable
+  JmsReceiveContext getReceiveContext();
+
+  /** Starts processing and returns whether this observer selected the delivery. */
+  boolean beginProcessing();
+
+  /** Ends a processing callback for this message. */
+  void endProcessing();
+
+  /** Ends processing when listener setup fails without replacing the setup failure. */
+  default void endProcessingAfterStartFailure(Throwable startFailure) {
+    try {
+      endProcessing();
+    } catch (Throwable cleanupFailure) {
+      if (cleanupFailure != startFailure) {
+        try {
+          startFailure.addSuppressed(cleanupFailure);
+        } catch (Throwable ignored) {
+          // Keep the setup failure as the throwable suppressed by the advice.
+        }
+      }
+    }
+  }
 }

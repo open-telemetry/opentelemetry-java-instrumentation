@@ -24,6 +24,7 @@ dependencies {
   implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
 
   bootstrap(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
+  bootstrap(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
 
   // without adding this dependency, javadoc fails:
   //   warning: unknown enum constant XmlAccessType.PROPERTY
@@ -53,6 +54,7 @@ dependencies {
   testImplementation("org.apache.camel:camel-cassandraql:$camelversion")
   testImplementation("org.apache.camel:camel-jms:$camelversion")
   testImplementation("org.apache.camel:camel-kafka:$camelversion")
+  testImplementation("org.apache.camel:camel-sjms:$camelversion")
   testImplementation("org.apache.activemq:activemq-broker:5.16.5")
 
   testImplementation("org.springframework.boot:spring-boot-starter-test:1.5.17.RELEASE")
@@ -76,6 +78,7 @@ dependencies {
   latestDepTestLibrary("org.apache.camel:camel-undertow:2.+") // documented limitation
   latestDepTestLibrary("org.apache.camel:camel-aws:2.+") // documented limitation
   latestDepTestLibrary("org.apache.camel:camel-cassandraql:2.+") // documented limitation
+  latestDepTestLibrary("org.apache.camel:camel-sjms:2.+") // documented limitation
 }
 
 tasks {
@@ -145,6 +148,58 @@ tasks {
     systemProperty("testNoLowerMessaging", "true")
     filter {
       includeTestsMatching("*JmsCamelStandaloneTest")
+      includeTestsMatching("*SjmsCamelTest")
+      includeTestsMatching("*SjmsRegisteredListenerTest")
+    }
+  }
+
+  val testStableSemconvSjmsWithoutCamelJms =
+    register<Test>("testStableSemconvSjmsWithoutCamelJms") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath =
+        sourceSets.test.get().runtimeClasspath.filter {
+          !it.name.startsWith("camel-jms-")
+        }
+
+      jvmArgs("-Dotel.instrumentation.experimental.span-suppression-strategy=semconv")
+      jvmArgs("-Dotel.semconv-stability.opt-in=database,messaging")
+      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,messaging")
+      filter {
+        includeTestsMatching("*SjmsCamelTest")
+        includeTestsMatching("*SjmsRegisteredListenerTest")
+      }
+    }
+
+  val testStableSemconvSjmsAliasOnly =
+    register<Test>("testStableSemconvSjmsAliasOnly") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+
+      jvmArgs("-Dotel.instrumentation.experimental.span-suppression-strategy=semconv")
+      jvmArgs("-Dotel.semconv-stability.opt-in=database,messaging")
+      jvmArgs("-Dotel.instrumentation.common.default-enabled=false")
+      jvmArgs("-Dotel.instrumentation.jms.enabled=true")
+      jvmArgs("-Dotel.instrumentation.camel-sjms.enabled=true")
+      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,messaging")
+      systemProperty("testCamelDisabled", "true")
+      filter {
+        includeTestsMatching("*SjmsCamelTest")
+        includeTestsMatching("*SjmsRegisteredListenerTest")
+      }
+    }
+
+  val testStableSemconvCamelDisabled = register<Test>("testStableSemconvCamelDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.experimental.span-suppression-strategy=semconv")
+    jvmArgs("-Dotel.semconv-stability.opt-in=database,messaging")
+    jvmArgs("-Dotel.instrumentation.camel.enabled=false")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,messaging")
+    systemProperty("testCamelDisabled", "true")
+    filter {
+      includeTestsMatching("*SjmsCamelTest")
+      includeTestsMatching("*SjmsRegisteredListenerTest")
     }
   }
 
@@ -155,6 +210,9 @@ tasks {
       testExperimental,
       testV3Preview,
       testStableSemconvNoLowerMessaging,
+      testStableSemconvSjmsWithoutCamelJms,
+      testStableSemconvSjmsAliasOnly,
+      testStableSemconvCamelDisabled,
     )
   }
 
