@@ -9,6 +9,7 @@ import static java.util.logging.Level.FINE;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -36,8 +37,8 @@ class LettuceMasterSlaveInstrumentation implements TypeInstrumentation {
   public ElementMatcher<TypeDescription> typeMatcher() {
     // These entry points delegate to each other in different Lettuce versions. Exit advice updates
     // only the inner RedisChannelHandler, so instrumenting both names is idempotent.
-    return named("io.lettuce.core.masterslave.MasterSlave")
-        .or(named("io.lettuce.core.masterreplica.MasterReplica"));
+    return namedOneOf(
+        "io.lettuce.core.masterslave.MasterSlave", "io.lettuce.core.masterreplica.MasterReplica");
   }
 
   @Override
