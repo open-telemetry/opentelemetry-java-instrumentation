@@ -17,6 +17,10 @@
 
 ### 🚫 Deprecations
 
+- Deprecate the source-specific experimental selectors for Log4j `MapMessage` entries, Logback
+  key-value pairs, Logstash markers, and Logstash structured arguments in favor of the common
+  structured logging attribute selector. The source-specific properties are ignored under
+  v3-preview.
 - Deprecate `otel.instrumentation.couchbase.experimental-span-attributes` in favor of
   `otel.instrumentation.couchbase.emit-experimental-telemetry`. It will be removed in the next minor
   release.

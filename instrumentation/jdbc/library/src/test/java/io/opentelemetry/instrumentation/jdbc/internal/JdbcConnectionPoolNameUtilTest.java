@@ -77,34 +77,36 @@ class JdbcConnectionPoolNameUtilTest {
         argumentSet(
             "address, port, and namespace",
             DbInfo.builder()
-                .serverAddress("db.example")
-                .serverPort(5432)
+                .legacyServerAddress("db.example")
+                .legacyServerPort(5432)
                 .dbNamespace("orders")
                 .build(),
             "db.example:5432/orders"),
         argumentSet(
             "IPv6 address, port, and namespace",
             DbInfo.builder()
-                .serverAddress("2001:db8::1")
-                .serverPort(5432)
+                .legacyServerAddress("2001:db8::1")
+                .legacyServerPort(5432)
                 .dbNamespace("orders")
                 .build(),
             "[2001:db8::1]:5432/orders"),
         argumentSet(
-            "address only", DbInfo.builder().serverAddress("db.example").build(), "db.example"),
+            "address only",
+            DbInfo.builder().legacyServerAddress("db.example").build(),
+            "db.example"),
         argumentSet(
             "address and port",
-            DbInfo.builder().serverAddress("db.example").serverPort(5432).build(),
+            DbInfo.builder().legacyServerAddress("db.example").legacyServerPort(5432).build(),
             "db.example:5432"),
         argumentSet(
             "address and namespace",
-            DbInfo.builder().serverAddress("db.example").dbNamespace("orders").build(),
+            DbInfo.builder().legacyServerAddress("db.example").dbNamespace("orders").build(),
             "db.example/orders"),
         argumentSet("namespace only", DbInfo.builder().dbNamespace("orders").build(), "orders"),
-        argumentSet("port only", DbInfo.builder().serverPort(5432).build(), FALLBACK_NAME),
+        argumentSet("port only", DbInfo.builder().legacyServerPort(5432).build(), FALLBACK_NAME),
         argumentSet(
             "port and namespace",
-            DbInfo.builder().serverPort(5432).dbNamespace("orders").build(),
+            DbInfo.builder().legacyServerPort(5432).dbNamespace("orders").build(),
             "orders"),
         argumentSet("no address, port, or namespace", DbInfo.DEFAULT, FALLBACK_NAME));
   }

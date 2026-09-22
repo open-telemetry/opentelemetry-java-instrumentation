@@ -21,12 +21,12 @@ public final class JdbcConnectionPoolNameUtil {
 
     String serverName = getPropertyValue(properties, "serverName");
     if (serverName != null && !serverName.isEmpty()) {
-      dbInfoBuilder.serverAddress(UrlParsingUtils.stripIpv6Brackets(serverName));
+      dbInfoBuilder.legacyServerAddress(UrlParsingUtils.stripIpv6Brackets(serverName));
     }
 
     Integer serverPort = UrlParsingUtils.parsePort(getPropertyValue(properties, "portNumber"));
     if (serverPort != null) {
-      dbInfoBuilder.serverPort(serverPort);
+      dbInfoBuilder.legacyServerPort(serverPort);
     }
 
     String databaseName = getPropertyValue(properties, "databaseName");
@@ -38,8 +38,8 @@ public final class JdbcConnectionPoolNameUtil {
   }
 
   public static String poolName(DbInfo dbInfo, String fallbackName) {
-    String serverAddress = dbInfo.getServerAddress();
-    Integer serverPort = dbInfo.getServerPort();
+    String serverAddress = dbInfo.getLegacyServerAddress();
+    Integer serverPort = dbInfo.getLegacyServerPort();
     String dbNamespace = dbInfo.getDbNamespace();
 
     StringBuilder poolName = new StringBuilder();

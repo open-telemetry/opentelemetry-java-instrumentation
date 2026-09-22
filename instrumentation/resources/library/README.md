@@ -40,6 +40,9 @@ Implemented attributes:
 
 - `host.id`
 
+The Java agent disables this provider by default. Enable it by setting
+`otel.resource.providers.host-id.enabled=true`.
+
 ### Operating System
 
 Provider: `io.opentelemetry.instrumentation.resources.OsResource`
