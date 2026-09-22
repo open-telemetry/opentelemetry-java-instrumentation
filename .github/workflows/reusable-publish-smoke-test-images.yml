@@ -78,5 +78,8 @@ jobs:
       - name: Build Java 21 Docker image
         run: ./gradlew "$PROJECT:jib" -Ptag="$TAG" -PtargetJDK=21 -Djib.httpTimeout=120000 -Djib.console=plain
 
+      - name: Build Java 25 Docker image
+        run: ./gradlew "$PROJECT:jib" -Ptag="$TAG" -PtargetJDK=25 -Djib.httpTimeout=120000 -Djib.console=plain
+
       - name: Build Java ${{ env.LATEST_JAVA_VERSION }} Docker image
         run: ./gradlew "$PROJECT:jib" -Ptag="$TAG" -PtargetJDK="$LATEST_JAVA_VERSION" -Djib.httpTimeout=120000 -Djib.console=plain
