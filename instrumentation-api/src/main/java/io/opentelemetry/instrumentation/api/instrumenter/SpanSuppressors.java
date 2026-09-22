@@ -63,9 +63,11 @@ final class SpanSuppressors {
   static final class BySpanKey implements SpanSuppressor {
 
     private final SpanKey[] spanKeys;
+    private final boolean genAiClient;
 
     BySpanKey(Set<SpanKey> spanKeys) {
       this.spanKeys = spanKeys.toArray(new SpanKey[0]);
+      this.genAiClient = spanKeys.contains(SpanKey.GEN_AI_CLIENT);
     }
 
     @Override
@@ -78,6 +80,11 @@ final class SpanSuppressors {
 
     @Override
     public boolean shouldSuppress(Context parentContext, SpanKind spanKind) {
+      // A GenAI operation may also have RPC or HTTP attributes. Its GenAI key alone identifies
+      // an existing operation; lower-level non-GenAI instrumenters retain all-key suppression.
+      if (genAiClient && SpanKey.GEN_AI_CLIENT.fromContextOrNull(parentContext) != null) {
+        return true;
+      }
       for (SpanKey spanKey : spanKeys) {
         if (spanKey.fromContextOrNull(parentContext) == null) {
           return false;

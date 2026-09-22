@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.openai.v1_1;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.EventIncubatingAttributes.EVENT_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME;
@@ -934,6 +935,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                             assertChatSpan(span)
                                 .hasException(emitExceptionAsSpanEvents() ? thrown : null)
                                 .hasAttributesSatisfyingExactly(
+                                    equalTo(ERROR_TYPE, OpenAIIoException.class.getName()),
                                     equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                     equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                     equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL)))));
@@ -951,6 +953,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     point
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
+                                            equalTo(ERROR_TYPE, OpenAIIoException.class.getName()),
                                             equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                             equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL)))));
@@ -1686,6 +1689,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                             assertChatSpan(span)
                                 .hasException(emitExceptionAsSpanEvents() ? thrown : null)
                                 .hasAttributesSatisfyingExactly(
+                                    equalTo(ERROR_TYPE, OpenAIIoException.class.getName()),
                                     equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                     equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                     equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
@@ -1704,6 +1708,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     point
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
+                                            equalTo(ERROR_TYPE, OpenAIIoException.class.getName()),
                                             equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                             equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL)))));
