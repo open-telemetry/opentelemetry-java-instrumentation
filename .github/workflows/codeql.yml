@@ -136,8 +136,8 @@ jobs:
         # to observe the compilation without reusing the warm-up compiler daemon.
         # (see https://docs.github.com/en/code-security/codeql-cli/getting-started-with-the-codeql-cli/preparing-your-code-for-codeql-analysis#specifying-build-commands)
         run: |
-          ./gradlew -p gradle-plugins compileKotlin --rerun --no-build-cache --no-daemon -Pkotlin.compiler.execution.strategy=in-process
-          ./gradlew -p conventions compileKotlin --rerun --no-build-cache --no-daemon -Pkotlin.compiler.execution.strategy=in-process
+          ./gradlew -p gradle-plugins compileKotlin --rerun --no-build-cache --no-daemon -Dorg.gradle.jvmargs=-Xmx8g -Pkotlin.compiler.execution.strategy=in-process
+          ./gradlew -p conventions compileKotlin --rerun --no-build-cache --no-daemon -Dorg.gradle.jvmargs=-Xmx8g -Pkotlin.compiler.execution.strategy=in-process
           ./gradlew compileKotlin --rerun --no-build-cache --no-daemon -Pkotlin.compiler.execution.strategy=in-process
 
       - name: Perform CodeQL analysis
