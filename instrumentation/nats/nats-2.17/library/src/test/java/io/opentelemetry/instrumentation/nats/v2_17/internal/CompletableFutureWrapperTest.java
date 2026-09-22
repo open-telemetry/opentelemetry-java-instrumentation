@@ -226,6 +226,28 @@ class CompletableFutureWrapperTest {
   }
 
   @Test
+  void manualCompletionCannotOvertakeCancellation() {
+    AtomicReference<CompletableFuture<String>> wrappedReference = new AtomicReference<>();
+    AtomicBoolean manualCompletionResult = new AtomicBoolean();
+    CompletableFuture<String> sourceFuture =
+        new CompletableFuture<String>() {
+          @Override
+          public boolean cancel(boolean mayInterruptIfRunning) {
+            manualCompletionResult.set(wrappedReference.get().complete("manual"));
+            return super.cancel(mayInterruptIfRunning);
+          }
+        };
+    CompletableFuture<String> wrapped =
+        CompletableFutureWrapper.wrap(sourceFuture, Context.root(), (result, error) -> {});
+    wrappedReference.set(wrapped);
+
+    assertThat(wrapped.cancel(false)).isTrue();
+    assertThat(manualCompletionResult).isFalse();
+    assertThat(wrapped).isCancelled();
+    assertThat(sourceFuture).isCancelled();
+  }
+
+  @Test
   void completionCallbackDoesNotHoldWrapperMonitor() {
     CountDownLatch callbackCompletion = new CountDownLatch(1);
     AtomicBoolean completedWhileCallbackActive = new AtomicBoolean();

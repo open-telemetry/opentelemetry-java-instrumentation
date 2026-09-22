@@ -24,6 +24,8 @@ public final class CompletableFutureWrapper<T> extends CompletableFuture<T> {
 
   private final CompletableFuture<?> sourceFuture;
   private final CountDownLatch completionFinished = new CountDownLatch(1);
+  private final Object completionLock = new Object();
+  private CompletionState completionState = CompletionState.OPEN;
 
   private CompletableFutureWrapper(CompletableFuture<?> sourceFuture) {
     this.sourceFuture = sourceFuture;
@@ -43,11 +45,7 @@ public final class CompletableFutureWrapper<T> extends CompletableFuture<T> {
           } finally {
             try {
               try (Scope ignored = context.makeCurrent()) {
-                if (throwable != null) {
-                  result.completeExceptionally(throwable);
-                } else {
-                  result.complete(value);
-                }
+                result.completeFromSource(value, throwable);
               }
             } finally {
               result.completionFinished.countDown();
@@ -59,15 +57,60 @@ public final class CompletableFutureWrapper<T> extends CompletableFuture<T> {
   }
 
   @Override
+  public boolean complete(T value) {
+    if (!claimCompletion()) {
+      return false;
+    }
+    return super.complete(value);
+  }
+
+  @Override
+  public boolean completeExceptionally(Throwable throwable) {
+    if (!claimCompletion()) {
+      return false;
+    }
+    return super.completeExceptionally(throwable);
+  }
+
+  @Override
   public boolean cancel(boolean mayInterruptIfRunning) {
-    if (isDone()) {
-      return isCancelled();
+    synchronized (completionLock) {
+      if (completionState != CompletionState.OPEN) {
+        return isCancelled();
+      }
+      completionState = CompletionState.CANCELLATION;
     }
     if (!sourceFuture.cancel(mayInterruptIfRunning)) {
+      synchronized (completionLock) {
+        if (completionState == CompletionState.CANCELLATION) {
+          completionState = CompletionState.OPEN;
+        }
+      }
       return false;
     }
     awaitCompletion();
     return isCancelled();
+  }
+
+  private boolean claimCompletion() {
+    synchronized (completionLock) {
+      if (completionState != CompletionState.OPEN) {
+        return false;
+      }
+      completionState = CompletionState.COMPLETION;
+      return true;
+    }
+  }
+
+  private void completeFromSource(T value, Throwable throwable) {
+    synchronized (completionLock) {
+      completionState = CompletionState.COMPLETION;
+    }
+    if (throwable != null) {
+      super.completeExceptionally(throwable);
+    } else {
+      super.complete(value);
+    }
   }
 
   private void awaitCompletion() {
@@ -83,5 +126,11 @@ public final class CompletableFutureWrapper<T> extends CompletableFuture<T> {
     if (interrupted) {
       Thread.currentThread().interrupt();
     }
+  }
+
+  private enum CompletionState {
+    OPEN,
+    COMPLETION,
+    CANCELLATION
   }
 }
