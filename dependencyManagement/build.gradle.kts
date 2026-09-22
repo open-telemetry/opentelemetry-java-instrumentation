@@ -124,7 +124,7 @@ val DEPENDENCIES = listOf(
 
   // OSGi runtime verification (see :smoke-tests-osgi). Versions track opentelemetry-java's osgi tests.
   "org.apache.felix:org.apache.felix.framework:7.0.5",
-  "org.apache.aries.spifly:org.apache.aries.spifly.dynamic.bundle:1.3.7",
+  "org.apache.aries.spifly:org.apache.aries.spifly.dynamic.bundle:1.3.8",
   "org.osgi:osgi.core:8.0.0",
   "org.osgi:org.osgi.test.junit5:1.3.0"
 )
