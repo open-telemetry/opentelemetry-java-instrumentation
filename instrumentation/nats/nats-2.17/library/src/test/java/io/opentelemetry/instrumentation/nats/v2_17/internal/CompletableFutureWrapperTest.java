@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.nats.v2_17.internal;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -80,6 +81,50 @@ class CompletableFutureWrapperTest {
     assertThat(wrapped.cancel(false)).isTrue();
 
     assertThat(callbackValue).hasValue("test-value");
+  }
+
+  @Test
+  void waitsForConcurrentSourceCancellation() throws InterruptedException {
+    CountDownLatch completionStarted = new CountDownLatch(1);
+    CountDownLatch allowCompletion = new CountDownLatch(1);
+    CompletableFuture<String> sourceFuture = new CompletableFuture<>();
+    CompletableFuture<String> wrapped =
+        CompletableFutureWrapper.wrap(
+            sourceFuture,
+            Context.root(),
+            (result, error) -> {
+              completionStarted.countDown();
+              try {
+                allowCompletion.await();
+              } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new AssertionError(e);
+              }
+            });
+    Thread sourceCanceller = new Thread(() -> sourceFuture.cancel(false));
+    sourceCanceller.start();
+    assertThat(completionStarted.await(10, SECONDS)).isTrue();
+
+    AtomicReference<Boolean> cancellationResult = new AtomicReference<>();
+    CountDownLatch cancellationReturned = new CountDownLatch(1);
+    Thread wrapperCanceller =
+        new Thread(
+            () -> {
+              cancellationResult.set(wrapped.cancel(false));
+              cancellationReturned.countDown();
+            });
+    wrapperCanceller.start();
+
+    try {
+      assertThat(cancellationReturned.await(100, MILLISECONDS)).isFalse();
+    } finally {
+      allowCompletion.countDown();
+      sourceCanceller.join();
+      wrapperCanceller.join();
+    }
+
+    assertThat(cancellationResult).hasValue(true);
+    assertThat(wrapped).isCancelled();
   }
 
   @Test
