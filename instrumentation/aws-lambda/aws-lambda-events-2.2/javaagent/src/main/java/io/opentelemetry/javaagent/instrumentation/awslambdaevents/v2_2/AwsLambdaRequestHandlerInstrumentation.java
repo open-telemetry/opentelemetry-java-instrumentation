@@ -94,13 +94,15 @@ class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentation {
 
         io.opentelemetry.context.Context functionContext =
             functionInstrumenter().start(parentContext, lambdaRequest);
+        io.opentelemetry.context.Context ambientContext =
+            io.opentelemetry.context.Context.current();
         Scope functionScope = functionContext.makeCurrent();
 
         io.opentelemetry.context.Context eventContext = null;
         Scope eventScope = null;
         if (arg instanceof SQSEvent) {
           SQSEvent sqsEvent = (SQSEvent) arg;
-          boolean processingSelected = SqsProcessingSelection.isSelected(functionContext, sqsEvent);
+          boolean processingSelected = SqsProcessingSelection.isSelected(ambientContext, sqsEvent);
           if (!processingSelected && eventInstrumenter().shouldStart(functionContext, sqsEvent)) {
             io.opentelemetry.context.Context selectedContext =
                 SqsProcessingSelection.select(functionContext, sqsEvent);
