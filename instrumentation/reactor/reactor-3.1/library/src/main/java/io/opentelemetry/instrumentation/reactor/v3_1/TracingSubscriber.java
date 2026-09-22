@@ -21,6 +21,7 @@
 package io.opentelemetry.instrumentation.reactor.v3_1;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -43,7 +44,6 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
   private final Subscriber<? super T> subscriber;
   private final Context context;
   private final boolean hasContextToPropagate;
-  private final boolean hasExplicitSpan;
   private final boolean hasSpanToPropagate;
 
   public TracingSubscriber(Subscriber<? super T> subscriber, Context ctx) {
@@ -59,7 +59,6 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
     this.traceContext = ContextPropagationOperator.getOpenTelemetryContext(ctx, contextToPropagate);
     this.hasContextToPropagate =
         traceContext != null && traceContext != io.opentelemetry.context.Context.root();
-    this.hasExplicitSpan = traceContext != null && Span.fromContextOrNull(traceContext) != null;
     this.hasSpanToPropagate =
         traceContext != null && Span.fromContext(traceContext).getSpanContext().isValid();
   }
@@ -115,11 +114,8 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
     if (!hasContextToPropagate) {
       return null;
     }
-    Span currentSpan = Span.current();
-    if (!hasExplicitSpan && currentSpan.getSpanContext().isValid()) {
-      return openScope(traceContext.with(currentSpan));
-    }
-    return openScope(traceContext);
+    return openScope(
+        new MergedContext(traceContext, io.opentelemetry.context.Context.current()));
   }
 
   @Nullable
@@ -142,6 +138,29 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
       return Class.forName("reactor.core.publisher.FluxRetryWhen$RetryWhenMainSubscriber");
     } catch (ClassNotFoundException ignored) {
       return null;
+    }
+  }
+
+  private static final class MergedContext implements io.opentelemetry.context.Context {
+    private final io.opentelemetry.context.Context primary;
+    private final io.opentelemetry.context.Context fallback;
+
+    private MergedContext(
+        io.opentelemetry.context.Context primary, io.opentelemetry.context.Context fallback) {
+      this.primary = primary;
+      this.fallback = fallback;
+    }
+
+    @Override
+    @Nullable
+    public <V> V get(ContextKey<V> key) {
+      V value = primary.get(key);
+      return value != null ? value : fallback.get(key);
+    }
+
+    @Override
+    public <V> io.opentelemetry.context.Context with(ContextKey<V> key, V value) {
+      return new MergedContext(primary.with(key, value), fallback);
     }
   }
 }

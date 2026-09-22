@@ -36,6 +36,8 @@ import reactor.core.publisher.Mono;
 public abstract class AbstractReactorCoreTest {
 
   protected static final ContextKey<String> TEST_CONTEXT_KEY = ContextKey.named("test-context-key");
+  private static final ContextKey<String> PRODUCER_CONTEXT_KEY =
+      ContextKey.named("producer-context-key");
 
   private final InstrumentationExtension testing;
 
@@ -211,6 +213,7 @@ public abstract class AbstractReactorCoreTest {
   void propagatesContextValuesFromExternallyDrivenPublisher() {
     AtomicReference<FluxSink<String>> sink = new AtomicReference<>();
     AtomicReference<String> observedContextValue = new AtomicReference<>();
+    AtomicReference<String> observedProducerContextValue = new AtomicReference<>();
     AtomicReference<Span> observedSpan = new AtomicReference<>();
     Flux<String> publisher = Flux.create(sink::set);
 
@@ -219,22 +222,27 @@ public abstract class AbstractReactorCoreTest {
       publisher.subscribe(
           unused -> {
             observedContextValue.set(Context.current().get(TEST_CONTEXT_KEY));
+            observedProducerContextValue.set(Context.current().get(PRODUCER_CONTEXT_KEY));
             observedSpan.set(Span.current());
           });
     }
 
-    testing.runWithSpan(
-        "producer",
-        () -> {
-          Span producerSpan = Span.current();
-          sink.get().next("message");
-          assertThat(Context.current().get(TEST_CONTEXT_KEY)).isNull();
-          assertThat(Span.current().getSpanContext()).isEqualTo(producerSpan.getSpanContext());
-          assertThat(observedSpan.get().getSpanContext()).isEqualTo(producerSpan.getSpanContext());
-        });
+    try (Scope ignored =
+        Context.current().with(PRODUCER_CONTEXT_KEY, "producer-context-value").makeCurrent()) {
+      testing.runWithSpan(
+          "producer",
+          () -> {
+            Span producerSpan = Span.current();
+            sink.get().next("message");
+            assertThat(Context.current().get(TEST_CONTEXT_KEY)).isNull();
+            assertThat(Span.current().getSpanContext()).isEqualTo(producerSpan.getSpanContext());
+            assertThat(observedSpan.get().getSpanContext()).isEqualTo(producerSpan.getSpanContext());
+          });
+    }
     sink.get().complete();
 
     assertThat(observedContextValue.get()).isEqualTo("test-context-value");
+    assertThat(observedProducerContextValue.get()).isEqualTo("producer-context-value");
     assertThat(Context.current().get(TEST_CONTEXT_KEY)).isNull();
 
     testing.waitAndAssertTraces(
