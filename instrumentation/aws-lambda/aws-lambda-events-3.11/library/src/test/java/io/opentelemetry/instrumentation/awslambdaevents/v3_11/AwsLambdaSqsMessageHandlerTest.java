@@ -239,10 +239,21 @@ class AwsLambdaSqsMessageHandlerTest {
 
     TestHandler handler = new TestHandler(testing.getOpenTelemetrySdk());
     handler.handleRequest(event, context);
+    testing.waitForTraces(1);
     assertMetrics(testing, TracingSqsEventHandler.INSTRUMENTATION_NAME, "queue1", 2, 1, null);
     testing.clearData();
 
     handler.handleRequest(event, context);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("my_function"),
+                span ->
+                    span.hasName(
+                        emitStableMessagingSemconv() ? "process queue1" : "aws:sqs process"),
+                span ->
+                    span.hasName(
+                        emitStableMessagingSemconv() ? "process queue1" : "aws:sqs process")));
     assertMetrics(testing, TracingSqsEventHandler.INSTRUMENTATION_NAME, "queue1", 2, 1, null);
   }
 
