@@ -10,6 +10,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
@@ -36,8 +37,6 @@ import reactor.core.publisher.Mono;
 public abstract class AbstractReactorCoreTest {
 
   protected static final ContextKey<String> TEST_CONTEXT_KEY = ContextKey.named("test-context-key");
-  private static final ContextKey<String> PRODUCER_CONTEXT_KEY =
-      ContextKey.named("producer-context-key");
 
   private final InstrumentationExtension testing;
 
@@ -213,7 +212,7 @@ public abstract class AbstractReactorCoreTest {
   void propagatesContextValuesFromExternallyDrivenPublisher() {
     AtomicReference<FluxSink<String>> sink = new AtomicReference<>();
     AtomicReference<String> observedContextValue = new AtomicReference<>();
-    AtomicReference<String> observedProducerContextValue = new AtomicReference<>();
+    AtomicReference<String> observedProducerBaggageValue = new AtomicReference<>();
     AtomicReference<Span> observedSpan = new AtomicReference<>();
     Flux<String> publisher = Flux.create(sink::set);
 
@@ -222,13 +221,13 @@ public abstract class AbstractReactorCoreTest {
       publisher.subscribe(
           unused -> {
             observedContextValue.set(Context.current().get(TEST_CONTEXT_KEY));
-            observedProducerContextValue.set(Context.current().get(PRODUCER_CONTEXT_KEY));
+            observedProducerBaggageValue.set(Baggage.current().getEntryValue("producer-key"));
             observedSpan.set(Span.current());
           });
     }
 
     try (Scope ignored =
-        Context.current().with(PRODUCER_CONTEXT_KEY, "producer-context-value").makeCurrent()) {
+        Baggage.current().toBuilder().put("producer-key", "producer-value").build().makeCurrent()) {
       testing.runWithSpan(
           "producer",
           () -> {
@@ -243,7 +242,7 @@ public abstract class AbstractReactorCoreTest {
     sink.get().complete();
 
     assertThat(observedContextValue.get()).isEqualTo("test-context-value");
-    assertThat(observedProducerContextValue.get()).isEqualTo("producer-context-value");
+    assertThat(observedProducerBaggageValue.get()).isEqualTo("producer-value");
     assertThat(Context.current().get(TEST_CONTEXT_KEY)).isNull();
 
     testing.waitAndAssertTraces(
