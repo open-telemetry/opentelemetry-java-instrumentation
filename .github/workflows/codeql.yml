@@ -132,12 +132,13 @@ jobs:
       - name: Compile production Kotlin
         # --rerun forces only the requested Kotlin compiler tasks. Their prepared Java
         # dependencies remain up-to-date and outside CodeQL tracing.
-        # --no-daemon is required for CodeQL to observe the compilation.
+        # --no-daemon and in-process Kotlin compilation are required for CodeQL
+        # to observe the compilation without reusing the warm-up compiler daemon.
         # (see https://docs.github.com/en/code-security/codeql-cli/getting-started-with-the-codeql-cli/preparing-your-code-for-codeql-analysis#specifying-build-commands)
         run: |
-          ./gradlew -p gradle-plugins compileKotlin --rerun --no-build-cache --no-daemon -Pkotlin.daemon.jvmargs=-Xmx4g
-          ./gradlew -p conventions compileKotlin --rerun --no-build-cache --no-daemon -Pkotlin.daemon.jvmargs=-Xmx4g
-          ./gradlew compileKotlin --rerun --no-build-cache --no-daemon -Pkotlin.daemon.jvmargs=-Xmx4g
+          ./gradlew -p gradle-plugins compileKotlin --rerun --no-build-cache --no-daemon -Pkotlin.compiler.execution.strategy=in-process
+          ./gradlew -p conventions compileKotlin --rerun --no-build-cache --no-daemon -Pkotlin.compiler.execution.strategy=in-process
+          ./gradlew compileKotlin --rerun --no-build-cache --no-daemon -Pkotlin.compiler.execution.strategy=in-process
 
       - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4.38.0
