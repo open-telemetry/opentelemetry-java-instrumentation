@@ -12,6 +12,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -20,6 +21,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
 
 class CompletableFutureWrapperTest {
@@ -223,6 +225,44 @@ class CompletableFutureWrapperTest {
         .isInstanceOf(CompletionException.class)
         .hasCauseInstanceOf(IllegalStateException.class)
         .hasRootCauseMessage("manual");
+  }
+
+  @Test
+  void doesNotCancelSourceAfterAsyncCompletion() throws ReflectiveOperationException {
+    CompletableFuture<String> sourceFuture = new CompletableFuture<>();
+    CompletableFuture<String> wrapped =
+        CompletableFutureWrapper.wrap(sourceFuture, Context.root(), (result, error) -> {});
+
+    Method completeAsync = CompletableFuture.class.getMethod("completeAsync", Supplier.class);
+    CompletableFuture<?> completion =
+        (CompletableFuture<?>) completeAsync.invoke(wrapped, (Supplier<String>) () -> "async");
+    assertThat(completion.join()).isEqualTo("async");
+    assertThat(wrapped.cancel(false)).isFalse();
+    assertThat(sourceFuture).isNotCancelled();
+  }
+
+  @Test
+  void doesNotCancelSourceAfterObtrudedCompletion() {
+    CompletableFuture<String> sourceFuture = new CompletableFuture<>();
+    CompletableFuture<String> wrapped =
+        CompletableFutureWrapper.wrap(sourceFuture, Context.root(), (result, error) -> {});
+
+    wrapped.obtrudeValue("obtruded");
+
+    assertThat(wrapped.cancel(false)).isFalse();
+    assertThat(sourceFuture).isNotCancelled();
+  }
+
+  @Test
+  void doesNotCancelSourceAfterObtrudedExceptionalCompletion() {
+    CompletableFuture<String> sourceFuture = new CompletableFuture<>();
+    CompletableFuture<String> wrapped =
+        CompletableFutureWrapper.wrap(sourceFuture, Context.root(), (result, error) -> {});
+
+    wrapped.obtrudeException(new IllegalStateException("obtruded"));
+
+    assertThat(wrapped.cancel(false)).isFalse();
+    assertThat(sourceFuture).isNotCancelled();
   }
 
   @Test

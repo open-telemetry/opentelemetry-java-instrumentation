@@ -75,6 +75,9 @@ public final class CompletableFutureWrapper<T> extends CompletableFuture<T> {
   @Override
   public boolean cancel(boolean mayInterruptIfRunning) {
     synchronized (completionLock) {
+      if (isDone()) {
+        completionState = CompletionState.COMPLETION;
+      }
       if (completionState != CompletionState.OPEN) {
         return isCancelled();
       }
