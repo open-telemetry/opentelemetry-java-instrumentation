@@ -115,12 +115,17 @@ class TracingIterator implements Iterator<Message> {
     Throwable error = null;
     try (Scope ignored = context.makeCurrent()) {
       action.accept(message);
-    } catch (RuntimeException | Error e) {
-      error = e;
-      throw e;
+    } catch (Throwable t) {
+      error = t;
+      throw sneakyThrow(t);
     } finally {
       tracingList.getInstrumenter().end(context, request, tracingList.getResponse(), error);
     }
+  }
+
+  @SuppressWarnings({"TypeParameterUnusedInFormals", "unchecked"})
+  private static <T extends Throwable> T sneakyThrow(Throwable t) throws T {
+    throw (T) t;
   }
 
   private static boolean shouldStartProcessing(

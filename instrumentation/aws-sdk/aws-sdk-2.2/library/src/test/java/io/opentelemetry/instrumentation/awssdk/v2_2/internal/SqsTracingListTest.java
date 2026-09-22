@@ -28,11 +28,13 @@ import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.RandomAccess;
 import java.util.Spliterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -148,6 +150,32 @@ class SqsTracingListTest {
   @Test
   void viewForEachEndsProcessingWhenActionThrows() {
     assertForEachFailure(true);
+  }
+
+  @Test
+  void forEachEndsProcessingWhenActionSneakyThrowsCheckedException() {
+    TracingList tracingList = tracingMessages(1, new ArrayList<>());
+    IOException failure = new IOException("processing failed");
+
+    assertThatThrownBy(() -> tracingList.forEach(unused -> throwUnchecked(failure)))
+        .isSameAs(failure);
+
+    testing.waitForTraces(1);
+    assertThat(testing.spans())
+        .singleElement()
+        .satisfies(
+            span -> {
+              assertThat(span.getAttributes().get(MESSAGING_MESSAGE_ID)).isEqualTo("message-0");
+              assertThat(span.getStatus().getStatusCode()).isEqualTo(StatusCode.ERROR);
+            });
+  }
+
+  @Test
+  void subListPreservesRandomAccess() {
+    TracingList tracingList = tracingMessages(1, new ArrayList<>());
+
+    assertThat(tracingList.subList(0, 1)).isInstanceOf(RandomAccess.class);
+    assertThat(tracingList.subList(0, 1).subList(0, 1)).isInstanceOf(RandomAccess.class);
   }
 
   @Test
@@ -410,5 +438,10 @@ class SqsTracingListTest {
     return new AwsSdkInstrumenterFactory(
             testing.getOpenTelemetry(), null, IncludeExclude.builder().build(), false, false, false)
         .consumerProcessInstrumenter();
+  }
+
+  @SuppressWarnings({"TypeParameterUnusedInFormals", "unchecked"})
+  private static <T extends Throwable> void throwUnchecked(Throwable t) throws T {
+    throw (T) t;
   }
 }

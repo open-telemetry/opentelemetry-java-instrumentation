@@ -15,6 +15,7 @@ import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.RandomAccess;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
@@ -171,7 +172,7 @@ public final class TracingList extends ArrayList<Message> {
     return processParentContext;
   }
 
-  private static final class TracingListView extends AbstractList<Message> {
+  private static final class TracingListView extends AbstractList<Message> implements RandomAccess {
     private final List<Message> delegate;
     private final TracingList tracingList;
 
