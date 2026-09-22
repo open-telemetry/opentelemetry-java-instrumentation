@@ -29,7 +29,7 @@ class TracingIterator implements Iterator<Message> {
   @Nullable private Context currentContext;
   @Nullable private Scope currentScope;
 
-  private TracingIterator(Iterator<Message> delegateIterator, TracingList tracingList) {
+  TracingIterator(Iterator<Message> delegateIterator, TracingList tracingList) {
     this.delegateIterator = delegateIterator;
     this.tracingList = tracingList;
   }
@@ -50,7 +50,10 @@ class TracingIterator implements Iterator<Message> {
     // in case they didn't call hasNext()...
     closeScopeAndEndSpan();
 
-    Message next = delegateIterator.next();
+    return trace(delegateIterator.next());
+  }
+
+  Message trace(Message next) {
     if (next != null && !tracingList.isListenerProcessingSelected()) {
       SqsMessage sqsMessage = tracingList.getTracingMessage(next);
       if (sqsMessage == null) {
@@ -71,7 +74,7 @@ class TracingIterator implements Iterator<Message> {
     return next;
   }
 
-  private void closeScopeAndEndSpan() {
+  void closeScopeAndEndSpan() {
     if (currentScope != null) {
       currentScope.close();
       tracingList

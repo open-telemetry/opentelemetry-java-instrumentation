@@ -31,6 +31,7 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Spliterator;
 import java.util.concurrent.ConcurrentHashMap;
@@ -207,6 +208,30 @@ class SqsTracingListTest {
   @Test
   void viewIteratorForEachRemainingEndsProcessingWhenActionThrows() {
     assertIteratorForEachRemainingFailure(true);
+  }
+
+  @Test
+  void viewListIteratorTracesForwardTraversal() {
+    TracingList tracingList = tracingMessages(1, new ArrayList<>());
+    ListIterator<Message> iterator = tracingList.subList(0, 1).listIterator();
+
+    assertThat(iterator.next().messageId()).isEqualTo("message-0");
+    assertThat(Span.current().getSpanContext().isValid()).isTrue();
+    assertThat(iterator.hasNext()).isFalse();
+
+    testing.waitForTraces(1);
+  }
+
+  @Test
+  void viewIndexedListIteratorTracesReverseTraversal() {
+    TracingList tracingList = tracingMessages(1, new ArrayList<>());
+    ListIterator<Message> iterator = tracingList.subList(0, 1).listIterator(1);
+
+    assertThat(iterator.previous().messageId()).isEqualTo("message-0");
+    assertThat(Span.current().getSpanContext().isValid()).isTrue();
+    assertThat(iterator.hasPrevious()).isFalse();
+
+    testing.waitForTraces(1);
   }
 
   private static void assertSplitTraversal(boolean useView) throws Exception {

@@ -314,6 +314,18 @@ class AwsSqsTest {
     sqsTemplate.send("batch-queue", "hello");
 
     assertThat(messageFuture.get(10, SECONDS)).containsExactly("hello");
+    await()
+        .untilAsserted(
+            () ->
+                assertThat(testing.spans())
+                    .filteredOn(
+                        span ->
+                            span.getName()
+                                .equals(
+                                    emitStableMessagingSemconv()
+                                        ? "delete batch-queue"
+                                        : "Sqs.DeleteMessageBatch"))
+                    .hasSize(1));
     assertThat(testing.spans())
         .filteredOn(
             span ->
