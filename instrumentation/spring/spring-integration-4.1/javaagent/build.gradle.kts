@@ -3,15 +3,10 @@ plugins {
   id("otel.nullaway-conventions")
 }
 
-// context "leak" here is intentional: spring-integration instrumentation will always override
-// "local" span context with one extracted from the incoming message when it decides to start a
-// CONSUMER span
-extra["failOnContextLeak"] = false
-
 muzzle {
   pass {
     group.set("org.springframework.integration")
-    module.set("spring-integration-core")
+    module.set("spring-integration-amqp")
     versions.set("[4.1.0.RELEASE,)")
     assertInverse.set(true)
   }
@@ -21,6 +16,7 @@ dependencies {
   implementation(project(":instrumentation:spring:spring-integration-4.1:library"))
 
   library("org.springframework.integration:spring-integration-core:4.1.0.RELEASE")
+  compileOnly("org.springframework.integration:spring-integration-amqp:4.1.0.RELEASE")
 
   testInstrumentation(project(":instrumentation:rabbitmq-2.7:javaagent"))
   testInstrumentation(project(":instrumentation:spring:spring-rabbit-1.0:javaagent"))
@@ -42,6 +38,56 @@ dependencies {
 }
 
 tasks {
+  val testAmqpHandoffWithRabbitInstrumentation =
+    register<Test>("testAmqpHandoffWithRabbitInstrumentation") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+      filter {
+        includeTestsMatching("MessageProducerSupportInstrumentationTest")
+      }
+      include("**/MessageProducerSupportInstrumentationTest.*")
+      jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
+      jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=true")
+      systemProperty("springIntegrationRabbitHandoffTest", "true")
+      systemProperty("metadataConfig", "otel.instrumentation.spring-rabbit.enabled=true")
+    }
+
+  val testAmqpHandoffWithRabbitInstrumentationMessagingPreview =
+    register<Test>("testAmqpHandoffWithRabbitInstrumentationMessagingPreview") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+      filter {
+        includeTestsMatching("MessageProducerSupportInstrumentationTest")
+      }
+      include("**/MessageProducerSupportInstrumentationTest.*")
+      jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
+      jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=true")
+      jvmArgs("-Dotel.semconv-stability.preview=messaging")
+      systemProperty("springIntegrationRabbitHandoffTest", "true")
+      systemProperty(
+        "metadataConfig",
+        "otel.instrumentation.spring-rabbit.enabled=true,otel.semconv-stability.preview=messaging",
+      )
+    }
+
+  val testAmqpHandoffWithRabbitInstrumentationBothSemconv =
+    register<Test>("testAmqpHandoffWithRabbitInstrumentationBothSemconv") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+      filter {
+        includeTestsMatching("MessageProducerSupportInstrumentationTest")
+      }
+      include("**/MessageProducerSupportInstrumentationTest.*")
+      jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
+      jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=true")
+      jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
+      systemProperty("springIntegrationRabbitHandoffTest", "true")
+      systemProperty(
+        "metadataConfig",
+        "otel.instrumentation.spring-rabbit.enabled=true,otel.semconv-stability.preview=messaging/dup",
+      )
+    }
+
   val testWithRabbitInstrumentation = register<Test>("testWithRabbitInstrumentation") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -119,7 +165,16 @@ tasks {
   }
 
   check {
-    dependsOn(testWithRabbitInstrumentation, testWithRabbitInstrumentationMessagingPreview, testWithProducerInstrumentation, testMessagingPreview, testBothSemconv)
+    dependsOn(
+      testAmqpHandoffWithRabbitInstrumentation,
+      testAmqpHandoffWithRabbitInstrumentationMessagingPreview,
+      testAmqpHandoffWithRabbitInstrumentationBothSemconv,
+      testWithRabbitInstrumentation,
+      testWithRabbitInstrumentationMessagingPreview,
+      testWithProducerInstrumentation,
+      testMessagingPreview,
+      testBothSemconv,
+    )
   }
 
   withType<Test>().configureEach {

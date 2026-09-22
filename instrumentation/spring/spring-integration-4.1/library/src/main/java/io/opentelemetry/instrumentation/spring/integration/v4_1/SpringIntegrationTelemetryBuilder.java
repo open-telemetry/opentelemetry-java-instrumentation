@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.spring.integration.v4_1;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.internal.Experimental.setSpanSuppressionStrategy;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
@@ -14,9 +15,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProducerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
@@ -128,9 +127,9 @@ public final class SpringIntegrationTelemetryBuilder {
                     MessagingOperationType.PROCESS,
                     PROCESS_OPERATION_NAME,
                     headers))
-            .addOperationMetrics(MessagingProcessMetrics.get())
-            .addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
+            .addOperationMetrics(SpringIntegrationConsumerMetrics::new);
     setMessagingProcessExceptionEventExtractor(consumerBuilder);
+    setSpanSuppressionStrategy(consumerBuilder, "none");
     Instrumenter<MessageWithChannel, Void> consumerInstrumenter =
         MessagingProcessInstrumenterFactory.create(
             consumerBuilder,
