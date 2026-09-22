@@ -64,6 +64,31 @@ class ChatAttributesGetterTest {
   }
 
   @Test
+  void omitsZeroDetailedTokenUsage() {
+    CompletionUsage usage =
+        CompletionUsage.builder()
+            .promptTokens(20)
+            .completionTokens(10)
+            .totalTokens(30)
+            .promptTokensDetails(
+                CompletionUsage.PromptTokensDetails.builder().cachedTokens(0).build())
+            .completionTokensDetails(
+                CompletionUsage.CompletionTokensDetails.builder().reasoningTokens(0).build())
+            .build();
+    ChatCompletion response =
+        ChatCompletion.builder()
+            .id("test-id")
+            .choices(emptyList())
+            .created(0)
+            .model("test-model")
+            .usage(usage)
+            .build();
+
+    assertThat(getter.getUsageCacheReadInputTokens(REQUEST, response)).isNull();
+    assertThat(getter.getUsageReasoningOutputTokens(REQUEST, response)).isNull();
+  }
+
+  @Test
   void omitsDetailedTokenUsageWhenResponseIsUnavailable() {
     assertThat(getter.getUsageCacheReadInputTokens(REQUEST, null)).isNull();
     assertThat(getter.getUsageReasoningOutputTokens(REQUEST, null)).isNull();

@@ -157,6 +157,7 @@ final class ChatAttributesGetter
         .usage()
         .flatMap(CompletionUsage::promptTokensDetails)
         .flatMap(CompletionUsage.PromptTokensDetails::cachedTokens)
+        .filter(tokens -> tokens > 0)
         .orElse(null);
   }
 
@@ -181,6 +182,7 @@ final class ChatAttributesGetter
         .usage()
         .flatMap(CompletionUsage::completionTokensDetails)
         .flatMap(CompletionUsage.CompletionTokensDetails::reasoningTokens)
+        .filter(tokens -> tokens > 0)
         .orElse(null);
   }
 }
