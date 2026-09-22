@@ -116,7 +116,9 @@
       allowedVersions: '!/\\-SNAPSHOT$/',
     },
     {
-      // Preserve the bare major in .java-version after applying the inherited Java LTS rule.
+      // workarounds:javaLTSVersions supplies the LTS allowlist and parses full JDK versions.
+      // Its partial-version exception covers GitHub Actions and mise, but not custom.regex.
+      // This keeps .java-version as 25 instead of 25.0.4+7.0.LTS without losing the LTS restriction.
       matchDatasources: [
         'java-version',
       ],
