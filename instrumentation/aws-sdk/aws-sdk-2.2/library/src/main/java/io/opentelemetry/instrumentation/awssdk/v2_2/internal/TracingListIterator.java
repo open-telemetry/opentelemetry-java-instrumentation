@@ -11,8 +11,7 @@ import software.amazon.awssdk.services.sqs.model.Message;
 final class TracingListIterator extends TracingIterator implements ListIterator<Message> {
   private final ListIterator<Message> delegate;
 
-  static ListIterator<Message> wrap(
-      ListIterator<Message> delegate, TracingList tracingList) {
+  static ListIterator<Message> wrap(ListIterator<Message> delegate, TracingList tracingList) {
     return new TracingListIterator(delegate, tracingList);
   }
 
@@ -30,7 +29,9 @@ final class TracingListIterator extends TracingIterator implements ListIterator<
   @Override
   public Message previous() {
     closeScopeAndEndSpan();
-    return trace(delegate.previous());
+    Message previous = delegate.previous();
+    trace(previous);
+    return previous;
   }
 
   @Override

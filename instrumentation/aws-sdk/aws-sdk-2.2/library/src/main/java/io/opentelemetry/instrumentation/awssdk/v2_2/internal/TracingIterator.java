@@ -50,14 +50,16 @@ class TracingIterator implements Iterator<Message> {
     // in case they didn't call hasNext()...
     closeScopeAndEndSpan();
 
-    return trace(delegateIterator.next());
+    Message next = delegateIterator.next();
+    trace(next);
+    return next;
   }
 
-  Message trace(Message next) {
+  void trace(Message next) {
     if (next != null && !tracingList.isListenerProcessingSelected()) {
       SqsMessage sqsMessage = tracingList.getTracingMessage(next);
       if (sqsMessage == null) {
-        return next;
+        return;
       }
       Context parentContext = tracingList.getProcessParentContext();
       if (parentContext == null) {
@@ -71,7 +73,6 @@ class TracingIterator implements Iterator<Message> {
         currentScope = currentContext.makeCurrent();
       }
     }
-    return next;
   }
 
   void closeScopeAndEndSpan() {
