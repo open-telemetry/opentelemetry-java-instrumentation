@@ -236,7 +236,8 @@ public abstract class AbstractReactorCoreTest {
             sink.get().next("message");
             assertThat(Context.current().get(TEST_CONTEXT_KEY)).isNull();
             assertThat(Span.current().getSpanContext()).isEqualTo(producerSpan.getSpanContext());
-            assertThat(observedSpan.get().getSpanContext()).isEqualTo(producerSpan.getSpanContext());
+            assertThat(observedSpan.get().getSpanContext())
+                .isEqualTo(producerSpan.getSpanContext());
           });
     }
     sink.get().complete();

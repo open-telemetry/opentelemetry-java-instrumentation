@@ -114,8 +114,7 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
     if (!hasContextToPropagate) {
       return null;
     }
-    return openScope(
-        new MergedContext(traceContext, io.opentelemetry.context.Context.current()));
+    return openScope(new MergedContext(traceContext, io.opentelemetry.context.Context.current()));
   }
 
   @Nullable
