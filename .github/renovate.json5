@@ -3,6 +3,7 @@
   extends: [
     "github>grafana/flint#v0.22.12",
     'config:best-practices',
+    'workarounds:javaLTSVersions',
     'helpers:pinGitHubActionDigestsToSemver',
     ':semanticCommits',
   ],
@@ -113,6 +114,19 @@
         'org.playframework.play:**',
       ],
       allowedVersions: '!/\\-SNAPSHOT$/',
+    },
+    {
+      // Preserve the bare major in .java-version after applying the inherited Java LTS rule.
+      matchDatasources: [
+        'java-version',
+      ],
+      matchDepNames: [
+        'java-jdk',
+      ],
+      matchManagers: [
+        'custom.regex',
+      ],
+      versioning: 'semver-partial',
     },
     {
       // prevent 3.0.1u2 -> 3.0.1
@@ -445,6 +459,19 @@
       matchStrings: [
         'gh extension install github/gh-aw --pin (?<currentValue>v\\d+\\.\\d+\\.\\d+)',
       ],
+    },
+    {
+      // Build JDK updates are LTS-only; explicit java-version markers below track every major.
+      customType: 'regex',
+      datasourceTemplate: 'java-version',
+      depNameTemplate: 'java-jdk',
+      managerFilePatterns: [
+        '/^\\.java-version$/',
+      ],
+      matchStrings: [
+        '(?<currentValue>\\d+)',
+      ],
+      versioningTemplate: 'semver-partial',
     },
     {
       customType: 'regex',
