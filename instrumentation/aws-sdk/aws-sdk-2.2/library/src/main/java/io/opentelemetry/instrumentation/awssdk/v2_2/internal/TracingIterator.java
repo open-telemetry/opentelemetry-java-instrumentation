@@ -123,6 +123,7 @@ class TracingIterator implements Iterator<Message> {
     }
   }
 
+  // The unchecked cast preserves callback failures that use a sneaky throw.
   @SuppressWarnings({"TypeParameterUnusedInFormals", "unchecked"})
   private static <T extends Throwable> T sneakyThrow(Throwable t) throws T {
     throw (T) t;

@@ -440,6 +440,7 @@ class SqsTracingListTest {
         .consumerProcessInstrumenter();
   }
 
+  // The unchecked cast simulates a callback that uses a sneaky throw.
   @SuppressWarnings({"TypeParameterUnusedInFormals", "unchecked"})
   private static <T extends Throwable> void throwUnchecked(Throwable t) throws T {
     throw (T) t;
