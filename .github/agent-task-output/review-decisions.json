@@ -1,0 +1,12 @@
+{
+  "schema": {
+    "id": "github.copilot.copilot-review-loop-decision-report",
+    "version": 3
+  },
+  "decisions": [
+    {
+      "finding_id": "finding-795e19549ce477c07fd608c2",
+      "disposition": "fixed"
+    }
+  ]
+}
