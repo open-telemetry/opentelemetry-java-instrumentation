@@ -1,0 +1,18 @@
+{
+  "schema": {
+    "id": "github.copilot.copilot-review-loop-decision-report",
+    "version": 3
+  },
+  "decisions": [
+    {
+      "finding_id": "finding-1aad814e4b71671bf5e41803",
+      "disposition": "fixed"
+    },
+    {
+      "finding_id": "finding-597286a2bc6eb73ba882f069",
+      "disposition": "no_change",
+      "reason": "The Java category intentionally preserves the existing analysis identity, while pull request metadata is outside this repository-only candidate.",
+      "proposed_reply": "The `/language:java` category is intentional to preserve the existing analysis identity and alert baselines. The PR description should be corrected separately to match it."
+    }
+  ]
+}
