@@ -1,0 +1,1 @@
+Normalize AWS SDK v2 SQS processing telemetry

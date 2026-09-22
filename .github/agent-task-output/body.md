@@ -1,0 +1,3 @@
+Adds best-effort AWS SDK v2 SQS processing for iterators, list iterators, sublists, `forEach`, and spliterators, including split callbacks. Callbacks run under the captured parent context, report failures, and end the matching processing operation. Abandoned iterator traversal has no reliable observable completion boundary.
+
+Supported Spring Cloud AWS single-message listeners take processing ownership from the SDK path, including asynchronous completion, while unsupported batch listeners keep the SDK fallback. Process metrics remain isolated from enclosing operations, and overlapping processing operations count each delivered message once. Cross-layer consumed-message deduplication is tracked in #20214.
