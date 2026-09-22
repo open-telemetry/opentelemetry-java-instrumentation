@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
+import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -73,15 +74,23 @@ public class TracingIterator<K, V> implements Iterator<ConsumerRecord<K, V>> {
     // in case they didn't call hasNext()...
     closeScopeAndEndSpan();
 
-    // it's important not to suppress consumer span creation here using Instrumenter.shouldStart()
-    // because this instrumentation can leak the context and so there may be a leaked consumer span
-    // in the context, in which case it's important to overwrite the leaked span instead of
-    // suppressing the correct span
-    // (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1947)
     ConsumerRecord<K, V> next = delegateIterator.next();
     if (next != null && wrappingEnabled.getAsBoolean()) {
-      currentRequest = KafkaProcessRequest.create(consumerContext, next);
-      currentContext = instrumenter.start(parentContext, currentRequest);
+      BooleanSupplier rawProcessingSelection =
+          KafkaConsumerContextUtil.getRawProcessingSelection(next);
+      if (rawProcessingSelection != null && !rawProcessingSelection.getAsBoolean()) {
+        return next;
+      }
+      KafkaProcessRequest request = KafkaProcessRequest.create(consumerContext, next);
+      // Iterator spans can leak if traversal is abandoned. Ignore an ambient consumer span when
+      // selecting another record, but retain explicit instrumentation suppression and enablement.
+      if (InstrumentationUtil.shouldSuppressInstrumentation(Context.current())
+          || !instrumenter.shouldStart(
+              KafkaConsumerContextUtil.spanSuppressionContext(parentContext), request)) {
+        return next;
+      }
+      currentRequest = request;
+      currentContext = instrumenter.start(parentContext, request);
       currentContext =
           KafkaConsumerContextUtil.withProcessParentSpan(currentContext, parentContext);
       currentScope = currentContext.makeCurrent();
