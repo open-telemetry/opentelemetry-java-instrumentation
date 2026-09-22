@@ -55,7 +55,7 @@ testing {
       targets {
         all {
           testTask.configure {
-            jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+            jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
             jvmArgs("-Dotel.semconv-stability.preview=messaging")
           }
         }
