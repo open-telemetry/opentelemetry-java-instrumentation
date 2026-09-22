@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactor.kafka.v1_0;
 
-import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
+import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanSuppression;
+
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
 import reactor.core.Scannable;
@@ -51,11 +52,13 @@ public class TracingDisablingKafkaFlux<T> extends FluxOperator<T, T> {
 
     @Override
     public void onNext(T record) {
-      boolean previous = KafkaClientsConsumerProcessTracing.setWrappingEnabled(false);
+      boolean suppressionAcquired = processSpanSuppression().tryAcquire();
       try {
         actual.onNext(record);
       } finally {
-        KafkaClientsConsumerProcessTracing.setWrappingEnabled(previous);
+        if (suppressionAcquired) {
+          processSpanSuppression().release();
+        }
       }
     }
 

@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11;
 
+import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanSuppression;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -31,12 +31,14 @@ class StreamThreadInstrumentation implements TypeInstrumentation {
   public static class RunLoopAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static boolean onEnter() {
-      return KafkaClientsConsumerProcessTracing.setWrappingEnabled(false);
+      return processSpanSuppression().tryAcquire();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter boolean previousValue) {
-      KafkaClientsConsumerProcessTracing.setWrappingEnabled(previousValue);
+    public static void onExit(@Advice.Enter boolean suppressionAcquired) {
+      if (suppressionAcquired) {
+        processSpanSuppression().release();
+      }
     }
   }
 }

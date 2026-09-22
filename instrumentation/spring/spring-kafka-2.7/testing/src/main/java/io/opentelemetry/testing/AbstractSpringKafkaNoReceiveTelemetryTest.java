@@ -300,57 +300,44 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                             .hasAttributesSatisfyingExactly(withErrorType(processAttributes, true)),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(0))),
             trace -> {
-              if (isLibraryInstrumentationTest() && testLatestDeps()) {
-                // in latest dep tests process spans are not created for retries because spring does
-                // not call the success/failure methods on the BatchInterceptor for retries
-                trace.hasSpansSatisfyingExactly(span -> span.hasName("consumer").hasNoParent());
-              } else {
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName(spanName("testBatchTopic", "process", "process"))
-                            .hasKind(SpanKind.CONSUMER)
-                            .hasNoParent()
-                            .hasLinksSatisfying(links(producer.get()))
-                            .hasStatus(StatusData.error())
-                            .hasException(new IllegalArgumentException("boom"))
-                            .hasAttributesSatisfyingExactly(withErrorType(processAttributes, true)),
-                    span -> span.hasName("consumer").hasParent(trace.getSpan(0)));
-              }
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName(spanName("testBatchTopic", "process", "process"))
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasNoParent()
+                          .hasLinksSatisfying(links(producer.get()))
+                          .hasStatus(StatusData.error())
+                          .hasException(new IllegalArgumentException("boom"))
+                          .hasAttributesSatisfyingExactly(withErrorType(processAttributes, true)),
+                  span -> span.hasName("consumer").hasParent(trace.getSpan(0)));
             },
             trace -> {
-              if (isLibraryInstrumentationTest() && testLatestDeps()) {
-                trace.hasSpansSatisfyingExactly(span -> span.hasName("consumer").hasNoParent());
-              } else {
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName(spanName("testBatchTopic", "process", "process"))
-                            .hasKind(SpanKind.CONSUMER)
-                            .hasNoParent()
-                            .hasLinksSatisfying(links(producer.get()))
-                            .hasStatus(StatusData.unset())
-                            .hasAttributesSatisfyingExactly(processAttributes),
-                    span -> span.hasName("consumer").hasParent(trace.getSpan(0)));
-              }
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName(spanName("testBatchTopic", "process", "process"))
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasNoParent()
+                          .hasLinksSatisfying(links(producer.get()))
+                          .hasStatus(StatusData.unset())
+                          .hasAttributesSatisfyingExactly(processAttributes),
+                  span -> span.hasName("consumer").hasParent(trace.getSpan(0)));
             });
-    int failureCount = isLibraryInstrumentationTest() && testLatestDeps() ? 1 : 2;
     assertProcessDurationMetrics(
         testing(),
         "io.opentelemetry.spring-kafka-2.7",
         "testBatchTopic",
         "testBatchListener",
         "0",
-        failureCount,
+        2,
         IllegalArgumentException.class.getName());
-    if (!isLibraryInstrumentationTest() || !testLatestDeps()) {
-      assertProcessDurationMetrics(
-          testing(),
-          "io.opentelemetry.spring-kafka-2.7",
-          "testBatchTopic",
-          "testBatchListener",
-          "0",
-          1,
-          null);
-    }
+    assertProcessDurationMetrics(
+        testing(),
+        "io.opentelemetry.spring-kafka-2.7",
+        "testBatchTopic",
+        "testBatchListener",
+        "0",
+        1,
+        null);
   }
 
   private static List<AttributeAssertion> sendAttributes(String topic, String messageKey) {

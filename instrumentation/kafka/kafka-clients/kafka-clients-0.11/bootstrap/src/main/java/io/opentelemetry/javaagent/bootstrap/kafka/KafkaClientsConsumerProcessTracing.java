@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.bootstrap.kafka;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.SPAN;
-
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
-import io.opentelemetry.javaagent.bootstrap.messaging.MessagingTelemetrySuppression;
+import io.opentelemetry.api.baggage.Baggage;
+import io.opentelemetry.api.impl.InstrumentationUtil;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadSuppression;
 import java.util.function.BooleanSupplier;
 
 // Classes used by multiple instrumentations should be in a bootstrap module to ensure that all
@@ -18,23 +19,32 @@ import java.util.function.BooleanSupplier;
 // have separate copies of helper classes.
 public final class KafkaClientsConsumerProcessTracing {
 
-  // This holder is the coordination key, so its suppressed signals stay invisible to every other
-  // messaging stack that runs on the same thread.
-  private static final MessagingTelemetrySuppression suppression =
-      MessagingTelemetrySuppression.create();
+  private static final ContextKey<Boolean> FRAMEWORK_PROCESS_KEY =
+      ContextKey.named("opentelemetry-kafka-framework-process-span");
 
-  public static boolean setWrappingEnabled(boolean enabled) {
-    MessagingTelemetrySignals previous = suppression.current();
-    suppression.restore(enabled ? previous.without(PROCESS, SPAN) : previous.with(PROCESS, SPAN));
-    return !previous.contains(PROCESS, SPAN);
+  private static final ScopedThreadSuppression processSpanSuppression =
+      new ScopedThreadSuppression();
+
+  public static ScopedThreadSuppression processSpanSuppression() {
+    return processSpanSuppression;
   }
 
-  public static boolean isWrappingEnabled() {
-    return !suppression.isSuppressed(PROCESS, SPAN);
+  public static BooleanSupplier processSpanEnabledSupplier() {
+    return () -> !processSpanSuppression.isActive();
   }
 
-  public static BooleanSupplier getWrappingEnabledSupplier() {
-    return KafkaClientsConsumerProcessTracing::isWrappingEnabled;
+  public static Context markFrameworkProcess(Context context) {
+    return context.with(FRAMEWORK_PROCESS_KEY, true);
+  }
+
+  public static Context withoutFrameworkProcessSuppression(Context context) {
+    if (!Boolean.TRUE.equals(context.get(FRAMEWORK_PROCESS_KEY))
+        || InstrumentationUtil.shouldSuppressInstrumentation(context)) {
+      return context;
+    }
+
+    Context parentContext = Context.root().with(Span.fromContext(context));
+    return Baggage.fromContext(context).storeInContext(parentContext);
   }
 
   private KafkaClientsConsumerProcessTracing() {}
