@@ -99,7 +99,7 @@ public final class HsqlUrlParser implements JdbcUrlParser {
 
   private static void parseNetworkMode(
       String subtype, String jdbcUrl, int defaultPort, ParseContext ctx) {
-    ctx.port(defaultPort);
+    ctx.defaultPort(defaultPort);
     ctx.subtype(subtype);
     ctx.parseUrl(jdbcUrl);
   }
