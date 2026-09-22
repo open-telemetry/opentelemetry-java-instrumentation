@@ -323,6 +323,18 @@ class AwsSqsTest {
                             ? "process batch-queue"
                             : "batch-queue process"))
         .hasSize(1);
+    await()
+        .untilAsserted(
+            () ->
+                assertThat(testing.spans())
+                    .filteredOn(
+                        span ->
+                            span.getName()
+                                .equals(
+                                    emitStableMessagingSemconv()
+                                        ? "delete batch-queue"
+                                        : "Sqs.DeleteMessageBatch"))
+                    .hasSize(1));
     if (!emitStableMessagingSemconv()) {
       return;
     }

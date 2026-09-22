@@ -21,6 +21,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -64,6 +65,54 @@ class SqsProcessMetricsIsolationTest {
   @Test
   void processDurationIsolatedFromOuterProcessWhenReceiveTelemetryEnabled() {
     assertProcessDurationIsolated(true);
+  }
+
+  @Test
+  void overlappingProcessOperationsCountDeliveryOnce() {
+    assumeTrue(emitStableMessagingSemconv());
+
+    Instrumenter<SqsProcessRequest, Response> instrumenter =
+        new AwsSdkInstrumenterFactory(
+                testing.getOpenTelemetry(),
+                null,
+                IncludeExclude.builder().build(),
+                false,
+                false,
+                false)
+            .consumerProcessInstrumenter();
+    SqsProcessRequest request =
+        SqsProcessRequest.create(
+            new ExecutionAttributes(),
+            SqsMessageImpl.wrap(Message.builder().messageId("message-id").build()));
+    Context first = instrumenter.start(Context.root(), request);
+    Context second = instrumenter.start(Context.root(), request);
+
+    instrumenter.end(first, request, null, null);
+    instrumenter.end(second, request, null, null);
+
+    testing.waitForTraces(2);
+    testing.waitAndAssertMetrics(
+        AWS_INSTRUMENTATION_NAME,
+        "messaging.client.consumed.messages",
+        metrics ->
+            metrics
+                .singleElement()
+                .satisfies(
+                    metric ->
+                        assertThat(metric.getLongSumData().getPoints())
+                            .singleElement()
+                            .satisfies(point -> assertThat(point.getValue()).isEqualTo(1))));
+    testing.waitAndAssertMetrics(
+        AWS_INSTRUMENTATION_NAME,
+        "messaging.process.duration",
+        metrics ->
+            metrics
+                .singleElement()
+                .satisfies(
+                    metric ->
+                        assertThat(metric.getHistogramData().getPoints())
+                            .singleElement()
+                            .satisfies(point -> assertThat(point.getCount()).isEqualTo(2))));
   }
 
   private static void assertProcessDurationIsolated(boolean receiveTelemetryEnabled) {

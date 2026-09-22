@@ -31,6 +31,7 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Spliterator;
 import java.util.concurrent.ConcurrentHashMap;
@@ -110,6 +111,15 @@ class SqsTracingListTest {
   @Test
   void viewSpliteratorTracesSplitCallbacks() throws Exception {
     assertSplitTraversal(true);
+  }
+
+  @Test
+  void rootAndViewListIteratorsTraceTraversal() {
+    assertListIteratorTraversal(false);
+    assertListIteratorTraversal(true);
+
+    testing.waitForTraces(4);
+    assertThat(testing.spans()).hasSize(4);
   }
 
   @Test
@@ -268,6 +278,22 @@ class SqsTracingListTest {
                               .satisfies(
                                   point -> assertThat(point.getValue()).isEqualTo(MESSAGE_COUNT))));
     }
+  }
+
+  private static void assertListIteratorTraversal(boolean useView) {
+    TracingList forwardTracingList = tracingMessages(1, new ArrayList<>());
+    List<Message> forwardMessages =
+        useView ? forwardTracingList.subList(0, forwardTracingList.size()) : forwardTracingList;
+    ListIterator<Message> forward = forwardMessages.listIterator();
+    assertThat(forward.next().messageId()).isEqualTo("message-0");
+    assertThat(forward.hasNext()).isFalse();
+
+    TracingList backwardTracingList = tracingMessages(1, new ArrayList<>());
+    List<Message> backwardMessages =
+        useView ? backwardTracingList.subList(0, backwardTracingList.size()) : backwardTracingList;
+    ListIterator<Message> backward = backwardMessages.listIterator(backwardMessages.size());
+    assertThat(backward.previous().messageId()).isEqualTo("message-0");
+    assertThat(backward.hasPrevious()).isFalse();
   }
 
   private static void assertIteratorForEachRemainingFailure(boolean useView) {

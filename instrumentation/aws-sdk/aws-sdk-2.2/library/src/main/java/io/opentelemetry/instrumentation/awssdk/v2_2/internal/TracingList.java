@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
@@ -82,6 +83,16 @@ public final class TracingList extends ArrayList<Message> {
   }
 
   @Override
+  public ListIterator<Message> listIterator() {
+    return tracingListIterator(super.listIterator());
+  }
+
+  @Override
+  public ListIterator<Message> listIterator(int index) {
+    return tracingListIterator(super.listIterator(index));
+  }
+
+  @Override
   public Spliterator<Message> spliterator() {
     return tracingSpliterator(super.spliterator());
   }
@@ -94,6 +105,13 @@ public final class TracingList extends ArrayList<Message> {
   private Iterator<Message> tracingIterator(Iterator<Message> delegateIterator) {
     if (shouldTraceTraversal()) {
       return TracingIterator.wrap(delegateIterator, this);
+    }
+    return delegateIterator;
+  }
+
+  private ListIterator<Message> tracingListIterator(ListIterator<Message> delegateIterator) {
+    if (shouldTraceTraversal()) {
+      return TracingListIterator.wrap(delegateIterator, this);
     }
     return delegateIterator;
   }
@@ -190,6 +208,16 @@ public final class TracingList extends ArrayList<Message> {
     @Override
     public Iterator<Message> iterator() {
       return tracingList.tracingIterator(delegate.iterator());
+    }
+
+    @Override
+    public ListIterator<Message> listIterator() {
+      return tracingList.tracingListIterator(delegate.listIterator());
+    }
+
+    @Override
+    public ListIterator<Message> listIterator(int index) {
+      return tracingList.tracingListIterator(delegate.listIterator(index));
     }
 
     @Override
