@@ -27,7 +27,7 @@ gradle.sharedServices.registerIfAbsent("dockerBuildService", DockerBuildService:
 val extraTag = findProperty("extraTag")
   ?: java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(java.time.LocalDateTime.now())
 
-val latestJava = "25" // renovate(java-version)
+val latestJava = "26" // renovate(java-version)
 
 // Each line under appserver describes one matrix of (version x vm x jdk), dockerfile key overrides
 // Dockerfile name, args key passes raw arguments to docker build
