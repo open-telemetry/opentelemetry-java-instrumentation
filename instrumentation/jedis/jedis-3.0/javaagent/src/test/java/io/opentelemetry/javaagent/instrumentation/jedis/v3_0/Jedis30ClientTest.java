@@ -41,7 +41,6 @@ import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIf;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -159,38 +158,6 @@ class Jedis30ClientTest {
     }
 
     assertHostAndPortTarget(endpoint);
-  }
-
-  @Test
-  @EnabledIf("supportsHostAndPortPool")
-  void pooledHostAndPortCommandUsesOriginalTarget() throws ReflectiveOperationException {
-    HostAndPort endpoint = HostAndPort.parseString("localhost:" + port);
-    Class<?> clientConfigClass = Class.forName("redis.clients.jedis.JedisClientConfig");
-    Class<?> defaultClientConfigClass =
-        Class.forName("redis.clients.jedis.DefaultJedisClientConfig");
-    Object builder = defaultClientConfigClass.getMethod("builder").invoke(null);
-    Object clientConfig = builder.getClass().getMethod("build").invoke(builder);
-    JedisPool pool =
-        JedisPool.class
-            .getConstructor(HostAndPort.class, clientConfigClass)
-            .newInstance(endpoint, clientConfig);
-    cleanup.deferCleanup(pool);
-
-    try (Jedis pooled = pool.getResource()) {
-      pooled.set("pooled-host-and-port", "value");
-    }
-
-    assertHostAndPortTarget(endpoint);
-  }
-
-  @SuppressWarnings("UnusedMethod")
-  private static boolean supportsHostAndPortPool() {
-    try {
-      Class<?> clientConfigClass = Class.forName("redis.clients.jedis.JedisClientConfig");
-      return JedisPool.class.getConstructor(HostAndPort.class, clientConfigClass) != null;
-    } catch (ClassNotFoundException | NoSuchMethodException ignored) {
-      return false;
-    }
   }
 
   private static void assertHostAndPortTarget(HostAndPort endpoint) {

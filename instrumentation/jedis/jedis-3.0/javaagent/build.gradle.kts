@@ -20,12 +20,22 @@ dependencies {
 
   implementation(project(":instrumentation:jedis:jedis-common-1.4:javaagent"))
 
-  testLibrary("redis.clients:jedis:3.6.1")
   testInstrumentation(project(":instrumentation:jedis:jedis-1.4:javaagent"))
   testInstrumentation(project(":instrumentation:jedis:jedis-2.0:javaagent"))
   testInstrumentation(project(":instrumentation:jedis:jedis-4.0:javaagent"))
 
   latestDepTestLibrary("redis.clients:jedis:3.+") // see jedis-4.0 module
+}
+
+testing {
+  suites {
+    register<JvmTestSuite>("jedis36Test") {
+      dependencies {
+        implementation("redis.clients:jedis:3.6.1")
+        implementation("org.testcontainers:testcontainers")
+      }
+    }
+  }
 }
 
 tasks {
@@ -43,6 +53,6 @@ tasks {
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites, testStableSemconv)
   }
 }
