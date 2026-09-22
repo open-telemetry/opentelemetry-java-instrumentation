@@ -50,9 +50,9 @@ class JedisSentinel40ClientTest {
 
   @BeforeAll
   static void setup() throws Exception {
-    int masterPort = PortUtils.findOpenPort();
-    replicaPort = PortUtils.findOpenPort();
-    sentinelPort = PortUtils.findOpenPort();
+    int masterPort = PortUtils.findOpenPorts(3);
+    replicaPort = masterPort + 1;
+    sentinelPort = masterPort + 2;
     String sentinelConfig =
         "port "
             + sentinelPort
