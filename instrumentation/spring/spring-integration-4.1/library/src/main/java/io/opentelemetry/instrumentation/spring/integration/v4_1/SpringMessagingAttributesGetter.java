@@ -14,7 +14,6 @@ import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 
-// this class is needed mostly for correct CONSUMER span suppression
 final class SpringMessagingAttributesGetter
     implements MessagingAttributesGetter<MessageWithChannel, Void> {
 

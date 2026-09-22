@@ -48,8 +48,8 @@ public final class SpringIntegrationTelemetry {
 
   /**
    * Returns a new {@link ChannelInterceptor} that propagates context through {@link Message}s and
-   * when no other messaging instrumentation is detected, traces {@link
-   * MessageChannel#send(Message)} calls.
+   * traces synchronous channel dispatches or, when the channel supports executor interception,
+   * individual handler invocations.
    *
    * @see org.springframework.integration.channel.ChannelInterceptorAware
    * @see org.springframework.messaging.support.InterceptableChannel
