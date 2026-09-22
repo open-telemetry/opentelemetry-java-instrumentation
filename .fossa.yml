@@ -219,6 +219,9 @@ targets:
       target: ':instrumentation:kubernetes-client-7.0:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:mcp-java-sdk-0.14:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:methods:javaagent'
     - type: gradle
       path: ./
@@ -766,9 +769,6 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:logback:logback-mdc-1.0:library'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:mcp:mcp-java-sdk-0.14:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:micrometer:micrometer-1.5:javaagent'
