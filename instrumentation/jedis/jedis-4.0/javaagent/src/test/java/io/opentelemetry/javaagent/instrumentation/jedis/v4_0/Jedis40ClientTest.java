@@ -220,6 +220,7 @@ class Jedis40ClientTest {
       testing.clearData();
       sharded.set("sharded", "value");
 
+      // Assert before close() can add the pre-5.1 QUIT trace.
       testing.waitAndAssertTraces(
           trace ->
               trace.hasSpansSatisfyingExactly(
@@ -240,8 +241,10 @@ class Jedis40ClientTest {
                               equalTo(NETWORK_PEER_PORT, port),
                               equalTo(NETWORK_PEER_ADDRESS, ip))));
     }
-    testing.waitForTraces(jedis51OrLater ? 1 : 2);
-    testing.clearData();
+    if (!jedis51OrLater) {
+      // The asserted SET trace remains captured; close() adds a second trace for QUIT.
+      testing.waitForTraces(2);
+    }
   }
 
   private static UnifiedJedis createShardedClient(
