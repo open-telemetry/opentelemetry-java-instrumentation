@@ -5,8 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 import com.lambdaworks.redis.protocol.RedisCommand;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
@@ -49,6 +52,10 @@ class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisCommand
   @Nullable
   @Override
   public String getServerAddress(RedisCommand<?, ?, ?> request) {
+    if (emitStableDatabaseSemconv()) {
+      RedisServerTarget serverTarget = LettuceServerTargets.get(request);
+      return serverTarget != null ? serverTarget.getAddress() : null;
+    }
     InetSocketAddress serverAddress = LettuceSingletons.COMMAND_ADDRESS.get(request);
     return serverAddress != null ? serverAddress.getHostString() : null;
   }
@@ -56,7 +63,27 @@ class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisCommand
   @Nullable
   @Override
   public Integer getServerPort(RedisCommand<?, ?, ?> request) {
+    if (emitStableDatabaseSemconv()) {
+      RedisServerTarget serverTarget = LettuceServerTargets.get(request);
+      return serverTarget != null ? serverTarget.getPort() : null;
+    }
     InetSocketAddress serverAddress = LettuceSingletons.COMMAND_ADDRESS.get(request);
     return serverAddress != null ? serverAddress.getPort() : null;
+  }
+
+  @Nullable
+  @Override
+  public String getNetworkPeerAddress(RedisCommand<?, ?, ?> request, @Nullable Void unused) {
+    return emitStableDatabaseSemconv()
+        ? LettuceCommandPeer.getNetworkPeerAddress(LettuceSingletons.commandPeerAddress(request))
+        : null;
+  }
+
+  @Nullable
+  @Override
+  public Integer getNetworkPeerPort(RedisCommand<?, ?, ?> request, @Nullable Void unused) {
+    return emitStableDatabaseSemconv()
+        ? LettuceCommandPeer.getNetworkPeerPort(LettuceSingletons.commandPeerAddress(request))
+        : null;
   }
 }

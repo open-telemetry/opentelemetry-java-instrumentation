@@ -7,7 +7,7 @@ pluginManagement {
     id("org.jetbrains.kotlin.jvm") version "2.4.10"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.9.1"
-    id("org.graalvm.buildtools.native") version "1.1.12"
+    id("org.graalvm.buildtools.native") version "1.1.14"
     id("com.google.osdetector") version "1.7.3"
     id("com.google.protobuf") version "0.10.0"
   }
@@ -477,6 +477,7 @@ include(":instrumentation:ktor:ktor-3.0:testing")
 include(":instrumentation:kubernetes-client-7.0:javaagent")
 include(":instrumentation:kubernetes-client-7.0:javaagent-unit-tests")
 include(":instrumentation:lettuce:lettuce-4.0:javaagent")
+include(":instrumentation:lettuce:lettuce-4.0:javaagent-unit-tests")
 include(":instrumentation:lettuce:lettuce-5.0:javaagent")
 include(":instrumentation:lettuce:lettuce-5.1:javaagent")
 include(":instrumentation:lettuce:lettuce-5.1:library")
@@ -619,6 +620,7 @@ include(":instrumentation:reactor:reactor-netty:reactor-netty-0.9:javaagent")
 include(":instrumentation:reactor:reactor-netty:reactor-netty-1.0:javaagent")
 include(":instrumentation:reactor:reactor-netty:reactor-netty-1.0:javaagent-unit-tests")
 include(":instrumentation:rediscala-1.8:javaagent")
+include(":instrumentation:rediscala-1.8:javaagent-unit-tests")
 include(":instrumentation:redisson:redisson-3.0:javaagent")
 include(":instrumentation:redisson:redisson-3.0:javaagent-unit-tests")
 include(":instrumentation:redisson:redisson-3.17:javaagent")
