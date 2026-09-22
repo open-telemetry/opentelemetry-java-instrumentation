@@ -8,10 +8,8 @@ observable traversal. For that work, one owner controls the process span, parent
 error reporting, and completion. Receive and send telemetry, propagation, and metrics have their
 own boundaries and are not assigned by this contract.
 
-Cross-layer consumed-message deduplication is outside this contract. Until the focused
-[follow-up issue](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues?q=is%3Aissue%20%22Count%20consumed%20messages%20once%20across%20overlapping%20messaging%20instrumentations%22)
-is created, this link intentionally points to a title search. Replace the search URL with the issue
-URL after creation.
+Cross-layer consumed-message deduplication is outside this contract. See
+[follow-up issue #20214](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20214).
 
 ## Roles and names
 
