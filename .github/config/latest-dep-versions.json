@@ -550,6 +550,7 @@
     "org.springframework.data:spring-data-jpa#+": "4.1.1",
     "org.springframework.data:spring-data-jpa#2.+": "2.7.18",
     "org.springframework.data:spring-data-r2dbc#+": "4.1.1",
+    "org.springframework.integration:spring-integration-amqp#+": "7.1.1",
     "org.springframework.integration:spring-integration-core#+": "7.1.1",
     "org.springframework.integration:spring-integration-core#5.+": "5.5.20",
     "org.springframework.kafka:spring-kafka#+": "4.1.1",
