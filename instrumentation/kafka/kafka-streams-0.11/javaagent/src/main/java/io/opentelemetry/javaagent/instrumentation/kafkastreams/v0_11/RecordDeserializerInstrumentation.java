@@ -62,8 +62,7 @@ class RecordDeserializerInstrumentation implements TypeInstrumentation {
         }
       }
 
-      // copy the receive CONSUMER span association
-      KafkaConsumerContextUtil.set(result, KafkaConsumerContextUtil.get(incoming));
+      KafkaConsumerContextUtil.copy(incoming, result);
       return result;
     }
   }

@@ -33,7 +33,7 @@ final class KafkaBatchProcessSpanLinksExtractor implements SpanLinksExtractor<Ka
       SpanLinksBuilder spanLinks, Context parentContext, KafkaReceiveRequest request) {
 
     if (!emitStableMessagingSemconv()) {
-      for (ConsumerRecord<?, ?> record : request.getRecords()) {
+      for (ConsumerRecord<?, ?> record : request.getRecordList()) {
         singleRecordLinkExtractor.extract(
             spanLinks,
             parentContext,
@@ -43,7 +43,7 @@ final class KafkaBatchProcessSpanLinksExtractor implements SpanLinksExtractor<Ka
     }
 
     KafkaBatchRecordAttributes attributes = request.getBatchRecordAttributes();
-    for (ConsumerRecord<?, ?> record : request.getRecords()) {
+    for (ConsumerRecord<?, ?> record : request.getRecordList()) {
       KafkaProcessRequest processRequest =
           KafkaProcessRequest.create(record, request.getConsumerGroup(), request.getClientId());
       Context extracted = propagator.extract(Context.root(), processRequest, recordGetter);

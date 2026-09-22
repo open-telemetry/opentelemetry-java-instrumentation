@@ -44,6 +44,7 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
   public static class GetRecordInterceptorAdvice {
 
     @AssignReturned.ToReturned
+    @AssignReturned.ToFields(@AssignReturned.ToFields.ToField("recordInterceptor"))
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static <K, V> RecordInterceptor<K, V> onExit(
         @Advice.Return @Nullable RecordInterceptor<K, V> originalInterceptor) {
@@ -53,8 +54,7 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
           || !interceptor
               .getClass()
               .getName()
-              .equals(
-                  "io.opentelemetry.instrumentation.spring.kafka.v2_7.InstrumentedRecordInterceptor")) {
+              .endsWith(".instrumentation.spring.kafka.v2_7.InstrumentedRecordInterceptor")) {
         interceptor = telemetry().createRecordInterceptor(interceptor);
       }
       return interceptor;
