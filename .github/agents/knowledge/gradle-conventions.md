@@ -120,6 +120,46 @@ or checks the `testLatestDeps` system property directly.
 `-PtestLatestDeps=true` is set; the system property is only for runtime test code that branches on
 that mode.
 
+### Multiple library versions in javaagent integration tests
+
+`library("group:artifact:version")` contributes the baseline library to `compileOnly` and the
+default test suite. `testLibrary("group:artifact:version")` also contributes to
+`testImplementation`; it is appropriate when the default tests should compile or run against a
+different version, or need a test-only artifact.
+
+Do not use `library(...)` plus `testLibrary(...)` for the same module coordinate when the goal is
+to test two runtime versions. Gradle resolves one dependency graph for the default test suite and
+normally selects the higher requested version, so the default javaagent integration tests no
+longer exercise the baseline runtime.
+
+When both versions need real javaagent integration coverage:
+
+- Keep the baseline dependency in `library(...)` and leave baseline-compatible tests in `src/test`.
+- Move only tests that require the newer API or runtime behavior into a version-specific source
+  set, such as `src/library36Test`.
+- Register a `JvmTestSuite` for that source set and declare the newer library inside the suite.
+- Wire `testing.suites` into `check` so the additional suite cannot be skipped.
+
+```kotlin
+testing {
+  suites {
+    register<JvmTestSuite>("library36Test") {
+      dependencies {
+        implementation("group:artifact:3.6.1")
+      }
+    }
+  }
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
+  }
+}
+```
+
+Keep `testLibrary(...)` for the single-runtime or test-only-artifact cases it is designed for.
+
 ## `testInstrumentation` Dependencies
 
 The `testInstrumentation` configuration declares which other javaagent instrumentation modules
