@@ -36,7 +36,6 @@ public class JedisClusterInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(
-        new JedisClusterInstrumentation(), new JedisClusterCommandInstrumentation());
+    return asList(new JedisClusterInstrumentation(), new JedisClusterCommandInstrumentation());
   }
 }
