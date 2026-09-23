@@ -15,11 +15,12 @@ configurations:
       manager names are not globally unique in federated architectures.
     type: boolean
     default: false
-  - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+  - name: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
     declarative_name: java.common.messaging.receive_telemetry/development.enabled
     description: >
       Enables the creation of consumer spans on messaging receive operations. These spans will
       measure the time between receiving a message and the consumer processing that message.
     type: boolean
     default: false
+  - ref: messaging.deprecated-receive-telemetry.enabled
   - ref: messaging.capture-headers
