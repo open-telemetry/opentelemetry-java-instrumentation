@@ -34,6 +34,20 @@ Transfer it when the library copies or wraps a message. If the framework is abse
 or cannot handle the callback, leave client processing available. Do not disable all client
 processing just because one framework delivery is in progress.
 
+## Recognize the roles in code
+
+Use `select` when choosing who owns Process telemetry at a particular handoff.
+`selectFrameworkProcessing(...)` and `selectListenerProcessing(...)` record that choice;
+`isListenerProcessingSelected(...)` checks it. A `*ProcessingSelection` helper or
+`PROCESSING_SELECTION` field makes the decision recognizable across instrumentations.
+The code path should show the same sequence: choose at the handoff, skip only the other
+layer's Process span for that work, and finish the chosen layer's invocation.
+
+Name state for one attempt `ProcessingInvocation` or `MessageInvocation`: it pairs the request,
+context, scope, and completion for that work. Use `current*` for temporary thread state and
+`*Enabled` for configuration or eligibility, not ownership. These names describe roles, not a
+shared API; ordinary paired advice need not add an invocation object.
+
 ## Finish the work you started
 
 Capture the parent context at the handoff, then make the Process context current while
