@@ -43,11 +43,10 @@ class VertxKafkaOwnershipTest {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vertx-kafka-client-3.6";
   private static final TopicPartition PARTITION = new TopicPartition("orders", 0);
-  private static final VirtualField<ConsumerRecords<?, ?>, KafkaConsumerBatchState>
-      PROCESSING_SELECTION =
-          VirtualField.find(ConsumerRecords.class, KafkaConsumerBatchState.class);
+  private static final VirtualField<ConsumerRecords<?, ?>, KafkaConsumerBatchState> BATCH_STATE =
+      VirtualField.find(ConsumerRecords.class, KafkaConsumerBatchState.class);
   private static final VirtualField<ConsumerRecord<?, ?>, BooleanSupplier>
-      RAW_PROCESSING_SELECTION = VirtualField.find(ConsumerRecord.class, BooleanSupplier.class);
+      RAW_PROCESSING_ELIGIBILITY = VirtualField.find(ConsumerRecord.class, BooleanSupplier.class);
 
   @RegisterExtension
   static final LibraryInstrumentationExtension testing = LibraryInstrumentationExtension.create();
@@ -164,29 +163,29 @@ class VertxKafkaOwnershipTest {
   }
 
   @Test
-  void repeatedSelectionKeepsFrameworkOwnership() {
+  void repeatedHandoffKeepsAdapterOwnership() {
     ConsumerRecords<String, String> records = records(record(0, "value"));
     prepareContexts(records);
-    KafkaConsumerBatchState batchSelection = selectRawProcessing(records);
+    KafkaConsumerBatchState batchState = prepareRawProcessingEligibility(records);
     ConsumerRecord<?, ?> record = recordsIn(records).get(0);
-    BooleanSupplier recordSelection = rawProcessingSelection(record);
+    BooleanSupplier recordEligibility = rawProcessingEligibility(record);
 
     KafkaReadStreamImplInstrumentation.DispatchAdvice.onEnter(new Object[] {records});
     KafkaReadStreamImplInstrumentation.DispatchAdvice.onEnter(new Object[] {records});
 
-    assertThat(batchSelection.getAsBoolean()).isFalse();
-    assertThat(recordSelection.getAsBoolean()).isFalse();
+    assertThat(batchState.getAsBoolean()).isFalse();
+    assertThat(recordEligibility.getAsBoolean()).isFalse();
   }
 
   @Test
-  void absentFrameworkSelectionLeavesRawProcessingEnabled() {
+  void absentAdapterHandoffLeavesRawProcessingEnabled() {
     ConsumerRecords<String, String> records = records(record(0, "value"));
     prepareContexts(records);
-    KafkaConsumerBatchState batchSelection = selectRawProcessing(records);
-    BooleanSupplier recordSelection = rawProcessingSelection(recordsIn(records).get(0));
+    KafkaConsumerBatchState batchState = prepareRawProcessingEligibility(records);
+    BooleanSupplier recordEligibility = rawProcessingEligibility(recordsIn(records).get(0));
 
-    assertThat(batchSelection.getAsBoolean()).isTrue();
-    assertThat(recordSelection.getAsBoolean()).isTrue();
+    assertThat(batchState.getAsBoolean()).isTrue();
+    assertThat(recordEligibility.getAsBoolean()).isTrue();
   }
 
   @Test
@@ -210,17 +209,18 @@ class VertxKafkaOwnershipTest {
     assertThat(testing.spans()).isEmpty();
   }
 
-  private static KafkaConsumerBatchState selectRawProcessing(ConsumerRecords<?, ?> records) {
-    KafkaConsumerBatchState batchSelection = new KafkaConsumerBatchState(true);
-    PROCESSING_SELECTION.set(records, batchSelection);
+  private static KafkaConsumerBatchState prepareRawProcessingEligibility(
+      ConsumerRecords<?, ?> records) {
+    KafkaConsumerBatchState batchState = new KafkaConsumerBatchState(true);
+    BATCH_STATE.set(records, batchState);
     for (ConsumerRecord<?, ?> record : recordsIn(records)) {
-      RAW_PROCESSING_SELECTION.set(record, new KafkaConsumerBatchState(true));
+      RAW_PROCESSING_ELIGIBILITY.set(record, new KafkaConsumerBatchState(true));
     }
-    return batchSelection;
+    return batchState;
   }
 
-  private static BooleanSupplier rawProcessingSelection(ConsumerRecord<?, ?> record) {
-    return RAW_PROCESSING_SELECTION.get(record);
+  private static BooleanSupplier rawProcessingEligibility(ConsumerRecord<?, ?> record) {
+    return RAW_PROCESSING_ELIGIBILITY.get(record);
   }
 
   private static void prepareContexts(
