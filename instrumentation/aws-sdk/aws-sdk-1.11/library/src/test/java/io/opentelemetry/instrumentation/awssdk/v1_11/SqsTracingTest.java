@@ -62,7 +62,7 @@ class SqsTracingTest extends AbstractSqsTracingTest {
   }
 
   @Test
-  void testFrameworkSelectionDisablesRawProcessSpansForResponse() {
+  void testProcessingOwnershipDisablesRawProcessSpansForResponse() {
     assumeTrue(emitStableMessagingSemconv());
     AmazonSQSAsync client = configureClient(newClientBuilder()).build();
     cleanup.deferCleanup(client::shutdown);
@@ -73,7 +73,7 @@ class SqsTracingTest extends AbstractSqsTracingTest {
     testing().clearData();
 
     ReceiveMessageResult response = client.receiveMessage(queueUrl);
-    SqsProcessTracing.selectFrameworkProcessing(response.getMessages());
+    SqsProcessTracing.markProcessingOwnedOutsideSqsSdk(response.getMessages());
     testing()
         .runWithSpan(
             "framework",
