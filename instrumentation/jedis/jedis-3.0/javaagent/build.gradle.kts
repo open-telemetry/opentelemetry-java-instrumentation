@@ -27,6 +27,17 @@ dependencies {
   latestDepTestLibrary("redis.clients:jedis:3.+") // see jedis-4.0 module
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("jedis36Test") {
+      dependencies {
+        implementation("redis.clients:jedis:3.6.1")
+        implementation("org.testcontainers:testcontainers")
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
@@ -42,6 +53,6 @@ tasks {
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites, testStableSemconv)
   }
 }

@@ -42,10 +42,10 @@ testing {
       targets {
         all {
           testTask.configure {
-            jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+            jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
             systemProperty(
               "metadataConfig",
-              "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true",
+              "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
             )
           }
         }
@@ -91,7 +91,7 @@ tasks {
     filter {
       excludeTestsMatching("Jms1SuppressReceiveSpansTest")
     }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
@@ -99,7 +99,7 @@ tasks {
   val testJms2MessagingPreview = register<Test>("testJms2MessagingPreview") {
     testClassesDirs = sourceSets["jms2Test"].output.classesDirs
     classpath = sourceSets["jms2Test"].runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
@@ -108,7 +108,7 @@ tasks {
     testClassesDirs = sourceSets["jms2Test"].output.classesDirs
     classpath = sourceSets["jms2Test"].runtimeClasspath
     isEnabled = project.tasks.named("jms2Test").get().enabled
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
   }
@@ -121,7 +121,7 @@ tasks {
       includeTestsMatching("Jms1InstrumentationTest")
     }
     include("**/Jms1InstrumentationTest.*")
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
   }
@@ -131,10 +131,10 @@ tasks {
     filter {
       excludeTestsMatching("Jms1SuppressReceiveSpansTest")
     }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true",
+      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
     )
   }
 
