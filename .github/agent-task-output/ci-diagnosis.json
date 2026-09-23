@@ -1,0 +1,67 @@
+{
+  "diagnoses": [
+    {
+      "check_key": "check:Build pull request/build / common / spotless",
+      "diagnosis": "pr_caused",
+      "reason": "The complete pinned job log identifies formatting violations in two Redisson instrumentation files changed by this pull request.",
+      "evidence": [
+        "Pinned job 106088992263 returned all 3174 log lines and ended with :instrumentation:redisson:redisson-3.0:javaagent:spotlessJavaCheck FAILED.",
+        "The log names CommandBatchServiceBefore372Instrumentation.java and CommandBatchServiceInstrumentation.java under the Redisson 3.0 javaagent module and shows the required formatting diff."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / common / build",
+      "diagnosis": "unknown",
+      "reason": "The complete exact pinned log could not be retrieved, so the available tail is insufficient under the supplied evidence policy to diagnose or repair this failure.",
+      "evidence": [
+        "Pinned job 106088992264 reports 14751 original lines, while the available retrieval returned only the final 5000 lines.",
+        "The deterministic fix_ci.py download attempt could not access PR #19204 and produced no retained CI bundle."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / common / test3 (8, hotspot, indy false)",
+      "diagnosis": "unknown",
+      "reason": "The complete exact pinned log could not be retrieved, so the available tail is insufficient under the supplied evidence policy to diagnose or repair this failure.",
+      "evidence": [
+        "Pinned job 106088992897 reports 16427 original lines, while the available retrieval returned only the final 5000 lines.",
+        "The deterministic fix_ci.py download attempt could not access PR #19204 and produced no retained CI bundle."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / common / test3 (8, hotspot, indy true)",
+      "diagnosis": "unknown",
+      "reason": "The complete exact pinned log could not be retrieved, so the available tail is insufficient under the supplied evidence policy to diagnose or repair this failure.",
+      "evidence": [
+        "Pinned job 106088992766 reports 17313 original lines, while the available retrieval returned only the final 5000 lines.",
+        "The deterministic fix_ci.py download attempt could not access PR #19204 and produced no retained CI bundle."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / common / test3 (11, hotspot, indy false)",
+      "diagnosis": "unknown",
+      "reason": "The complete exact pinned log could not be retrieved, so the available tail is insufficient under the supplied evidence policy to diagnose or repair this failure.",
+      "evidence": [
+        "Pinned job 106088992901 reports 16563 original lines, while the available retrieval returned only the final 5000 lines.",
+        "The deterministic fix_ci.py download attempt could not access PR #19204 and produced no retained CI bundle."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / common / test3 (11, hotspot, indy true)",
+      "diagnosis": "unknown",
+      "reason": "The complete exact pinned log could not be retrieved, so the available tail is insufficient under the supplied evidence policy to diagnose or repair this failure.",
+      "evidence": [
+        "Pinned job 106088992823 reports 16346 original lines, while the available retrieval returned only the final 5000 lines.",
+        "The deterministic fix_ci.py download attempt could not access PR #19204 and produced no retained CI bundle."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / required-status-check",
+      "diagnosis": "unknown",
+      "reason": "The complete aggregate job log only records an intentional exit 1 and contains no diagnostic tying the aggregate failure to a particular underlying check.",
+      "evidence": [
+        "Pinned job 106091151245 runs only `exit 1` and reports `Process completed with exit code 1`.",
+        "The aggregate log does not identify which dependency caused required-status-check to fail."
+      ]
+    }
+  ]
+}
