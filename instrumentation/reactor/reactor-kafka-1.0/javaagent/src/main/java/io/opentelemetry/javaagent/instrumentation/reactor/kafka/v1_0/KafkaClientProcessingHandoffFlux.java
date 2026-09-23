@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactor.kafka.v1_0;
 
-import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaProcessingSelectionUtil.selectFrameworkProcessing;
+import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaProcessingOwnershipUtil.markProcessingOwnedOutsideKafkaClient;
 
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.reactivestreams.Subscription;
@@ -16,25 +16,25 @@ import reactor.core.publisher.FluxOperator;
 import reactor.core.publisher.Operators;
 import reactor.util.context.Context;
 
-public class ProcessingSelectingKafkaFlux
+public class KafkaClientProcessingHandoffFlux
     extends FluxOperator<ConsumerRecords<?, ?>, ConsumerRecords<?, ?>> {
 
-  public ProcessingSelectingKafkaFlux(Flux<? extends ConsumerRecords<?, ?>> source) {
+  public KafkaClientProcessingHandoffFlux(Flux<? extends ConsumerRecords<?, ?>> source) {
     super(source);
   }
 
   @Override
   public void subscribe(CoreSubscriber<? super ConsumerRecords<?, ?>> actual) {
-    source.subscribe(new ProcessingSelectingSubscriber(actual));
+    source.subscribe(new KafkaClientProcessingHandoffSubscriber(actual));
   }
 
-  static final class ProcessingSelectingSubscriber
+  static final class KafkaClientProcessingHandoffSubscriber
       implements CoreSubscriber<ConsumerRecords<?, ?>>, Subscription, Scannable {
 
     private final CoreSubscriber<? super ConsumerRecords<?, ?>> actual;
     private Subscription subscription;
 
-    ProcessingSelectingSubscriber(CoreSubscriber<? super ConsumerRecords<?, ?>> actual) {
+    KafkaClientProcessingHandoffSubscriber(CoreSubscriber<? super ConsumerRecords<?, ?>> actual) {
       this.actual = actual;
     }
 
@@ -53,7 +53,7 @@ public class ProcessingSelectingKafkaFlux
 
     @Override
     public void onNext(ConsumerRecords<?, ?> records) {
-      selectFrameworkProcessing(records);
+      markProcessingOwnedOutsideKafkaClient(records);
       actual.onNext(records);
     }
 

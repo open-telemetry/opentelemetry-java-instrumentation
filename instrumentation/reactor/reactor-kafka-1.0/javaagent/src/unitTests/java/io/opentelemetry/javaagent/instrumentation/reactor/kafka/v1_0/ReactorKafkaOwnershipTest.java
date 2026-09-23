@@ -46,29 +46,28 @@ class ReactorKafkaOwnershipTest {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.reactor-kafka-1.0";
   private static final TopicPartition PARTITION = new TopicPartition("orders", 0);
-  private static final VirtualField<ConsumerRecords<?, ?>, KafkaConsumerBatchState>
-      PROCESSING_SELECTION =
-          VirtualField.find(ConsumerRecords.class, KafkaConsumerBatchState.class);
+  private static final VirtualField<ConsumerRecords<?, ?>, KafkaConsumerBatchState> BATCH_STATE =
+      VirtualField.find(ConsumerRecords.class, KafkaConsumerBatchState.class);
   private static final VirtualField<ConsumerRecord<?, ?>, BooleanSupplier>
-      RAW_PROCESSING_SELECTION = VirtualField.find(ConsumerRecord.class, BooleanSupplier.class);
+      RAW_PROCESSING_ELIGIBILITY = VirtualField.find(ConsumerRecord.class, BooleanSupplier.class);
 
   @RegisterExtension
   static final LibraryInstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Test
-  void selectsProcessingBeforeAsyncRecordHandoff() {
+  void marksOwnershipBeforeAsyncRecordHandoff() {
     SpanContext firstProducer =
         remoteSpanContext("00000000000000000000000000000001", "0000000000000001");
     SpanContext secondProducer =
         remoteSpanContext("00000000000000000000000000000002", "0000000000000002");
     ConsumerRecords<String, String> records = records(record(0, "first"), record(1, "second"));
     prepareContexts(records, firstProducer, secondProducer);
-    KafkaConsumerBatchState batchSelection = selectRawProcessing(records);
+    KafkaConsumerBatchState batchState = prepareRawProcessingEligibility(records);
 
     Scheduler scheduler = Schedulers.newSingle("reactor-kafka-ownership");
     try {
       List<SpanContext> observedContexts = new ArrayList<>();
-      new ProcessingSelectingKafkaFlux(Flux.just(records))
+      new KafkaClientProcessingHandoffFlux(Flux.just(records))
           .publishOn(scheduler)
           .concatMap(
               batch ->
@@ -76,8 +75,8 @@ class ReactorKafkaOwnershipTest {
                       Flux.fromIterable(recordsIn((ConsumerRecords<?, ?>) batch))))
           .doOnNext(
               record -> {
-                assertThat(batchSelection.getAsBoolean()).isFalse();
-                assertThat(rawProcessingSelection(record).getAsBoolean()).isFalse();
+                assertThat(batchState.getAsBoolean()).isFalse();
+                assertThat(rawProcessingEligibility(record).getAsBoolean()).isFalse();
                 assertThat(Span.current().getSpanContext().isValid()).isTrue();
                 observedContexts.add(Span.current().getSpanContext());
               })
@@ -104,14 +103,14 @@ class ReactorKafkaOwnershipTest {
   }
 
   @Test
-  void cancellationBeforeOnNextDoesNotSelectProcessing() {
+  void cancellationBeforeOnNextDoesNotMarkOwnership() {
     ConsumerRecords<String, String> records = records(record(0, "value"));
     prepareContexts(
         records, remoteSpanContext("00000000000000000000000000000003", "0000000000000003"));
-    KafkaConsumerBatchState batchSelection = selectRawProcessing(records);
-    BooleanSupplier recordSelection = rawProcessingSelection(recordsIn(records).get(0));
+    KafkaConsumerBatchState batchState = prepareRawProcessingEligibility(records);
+    BooleanSupplier recordEligibility = rawProcessingEligibility(recordsIn(records).get(0));
 
-    new ProcessingSelectingKafkaFlux(Flux.just(records))
+    new KafkaClientProcessingHandoffFlux(Flux.just(records))
         .subscribe(
             new BaseSubscriber<ConsumerRecords<?, ?>>() {
               @Override
@@ -120,8 +119,8 @@ class ReactorKafkaOwnershipTest {
               }
             });
 
-    assertThat(batchSelection.getAsBoolean()).isTrue();
-    assertThat(recordSelection.getAsBoolean()).isTrue();
+    assertThat(batchState.getAsBoolean()).isTrue();
+    assertThat(recordEligibility.getAsBoolean()).isTrue();
     assertThat(testing.spans()).isEmpty();
   }
 
@@ -215,17 +214,18 @@ class ReactorKafkaOwnershipTest {
     assertThat(Baggage.current().getEntryValue("tenant")).isNull();
   }
 
-  private static KafkaConsumerBatchState selectRawProcessing(ConsumerRecords<?, ?> records) {
-    KafkaConsumerBatchState batchSelection = new KafkaConsumerBatchState(true);
-    PROCESSING_SELECTION.set(records, batchSelection);
+  private static KafkaConsumerBatchState prepareRawProcessingEligibility(
+      ConsumerRecords<?, ?> records) {
+    KafkaConsumerBatchState batchState = new KafkaConsumerBatchState(true);
+    BATCH_STATE.set(records, batchState);
     for (ConsumerRecord<?, ?> record : recordsIn(records)) {
-      RAW_PROCESSING_SELECTION.set(record, new KafkaConsumerBatchState(true));
+      RAW_PROCESSING_ELIGIBILITY.set(record, new KafkaConsumerBatchState(true));
     }
-    return batchSelection;
+    return batchState;
   }
 
-  private static BooleanSupplier rawProcessingSelection(ConsumerRecord<?, ?> record) {
-    return RAW_PROCESSING_SELECTION.get(record);
+  private static BooleanSupplier rawProcessingEligibility(ConsumerRecord<?, ?> record) {
+    return RAW_PROCESSING_ELIGIBILITY.get(record);
   }
 
   private static void prepareContexts(

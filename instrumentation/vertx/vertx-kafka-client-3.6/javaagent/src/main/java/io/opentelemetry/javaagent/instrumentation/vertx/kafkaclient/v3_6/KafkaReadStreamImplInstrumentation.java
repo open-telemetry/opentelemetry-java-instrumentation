@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.kafkaclient.v3_6;
 
-import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaProcessingSelectionUtil.selectFrameworkProcessing;
+import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaProcessingOwnershipUtil.markProcessingOwnedOutsideKafkaClient;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.isSynthetic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -95,7 +95,7 @@ class KafkaReadStreamImplInstrumentation implements TypeInstrumentation {
     public static void onEnter(@Advice.AllArguments Object[] arguments) {
       for (Object argument : arguments) {
         if (argument instanceof ConsumerRecords) {
-          selectFrameworkProcessing((ConsumerRecords<?, ?>) argument);
+          markProcessingOwnedOutsideKafkaClient((ConsumerRecords<?, ?>) argument);
           return;
         }
       }
