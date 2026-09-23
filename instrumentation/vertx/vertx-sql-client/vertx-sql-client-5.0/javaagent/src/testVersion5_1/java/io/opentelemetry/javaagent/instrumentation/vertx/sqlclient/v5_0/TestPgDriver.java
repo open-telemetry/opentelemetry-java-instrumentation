@@ -5,22 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import io.vertx.core.Completable;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.internal.CloseFuture;
 import io.vertx.core.internal.VertxInternal;
 import io.vertx.core.net.NetClientOptions;
 import io.vertx.pgclient.PgConnectOptions;
 import io.vertx.pgclient.spi.PgDriver;
-import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.impl.pool.PoolImpl;
+import io.vertx.sqlclient.internal.PoolInternal;
 import io.vertx.sqlclient.spi.connection.Connection;
 import io.vertx.sqlclient.spi.connection.ConnectionFactory;
 import io.vertx.sqlclient.spi.protocol.CommandBase;
@@ -34,7 +31,7 @@ final class TestPgDriver extends PgDriver {
   private final Runnable beforeSchedule;
   private final Consumer<Throwable> afterCompletion;
   private PoolImpl pool;
-  private CloseFuture closeFuture;
+  private boolean ignoreCloseCompletion;
 
   static TestPgDriver create(Function<PgConnectOptions, Future<?>> connectionProvider) {
     return create(connectionProvider, () -> {}, ignored -> {});
@@ -64,13 +61,12 @@ final class TestPgDriver extends PgDriver {
   }
 
   @Override
-  protected Pool newPool(
+  protected PoolInternal newPool(
       VertxInternal vertx,
       Handler<SqlConnection> connectHandler,
       Supplier<Future<PgConnectOptions>> databases,
       PoolOptions poolOptions,
-      NetClientOptions transportOptions,
-      CloseFuture closeFuture) {
+      NetClientOptions transportOptions) {
     beforePoolConstruction.run();
     ConnectionFactory<PgConnectOptions> factory = createConnectionFactory(vertx, transportOptions);
     PoolImpl pool =
@@ -84,8 +80,7 @@ final class TestPgDriver extends PgDriver {
             factory,
             databases,
             connectHandler,
-            (context, ignored, connection) -> wrapConnection(context, factory, connection),
-            closeFuture) {
+            (context, ignored, connection) -> wrapConnection(context, factory, connection)) {
           @Override
           public <R> void schedule(CommandBase<R> command, Completable<R> handler) {
             beforeSchedule.run();
@@ -99,19 +94,22 @@ final class TestPgDriver extends PgDriver {
                   }
                 });
           }
+
+          @Override
+          protected Future<Void> closeImpl() {
+            Future<Void> close = super.closeImpl();
+            return ignoreCloseCompletion ? Future.succeededFuture() : close;
+          }
         };
     pool.init();
-    closeFuture.add(factory);
     this.pool = pool;
-    this.closeFuture = closeFuture;
     return pool;
   }
 
   Future<Void> closeAfterSupplierThrow() {
-    assertThat(closeFuture.remove(pool)).isTrue();
     // A synchronous supplier throw leaves a core pool slot whose close future cannot complete.
-    pool.close((ignored, failure) -> {});
-    return closeFuture.close();
+    ignoreCloseCompletion = true;
+    return pool.close();
   }
 
   @Override
@@ -124,8 +122,8 @@ final class TestPgDriver extends PgDriver {
       }
 
       @Override
-      public void close(Completable<Void> completion) {
-        completion.succeed();
+      public Future<Void> close() {
+        return Future.succeededFuture();
       }
     };
   }
