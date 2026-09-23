@@ -11,6 +11,10 @@ for file in $(find instrumentation -name "*Module.java"); do
   fi
 
   module_name=$(echo "$file" | sed 's#.*/\([^/]*\)/javaagent/src/.*#\1#')
+  if [[ "$file" == *"/vertx-redis-client-4.0/javaagent/src/"*"/v4_4_5/"* ]]; then
+    # 4.4.5 variant is hosted in the 4.0 gradle module
+    module_name="vertx-redis-client-4.4.5"
+  fi
   simple_module_name=$(echo "$module_name" | sed 's/-[0-9.]*$//')
 
   if [[ "$simple_module_name" == *jaxrs* ]]; then
