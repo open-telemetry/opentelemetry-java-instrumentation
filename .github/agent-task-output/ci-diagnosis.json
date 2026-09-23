@@ -1,0 +1,74 @@
+{
+  "diagnoses": [
+    {
+      "check_key": "check:Build pull request/build / common / spotless",
+      "diagnosis": "unknown",
+      "reason": "The complete exact job log required for diagnosis could not be retrieved, so no repair can be made safely.",
+      "evidence": [
+        "The controller records job 106088992263 from run 35514864695 attempt 1 as 450654 UTF-8 bytes with SHA-256 2bf4c5554cd9aad52ceb7721bcc5f3e091fd64754e607eef793ba907d96e1f4a and explicitly requires full-log retrieval.",
+        "The deterministic command `python .github/scripts/pr-triage/fix_ci.py 19204 --download-only` failed before downloading logs because GitHub CLI authentication was unavailable.",
+        "GitHub MCP returned only 327436 bytes for job 106088992263; its SHA-256 was a68da0d3541997b895c855c0df727acc2825109a1e558ca9f9e7093a29d31ac6, which does not match the recorded exact-log hash."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / common / build",
+      "diagnosis": "unknown",
+      "reason": "The complete exact job log required for diagnosis could not be retrieved, so no repair can be made safely.",
+      "evidence": [
+        "The controller records job 106088992264 from run 35514864695 attempt 1 as 2489819 UTF-8 bytes with SHA-256 9e155cbdc5f466909568e98a6fb8f36415a2be2413a0f69eb123b7af38faf5e5 and explicitly requires full-log retrieval.",
+        "The deterministic CI-bundle download failed before retrieving logs because GitHub CLI authentication was unavailable.",
+        "GitHub MCP returned only 1087825 bytes for job 106088992264; its SHA-256 was 724d777e4be60946c6353a1338a205c9daa8934c8161ad0310428db518be5c84, which does not match the recorded exact-log hash."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / common / test3 (8, hotspot, indy false)",
+      "diagnosis": "unknown",
+      "reason": "The complete exact job log required for diagnosis could not be retrieved, so no repair can be made safely.",
+      "evidence": [
+        "The controller records job 106088992897 from run 35514864695 attempt 1 as 3101140 UTF-8 bytes with SHA-256 08f12d3e045dbbf3d4ceea8e1af878f65fd5cd595e81951f37bc44a2e6649c81 and explicitly requires full-log retrieval.",
+        "The deterministic CI-bundle download failed before retrieving logs because GitHub CLI authentication was unavailable.",
+        "GitHub MCP returned only 873525 bytes for job 106088992897; its SHA-256 was ecfd8bd3d4bd3402bf3977a9e87629078ac47dcb979e9a65a1cc093520bc450b, which does not match the recorded exact-log hash."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / common / test3 (8, hotspot, indy true)",
+      "diagnosis": "unknown",
+      "reason": "The complete exact job log required for diagnosis could not be retrieved, so no repair can be made safely.",
+      "evidence": [
+        "The controller records job 106088992766 from run 35514864695 attempt 1 as 3225327 UTF-8 bytes with SHA-256 4844f4528b9bb795c6cb4b9cf244bdbe0849106931fb3e9b04e0059ff0296eb6 and explicitly requires full-log retrieval.",
+        "The deterministic CI-bundle download failed before retrieving logs because GitHub CLI authentication was unavailable.",
+        "GitHub MCP returned only 816695 bytes for job 106088992766; its SHA-256 was dfddd36f70a35a62c2b1e04cbebfddeb253251e8834cf36c1896426f8bc5073d, which does not match the recorded exact-log hash."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / common / test3 (11, hotspot, indy false)",
+      "diagnosis": "unknown",
+      "reason": "The complete exact job log required for diagnosis could not be retrieved, so no repair can be made safely.",
+      "evidence": [
+        "The controller records job 106088992901 from run 35514864695 attempt 1 as 3146025 UTF-8 bytes with SHA-256 6d01aa7ad845f6f5f03dcc07640e92ed541047c8a6126a9ab8125ac682201783 and explicitly requires full-log retrieval.",
+        "The deterministic CI-bundle download failed before retrieving logs because GitHub CLI authentication was unavailable.",
+        "GitHub MCP returned only 874885 bytes for job 106088992901; its SHA-256 was b4f3b5160ed926543074d9b3ba6117ba244d9e4ee90c3fa486140b38444c8eb6, which does not match the recorded exact-log hash."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / common / test3 (11, hotspot, indy true)",
+      "diagnosis": "unknown",
+      "reason": "The complete exact job log required for diagnosis could not be retrieved, so no repair can be made safely.",
+      "evidence": [
+        "The controller records job 106088992823 from run 35514864695 attempt 1 as 3082593 UTF-8 bytes with SHA-256 515dfc957abbd5be76dc9e4245c09e0f97478d8c139ce7a9c5d1bc7ed3f5ab79 and explicitly requires full-log retrieval.",
+        "The deterministic CI-bundle download failed before retrieving logs because GitHub CLI authentication was unavailable.",
+        "GitHub MCP returned only 868892 bytes for job 106088992823; its SHA-256 was 32713b460ea392d2ab7af67f6514d5f13762fea689b931b1933331b1320d563f, which does not match the recorded exact-log hash."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / required-status-check",
+      "diagnosis": "unknown",
+      "reason": "This aggregate check only reports that a required child job failed, while the complete exact logs for the failed child jobs could not be retrieved.",
+      "evidence": [
+        "Job 106091151245 from run 35514864695 attempt 1 executes `exit 1` and reports process exit code 1 without identifying an independent defect.",
+        "The six failed child-job logs are all marked retrieve_full_log by the controller, and none of the retrieved GitHub MCP payloads matched its recorded exact-log byte count or SHA-256.",
+        "Without the complete child-job diagnostics, the aggregate failure cannot be attributed to the pull request, infrastructure, a flake, or a pre-existing failure."
+      ]
+    }
+  ]
+}
