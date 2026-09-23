@@ -8,8 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
@@ -46,12 +44,10 @@ class AwsLambdaSqsEventHandlerTest extends AbstractAwsLambdaSqsEventHandlerTest 
   void sameNestedEventStartsOneProcessingSpan() {
     SQSEvent event = newEvent("message");
 
-    new NestedTestRequestHandler(event).handleRequest(event, newContext());
+    new NestedTestRequestHandler(event).handleRequest(event, context);
 
     testing.waitForTraces(2);
-    assertThat(testing.spans())
-        .filteredOn(span -> span.getKind() == SpanKind.CONSUMER)
-        .hasSize(1);
+    assertThat(testing.spans()).filteredOn(span -> span.getKind() == SpanKind.CONSUMER).hasSize(1);
   }
 
   @Test
@@ -59,19 +55,10 @@ class AwsLambdaSqsEventHandlerTest extends AbstractAwsLambdaSqsEventHandlerTest 
     SQSEvent outerEvent = newEvent("outer");
     SQSEvent nestedEvent = newEvent("nested");
 
-    new NestedTestRequestHandler(nestedEvent).handleRequest(outerEvent, newContext());
+    new NestedTestRequestHandler(nestedEvent).handleRequest(outerEvent, context);
 
     testing.waitForTraces(2);
-    assertThat(testing.spans())
-        .filteredOn(span -> span.getKind() == SpanKind.CONSUMER)
-        .hasSize(2);
-  }
-
-  private static Context newContext() {
-    Context context = mock(Context.class);
-    when(context.getFunctionName()).thenReturn("my_function");
-    when(context.getAwsRequestId()).thenReturn("1-22-333");
-    return context;
+    assertThat(testing.spans()).filteredOn(span -> span.getKind() == SpanKind.CONSUMER).hasSize(2);
   }
 
   private static SQSEvent newEvent(String messageId) {

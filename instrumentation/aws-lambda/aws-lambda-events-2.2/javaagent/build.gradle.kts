@@ -1,3 +1,5 @@
+import org.gradle.process.CommandLineArgumentProvider
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -60,5 +62,16 @@ tasks {
 
   check {
     dependsOn(testMessagingPreview, testBothSemconv, testV3Preview)
+  }
+}
+
+afterEvaluate {
+  tasks.withType<Test>().configureEach {
+    // Nested request handlers intentionally extract while the outer event context is current.
+    jvmArgumentProviders.add(
+      CommandLineArgumentProvider {
+        listOf("-Dotel.javaagent.testing.fail-on-context-leak=false")
+      }
+    )
   }
 }

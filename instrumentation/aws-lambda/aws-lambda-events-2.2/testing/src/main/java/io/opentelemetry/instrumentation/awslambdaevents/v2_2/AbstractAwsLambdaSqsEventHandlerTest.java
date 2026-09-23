@@ -56,7 +56,7 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
 
   protected abstract String instrumentationName();
 
-  @Mock private Context context;
+  @Mock protected Context context;
 
   @BeforeEach
   void setUp() {
