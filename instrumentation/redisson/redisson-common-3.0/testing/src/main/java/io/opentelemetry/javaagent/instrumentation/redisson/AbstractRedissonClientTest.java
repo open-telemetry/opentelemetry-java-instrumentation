@@ -1175,8 +1175,7 @@ public abstract class AbstractRedissonClientTest {
 
   private static void setExecutionMode(Object options, String executionMode) {
     try {
-      Class<?> executionModeClass =
-          Class.forName("org.redisson.api.BatchOptions$ExecutionMode");
+      Class<?> executionModeClass = Class.forName("org.redisson.api.BatchOptions$ExecutionMode");
       Object executionModeValue = executionModeClass.getField(executionMode).get(null);
       options
           .getClass()
