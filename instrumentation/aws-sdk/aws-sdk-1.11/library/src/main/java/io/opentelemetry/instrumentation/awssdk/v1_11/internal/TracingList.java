@@ -30,7 +30,7 @@ class TracingList extends SdkInternalList<Message> {
   private final transient Request<?> request;
   private final transient Response<?> response;
   @Nullable private final transient Context processParentContext;
-  private volatile boolean frameworkProcessingSelected;
+  private volatile boolean processingOwnedOutsideSqsSdk;
 
   static SdkInternalList<Message> wrap(
       List<Message> messages,
@@ -98,15 +98,15 @@ class TracingList extends SdkInternalList<Message> {
     return processParentContext;
   }
 
-  boolean isFrameworkProcessingSelected() {
-    return frameworkProcessingSelected;
+  boolean isProcessingOwnedOutsideSqsSdk() {
+    return processingOwnedOutsideSqsSdk;
   }
 
-  static void selectFrameworkProcessing(List<?> messages) {
+  static void markProcessingOwnedOutsideSqsSdk(List<?> messages) {
     if (messages instanceof TracingList) {
-      ((TracingList) messages).frameworkProcessingSelected = true;
+      ((TracingList) messages).processingOwnedOutsideSqsSdk = true;
     } else if (messages instanceof TracingListView) {
-      ((TracingListView) messages).tracingList.frameworkProcessingSelected = true;
+      ((TracingListView) messages).tracingList.processingOwnedOutsideSqsSdk = true;
     }
   }
 

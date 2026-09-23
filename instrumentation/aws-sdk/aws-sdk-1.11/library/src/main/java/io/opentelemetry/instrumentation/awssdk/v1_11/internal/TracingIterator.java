@@ -156,7 +156,7 @@ class TracingIterator implements ListIterator<Message> {
 
     @Nullable
     private static ProcessingInvocation start(TracingList tracingList, SqsMessage message) {
-      if (tracingList.isFrameworkProcessingSelected()
+      if (tracingList.isProcessingOwnedOutsideSqsSdk()
           || InstrumentationUtil.shouldSuppressInstrumentation(Context.current())) {
         return null;
       }
@@ -167,7 +167,7 @@ class TracingIterator implements ListIterator<Message> {
       SqsProcessRequest request = SqsProcessRequest.create(tracingList.getRequest(), message);
 
       // An abandoned iterator can leave an ambient consumer span. Only explicit suppression and
-      // selection of this response list should prevent unrelated raw processing.
+      // ownership of this response list should prevent unrelated raw processing.
       Context suppressionContext = Context.root().with(Span.fromContext(parentContext));
       if (!tracingList.getInstrumenter().shouldStart(suppressionContext, request)) {
         return null;
