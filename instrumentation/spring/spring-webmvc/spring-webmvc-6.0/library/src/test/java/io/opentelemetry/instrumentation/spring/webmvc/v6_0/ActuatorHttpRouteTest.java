@@ -13,15 +13,15 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.testing.internal.armeria.client.WebClient;
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import jakarta.servlet.Filter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Bean;
-import org.springframework.http.ResponseEntity;
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -31,13 +31,14 @@ class ActuatorHttpRouteTest {
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  @Autowired private TestRestTemplate testRestTemplate;
+  @Value("${local.server.port}")
+  private int port;
 
   @Test
   void actuatorEndpointHasHttpRoute() {
-    ResponseEntity<String> response =
-        testRestTemplate.getForEntity("/actuator/health", String.class);
-    assertThat(response.getStatusCode().value()).isEqualTo(200);
+    AggregatedHttpResponse response =
+        WebClient.of("http://localhost:" + port).get("/actuator/health").aggregate().join();
+    assertThat(response.status().code()).isEqualTo(200);
 
     testing.waitAndAssertTraces(
         trace ->
