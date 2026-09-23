@@ -13,8 +13,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.amazonaws.services.lambda.runtime.ClientContext;
-import com.amazonaws.services.lambda.runtime.CognitoIdentity;
-import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -67,8 +65,10 @@ class InstrumenterExtractionTest {
             OpenTelemetry.propagating(
                 ContextPropagators.create(new TraceHeaderPropagator(extractedTraceHeader))));
 
+    ContextWithXrayTraceId contextWithXrayTraceId = mock(ContextWithXrayTraceId.class);
+    when(contextWithXrayTraceId.getXrayTraceId()).thenReturn(traceHeader);
     AwsLambdaRequest input =
-        AwsLambdaRequest.create(new ContextWithXrayTraceId(traceHeader), new Object(), emptyMap());
+        AwsLambdaRequest.create(contextWithXrayTraceId, new Object(), emptyMap());
 
     instr.extract(input);
 
@@ -106,73 +106,10 @@ class InstrumenterExtractionTest {
     }
   }
 
-  private static final class ContextWithXrayTraceId
-      implements com.amazonaws.services.lambda.runtime.Context, XrayTraceIdContext {
-    private final String traceHeader;
-
-    private ContextWithXrayTraceId(String traceHeader) {
-      this.traceHeader = traceHeader;
-    }
-
-    @Override
-    @SuppressWarnings("EffectivelyPrivate")
-    public String getXrayTraceId() {
-      return traceHeader;
-    }
-
-    @Override
-    public String getAwsRequestId() {
-      return null;
-    }
-
-    @Override
-    public String getLogGroupName() {
-      return null;
-    }
-
-    @Override
-    public String getLogStreamName() {
-      return null;
-    }
-
-    @Override
-    public String getFunctionName() {
-      return null;
-    }
-
-    @Override
-    public String getFunctionVersion() {
-      return null;
-    }
-
-    @Override
-    public String getInvokedFunctionArn() {
-      return null;
-    }
-
-    @Override
-    public CognitoIdentity getIdentity() {
-      return null;
-    }
-
-    @Override
-    public ClientContext getClientContext() {
-      return null;
-    }
-
-    @Override
-    public int getRemainingTimeInMillis() {
-      return 0;
-    }
-
-    @Override
-    public int getMemoryLimitInMB() {
-      return 0;
-    }
-
-    @Override
-    public LambdaLogger getLogger() {
-      return null;
-    }
+  // this class exposes getXrayTraceId method that is not present in the earliest tested version
+  private interface ContextWithXrayTraceId extends com.amazonaws.services.lambda.runtime.Context {
+    // Context has this method only in latest dep tests
+    @SuppressWarnings("MissingOverride")
+    String getXrayTraceId();
   }
 }
