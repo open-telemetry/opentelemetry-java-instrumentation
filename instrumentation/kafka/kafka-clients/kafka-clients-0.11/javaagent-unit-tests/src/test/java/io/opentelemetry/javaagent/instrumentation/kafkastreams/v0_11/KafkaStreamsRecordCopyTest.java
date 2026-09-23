@@ -26,7 +26,7 @@ class KafkaStreamsRecordCopyTest {
 
   @ParameterizedTest
   @MethodSource("deserializers")
-  void preservesConsumerContextProcessingSelectionAndDeliveryIdentity(
+  void preservesConsumerContextProcessingEligibilityAndDeliveryIdentity(
       BiFunction<ConsumerRecord<?, ?>, ConsumerRecord<?, ?>, ConsumerRecord<?, ?>> deserialize) {
     ConsumerRecord<String, String> incoming = new ConsumerRecord<>("orders", 0, 7, "key", "value");
     ConsumerRecord<String, String> result = new ConsumerRecord<>("orders", 0, 7, "key", "value");
@@ -34,14 +34,14 @@ class KafkaStreamsRecordCopyTest {
     Context context = Context.root();
     KafkaConsumerContextUtil.set(
         incoming, KafkaConsumerContextUtil.create(context, "group", "client"));
-    BooleanSupplier rawProcessingSelection = () -> false;
-    KafkaConsumerContextUtil.setRawProcessingSelection(incoming, rawProcessingSelection);
+    BooleanSupplier rawProcessingEligibility = () -> false;
+    KafkaConsumerContextUtil.setRawProcessingEligibility(incoming, rawProcessingEligibility);
     assertThat(KafkaConsumerContextUtil.markConsumedMessageCounted(incoming)).isTrue();
 
     assertThat(deserialize.apply(incoming, result)).isSameAs(result);
     assertThat(KafkaConsumerContextUtil.markConsumedMessageCounted(result)).isFalse();
-    assertThat(KafkaConsumerContextUtil.getRawProcessingSelection(result))
-        .isSameAs(rawProcessingSelection);
+    assertThat(KafkaConsumerContextUtil.getRawProcessingEligibility(result))
+        .isSameAs(rawProcessingEligibility);
     KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(result);
     assertThat(consumerContext.getContext()).isSameAs(context);
     KafkaProcessRequest request = KafkaProcessRequest.create(consumerContext, result);

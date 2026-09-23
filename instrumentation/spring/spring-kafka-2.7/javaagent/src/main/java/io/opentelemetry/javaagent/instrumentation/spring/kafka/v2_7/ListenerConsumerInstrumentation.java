@@ -41,7 +41,7 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("invokeIfHaveRecords")
             .and(takesArgument(0, named("org.apache.kafka.clients.consumer.ConsumerRecords"))),
-        getClass().getName() + "$SelectListenerProcessingAdvice");
+        getClass().getName() + "$MarkSpringKafkaAsProcessingOwnerAdvice");
     transformer.applyAdviceToMethod(
         named("invokeBatchOnMessageWithRecordsOrList")
             .and(takesArgument(0, named("org.apache.kafka.clients.consumer.ConsumerRecords"))),
@@ -54,7 +54,7 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Return @Nullable ConsumerRecords<?, ?> records) {
       if (records != null) {
-        SpringKafkaProcessingSelection.selectListenerProcessing(records);
+        SpringKafkaProcessingOwnership.markSpringKafkaAsProcessingOwner(records);
       }
     }
   }
@@ -75,11 +75,11 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class SelectListenerProcessingAdvice {
+  public static class MarkSpringKafkaAsProcessingOwnerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) ConsumerRecords<?, ?> records) {
-      SpringKafkaProcessingSelection.selectListenerProcessing(records);
+      SpringKafkaProcessingOwnership.markSpringKafkaAsProcessingOwner(records);
     }
   }
 
@@ -99,7 +99,7 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
 
       @Nullable
       public static AdviceScope start(ConsumerRecords<?, ?> records, Consumer<?, ?> consumer) {
-        SpringKafkaProcessingSelection.selectListenerProcessing(records);
+        SpringKafkaProcessingOwnership.markSpringKafkaAsProcessingOwner(records);
         KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(records);
         Context receiveContext = consumerContext.getContext();
 
