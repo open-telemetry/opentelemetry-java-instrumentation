@@ -18,8 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class VertxRedisClientInstrumentationModule extends InstrumentationModule {
 
   public VertxRedisClientInstrumentationModule() {
-    super(
-        "vertx-redis-client", "vertx-redis-client-4.0", "vertx-redis-client-4.4.5", "vertx");
+    super("vertx-redis-client", "vertx-redis-client-4.0", "vertx-redis-client-4.4.5", "vertx");
   }
 
   @Override
