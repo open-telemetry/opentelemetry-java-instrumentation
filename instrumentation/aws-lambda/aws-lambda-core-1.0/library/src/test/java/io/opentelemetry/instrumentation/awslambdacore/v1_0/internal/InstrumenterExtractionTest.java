@@ -79,7 +79,7 @@ class InstrumenterExtractionTest {
     try {
       com.amazonaws.services.lambda.runtime.Context.class.getMethod("getXrayTraceId");
       return true;
-    } catch (NoSuchMethodException | SecurityException ignored) {
+    } catch (Exception ignored) {
       return false;
     }
   }
