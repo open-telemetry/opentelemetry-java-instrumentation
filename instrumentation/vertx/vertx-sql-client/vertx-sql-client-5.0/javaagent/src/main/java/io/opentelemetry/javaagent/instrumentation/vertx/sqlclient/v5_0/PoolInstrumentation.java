@@ -89,7 +89,8 @@ class PoolInstrumentation implements TypeInstrumentation {
       VertxSqlClientSingletons.setConstructionState(null);
       if (constructionState != null) {
         if (pool != null) {
-          constructionState.setDbSystemName(getDbSystemNameFromClassName(pool));
+          constructionState.setDbSystemName(
+              getDbSystemNameFromClassName(VertxSqlClientSingletons.unwrapPool(pool)));
         }
         constructionState.complete(pool);
       }

@@ -17,7 +17,7 @@ import io.lettuce.core.AbstractRedisReactiveCommands;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons;
+import io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceConnectionState;
 import java.util.function.Supplier;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
@@ -58,7 +58,7 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
         @Advice.This AbstractRedisReactiveCommands<K, V> commands,
         @Advice.Argument(0) Supplier<RedisCommand<K, V, T>> supplier) {
       RedisCommand<K, V, T> command = supplier.get();
-      LettuceSingletons.attachAddress(command, commands.getConnection());
+      LettuceConnectionState.copy(commands.getConnection(), command);
       return command;
     }
 
@@ -89,7 +89,7 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
         @Advice.This AbstractRedisReactiveCommands<K, V> commands,
         @Advice.Argument(0) Supplier<RedisCommand<K, V, T>> supplier) {
       RedisCommand<K, V, T> command = supplier.get();
-      LettuceSingletons.attachAddress(command, commands.getConnection());
+      LettuceConnectionState.copy(commands.getConnection(), command);
       return command;
     }
 
