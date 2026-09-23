@@ -45,8 +45,8 @@ class KafkaConsumerBatchSelectionTest {
   void iteratorCreatedBeforePollStateObservesLaterSelection() {
     ConsumerRecords<String, String> records = records(record(0));
     Iterator<ConsumerRecord<String, String>> iterator = iterator(records);
-    KafkaProcessingSelectionUtil.recordPoll(records, true);
-    KafkaProcessingSelectionUtil.selectFrameworkProcessing(records);
+    KafkaProcessingOwnershipUtil.recordPoll(records, true);
+    KafkaProcessingOwnershipUtil.markProcessingOwnedOutsideKafkaClient(records);
 
     assertThat(iterator.next().offset()).isZero();
     assertThat(iterator.hasNext()).isFalse();
@@ -58,11 +58,11 @@ class KafkaConsumerBatchSelectionTest {
     ConsumerRecord<String, String> selected = record(0);
     ConsumerRecord<String, String> unrelated = record(1);
     ConsumerRecords<String, String> records = records(selected, unrelated);
-    KafkaProcessingSelectionUtil.recordPoll(records, true);
+    KafkaProcessingOwnershipUtil.recordPoll(records, true);
     Iterator<ConsumerRecord<String, String>> iterator = iterator(records);
     ConsumerRecord<String, String> copy = record(0);
     KafkaConsumerContextUtil.copy(selected, copy);
-    KafkaProcessingSelectionUtil.selectFrameworkProcessing(records(copy));
+    KafkaProcessingOwnershipUtil.markProcessingOwnedOutsideKafkaClient(records(copy));
 
     assertThat(iterator.next()).isSameAs(selected);
     assertThat(Span.current().getSpanContext().isValid()).isFalse();
@@ -75,7 +75,7 @@ class KafkaConsumerBatchSelectionTest {
   @Test
   void disabledFrameworkLeavesRawFallback() {
     ConsumerRecords<String, String> records = records(record(0), record(1));
-    KafkaProcessingSelectionUtil.recordPoll(records, true);
+    KafkaProcessingOwnershipUtil.recordPoll(records, true);
 
     Iterator<ConsumerRecord<String, String>> iterator = iterator(records);
     while (iterator.hasNext()) {
@@ -87,15 +87,15 @@ class KafkaConsumerBatchSelectionTest {
   @Test
   void unrelatedRawBatchRemainsVisibleInsideFrameworkBatch() {
     ConsumerRecords<String, String> frameworkRecords = records(record(0));
-    KafkaProcessingSelectionUtil.recordPoll(frameworkRecords, true);
+    KafkaProcessingOwnershipUtil.recordPoll(frameworkRecords, true);
     Iterator<ConsumerRecord<String, String>> earlyIterator = iterator(frameworkRecords);
-    KafkaProcessingSelectionUtil.selectFrameworkProcessing(frameworkRecords);
+    KafkaProcessingOwnershipUtil.markProcessingOwnedOutsideKafkaClient(frameworkRecords);
     Instrumenter<KafkaReceiveRequest, Void> framework = factory.createBatchProcessInstrumenter();
     KafkaReceiveRequest request = KafkaReceiveRequest.create(frameworkRecords, "group", "client");
     Context context = framework.start(Context.current(), request);
     try (Scope ignored = context.makeCurrent()) {
       ConsumerRecords<String, String> nestedRecords = records(record(1));
-      KafkaProcessingSelectionUtil.recordPoll(nestedRecords, true);
+      KafkaProcessingOwnershipUtil.recordPoll(nestedRecords, true);
       Iterator<ConsumerRecord<String, String>> nested = iterator(nestedRecords);
       nested.next();
       assertThat(nested.hasNext()).isFalse();
@@ -130,10 +130,11 @@ class KafkaConsumerBatchSelectionTest {
   @Test
   void selectionOnAnotherThreadAffectsExistingIterator() throws InterruptedException {
     ConsumerRecords<String, String> records = records(record(0));
-    KafkaProcessingSelectionUtil.recordPoll(records, true);
+    KafkaProcessingOwnershipUtil.recordPoll(records, true);
     Iterator<ConsumerRecord<String, String>> iterator = iterator(records);
     Thread framework =
-        new Thread(() -> KafkaProcessingSelectionUtil.selectFrameworkProcessing(records));
+        new Thread(
+            () -> KafkaProcessingOwnershipUtil.markProcessingOwnedOutsideKafkaClient(records));
     framework.start();
     framework.join();
 
@@ -145,7 +146,7 @@ class KafkaConsumerBatchSelectionTest {
   @Test
   void explicitSuppressionAfterIteratorCreationIsHonored() {
     ConsumerRecords<String, String> records = records(record(0));
-    KafkaProcessingSelectionUtil.recordPoll(records, true);
+    KafkaProcessingOwnershipUtil.recordPoll(records, true);
     Iterator<ConsumerRecord<String, String>> iterator = iterator(records);
 
     InstrumentationUtil.suppressInstrumentation(
@@ -159,9 +160,9 @@ class KafkaConsumerBatchSelectionTest {
   @Test
   void newPollResetsSelectionOnReusedBatch() {
     ConsumerRecords<String, String> records = records(record(0));
-    KafkaProcessingSelectionUtil.recordPoll(records, true);
-    KafkaProcessingSelectionUtil.selectFrameworkProcessing(records);
-    KafkaProcessingSelectionUtil.recordPoll(records, true);
+    KafkaProcessingOwnershipUtil.recordPoll(records, true);
+    KafkaProcessingOwnershipUtil.markProcessingOwnedOutsideKafkaClient(records);
+    KafkaProcessingOwnershipUtil.recordPoll(records, true);
 
     Iterator<ConsumerRecord<String, String>> iterator = iterator(records);
     iterator.next();
@@ -176,7 +177,7 @@ class KafkaConsumerBatchSelectionTest {
     return TracingIterator.wrap(
         records.iterator(),
         instrumenter,
-        KafkaProcessingSelectionUtil.rawProcessingSelection(records, () -> true),
+        KafkaProcessingOwnershipUtil.rawProcessingEligibility(records, () -> true),
         KafkaConsumerContextUtil.create(null, "group", "client"));
   }
 
