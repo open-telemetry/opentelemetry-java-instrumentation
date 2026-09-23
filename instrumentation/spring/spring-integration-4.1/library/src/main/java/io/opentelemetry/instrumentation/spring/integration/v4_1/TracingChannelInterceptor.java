@@ -130,7 +130,7 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
       }
     } else if (!outputChannel && !supportsHandlerInterception(messageChannel)) {
       processingInvocation = true;
-      if (isProcessingSelected(parentContext, message)
+      if (isChannelProcessingEligible(parentContext, message)
           && consumerInstrumenter.shouldStart(parentContext, messageWithChannel)) {
         telemetryContext = startConsumer(parentContext, messageWithChannel);
         context = telemetryContext;
@@ -160,7 +160,7 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
     return outputMessage;
   }
 
-  private static boolean isProcessingSelected(Context currentContext, Message<?> message) {
+  private static boolean isChannelProcessingEligible(Context currentContext, Message<?> message) {
     return !SpringIntegrationHandoff.isCurrent(message)
         || MessageInvocation.currentUsesLowerProcessing(
             currentContext, SpringIntegrationHandoff.currentLowerProcessing());
