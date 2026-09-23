@@ -20,53 +20,55 @@ class KafkaConsumerBatchStateTest {
   @Test
   void shouldTraceUnclaimedApplicationPoll() {
     ConsumerRecords<String, String> records = records();
-    KafkaProcessingSelectionUtil.recordPoll(records, true);
+    KafkaProcessingOwnershipUtil.recordPoll(records, true);
 
     assertThat(
-            KafkaProcessingSelectionUtil.rawProcessingSelection(records, () -> true).getAsBoolean())
+            KafkaProcessingOwnershipUtil.rawProcessingEligibility(records, () -> true)
+                .getAsBoolean())
         .isTrue();
   }
 
   @Test
   void shouldHonorClaimBeforeIteratorCreation() {
     ConsumerRecords<String, String> records = records();
-    KafkaProcessingSelectionUtil.recordPoll(records, true);
-    KafkaProcessingSelectionUtil.selectFrameworkProcessing(records);
+    KafkaProcessingOwnershipUtil.recordPoll(records, true);
+    KafkaProcessingOwnershipUtil.markProcessingOwnedOutsideKafkaClient(records);
 
-    BooleanSupplier rawProcessingSelection =
-        KafkaProcessingSelectionUtil.rawProcessingSelection(records, () -> true);
-    assertThat(rawProcessingSelection.getAsBoolean()).isFalse();
+    BooleanSupplier rawProcessingEligibility =
+        KafkaProcessingOwnershipUtil.rawProcessingEligibility(records, () -> true);
+    assertThat(rawProcessingEligibility.getAsBoolean()).isFalse();
   }
 
   @Test
   void shouldHonorClaimAfterIteratorCreation() {
     ConsumerRecords<String, String> records = records();
-    KafkaProcessingSelectionUtil.recordPoll(records, true);
+    KafkaProcessingOwnershipUtil.recordPoll(records, true);
 
-    BooleanSupplier rawProcessingSelection =
-        KafkaProcessingSelectionUtil.rawProcessingSelection(records, () -> true);
-    KafkaProcessingSelectionUtil.selectFrameworkProcessing(records);
+    BooleanSupplier rawProcessingEligibility =
+        KafkaProcessingOwnershipUtil.rawProcessingEligibility(records, () -> true);
+    KafkaProcessingOwnershipUtil.markProcessingOwnedOutsideKafkaClient(records);
 
-    assertThat(rawProcessingSelection.getAsBoolean()).isFalse();
+    assertThat(rawProcessingEligibility.getAsBoolean()).isFalse();
   }
 
   @Test
   void shouldNotTraceFrameworkPoll() {
     ConsumerRecords<String, String> records = records();
-    KafkaProcessingSelectionUtil.recordPoll(records, false);
+    KafkaProcessingOwnershipUtil.recordPoll(records, false);
 
     assertThat(
-            KafkaProcessingSelectionUtil.rawProcessingSelection(records, () -> true).getAsBoolean())
+            KafkaProcessingOwnershipUtil.rawProcessingEligibility(records, () -> true)
+                .getAsBoolean())
         .isFalse();
   }
 
   @Test
   void shouldHonorFrameworkSuppressionAfterApplicationPoll() {
     ConsumerRecords<String, String> records = records();
-    KafkaProcessingSelectionUtil.recordPoll(records, true);
+    KafkaProcessingOwnershipUtil.recordPoll(records, true);
 
     assertThat(
-            KafkaProcessingSelectionUtil.rawProcessingSelection(records, () -> false)
+            KafkaProcessingOwnershipUtil.rawProcessingEligibility(records, () -> false)
                 .getAsBoolean())
         .isFalse();
   }

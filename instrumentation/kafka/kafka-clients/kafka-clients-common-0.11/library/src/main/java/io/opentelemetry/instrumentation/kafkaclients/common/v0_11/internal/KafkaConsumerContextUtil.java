@@ -45,7 +45,7 @@ public final class KafkaConsumerContextUtil {
   private static final VirtualField<ConsumerRecord<?, ?>, Boolean> RECORD_COUNTED =
       VirtualField.find(ConsumerRecord.class, Boolean.class);
   private static final VirtualField<ConsumerRecord<?, ?>, BooleanSupplier>
-      RAW_PROCESSING_SELECTION = VirtualField.find(ConsumerRecord.class, BooleanSupplier.class);
+      RAW_PROCESSING_ELIGIBILITY = VirtualField.find(ConsumerRecord.class, BooleanSupplier.class);
 
   /** Checks a distinct Kafka operation without treating an ambient consumer as its owner. */
   public static Context spanSuppressionContext(Context context) {
@@ -100,14 +100,14 @@ public final class KafkaConsumerContextUtil {
     return true;
   }
 
-  public static void setRawProcessingSelection(
-      ConsumerRecord<?, ?> record, BooleanSupplier rawProcessingSelection) {
-    RAW_PROCESSING_SELECTION.set(record, rawProcessingSelection);
+  public static void setRawProcessingEligibility(
+      ConsumerRecord<?, ?> record, BooleanSupplier rawProcessingEligibility) {
+    RAW_PROCESSING_ELIGIBILITY.set(record, rawProcessingEligibility);
   }
 
   @Nullable
-  public static BooleanSupplier getRawProcessingSelection(ConsumerRecord<?, ?> record) {
-    return RAW_PROCESSING_SELECTION.get(record);
+  public static BooleanSupplier getRawProcessingEligibility(ConsumerRecord<?, ?> record) {
+    return RAW_PROCESSING_ELIGIBILITY.get(record);
   }
 
   /** Reads batch membership without invoking tracing iterators. */
@@ -193,7 +193,7 @@ public final class KafkaConsumerContextUtil {
     RECORD_CONTEXT.set(to, RECORD_CONTEXT.get(from));
     RECORD_CONSUMER_INFO.set(to, RECORD_CONSUMER_INFO.get(from));
     RECORD_COUNTED.set(to, RECORD_COUNTED.get(from));
-    RAW_PROCESSING_SELECTION.set(to, RAW_PROCESSING_SELECTION.get(from));
+    RAW_PROCESSING_ELIGIBILITY.set(to, RAW_PROCESSING_ELIGIBILITY.get(from));
   }
 
   private KafkaConsumerContextUtil() {}

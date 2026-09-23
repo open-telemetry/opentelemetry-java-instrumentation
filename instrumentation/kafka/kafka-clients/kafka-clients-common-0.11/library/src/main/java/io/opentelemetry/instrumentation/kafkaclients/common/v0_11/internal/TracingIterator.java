@@ -76,9 +76,9 @@ public class TracingIterator<K, V> implements Iterator<ConsumerRecord<K, V>> {
 
     ConsumerRecord<K, V> next = delegateIterator.next();
     if (next != null && wrappingEnabled.getAsBoolean()) {
-      BooleanSupplier rawProcessingSelection =
-          KafkaConsumerContextUtil.getRawProcessingSelection(next);
-      if (rawProcessingSelection != null && !rawProcessingSelection.getAsBoolean()) {
+      BooleanSupplier rawProcessingEligibility =
+          KafkaConsumerContextUtil.getRawProcessingEligibility(next);
+      if (rawProcessingEligibility != null && !rawProcessingEligibility.getAsBoolean()) {
         return next;
       }
       KafkaProcessRequest request = KafkaProcessRequest.create(consumerContext, next);

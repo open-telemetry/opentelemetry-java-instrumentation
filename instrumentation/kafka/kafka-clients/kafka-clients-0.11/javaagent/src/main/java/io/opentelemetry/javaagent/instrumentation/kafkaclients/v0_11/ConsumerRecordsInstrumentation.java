@@ -80,7 +80,7 @@ class ConsumerRecordsInstrumentation implements TypeInstrumentation {
       return TracingIterable.wrap(
           iterable,
           consumerProcessInstrumenter(),
-          KafkaProcessingSelectionUtil.rawProcessingSelection(
+          KafkaProcessingOwnershipUtil.rawProcessingEligibility(
               records, processSpanEnabledSupplier()),
           consumerContext);
     }
@@ -103,7 +103,7 @@ class ConsumerRecordsInstrumentation implements TypeInstrumentation {
       return TracingList.wrap(
           list,
           consumerProcessInstrumenter(),
-          KafkaProcessingSelectionUtil.rawProcessingSelection(
+          KafkaProcessingOwnershipUtil.rawProcessingEligibility(
               records, processSpanEnabledSupplier()),
           consumerContext);
     }
@@ -126,7 +126,7 @@ class ConsumerRecordsInstrumentation implements TypeInstrumentation {
       return TracingIterator.wrap(
           iterator,
           consumerProcessInstrumenter(),
-          KafkaProcessingSelectionUtil.rawProcessingSelection(
+          KafkaProcessingOwnershipUtil.rawProcessingEligibility(
               records, processSpanEnabledSupplier()),
           consumerContext);
     }
@@ -149,7 +149,7 @@ class ConsumerRecordsInstrumentation implements TypeInstrumentation {
       return TracingListIterator.wrap(
           listIterator,
           consumerProcessInstrumenter(),
-          KafkaProcessingSelectionUtil.rawProcessingSelection(
+          KafkaProcessingOwnershipUtil.rawProcessingEligibility(
               records, processSpanEnabledSupplier()),
           consumerContext);
     }
