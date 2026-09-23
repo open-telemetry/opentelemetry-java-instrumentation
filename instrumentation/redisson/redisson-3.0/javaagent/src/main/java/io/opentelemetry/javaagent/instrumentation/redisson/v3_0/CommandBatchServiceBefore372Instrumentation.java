@@ -82,8 +82,7 @@ class CommandBatchServiceBefore372Instrumentation implements TypeInstrumentation
     public static RedissonBatchAdviceScope onEnter(
         @Advice.This CommandBatchService service, @Advice.AllArguments Object[] arguments) {
       Object options = arguments[arguments.length - 1];
-      return RedissonBatchAdviceScope.start(
-          service, options, batchInstrumenter(), futureMarker());
+      return RedissonBatchAdviceScope.start(service, options, batchInstrumenter(), futureMarker());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
