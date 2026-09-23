@@ -10,11 +10,13 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.vertx.redis.client.RedisConnectOptions;
 import io.vertx.redis.client.impl.RedisConnectionManagerUtil;
 import java.util.function.Supplier;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -35,6 +37,9 @@ class RedisConnectionManagerInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArguments(5)).and(takesArgument(3, Supplier.class)),
         getClass().getName() + "$ConstructorWithSupplierAdvice");
+    transformer.applyAdviceToMethod(
+        named("connectionEndpointProvider"),
+        getClass().getName() + "$ConnectionEndpointProviderAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -53,6 +58,21 @@ class RedisConnectionManagerInstrumentation implements TypeInstrumentation {
         @Advice.This Object manager, @Advice.Argument(3) Supplier<?> optionsSupplier) {
       RedisConnectionManagerUtil.setServerTarget(
           manager, VertxRedisServerTargets.ofConstantSupplier(optionsSupplier));
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ConnectionEndpointProviderAdvice {
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
+    public static RedisServerTarget onEnter(@Advice.This Object manager) {
+      return RedisConnectionManagerUtil.currentServerTarget()
+          .set(RedisConnectionManagerUtil.getServerTarget(manager));
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable RedisServerTarget previous) {
+      RedisConnectionManagerUtil.currentServerTarget().restore(previous);
     }
   }
 }

@@ -29,7 +29,8 @@ public class VertxRedisClientInstrumentationModule extends InstrumentationModule
   public List<String> injectedClassNames() {
     return asList(
         "io.vertx.redis.client.impl.RequestUtil",
-        "io.vertx.redis.client.impl.RedisConnectionManagerUtil");
+        "io.vertx.redis.client.impl.RedisConnectionManagerUtil",
+        "io.vertx.redis.client.impl.RedisConnectionManagerUtil$CapturedTarget");
   }
 
   @Override
