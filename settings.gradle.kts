@@ -7,7 +7,7 @@ pluginManagement {
     id("org.jetbrains.kotlin.jvm") version "2.4.10"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.9.1"
-    id("org.graalvm.buildtools.native") version "1.1.12"
+    id("org.graalvm.buildtools.native") version "1.1.14"
     id("com.google.osdetector") version "1.7.3"
     id("com.google.protobuf") version "0.10.0"
   }
@@ -423,7 +423,9 @@ include(":instrumentation:jdbc:testing")
 include(":instrumentation:jedis:jedis-1.4:javaagent")
 include(":instrumentation:jedis:jedis-2.0:javaagent")
 include(":instrumentation:jedis:jedis-3.0:javaagent")
+include(":instrumentation:jedis:jedis-3.0:javaagent-unit-tests")
 include(":instrumentation:jedis:jedis-4.0:javaagent")
+include(":instrumentation:jedis:jedis-4.0:javaagent-unit-tests")
 include(":instrumentation:jedis:jedis-common-1.4:javaagent")
 include(":instrumentation:jetty:jetty-8.0:javaagent")
 include(":instrumentation:jetty:jetty-11.0:javaagent")

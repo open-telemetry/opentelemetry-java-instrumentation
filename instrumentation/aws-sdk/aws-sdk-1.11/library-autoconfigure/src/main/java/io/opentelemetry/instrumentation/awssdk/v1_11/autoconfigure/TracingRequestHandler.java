@@ -26,8 +26,6 @@ public final class TracingRequestHandler extends RequestHandler2 {
   private static final RequestHandler2 delegate = buildDelegate(GlobalOpenTelemetry.get());
 
   private static RequestHandler2 buildDelegate(OpenTelemetry openTelemetry) {
-    DeclarativeConfigProperties messaging =
-        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common").get("messaging");
     DeclarativeConfigProperties awsSdk =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "aws_sdk");
     AwsSdkTelemetryBuilder builder =
@@ -44,13 +42,7 @@ public final class TracingRequestHandler extends RequestHandler2 {
         .setBatchSendMessageCreationSpansEnabled(
             MessagingConfig.isBatchSendMessageCreationSpansEnabled(openTelemetry, "aws_sdk", true))
         .setMessagingReceiveTelemetryEnabled(
-            messaging
-                .get("receive_telemetry/development")
-                .getBoolean(
-                    "enabled",
-                    SystemProperty.getBoolean(
-                        "otel.instrumentation.messaging.experimental.receive-telemetry.enabled",
-                        false)))
+            MessagingConfig.isReceiveTelemetryEnabled(openTelemetry, true))
         .setHeaders(MessagingConfig.getHeaders(openTelemetry, true))
         .build()
         .createRequestHandler();

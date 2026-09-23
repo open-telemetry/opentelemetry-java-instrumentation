@@ -8,12 +8,25 @@ muzzle {
     module.set("jedis")
     versions.set("[2.0.0,3.0.0)")
     assertInverse.set(true)
+
+    excludeInstrumentationName("jedis-2.3-cluster")
+  }
+  pass {
+    // instrumentation-docs:ignore - verification only, the directive above is the range we document
+    name.set("Jedis cluster instrumentation")
+    group.set("redis.clients")
+    module.set("jedis")
+    versions.set("[2.3.0,3.0.0)")
+    assertInverse.set(true)
+
+    excludeInstrumentationName("jedis-2.0-core")
   }
 }
 
 dependencies {
   library("redis.clients:jedis:2.0.0")
 
+  compileOnly("redis.clients:jedis:2.3.0") // For optional cluster types added in 2.3
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
@@ -24,6 +37,26 @@ dependencies {
   testInstrumentation(project(":instrumentation:jedis:jedis-4.0:javaagent"))
 
   latestDepTestLibrary("redis.clients:jedis:2.+") // see jedis-3.0 module
+}
+
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation-api-incubator"))
+        implementation("redis.clients:jedis:2.0.0")
+      }
+
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.semconv-stability.opt-in=database")
+          }
+        }
+      }
+    }
+  }
 }
 
 tasks {
@@ -41,6 +74,6 @@ tasks {
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites, testStableSemconv)
   }
 }

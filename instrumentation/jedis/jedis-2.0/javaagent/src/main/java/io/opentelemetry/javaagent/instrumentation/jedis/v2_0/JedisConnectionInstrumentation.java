@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSingletons.instrumenter;
 import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.is;
+import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -34,6 +35,11 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$CaptureTargetAdvice");
+    transformer.applyAdviceToMethod(
+        namedOneOf("setHost", "setPort").and(takesArguments(1)),
+        getClass().getName() + "$CaptureTargetAdvice");
+
     transformer.applyAdviceToMethod(
         named("sendCommand")
             .and(takesArguments(1))
@@ -55,6 +61,14 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
                         "redis.clients.jedis.ProtocolCommand")))
             .and(takesArgument(1, is(byte[][].class))),
         getClass().getName() + "$SendCommandWithArgsAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class CaptureTargetAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.This Connection connection) {
+      JedisSingletons.captureConnectionTarget(connection);
+    }
   }
 
   public static class AdviceScope {
