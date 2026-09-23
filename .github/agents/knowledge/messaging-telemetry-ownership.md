@@ -17,11 +17,13 @@ during known delegation. Neither makes the ownership decision.
 For example:
 
 - **Spring Rabbit:** The client and Spring both see deliveries to a Spring-created consumer.
-  Mark that consumer when it registers so Spring owns its listener's Process span. A separately
-  registered RabbitMQ consumer, even on the same channel, still gets a client Process span.
+  Mark that consumer when it registers. Spring then emits the Process span when it invokes the
+  listener. A separately registered RabbitMQ consumer, even on the same channel, still gets a
+  client Process span.
 - **Spring Kafka:** A poll returns records that might be iterated later or on another thread.
-  Keep the choice with the batch and records Spring handles. Raw Kafka iteration still
-  instruments independent application polls.
+  Spring marks the batch and its records for listener processing, so later iteration does not
+  create a second client Process span. Raw Kafka iteration still instruments independent
+  application polls.
 - **SQS:** An SDK receive call returns messages without a processing callback. Iteration is
   the best boundary available to a raw SDK user. If a supported framework handles that
   response, it owns the messages it passes to its listener; otherwise SDK traversal is the
