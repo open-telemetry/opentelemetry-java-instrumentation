@@ -1,0 +1,1 @@
+Normalize Lambda SQS processing selection
