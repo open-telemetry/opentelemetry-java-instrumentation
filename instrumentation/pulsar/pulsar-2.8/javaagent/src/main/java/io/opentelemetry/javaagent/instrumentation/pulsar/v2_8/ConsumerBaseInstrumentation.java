@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
-import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.listenerProcessingSelection;
+import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.listenerProcessingScope;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -43,13 +43,13 @@ class ConsumerBaseInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static boolean onEnter() {
-      return listenerProcessingSelection().tryAcquire();
+      return listenerProcessingScope().tryAcquire();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter boolean selectionAcquired) {
-      if (selectionAcquired) {
-        listenerProcessingSelection().release();
+    public static void onExit(@Advice.Enter boolean listenerProcessingScopeAcquired) {
+      if (listenerProcessingScopeAcquired) {
+        listenerProcessingScope().release();
       }
     }
   }

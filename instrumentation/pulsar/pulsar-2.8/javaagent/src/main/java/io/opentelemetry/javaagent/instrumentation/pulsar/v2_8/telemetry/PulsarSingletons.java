@@ -68,7 +68,7 @@ public class PulsarSingletons {
   private static final Instrumenter<PulsarRequest, Void> producerInstrumenter =
       createProducerInstrumenter();
 
-  private static final ScopedThreadSuppression listenerProcessingSelection =
+  private static final ScopedThreadSuppression listenerProcessingScope =
       new ScopedThreadSuppression();
   private static final ScopedThreadSuppression internalReceiveSpanSuppression =
       new ScopedThreadSuppression();
@@ -81,8 +81,8 @@ public class PulsarSingletons {
     return producerInstrumenter;
   }
 
-  public static ScopedThreadSuppression listenerProcessingSelection() {
-    return listenerProcessingSelection;
+  public static ScopedThreadSuppression listenerProcessingScope() {
+    return listenerProcessingScope;
   }
 
   public static ScopedThreadSuppression internalReceiveSpanSuppression() {
@@ -212,7 +212,7 @@ public class PulsarSingletons {
     if (!receiveInstrumentationEnabled) {
       // suppress receive span when receive telemetry is not enabled and message is going to be
       // processed by a listener
-      if (listenerProcessingSelection.isActive()) {
+      if (listenerProcessingScope.isActive()) {
         VirtualFieldStore.setProcessParentContext(message, parent);
         return null;
       }
@@ -296,7 +296,7 @@ public class PulsarSingletons {
       return future;
     }
 
-    boolean processingSelected = listenerProcessingSelection.isActive();
+    boolean listenerProcessingActive = listenerProcessingScope.isActive();
     Context parent = Context.current();
     CompletableFuture<Message<?>> result = new CompletableFuture<>();
     future.whenComplete(
@@ -304,7 +304,7 @@ public class PulsarSingletons {
           // we create a "receive" span when receive telemetry is enabled or when we know that
           // this message will not be passed to a listener that would create the "process" span
           Context context =
-              receiveInstrumentationEnabled || !processingSelected
+              receiveInstrumentationEnabled || !listenerProcessingActive
                   ? startAndEndConsumerReceive(parent, message, timer, consumer, throwable)
                   : prepareListenerContext(parent, message);
           runWithContext(

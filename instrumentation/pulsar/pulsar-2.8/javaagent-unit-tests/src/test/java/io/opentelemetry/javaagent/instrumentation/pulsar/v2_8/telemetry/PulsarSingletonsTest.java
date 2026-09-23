@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 
-import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.listenerProcessingSelection;
+import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.listenerProcessingScope;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 import static org.mockito.Mockito.mock;
@@ -43,29 +43,29 @@ class PulsarSingletonsTest {
   }
 
   @Test
-  void nestedListenerProcessingSelectionPreservesOuterSelection() {
-    ScopedThreadSuppression selection = listenerProcessingSelection();
-    boolean outerSelectionAcquired = selection.tryAcquire();
+  void nestedListenerProcessingScopePreservesOuterScope() {
+    ScopedThreadSuppression scope = listenerProcessingScope();
+    boolean outerScopeAcquired = scope.tryAcquire();
     try {
-      assertThat(outerSelectionAcquired).isTrue();
-      boolean innerSelectionAcquired = selection.tryAcquire();
-      assertThat(innerSelectionAcquired).isFalse();
-      if (innerSelectionAcquired) {
-        selection.release();
+      assertThat(outerScopeAcquired).isTrue();
+      boolean innerScopeAcquired = scope.tryAcquire();
+      assertThat(innerScopeAcquired).isFalse();
+      if (innerScopeAcquired) {
+        scope.release();
       }
-      assertThat(selection.isActive()).isTrue();
+      assertThat(scope.isActive()).isTrue();
     } finally {
-      if (outerSelectionAcquired) {
-        selection.release();
+      if (outerScopeAcquired) {
+        scope.release();
       }
     }
-    assertThat(selection.isActive()).isFalse();
+    assertThat(scope.isActive()).isFalse();
   }
 
   @Test
-  void listenerProcessingSelectionReleasesAfterException() {
-    ScopedThreadSuppression selection = listenerProcessingSelection();
-    boolean selectionAcquired = selection.tryAcquire();
+  void listenerProcessingScopeReleasesAfterException() {
+    ScopedThreadSuppression scope = listenerProcessingScope();
+    boolean scopeAcquired = scope.tryAcquire();
 
     assertThatIllegalStateException()
         .isThrownBy(
@@ -73,13 +73,13 @@ class PulsarSingletonsTest {
               try {
                 throw new IllegalStateException("boom");
               } finally {
-                if (selectionAcquired) {
-                  selection.release();
+                if (scopeAcquired) {
+                  scope.release();
                 }
               }
             });
 
-    assertThat(selection.isActive()).isFalse();
+    assertThat(scope.isActive()).isFalse();
   }
 
   @Test
@@ -106,12 +106,12 @@ class PulsarSingletonsTest {
     Context parent = Context.root().with(TEST_KEY, "parent");
     CompletableFuture<Message<?>> future = new CompletableFuture<>();
     CompletableFuture<Message<?>> wrapped;
-    boolean acquired = listenerProcessingSelection().tryAcquire();
+    boolean listenerProcessingScopeAcquired = listenerProcessingScope().tryAcquire();
     try (Scope ignored = parent.makeCurrent()) {
       wrapped = PulsarSingletons.wrap(future, Timer.start(), consumer);
     } finally {
-      if (acquired) {
-        listenerProcessingSelection().release();
+      if (listenerProcessingScopeAcquired) {
+        listenerProcessingScope().release();
       }
     }
     CompletableFuture<String> callbackContext =
@@ -123,6 +123,6 @@ class PulsarSingletonsTest {
     assertThat(callbackContext.join()).isEqualTo("parent");
     assertThat(VirtualFieldStore.extractProcessParentContext(message).get(TEST_KEY))
         .isEqualTo("parent");
-    assertThat(listenerProcessingSelection().isActive()).isFalse();
+    assertThat(listenerProcessingScope().isActive()).isFalse();
   }
 }
