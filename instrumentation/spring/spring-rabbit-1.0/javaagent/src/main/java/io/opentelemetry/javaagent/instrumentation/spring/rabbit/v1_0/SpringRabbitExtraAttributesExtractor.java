@@ -18,7 +18,7 @@ import org.springframework.amqp.core.Message;
 class SpringRabbitExtraAttributesExtractor
     implements AttributesExtractor<SpringRabbitRequest, Void> {
 
-  // Consumer registration selects the process owner, not an ambient messaging span key.
+  // Registration identifies the Process owner on each consumer, not via ambient span state.
   private final AttributesExtractor<SpringRabbitRequest, Void> messagingAttributes;
 
   SpringRabbitExtraAttributesExtractor(
