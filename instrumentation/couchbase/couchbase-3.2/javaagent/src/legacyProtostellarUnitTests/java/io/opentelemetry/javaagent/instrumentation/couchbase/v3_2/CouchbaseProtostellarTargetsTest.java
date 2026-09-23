@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.couchbase.client.core.Core;
 import com.couchbase.client.core.env.SeedNode;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseConnectionStrings;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseServerTarget;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseServerTargets;
 import org.junit.jupiter.api.Test;
@@ -19,13 +19,11 @@ import org.objenesis.ObjenesisStd;
 class CouchbaseProtostellarTargetsTest {
 
   @Test
-  void preservesConfiguredTargetForLegacyCore() throws ClassNotFoundException {
-    Class.forName("com.couchbase.client.core.CoreProtostellar");
+  void preservesConfiguredTargetForLegacyCore() {
     Core core = new ObjenesisStd().newInstance(Core.class);
 
     CouchbaseServerTarget configuredTarget =
-        CouchbaseServerTarget.direct(
-            DbServerTarget.builder(18098).addEndpoint("node", 18099).build());
+        CouchbaseConnectionStrings.target("protostellar://node:18099");
     CouchbaseServerTargets.register(core, configuredTarget, null);
 
     CouchbaseProtostellarTargets.registerCore(
