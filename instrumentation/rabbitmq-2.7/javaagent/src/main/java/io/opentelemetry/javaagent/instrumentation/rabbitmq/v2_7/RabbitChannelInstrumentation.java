@@ -10,7 +10,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitCommandInstrumentation.SpanHolder.CURRENT_RABBIT_CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitInstrumenterHelper.helper;
-import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitSingletons.LISTENER_PROCESSING_SELECTED;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitSingletons.PROCESSING_OWNED_OUTSIDE_RABBIT_CLIENT;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitSingletons.channelInstrumenter;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitSingletons.receiveInstrumenter;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
@@ -476,7 +476,7 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
             queue,
             consumer,
             channel.getConnection(),
-            !Boolean.TRUE.equals(LISTENER_PROCESSING_SELECTED.get(consumer)));
+            !Boolean.TRUE.equals(PROCESSING_OWNED_OUTSIDE_RABBIT_CLIENT.get(consumer)));
       }
 
       return consumer;
