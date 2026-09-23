@@ -30,15 +30,15 @@ public class SpringAwsUtil {
   private static final ScopedThreadValue<TracingList> currentTracingList =
       new ScopedThreadValue<>();
   private static final VirtualField<AbstractMessageConvertingMessageSource<?, ?>, ListenerMode>
-      PROCESSING_SELECTION =
+      LISTENER_MODE =
           VirtualField.find(AbstractMessageConvertingMessageSource.class, ListenerMode.class);
   private static final VirtualField<Message<?>, TracingContext> TRACING_CONTEXT =
       VirtualField.find(Message.class, TracingContext.class);
 
-  public static void setProcessingSelection(
+  public static void setListenerMode(
       AbstractMessageConvertingMessageSource<?, ?> messageSource,
       ContainerOptions<?, ?> containerOptions) {
-    PROCESSING_SELECTION.set(messageSource, containerOptions.getListenerMode());
+    LISTENER_MODE.set(messageSource, containerOptions.getListenerMode());
   }
 
   @Nullable
@@ -46,9 +46,8 @@ public class SpringAwsUtil {
       AbstractMessageConvertingMessageSource<?, ?> messageSource, Collection<?> messages) {
     TracingList tracingList =
         messages instanceof TracingList currentTracingList ? currentTracingList : null;
-    if (tracingList != null
-        && PROCESSING_SELECTION.get(messageSource) == ListenerMode.SINGLE_MESSAGE) {
-      tracingList.selectListenerProcessing();
+    if (tracingList != null && LISTENER_MODE.get(messageSource) == ListenerMode.SINGLE_MESSAGE) {
+      tracingList.markProcessingOwnedOutsideSqsSdk();
     }
     return currentTracingList.set(tracingList);
   }

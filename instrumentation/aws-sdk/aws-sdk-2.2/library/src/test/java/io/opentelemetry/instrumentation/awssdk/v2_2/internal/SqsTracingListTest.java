@@ -75,7 +75,7 @@ class SqsTracingListTest {
             Context.root());
 
     Iterator<Message> iterator = tracingList.iterator();
-    tracingList.selectListenerProcessing();
+    tracingList.markProcessingOwnedOutsideSqsSdk();
 
     assertThat(iterator.next()).isSameAs(message);
     assertThat(iterator.hasNext()).isFalse();
@@ -98,7 +98,7 @@ class SqsTracingListTest {
             Context.root());
 
     Spliterator<Message> spliterator = tracingList.spliterator();
-    tracingList.selectListenerProcessing();
+    tracingList.markProcessingOwnedOutsideSqsSdk();
 
     assertThat(spliterator.tryAdvance(value -> assertThat(value).isSameAs(message))).isTrue();
     assertThat(spliterator.tryAdvance(unused -> {})).isFalse();

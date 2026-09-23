@@ -35,7 +35,7 @@ public final class TracingList extends ArrayList<Message> {
   private final TracingExecutionInterceptor config;
   private final IdentityHashMap<Message, SqsMessage> tracingMessages;
   @Nullable private final Context processParentContext;
-  private boolean processingSelected;
+  private boolean processingOwnedOutsideSqsSdk;
   private boolean firstIterator = true;
 
   public static TracingList wrap(
@@ -70,12 +70,12 @@ public final class TracingList extends ArrayList<Message> {
     }
   }
 
-  public void selectListenerProcessing() {
-    processingSelected = true;
+  public void markProcessingOwnedOutsideSqsSdk() {
+    processingOwnedOutsideSqsSdk = true;
   }
 
-  boolean isListenerProcessingSelected() {
-    return processingSelected;
+  boolean isProcessingOwnedOutsideSqsSdk() {
+    return processingOwnedOutsideSqsSdk;
   }
 
   @Override
@@ -128,7 +128,7 @@ public final class TracingList extends ArrayList<Message> {
     // We should only return one traversal with tracing.
     // However, this is not thread-safe, but usually the first (hopefully only) traversal of
     // List is performed in the same thread that called receiveMessage()
-    boolean shouldTrace = !processingSelected && firstIterator;
+    boolean shouldTrace = !processingOwnedOutsideSqsSdk && firstIterator;
     firstIterator = false;
     return shouldTrace;
   }

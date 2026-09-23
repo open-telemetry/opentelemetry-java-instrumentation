@@ -52,7 +52,7 @@ class AbstractMessageConvertingMessageSourceInstrumentation implements TypeInstr
     public static void methodExit(
         @Advice.This AbstractMessageConvertingMessageSource<?, ?> messageSource,
         @Advice.Argument(0) ContainerOptions<?, ?> containerOptions) {
-      SpringAwsUtil.setProcessingSelection(messageSource, containerOptions);
+      SpringAwsUtil.setListenerMode(messageSource, containerOptions);
     }
   }
 

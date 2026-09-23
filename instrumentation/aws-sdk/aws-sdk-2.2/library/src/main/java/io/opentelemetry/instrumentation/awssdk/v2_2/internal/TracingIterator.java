@@ -56,7 +56,7 @@ class TracingIterator implements Iterator<Message> {
   }
 
   void startProcessing(Message message) {
-    if (message != null && !tracingList.isListenerProcessingSelected()) {
+    if (message != null && !tracingList.isProcessingOwnedOutsideSqsSdk()) {
       SqsMessage sqsMessage = tracingList.getTracingMessage(message);
       if (sqsMessage == null) {
         return;
@@ -90,7 +90,7 @@ class TracingIterator implements Iterator<Message> {
   static void processCallback(
       TracingList tracingList, Message message, Consumer<? super Message> action) {
     requireNonNull(action);
-    if (message == null || tracingList.isListenerProcessingSelected()) {
+    if (message == null || tracingList.isProcessingOwnedOutsideSqsSdk()) {
       action.accept(message);
       return;
     }
