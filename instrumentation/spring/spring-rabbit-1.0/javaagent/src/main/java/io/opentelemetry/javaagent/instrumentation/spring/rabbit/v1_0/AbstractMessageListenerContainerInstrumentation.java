@@ -53,7 +53,7 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
       @Nullable
       public static AdviceScope start(
           AbstractMessageListenerContainer container, Channel channel, Object data) {
-        if (!SpringRabbitListenerUtil.isListenerProcessingSelected(container)) {
+        if (!SpringRabbitListenerUtil.canTraceListenerProcessing(container)) {
           return null;
         }
 

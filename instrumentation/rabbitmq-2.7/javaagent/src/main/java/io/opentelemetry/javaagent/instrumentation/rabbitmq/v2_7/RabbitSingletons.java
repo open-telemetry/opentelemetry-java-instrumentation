@@ -44,8 +44,8 @@ import java.util.Map;
 
 public class RabbitSingletons {
 
-  // RabbitMQ owns this field, shared with Spring Rabbit through the application Consumer type.
-  public static final VirtualField<Consumer, Boolean> LISTENER_PROCESSING_SELECTED =
+  // Shared with framework instrumentations through the application Consumer type.
+  public static final VirtualField<Consumer, Boolean> PROCESSING_OWNED_OUTSIDE_RABBIT_CLIENT =
       VirtualField.find(Consumer.class, Boolean.class);
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.rabbitmq-2.7";
