@@ -2,36 +2,52 @@
 
 Use when a client and a framework can observe the same messaging processing work.
 
-## Choose at the handoff
+When two layers see the *same work*, only one should produce its Process span and record its
+parent, error, duration, and completion. The unit of work is a callback or observable traversal,
+not a message's entire lifetime. Another handler, a retry, or a nested delivery may be new work
+with its own Process span.
 
-One layer owns each callback or observable traversal: its Process span, parent context, error,
-duration when recorded, and completion. Select that layer from the actual registration or
-delivery handoff, not an active span, thread, or framework on the classpath. Spring Rabbit can
-make the choice per consumer registration; Spring Kafka can carry it with a polled batch and
-its records.
+## Decide where the work changes hands
 
-Keep the choice with the registration, message, batch, or response that needs it, including
-when a library copies or wraps the carrier. Suppress lower-level processing only for work the
-framework owns. Independent nested client work stays visible, and the client remains the
-fallback when the framework is absent, disabled, or cannot handle that callback. Configuration
-enablement and temporary suppression are not ownership decisions.
+Choose the owner at the actual client-to-framework handoff. A framework on the classpath, the
+current span, or a shared thread does not tell you which layer owns a particular callback.
+Configuration enables an instrumentation; temporary suppression prevents a duplicate span
+during known delegation. Neither makes the ownership decision.
 
-## Finish the same invocation
+For example:
 
-Capture the parent at the processing handoff. Make the operation context current only while
-application code runs; retain invocation state for nested or asynchronous callbacks so the
-matching operation records its error and duration and ends at the observed completion. Restore
-prior thread state and clean up on failures. Do not infer the parent from the context current
-on a completion thread. Use [AdviceScope](javaagent-advice-patterns.md#advicescope-patterns)
-for ordinary paired advice; release `ScopedThreadSuppression` only if this invocation acquired
-it, following the [thread-state guidance](javaagent-thread-local-state.md).
+- **Spring Rabbit:** The client and Spring both see deliveries to a Spring-created consumer.
+  Mark that consumer when it registers so Spring owns its listener's Process span. A separately
+  registered RabbitMQ consumer, even on the same channel, still gets a client Process span.
+- **Spring Kafka:** A poll returns records that might be iterated later or on another thread.
+  Keep the choice with the batch and records Spring handles. Raw Kafka iteration still
+  instruments independent application polls.
+- **SQS:** An SDK receive call returns messages without a processing callback. Iteration is
+  the best boundary available to a raw SDK user. If a supported framework handles that
+  response, it owns the messages it passes to its listener; otherwise SDK traversal is the
+  fallback.
 
-## Keep the boundary honest
+Keep ownership information with the registration, batch, or message that crosses the handoff.
+Transfer it when the library copies or wraps a message. If the framework is absent, disabled,
+or cannot handle the callback, leave client processing available. Do not disable all client
+processing just because one framework delivery is in progress.
 
-A retry, another handler, or a nested delivery may be a new Process operation. Raw Kafka and
-SQS traversal is only best-effort processing: instrument supported iterator or callback
-boundaries, not arbitrary list access. An abandoned iterator has no reliable completion event.
+## Finish the work you started
 
-Receive, Send, Create, and propagation have separate lifecycles. Process ownership does not
-deduplicate `messaging.client.consumed.messages`; that needs delivery identity, tracked in
-[issue #20214](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20214).
+Capture the parent context at the handoff, then make the Process context current while
+application code runs. Keep enough state to finish that exact invocation, including across
+nested callbacks or asynchronous completion. Close the thread scope when the callback returns.
+At the completion you can observe, record its error and duration and end the operation. Restore
+previous thread state on exit, including failure. Do not look up the parent from the context
+current on the completion thread.
+
+Ordinary paired advice can use [AdviceScope](javaagent-advice-patterns.md#advicescope-patterns).
+When suppressing lower-level processing with `ScopedThreadSuppression`, release it only if
+this invocation acquired it; see [thread-state guidance](javaagent-thread-local-state.md).
+
+Raw Kafka and SQS traversal is best effort. Instrument the supported iterator or callback
+boundary, not arbitrary list access. An abandoned iterator has no reliable completion event.
+
+Receive, Send, Create, and context propagation have their own boundaries. Process ownership
+does not deduplicate `messaging.client.consumed.messages`; that requires delivery identity,
+tracked in [issue #20214](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20214).
