@@ -1,3 +1,5 @@
+import java.time.Duration
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -40,6 +42,11 @@ tasks {
     jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
 
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+
+    // Above the repository wide 15 minute default: these tests start a real queue manager from a
+    // large image on icr.io, and a cold runner has spent longer than that pulling and booting it
+    // before the first test runs. The tests themselves take seconds.
+    timeout.set(Duration.ofMinutes(30))
   }
 
   test {
