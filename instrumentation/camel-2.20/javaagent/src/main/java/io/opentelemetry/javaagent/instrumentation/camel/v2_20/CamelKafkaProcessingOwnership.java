@@ -6,11 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaProcessingSelectionUtil;
+import io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaProcessingOwnershipUtil;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 
-public final class CamelKafkaProcessingSelection {
+public final class CamelKafkaProcessingOwnership {
 
   private static final VirtualField<KafkaConsumer<?, ?>, Boolean> CAMEL_CONSUMERS =
       VirtualField.find(KafkaConsumer.class, Boolean.class);
@@ -19,13 +19,13 @@ public final class CamelKafkaProcessingSelection {
     CAMEL_CONSUMERS.set(consumer, true);
   }
 
-  public static void selectFrameworkProcessing(
+  public static void markCamelAsProcessingOwner(
       KafkaConsumer<?, ?> consumer, ConsumerRecords<?, ?> records) {
     if (CAMEL_CONSUMERS.get(consumer) == null || records.isEmpty()) {
       return;
     }
-    KafkaProcessingSelectionUtil.selectFrameworkProcessing(records);
+    KafkaProcessingOwnershipUtil.markProcessingOwnedOutsideKafkaClient(records);
   }
 
-  private CamelKafkaProcessingSelection() {}
+  private CamelKafkaProcessingOwnership() {}
 }

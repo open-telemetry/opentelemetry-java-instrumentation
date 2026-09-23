@@ -31,7 +31,7 @@ class KafkaCamelPollInstrumentationTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
-  void selectsOnlyCamelProcessingAfterKafkaPoll(boolean camelConsumer) throws Exception {
+  void marksOnlyCamelProcessingAfterKafkaPoll(boolean camelConsumer) throws Exception {
     ConsumerRecord<String, String> record = new ConsumerRecord<>("test", 0, 0, "key", "value");
     KafkaConsumer<String, String> consumer = TestKafkaConsumerFactory.create(record);
     ClassLoader classLoader = consumer.getClass().getClassLoader();
@@ -53,7 +53,7 @@ class KafkaCamelPollInstrumentationTest {
     if (camelConsumer && !CAMEL_DISABLED && !ADAPTER_DISABLED) {
       Class<?> camelSelection =
           Class.forName(
-              "io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelKafkaProcessingSelection",
+              "io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelKafkaProcessingOwnership",
               true,
               classLoader);
       camelSelection.getMethod("markConsumer", KafkaConsumer.class).invoke(null, consumer);
@@ -61,17 +61,17 @@ class KafkaCamelPollInstrumentationTest {
 
     ConsumerRecords<String, String> records = consumer.poll(0);
 
-    Class<?> kafkaSelection =
+    Class<?> kafkaOwnership =
         Class.forName(
             "io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11"
-                + ".KafkaProcessingSelectionUtil",
+                + ".KafkaProcessingOwnershipUtil",
             true,
             classLoader);
-    Method rawBatchSelection =
-        kafkaSelection.getMethod(
-            "rawProcessingSelection", ConsumerRecords.class, BooleanSupplier.class);
-    BooleanSupplier batchSelection =
-        (BooleanSupplier) rawBatchSelection.invoke(null, records, (BooleanSupplier) () -> true);
+    Method rawBatchEligibility =
+        kafkaOwnership.getMethod(
+            "rawProcessingEligibility", ConsumerRecords.class, BooleanSupplier.class);
+    BooleanSupplier batchEligibility =
+        (BooleanSupplier) rawBatchEligibility.invoke(null, records, (BooleanSupplier) () -> true);
 
     Class<?> kafkaContext =
         Class.forName(
@@ -79,17 +79,17 @@ class KafkaCamelPollInstrumentationTest {
                 + ".KafkaConsumerContextUtil",
             true,
             classLoader);
-    Method rawRecordSelection =
-        kafkaContext.getMethod("getRawProcessingSelection", ConsumerRecord.class);
+    Method rawRecordEligibility =
+        kafkaContext.getMethod("getRawProcessingEligibility", ConsumerRecord.class);
 
     assertThat(records.count()).isEqualTo(1);
-    assertThat(batchSelection.getAsBoolean())
+    assertThat(batchEligibility.getAsBoolean())
         .isEqualTo(!camelConsumer || CAMEL_DISABLED || ADAPTER_DISABLED);
-    assertThat(rawRecordSelection.invoke(null, record))
+    assertThat(rawRecordEligibility.invoke(null, record))
         .isInstanceOfSatisfying(
             KafkaConsumerBatchState.class,
-            recordSelection ->
-                assertThat(recordSelection.getAsBoolean())
+            recordEligibility ->
+                assertThat(recordEligibility.getAsBoolean())
                     .isEqualTo(!camelConsumer || CAMEL_DISABLED || ADAPTER_DISABLED));
   }
 }
