@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v3_2;
 
 import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 import com.couchbase.client.core.Core;
 import com.couchbase.client.core.env.SeedNode;
@@ -14,14 +15,13 @@ import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.Couchbas
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseServerTarget;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseServerTargets;
 import org.junit.jupiter.api.Test;
-import org.objenesis.ObjenesisStd;
 
 class CouchbaseProtostellarTargetsTest {
 
   @Test
   void preservesConfiguredTargetForLegacyCore() throws ClassNotFoundException {
     Class.forName("com.couchbase.client.core.CoreProtostellar");
-    Core core = new ObjenesisStd().newInstance(Core.class);
+    Core core = mock(Core.class);
 
     CouchbaseServerTarget configuredTarget =
         CouchbaseConnectionStrings.target("protostellar://node:18099");

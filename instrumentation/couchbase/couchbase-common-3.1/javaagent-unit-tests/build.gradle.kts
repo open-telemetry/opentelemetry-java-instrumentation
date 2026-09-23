@@ -15,6 +15,7 @@ testing {
       dependencies {
         implementation(project(":instrumentation-api-incubator"))
         implementation(project(":javaagent-extension-api"))
+        implementation(project(":instrumentation:couchbase:couchbase-3.2:javaagent"))
         implementation(project(":instrumentation:couchbase:couchbase-common-3.1:javaagent"))
         implementation("com.couchbase.client:java-client:3.4.3")
       }
