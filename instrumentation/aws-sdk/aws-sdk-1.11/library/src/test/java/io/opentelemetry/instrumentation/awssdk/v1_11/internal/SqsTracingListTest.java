@@ -221,12 +221,12 @@ class SqsTracingListTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
-  void frameworkSelectionDisablesOnlyMatchingResponse(boolean selectView) {
+  void processingOwnershipDisablesOnlyMatchingResponse(boolean selectView) {
     List<Message> selected = tracingMessages();
     List<Message> view = selected.subList(0, 2);
     ListIterator<Message> existingIterator = selected.listIterator();
     List<Message> unrelated = tracingMessages(Context.root(), true, new ArrayList<>(selected));
-    SqsProcessTracing.selectFrameworkProcessing(selectView ? view : selected);
+    SqsProcessTracing.markProcessingOwnedOutsideSqsSdk(selectView ? view : selected);
     selected.forEach(message -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
     view.spliterator()
         .forEachRemaining(
@@ -240,9 +240,9 @@ class SqsTracingListTest {
   }
 
   @Test
-  void unsupportedCopiedListDoesNotSelectResponse() {
+  void unsupportedCopiedListDoesNotMarkResponseOwned() {
     List<Message> messages = tracingMessages();
-    SqsProcessTracing.selectFrameworkProcessing(new ArrayList<>(messages));
+    SqsProcessTracing.markProcessingOwnedOutsideSqsSdk(new ArrayList<>(messages));
     messages.forEach(SqsTracingListTest::processing);
     messages.forEach(SqsTracingListTest::processing);
     assertThat(testing.spans()).hasSize(4);
