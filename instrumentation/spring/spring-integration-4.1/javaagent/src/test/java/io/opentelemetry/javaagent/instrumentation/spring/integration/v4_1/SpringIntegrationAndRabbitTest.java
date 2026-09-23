@@ -108,7 +108,7 @@ class SpringIntegrationAndRabbitTest {
                             satisfies(
                                 MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
                                 val -> val.isInstanceOf(String.class))),
-                // Spring listener registration selects spring-rabbit for the process span.
+                // Listener registration marks Spring Rabbit as this consumer's Process owner.
                 span ->
                     span.satisfies(
                             spanData ->
