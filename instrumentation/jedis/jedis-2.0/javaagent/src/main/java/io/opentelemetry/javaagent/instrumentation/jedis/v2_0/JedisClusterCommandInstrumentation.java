@@ -24,8 +24,7 @@ class JedisClusterCommandInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("redis.clients.jedis.JedisClusterCommand")
-        .or(extendsClass(named("redis.clients.jedis.JedisClusterCommand")));
+    return extendsClass(named("redis.clients.jedis.JedisClusterCommand"));
   }
 
   @Override
