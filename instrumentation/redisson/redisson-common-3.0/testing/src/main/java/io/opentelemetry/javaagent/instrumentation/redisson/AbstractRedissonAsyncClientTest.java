@@ -305,10 +305,8 @@ public abstract class AbstractRedissonAsyncClientTest {
         testing.runWithSpan(
             "parent",
             () -> {
-              BatchOptions batchOptions =
-                  BatchOptions.defaults()
-                      .executionMode(BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC);
-              RBatch batch = redisson.createBatch(batchOptions);
+              RBatch batch =
+                  redisson.createBatch((BatchOptions) batchOptions("REDIS_WRITE_ATOMIC"));
               batch.getBucket("batch1").setAsync("v1");
               batch.getBucket("batch2").setAsync("v2");
               RFuture<?> batchResultFuture = batch.executeAsync();
@@ -425,9 +423,8 @@ public abstract class AbstractRedissonAsyncClientTest {
   void atomicBatchCommandCallback() throws ReflectiveOperationException {
     Assumptions.assumeTrue(emitStableDatabaseSemconv());
     boolean usesRPromise;
-    Class<?> executionModeClass;
     try {
-      executionModeClass = Class.forName("org.redisson.api.BatchOptions$ExecutionMode");
+      Class.forName("org.redisson.api.BatchOptions$ExecutionMode");
       usesRPromise =
           Arrays.stream(
                   Class.forName("org.redisson.client.protocol.CommandData")
@@ -444,12 +441,7 @@ public abstract class AbstractRedissonAsyncClientTest {
       return;
     }
     String executionModeName = usesRPromise ? "REDIS_WRITE_ATOMIC" : "IN_MEMORY_ATOMIC";
-    Object executionMode =
-        executionModeClass.getMethod("valueOf", String.class).invoke(null, executionModeName);
-    BatchOptions options = BatchOptions.defaults();
-    BatchOptions.class
-        .getMethod("executionMode", executionModeClass)
-        .invoke(options, executionMode);
+    BatchOptions options = (BatchOptions) batchOptions(executionModeName);
     RBatch batch = redisson.createBatch(options);
 
     CompletableFuture<String> callbackResult = new CompletableFuture<>();
@@ -508,6 +500,22 @@ public abstract class AbstractRedissonAsyncClientTest {
 
   protected boolean useRedisProtocol() {
     return testLatestDeps();
+  }
+
+  private static Object batchOptions(String executionModeName) {
+    try {
+      Class<?> executionModeClass = Class.forName("org.redisson.api.BatchOptions$ExecutionMode");
+      Object executionMode =
+          executionModeClass.getMethod("valueOf", String.class).invoke(null, executionModeName);
+      Object options = BatchOptions.defaults();
+      options
+          .getClass()
+          .getMethod("executionMode", executionModeClass)
+          .invoke(options, executionMode);
+      return options;
+    } catch (ReflectiveOperationException e) {
+      throw new IllegalStateException(e);
+    }
   }
 
   /** Whether the instrumented redisson version can report the Redis database index. */

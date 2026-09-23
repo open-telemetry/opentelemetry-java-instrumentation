@@ -296,9 +296,7 @@ public abstract class AbstractRedissonClientTest {
     RedissonClient databaseOne = Redisson.create(createConfig(1, null, false));
     try {
       testing.clearData();
-      RBatch batch =
-          databaseOne.createBatch(
-              BatchOptions.defaults().executionMode(BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC));
+      RBatch batch = databaseOne.createBatch((BatchOptions) batchOptions("REDIS_WRITE_ATOMIC"));
       batch.getBucket("batch1").setAsync("v1");
       batch.execute();
 
@@ -569,9 +567,7 @@ public abstract class AbstractRedissonClientTest {
     testing.runWithSpan(
         "parent",
         () -> {
-          BatchOptions batchOptions =
-              BatchOptions.defaults().executionMode(BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC);
-          RBatch batch = redisson.createBatch(batchOptions);
+          RBatch batch = redisson.createBatch((BatchOptions) batchOptions("REDIS_WRITE_ATOMIC"));
           batch.getBucket("batch1").setAsync("v1");
           batch.getBucket("batch2").setAsync("v2");
           batch.execute();
@@ -660,9 +656,7 @@ public abstract class AbstractRedissonClientTest {
   @Test
   void atomicBatchSingleCommand() {
     assumeStableAtomicBatchSupport();
-    RBatch batch =
-        redisson.createBatch(
-            BatchOptions.defaults().executionMode(BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC));
+    RBatch batch = redisson.createBatch((BatchOptions) batchOptions("REDIS_WRITE_ATOMIC"));
     batch.getBucket("batch1").setAsync("v1");
     batch.execute();
     assertStableAtomicBatch("MULTI SET", null, "SET batch1 ?");
@@ -675,7 +669,7 @@ public abstract class AbstractRedissonClientTest {
     RBatch batch = redisson.createBatch(options);
     batch.getBucket("batch1").setAsync("v1");
     batch.getBucket("batch2").setAsync("v2");
-    options.executionMode(BatchOptions.ExecutionMode.IN_MEMORY_ATOMIC);
+    setBatchExecutionMode(options, "IN_MEMORY_ATOMIC");
     batch.execute();
     assertStableAtomicBatch("MULTI SET", 2L, "SET batch1 ?; SET batch2 ?");
   }
@@ -684,12 +678,11 @@ public abstract class AbstractRedissonClientTest {
   @Tag(TEST_SINGLE_CONNECTION)
   void batchChangedFromAtomicAfterCommandsQueued() {
     assumeStableAtomicBatchSupport();
-    BatchOptions options =
-        BatchOptions.defaults().executionMode(BatchOptions.ExecutionMode.IN_MEMORY_ATOMIC);
+    BatchOptions options = (BatchOptions) batchOptions("IN_MEMORY_ATOMIC");
     RBatch batch = redisson.createBatch(options);
     batch.getBucket("batch1").setAsync("v1");
     batch.getBucket("batch2").setAsync("v2");
-    options.executionMode(BatchOptions.ExecutionMode.IN_MEMORY);
+    setBatchExecutionMode(options, "IN_MEMORY");
     batch.execute();
     redisson.getBucket("after-pipeline").get();
 
@@ -736,9 +729,7 @@ public abstract class AbstractRedissonClientTest {
   @Test
   void atomicBatchCannotExecuteTwice() {
     assumeStableAtomicBatchSupport();
-    RBatch batch =
-        redisson.createBatch(
-            BatchOptions.defaults().executionMode(BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC));
+    RBatch batch = redisson.createBatch((BatchOptions) batchOptions("REDIS_WRITE_ATOMIC"));
     batch.getBucket("batch1").setAsync("v1");
     batch.execute();
 
@@ -749,9 +740,7 @@ public abstract class AbstractRedissonClientTest {
   @Test
   void atomicBatchMixedCommands() {
     assumeStableAtomicBatchSupport();
-    RBatch batch =
-        redisson.createBatch(
-            BatchOptions.defaults().executionMode(BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC));
+    RBatch batch = redisson.createBatch((BatchOptions) batchOptions("REDIS_WRITE_ATOMIC"));
     batch.getBucket("batch1").setAsync("v1");
     batch.getBucket("batch1").getAsync();
     batch.execute();
@@ -761,9 +750,7 @@ public abstract class AbstractRedissonClientTest {
   @Test
   void atomicBatchAsyncCommand() {
     assumeStableAtomicBatchSupport();
-    RBatch batch =
-        redisson.createBatch(
-            BatchOptions.defaults().executionMode(BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC));
+    RBatch batch = redisson.createBatch((BatchOptions) batchOptions("REDIS_WRITE_ATOMIC"));
     batch.getBucket("batch1").setAsync("v1");
     batch.getBucket("batch2").setAsync("v2");
     batch.executeAsync().toCompletableFuture().join();
@@ -782,9 +769,7 @@ public abstract class AbstractRedissonClientTest {
       Assumptions.abort();
     }
 
-    RBatch batch =
-        redisson.createBatch(
-            BatchOptions.defaults().executionMode(BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC));
+    RBatch batch = redisson.createBatch((BatchOptions) batchOptions("REDIS_WRITE_ATOMIC"));
     batch.getBucket("batch1").setAsync("v1");
     batch.getClass().getMethod("discard").invoke(batch);
 
@@ -805,9 +790,7 @@ public abstract class AbstractRedissonClientTest {
       Assumptions.abort();
     }
 
-    RBatch batch =
-        redisson.createBatch(
-            BatchOptions.defaults().executionMode(BatchOptions.ExecutionMode.IN_MEMORY_ATOMIC));
+    RBatch batch = redisson.createBatch((BatchOptions) batchOptions("IN_MEMORY_ATOMIC"));
     batch.getBucket("batch1").setAsync("v1");
     batch.getClass().getMethod("discard").invoke(batch);
 
@@ -824,9 +807,7 @@ public abstract class AbstractRedissonClientTest {
     assumeStableAtomicBatchSupport();
     String bucketName = "bucket" + String.join("", nCopies(15_000, "a"));
     int batchSize = 4;
-    RBatch batch =
-        redisson.createBatch(
-            BatchOptions.defaults().executionMode(BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC));
+    RBatch batch = redisson.createBatch((BatchOptions) batchOptions("REDIS_WRITE_ATOMIC"));
     for (int i = 0; i < batchSize; i++) {
       batch.getBucket(bucketName).setAsync("v" + i);
     }
@@ -842,9 +823,7 @@ public abstract class AbstractRedissonClientTest {
     redisson.getBucket("wrongtype").set("value");
     testing.clearData();
 
-    RBatch batch =
-        redisson.createBatch(
-            BatchOptions.defaults().executionMode(BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC));
+    RBatch batch = redisson.createBatch((BatchOptions) batchOptions("REDIS_WRITE_ATOMIC"));
     batch.getMap("wrongtype").getAsync("field");
     batch.getBucket("after").setAsync("value");
 
@@ -898,6 +877,26 @@ public abstract class AbstractRedissonClientTest {
       Assumptions.abort();
     } catch (ClassNotFoundException ignored) {
       // Atomic mode was passed to executeAsync before it became a CommandBatchService field.
+    }
+  }
+
+  private static Object batchOptions(String executionModeName) {
+    Object options = BatchOptions.defaults();
+    setBatchExecutionMode(options, executionModeName);
+    return options;
+  }
+
+  private static void setBatchExecutionMode(Object options, String executionModeName) {
+    try {
+      Class<?> executionModeClass = Class.forName("org.redisson.api.BatchOptions$ExecutionMode");
+      Object executionMode =
+          executionModeClass.getMethod("valueOf", String.class).invoke(null, executionModeName);
+      options
+          .getClass()
+          .getMethod("executionMode", executionModeClass)
+          .invoke(options, executionMode);
+    } catch (ReflectiveOperationException e) {
+      throw new IllegalStateException(e);
     }
   }
 
