@@ -229,7 +229,7 @@ class CouchbaseClient32Test {
                                 : "get")
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), "couchbase"),
-                            equalTo(longKey("db.couchbase.retries"), oldOrExperimental(0L)),
+                            equalTo(longKey("db.couchbase.retries"), experimental(0L)),
                             equalTo(
                                 SERVER_ADDRESS, emitStableDatabaseSemconv() ? seedAddress : null),
                             equalTo(
