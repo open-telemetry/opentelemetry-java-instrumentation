@@ -8,14 +8,14 @@ package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import javax.jms.MessageListener;
 
-public final class CamelJmsProcessingSelection {
+public final class CamelJmsProcessingOwnership {
 
-  private static final VirtualField<MessageListener, Boolean> PROCESSING_SELECTION =
+  private static final VirtualField<MessageListener, Boolean> CAMEL_OWNS_PROCESSING =
       VirtualField.find(MessageListener.class, Boolean.class);
 
-  public static void selectFrameworkProcessing(MessageListener messageListener) {
-    PROCESSING_SELECTION.set(messageListener, true);
+  public static void markCamelAsProcessingOwner(MessageListener messageListener) {
+    CAMEL_OWNS_PROCESSING.set(messageListener, true);
   }
 
-  private CamelJmsProcessingSelection() {}
+  private CamelJmsProcessingOwnership() {}
 }

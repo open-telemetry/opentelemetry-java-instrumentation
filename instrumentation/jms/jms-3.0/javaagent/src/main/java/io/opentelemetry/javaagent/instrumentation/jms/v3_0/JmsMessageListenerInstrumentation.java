@@ -83,10 +83,10 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
         MessageAdapter messageAdapter = JakartaMessageAdapter.create(message);
         MessageWithDestination messageWithDestination =
             MessageWithDestination.create(messageAdapter, null, JmsSubscriptionNames.get(message));
-        boolean processingSelected = messageAdapter.beginProcessing();
+        boolean firstProcessingObserver = messageAdapter.beginProcessing();
 
         try {
-          if (!processingSelected) {
+          if (!firstProcessingObserver) {
             return new AdviceScope(
                 consumerProcessInstrumenter(),
                 messageWithDestination,

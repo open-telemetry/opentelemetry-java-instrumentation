@@ -44,14 +44,14 @@ class JmsMessageListenerStartFailureTest {
   }
 
   @Test
-  void markedFrameworkListenerStillCompletesProcessingLifecycle() {
-    VirtualField<MessageListener, Boolean> processingSelection =
+  void camelOwnedListenerStillCompletesProcessingLifecycle() {
+    VirtualField<MessageListener, Boolean> camelOwnsProcessing =
         VirtualField.find(MessageListener.class, Boolean.class);
     VirtualField<Message, JmsMessageProcessingState> processingState =
         VirtualField.find(Message.class, JmsMessageProcessingState.class);
     Message message = newMessage();
     MessageListener listener = ignored -> {};
-    processingSelection.set(listener, true);
+    camelOwnsProcessing.set(listener, true);
 
     JmsMessageListenerInstrumentation.MessageListenerAdvice.AdviceScope firstScope =
         JmsMessageListenerInstrumentation.MessageListenerAdvice.AdviceScope.start(

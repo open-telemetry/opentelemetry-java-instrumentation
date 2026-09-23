@@ -48,7 +48,7 @@ class SjmsConsumerInstrumentation implements TypeInstrumentation {
       if (messageListener != null
           && emitStableMessagingSemconv()
           && CamelInstrumentationEnabled.isEnabled(consumer.getEndpoint().getCamelContext())) {
-        CamelJmsProcessingSelection.selectFrameworkProcessing(messageListener);
+        CamelJmsProcessingOwnership.markCamelAsProcessingOwner(messageListener);
       }
     }
   }

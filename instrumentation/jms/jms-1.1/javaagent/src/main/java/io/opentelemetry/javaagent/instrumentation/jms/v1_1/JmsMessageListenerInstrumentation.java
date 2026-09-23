@@ -54,7 +54,7 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
   public static class MessageListenerAdvice {
 
     public static class AdviceScope {
-      private static final VirtualField<MessageListener, Boolean> FRAMEWORK_PROCESSING_SELECTION =
+      private static final VirtualField<MessageListener, Boolean> CAMEL_OWNS_PROCESSING =
           VirtualField.find(MessageListener.class, Boolean.class);
 
       private final Instrumenter<MessageWithDestination, Void> instrumenter;
@@ -87,11 +87,11 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
         MessageAdapter messageAdapter = JavaxMessageAdapter.create(message);
         MessageWithDestination messageWithDestination =
             MessageWithDestination.create(messageAdapter, null, JmsSubscriptionNames.get(message));
-        boolean processingSelected = messageAdapter.beginProcessing();
+        boolean firstProcessingObserver = messageAdapter.beginProcessing();
 
         try {
-          if (!processingSelected
-              || Boolean.TRUE.equals(FRAMEWORK_PROCESSING_SELECTION.get(messageListener))) {
+          if (!firstProcessingObserver
+              || Boolean.TRUE.equals(CAMEL_OWNS_PROCESSING.get(messageListener))) {
             return new AdviceScope(
                 consumerProcessInstrumenter(),
                 messageWithDestination,

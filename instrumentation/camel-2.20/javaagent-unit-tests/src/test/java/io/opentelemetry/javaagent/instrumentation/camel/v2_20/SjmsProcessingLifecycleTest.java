@@ -23,28 +23,28 @@ class SjmsProcessingLifecycleTest {
 
   private static final VirtualField<Message, JmsMessageProcessingState> PROCESSING_STATE =
       VirtualField.find(Message.class, JmsMessageProcessingState.class);
-  private static final VirtualField<MessageListener, Boolean> PROCESSING_SELECTION =
+  private static final VirtualField<MessageListener, Boolean> CAMEL_OWNS_PROCESSING =
       VirtualField.find(MessageListener.class, Boolean.class);
 
   @Test
-  void selectsCamelProcessingForSjmsListener() {
+  void marksCamelAsProcessingOwnerForSjmsListener() {
     MessageListener listener = mock(MessageListener.class);
 
     SjmsConsumerInstrumentation.CreateMessageHandlerAdvice.onExit(
         consumerWithCoreInstrumentation(true), listener);
 
-    assertThat(PROCESSING_SELECTION.get(listener))
+    assertThat(CAMEL_OWNS_PROCESSING.get(listener))
         .isEqualTo(emitStableMessagingSemconv() ? Boolean.TRUE : null);
   }
 
   @Test
-  void doesNotSelectCamelProcessingWithoutCoreInstrumentation() {
+  void doesNotMarkCamelAsProcessingOwnerWithoutCoreInstrumentation() {
     MessageListener listener = mock(MessageListener.class);
 
     SjmsConsumerInstrumentation.CreateMessageHandlerAdvice.onExit(
         consumerWithCoreInstrumentation(false), listener);
 
-    assertThat(PROCESSING_SELECTION.get(listener)).isNull();
+    assertThat(CAMEL_OWNS_PROCESSING.get(listener)).isNull();
   }
 
   @Test

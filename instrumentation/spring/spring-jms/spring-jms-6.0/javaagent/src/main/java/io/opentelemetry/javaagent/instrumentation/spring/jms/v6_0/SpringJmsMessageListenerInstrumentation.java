@@ -83,10 +83,10 @@ class SpringJmsMessageListenerInstrumentation implements TypeInstrumentation {
         MessageAdapter messageAdapter = JakartaMessageAdapter.create(message);
         MessageWithDestination request =
             MessageWithDestination.create(messageAdapter, null, JmsSubscriptionNames.get(message));
-        boolean processingSelected = messageAdapter.beginProcessing();
+        boolean firstProcessingObserver = messageAdapter.beginProcessing();
 
         try {
-          if (!processingSelected) {
+          if (!firstProcessingObserver) {
             return new AdviceScope(listenerInstrumenter(), request, messageAdapter, null, null);
           }
 
