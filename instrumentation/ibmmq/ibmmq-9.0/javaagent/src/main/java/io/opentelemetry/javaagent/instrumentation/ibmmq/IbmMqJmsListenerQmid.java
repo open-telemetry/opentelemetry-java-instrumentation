@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.ibmmq;
 
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import javax.annotation.Nullable;
 import javax.jms.Message;
@@ -55,15 +56,19 @@ public class IbmMqJmsListenerQmid {
     if (message != null) {
       IbmMqQmid qmid = RECEIVED_QMID.get(message);
       if (qmid != null) {
-        IbmMqQmidSupport.stampMessagingSystem();
-        IbmMqQmidSupport.stampMessagingSpan(qmid.value());
+        IbmMqQmidSupport.stampMessagingSystem(SpanKey.CONSUMER_PROCESS);
+        IbmMqQmidSupport.stampMessagingSpan(SpanKey.CONSUMER_PROCESS, qmid.value());
         return;
       }
     }
     IbmMqConsumerHolder holder = CONSUMER.get(listener);
     Object consumer = holder == null ? null : holder.consumer();
     if (consumer != null) {
-      IbmMqJmsQmid.stampMessagingSpan(consumer);
+      String qmid = IbmMqJmsQmid.readQmid(consumer);
+      if (qmid != null) {
+        IbmMqQmidSupport.stampMessagingSystem(SpanKey.CONSUMER_PROCESS);
+        IbmMqQmidSupport.stampMessagingSpan(SpanKey.CONSUMER_PROCESS, qmid);
+      }
     }
   }
 

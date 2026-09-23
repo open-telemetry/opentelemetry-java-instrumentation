@@ -43,20 +43,5 @@ public class IbmMqJmsQmid {
     }
   }
 
-  public static void stampMessagingSpan(Object jmsObject) {
-    if (!IbmMqQmidSupport.enabled()) {
-      return;
-    }
-    // Read the QMID first: this method now also runs for listeners re-associated after a
-    // transient read failure, which may be re-invoked for a non-IBM-MQ consumer too. Only stamp
-    // messaging.system once a genuine QMID was actually read, never before.
-    String qmid = readQmid(jmsObject);
-    if (qmid == null) {
-      return;
-    }
-    IbmMqQmidSupport.stampMessagingSystem();
-    IbmMqQmidSupport.stampMessagingSpan(qmid);
-  }
-
   private IbmMqJmsQmid() {}
 }

@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -41,7 +42,15 @@ public class IbmMqJmsProducerInstrumentation implements TypeInstrumentation {
     // has therefore already opened the producer span and made it current by the time this runs.
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.This Object producer) {
-      IbmMqJmsQmid.stampMessagingSpan(producer);
+      if (!IbmMqQmidSupport.enabled()) {
+        return;
+      }
+      String qmid = IbmMqJmsQmid.readQmid(producer);
+      if (qmid == null) {
+        return;
+      }
+      IbmMqQmidSupport.stampMessagingSystem(SpanKey.PRODUCER);
+      IbmMqQmidSupport.stampMessagingSpan(SpanKey.PRODUCER, qmid);
     }
   }
 }

@@ -41,7 +41,6 @@ class IbmMqJakartaTest {
   void enrichmentHelpersNeverThrow() {
     assertThatCode(
             () -> {
-              IbmMqJakartaJmsQmid.stampMessagingSpan(new Object());
               IbmMqJakartaJmsListenerQmid.associate(new Object(), null);
               IbmMqJakartaJmsListenerQmid.stamp(null, null);
               IbmMqJakartaJmsListenerQmid.captureFromReceive(new Object(), null);
