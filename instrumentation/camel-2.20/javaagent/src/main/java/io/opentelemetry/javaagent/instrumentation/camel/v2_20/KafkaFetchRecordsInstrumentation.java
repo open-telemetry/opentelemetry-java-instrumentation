@@ -37,7 +37,7 @@ class KafkaFetchRecordsInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.FieldValue("consumer") @Nullable KafkaConsumer<?, ?> consumer) {
       if (emitStableMessagingSemconv() && consumer != null) {
-        CamelKafkaProcessingSelection.markConsumer(consumer);
+        CamelKafkaProcessingOwnership.markConsumer(consumer);
       }
     }
   }

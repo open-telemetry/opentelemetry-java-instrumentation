@@ -37,7 +37,7 @@ class RabbitConsumerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This Consumer consumer) {
       if (emitStableMessagingSemconv()) {
-        CamelRabbitProcessingSelection.selectFrameworkProcessing(consumer);
+        CamelRabbitProcessingOwnership.markCamelAsProcessingOwner(consumer);
       }
     }
   }

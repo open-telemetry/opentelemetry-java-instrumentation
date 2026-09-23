@@ -37,7 +37,7 @@ class SqsConsumerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) List<?> messages) {
       if (emitStableMessagingSemconv()) {
-        SqsProcessTracing.selectFrameworkProcessing(messages);
+        SqsProcessTracing.markProcessingOwnedOutsideSqsSdk(messages);
       }
     }
   }
