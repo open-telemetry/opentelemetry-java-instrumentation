@@ -25,9 +25,29 @@ public class IbmMqJakartaJmsListenerQmid {
     if (!IbmMqQmidSupport.enabled() || listener == null) {
       return;
     }
-    // Stored unconditionally, even when the QMID cannot be read right now: overwriting replaces
-    // a stale association from a previous registration, and a weak reference to the consumer
-    // costs nothing to hold, so a later delivery can retry the read instead of being permanently
+    IbmMqConsumerHolder holder = CONSUMER.get(listener);
+    if (holder != null && holder.isAmbiguous()) {
+      // Ambiguity is sticky: a third registration on this listener must not resurrect
+      // attribution just because it happens to agree with one of the earlier two -- an earlier
+      // consumer bound to the queue manager this registration disagreed with can still deliver.
+      return;
+    }
+    Object existingConsumer = holder == null ? null : holder.consumer();
+    if (existingConsumer != null && existingConsumer != consumer) {
+      // The discriminator is the QMID VALUE, not consumer identity: Spring's
+      // DefaultMessageListenerContainer with concurrency greater than 1 legitimately shares one
+      // listener bean across several consumer instances on the SAME queue manager, and that
+      // common case must keep its attribute, so a mere identity change is not itself ambiguous.
+      String existingQmid = IbmMqJakartaJmsQmid.readQmid(existingConsumer);
+      String newQmid = IbmMqJakartaJmsQmid.readQmid(consumer);
+      if (existingQmid != null && newQmid != null && !existingQmid.equals(newQmid)) {
+        CONSUMER.set(listener, IbmMqConsumerHolder.ambiguous());
+        return;
+      }
+    }
+    // Stored otherwise, even when the QMID cannot be read right now: overwriting replaces a
+    // stale association from a previous registration, and a weak reference to the consumer costs
+    // nothing to hold, so a later delivery can retry the read instead of being permanently
     // short-circuited by one failed attempt at registration time.
     CONSUMER.set(listener, new IbmMqConsumerHolder(consumer));
   }

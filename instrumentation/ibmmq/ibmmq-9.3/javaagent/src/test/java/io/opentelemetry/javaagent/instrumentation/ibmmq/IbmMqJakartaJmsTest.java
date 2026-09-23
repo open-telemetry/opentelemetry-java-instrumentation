@@ -247,6 +247,36 @@ class IbmMqJakartaJmsTest {
     assertThat(staleReads.get()).isZero();
   }
 
+  @Test
+  void listenerAssociationBecomesAmbiguousAcrossDifferentQueueManagers() {
+    // A unit-level check: a listener bean legitimately shared by Spring's
+    // DefaultMessageListenerContainer across several consumers on the SAME queue manager must
+    // keep its attribute (that case is exercised elsewhere), but two consumers on DIFFERENT queue
+    // managers must poison the association instead of letting the second writer silently
+    // overwrite the first, since a delivery driven by the first consumer would then be stamped
+    // with the second consumer's QMID.
+    AtomicInteger readsA = new AtomicInteger();
+    AtomicInteger readsB = new AtomicInteger();
+    Object consumerA = fixedQmidConsumer("QMID_A", readsA);
+    Object consumerB = fixedQmidConsumer("QMID_B", readsB);
+    CountingListener listener = new CountingListener(new CountDownLatch(1));
+
+    IbmMqJakartaJmsListenerQmid.associate(consumerA, listener);
+    assertThat(readsA.get()).isZero();
+
+    IbmMqJakartaJmsListenerQmid.associate(consumerB, listener);
+    assertThat(readsA.get()).isEqualTo(EXPERIMENTAL_ATTRIBUTES ? 1 : 0);
+    assertThat(readsB.get()).isEqualTo(EXPERIMENTAL_ATTRIBUTES ? 1 : 0);
+
+    IbmMqJakartaJmsListenerQmid.stamp(listener, null);
+
+    // Load-bearing: stamp() must never read either fake once the association is ambiguous --
+    // neither counter advances beyond its associate-time value, so no QMID could have been
+    // stamped.
+    assertThat(readsA.get()).isEqualTo(EXPERIMENTAL_ATTRIBUTES ? 1 : 0);
+    assertThat(readsB.get()).isEqualTo(EXPERIMENTAL_ATTRIBUTES ? 1 : 0);
+  }
+
   /** A fake JMS message, used only as an identity key for the message-keyed QMID virtual field. */
   private static Message fakeMessage() {
     return (Message)
