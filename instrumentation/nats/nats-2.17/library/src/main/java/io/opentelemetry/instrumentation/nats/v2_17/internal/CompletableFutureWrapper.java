@@ -38,6 +38,7 @@ public final class CompletableFutureWrapper<T> extends CompletableFuture<T> {
     CompletableFutureWrapper<T> result = new CompletableFutureWrapper<>(future);
     future.whenComplete(
         (T value, Throwable throwable) -> {
+          result.beginSourceCompletion();
           try {
             completion.accept(value, throwable);
           } catch (Throwable t) {
@@ -74,14 +75,25 @@ public final class CompletableFutureWrapper<T> extends CompletableFuture<T> {
 
   @Override
   public boolean cancel(boolean mayInterruptIfRunning) {
+    boolean awaitSourceCancellation = false;
     synchronized (completionLock) {
       if (isDone()) {
         completionState = CompletionState.COMPLETION;
       }
-      if (completionState != CompletionState.OPEN) {
-        return isCancelled();
+      if (completionState == CompletionState.SOURCE_COMPLETION && sourceFuture.isCancelled()) {
+        awaitSourceCancellation = true;
       }
-      completionState = CompletionState.CANCELLATION;
+      if (completionState != CompletionState.OPEN) {
+        if (!awaitSourceCancellation) {
+          return isCancelled();
+        }
+      } else {
+        completionState = CompletionState.CANCELLATION;
+      }
+    }
+    if (awaitSourceCancellation) {
+      awaitCompletion();
+      return isCancelled();
     }
     if (!sourceFuture.cancel(mayInterruptIfRunning)) {
       synchronized (completionLock) {
@@ -116,6 +128,12 @@ public final class CompletableFutureWrapper<T> extends CompletableFuture<T> {
     }
   }
 
+  private void beginSourceCompletion() {
+    synchronized (completionLock) {
+      completionState = CompletionState.SOURCE_COMPLETION;
+    }
+  }
+
   private void awaitCompletion() {
     boolean interrupted = false;
     while (true) {
@@ -133,6 +151,7 @@ public final class CompletableFutureWrapper<T> extends CompletableFuture<T> {
 
   private enum CompletionState {
     OPEN,
+    SOURCE_COMPLETION,
     COMPLETION,
     CANCELLATION
   }

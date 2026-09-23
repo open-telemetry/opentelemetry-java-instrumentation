@@ -288,6 +288,39 @@ class CompletableFutureWrapperTest {
   }
 
   @Test
+  void manualCompletionCannotOvertakeSourceCompletion() throws InterruptedException {
+    CountDownLatch completionStarted = new CountDownLatch(1);
+    CountDownLatch allowCompletion = new CountDownLatch(1);
+    CompletableFuture<String> sourceFuture = new CompletableFuture<>();
+    CompletableFuture<String> wrapped =
+        CompletableFutureWrapper.wrap(
+            sourceFuture,
+            Context.root(),
+            (result, error) -> {
+              completionStarted.countDown();
+              try {
+                allowCompletion.await();
+              } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new AssertionError(e);
+              }
+            });
+    Thread completer = new Thread(() -> sourceFuture.complete("source"));
+    completer.start();
+
+    try {
+      assertThat(completionStarted.await(10, SECONDS)).isTrue();
+      assertThat(wrapped.complete("manual")).isFalse();
+      assertThat(wrapped).isNotDone();
+    } finally {
+      allowCompletion.countDown();
+      completer.join();
+    }
+
+    assertThat(wrapped).isCompletedWithValue("source");
+  }
+
+  @Test
   void completionCallbackDoesNotHoldWrapperMonitor() {
     CountDownLatch callbackCompletion = new CountDownLatch(1);
     AtomicBoolean completedWhileCallbackActive = new AtomicBoolean();
