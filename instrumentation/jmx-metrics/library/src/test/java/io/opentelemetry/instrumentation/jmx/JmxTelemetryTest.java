@@ -61,7 +61,7 @@ class JmxTelemetryTest {
   void knownValidYaml() {
     JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
     // disable automatic metrics loading to only use provided rules from classpath
-    builder.internalMetricsSystemFilter(IncludeExclude.builder().setExcluded("*").build());
+    builder.setInternalMetricsSystemFilter(IncludeExclude.builder().setExcluded("*").build());
     builder.addRules(classpathRules("jmx/rules/jvm-test.yaml"));
     builder.addRules(classpathRules("jmx/rules/jvm-test_unstable.yaml"));
     JmxTelemetry telemetry = builder.build(testDefinitions());
@@ -139,9 +139,10 @@ class JmxTelemetryTest {
     JmxTelemetryBuilder builder =
         JmxTelemetry.builder(OpenTelemetry.noop())
             // only load explicitly listed systems
-            .internalMetricsSystemFilter(IncludeExclude.builder().setIncluded("jvm-test").build())
+            .setInternalMetricsSystemFilter(
+                IncludeExclude.builder().setIncluded("jvm-test").build())
             // include all unstable metrics (stable ones already included)
-            .internalMetricsUnstableMetricsFilter(IncludeExclude.builder().build());
+            .setInternalMetricsUnstableMetricsFilter(IncludeExclude.builder().build());
 
     JmxTelemetry telemetry = builder.build(testDefinitions());
 
@@ -192,7 +193,7 @@ class JmxTelemetryTest {
     JmxTelemetryBuilder builder =
         JmxTelemetry.builder(OpenTelemetry.noop())
             // every system included by default, we just enable all unstable metrics
-            .internalMetricsUnstableMetricsFilter(IncludeExclude.builder().build());
+            .setInternalMetricsUnstableMetricsFilter(IncludeExclude.builder().build());
 
     JmxTelemetry telemetry = builder.build(testDefinitions());
 
@@ -215,7 +216,7 @@ class JmxTelemetryTest {
   void includeNothing() {
     JmxTelemetryBuilder builder =
         JmxTelemetry.builder(OpenTelemetry.noop())
-            .internalMetricsSystemFilter(IncludeExclude.builder().setExcluded("*").build());
+            .setInternalMetricsSystemFilter(IncludeExclude.builder().setExcluded("*").build());
     builder.build(testDefinitions());
     assertThat(builder.getRegisteredMetrics()).isEmpty();
   }

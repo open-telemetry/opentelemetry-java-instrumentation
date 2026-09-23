@@ -102,7 +102,7 @@ class HandlerTest {
   private static JmxTelemetryBuilder getTestJmxTelemetryBuilder() {
     return JmxTelemetry.builder(testing.getOpenTelemetry())
         // disable internal metrics loading as they are enabled by default and interfere with test
-        .internalMetricsSystemFilter(IncludeExclude.builder().setExcluded("*").build());
+        .setInternalMetricsSystemFilter(IncludeExclude.builder().setExcluded("*").build());
   }
 
   @Test

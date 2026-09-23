@@ -67,7 +67,7 @@ public class JmxMetricInsightInstaller implements AgentListener {
 
     if (v3Preview) {
       // include all stable metrics excepted for jvm metrics as they overlap runtime-telemetry
-      jmx.internalMetricsSystemFilter(IncludeExclude.builder().setExcluded("jvm").build());
+      jmx.setInternalMetricsSystemFilter(IncludeExclude.builder().setExcluded("jvm").build());
 
       List<String> unstableInclude =
           config
@@ -77,7 +77,7 @@ public class JmxMetricInsightInstaller implements AgentListener {
 
       if (!unstableInclude.isEmpty()) {
         // only include explicitly opted-in, others will be excluded
-        jmx.internalMetricsUnstableMetricsFilter(
+        jmx.setInternalMetricsUnstableMetricsFilter(
             IncludeExclude.builder().setIncluded(unstableInclude).build());
       }
 
@@ -121,16 +121,16 @@ public class JmxMetricInsightInstaller implements AgentListener {
 
       if (systemsConfig.isEmpty()) {
         // exclude everything by default
-        jmx.internalMetricsSystemFilter(IncludeExclude.builder().setExcluded("*").build());
+        jmx.setInternalMetricsSystemFilter(IncludeExclude.builder().setExcluded("*").build());
       } else {
         // only opt-in on explicitly configured values
-        jmx.internalMetricsSystemFilter(
+        jmx.setInternalMetricsSystemFilter(
             IncludeExclude.builder().setIncluded(systemsConfig).build());
       }
 
       // loaded internal metrics have been explicitly opted-in, so we disable filtering on unstable
       // metrics.
-      jmx.internalMetricsUnstableMetricsFilter(IncludeExclude.builder().build());
+      jmx.setInternalMetricsUnstableMetricsFilter(IncludeExclude.builder().build());
     }
 
     // include/exclude metrics by name
