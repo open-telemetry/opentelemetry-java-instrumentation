@@ -74,6 +74,7 @@ tasks {
   }
 
   val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+    .matching { it.name != "unitTests" }
     .map { suite ->
       register<Test>("${suite.name}StableSemconv") {
         testClassesDirs = suite.sources.output.classesDirs
