@@ -35,13 +35,14 @@ class SpringRabbitConsumerInstrumentation implements TypeInstrumentation {
   public static class ConstructorAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This Consumer consumer, @Advice.Argument(0) Object owner) {
-      boolean listenerProcessingSelected =
+      boolean processingOwnedOutsideRabbitClient =
           owner instanceof BlockingQueueConsumer
-              ? SpringRabbitListenerUtil.isListenerProcessingSelected((BlockingQueueConsumer) owner)
+              ? SpringRabbitListenerUtil.springRabbitOwnsProcessing((BlockingQueueConsumer) owner)
               : owner instanceof AbstractMessageListenerContainer
-                  && SpringRabbitListenerUtil.isListenerProcessingSelected(
+                  && SpringRabbitListenerUtil.canTraceListenerProcessing(
                       (AbstractMessageListenerContainer) owner);
-      SpringRabbitListenerUtil.setListenerProcessingSelected(consumer, listenerProcessingSelected);
+      SpringRabbitListenerUtil.setProcessingOwnedOutsideRabbitClient(
+          consumer, processingOwnedOutsideRabbitClient);
     }
   }
 }
