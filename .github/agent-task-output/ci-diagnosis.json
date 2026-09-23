@@ -1,0 +1,73 @@
+{
+  "diagnoses": [
+    {
+      "check_key": "check:Build pull request/build / common / spotless",
+      "diagnosis": "unknown",
+      "reason": "The complete exact pinned job log could not be retrieved, so the failure cannot be diagnosed safely.",
+      "evidence": [
+        "Controller evidence requires the full 450654-byte log for run 35514864695, attempt 1, job 106088992263.",
+        "The deterministic CI bundle retrieval stopped before downloading logs because pull request checkout authentication was unavailable.",
+        "The GitHub job-log response was truncated relative to the controller-recorded log size."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / common / build",
+      "diagnosis": "unknown",
+      "reason": "The complete exact pinned job log could not be retrieved, so the visible failure excerpt is insufficient for a safe diagnosis.",
+      "evidence": [
+        "Controller evidence requires the full 2489819-byte log for run 35514864695, attempt 1, job 106088992264.",
+        "The deterministic CI bundle retrieval stopped before downloading logs because pull request checkout authentication was unavailable.",
+        "The GitHub job-log response began at 2026-09-20T14:00:29 rather than the start of the job and was truncated relative to the controller-recorded log size."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / common / test3 (8, hotspot, indy false)",
+      "diagnosis": "unknown",
+      "reason": "The complete exact pinned job log could not be retrieved, so the failure cannot be attributed to the pull request.",
+      "evidence": [
+        "Controller evidence requires the full 3101140-byte log for run 35514864695, attempt 1, job 106088992897.",
+        "The deterministic CI bundle retrieval stopped before downloading logs because pull request checkout authentication was unavailable.",
+        "The GitHub job-log response began at 2026-09-20T13:59:45 in Gradle task output rather than at job startup and was truncated relative to the controller-recorded log size."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / common / test3 (8, hotspot, indy true)",
+      "diagnosis": "unknown",
+      "reason": "The complete exact pinned job log could not be retrieved, so the failure cannot be attributed to the pull request.",
+      "evidence": [
+        "Controller evidence requires the full 3225327-byte log for run 35514864695, attempt 1, job 106088992766.",
+        "The deterministic CI bundle retrieval stopped before downloading logs because pull request checkout authentication was unavailable.",
+        "The GitHub job-log response began at 2026-09-20T13:58:17 in Gradle task output rather than at job startup and was truncated relative to the controller-recorded log size."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / common / test3 (11, hotspot, indy false)",
+      "diagnosis": "unknown",
+      "reason": "The complete exact pinned job log could not be retrieved, so the failure cannot be attributed to the pull request.",
+      "evidence": [
+        "Controller evidence requires the full 3146025-byte log for run 35514864695, attempt 1, job 106088992901.",
+        "The deterministic CI bundle retrieval stopped before downloading logs because pull request checkout authentication was unavailable.",
+        "The GitHub job-log response began at 2026-09-20T13:57:45 in Gradle task output rather than at job startup and was truncated relative to the controller-recorded log size."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / common / test3 (11, hotspot, indy true)",
+      "diagnosis": "unknown",
+      "reason": "The complete exact pinned job log could not be retrieved, so the failure cannot be attributed to the pull request.",
+      "evidence": [
+        "Controller evidence requires the full 3082593-byte log for run 35514864695, attempt 1, job 106088992823.",
+        "The deterministic CI bundle retrieval stopped before downloading logs because pull request checkout authentication was unavailable.",
+        "The GitHub job-log response began at 2026-09-20T13:59:26 in Gradle task output rather than at job startup and was truncated relative to the controller-recorded log size."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / required-status-check",
+      "diagnosis": "unknown",
+      "reason": "This aggregate check only reports that a required constituent failed, and the complete exact logs for those constituent failures were unavailable.",
+      "evidence": [
+        "Job 106091151245 contains only an explicit exit 1 after the reusable workflow inputs and no independent failure diagnostic.",
+        "The required constituent job logs recorded by the controller could not be retrieved completely and exactly."
+      ]
+    }
+  ]
+}
