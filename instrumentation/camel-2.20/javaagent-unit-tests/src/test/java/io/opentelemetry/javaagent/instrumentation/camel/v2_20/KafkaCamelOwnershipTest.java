@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
-import io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaProcessingSelectionUtil;
+import io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaProcessingOwnershipUtil;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -24,12 +24,12 @@ class KafkaCamelOwnershipTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
-  void selectsOnlyCamelConsumerProcessing(boolean camelConsumer) {
+  void marksOnlyCamelConsumerProcessing(boolean camelConsumer) {
     KafkaConsumer<?, ?> consumer = mock(KafkaConsumer.class);
     ConsumerRecord<String, String> record = new ConsumerRecord<>("test", 0, 0, "key", "value");
     ConsumerRecords<?, ?> records =
         new ConsumerRecords<>(singletonMap(new TopicPartition("test", 0), singletonList(record)));
-    KafkaProcessingSelectionUtil.recordPoll(records, true);
+    KafkaProcessingOwnershipUtil.recordPoll(records, true);
     if (camelConsumer) {
       KafkaFetchRecordsInstrumentation.MarkConsumerAdvice.onEnter(consumer);
     }
@@ -37,9 +37,10 @@ class KafkaCamelOwnershipTest {
     KafkaConsumerInstrumentation.PollAdvice.onExit(consumer, records);
 
     assertThat(
-            KafkaProcessingSelectionUtil.rawProcessingSelection(records, () -> true).getAsBoolean())
+            KafkaProcessingOwnershipUtil.rawProcessingEligibility(records, () -> true)
+                .getAsBoolean())
         .isEqualTo(!camelConsumer || !emitStableMessagingSemconv());
-    assertThat(KafkaConsumerContextUtil.getRawProcessingSelection(record).getAsBoolean())
+    assertThat(KafkaConsumerContextUtil.getRawProcessingEligibility(record).getAsBoolean())
         .isEqualTo(!camelConsumer || !emitStableMessagingSemconv());
   }
 }
