@@ -46,9 +46,10 @@ those records. Use `mark`, not `claim`, for a marker write that does not arbitra
 Keep other roles distinct. `canTraceListenerProcessing` checks whether a listener can be
 instrumented; `rawProcessingEligibility` can combine ownership and configuration;
 `ProcessingInvocation` or `MessageInvocation` tracks a single attempt through completion.
-Use `current*` for temporary thread state and `*Enabled` for configuration, not ownership.
-These are naming patterns, not a shared API. Ordinary paired advice need not add an invocation
-object.
+`listenerProcessingScope` is temporary callback state, while `LISTENER_MODE` stores
+configuration. Neither is an owner marker. Use `current*` for temporary thread state and
+`*Enabled` for configuration, not ownership. These are naming patterns, not a shared API.
+Ordinary paired advice need not add an invocation object.
 
 ## Finish the work you started
 
