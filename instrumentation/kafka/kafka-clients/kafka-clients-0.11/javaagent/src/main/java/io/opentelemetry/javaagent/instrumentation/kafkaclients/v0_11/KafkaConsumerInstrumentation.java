@@ -113,7 +113,7 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
             recordTelemetry().add(record, RECEIVE, CONSUMED_MESSAGES);
           }
         }
-        KafkaProcessingSelectionUtil.recordPoll(records, suppressionAcquired);
+        KafkaProcessingOwnershipUtil.recordPoll(records, suppressionAcquired);
       } finally {
         if (suppressionAcquired) {
           processSpanSuppression().release();
