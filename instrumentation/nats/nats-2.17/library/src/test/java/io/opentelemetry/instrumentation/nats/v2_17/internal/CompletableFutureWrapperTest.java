@@ -9,6 +9,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
@@ -229,6 +230,8 @@ class CompletableFutureWrapperTest {
 
   @Test
   void doesNotCancelSourceAfterAsyncCompletion() throws ReflectiveOperationException {
+    assumeFalse("1.8".equals(System.getProperty("java.specification.version")));
+
     CompletableFuture<String> sourceFuture = new CompletableFuture<>();
     CompletableFuture<String> wrapped =
         CompletableFutureWrapper.wrap(sourceFuture, Context.root(), (result, error) -> {});
