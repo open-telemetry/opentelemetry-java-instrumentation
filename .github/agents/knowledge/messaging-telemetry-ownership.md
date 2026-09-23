@@ -34,19 +34,21 @@ Transfer it when the library copies or wraps a message. If the framework is abse
 or cannot handle the callback, leave client processing available. Do not disable all client
 processing just because one framework delivery is in progress.
 
-## Recognize the roles in code
+## Name the handoff in code
 
-Use `select` when choosing who owns Process telemetry at a particular handoff.
-`selectFrameworkProcessing(...)` and `selectListenerProcessing(...)` record that choice;
-`isListenerProcessingSelected(...)` checks it. A `*ProcessingSelection` helper or
-`PROCESSING_SELECTION` field makes the decision recognizable across instrumentations.
-The code path should show the same sequence: choose at the handoff, skip only the other
-layer's Process span for that work, and finish the chosen layer's invocation.
+When the caller knows the owner, name it: `markSpringKafkaAsProcessingOwner(records)` or
+`markSpringRabbitAsProcessingOwner(consumer)`. Shared client code may only know that processing
+belongs elsewhere. Name that side `markProcessingOwnedOutsideKafkaClient(records)`, with state
+such as `processingOwnedOutsideKafkaClient`. This is the same handoff from two viewpoints: Spring
+Kafka knows who will process the batch; Kafka clients only know not to emit a raw Process span for
+those records. Use `mark`, not `claim`, for a marker write that does not arbitrate ownership.
 
-Name state for one attempt `ProcessingInvocation` or `MessageInvocation`: it pairs the request,
-context, scope, and completion for that work. Use `current*` for temporary thread state and
-`*Enabled` for configuration or eligibility, not ownership. These names describe roles, not a
-shared API; ordinary paired advice need not add an invocation object.
+Keep other roles distinct. `canTraceListenerProcessing` checks whether a listener can be
+instrumented; `rawProcessingEligibility` can combine ownership and configuration;
+`ProcessingInvocation` or `MessageInvocation` tracks a single attempt through completion.
+Use `current*` for temporary thread state and `*Enabled` for configuration, not ownership.
+These are naming patterns, not a shared API. Ordinary paired advice need not add an invocation
+object.
 
 ## Finish the work you started
 
