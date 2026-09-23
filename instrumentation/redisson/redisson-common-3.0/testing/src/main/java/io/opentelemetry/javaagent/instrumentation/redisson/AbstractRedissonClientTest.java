@@ -880,16 +880,8 @@ public abstract class AbstractRedissonClientTest {
     }
   }
 
-  private static Object batchOptions() throws ReflectiveOperationException {
-    Class<?> batchOptionsClass = Class.forName("org.redisson.api.BatchOptions");
-    return batchOptionsClass.getMethod("defaults").invoke(null);
-  }
-
-  private static void setBatchExecutionMode(Object options, String executionMode)
-      throws ReflectiveOperationException {
-    Class<?> executionModeClass = Class.forName("org.redisson.api.BatchOptions$ExecutionMode");
-    Object mode = executionModeClass.getField(executionMode).get(null);
-    options.getClass().getMethod("executionMode", executionModeClass).invoke(options, mode);
+  protected RBatch createBatch(RedissonClient redisson) throws ReflectiveOperationException {
+    return createBatch(redisson, batchOptions());
   }
 
   private static RBatch createBatch(RedissonClient client, String executionMode)
@@ -903,6 +895,18 @@ public abstract class AbstractRedissonClientTest {
       throws ReflectiveOperationException {
     return (RBatch)
         client.getClass().getMethod("createBatch", options.getClass()).invoke(client, options);
+  }
+
+  private static Object batchOptions() throws ReflectiveOperationException {
+    Class<?> batchOptionsClass = Class.forName("org.redisson.api.BatchOptions");
+    return batchOptionsClass.getMethod("defaults").invoke(null);
+  }
+
+  private static void setBatchExecutionMode(Object options, String executionMode)
+      throws ReflectiveOperationException {
+    Class<?> executionModeClass = Class.forName("org.redisson.api.BatchOptions$ExecutionMode");
+    Object mode = executionModeClass.getField(executionMode).get(null);
+    options.getClass().getMethod("executionMode", executionModeClass).invoke(options, mode);
   }
 
   private void assertStableAtomicBatch(String operationName, Long batchSize, String queryText) {
@@ -1167,10 +1171,6 @@ public abstract class AbstractRedissonClientTest {
 
   private String dbNamespace(String databaseIndex) {
     return emitStableDatabaseSemconv() && hasDatabaseIndex() ? databaseIndex : null;
-  }
-
-  protected RBatch createBatch(RedissonClient redisson) throws ReflectiveOperationException {
-    return createBatch(redisson, batchOptions());
   }
 
   private static final class BatchScenario {
