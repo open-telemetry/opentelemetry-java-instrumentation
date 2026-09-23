@@ -21,6 +21,10 @@ public final class SqsProcessingSelection {
   private static final ContextKey<SQSEvent> SELECTED_EVENT =
       ContextKey.named("aws-lambda-sqs-processing-event");
 
+  public static boolean isPresent(Context context) {
+    return context.get(SELECTED_EVENT) != null;
+  }
+
   public static boolean isSelected(Context context, SQSEvent event) {
     return context.get(SELECTED_EVENT) == event;
   }

@@ -59,15 +59,15 @@ class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentation {
 
     public static class AdviceScope {
       private final AwsLambdaRequest lambdaRequest;
-      private final Scope functionScope;
-      private final io.opentelemetry.context.Context functionContext;
+      @Nullable private final Scope functionScope;
+      @Nullable private final io.opentelemetry.context.Context functionContext;
       @Nullable private final Scope eventScope;
       @Nullable private final io.opentelemetry.context.Context eventContext;
 
       private AdviceScope(
           AwsLambdaRequest lambdaRequest,
-          io.opentelemetry.context.Context functionContext,
-          Scope functionScope,
+          @Nullable io.opentelemetry.context.Context functionContext,
+          @Nullable Scope functionScope,
           @Nullable io.opentelemetry.context.Context eventContext,
           @Nullable Scope eventScope) {
         this.lambdaRequest = lambdaRequest;
@@ -85,30 +85,39 @@ class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentation {
           headers = MapUtils.lowercaseMap(((APIGatewayProxyRequestEvent) arg).getHeaders());
         }
         AwsLambdaRequest lambdaRequest = AwsLambdaRequest.create(context, arg, headers);
-        io.opentelemetry.context.Context parentContext =
-            functionInstrumenter().extract(lambdaRequest);
-
-        if (!functionInstrumenter().shouldStart(parentContext, lambdaRequest)) {
-          return null;
-        }
-
-        io.opentelemetry.context.Context functionContext =
-            functionInstrumenter().start(parentContext, lambdaRequest);
         io.opentelemetry.context.Context ambientContext =
             io.opentelemetry.context.Context.current();
-        Scope functionScope = functionContext.makeCurrent();
+
+        io.opentelemetry.context.Context functionContext = null;
+        Scope functionScope = null;
+        boolean processingSelectionPresent =
+            arg instanceof SQSEvent && SqsProcessingSelection.isPresent(ambientContext);
+        if (!processingSelectionPresent) {
+          io.opentelemetry.context.Context parentContext =
+              functionInstrumenter().extract(lambdaRequest);
+          if (functionInstrumenter().shouldStart(parentContext, lambdaRequest)) {
+            functionContext = functionInstrumenter().start(parentContext, lambdaRequest);
+            functionScope = functionContext.makeCurrent();
+          }
+        }
 
         io.opentelemetry.context.Context eventContext = null;
         Scope eventScope = null;
         if (arg instanceof SQSEvent) {
           SQSEvent sqsEvent = (SQSEvent) arg;
           boolean processingSelected = SqsProcessingSelection.isSelected(ambientContext, sqsEvent);
-          if (!processingSelected && eventInstrumenter().shouldStart(functionContext, sqsEvent)) {
+          io.opentelemetry.context.Context eventParentContext =
+              functionContext != null ? functionContext : ambientContext;
+          if (!processingSelected
+              && eventInstrumenter().shouldStart(eventParentContext, sqsEvent)) {
             io.opentelemetry.context.Context selectedContext =
-                SqsProcessingSelection.select(functionContext, sqsEvent);
+                SqsProcessingSelection.select(eventParentContext, sqsEvent);
             eventContext = eventInstrumenter().start(selectedContext, sqsEvent);
             eventScope = eventContext.makeCurrent();
           }
+        }
+        if (functionContext == null && eventContext == null) {
+          return null;
         }
         return new AdviceScope(
             lambdaRequest, functionContext, functionScope, eventContext, eventScope);
@@ -119,8 +128,10 @@ class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentation {
           eventScope.close();
           eventInstrumenter().end(eventContext, (SQSEvent) arg, null, throwable);
         }
-        functionScope.close();
-        functionInstrumenter().end(functionContext, lambdaRequest, result, throwable);
+        if (functionScope != null && functionContext != null) {
+          functionScope.close();
+          functionInstrumenter().end(functionContext, lambdaRequest, result, throwable);
+        }
         OpenTelemetrySdkAccess.forceFlush(FLUSH_TIMEOUT.toNanos(), NANOSECONDS);
       }
     }

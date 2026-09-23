@@ -6,8 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
@@ -16,6 +14,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.awslambdaevents.v2_2.AbstractAwsLambdaSqsEventHandlerTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -51,16 +50,12 @@ class AwsLambdaSqsEventHandlerTest extends AbstractAwsLambdaSqsEventHandlerTest 
     assertNestedProcessingSpanCount(new SQSEvent(), new SQSEvent(), 2);
   }
 
-  private static void assertNestedProcessingSpanCount(
+  private void assertNestedProcessingSpanCount(
       SQSEvent outerEvent, SQSEvent nestedEvent, long expectedCount) {
-    Context context = mock(Context.class);
-    when(context.getFunctionName()).thenReturn("my_function");
-    when(context.getAwsRequestId()).thenReturn("1-22-333");
-
-    new NestedRequestHandler(nestedEvent).handleRequest(outerEvent, context);
+    new NestedRequestHandler(nestedEvent).handleRequest(outerEvent, context());
 
     long processingSpanCount =
-        testing.waitForTraces(2).stream()
+        testing.waitForTraces(1).stream()
             .flatMap(trace -> trace.stream())
             .filter(span -> span.getKind() == SpanKind.CONSUMER)
             .count();
@@ -84,7 +79,14 @@ class AwsLambdaSqsEventHandlerTest extends AbstractAwsLambdaSqsEventHandlerTest 
 
     @Override
     public Void handleRequest(SQSEvent input, Context context) {
-      return delegate.handleRequest(nestedEvent, context);
+      CompletableFuture.runAsync(
+              io.opentelemetry.context.Context.current()
+                  .wrap(
+                      () -> {
+                        delegate.handleRequest(nestedEvent, context);
+                      }))
+          .join();
+      return null;
     }
   }
 }
