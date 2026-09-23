@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 class JmsMessageProcessingStateTest {
 
   @Test
-  void selectsOnlyFirstNestedProcessingObserver() {
+  void reportsOnlyFirstProcessingObserverPerDelivery() {
     JmsMessageProcessingState state = new JmsMessageProcessingState();
 
     assertThat(state.beginProcessing()).isTrue();

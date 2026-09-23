@@ -41,7 +41,7 @@ public interface MessageAdapter {
   @Nullable
   JmsReceiveContext getReceiveContext();
 
-  /** Starts processing and returns whether this observer selected the delivery. */
+  /** Starts processing and returns whether this is the first observer for this delivery. */
   boolean beginProcessing();
 
   /** Ends a processing callback for this message. */

@@ -105,7 +105,7 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
             }
           }
           Instrumenter<MessageWithDestination, Void> instrumenter = consumerProcessInstrumenter();
-          // Ignore an ambient process signal when selecting a distinct delivery, but retain the
+          // Ignore an ambient process signal when processing a distinct delivery, but retain the
           // original parent for the span and explicit instrumentation suppression.
           Context eligibilityContext =
               Span.fromContext(parentContext).storeInContext(Context.root());
