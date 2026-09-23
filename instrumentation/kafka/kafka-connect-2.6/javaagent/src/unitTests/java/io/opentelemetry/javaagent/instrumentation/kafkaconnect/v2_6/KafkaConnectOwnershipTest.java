@@ -72,7 +72,7 @@ class KafkaConnectOwnershipTest {
     assertThat(processSpanSuppression().isActive()).isFalse();
     assertThat(BATCH_STATE.get(records).getAsBoolean()).isFalse();
     assertThat(
-            KafkaConsumerContextUtil.getRawProcessingSelection(records.iterator().next())
+            KafkaConsumerContextUtil.getRawProcessingEligibility(records.iterator().next())
                 .getAsBoolean())
         .isFalse();
   }

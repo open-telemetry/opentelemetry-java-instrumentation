@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11;
 
 import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanSuppression;
-import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaProcessingSelectionUtil.selectFrameworkProcessing;
+import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaProcessingOwnershipUtil.markProcessingOwnedOutsideKafkaClient;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
@@ -50,7 +50,7 @@ class StreamThreadInstrumentation implements TypeInstrumentation {
         processSpanSuppression().release();
       }
       if (records != null) {
-        selectFrameworkProcessing(records);
+        markProcessingOwnedOutsideKafkaClient(records);
       }
     }
   }
