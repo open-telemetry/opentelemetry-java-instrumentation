@@ -45,7 +45,7 @@ class KafkaStreamsSuppressionTest {
 
     assertThat(state.getAsBoolean()).isFalse();
     assertThat(
-            KafkaConsumerContextUtil.getRawProcessingSelection(records.iterator().next())
+            KafkaConsumerContextUtil.getRawProcessingEligibility(records.iterator().next())
                 .getAsBoolean())
         .isFalse();
     assertThat(processSpanSuppression().isActive()).isFalse();

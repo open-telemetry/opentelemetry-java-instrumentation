@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6;
 
 import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanSuppression;
-import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaProcessingSelectionUtil.selectFrameworkProcessing;
+import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaProcessingOwnershipUtil.markProcessingOwnedOutsideKafkaClient;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
@@ -49,7 +49,7 @@ class WorkerSinkTaskInstrumentation implements TypeInstrumentation {
         processSpanSuppression().release();
       }
       if (records != null) {
-        selectFrameworkProcessing(records);
+        markProcessingOwnedOutsideKafkaClient(records);
       }
     }
   }
