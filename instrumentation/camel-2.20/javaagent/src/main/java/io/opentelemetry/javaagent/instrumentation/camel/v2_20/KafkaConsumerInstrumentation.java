@@ -42,7 +42,7 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
         @Advice.This KafkaConsumer<?, ?> consumer,
         @Advice.Return @Nullable ConsumerRecords<?, ?> records) {
       if (records != null) {
-        CamelKafkaProcessingSelection.selectFrameworkProcessing(consumer, records);
+        CamelKafkaProcessingOwnership.markCamelAsProcessingOwner(consumer, records);
       }
     }
   }

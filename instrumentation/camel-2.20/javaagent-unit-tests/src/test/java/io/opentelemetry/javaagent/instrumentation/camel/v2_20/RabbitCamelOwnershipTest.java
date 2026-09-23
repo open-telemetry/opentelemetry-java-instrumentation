@@ -15,16 +15,16 @@ import org.junit.jupiter.api.Test;
 
 class RabbitCamelOwnershipTest {
 
-  private static final VirtualField<Consumer, Boolean> PROCESSING_SELECTION =
+  private static final VirtualField<Consumer, Boolean> PROCESSING_OWNED_OUTSIDE_RABBIT_CLIENT =
       VirtualField.find(Consumer.class, Boolean.class);
 
   @Test
-  void selectsCamelProcessingBeforeConsumerRegistration() {
+  void marksCamelProcessingBeforeConsumerRegistration() {
     Consumer consumer = mock(Consumer.class);
 
     RabbitConsumerInstrumentation.StartAdvice.onEnter(consumer);
 
-    assertThat(PROCESSING_SELECTION.get(consumer))
+    assertThat(PROCESSING_OWNED_OUTSIDE_RABBIT_CLIENT.get(consumer))
         .isEqualTo(emitStableMessagingSemconv() ? true : null);
   }
 }
