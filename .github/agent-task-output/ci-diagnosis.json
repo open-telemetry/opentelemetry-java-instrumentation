@@ -1,0 +1,33 @@
+{
+  "diagnoses": [
+    {
+      "check_key": "check:Build pull request/build / common / test2 (8, hotspot, indy false)",
+      "diagnosis": "unknown",
+      "reason": "The complete exact log for the recorded job could not be retrieved, so the supplied failure cannot be diagnosed under the required evidence policy.",
+      "evidence": [
+        "Controller evidence marks job 106932340932 from run 35778408254 attempt 3 as retrieve_full_log=true and reports 3023528 omitted UTF-8 bytes.",
+        "GitHub job-log retrieval returned only the final 5000 lines (644223 bytes), whose SHA-256 does not match the controller-recorded full-log SHA-256 1a4b925c42dce4d2600c40b9873688ebbf997f24b41a9c21e1115c1cc64ae886.",
+        ".github/scripts/pr-triage/fix_ci.py 20196 --download-only failed before downloading logs because GitHub CLI authentication was unavailable."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / common / test2 (8, hotspot, indy true)",
+      "diagnosis": "unknown",
+      "reason": "The complete exact log for the recorded job could not be retrieved, so the supplied failure cannot be diagnosed under the required evidence policy.",
+      "evidence": [
+        "Controller evidence marks job 106932341087 from run 35778408254 attempt 3 as retrieve_full_log=true and reports 2965764 omitted UTF-8 bytes.",
+        "GitHub job-log retrieval returned only the final 5000 lines (640132 bytes), whose SHA-256 does not match the controller-recorded full-log SHA-256 2df1aa34719f5f9d5757e2183c537cf0cd1a426c03111e7f71e0c271cfb647b6.",
+        ".github/scripts/pr-triage/fix_ci.py 20196 --download-only failed before downloading logs because GitHub CLI authentication was unavailable."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / required-status-check",
+      "diagnosis": "unknown",
+      "reason": "The aggregate check only reports a forced nonzero exit and does not identify the upstream failure classification; the two failed constituent checks cannot be diagnosed without their complete exact logs.",
+      "evidence": [
+        "The supplied complete log for job 106935946653 contains only `Run exit 1` followed by `Process completed with exit code 1`.",
+        "The aggregate log does not include diagnostics connecting its failure to a pull-request defect, a base-branch defect, or a transient failure."
+      ]
+    }
+  ]
+}
