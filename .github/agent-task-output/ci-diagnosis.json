@@ -1,0 +1,33 @@
+{
+  "diagnoses": [
+    {
+      "check_key": "check:Build pull request/build / common / test2 (8, hotspot, indy false)",
+      "diagnosis": "unknown",
+      "reason": "The complete exact job log could not be retrieved, so the failure cannot be safely attributed or repaired.",
+      "evidence": [
+        "The controller requires the full log and records 3023528 UTF-8 bytes with SHA-256 1a4b925c42dce4d2600c40b9873688ebbf997f24b41a9c21e1115c1cc64ae886.",
+        "The available GitHub job-log response contained only the final 5000 lines (644223 bytes) and began at 2026-09-22T20:57:57.2255008Z, after the job started at 2026-09-22T20:50:13Z.",
+        "Deterministic bundle retrieval could not authenticate to GitHub, so the recorded full-log identity could not be verified."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / common / test2 (8, hotspot, indy true)",
+      "diagnosis": "unknown",
+      "reason": "The complete exact job log could not be retrieved, so the failure cannot be safely attributed or repaired.",
+      "evidence": [
+        "The controller requires the full log and records 2965764 UTF-8 bytes with SHA-256 2df1aa34719f5f9d5757e2183c537cf0cd1a426c03111e7f71e0c271cfb647b6.",
+        "The available GitHub job-log response contained only the final 5000 lines (640132 bytes) and began at 2026-09-22T20:54:10.1728716Z, after the job started at 2026-09-22T20:50:12Z.",
+        "Deterministic bundle retrieval could not authenticate to GitHub, so the recorded full-log identity could not be verified."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / required-status-check",
+      "diagnosis": "unknown",
+      "reason": "This aggregate check failed because a prerequisite check failed; attribution remains unknown while the prerequisite job logs are incomplete.",
+      "evidence": [
+        "The complete aggregate log only runs `exit 1` and reports process exit code 1.",
+        "The supplied failure set contains the two failed test2 prerequisite jobs whose complete exact logs could not be verified."
+      ]
+    }
+  ]
+}
