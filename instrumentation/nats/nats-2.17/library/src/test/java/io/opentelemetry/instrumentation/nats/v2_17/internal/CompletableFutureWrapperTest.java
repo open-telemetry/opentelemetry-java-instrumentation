@@ -23,6 +23,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledForJreRange;
+import org.junit.jupiter.api.condition.JRE;
 
 class CompletableFutureWrapperTest {
 
@@ -228,6 +230,7 @@ class CompletableFutureWrapperTest {
   }
 
   @Test
+  @EnabledForJreRange(min = JRE.JAVA_9)
   void doesNotCancelSourceAfterAsyncCompletion() throws ReflectiveOperationException {
     CompletableFuture<String> sourceFuture = new CompletableFuture<>();
     CompletableFuture<String> wrapped =
