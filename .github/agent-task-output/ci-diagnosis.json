@@ -1,0 +1,67 @@
+{
+  "diagnoses": [
+    {
+      "check_key": "check:Build pull request/build / common / spotless",
+      "diagnosis": "unknown",
+      "reason": "The controller required the complete exact pinned job log, but deterministic retrieval could not establish the supplied log identity, so no diagnosis or repair is safe.",
+      "evidence": [
+        "Pinned evidence marks job 106088992263, run 35514864695 attempt 1, with retrieve_full_log=true and expected SHA-256 2bf4c5554cd9aad52ceb7721bcc5f3e091fd64754e607eef793ba907d96e1f4a.",
+        "python .github/scripts/pr-triage/fix_ci.py 19204 --download-only failed before downloading logs because gh reported that GH_TOKEN was not set."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / common / build",
+      "diagnosis": "unknown",
+      "reason": "The controller required the complete exact pinned job log, but deterministic retrieval could not establish the supplied log identity, so no diagnosis or repair is safe.",
+      "evidence": [
+        "Pinned evidence marks job 106088992264, run 35514864695 attempt 1, with retrieve_full_log=true and expected SHA-256 9e155cbdc5f466909568e98a6fb8f36415a2be2413a0f69eb123b7af38faf5e5.",
+        "GitHub MCP log retrieval returned only the final 5000 lines, while the controller records a 2489819-byte complete log; exact full-log identity could not be verified."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / common / test3 (8, hotspot, indy false)",
+      "diagnosis": "unknown",
+      "reason": "The controller required the complete exact pinned job log, but deterministic retrieval could not establish the supplied log identity, so no diagnosis or repair is safe.",
+      "evidence": [
+        "Pinned evidence marks job 106088992897, run 35514864695 attempt 1, with retrieve_full_log=true and expected SHA-256 08f12d3e045dbbf3d4ceea8e1af878f65fd5cd595e81951f37bc44a2e6649c81.",
+        "GitHub MCP log retrieval returned only the final 5000 lines, while the controller records a 3101140-byte complete log; exact full-log identity could not be verified."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / common / test3 (8, hotspot, indy true)",
+      "diagnosis": "unknown",
+      "reason": "The controller required the complete exact pinned job log, but deterministic retrieval could not establish the supplied log identity, so no diagnosis or repair is safe.",
+      "evidence": [
+        "Pinned evidence marks job 106088992766, run 35514864695 attempt 1, with retrieve_full_log=true and expected SHA-256 4844f4528b9bb795c6cb4b9cf244bdbe0849106931fb3e9b04e0059ff0296eb6.",
+        "GitHub MCP log retrieval returned only the final 5000 lines, while the controller records a 3225327-byte complete log; exact full-log identity could not be verified."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / common / test3 (11, hotspot, indy false)",
+      "diagnosis": "unknown",
+      "reason": "The controller required the complete exact pinned job log, but deterministic retrieval could not establish the supplied log identity, so no diagnosis or repair is safe.",
+      "evidence": [
+        "Pinned evidence marks job 106088992901, run 35514864695 attempt 1, with retrieve_full_log=true and expected SHA-256 6d01aa7ad845f6f5f03dcc07640e92ed541047c8a6126a9ab8125ac682201783.",
+        "GitHub MCP log retrieval returned only the final 5000 lines, while the controller records a 3146025-byte complete log; exact full-log identity could not be verified."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / common / test3 (11, hotspot, indy true)",
+      "diagnosis": "unknown",
+      "reason": "The controller required the complete exact pinned job log, but deterministic retrieval could not establish the supplied log identity, so no diagnosis or repair is safe.",
+      "evidence": [
+        "Pinned evidence marks job 106088992823, run 35514864695 attempt 1, with retrieve_full_log=true and expected SHA-256 515dfc957abbd5be76dc9e4245c09e0f97478d8c139ce7a9c5d1bc7ed3f5ab79.",
+        "GitHub MCP log retrieval returned only the final 5000 lines, while the controller records a 3082593-byte complete log; exact full-log identity could not be verified."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / required-status-check",
+      "diagnosis": "unknown",
+      "reason": "The aggregate job only reports exit 1 and does not identify which underlying failure is attributable to the pull request; the required complete underlying logs were unavailable.",
+      "evidence": [
+        "Pinned job 106091151245 runs `exit 1` and reports `Process completed with exit code 1` without an independent diagnostic.",
+        "The complete exact logs for the failed common build and test jobs could not be retrieved or verified."
+      ]
+    }
+  ]
+}
