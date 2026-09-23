@@ -60,7 +60,7 @@ class SqsTracingListTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  void iteratorCreatedBeforeListenerSelectionDoesNotStartSdkProcessing() {
+  void iteratorCreatedBeforeProcessingHandoffDoesNotStartSdkProcessing() {
     Message message = Message.builder().messageId("message-id").build();
     Instrumenter<SqsProcessRequest, Response> instrumenter = mock(Instrumenter.class);
     when(instrumenter.start(any(), any())).thenReturn(Context.root());
@@ -83,7 +83,7 @@ class SqsTracingListTest {
   }
 
   @Test
-  void spliteratorCreatedBeforeListenerSelectionDoesNotStartSdkProcessing() {
+  void spliteratorCreatedBeforeProcessingHandoffDoesNotStartSdkProcessing() {
     Message message = Message.builder().messageId("message-id").build();
     @SuppressWarnings("unchecked")
     Instrumenter<SqsProcessRequest, Response> instrumenter = mock(Instrumenter.class);
