@@ -296,9 +296,14 @@ public abstract class AbstractRedissonClientTest {
     RedissonClient databaseOne = Redisson.create(createConfig(1, null, false));
     try {
       testing.clearData();
-      RBatch batch =
-          databaseOne.createBatch(
-              BatchOptions.defaults().executionMode(BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC));
+      Class<?> executionModeClass = Class.forName("org.redisson.api.BatchOptions$ExecutionMode");
+      Object executionMode =
+          executionModeClass.getMethod("valueOf", String.class).invoke(null, "REDIS_WRITE_ATOMIC");
+      BatchOptions options = BatchOptions.defaults();
+      BatchOptions.class
+          .getMethod("executionMode", executionModeClass)
+          .invoke(options, executionMode);
+      RBatch batch = databaseOne.createBatch(options);
       batch.getBucket("batch1").setAsync("v1");
       batch.execute();
 
