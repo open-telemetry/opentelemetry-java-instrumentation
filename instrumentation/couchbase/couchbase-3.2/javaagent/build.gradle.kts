@@ -40,6 +40,23 @@ dependencies {
   latestDepTestLibrary("com.couchbase.client:java-client:+")
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("version343Test") {
+      dependencies {
+        implementation("com.couchbase.client:java-client:3.4.3")
+      }
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.semconv-stability.opt-in=database")
+          }
+        }
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
@@ -102,6 +119,7 @@ tasks {
 
   check {
     dependsOn(
+      testing.suites,
       testStableSemconv,
       testStableSemconvExperimental,
       testV3Preview,
