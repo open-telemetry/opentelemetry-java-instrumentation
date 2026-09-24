@@ -2,6 +2,10 @@ plugins {
   id("otel.library-instrumentation")
 }
 
+java {
+  toolchain.vendor.set(JvmVendorSpec.ADOPTIUM)
+}
+
 otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_21)
   maxJavaVersionSupported.set(JavaVersion.VERSION_27)

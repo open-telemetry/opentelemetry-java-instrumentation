@@ -2,6 +2,10 @@ plugins {
   id("otel.javaagent-instrumentation")
 }
 
+java {
+  toolchain.vendor.set(JvmVendorSpec.ADOPTIUM)
+}
+
 muzzle {
   pass {
     group.set("io.helidon.webserver")
