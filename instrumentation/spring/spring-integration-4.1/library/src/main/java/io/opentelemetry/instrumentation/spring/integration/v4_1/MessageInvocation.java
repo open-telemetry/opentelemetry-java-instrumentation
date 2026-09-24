@@ -148,10 +148,15 @@ final class MessageInvocation {
       MessageChannel channel,
       @Nullable MessageHandler handler,
       boolean handlerInvocation) {
-    if (find(message, channel, handler, handlerInvocation) == null) {
+    MessageInvocation invocation = find(message, channel, handler, handlerInvocation);
+    Deque<Callback> callbacks = currentCallbacks.get();
+    if (invocation == null
+        || callbacks == null
+        || callbacks.isEmpty()
+        || callbacks.peekLast().owner != invocation) {
       return false;
     }
-    addCallback(new Callback(channel, handler, handlerInvocation, null));
+    addCallback(new Callback(channel, handler, handlerInvocation, null, invocation));
     return true;
   }
 
@@ -221,16 +226,27 @@ final class MessageInvocation {
     @Nullable private final MessageHandler handler;
     private final boolean handlerInvocation;
     @Nullable private final MessageInvocation invocation;
+    @Nullable private final MessageInvocation owner;
 
     private Callback(
         MessageChannel channel,
         @Nullable MessageHandler handler,
         boolean handlerInvocation,
         @Nullable MessageInvocation invocation) {
+      this(channel, handler, handlerInvocation, invocation, invocation);
+    }
+
+    private Callback(
+        MessageChannel channel,
+        @Nullable MessageHandler handler,
+        boolean handlerInvocation,
+        @Nullable MessageInvocation invocation,
+        @Nullable MessageInvocation owner) {
       this.channel = channel;
       this.handler = handler;
       this.handlerInvocation = handlerInvocation;
       this.invocation = invocation;
+      this.owner = owner;
     }
 
     private boolean matches(
