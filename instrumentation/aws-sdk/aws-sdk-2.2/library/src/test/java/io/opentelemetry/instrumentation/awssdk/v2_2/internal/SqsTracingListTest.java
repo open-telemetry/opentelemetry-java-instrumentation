@@ -222,6 +222,29 @@ class SqsTracingListTest {
   }
 
   @Test
+  void viewClearDoesNotTraceTraversal() {
+    TracingList tracingList = tracingMessages(2, new ArrayList<>());
+    List<Message> view = tracingList.subList(0, 1);
+    ContextKey<String> markerKey = ContextKey.named("clear-test-marker");
+    Context expectedContext = Context.root().with(markerKey, "present");
+
+    try (Scope ignored = expectedContext.makeCurrent()) {
+      view.clear();
+
+      assertThat(view).isEmpty();
+      assertThat(Context.current()).isSameAs(expectedContext);
+      assertThat(testing.spans()).isEmpty();
+    }
+
+    Iterator<Message> iterator = tracingList.iterator();
+    assertThat(iterator.next().messageId()).isEqualTo("message-1");
+    assertThat(iterator.hasNext()).isFalse();
+
+    testing.waitForTraces(1);
+    assertThat(testing.spans()).hasSize(1);
+  }
+
+  @Test
   void rootAndViewEqualityAndHashCodeDoNotTraceTraversal() {
     TracingList tracingList = tracingMessages(2, new ArrayList<>());
     List<Message> first = tracingList.subList(0, 1);

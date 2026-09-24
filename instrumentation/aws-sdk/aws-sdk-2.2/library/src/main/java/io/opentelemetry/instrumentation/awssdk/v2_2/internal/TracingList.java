@@ -279,6 +279,11 @@ public final class TracingList extends ArrayList<Message> {
     }
 
     @Override
+    public void clear() {
+      delegate.clear();
+    }
+
+    @Override
     public Iterator<Message> iterator() {
       return tracingList.tracingIterator(delegate.iterator());
     }
