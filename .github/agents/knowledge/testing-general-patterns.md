@@ -5,6 +5,18 @@
 - Use when: test files (`**/src/test/**`) are in scope
 - Review focus: assertion style, test class visibility, test method signatures and throws clauses, resource cleanup patterns, attribute assertion patterns
 
+## Javaagent integration coverage versus unit coverage
+
+Unit suites and legacy `javaagent-unit-tests` projects exercise helper or instrumentation classes
+directly without installing the javaagent against a live target library. They do not verify agent
+loading, class transformation, or runtime behavior of clients, pools, clusters, sentinels, and
+other integrations.
+
+When a change must support multiple runtime versions, retain real agent-backed integration tests
+for each required version. Keep tests that run on the baseline in the default `test` suite and
+place only newer-version-specific tests in a dedicated `JvmTestSuite`; do not count a unit suite
+as coverage for the missing integration runtime.
+
 ## Assertion Framework
 
 - JUnit 5, AssertJ assertions (not JUnit `assertEquals`/`assertTrue`).
