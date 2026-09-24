@@ -19,7 +19,9 @@ import com.sun.net.httpserver.HttpServer;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.javaagent.testing.common.AgentClassLoaderAccess;
 import java.net.InetSocketAddress;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Queue;
 import org.apache.camel.Exchange;
@@ -72,6 +74,7 @@ class SqsCamelOwnershipInstrumentationTest {
                         "http://localhost:" + server.getAddress().getPort(), "us-east-1"))
                 .build();
     try {
+      assertSeparateIndyHelperClassLoaders(client.getClass().getClassLoader());
       DefaultCamelContext camelContext = new DefaultCamelContext();
       SqsComponent component = new SqsComponent();
       component.setCamelContext(camelContext);
@@ -109,6 +112,34 @@ class SqsCamelOwnershipInstrumentationTest {
       client.shutdown();
       server.stop(0);
     }
+  }
+
+  private static void assertSeparateIndyHelperClassLoaders(ClassLoader applicationClassLoader)
+      throws Exception {
+    if (!Boolean.getBoolean("otel.javaagent.experimental.indy")) {
+      return;
+    }
+
+    Class<?> registry =
+        AgentClassLoaderAccess.loadClass(
+            "io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry");
+    Method getInstrumentationClassLoader =
+        registry.getMethod("getInstrumentationClassLoader", String.class, ClassLoader.class);
+    ClassLoader camelClassLoader =
+        (ClassLoader)
+            getInstrumentationClassLoader.invoke(
+                null,
+                "io.opentelemetry.javaagent.instrumentation.camel.v2_20"
+                    + ".ApacheCamelAwsSqsInstrumentationModule",
+                applicationClassLoader);
+    ClassLoader awsClassLoader =
+        (ClassLoader)
+            getInstrumentationClassLoader.invoke(
+                null,
+                "io.opentelemetry.javaagent.instrumentation.awssdk.v1_11"
+                    + ".SqsInstrumentationModule",
+                applicationClassLoader);
+    assertThat(camelClassLoader).isNotSameAs(awsClassLoader);
   }
 
   private static class TestSqsConsumer extends SqsConsumer {
