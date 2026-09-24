@@ -89,12 +89,9 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
       if (context != null) {
         try {
           adviceState.scope = context.makeCurrent();
-        } catch (RuntimeException e) {
+        } catch (Throwable t) {
           currentTransactionFraming().restore(adviceState.previousTransactionFraming);
-          throw e;
-        } catch (Error error) {
-          currentTransactionFraming().restore(adviceState.previousTransactionFraming);
-          throw error;
+          throw t;
         }
       }
       return adviceState;
