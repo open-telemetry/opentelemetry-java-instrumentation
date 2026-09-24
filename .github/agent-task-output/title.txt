@@ -1,0 +1,1 @@
+Add configured targets for Vert.x Redis 4.4.5
