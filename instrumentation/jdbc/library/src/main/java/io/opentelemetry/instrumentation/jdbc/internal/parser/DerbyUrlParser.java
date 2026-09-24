@@ -138,6 +138,7 @@ public final class DerbyUrlParser implements JdbcUrlParser {
   }
 
   private static void parseNetworkMode(String details, ParseContext ctx) {
+    ctx.defaultPort(DEFAULT_PORT);
     String url = details.substring("//".length());
 
     int instanceLoc = url.indexOf("/");
@@ -161,7 +162,6 @@ public final class DerbyUrlParser implements JdbcUrlParser {
       }
     } else {
       ctx.host(url);
-      ctx.port(DEFAULT_PORT);
     }
   }
 }

@@ -20,6 +20,8 @@ import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class DbConfigTest {
 
@@ -152,6 +154,27 @@ class DbConfigTest {
     when(instrumentationConfig.get("statement_sanitizer").getBoolean("enabled")).thenReturn(false);
 
     assertThat(DbConfig.isQuerySanitizationEnabled(openTelemetry, "jdbc")).isFalse();
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void deprecatedInstrumentationQuerySanitizationUsesInstanceV3Preview(boolean v3Preview) {
+    ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
+    DeclarativeConfigProperties commonConfig =
+        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
+    DeclarativeConfigProperties instrumentationConfig =
+        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
+    when(openTelemetry.getInstrumentationConfig("common")).thenReturn(commonConfig);
+    when(openTelemetry.getInstrumentationConfig("jdbc")).thenReturn(instrumentationConfig);
+    when(commonConfig.getBoolean("v3_preview")).thenReturn(v3Preview);
+    when(instrumentationConfig.get("query_sanitization").getBoolean("enabled")).thenReturn(null);
+    when(instrumentationConfig.get("statement_sanitizer").getBoolean("enabled")).thenReturn(false);
+    when(commonConfig.get("db").get("query_sanitization").getBoolean("enabled")).thenReturn(null);
+    when(commonConfig.get("database").get("statement_sanitizer").getBoolean("enabled"))
+        .thenReturn(null);
+    when(commonConfig.get("db_statement_sanitizer").getBoolean("enabled")).thenReturn(null);
+
+    assertThat(DbConfig.isQuerySanitizationEnabled(openTelemetry, "jdbc")).isEqualTo(v3Preview);
   }
 
   @Test

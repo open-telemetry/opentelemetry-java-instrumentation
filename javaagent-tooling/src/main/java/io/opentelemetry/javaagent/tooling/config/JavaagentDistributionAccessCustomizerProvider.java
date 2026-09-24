@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.tooling.config;
 import static java.util.logging.Level.WARNING;
 
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,8 +20,9 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistri
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigurationCustomizer;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.DistributionModel;
-import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.DistributionPropertyModel;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -72,21 +74,22 @@ public final class JavaagentDistributionAccessCustomizerProvider
     // set 'distribution.javaagent.indy/development' to 'true' for v3 preview
     if (v3Preview) {
       // creating distribution.javaagent is required to add indy/development to it
-      DistributionPropertyModel javaagent;
       if (distribution == null) {
         distribution = new DistributionModel();
       }
-      javaagent = distribution.getAdditionalProperties().get("javaagent");
-      if (javaagent == null) {
-        javaagent = new DistributionPropertyModel();
-        distribution.withAdditionalProperty("javaagent", javaagent);
+      Object javaagent = distribution.getExtensionProperties().get("javaagent");
+      Map<String, Object> javaagentProperties = new HashMap<>();
+      if (javaagent != null) {
+        javaagentProperties.putAll(
+            mapper.convertValue(javaagent, new TypeReference<Map<String, Object>>() {}));
       }
       // when v3 preview is enabled, force indy enabled
-      javaagent.withAdditionalProperty("indy/development", true);
+      javaagentProperties.put("indy/development", true);
+      distribution.setExtensionProperty("javaagent", javaagentProperties);
     }
 
     if (distribution != null) {
-      DistributionPropertyModel javaagent = distribution.getAdditionalProperties().get("javaagent");
+      Object javaagent = distribution.getExtensionProperties().get("javaagent");
       if (javaagent != null) {
         try {
           return mapper.convertValue(javaagent, AgentDistributionConfig.class);

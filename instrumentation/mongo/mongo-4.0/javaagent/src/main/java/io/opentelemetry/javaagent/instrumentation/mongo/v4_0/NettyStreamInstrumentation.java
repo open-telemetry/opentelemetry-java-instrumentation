@@ -9,7 +9,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.lang.reflect.Method;
 import java.net.SocketAddress;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -28,6 +30,12 @@ class NettyStreamInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class OpenAdvice {
+    @Nullable private static final Method remoteAddressMethod = findRemoteAddressMethod();
+
+    @Nullable
+    public static Method getRemoteAddressMethod() {
+      return remoteAddressMethod;
+    }
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.FieldValue("channel") Object channel)
@@ -35,9 +43,22 @@ class NettyStreamInstrumentation implements TypeInstrumentation {
       if (channel == null) {
         return;
       }
-      SocketAddress remoteAddress =
-          (SocketAddress) channel.getClass().getMethod("remoteAddress").invoke(channel);
-      MongoConnectionPeer.capture(remoteAddress);
+      Method method = getRemoteAddressMethod();
+      if (method != null) {
+        SocketAddress remoteAddress = (SocketAddress) method.invoke(channel);
+        MongoConnectionPeer.capture(remoteAddress);
+      }
+    }
+
+    @Nullable
+    private static Method findRemoteAddressMethod() {
+      try {
+        Class<?> channelClass =
+            Class.forName("io.netty.channel.Channel", false, OpenAdvice.class.getClassLoader());
+        return channelClass.getMethod("remoteAddress");
+      } catch (ReflectiveOperationException | LinkageError | SecurityException ignored) {
+        return null;
+      }
     }
   }
 }

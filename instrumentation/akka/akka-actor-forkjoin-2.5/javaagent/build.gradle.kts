@@ -1,6 +1,7 @@
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.scala-conventions")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {
