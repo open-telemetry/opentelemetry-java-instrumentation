@@ -11,7 +11,7 @@ public final class JmsMessageProcessingState {
   private int processingDepth;
 
   /** Returns whether this is the first processing observer for this delivery. */
-  public boolean beginProcessing() {
+  public synchronized boolean beginProcessing() {
     if (processingCompleted) {
       return false;
     }
@@ -19,11 +19,11 @@ public final class JmsMessageProcessingState {
     return processingDepth == 1;
   }
 
-  public boolean isProcessingCompleted() {
+  public synchronized boolean isProcessingCompleted() {
     return processingCompleted;
   }
 
-  public boolean endProcessing() {
+  public synchronized boolean endProcessing() {
     if (processingDepth == 0) {
       return false;
     }
