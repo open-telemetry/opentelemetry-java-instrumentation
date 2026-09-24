@@ -110,6 +110,9 @@ public class JmsInstrumenterFactory {
                 createMessagingAttributesExtractor(operationType, PROCESS_OPERATION_NAME));
     boolean receiveOperationExists =
         canHaveReceiveInstrumentation && messagingReceiveInstrumentationEnabled;
+    if (!receiveOperationExists) {
+      builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
+    }
     if (emitStableMessagingSemconv()) {
       builder.addOperationMetrics(JmsProcessMetrics.create());
     } else {
