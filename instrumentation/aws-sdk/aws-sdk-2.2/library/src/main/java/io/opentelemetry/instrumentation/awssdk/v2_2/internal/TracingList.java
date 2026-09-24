@@ -192,6 +192,21 @@ public final class TracingList extends ArrayList<Message> {
     }
 
     @Override
+    public boolean contains(Object object) {
+      return delegate.contains(object);
+    }
+
+    @Override
+    public int indexOf(Object object) {
+      return delegate.indexOf(object);
+    }
+
+    @Override
+    public int lastIndexOf(Object object) {
+      return delegate.lastIndexOf(object);
+    }
+
+    @Override
     public Message set(int index, Message element) {
       return delegate.set(index, element);
     }

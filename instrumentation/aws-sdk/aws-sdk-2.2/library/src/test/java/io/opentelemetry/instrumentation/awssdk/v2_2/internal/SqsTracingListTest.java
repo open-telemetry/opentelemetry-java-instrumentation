@@ -179,6 +179,43 @@ class SqsTracingListTest {
   }
 
   @Test
+  void viewLookupMethodsDoNotTraceTraversal() {
+    List<List<Message>> views = new ArrayList<>();
+    ContextKey<String> markerKey = ContextKey.named("lookup-test-marker");
+    Context expectedContext = Context.root().with(markerKey, "present");
+
+    try (Scope ignored = expectedContext.makeCurrent()) {
+      TracingList containsList = tracingMessages(1, new ArrayList<>());
+      List<Message> containsView = containsList.subList(0, containsList.size());
+      views.add(containsView);
+      assertThat(containsView.contains(containsView.get(0))).isTrue();
+
+      TracingList indexOfList = tracingMessages(1, new ArrayList<>());
+      List<Message> indexOfView = indexOfList.subList(0, indexOfList.size());
+      views.add(indexOfView);
+      assertThat(indexOfView.indexOf(indexOfView.get(0))).isZero();
+
+      TracingList lastIndexOfList = tracingMessages(1, new ArrayList<>());
+      List<Message> lastIndexOfView = lastIndexOfList.subList(0, lastIndexOfList.size());
+      views.add(lastIndexOfView);
+      assertThat(lastIndexOfView.lastIndexOf(lastIndexOfView.get(0))).isZero();
+
+      assertThat(Context.current()).isSameAs(expectedContext);
+      assertThat(testing.spans()).isEmpty();
+    }
+
+    views.forEach(
+        view -> {
+          Iterator<Message> iterator = view.iterator();
+          assertThat(iterator.next()).isSameAs(view.get(0));
+          assertThat(iterator.hasNext()).isFalse();
+        });
+
+    testing.waitForTraces(3);
+    assertThat(testing.spans()).hasSize(3);
+  }
+
+  @Test
   void explicitSuppressionSkipsCallbackProcessing() {
     TracingList tracingList = tracingMessages(1, new ArrayList<>());
     AtomicBoolean callbackInvoked = new AtomicBoolean();
