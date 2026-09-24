@@ -80,7 +80,7 @@ class CouchbaseServerTargetsTest {
   @Test
   void existingCoreTargetTakesPrecedenceOverDirectSeeds() {
     CouchbaseServerTarget existingTarget =
-        CouchbaseConnectionStrings.target("protostellar://node.example:18099");
+        CouchbaseConnectionStrings.target("couchbase://node.example:18099");
     assertThat(existingTarget).isNotNull();
     Core core = mock(Core.class);
     CouchbaseServerTargets.register(core, existingTarget, null);
