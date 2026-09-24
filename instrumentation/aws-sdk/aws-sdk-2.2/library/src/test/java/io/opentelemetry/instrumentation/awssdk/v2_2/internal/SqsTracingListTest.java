@@ -216,16 +216,21 @@ class SqsTracingListTest {
   }
 
   @Test
-  void viewEqualityAndHashCodeDoNotTraceTraversal() {
+  void rootAndViewEqualityAndHashCodeDoNotTraceTraversal() {
     TracingList tracingList = tracingMessages(2, new ArrayList<>());
     List<Message> first = tracingList.subList(0, 1);
     List<Message> second = tracingList.subList(1, 2);
+    List<TracingList> comparedLists = new ArrayList<>();
     ContextKey<String> markerKey = ContextKey.named("equality-test-marker");
     Context expectedContext = Context.root().with(markerKey, "present");
 
     try (Scope ignored = expectedContext.makeCurrent()) {
       assertThat(first).isNotEqualTo(second);
       assertThat(first.hashCode()).isNotZero();
+      comparedLists.add(assertRootAndViewEqualityDoesNotTrace(true, true));
+      comparedLists.add(assertRootAndViewEqualityDoesNotTrace(true, false));
+      comparedLists.add(assertRootAndViewEqualityDoesNotTrace(false, true));
+      comparedLists.add(assertRootAndViewEqualityDoesNotTrace(false, false));
 
       assertThat(Context.current()).isSameAs(expectedContext);
       assertThat(testing.spans()).isEmpty();
@@ -234,9 +239,15 @@ class SqsTracingListTest {
     Iterator<Message> iterator = first.iterator();
     assertThat(iterator.next()).isSameAs(first.get(0));
     assertThat(iterator.hasNext()).isFalse();
+    comparedLists.forEach(
+        list -> {
+          Iterator<Message> comparedIterator = list.iterator();
+          assertThat(comparedIterator.next()).isSameAs(list.get(0));
+          assertThat(comparedIterator.hasNext()).isFalse();
+        });
 
-    testing.waitForTraces(1);
-    assertThat(testing.spans()).hasSize(1);
+    testing.waitForTraces(5);
+    assertThat(testing.spans()).hasSize(5);
   }
 
   @Test
@@ -383,6 +394,20 @@ class SqsTracingListTest {
     ListIterator<Message> backward = backwardMessages.listIterator(backwardMessages.size());
     assertThat(backward.previous().messageId()).isEqualTo("message-0");
     assertThat(backward.hasPrevious()).isFalse();
+  }
+
+  private static TracingList assertRootAndViewEqualityDoesNotTrace(
+      boolean viewFirst, boolean equal) {
+    TracingList first = tracingMessages(1, new ArrayList<>());
+    TracingList second = tracingMessages(1, new ArrayList<>());
+    if (!equal) {
+      first.set(0, Message.builder().messageId("different-message").build());
+    }
+
+    List<Message> left = viewFirst ? first.subList(0, first.size()) : first;
+    List<Message> right = viewFirst ? second : second.subList(0, second.size());
+    assertThat(left.equals(right)).isEqualTo(equal);
+    return second;
   }
 
   private static void assertIteratorForEachRemainingFailure(boolean useView) {

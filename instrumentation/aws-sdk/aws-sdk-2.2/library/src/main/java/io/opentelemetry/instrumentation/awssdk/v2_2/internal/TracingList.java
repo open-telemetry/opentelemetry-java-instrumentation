@@ -15,6 +15,7 @@ import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Objects;
 import java.util.RandomAccess;
 import java.util.Spliterator;
 import java.util.function.Consumer;
@@ -101,6 +102,30 @@ public final class TracingList extends ArrayList<Message> {
   @Override
   public List<Message> subList(int fromIndex, int toIndex) {
     return new TracingListView(super.subList(fromIndex, toIndex), this);
+  }
+
+  @Override
+  public boolean equals(Object object) {
+    if (object instanceof TracingList || object instanceof TracingListView) {
+      return equalsWithoutTracing(this, (List<?>) object);
+    }
+    return super.equals(object);
+  }
+
+  private static boolean equalsWithoutTracing(List<?> left, List<?> right) {
+    if (left == right) {
+      return true;
+    }
+    int size = left.size();
+    if (size != right.size()) {
+      return false;
+    }
+    for (int i = 0; i < size; i++) {
+      if (!Objects.equals(left.get(i), right.get(i))) {
+        return false;
+      }
+    }
+    return true;
   }
 
   private Iterator<Message> tracingIterator(Iterator<Message> delegateIterator) {
@@ -208,8 +233,11 @@ public final class TracingList extends ArrayList<Message> {
 
     @Override
     public boolean equals(Object object) {
+      if (object instanceof TracingList) {
+        return equalsWithoutTracing(delegate, (TracingList) object);
+      }
       if (object instanceof TracingListView) {
-        object = ((TracingListView) object).delegate;
+        return equalsWithoutTracing(delegate, ((TracingListView) object).delegate);
       }
       return delegate.equals(object);
     }
