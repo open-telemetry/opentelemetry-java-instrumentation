@@ -58,7 +58,7 @@ class CouchbaseProtostellar343Test {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("get node")
+                        span.hasName("get node:18099")
                             .hasKind(CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 equalTo(SERVER_ADDRESS, "node"), equalTo(SERVER_PORT, 18099L))));

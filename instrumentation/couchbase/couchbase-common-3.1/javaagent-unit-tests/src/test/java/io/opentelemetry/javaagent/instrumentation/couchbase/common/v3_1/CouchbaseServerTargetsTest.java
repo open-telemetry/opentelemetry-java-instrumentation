@@ -86,9 +86,7 @@ class CouchbaseServerTargetsTest {
     CouchbaseServerTargets.register(core, existingTarget, null);
 
     CouchbaseServerTargets.registerFromSeedNodes(
-        core,
-        singleton(SeedNode.create("node.example", Optional.empty(), Optional.empty())),
-        null);
+        core, singleton(SeedNode.create("node.example", Optional.empty(), Optional.empty())), null);
 
     assertThat(CouchbaseServerTargets.get(core)).isSameAs(existingTarget);
   }
