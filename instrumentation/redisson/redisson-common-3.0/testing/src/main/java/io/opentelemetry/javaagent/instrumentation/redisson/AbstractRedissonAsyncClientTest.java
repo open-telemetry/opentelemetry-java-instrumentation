@@ -446,11 +446,16 @@ public abstract class AbstractRedissonAsyncClientTest {
     String executionModeName = usesRPromise ? "REDIS_WRITE_ATOMIC" : "IN_MEMORY_ATOMIC";
     Object executionMode =
         executionModeClass.getMethod("valueOf", String.class).invoke(null, executionModeName);
-    BatchOptions options = BatchOptions.defaults();
-    BatchOptions.class
+    Class<?> batchOptionsClass = Class.forName("org.redisson.api.BatchOptions");
+    Object options = batchOptionsClass.getMethod("defaults").invoke(null);
+    batchOptionsClass
         .getMethod("executionMode", executionModeClass)
         .invoke(options, executionMode);
-    RBatch batch = redisson.createBatch(options);
+    RBatch batch =
+        (RBatch)
+            RedissonClient.class
+                .getMethod("createBatch", batchOptionsClass)
+                .invoke(redisson, options);
 
     CompletableFuture<String> callbackResult = new CompletableFuture<>();
     CompletionStage<?> result =
