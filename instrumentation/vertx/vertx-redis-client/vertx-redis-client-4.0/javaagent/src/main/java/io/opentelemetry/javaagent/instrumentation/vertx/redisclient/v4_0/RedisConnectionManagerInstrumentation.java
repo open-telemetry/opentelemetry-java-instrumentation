@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0.VertxRedisClientSingletons.currentServerTarget;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -34,8 +33,9 @@ class RedisConnectionManagerInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(1, named("io.vertx.redis.client.RedisOptions"))),
         getClass().getName() + "$ConstructorAdvice");
-    // 4.0.3 through 4.4.4 build the connection provider here, out of reach of the manager, so a
-    // scoped thread local carries the captured target through the synchronous provider constructor
+    // 4.0.3 and later build the connection provider here, out of reach of the manager, so a scoped
+    // thread local carries the captured target through the synchronous provider constructor advice
+    // in this module and its 4.4.5 counterpart
     transformer.applyAdviceToMethod(
         named("connectionEndpointProvider"),
         getClass().getName() + "$ConnectionEndpointProviderAdvice");
@@ -55,12 +55,13 @@ class RedisConnectionManagerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static RedisServerTarget onEnter(@Advice.This Object manager) {
-      return currentServerTarget().set(RedisConnectionManagerUtil.getServerTarget(manager));
+      return RedisConnectionManagerUtil.currentServerTarget()
+          .set(RedisConnectionManagerUtil.getServerTarget(manager));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable RedisServerTarget previous) {
-      currentServerTarget().restore(previous);
+      RedisConnectionManagerUtil.currentServerTarget().restore(previous);
     }
   }
 }

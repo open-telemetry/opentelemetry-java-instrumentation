@@ -102,6 +102,7 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.This JedisClusterConnectionHandler handler) {
+      JedisClusterCommandContext.enterConnectionAcquisition();
       Context context =
           JedisSingletons.configuredTargetContext(JedisClusterTargetAccessor.getTarget(handler));
       return context != null ? context.makeCurrent() : null;
@@ -112,6 +113,7 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
       if (scope != null) {
         scope.close();
       }
+      JedisClusterCommandContext.exitConnectionAcquisition();
     }
   }
 

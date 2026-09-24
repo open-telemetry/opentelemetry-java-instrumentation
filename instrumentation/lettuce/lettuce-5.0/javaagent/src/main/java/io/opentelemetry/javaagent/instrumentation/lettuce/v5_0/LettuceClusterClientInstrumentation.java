@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.logging.Level.FINE;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -114,6 +115,9 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
       if (connection instanceof RedisChannelHandler) {
         RedisChannelHandler<?, ?> connectionHandler = (RedisChannelHandler<?, ?>) connection;
         LettuceServerTargets.copy(client, connectionHandler);
+      }
+      if (!emitStableDatabaseSemconv()) {
+        return socketAddressSource;
       }
       if (socketAddressSource instanceof Supplier) {
         Supplier<?> socketAddressSupplier = (Supplier<?>) socketAddressSource;
