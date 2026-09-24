@@ -5,21 +5,5 @@ semantic_conventions:
   - DATABASE_CLIENT_METRICS
 library_link: https://github.com/redis/jedis
 configurations:
-  - name: otel.instrumentation.jedis.query-sanitization.enabled
-    declarative_name: java.jedis.query_sanitization.enabled
-    description: >
-      Enables query sanitization for Jedis queries. Overrides
-      `otel.instrumentation.common.db.query-sanitization.enabled` for this instrumentation; when
-      unset, that setting applies.
-    type: boolean
   - ref: common.db.query-sanitization.enabled
-  - ref: common.db-statement-sanitizer.enabled
-  - ref: common.database.statement_sanitizer.enabled
-  - name: otel.instrumentation.jedis.statement-sanitizer.enabled
-    declarative_name: java.jedis.statement_sanitizer.enabled
-    description: "Deprecated: use `otel.instrumentation.jedis.query-sanitization.enabled` instead. It is ignored under v3 preview and will be removed in 3.0."
-    type: boolean
-    default: true
-    deprecated: true
-    replaced_by: otel.instrumentation.jedis.query-sanitization.enabled
   - ref: common.peer-service-mapping

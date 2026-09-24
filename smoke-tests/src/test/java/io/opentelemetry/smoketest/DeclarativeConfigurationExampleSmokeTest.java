@@ -14,9 +14,9 @@ import org.junit.jupiter.api.condition.DisabledIf;
 
 /**
  * Verifies that the agent starts up and instruments an application when configured with the
- * generated {@code docs/declarative-configuration-example.yaml}, which sets every declarative
- * configuration option known to the agent to its default, except deprecated ones. The file is
- * copied onto the test classpath by the {@code processTestResources} task.
+ * generated {@code docs/declarative-configuration-example.yaml}, which includes non-deprecated
+ * configurations with explicit defaults. The file is copied onto the test classpath by the {@code
+ * processTestResources} task.
  */
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
 class DeclarativeConfigurationExampleSmokeTest extends AbstractSmokeTest<Integer> {

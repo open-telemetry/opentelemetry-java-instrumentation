@@ -15,15 +15,6 @@ configurations:
       unset, that setting applies.
     type: boolean
   - ref: common.db.query-sanitization.enabled
-  - ref: common.db-statement-sanitizer.enabled
-  - ref: common.database.statement_sanitizer.enabled
-  - name: otel.instrumentation.r2dbc.statement-sanitizer.enabled
-    declarative_name: java.r2dbc.statement_sanitizer.enabled
-    description: "Deprecated: use `otel.instrumentation.r2dbc.query-sanitization.enabled` instead. It is ignored under v3 preview and will be removed in 3.0."
-    type: boolean
-    default: true
-    deprecated: true
-    replaced_by: otel.instrumentation.r2dbc.query-sanitization.enabled
   - name: otel.instrumentation.r2dbc.experimental.sqlcommenter.enabled
     declarative_name: java.r2dbc.sqlcommenter/development.enabled
     description: >
@@ -34,5 +25,4 @@ configurations:
       query texts unique, which may have adverse impact on database performance.
     type: boolean
   - ref: common.db.sqlcommenter.enabled
-  - ref: common.database.sqlcommenter.enabled
   - ref: common.peer-service-mapping

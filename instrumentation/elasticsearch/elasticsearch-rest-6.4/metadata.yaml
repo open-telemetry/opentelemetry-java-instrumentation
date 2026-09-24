@@ -23,13 +23,4 @@ configurations:
       unset, that setting applies.
     type: boolean
   - ref: common.db.query-sanitization.enabled
-  - ref: common.db-statement-sanitizer.enabled
-  - ref: common.database.statement_sanitizer.enabled
-  - name: otel.instrumentation.elasticsearch.statement-sanitizer.enabled
-    declarative_name: java.elasticsearch.statement_sanitizer.enabled
-    description: "Deprecated: use `otel.instrumentation.elasticsearch.query-sanitization.enabled` instead. It is ignored under v3 preview and will be removed in 3.0."
-    type: boolean
-    default: true
-    deprecated: true
-    replaced_by: otel.instrumentation.elasticsearch.query-sanitization.enabled
   - ref: http.known-methods

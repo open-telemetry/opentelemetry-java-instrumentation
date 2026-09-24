@@ -18,15 +18,6 @@ configurations:
       unset, that setting applies.
     type: boolean
   - ref: common.db.query-sanitization.enabled
-  - ref: common.db-statement-sanitizer.enabled
-  - ref: common.database.statement_sanitizer.enabled
-  - name: otel.instrumentation.jdbc.statement-sanitizer.enabled
-    declarative_name: java.jdbc.statement_sanitizer.enabled
-    description: "Deprecated: use `otel.instrumentation.jdbc.query-sanitization.enabled` instead. It is ignored under v3 preview and will be removed in 3.0."
-    type: boolean
-    default: true
-    deprecated: true
-    replaced_by: otel.instrumentation.jdbc.query-sanitization.enabled
   - name: otel.instrumentation.jdbc.experimental.transaction.enabled
     declarative_name: java.jdbc.transaction/development.enabled
     description: Enables experimental instrumentation to create spans for COMMIT and ROLLBACK operations.
@@ -36,13 +27,13 @@ configurations:
     declarative_name: java.jdbc.sqlcommenter/development.enabled
     description: >
       Enables augmenting queries with a comment containing the tracing information. See
-      [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. WARNING: augmenting
-      queries with tracing context will make query texts unique, which may have adverse impact on
-      database performance. Consult with database experts before enabling.
+      [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. Overrides
+      `otel.instrumentation.common.db.experimental.sqlcommenter.enabled` for this instrumentation;
+      when unset, that setting applies. WARNING: augmenting queries with tracing context will make
+      query texts unique, which may have adverse impact on database performance. Consult with
+      database experts before enabling.
     type: boolean
-    default: false
   - ref: common.db.sqlcommenter.enabled
-  - ref: common.database.sqlcommenter.enabled
   - ref: common.peer-service-mapping
   - name: otel.instrumentation.jdbc.experimental.capture-query-parameters
     declarative_name: java.jdbc.capture_query_parameters/development

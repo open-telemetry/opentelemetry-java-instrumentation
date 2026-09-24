@@ -105,6 +105,18 @@ configurations:
     type: boolean
     default: true
 
+  common.db.sqlcommenter.enabled:
+    name: otel.instrumentation.common.db.experimental.sqlcommenter.enabled
+    declarative_name: java.common.db.sqlcommenter/development.enabled
+    description: >
+      Enables augmenting queries with a comment containing tracing information. An
+      instrumentation-specific setting takes precedence. See
+      [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. WARNING: augmenting
+      queries with tracing context will make query texts unique, which may have adverse impact on
+      database performance.
+    type: boolean
+    default: false
+
   messaging.headers.included:
     name: otel.instrumentation.common.messaging.experimental.headers.included
     declarative_name: java.common.messaging.headers/development.included
@@ -160,84 +172,3 @@ configurations:
     description: "Provides the default for whether to create a producer span for each eligible message in a batch send when stable messaging semantic conventions are enabled. An instrumentation-specific setting takes precedence."
     type: boolean
     default: true
-
-  common.db.sqlcommenter.enabled:
-    name: otel.instrumentation.common.db.experimental.sqlcommenter.enabled
-    declarative_name: java.common.db.sqlcommenter/development.enabled
-    description: "Provides the default for whether to augment database queries with a comment containing the tracing information. See [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. An instrumentation-specific setting takes precedence. WARNING: augmenting queries with tracing context will make query texts unique, which may have adverse impact on database performance."
-    type: boolean
-    default: false
-
-  # Deprecated aliases of the common database settings above, resolved by the same helper.
-  common.db-statement-sanitizer.enabled:
-    name: otel.instrumentation.common.db-statement-sanitizer.enabled
-    description: "Deprecated: use `otel.instrumentation.common.db.query-sanitization.enabled` instead. It is ignored under v3 preview and will be removed in 3.0."
-    type: boolean
-    default: true
-    deprecated: true
-    replaced_by: otel.instrumentation.common.db.query-sanitization.enabled
-
-  # This one and the next were never regular (non-declarative) configuration property names.
-  common.database.statement_sanitizer.enabled:
-    declarative_name: java.common.database.statement_sanitizer.enabled
-    description: "Deprecated: use `java.common.db.query_sanitization.enabled` instead. It is ignored under v3 preview."
-    type: boolean
-    default: true
-    deprecated: true
-    replaced_by: java.common.db.query_sanitization.enabled
-
-  common.database.sqlcommenter.enabled:
-    declarative_name: java.common.database.sqlcommenter/development.enabled
-    description: "Deprecated: use `java.common.db.sqlcommenter/development.enabled` instead. It is ignored under v3 preview."
-    type: boolean
-    default: false
-    deprecated: true
-    replaced_by: java.common.db.sqlcommenter/development.enabled
-
-  common.logging.trace-id-key:
-    name: otel.instrumentation.common.logging.trace-id-key
-    declarative_name: java.common.logging.trace_id_key
-    description: "Specifies the key name used to store the trace ID in the logging context."
-    type: string
-    default: trace_id
-
-  common.logging.span-id-key:
-    name: otel.instrumentation.common.logging.span-id-key
-    declarative_name: java.common.logging.span_id_key
-    description: "Specifies the key name used to store the span ID in the logging context."
-    type: string
-    default: span_id
-
-  common.logging.trace-flags-key:
-    name: otel.instrumentation.common.logging.trace-flags-key
-    declarative_name: java.common.logging.trace_flags_key
-    description: "Specifies the key name used to store the trace flags in the logging context."
-    type: string
-    default: trace_flags
-
-  common.logging.trace-id:
-    name: otel.instrumentation.common.logging.trace-id
-    declarative_name: java.common.logging.trace_id
-    description: "Deprecated: use `otel.instrumentation.common.logging.trace-id-key` instead. It is ignored under v3 preview and will be removed in 3.0."
-    type: string
-    default: trace_id
-    deprecated: true
-    replaced_by: otel.instrumentation.common.logging.trace-id-key
-
-  common.logging.span-id:
-    name: otel.instrumentation.common.logging.span-id
-    declarative_name: java.common.logging.span_id
-    description: "Deprecated: use `otel.instrumentation.common.logging.span-id-key` instead. It is ignored under v3 preview and will be removed in 3.0."
-    type: string
-    default: span_id
-    deprecated: true
-    replaced_by: otel.instrumentation.common.logging.span-id-key
-
-  common.logging.trace-flags:
-    name: otel.instrumentation.common.logging.trace-flags
-    declarative_name: java.common.logging.trace_flags
-    description: "Deprecated: use `otel.instrumentation.common.logging.trace-flags-key` instead. It is ignored under v3 preview and will be removed in 3.0."
-    type: string
-    default: trace_flags
-    deprecated: true
-    replaced_by: otel.instrumentation.common.logging.trace-flags-key

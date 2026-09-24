@@ -81,6 +81,13 @@ instrumentation/development:
         query_sanitization:
           # Enables query sanitization for database queries.
           enabled: true
+        sqlcommenter/development:
+          # Enables augmenting queries with a comment containing tracing information. An
+          # instrumentation-specific setting takes precedence. See
+          # [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. WARNING:
+          # augmenting queries with tracing context will make query texts unique, which may have
+          # adverse impact on database performance.
+          enabled: false
       enduser:
         id:
           # Enables capturing the enduser.id attribute. This property and the associated attribute
@@ -342,12 +349,6 @@ instrumentation/development:
       # sanitization.<p>WARNING: captured query parameters may contain sensitive information such as
       # passwords, personally identifiable information or protected health info.
       capture_query_parameters/development: false
-      sqlcommenter/development:
-        # Enables augmenting queries with a comment containing the tracing information. See
-        # [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. WARNING: augmenting
-        # queries with tracing context will make query texts unique, which may have adverse impact
-        # on database performance. Consult with database experts before enabling.
-        enabled: false
       transaction/development:
         # Enables experimental instrumentation to create spans for COMMIT and ROLLBACK operations.
         enabled: false
@@ -546,13 +547,6 @@ instrumentation/development:
     quartz:
       # Enables the experimental `job.system` span attribute.
       experimental_span_attributes/development: false
-    r2dbc:
-      sqlcommenter/development:
-        # Enables augmenting queries with a comment containing the tracing information. See
-        # [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. WARNING: augmenting
-        # queries with tracing context will make query texts unique, which may have adverse impact
-        # on database performance.
-        enabled: false
     rabbitmq:
       # Enables experimental span attributes `rabbitmq.command`, `rabbitmq.delivery_mode`,
       # `rabbitmq.queue`, and `rabbitmq.record.queue_time_ms`.

@@ -1027,8 +1027,7 @@ class YamlHelperTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
-  void marksDeprecatedConfigurations() throws Exception {
+  void marksDeprecatedConfigurations() throws IOException {
     ConfigurationOption deprecated =
         new ConfigurationOption(
                 "otel.instrumentation.common.logging.trace-id",
@@ -1054,7 +1053,7 @@ class YamlHelperTest {
   }
 
   @Test
-  void omitsMissingDefault() throws Exception {
+  void omitsMissingDefault() throws IOException {
     ConfigurationOption option =
         new ConfigurationOption(
                 null,
