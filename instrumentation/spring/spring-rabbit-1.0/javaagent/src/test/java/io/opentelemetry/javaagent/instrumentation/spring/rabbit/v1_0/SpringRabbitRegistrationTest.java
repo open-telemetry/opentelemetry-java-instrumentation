@@ -51,6 +51,7 @@ import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.listener.BlockingQueueConsumer;
 import org.springframework.amqp.rabbit.listener.DirectMessageListenerContainer;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
+import org.springframework.test.util.ReflectionTestUtils;
 
 class SpringRabbitRegistrationTest {
 
@@ -436,12 +437,17 @@ class SpringRabbitRegistrationTest {
   }
 
   private static class TestContainer extends SimpleMessageListenerContainer {
+    TestContainer() {
+      ReflectionTestUtils.setField(this, "active", true);
+      ReflectionTestUtils.setField(this, "running", true);
+    }
+
     BlockingQueueConsumer createConsumer() {
       return createBlockingQueueConsumer();
     }
 
     void invoke(Channel channel, Message message) {
-      invokeListener(channel, message);
+      executeListener(channel, message);
     }
   }
 

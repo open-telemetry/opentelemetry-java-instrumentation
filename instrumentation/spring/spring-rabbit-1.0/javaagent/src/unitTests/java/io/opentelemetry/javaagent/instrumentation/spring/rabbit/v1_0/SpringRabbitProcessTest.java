@@ -182,7 +182,7 @@ class SpringRabbitProcessTest {
   void skippedProcessingDoesNotInstallContext() {
     Message message = message();
     assertThat(
-            AbstractMessageListenerContainerInstrumentation.InvokeListenerAdvice.onEnter(
+            AbstractMessageListenerContainerInstrumentation.ExecuteListenerAdvice.onEnter(
                 new SimpleMessageListenerContainer(), channel, message))
         .isNull();
     assertThat(PROCESSING_CONTEXT.get(message)).isNull();
@@ -194,7 +194,7 @@ class SpringRabbitProcessTest {
     InstrumentationUtil.suppressInstrumentation(
         () ->
             assertThat(
-                    AbstractMessageListenerContainerInstrumentation.InvokeListenerAdvice.onEnter(
+                    AbstractMessageListenerContainerInstrumentation.ExecuteListenerAdvice.onEnter(
                         container, channel, message))
                 .isNull());
     assertThat(PROCESSING_CONTEXT.get(message)).isNull();
@@ -204,8 +204,8 @@ class SpringRabbitProcessTest {
   }
 
   private void process(Object message, Runnable callback) {
-    AbstractMessageListenerContainerInstrumentation.InvokeListenerAdvice.AdviceScope scope =
-        AbstractMessageListenerContainerInstrumentation.InvokeListenerAdvice.onEnter(
+    AbstractMessageListenerContainerInstrumentation.ExecuteListenerAdvice.AdviceScope scope =
+        AbstractMessageListenerContainerInstrumentation.ExecuteListenerAdvice.onEnter(
             container, channel, message);
     assertThat(scope).isNotNull();
     Throwable error = null;
@@ -215,7 +215,7 @@ class SpringRabbitProcessTest {
       error = t;
       throw t;
     } finally {
-      AbstractMessageListenerContainerInstrumentation.InvokeListenerAdvice.onExit(error, scope);
+      AbstractMessageListenerContainerInstrumentation.ExecuteListenerAdvice.onExit(error, scope);
     }
   }
 
