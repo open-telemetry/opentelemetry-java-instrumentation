@@ -15,12 +15,15 @@ import com.amazonaws.services.sqs.model.Message;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.AbstractList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Spliterator;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 import javax.annotation.Nullable;
 
 class TracingList extends SdkInternalList<Message> {
@@ -159,6 +162,36 @@ class TracingList extends SdkInternalList<Message> {
     }
 
     @Override
+    public boolean contains(Object object) {
+      return delegate.contains(object);
+    }
+
+    @Override
+    public boolean containsAll(Collection<?> collection) {
+      return delegate.containsAll(collection);
+    }
+
+    @Override
+    public int indexOf(Object object) {
+      return delegate.indexOf(object);
+    }
+
+    @Override
+    public int lastIndexOf(Object object) {
+      return delegate.lastIndexOf(object);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+      return delegate.equals(object);
+    }
+
+    @Override
+    public int hashCode() {
+      return delegate.hashCode();
+    }
+
+    @Override
     public Message set(int index, Message element) {
       return delegate.set(index, element);
     }
@@ -171,6 +204,41 @@ class TracingList extends SdkInternalList<Message> {
     @Override
     public Message remove(int index) {
       return delegate.remove(index);
+    }
+
+    @Override
+    public boolean remove(Object object) {
+      return delegate.remove(object);
+    }
+
+    @Override
+    public boolean removeAll(Collection<?> collection) {
+      return delegate.removeAll(collection);
+    }
+
+    @Override
+    public boolean retainAll(Collection<?> collection) {
+      return delegate.retainAll(collection);
+    }
+
+    @Override
+    public boolean removeIf(Predicate<? super Message> filter) {
+      return delegate.removeIf(filter);
+    }
+
+    @Override
+    public void replaceAll(UnaryOperator<Message> operator) {
+      delegate.replaceAll(operator);
+    }
+
+    @Override
+    public void sort(Comparator<? super Message> comparator) {
+      delegate.sort(comparator);
+    }
+
+    @Override
+    public void clear() {
+      delegate.clear();
     }
 
     @Override

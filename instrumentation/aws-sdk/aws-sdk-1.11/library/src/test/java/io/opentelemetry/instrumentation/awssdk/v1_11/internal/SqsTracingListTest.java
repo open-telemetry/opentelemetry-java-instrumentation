@@ -146,6 +146,19 @@ class SqsTracingListTest {
   }
 
   @Test
+  void nonProcessingViewOperationsDoNotCreateSpansOrChangeContext() {
+    List<Message> messages = tracingMessages();
+    List<Message> view = messages.subList(0, 1);
+    Context previous = Context.current();
+
+    assertThat(view.contains(messages.get(0))).isTrue();
+    view.clear();
+
+    assertThat(Context.current()).isSameAs(previous);
+    assertThat(testing.spans()).isEmpty();
+  }
+
+  @Test
   void callbacksValidateNullActionsForEmptyLists() {
     List<Message> messages = tracingMessages().subList(0, 0);
     assertThatThrownBy(() -> messages.forEach(null)).isInstanceOf(NullPointerException.class);
