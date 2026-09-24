@@ -208,8 +208,8 @@ public final class TracingList extends ArrayList<Message> {
 
     @Override
     public boolean equals(Object object) {
-      if (object instanceof TracingListView tracingListView) {
-        object = tracingListView.delegate;
+      if (object instanceof TracingListView) {
+        object = ((TracingListView) object).delegate;
       }
       return delegate.equals(object);
     }

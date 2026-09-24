@@ -30,14 +30,16 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.Collections.emptyList;
 import static java.util.concurrent.CompletableFuture.completedFuture;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import io.awspring.cloud.sqs.MessageHeaderUtils;
 import io.awspring.cloud.sqs.listener.AsyncMessageListener;
 import io.awspring.cloud.sqs.listener.MessageProcessingContext;
+import io.awspring.cloud.sqs.listener.acknowledgement.handler.AcknowledgementHandler;
 import io.awspring.cloud.sqs.listener.pipeline.MessageListenerExecutionStage;
 import io.awspring.cloud.sqs.listener.pipeline.MessageProcessingConfiguration;
 import io.awspring.cloud.sqs.operations.SqsTemplate;
@@ -59,7 +61,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.messaging.Message;
-import org.springframework.messaging.handler.invocation.InvocableHandlerMethod;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 @SpringBootTest(
@@ -442,7 +443,11 @@ class AwsSqsTest {
   private static CompletableFuture<Message<String>> processMessage(
       Message<String> message, AsyncMessageListener<String> listener) {
     MessageProcessingConfiguration<String> configuration =
-        MessageProcessingConfiguration.<String>builder().messageListener(listener).build();
+        MessageProcessingConfiguration.<String>builder()
+            .messageListener(listener)
+            .ackHandler(new AcknowledgementHandler<String>() {})
+            .interceptors(emptyList())
+            .build();
     return new MessageListenerExecutionStage<>(configuration)
         .process(message, MessageProcessingContext.create());
   }
@@ -457,7 +462,6 @@ class AwsSqsTest {
 
   private static class AsyncRetriedMessageHandler {
     private final CompletableFuture<Void> result = new CompletableFuture<>();
-
   }
 
   private enum AsyncCompletion {
