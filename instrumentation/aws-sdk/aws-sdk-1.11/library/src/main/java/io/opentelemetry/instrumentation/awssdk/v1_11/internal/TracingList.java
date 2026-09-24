@@ -20,6 +20,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Objects;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -168,7 +169,12 @@ class TracingList extends SdkInternalList<Message> {
 
     @Override
     public boolean containsAll(Collection<?> collection) {
-      return delegate.containsAll(collection);
+      for (Object element : collection.toArray()) {
+        if (!delegate.contains(element)) {
+          return false;
+        }
+      }
+      return true;
     }
 
     @Override
@@ -183,7 +189,22 @@ class TracingList extends SdkInternalList<Message> {
 
     @Override
     public boolean equals(Object object) {
-      return delegate.equals(object);
+      if (object == this) {
+        return true;
+      }
+      if (!(object instanceof List)) {
+        return false;
+      }
+      List<?> list = (List<?>) object;
+      if (delegate.size() != list.size()) {
+        return false;
+      }
+      for (int i = 0; i < delegate.size(); i++) {
+        if (!Objects.equals(delegate.get(i), list.get(i))) {
+          return false;
+        }
+      }
+      return true;
     }
 
     @Override

@@ -149,9 +149,12 @@ class SqsTracingListTest {
   void nonProcessingViewOperationsDoNotCreateSpansOrChangeContext() {
     List<Message> messages = tracingMessages();
     List<Message> view = messages.subList(0, 1);
+    List<Message> equivalentView = messages.subList(0, 1);
     Context previous = Context.current();
 
     assertThat(view.contains(messages.get(0))).isTrue();
+    assertThat(view.containsAll(equivalentView)).isTrue();
+    assertThat(view.equals(equivalentView)).isTrue();
     view.clear();
 
     assertThat(Context.current()).isSameAs(previous);
