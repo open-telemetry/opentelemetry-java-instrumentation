@@ -135,10 +135,8 @@ class LettuceClusterClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? configuredTarget : host),
-                            equalTo(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
+                                emitStableDatabaseSemconv() ? configuredTarget : null),
+                            equalTo(SERVER_PORT, null),
                             equalTo(
                                 NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
                             equalTo(
@@ -159,10 +157,8 @@ class LettuceClusterClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? configuredTarget : host),
-                            equalTo(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : Long.valueOf(port)),
+                                emitStableDatabaseSemconv() ? configuredTarget : null),
+                            equalTo(SERVER_PORT, null),
                             equalTo(
                                 NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
                             equalTo(
