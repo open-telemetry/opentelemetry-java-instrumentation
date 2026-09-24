@@ -322,6 +322,9 @@ readonly INSTRUMENTATIONS=(
   "spring:spring-batch-3.0:javaagent:testExperimental"
   "spring:spring-data:spring-data-1.8:javaagent:test"
   "spring:spring-integration-4.1:javaagent:test"
+  "spring:spring-integration-4.1:javaagent:testAmqpHandoffWithRabbitInstrumentation"
+  "spring:spring-integration-4.1:javaagent:testAmqpHandoffWithRabbitInstrumentationBothSemconv"
+  "spring:spring-integration-4.1:javaagent:testAmqpHandoffWithRabbitInstrumentationMessagingPreview"
   "spring:spring-integration-4.1:javaagent:testMessagingPreview"
   "spring:spring-integration-4.1:javaagent:testWithProducerInstrumentation"
   "spring:spring-integration-4.1:javaagent:testWithRabbitInstrumentation"
@@ -437,4 +440,7 @@ readonly TEST_LATEST_DEPS_INSTRUMENTATIONS=(
   "redisson:redisson-metrics-3.18:javaagent:testStableSemconv"
   "redisson:redisson-metrics-3.26:javaagent:test"
   "redisson:redisson-metrics-3.26:javaagent:testStableSemconv"
+  "spring:spring-integration-4.1:javaagent:testAmqpHandoffWithRabbitInstrumentation"
+  "spring:spring-integration-4.1:javaagent:testAmqpHandoffWithRabbitInstrumentationBothSemconv"
+  "spring:spring-integration-4.1:javaagent:testAmqpHandoffWithRabbitInstrumentationMessagingPreview"
 )
