@@ -61,17 +61,7 @@ class StructuredTaskScopeTest {
             () -> {
               StructuredTaskScope.Subtask<String> fork1 = taskScope.fork(callable1);
               StructuredTaskScope.Subtask<String> fork2 = taskScope.fork(callable2);
-              try {
-                taskScope.join();
-              } catch (InterruptedException e) {
-                throw e;
-              } catch (RuntimeException e) {
-                throw e;
-              } catch (Error error) {
-                throw error;
-              } catch (Throwable t) {
-                throw new AssertionError(t);
-              }
+              taskScope.join();
 
               return "" + fork1.get() + fork2.get();
             });
