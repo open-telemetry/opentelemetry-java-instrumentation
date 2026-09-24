@@ -85,7 +85,9 @@ public class CamelMessagingMetricsAssertions {
         destination,
         processErrorType,
         processDestinationPartitionId);
-    if (!system.equals("jms") || Boolean.getBoolean("testNoLowerMessaging")) {
+    if (system.equals("jms") || system.equals("kafka")) {
+      assertConsumedMessageCount(testing, system, destination, 1);
+    } else {
       assertCounter(
           testing,
           "messaging.client.consumed.messages",
@@ -294,7 +296,25 @@ public class CamelMessagingMetricsAssertions {
     assertNoDuplicateMessagingMetric(
         testing, "messaging.client.operation.duration", "send", system, destination);
     assertNoDuplicateMessagingMetric(
+        testing, "messaging.client.consumed.messages", "process", system, destination);
+    assertNoDuplicateMessagingMetric(
         testing, "messaging.process.duration", "process", system, destination);
+  }
+
+  private static void assertConsumedMessageCount(
+      InstrumentationExtension testing, String system, String destination, long expectedCount) {
+    long count =
+        testing.metrics().stream()
+            .filter(metric -> metric.getName().equals("messaging.client.consumed.messages"))
+            .flatMap(metric -> metric.getLongSumData().getPoints().stream())
+            .filter(
+                point ->
+                    system.equals(point.getAttributes().get(MESSAGING_SYSTEM))
+                        && destination.equals(
+                            point.getAttributes().get(MESSAGING_DESTINATION_NAME)))
+            .mapToLong(point -> point.getValue())
+            .sum();
+    assertThat(count).isEqualTo(expectedCount);
   }
 
   private static void assertNoDuplicateMessagingMetric(
