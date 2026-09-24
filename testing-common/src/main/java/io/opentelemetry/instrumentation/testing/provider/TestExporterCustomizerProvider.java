@@ -65,15 +65,14 @@ public class TestExporterCustomizerProvider implements DeclarativeConfigurationC
     //            exporter:
     //              console:
     List<SpanProcessorModel> processors = new ArrayList<>();
-    processors.add(getProcessorModel(new SpanExporterModel().withAdditionalProperty("test", null)));
+    processors.add(getProcessorModel(new SpanExporterModel().setExtensionProperty("test", null)));
     processors.add(
-        getProcessorModel(new SpanExporterModel().withConsole(new ConsoleExporterModel())));
-    model.withTracerProvider(new TracerProviderModel().withProcessors(processors));
+        getProcessorModel(new SpanExporterModel().setConsole(new ConsoleExporterModel())));
+    model.setTracerProvider(new TracerProviderModel().setProcessors(processors));
   }
 
   private static SpanProcessorModel getProcessorModel(SpanExporterModel exporter) {
-    return new SpanProcessorModel()
-        .withSimple(new SimpleSpanProcessorModel().withExporter(exporter));
+    return new SpanProcessorModel().setSimple(new SimpleSpanProcessorModel().setExporter(exporter));
   }
 
   private static void addLoggerProvider(OpenTelemetryConfigurationModel model) {
@@ -83,16 +82,16 @@ public class TestExporterCustomizerProvider implements DeclarativeConfigurationC
     //        - simple:
     //            exporter:
     //              test:
-    model.withLoggerProvider(
+    model.setLoggerProvider(
         new LoggerProviderModel()
-            .withProcessors(
+            .setProcessors(
                 singletonList(
                     new LogRecordProcessorModel()
-                        .withSimple(
+                        .setSimple(
                             new SimpleLogRecordProcessorModel()
-                                .withExporter(
+                                .setExporter(
                                     new LogRecordExporterModel()
-                                        .withAdditionalProperty("test", null))))));
+                                        .setExtensionProperty("test", null))))));
   }
 
   private static void addMeterProvider(OpenTelemetryConfigurationModel model) {
@@ -103,18 +102,18 @@ public class TestExporterCustomizerProvider implements DeclarativeConfigurationC
     //            interval: 1000000
     //            exporter:
     //              test:
-    model.withMeterProvider(
+    model.setMeterProvider(
         new MeterProviderModel()
-            .withReaders(
+            .setReaders(
                 singletonList(
                     new MetricReaderModel()
-                        .withPeriodic(
+                        .setPeriodic(
                             new PeriodicMetricReaderModel()
                                 // Set really long interval. We'll call forceFlush when we need the
                                 // metrics instead of collecting them periodically.
-                                .withInterval(1000000)
-                                .withExporter(
+                                .setInterval(1000000)
+                                .setExporter(
                                     new PushMetricExporterModel()
-                                        .withAdditionalProperty("test", null))))));
+                                        .setExtensionProperty("test", null))))));
   }
 }

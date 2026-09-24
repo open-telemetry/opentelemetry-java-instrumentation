@@ -8,10 +8,12 @@ package io.opentelemetry.javaagent.instrumentation.mongo.v4_0;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.internal.async.SingleResultCallback;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
@@ -27,6 +29,7 @@ final class InternalStreamConnectionInstrumentation implements TypeInstrumentati
 
   @Override
   public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(named("open"), getClass().getName() + "$OpenAdvice");
     // before 5.2.0
     transformer.applyAdviceToMethod(
         named("openAsync")
@@ -57,6 +60,23 @@ final class InternalStreamConnectionInstrumentation implements TypeInstrumentati
         named("sendMessageAsync")
             .and(takesArgument(3, named("com.mongodb.internal.async.SingleResultCallback"))),
         getClass().getName() + "$SingleResultCallbackArg3Advice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class OpenAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static MongoConnectionPeer.OpenState onEnter() {
+      return MongoConnectionPeer.startOpen();
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.Enter MongoConnectionPeer.OpenState state,
+        @Advice.FieldValue("description") @Nullable ConnectionDescription connectionDescription,
+        @Advice.Thrown @Nullable Throwable error) {
+      MongoConnectionPeer.endOpen(state, connectionDescription, error);
+    }
   }
 
   @SuppressWarnings("unused")

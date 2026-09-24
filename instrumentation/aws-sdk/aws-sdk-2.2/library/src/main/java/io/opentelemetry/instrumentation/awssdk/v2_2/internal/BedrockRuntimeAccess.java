@@ -69,6 +69,12 @@ final class BedrockRuntimeAccess {
 
   @Nullable
   @NoMuzzle
+  static String getGuardrailIdentifier(ExecutionAttributes executionAttributes) {
+    return enabled ? BedrockRuntimeImpl.getGuardrailIdentifier(executionAttributes) : null;
+  }
+
+  @Nullable
+  @NoMuzzle
   static String getOperationName(ExecutionAttributes executionAttributes) {
     return enabled ? BedrockRuntimeImpl.getOperationName(executionAttributes) : null;
   }

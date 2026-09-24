@@ -37,7 +37,7 @@ public final class MongoTelemetryBuilder {
   }
 
   /**
-   * Sets the max length of recorded queries after normalization. Defaults to {@value
+   * Sets the maximum normalized query {@link String#length()}. Defaults to {@value
    * DEFAULT_MAX_NORMALIZED_QUERY_LENGTH}.
    */
   @CanIgnoreReturnValue

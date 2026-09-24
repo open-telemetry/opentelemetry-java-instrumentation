@@ -157,6 +157,13 @@ public class IntegrationTestUtils {
     throw new IllegalStateException("Agent jar not found");
   }
 
+  static String getAgentJarPath() {
+    String agentArgument = getAgentArgument();
+    int optionsIndex = agentArgument.indexOf('=');
+    return agentArgument.substring(
+        "-javaagent:".length(), optionsIndex == -1 ? agentArgument.length() : optionsIndex);
+  }
+
   public static int runOnSeparateJvm(
       String mainClassName,
       String[] jvmArgs,
@@ -184,20 +191,34 @@ public class IntegrationTestUtils {
       String classpath,
       boolean printOutputStreams)
       throws Exception {
+    return runOnSeparateJvmAndCaptureOutput(
+            mainClassName, jvmArgs, mainMethodArgs, envVars, classpath, printOutputStreams)
+        .getExitCode();
+  }
+
+  static ProcessResult runOnSeparateJvmAndCaptureOutput(
+      String mainClassName,
+      String[] jvmArgs,
+      String[] mainMethodArgs,
+      Map<String, String> envVars,
+      String classpath,
+      boolean printOutputStreams)
+      throws Exception {
+    List<String> vmArgsList = new ArrayList<>(asList(jvmArgs));
+    vmArgsList.add(getAgentArgument());
+
+    List<String> arguments = new ArrayList<>(vmArgsList);
+    arguments.add("-cp");
+    arguments.add(classpath);
+    arguments.add(mainClassName);
+    arguments.addAll(asList(mainMethodArgs));
 
     String separator = System.getProperty("file.separator");
     String path = System.getProperty("java.home") + separator + "bin" + separator + "java";
 
-    List<String> vmArgsList = new ArrayList<>(asList(jvmArgs));
-    vmArgsList.add(getAgentArgument());
-
     List<String> commands = new ArrayList<>();
     commands.add(path);
-    commands.addAll(vmArgsList);
-    commands.add("-cp");
-    commands.add(classpath);
-    commands.add(mainClassName);
-    commands.addAll(asList(mainMethodArgs));
+    commands.addAll(arguments);
     ProcessBuilder processBuilder = new ProcessBuilder(commands.toArray(new String[0]));
     processBuilder.environment().putAll(envVars);
 
@@ -215,7 +236,8 @@ public class IntegrationTestUtils {
     outputGobbler.join();
     errorGobbler.join();
 
-    return process.exitValue();
+    return new ProcessResult(
+        process.exitValue(), outputGobbler.getOutput() + errorGobbler.getOutput());
   }
 
   private static void waitFor(Process process, long timeout, TimeUnit unit)
@@ -241,6 +263,7 @@ public class IntegrationTestUtils {
     final InputStream stream;
     final String type;
     final boolean print;
+    final StringBuilder output = new StringBuilder();
 
     private StreamGobbler(InputStream stream, String type, boolean print) {
       this.stream = stream;
@@ -254,6 +277,7 @@ public class IntegrationTestUtils {
         BufferedReader reader = new BufferedReader(new InputStreamReader(stream, UTF_8));
         String line = null;
         while ((line = reader.readLine()) != null) {
+          output.append(line).append(System.lineSeparator());
           if (print) {
             logger.info("{}> {}", type, line);
           }
@@ -261,6 +285,28 @@ public class IntegrationTestUtils {
       } catch (IOException e) {
         logger.warn("Error gobbling.", e);
       }
+    }
+
+    private String getOutput() {
+      return output.toString();
+    }
+  }
+
+  static class ProcessResult {
+    private final int exitCode;
+    private final String output;
+
+    private ProcessResult(int exitCode, String output) {
+      this.exitCode = exitCode;
+      this.output = output;
+    }
+
+    int getExitCode() {
+      return exitCode;
+    }
+
+    String getOutput() {
+      return output;
     }
   }
 

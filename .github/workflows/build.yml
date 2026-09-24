@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   common:
-    uses: ./.github/workflows/build-common.yml
+    uses: $/.github/workflows/build-common.yml
     secrets:
       DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
 
@@ -21,7 +21,7 @@ jobs:
     # because any time a new library version is released to maven central it can fail
     # which requires unnecessary release branch maintenance, especially for patches
     if: "!startsWith(github.ref_name, 'release/')"
-    uses: ./.github/workflows/reusable-test-latest-deps.yml
+    uses: $/.github/workflows/reusable-test-latest-deps.yml
     secrets:
       DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
 
@@ -30,10 +30,10 @@ jobs:
     # because any time a new library version is released to maven central it can fail
     # which requires unnecessary release branch maintenance, especially for patches
     if: "!startsWith(github.ref_name, 'release/')"
-    uses: ./.github/workflows/reusable-muzzle.yml
+    uses: $/.github/workflows/reusable-muzzle.yml
 
   lint:
     # release branches are excluded because the README.md javaagent download link has to be updated
     # on release branches before the release download has been published
     if: "!startsWith(github.ref_name, 'release/')"
-    uses: ./.github/workflows/reusable-lint-check.yml
+    uses: $/.github/workflows/reusable-lint-check.yml

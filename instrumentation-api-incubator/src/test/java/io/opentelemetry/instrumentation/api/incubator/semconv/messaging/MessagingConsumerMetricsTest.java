@@ -30,12 +30,14 @@ import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import java.util.Collection;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -46,11 +48,14 @@ class MessagingConsumerMetricsTest {
   private static final double[] DURATION_BUCKETS =
       MessagingMetricsAdvice.DURATION_SECONDS_BUCKETS.stream().mapToDouble(d -> d).toArray();
 
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   @Test
   void collectsMetricsAndCountsBatchOnce() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
     OperationListener listener =
         MessagingConsumerMetrics.getForOperationTypeWithOldMetrics()
             .create(meterProvider.get("test"));
@@ -192,6 +197,7 @@ class MessagingConsumerMetricsTest {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
     OperationListener outer =
         MessagingConsumerMetrics.getForOperationType().create(meterProvider.get("outer"));
     OperationListener inner =
@@ -234,6 +240,7 @@ class MessagingConsumerMetricsTest {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
     OperationListener outer =
         MessagingConsumerMetrics.getForOperationType().create(meterProvider.get("outer"));
     OperationListener inner =
@@ -264,6 +271,7 @@ class MessagingConsumerMetricsTest {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
     OperationListener durationListener =
         MessagingConsumerMetrics.getClientOperationDuration().create(meterProvider.get("test"));
     OperationListener consumedMessagesListener =
@@ -295,6 +303,7 @@ class MessagingConsumerMetricsTest {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
     OperationListener receive =
         MessagingConsumerMetrics.getClientOperationDuration().create(meterProvider.get("receive"));
     OperationListener settle =
@@ -330,6 +339,7 @@ class MessagingConsumerMetricsTest {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
     OperationListener listener =
         MessagingConsumerMetrics.getForOperationTypeWithOldMetrics()
             .create(meterProvider.get("test"));
@@ -369,6 +379,7 @@ class MessagingConsumerMetricsTest {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
     OperationListener listener =
         MessagingConsumerMetrics.getConsumedMessages().create(meterProvider.get("test"));
 
@@ -414,6 +425,7 @@ class MessagingConsumerMetricsTest {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
     OperationListener listener =
         MessagingConsumerMetrics.getClientOperationDuration().create(meterProvider.get("test"));
 
@@ -443,6 +455,7 @@ class MessagingConsumerMetricsTest {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
     OperationListener listener =
         MessagingConsumerMetrics.getForOperationTypeWithOldMetrics()
             .create(meterProvider.get("test"));
@@ -485,6 +498,7 @@ class MessagingConsumerMetricsTest {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
     OperationListener listener =
         MessagingConsumerMetrics.getForOperationTypeWithOldMetrics()
             .create(meterProvider.get("test"));
@@ -513,6 +527,7 @@ class MessagingConsumerMetricsTest {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
     OperationListener listener =
         MessagingConsumerMetrics.getForOperationTypeWithOldMetrics()
             .create(meterProvider.get("test"));
@@ -546,6 +561,7 @@ class MessagingConsumerMetricsTest {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
     OperationListener listener =
         MessagingConsumerMetrics.getForOperationType().create(meterProvider.get("test"));
 
@@ -577,6 +593,7 @@ class MessagingConsumerMetricsTest {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
     OperationListener listener = MessagingConsumerMetrics.get().create(meterProvider.get("test"));
 
     Context context =

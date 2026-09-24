@@ -6,11 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v6_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.FilterClientInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -32,6 +33,9 @@ public class Elasticsearch6TransportClientInstrumentationModule extends Instrume
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new AbstractClientInstrumentation());
+    return asList(
+        new AbstractClientInstrumentation(),
+        new FilterClientInstrumentation(),
+        new TransportClientInstrumentation());
   }
 }

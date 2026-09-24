@@ -145,6 +145,15 @@ class JacksonElasticsearchQuerySanitizerTest {
   }
 
   @Test
+  void doesNotSplitSurrogatePairAtQueryLengthLimit() {
+    String beforePair =
+        "{\"" + repeat('a', JacksonElasticsearchQuerySanitizer.MAX_QUERY_LENGTH - 3);
+    String body = beforePair + "😀\":[]}";
+
+    assertThat(sanitizer.apply(body)).isEqualTo(beforePair);
+  }
+
+  @Test
   void stopsBeforeOverDepthContentAfterLimit() {
     String exactLimit =
         objectWithEmptyArrayField(JacksonElasticsearchQuerySanitizer.MAX_QUERY_LENGTH - 7);
@@ -233,5 +242,13 @@ class JacksonElasticsearchQuerySanitizerTest {
       body.append('a');
     }
     return body.append("\":[]}").toString();
+  }
+
+  private static String repeat(char value, int count) {
+    StringBuilder result = new StringBuilder(count);
+    for (int i = 0; i < count; i++) {
+      result.append(value);
+    }
+    return result.toString();
   }
 }
