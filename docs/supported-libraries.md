@@ -247,10 +247,10 @@ These are the application servers that the smoke tests are run against:
 
 These are the JVMs and operating systems that the integration tests are run against:
 
-| JVM                                                                                  | Versions              | OS                |
-| ------------------------------------------------------------------------------------ | --------------------- | ----------------- |
-| [OpenJDK (Azul Zulu)](https://www.azul.com/downloads/)                               | 8, 11, 17, 21, 25, 27 | [`ubuntu-latest`] |
-| [OpenJ9 (IBM Semeru Runtimes)](https://developer.ibm.com/languages/semeru-runtimes/) | 8, 11, 17, 21, 25, 27 | [`ubuntu-latest`] |
+| JVM     | Versions              | OS                |
+| ------- | --------------------- | ----------------- |
+| OpenJDK | 8, 11, 17, 21, 25, 27 | [`ubuntu-latest`] |
+| OpenJ9  | 8, 11, 17, 21, 25, 27 | [`ubuntu-latest`] |
 
 ## Disabled instrumentations
 
