@@ -4,7 +4,10 @@ plugins {
 
 otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_21)
-  if (otelProps.testLatestDeps) {
+  if (
+    otelProps.testLatestDeps ||
+    otelProps.testJavaVersion?.isCompatibleWith(JavaVersion.VERSION_27) == true
+  ) {
     maxJavaVersionSupported.set(JavaVersion.VERSION_27)
   }
 }
