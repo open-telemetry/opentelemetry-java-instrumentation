@@ -106,10 +106,15 @@ public final class TracingList extends ArrayList<Message> {
 
   @Override
   public boolean equals(Object object) {
-    if (object instanceof TracingList || object instanceof TracingListView) {
-      return equalsWithoutTracing(this, (List<?>) object);
+    if (!(object instanceof List)) {
+      return false;
     }
-    return super.equals(object);
+    return equalsWithoutTracing(this, (List<?>) object);
+  }
+
+  @Override
+  public int hashCode() {
+    return hashCodeWithoutTracing(this);
   }
 
   private static boolean equalsWithoutTracing(List<?> left, List<?> right) {
@@ -126,6 +131,15 @@ public final class TracingList extends ArrayList<Message> {
       }
     }
     return true;
+  }
+
+  private static int hashCodeWithoutTracing(List<?> list) {
+    int hashCode = 1;
+    for (int i = 0; i < list.size(); i++) {
+      Object element = list.get(i);
+      hashCode = 31 * hashCode + (element == null ? 0 : element.hashCode());
+    }
+    return hashCode;
   }
 
   private Iterator<Message> tracingIterator(Iterator<Message> delegateIterator) {
@@ -233,18 +247,15 @@ public final class TracingList extends ArrayList<Message> {
 
     @Override
     public boolean equals(Object object) {
-      if (object instanceof TracingList) {
-        return equalsWithoutTracing(delegate, (TracingList) object);
+      if (!(object instanceof List)) {
+        return false;
       }
-      if (object instanceof TracingListView) {
-        return equalsWithoutTracing(delegate, ((TracingListView) object).delegate);
-      }
-      return delegate.equals(object);
+      return equalsWithoutTracing(delegate, (List<?>) object);
     }
 
     @Override
     public int hashCode() {
-      return delegate.hashCode();
+      return hashCodeWithoutTracing(delegate);
     }
 
     @Override

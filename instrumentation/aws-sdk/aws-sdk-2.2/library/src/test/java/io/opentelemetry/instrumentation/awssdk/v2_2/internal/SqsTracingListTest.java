@@ -237,6 +237,10 @@ class SqsTracingListTest {
       comparedLists.add(assertRootAndViewEqualityDoesNotTrace(true, false));
       comparedLists.add(assertRootAndViewEqualityDoesNotTrace(false, true));
       comparedLists.add(assertRootAndViewEqualityDoesNotTrace(false, false));
+      comparedLists.add(assertOrdinaryListEqualityDoesNotTrace(true, true));
+      comparedLists.add(assertOrdinaryListEqualityDoesNotTrace(true, false));
+      comparedLists.add(assertOrdinaryListEqualityDoesNotTrace(false, true));
+      comparedLists.add(assertOrdinaryListEqualityDoesNotTrace(false, false));
 
       assertThat(Context.current()).isSameAs(expectedContext);
       assertThat(testing.spans()).isEmpty();
@@ -252,8 +256,8 @@ class SqsTracingListTest {
           assertThat(comparedIterator.hasNext()).isFalse();
         });
 
-    testing.waitForTraces(5);
-    assertThat(testing.spans()).hasSize(5);
+    testing.waitForTraces(9);
+    assertThat(testing.spans()).hasSize(9);
   }
 
   @Test
@@ -414,6 +418,22 @@ class SqsTracingListTest {
     List<Message> right = viewFirst ? second : second.subList(0, second.size());
     assertThat(left.equals(right)).isEqualTo(equal);
     return second;
+  }
+
+  private static TracingList assertOrdinaryListEqualityDoesNotTrace(
+      boolean viewFirst, boolean equal) {
+    TracingList tracingList = tracingMessages(1, new ArrayList<>());
+    List<Message> ordinaryList = new ArrayList<>();
+    ordinaryList.add(
+        equal ? tracingList.get(0) : Message.builder().messageId("different-message").build());
+
+    List<Message> left =
+        viewFirst ? tracingList.subList(0, tracingList.size()) : tracingList;
+    assertThat(left.equals(ordinaryList)).isEqualTo(equal);
+    if (equal) {
+      assertThat(left.hashCode()).isEqualTo(ordinaryList.hashCode());
+    }
+    return tracingList;
   }
 
   private static void assertIteratorForEachRemainingFailure(boolean useView) {
