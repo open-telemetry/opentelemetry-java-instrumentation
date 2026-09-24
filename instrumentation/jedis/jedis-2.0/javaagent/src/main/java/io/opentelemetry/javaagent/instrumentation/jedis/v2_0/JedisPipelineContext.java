@@ -23,8 +23,8 @@ public final class JedisPipelineContext {
     return new TransactionFraming(request);
   }
 
-  public static void captureTransactionFramingPeerAddress(@Nullable Object transaction) {
-    TransactionFraming framing = currentTransactionFraming().get();
+  public static void captureTransactionFramingPeerAddress(
+      @Nullable Object transaction, @Nullable TransactionFraming framing) {
     if (framing != null && framing.framingRequest != null && transaction instanceof Queable) {
       batchState((Queable) transaction).transactionFramingPeerAddress =
           framing.framingRequest.getPeerAddress();

@@ -88,11 +88,9 @@ class JedisInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) @Nullable Object transaction,
         @Advice.Enter @Nullable TransactionFraming previous) {
-      try {
-        captureTransactionFramingPeerAddress(transaction);
-      } finally {
-        currentTransactionFraming().restore(previous);
-      }
+      TransactionFraming framing = currentTransactionFraming().get();
+      currentTransactionFraming().restore(previous);
+      captureTransactionFramingPeerAddress(transaction, framing);
     }
   }
 }
