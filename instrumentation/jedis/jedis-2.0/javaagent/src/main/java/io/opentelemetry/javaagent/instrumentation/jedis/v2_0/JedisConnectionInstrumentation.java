@@ -109,10 +109,8 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
       if (clusterCommandContext != null) {
         if (clusterCommandContext.isAcquiringConnection()) {
           if (CONNECTION_HEALTH_CHECK_COMMAND.equals(request.getOperationName())) {
-            // Jedis validates a pooled cluster connection with a health check command before
-            // handing
-            // it out; that command belongs to getting the connection rather than being an operation
-            // of its own.
+            // Jedis checks a pooled cluster connection with PING before handing it out. The
+            // health check is part of connection acquisition, not a separate operation.
             return null;
           }
           // A missing slot can refresh the slot cache while the cluster command is executing. The
