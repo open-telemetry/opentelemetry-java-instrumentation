@@ -64,7 +64,7 @@ public class SpymemcachedSingletons {
                   }
                 })
             .addContextCustomizer(
-                (context, request, attributes) -> SpymemcachedRequestHolder.init(context, request))
+                (context, request, attributes) -> SpymemcachedRequestContext.init(context, request))
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(builder);
 

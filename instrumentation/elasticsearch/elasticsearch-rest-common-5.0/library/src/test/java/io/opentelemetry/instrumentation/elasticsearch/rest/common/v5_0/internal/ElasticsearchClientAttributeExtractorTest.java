@@ -22,6 +22,7 @@ import org.apache.http.message.BasicRequestLine;
 import org.elasticsearch.client.Response;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("deprecation") // testing deprecated API
 class ElasticsearchClientAttributeExtractorTest {
 
   @Test

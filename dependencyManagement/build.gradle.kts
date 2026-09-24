@@ -5,7 +5,7 @@ plugins {
 data class DependencySet(val group: String, val version: String, val modules: List<String>)
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.65.0"
+val otelSdkVersion = "1.66.0"
 val otelZipkinVersion = "1.64.0" // last published version, remove with Zipkin support in 3.0
 val otelContribVersion = "1.60.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
@@ -28,7 +28,7 @@ val DEPENDENCY_BOMS = listOf(
   // for some reason boms show up as runtime dependencies in license and vulnerability scans
   // even if they are only used by test dependencies, so not using junit bom since it is LGPL
 
-  "com.fasterxml.jackson:jackson-bom:2.22.2",
+  "com.fasterxml.jackson:jackson-bom:2.22.3",
   "com.google.guava:guava-bom:33.7.1-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
@@ -39,12 +39,12 @@ val DEPENDENCY_BOMS = listOf(
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.1"
 val errorProneVersion = "2.50.0"
-val byteBuddyVersion = "1.18.13"
+val byteBuddyVersion = "1.18.14"
 val asmVersion = "9.10.1"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
 val slf4jVersion = "2.0.19"
-val semConvVersion = "1.43.0"
+val semConvVersion = "1.44.0"
 val semConvAlphaVersion =  semConvVersion.replaceFirst("(-rc.*)?$".toRegex(), "-alpha$1")
 
 val CORE_DEPENDENCIES = listOf(
@@ -114,7 +114,7 @@ val DEPENDENCIES = listOf(
   "com.google.code.findbugs:jsr305:3.0.2",
   "org.apache.groovy:groovy:${groovyVersion}",
   "org.apache.groovy:groovy-json:${groovyVersion}",
-  "org.codehaus.mojo:animal-sniffer-annotations:1.27",
+  "org.codehaus.mojo:animal-sniffer-annotations:1.28",
   "org.junit-pioneer:junit-pioneer:1.9.1",
   "org.objenesis:objenesis:3.6",
   "javax.validation:validation-api:2.0.1.Final",
@@ -124,7 +124,7 @@ val DEPENDENCIES = listOf(
 
   // OSGi runtime verification (see :smoke-tests-osgi). Versions track opentelemetry-java's osgi tests.
   "org.apache.felix:org.apache.felix.framework:7.0.5",
-  "org.apache.aries.spifly:org.apache.aries.spifly.dynamic.bundle:1.3.7",
+  "org.apache.aries.spifly:org.apache.aries.spifly.dynamic.bundle:1.3.8",
   "org.osgi:osgi.core:8.0.0",
   "org.osgi:org.osgi.test.junit5:1.3.0"
 )

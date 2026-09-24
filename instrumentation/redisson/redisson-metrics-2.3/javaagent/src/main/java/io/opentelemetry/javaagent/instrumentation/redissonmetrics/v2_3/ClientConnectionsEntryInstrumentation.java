@@ -17,6 +17,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.redisson.client.RedisClient;
+import org.redisson.connection.ConnectionManager;
 
 class ClientConnectionsEntryInstrumentation implements TypeInstrumentation {
 
@@ -50,7 +51,7 @@ class ClientConnectionsEntryInstrumentation implements TypeInstrumentation {
         @Advice.Argument(2) int poolMaxSize,
         @Advice.Argument(3) int subscriptionPoolMinSize,
         @Advice.Argument(4) int subscriptionPoolMaxSize,
-        @Advice.Argument(5) Object connectionManager,
+        @Advice.Argument(5) ConnectionManager connectionManager,
         @Advice.FieldValue("freeConnectionsCounter") Object freeConnectionsCounter,
         @Advice.FieldValue("freeConnections") Collection<?> freeConnections,
         @Advice.FieldValue("freeSubscribeConnectionsCounter")

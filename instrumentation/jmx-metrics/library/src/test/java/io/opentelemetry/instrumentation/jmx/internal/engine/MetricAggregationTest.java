@@ -13,6 +13,7 @@ import static org.junit.jupiter.params.ParameterizedInvocationConstants.ARGUMENT
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.jmx.internal.handler.HandlerRegistry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -242,6 +243,9 @@ class MetricAggregationTest {
 
     metricConfiguration.addMetricDef(metricDef);
     metricInsight.start(
-        metricConfiguration, () -> MBeanServerFactory.findMBeanServer(null), new HandlerRegistry());
+        metricConfiguration,
+        () -> MBeanServerFactory.findMBeanServer(null),
+        new HandlerRegistry(),
+        IncludeExclude.builder().build());
   }
 }

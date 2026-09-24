@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v1_4.JedisSingletons.instrumenter;
 import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.is;
+import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -34,6 +35,14 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
+    transformer.applyAdviceToMethod(
+        named("setHost")
+            .and(takesArguments(1))
+            .and(takesArgument(0, String.class))
+            .or(named("setPort").and(takesArguments(1)).and(takesArgument(0, int.class))),
+        getClass().getName() + "$SetTargetAdvice");
+
     transformer.applyAdviceToMethod(
         named("sendCommand")
             .and(takesArguments(1))
@@ -81,6 +90,24 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
     public void end(@Nullable Throwable throwable) {
       scope.close();
       JedisRequestContext.endIfNotAttached(instrumenter(), context, request, throwable);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ConstructorAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.This Connection connection) {
+      JedisSingletons.captureConnectionTarget(connection);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class SetTargetAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.This Connection connection) {
+      JedisSingletons.captureConnectionTarget(connection);
     }
   }
 

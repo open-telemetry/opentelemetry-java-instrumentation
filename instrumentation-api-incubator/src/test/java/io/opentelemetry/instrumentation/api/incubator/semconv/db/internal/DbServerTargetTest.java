@@ -22,6 +22,38 @@ class DbServerTargetTest {
 
   private static final int DEFAULT_PORT = 9042;
 
+  @Test
+  void alreadyParsedTargetPreservesDefaultPort() {
+    DbServerTarget target = DbServerTarget.create("cassandra.example.com", DEFAULT_PORT);
+
+    assertThat(target.getAddress()).isEqualTo("cassandra.example.com");
+    assertThat(target.getPort()).isEqualTo(DEFAULT_PORT);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"host1\\instance,host2", "/var/run/db.sock,host2:5432"})
+  void alreadyParsedTargetPreservesSpecialAddressGroup(String address) {
+    DbServerTarget target = DbServerTarget.create(address, null);
+
+    assertThat(target.getAddress()).isEqualTo(address);
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void targetsHaveValueEquality() {
+    DbServerTarget target = DbServerTarget.create("cassandra.example.com", 19042);
+
+    assertThat(builder().addEndpoint("cassandra.example.com", 19042).build())
+        .isEqualTo(target)
+        .hasSameHashCodeAs(target);
+    assertThat(DbServerTarget.create("cassandra.example.com", null))
+        .isEqualTo(DbServerTarget.create("cassandra.example.com", null))
+        .hasSameHashCodeAs(DbServerTarget.create("cassandra.example.com", null))
+        .isNotEqualTo(target);
+    assertThat(DbServerTarget.create("cassandra.example.com", DEFAULT_PORT)).isNotEqualTo(target);
+    assertThat(DbServerTarget.create("other.example.com", 19042)).isNotEqualTo(target);
+  }
+
   @ParameterizedTest
   @MethodSource("unixSocketPaths")
   void unixSocketPreservesAcceptedPathAndHasNoPort(String path) {

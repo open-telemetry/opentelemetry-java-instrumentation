@@ -117,7 +117,10 @@ class KotlinCoroutines13InstrumentationTest {
         val mono = mono(dispatcherWrapper.dispatcher) {
           // extract context from reactor and propagate it into coroutine
           val reactorContext = coroutineContext[ReactorContext.Key]?.context
-          val otelContext = ContextPropagationOperator.getOpenTelemetryContext(reactorContext, Context.current())
+          val otelContext =
+            requireNotNull(
+              ContextPropagationOperator.getOpenTelemetryContext(reactorContext, Context.current())
+            )
           withContext(otelContext.asContextElement()) {
             tracedChild("child")
           }

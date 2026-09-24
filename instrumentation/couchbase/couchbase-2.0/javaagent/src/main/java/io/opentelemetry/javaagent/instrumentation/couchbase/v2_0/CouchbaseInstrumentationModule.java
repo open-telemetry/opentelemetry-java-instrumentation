@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class CouchbaseInstrumentationModule extends InstrumentationModule {
 
   public CouchbaseInstrumentationModule() {
-    super("couchbase", "couchbase-2.0");
+    super("couchbase", "couchbase-2.0", "couchbase-2.0-core");
   }
 
   @Override
@@ -29,7 +29,10 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new CouchbaseBucketInstrumentation(), new CouchbaseClusterInstrumentation());
+    return asList(
+        new CouchbaseBucketInstrumentation(),
+        new CouchbaseClusterInstrumentation(),
+        new CouchbaseClusterTargetInstrumentation());
   }
 
   @Override

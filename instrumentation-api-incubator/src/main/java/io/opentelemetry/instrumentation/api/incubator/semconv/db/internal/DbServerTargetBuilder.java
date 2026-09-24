@@ -13,7 +13,9 @@ import javax.annotation.Nullable;
 
 /**
  * Collects the endpoints a database client was configured with and renders them as a single {@link
- * DbServerTarget}.
+ * DbServerTarget}. A caller that knows which single endpoint served an operation collects that one
+ * endpoint instead, and reports the result as {@code network.peer.address} and {@code
+ * network.peer.port}.
  *
  * <p>Every endpoint is validated as a host name, an IPv4 literal, or an IPv6 literal without any
  * name resolution. When one endpoint cannot be validated the whole target is dropped, because a
@@ -34,6 +36,7 @@ import javax.annotation.Nullable;
 public class DbServerTargetBuilder {
 
   public static final int MAX_ENDPOINTS = 5;
+
   private static final int MIN_PORT = 1;
   private static final int MAX_PORT = 65535;
   private static final int MAX_HOST_NAME_LENGTH = 253;
@@ -48,6 +51,11 @@ public class DbServerTargetBuilder {
 
   DbServerTargetBuilder(@Nullable Integer defaultPort) {
     this.defaultPort = defaultPort;
+  }
+
+  /** Returns whether {@code host} can be represented safely as a database server host. */
+  public static boolean isValidHost(@Nullable String host) {
+    return sanitizeHost(host) != null;
   }
 
   /**
@@ -176,7 +184,7 @@ public class DbServerTargetBuilder {
   }
 
   private DbServerTarget target(String address, @Nullable Integer port) {
-    return new DbServerTarget(suffix == null ? address : address + "/" + suffix, port);
+    return DbServerTarget.create(suffix == null ? address : address + "/" + suffix, port);
   }
 
   private static String renderHostAndPort(String host, int port) {
