@@ -1,0 +1,67 @@
+{
+  "diagnoses": [
+    {
+      "check_key": "check:Build pull request/build / common / test0 (8, hotspot, indy true)",
+      "diagnosis": "unknown",
+      "reason": "The complete exact attempt-1 job log required for diagnosis could not be retrieved, so the omitted portion may contain decisive failure evidence.",
+      "evidence": [
+        "Pinned job 107477774633 in run 35950484495 attempt 1 is recorded as a 97,119,045-byte log with SHA-256 d21acda58f183e0ef9a858bb70dce0a48c9122fd9dcd9290329ddd8e41b9d4e1.",
+        "The available GitHub log API response returned only 500 lines while reporting an original length of 235,160 lines."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / common / test0 (11, hotspot, indy true)",
+      "diagnosis": "unknown",
+      "reason": "The complete exact attempt-1 job log required for diagnosis could not be retrieved, so the omitted portion may contain decisive failure evidence.",
+      "evidence": [
+        "Pinned job 107477774839 in run 35950484495 attempt 1 is recorded as a 99,513,016-byte log with SHA-256 7d02f96aaa1446eba25f7cc6d693f8f7df44abc09bc318bd531a184b586a68a6.",
+        "The available GitHub log API response returned only 500 lines while reporting an original length of 228,466 lines."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / common / test0 (17, hotspot, indy true)",
+      "diagnosis": "unknown",
+      "reason": "The complete exact attempt-1 job log required for diagnosis could not be retrieved, so the omitted portion may contain decisive failure evidence.",
+      "evidence": [
+        "Pinned job 107477774775 in run 35950484495 attempt 1 is recorded as a 15,813,486-byte log with SHA-256 1a6b60de02609d05cec369355f9749ede0378b6adae2a06d6200a26da105c361.",
+        "The available GitHub log API response returned at most 5,000 lines while reporting an original length of 39,309 lines."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / common / test0 (21, hotspot, indy true)",
+      "diagnosis": "unknown",
+      "reason": "The complete exact attempt-1 job log required for diagnosis could not be retrieved, so the omitted portion may contain decisive failure evidence.",
+      "evidence": [
+        "Pinned job 107477774902 in run 35950484495 attempt 1 is recorded as a 116,515,510-byte log with SHA-256 cf55fe6ccf6846e439ce3d1375e95d934fa955be17baa6339d02009ed817b567.",
+        "The available GitHub log API response returned only 500 lines while reporting an original length of 254,762 lines."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / common / test0 (25, hotspot, indy true)",
+      "diagnosis": "unknown",
+      "reason": "The complete exact attempt-1 job log required for diagnosis could not be retrieved, so the omitted portion may contain decisive failure evidence.",
+      "evidence": [
+        "Pinned job 107477774857 in run 35950484495 attempt 1 is recorded as a 117,288,355-byte log with SHA-256 cebe086967911fe36b85e4ca98b1b3230bfc0f314cda4a6a1a63dbc0781f0d7f.",
+        "The available GitHub log API response returned only 500 lines while reporting an original length of 283,860 lines."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / common / test0 (26, hotspot, indy true)",
+      "diagnosis": "unknown",
+      "reason": "The complete exact attempt-1 job log required for diagnosis could not be retrieved, so the omitted portion may contain decisive failure evidence.",
+      "evidence": [
+        "Pinned job 107477774891 in run 35950484495 attempt 1 is recorded as a 113,017,858-byte log with SHA-256 30b0abbde230b42ad283c1f9edff76f470805964b3ccf4efff0184821439e39c.",
+        "The available GitHub log API response returned only 500 lines while reporting an original length of 273,466 lines."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / required-status-check",
+      "diagnosis": "unknown",
+      "reason": "This aggregate check contains no root-cause diagnostic and only reports failure after its required child jobs failed; those child-job logs are incomplete.",
+      "evidence": [
+        "Pinned job 107487707667 in run 35950484495 attempt 1 contains only `Run exit 1` followed by `Process completed with exit code 1.`",
+        "The six failed common/test0 child jobs cannot be classified because their complete exact logs were unavailable."
+      ]
+    }
+  ]
+}
