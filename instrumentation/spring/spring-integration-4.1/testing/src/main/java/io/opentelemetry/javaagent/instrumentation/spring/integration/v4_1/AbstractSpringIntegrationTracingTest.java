@@ -402,6 +402,63 @@ abstract class AbstractSpringIntegrationTracingTest {
   }
 
   @Test
+  void shouldTraceNestedDirectDispatchOfSameMessageWithDuplicateInterceptors() {
+    DirectChannel channel = new DirectChannel();
+    channel.setBeanName("duplicateDirectChannel");
+    ChannelInterceptor interceptor =
+        applicationContext.getBean(GlobalChannelInterceptorWrapper.class).getChannelInterceptor();
+    channel.addInterceptor(interceptor);
+    channel.addInterceptor(interceptor);
+
+    AtomicBoolean nested = new AtomicBoolean();
+    MessageHandler messageHandler =
+        message -> {
+          if (nested.compareAndSet(false, true)) {
+            channel.send(message);
+            runWithSpan("outerAfterNested", () -> {});
+          } else {
+            runWithSpan("nestedHandler", () -> {});
+          }
+        };
+    channel.subscribe(messageHandler);
+
+    Context before = Context.current();
+    channel.send(MessageBuilder.withPayload("test").build());
+    assertThat(Context.current()).isSameAs(before);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "process duplicateDirectChannel"
+                                : "duplicateDirectChannel process")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasAttributesSatisfyingExactly(
+                            messagingAttributes("process", "duplicateDirectChannel")),
+                span ->
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "process duplicateDirectChannel"
+                                : "duplicateDirectChannel process")
+                        .hasParent(trace.getSpan(0))
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasAttributesSatisfyingExactly(
+                            messagingAttributes("process", "duplicateDirectChannel")),
+                span -> span.hasName("nestedHandler").hasParent(trace.getSpan(1)),
+                span -> span.hasName("outerAfterNested").hasParent(trace.getSpan(0))));
+
+    if (emitStableMessagingSemconv()) {
+      assertProcessMetrics(testing, "duplicateDirectChannel", false, 2);
+    } else {
+      assertNoMetrics(testing);
+    }
+
+    channel.unsubscribe(messageHandler);
+  }
+
+  @Test
   void shouldTraceEachExecutorChannelHandler() throws InterruptedException {
     SubscribableChannel channel =
         applicationContext.getBean("executorChannel", SubscribableChannel.class);
