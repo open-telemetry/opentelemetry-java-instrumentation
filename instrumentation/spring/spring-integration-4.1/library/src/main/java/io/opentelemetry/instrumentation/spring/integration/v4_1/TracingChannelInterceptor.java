@@ -45,6 +45,10 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
       getChannelAttributeMh(DIRECT_WITH_ATTRIBUTES_CHANNEL_CLASS);
 
   @Nullable
+  private static final MethodHandle INTEGRATION_CHANNEL_GET_INTERCEPTORS_MH =
+      getIntegrationChannelInterceptorsMh();
+
+  @Nullable
   private static Class<?> getDirectWithAttributesChannelClass() {
     try {
       return Class.forName(
@@ -79,6 +83,27 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
               MethodType.methodType(Object.class, String.class));
     } catch (NoSuchMethodException | IllegalAccessException ignored) {
       return null;
+    }
+  }
+
+  @Nullable
+  private static MethodHandle getIntegrationChannelInterceptorsMh() {
+    MethodHandles.Lookup lookup = MethodHandles.publicLookup();
+    MethodType methodType = MethodType.methodType(List.class);
+    try {
+      return lookup.findVirtual(
+          org.springframework.integration.channel.AbstractMessageChannel.class,
+          "getChannelInterceptors",
+          methodType);
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
+      try {
+        return lookup.findVirtual(
+            org.springframework.integration.channel.AbstractMessageChannel.class,
+            "getInterceptors",
+            methodType);
+      } catch (NoSuchMethodException | IllegalAccessException ignore) {
+        return null;
+      }
     }
   }
 
@@ -308,15 +333,16 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
     messageChannel = unwrapProxy(messageChannel);
     List<ChannelInterceptor> interceptors;
     if (messageChannel instanceof org.springframework.integration.channel.AbstractMessageChannel) {
-      interceptors =
-          ((org.springframework.integration.channel.AbstractMessageChannel) messageChannel)
-              .getChannelInterceptors();
+      interceptors = getIntegrationChannelInterceptors(messageChannel);
     } else if (messageChannel
         instanceof org.springframework.messaging.support.AbstractMessageChannel) {
       interceptors =
           ((org.springframework.messaging.support.AbstractMessageChannel) messageChannel)
               .getInterceptors();
     } else {
+      return 1;
+    }
+    if (interceptors == null) {
       return 1;
     }
 
@@ -327,6 +353,21 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
       }
     }
     return Math.max(count, 1);
+  }
+
+  @Nullable
+  @SuppressWarnings("unchecked") // MethodHandle returns List<ChannelInterceptor>
+  private static List<ChannelInterceptor> getIntegrationChannelInterceptors(
+      MessageChannel messageChannel) {
+    if (INTEGRATION_CHANNEL_GET_INTERCEPTORS_MH == null) {
+      return null;
+    }
+    try {
+      return (List<ChannelInterceptor>)
+          INTEGRATION_CHANNEL_GET_INTERCEPTORS_MH.invoke(messageChannel);
+    } catch (Throwable ignored) {
+      return null;
+    }
   }
 
   // unwrap spring aop proxy
