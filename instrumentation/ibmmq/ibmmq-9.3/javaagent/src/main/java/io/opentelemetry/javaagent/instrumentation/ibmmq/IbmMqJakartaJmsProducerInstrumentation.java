@@ -45,11 +45,13 @@ public class IbmMqJakartaJmsProducerInstrumentation implements TypeInstrumentati
       if (!IbmMqQmidSupport.enabled()) {
         return;
       }
+      // The type matcher only reaches IBM's own producer implementation, so the messaging
+      // system is known here even when the identifier read fails.
+      IbmMqQmidSupport.stampMessagingSystem(SpanKey.PRODUCER);
       String qmid = IbmMqJakartaJmsQmid.readQmid(producer);
       if (qmid == null) {
         return;
       }
-      IbmMqQmidSupport.stampMessagingSystem(SpanKey.PRODUCER);
       IbmMqQmidSupport.stampMessagingSpan(SpanKey.PRODUCER, qmid);
     }
   }
