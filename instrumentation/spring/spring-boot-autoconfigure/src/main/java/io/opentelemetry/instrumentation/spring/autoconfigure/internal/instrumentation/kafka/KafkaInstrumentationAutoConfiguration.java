@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.kafka;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingConfig;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
@@ -36,17 +35,12 @@ public class KafkaInstrumentationAutoConfiguration {
   @Bean
   static SpringKafkaTelemetry getTelemetry(ObjectProvider<OpenTelemetry> openTelemetryProvider) {
     OpenTelemetry openTelemetry = openTelemetryProvider.getObject();
-    DeclarativeConfigProperties commonConfig =
-        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
     return SpringKafkaTelemetry.builder(openTelemetry)
         .setCaptureExperimentalSpanAttributes(
             DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "kafka")
                 .getBoolean("experimental_span_attributes/development", false))
         .setMessagingReceiveTelemetryEnabled(
-            commonConfig
-                .get("messaging")
-                .get("receive_telemetry/development")
-                .getBoolean("enabled", false))
+            MessagingConfig.isReceiveTelemetryEnabled(openTelemetry, false))
         .setHeaders(MessagingConfig.getHeaders(openTelemetry))
         .build();
   }
