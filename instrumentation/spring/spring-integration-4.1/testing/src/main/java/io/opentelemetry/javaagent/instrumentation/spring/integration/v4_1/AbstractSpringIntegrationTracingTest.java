@@ -251,15 +251,14 @@ abstract class AbstractSpringIntegrationTracingTest {
   }
 
   @Test
-  void shouldTraceNestedDispatchOfSameMessageOnTheSameChannel() {
+  void shouldTraceNestedDispatchOnTheSameChannel() {
     SubscribableChannel channel =
         applicationContext.getBean("directChannel", SubscribableChannel.class);
 
-    AtomicBoolean nested = new AtomicBoolean();
     MessageHandler messageHandler =
         message -> {
-          if (nested.compareAndSet(false, true)) {
-            channel.send(message);
+          if (!message.getHeaders().containsKey("nested")) {
+            channel.send(MessageBuilder.fromMessage(message).setHeader("nested", true).build());
           } else {
             runWithSpan("handler", () -> {});
           }
@@ -346,7 +345,7 @@ abstract class AbstractSpringIntegrationTracingTest {
   }
 
   @Test
-  void shouldBalanceDuplicateHandlerCallbacksForNestedSameChannelDispatch() {
+  void shouldTraceNestedDispatchOfSameMessageWithDuplicateInterceptors() {
     ExecutorSubscribableChannel channel = new ExecutorSubscribableChannel(Runnable::run);
     channel.setBeanName("duplicateExecutorChannel");
     ChannelInterceptor interceptor =
@@ -354,10 +353,11 @@ abstract class AbstractSpringIntegrationTracingTest {
     channel.addInterceptor(interceptor);
     channel.addInterceptor(interceptor);
 
+    AtomicBoolean nested = new AtomicBoolean();
     MessageHandler messageHandler =
         message -> {
-          if (!message.getHeaders().containsKey("nested")) {
-            channel.send(MessageBuilder.fromMessage(message).setHeader("nested", true).build());
+          if (nested.compareAndSet(false, true)) {
+            channel.send(message);
             runWithSpan("outerAfterNested", () -> {});
           } else {
             runWithSpan("nestedHandler", () -> {});
