@@ -37,11 +37,18 @@ jobs:
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
 
-      - name: Set up JDK for running Gradle
+      - id: setup-test-java
+        name: Set up JDK 27 for running tests
         uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: temurin
           java-version: 27
+
+      - name: Set up JDK for running Gradle
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version-file: .java-version
 
       - name: Increase gradle daemon heap size
         run: |
@@ -79,10 +86,14 @@ jobs:
       - name: Test
         env:
           DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
+          STEPS_SETUP_TEST_JAVA_OUTPUTS_PATH: ${{ steps.setup-test-java.outputs.path }}
         run: >
           ./gradlew
           ${test_tasks}
           -PtestLatestDeps=true
+          -PtestJavaVersion=27
+          -Porg.gradle.java.installations.paths=${STEPS_SETUP_TEST_JAVA_OUTPUTS_PATH}
+          -Porg.gradle.java.installations.auto-download=false
           ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
       - name: Build scan
