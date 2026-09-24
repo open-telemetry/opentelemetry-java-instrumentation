@@ -4,7 +4,9 @@ plugins {
 
 otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_21)
-  maxJavaVersionSupported.set(JavaVersion.VERSION_27)
+  if (otelProps.testLatestDeps) {
+    maxJavaVersionSupported.set(JavaVersion.VERSION_27)
+  }
 }
 
 dependencies {
