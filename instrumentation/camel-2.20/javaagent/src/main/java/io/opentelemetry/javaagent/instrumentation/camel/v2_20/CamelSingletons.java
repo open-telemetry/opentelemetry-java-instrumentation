@@ -6,11 +6,15 @@
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.SEND;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.add;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.enable;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.databaseSchemaUrl;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.messagingSchemaUrl;
+import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessageTelemetry.messageTelemetry;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -106,6 +110,11 @@ class CamelSingletons {
     }
     if (operationType == PROCESS && emitStableMessagingSemconv()) {
       builder.addOperationMetrics(MessagingProcessMetrics.get());
+      builder.addContextCustomizer(
+          (context, request, startAttributes) ->
+              messageTelemetry().contains(request.getExchange().getIn(), RECEIVE, CONSUMED_MESSAGES)
+                  ? add(context, RECEIVE, CONSUMED_MESSAGES)
+                  : context);
       builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
       return MessagingProcessInstrumenterFactory.create(
           builder,
