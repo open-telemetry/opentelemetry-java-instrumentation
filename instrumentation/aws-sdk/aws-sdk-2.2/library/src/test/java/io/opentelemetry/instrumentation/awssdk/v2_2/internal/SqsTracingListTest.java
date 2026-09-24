@@ -200,6 +200,12 @@ class SqsTracingListTest {
       views.add(lastIndexOfView);
       assertThat(lastIndexOfView.lastIndexOf(lastIndexOfView.get(0))).isZero();
 
+      TracingList removeList = tracingMessages(2, new ArrayList<>());
+      List<Message> removeView = removeList.subList(0, removeList.size());
+      views.add(removeView);
+      assertThat(removeView.remove(removeView.get(0))).isTrue();
+      assertThat(removeView).hasSize(1);
+
       assertThat(Context.current()).isSameAs(expectedContext);
       assertThat(testing.spans()).isEmpty();
     }
@@ -211,8 +217,8 @@ class SqsTracingListTest {
           assertThat(iterator.hasNext()).isFalse();
         });
 
-    testing.waitForTraces(3);
-    assertThat(testing.spans()).hasSize(3);
+    testing.waitForTraces(4);
+    assertThat(testing.spans()).hasSize(4);
   }
 
   @Test

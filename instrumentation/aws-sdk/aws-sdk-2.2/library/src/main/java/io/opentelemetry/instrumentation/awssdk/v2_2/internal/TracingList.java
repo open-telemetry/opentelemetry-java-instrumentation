@@ -263,6 +263,11 @@ public final class TracingList extends ArrayList<Message> {
     }
 
     @Override
+    public boolean remove(Object object) {
+      return delegate.remove(object);
+    }
+
+    @Override
     public Iterator<Message> iterator() {
       return tracingList.tracingIterator(delegate.iterator());
     }
