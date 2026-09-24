@@ -62,7 +62,8 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
       @Nullable
       public static AdviceScope start(
           AbstractMessageListenerContainer container, Channel channel, Object data) {
-        if (!SpringRabbitListenerUtil.canTraceListenerProcessing(container)) {
+        if (SpringRabbitErrorHolder.isInitialized(Context.current())
+            || !SpringRabbitListenerUtil.canTraceListenerProcessing(container)) {
           return null;
         }
 
@@ -141,10 +142,24 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
   @SuppressWarnings("unused")
   public static class InvokeListenerAdvice {
 
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static ExecuteListenerAdvice.AdviceScope onEnter(
+        @Advice.This AbstractMessageListenerContainer container,
+        @Advice.Argument(0) Channel channel,
+        @Advice.Argument(1) Object data) {
+      return ExecuteListenerAdvice.AdviceScope.start(container, channel, data);
+    }
+
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
-    public static void onExit(@Advice.Thrown @Nullable Throwable throwable) {
+    public static void onExit(
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable ExecuteListenerAdvice.AdviceScope adviceScope) {
       if (throwable != null) {
         SpringRabbitErrorHolder.set(Java8BytecodeBridge.currentContext(), throwable);
+      }
+      if (adviceScope != null) {
+        adviceScope.end(throwable);
       }
     }
   }

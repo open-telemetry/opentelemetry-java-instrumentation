@@ -25,6 +25,10 @@ public class SpringRabbitErrorHolder implements ImplicitContextKeyed {
     return context.with(new SpringRabbitErrorHolder());
   }
 
+  public static boolean isInitialized(Context context) {
+    return context.get(KEY) != null;
+  }
+
   public static void set(Context context, Throwable error) {
     SpringRabbitErrorHolder holder = context.get(KEY);
     if (holder != null) {
