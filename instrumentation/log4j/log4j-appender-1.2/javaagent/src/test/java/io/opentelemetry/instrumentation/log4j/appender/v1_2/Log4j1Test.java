@@ -24,14 +24,12 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import java.lang.reflect.Field;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 import org.apache.log4j.Logger;
 import org.apache.log4j.MDC;
-import org.apache.log4j.helpers.Loader;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -41,17 +39,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 class Log4j1Test {
 
   static {
-    // this is needed because log4j1 incorrectly thinks the initial releases of Java 10-19
-    // (which have no '.' in their versions since there is no minor version) are Java 1.1,
-    // which is before ThreadLocal was introduced and so log4j1 disables MDC functionality
-    // (and the MDC tests below fail)
-    try {
-      Field java1 = Loader.class.getDeclaredField("java1");
-      java1.setAccessible(true);
-      java1.set(null, false);
-    } catch (NoSuchFieldException | IllegalAccessException e) {
-      throw new RuntimeException(e);
-    }
+    Log4jMdcTestHelper.enableMdc();
   }
 
   @RegisterExtension
