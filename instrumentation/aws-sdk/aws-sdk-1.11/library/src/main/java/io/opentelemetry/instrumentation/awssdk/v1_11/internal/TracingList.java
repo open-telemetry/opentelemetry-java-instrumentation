@@ -15,12 +15,16 @@ import com.amazonaws.services.sqs.model.Message;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.AbstractList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Objects;
 import java.util.Spliterator;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 import javax.annotation.Nullable;
 
 class TracingList extends SdkInternalList<Message> {
@@ -115,6 +119,48 @@ class TracingList extends SdkInternalList<Message> {
     iterator().forEachRemaining(action);
   }
 
+  @Override
+  public boolean equals(Object object) {
+    if (object == this) {
+      return true;
+    }
+    if (!(object instanceof List)) {
+      return false;
+    }
+    List<?> list = (List<?>) object;
+    if (size() != list.size()) {
+      return false;
+    }
+    for (int i = 0; i < size(); i++) {
+      if (!Objects.equals(get(i), list.get(i))) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    int hashCode = 1;
+    for (int i = 0; i < size(); i++) {
+      Message message = get(i);
+      hashCode = 31 * hashCode + (message == null ? 0 : message.hashCode());
+    }
+    return hashCode;
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder string = new StringBuilder("[");
+    for (int i = 0; i < size(); i++) {
+      if (i > 0) {
+        string.append(", ");
+      }
+      string.append(get(i));
+    }
+    return string.append(']').toString();
+  }
+
   private static boolean inAwsClient() {
     for (Class<?> caller : CallerClass.INSTANCE.getClassContext()) {
       if (AmazonSQSClient.class == caller) {
@@ -159,6 +205,61 @@ class TracingList extends SdkInternalList<Message> {
     }
 
     @Override
+    public boolean contains(Object object) {
+      return delegate.contains(object);
+    }
+
+    @Override
+    public boolean containsAll(Collection<?> collection) {
+      for (Object element : collection.toArray()) {
+        if (!delegate.contains(element)) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    @Override
+    public int indexOf(Object object) {
+      return delegate.indexOf(object);
+    }
+
+    @Override
+    public int lastIndexOf(Object object) {
+      return delegate.lastIndexOf(object);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+      if (object == this) {
+        return true;
+      }
+      if (!(object instanceof List)) {
+        return false;
+      }
+      List<?> list = (List<?>) object;
+      if (delegate.size() != list.size()) {
+        return false;
+      }
+      for (int i = 0; i < delegate.size(); i++) {
+        if (!Objects.equals(delegate.get(i), list.get(i))) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return delegate.hashCode();
+    }
+
+    @Override
+    public String toString() {
+      return delegate.toString();
+    }
+
+    @Override
     public Message set(int index, Message element) {
       return delegate.set(index, element);
     }
@@ -171,6 +272,41 @@ class TracingList extends SdkInternalList<Message> {
     @Override
     public Message remove(int index) {
       return delegate.remove(index);
+    }
+
+    @Override
+    public boolean remove(Object object) {
+      return delegate.remove(object);
+    }
+
+    @Override
+    public boolean removeAll(Collection<?> collection) {
+      return delegate.removeAll(collection);
+    }
+
+    @Override
+    public boolean retainAll(Collection<?> collection) {
+      return delegate.retainAll(collection);
+    }
+
+    @Override
+    public boolean removeIf(Predicate<? super Message> filter) {
+      return delegate.removeIf(filter);
+    }
+
+    @Override
+    public void replaceAll(UnaryOperator<Message> operator) {
+      delegate.replaceAll(operator);
+    }
+
+    @Override
+    public void sort(Comparator<? super Message> comparator) {
+      delegate.sort(comparator);
+    }
+
+    @Override
+    public void clear() {
+      delegate.clear();
     }
 
     @Override
