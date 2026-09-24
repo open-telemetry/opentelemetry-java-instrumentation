@@ -1,0 +1,30 @@
+{
+  "schema": {
+    "id": "github.copilot.copilot-review-loop-decision-report",
+    "version": 3
+  },
+  "decisions": [
+    {
+      "finding_id": "finding-1a801b3993d7145676ccedf1",
+      "disposition": "fixed"
+    },
+    {
+      "finding_id": "finding-b5972130a1c024713716c0ba",
+      "disposition": "no_change",
+      "reason": "The referenced test method does not declare any checked exceptions.",
+      "proposed_reply": "No change is needed because this test already has no checked exception declaration."
+    },
+    {
+      "finding_id": "finding-f60980d776ba7b18788a84b4",
+      "disposition": "no_change",
+      "reason": "The referenced test method does not declare any checked exceptions.",
+      "proposed_reply": "No change is needed because this test already has no checked exception declaration."
+    },
+    {
+      "finding_id": "finding-4f1caaabd8a340971356f848",
+      "disposition": "no_change",
+      "reason": "The referenced test method does not declare any checked exceptions.",
+      "proposed_reply": "No change is needed because this test already has no checked exception declaration."
+    }
+  ]
+}
