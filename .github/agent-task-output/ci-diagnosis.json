@@ -1,0 +1,74 @@
+{
+  "diagnoses": [
+    {
+      "check_key": "check:Build pull request/build / common / test0 (8, hotspot, indy true)",
+      "diagnosis": "unknown",
+      "reason": "The complete exact job log required for diagnosis could not be retrieved, so the omitted failure context cannot safely be attributed or repaired.",
+      "evidence": [
+        "Controller evidence marks job 107477774633 in run 35950484495 attempt 1 as retrieve_full_log=true and reports 48,474,700 omitted UTF-8 bytes.",
+        "The deterministic downloader failed at `gh pr checkout 20089` because GitHub CLI authentication was unavailable.",
+        "The unauthenticated exact-job log endpoint returned HTTP 403."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / common / test0 (11, hotspot, indy true)",
+      "diagnosis": "unknown",
+      "reason": "The complete exact job log required for diagnosis could not be retrieved, so the omitted failure context cannot safely be attributed or repaired.",
+      "evidence": [
+        "Controller evidence marks job 107477774839 in run 35950484495 attempt 1 as retrieve_full_log=true and reports 47,742,030 omitted UTF-8 bytes.",
+        "The deterministic downloader failed at `gh pr checkout 20089` because GitHub CLI authentication was unavailable.",
+        "The unauthenticated exact-job log endpoint returned HTTP 403."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / common / test0 (17, hotspot, indy true)",
+      "diagnosis": "unknown",
+      "reason": "The complete exact job log required for diagnosis could not be retrieved, so the omitted failure context cannot safely be attributed or repaired.",
+      "evidence": [
+        "Controller evidence marks job 107477774775 in run 35950484495 attempt 1 as retrieve_full_log=true and reports 7,527,818 omitted UTF-8 bytes.",
+        "The deterministic downloader failed at `gh pr checkout 20089` because GitHub CLI authentication was unavailable.",
+        "The unauthenticated exact-job log endpoint returned HTTP 403."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / common / test0 (21, hotspot, indy true)",
+      "diagnosis": "unknown",
+      "reason": "The complete exact job log required for diagnosis could not be retrieved, so the omitted failure context cannot safely be attributed or repaired.",
+      "evidence": [
+        "Controller evidence marks job 107477774902 in run 35950484495 attempt 1 as retrieve_full_log=true and reports 55,186,441 omitted UTF-8 bytes.",
+        "The deterministic downloader failed at `gh pr checkout 20089` because GitHub CLI authentication was unavailable.",
+        "The unauthenticated exact-job log endpoint returned HTTP 403."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / common / test0 (25, hotspot, indy true)",
+      "diagnosis": "unknown",
+      "reason": "The complete exact job log required for diagnosis could not be retrieved, so the omitted failure context cannot safely be attributed or repaired.",
+      "evidence": [
+        "Controller evidence marks job 107477774857 in run 35950484495 attempt 1 as retrieve_full_log=true and reports 59,445,772 omitted UTF-8 bytes.",
+        "The deterministic downloader failed at `gh pr checkout 20089` because GitHub CLI authentication was unavailable.",
+        "The unauthenticated exact-job log endpoint returned HTTP 403."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / common / test0 (26, hotspot, indy true)",
+      "diagnosis": "unknown",
+      "reason": "The complete exact job log required for diagnosis could not be retrieved, so the omitted failure context cannot safely be attributed or repaired.",
+      "evidence": [
+        "Controller evidence marks job 107477774891 in run 35950484495 attempt 1 as retrieve_full_log=true and reports 57,903,887 omitted UTF-8 bytes.",
+        "The deterministic downloader failed at `gh pr checkout 20089` because GitHub CLI authentication was unavailable.",
+        "The unauthenticated exact-job log endpoint returned HTTP 403."
+      ]
+    },
+    {
+      "check_key": "check:Build pull request/build / required-status-check",
+      "diagnosis": "unknown",
+      "reason": "This aggregate job only records an intentional exit after upstream failures; the unavailable complete upstream logs prevent a supported attribution.",
+      "evidence": [
+        "Exact job 107487707667 in run 35950484495 attempt 1 executes `exit 1` and reports process exit code 1.",
+        "The same log contains no underlying test diagnostic and identifies the job as `build / required-status-check`.",
+        "All six supplied upstream common-test failures require full-log retrieval, which was unavailable."
+      ]
+    }
+  ]
+}
