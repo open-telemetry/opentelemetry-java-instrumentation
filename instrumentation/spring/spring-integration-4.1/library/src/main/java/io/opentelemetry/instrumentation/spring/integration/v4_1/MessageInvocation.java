@@ -163,8 +163,7 @@ final class MessageInvocation {
     return true;
   }
 
-  private static int countCallbacks(
-      Deque<Callback> callbacks, MessageInvocation invocation) {
+  private static int countCallbacks(Deque<Callback> callbacks, MessageInvocation invocation) {
     int count = 0;
     for (Callback callback : callbacks) {
       if (callback.owner == invocation) {
