@@ -16,11 +16,7 @@ import java.util.List;
 public class VertxRedisClientInstrumentationModule extends InstrumentationModule {
 
   public VertxRedisClientInstrumentationModule() {
-    super(
-        "vertx-redis-client",
-        "vertx-redis-client-4.0",
-        "vertx-redis-client-4.0-core",
-        "vertx");
+    super("vertx-redis-client", "vertx-redis-client-4.0", "vertx-redis-client-4.0-core", "vertx");
   }
 
   @Override
