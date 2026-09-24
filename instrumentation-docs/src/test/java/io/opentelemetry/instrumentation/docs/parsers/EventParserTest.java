@@ -133,8 +133,8 @@ class EventParserTest {
   void getEventsKeepsBothSeveritiesOfTheSameEvent(@TempDir Path tempDir) throws IOException {
     Path telemetryDir = Files.createDirectories(tempDir.resolve(".telemetry"));
 
-    // sofa-rpc builds a client and a server instrumenter under one scope and keeps the default
-    // exception event, so it emits that event at WARN and at ERROR under a single scope.
+    // an instrumentation that builds a client and a server instrumenter under one scope with the
+    // same exception event name emits that event at WARN and at ERROR under a single scope.
     Files.writeString(
         telemetryDir.resolve("events-1.yaml"),
         """
@@ -142,12 +142,12 @@ class EventParserTest {
         events_by_scope:
           - scope: io.opentelemetry.sofa-rpc-5.4
             events:
-              - name: exception
+              - name: rpc.call.exception
                 severity: WARN
                 attributes:
                   - name: exception.type
                     type: STRING
-              - name: exception
+              - name: rpc.call.exception
                 severity: ERROR
                 attributes:
                   - name: rpc.method
@@ -161,13 +161,59 @@ class EventParserTest {
     List<EmittedEvents.Event> events = result.get("otel.semconv.exception.signal.preview=logs");
     assertThat(events)
         .extracting(EmittedEvents.Event::getName, EmittedEvents.Event::getSeverity)
-        .containsExactly(tuple("exception", "ERROR"), tuple("exception", "WARN"));
+        .containsExactly(tuple("rpc.call.exception", "ERROR"), tuple("rpc.call.exception", "WARN"));
     assertThat(events.get(0).getAttributes())
         .extracting(TelemetryAttribute::getName)
         .containsExactly("rpc.method");
     assertThat(events.get(1).getAttributes())
         .extracting(TelemetryAttribute::getName)
         .containsExactly("exception.type");
+  }
+
+  @Test
+  void getEventsFiltersOutGenericExceptionEvents(@TempDir Path tempDir) throws IOException {
+    Path telemetryDir = Files.createDirectories(tempDir.resolve(".telemetry"));
+
+    Files.writeString(
+        telemetryDir.resolve("events-1.yaml"),
+        """
+        when: otel.semconv.exception.signal.preview=logs
+        events_by_scope:
+          - scope: io.opentelemetry.jdbc
+            events:
+              - name: exception
+                severity: WARN
+                attributes:
+                  - name: exception.type
+                    type: STRING
+              - name: db.client.operation.exception
+                severity: WARN
+                attributes:
+                  - name: exception.type
+                    type: STRING
+      """);
+    Files.writeString(
+        telemetryDir.resolve("events-2.yaml"),
+        """
+        when: otel.semconv-stability.opt-in=database,otel.semconv.exception.signal.preview=logs
+        events_by_scope:
+          - scope: io.opentelemetry.jdbc
+            events:
+              - name: exception
+                severity: ERROR
+                attributes:
+                  - name: exception.type
+                    type: STRING
+      """);
+
+    Map<String, List<EmittedEvents.Event>> result =
+        EventParser.getEvents(module("jdbc", "io.opentelemetry.jdbc"), new FileManager(tempDir));
+
+    // a `when` condition that only produced the generic exception event is dropped entirely
+    assertThat(result).containsOnlyKeys("otel.semconv.exception.signal.preview=logs");
+    assertThat(result.get("otel.semconv.exception.signal.preview=logs"))
+        .extracting(EmittedEvents.Event::getName)
+        .containsExactly("db.client.operation.exception");
   }
 
   @Test
