@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -270,18 +269,14 @@ class LettuceClusterClientTest {
                                 : "SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, source.getHost()),
-                            satisfies(
+                            equalTo(
+                                SERVER_ADDRESS,
+                                emitStableDatabaseSemconv() ? source.getHost() : null),
+                            equalTo(
                                 SERVER_PORT,
-                                val -> {
-                                  if (emitStableDatabaseSemconv()) {
-                                    val.isEqualTo(Long.valueOf(source.getPort()));
-                                  } else {
-                                    val.isIn(
-                                        Long.valueOf(source.getPort()),
-                                        Long.valueOf(target.getPort()));
-                                  }
-                                }),
+                                emitStableDatabaseSemconv()
+                                    ? Long.valueOf(source.getPort())
+                                    : null),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv() ? target.getHost() : null),
