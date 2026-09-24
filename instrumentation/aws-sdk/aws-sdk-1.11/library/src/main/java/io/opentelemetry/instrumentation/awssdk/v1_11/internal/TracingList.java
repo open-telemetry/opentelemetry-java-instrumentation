@@ -34,7 +34,7 @@ class TracingList extends SdkInternalList<Message> {
   private final transient Request<?> request;
   private final transient Response<?> response;
   @Nullable private final transient Context processParentContext;
-  private volatile boolean processingOwnedOutsideSqsSdk;
+  private final transient ProcessingOwnership processingOwnership = new ProcessingOwnership();
 
   static SdkInternalList<Message> wrap(
       List<Message> messages,
@@ -71,7 +71,7 @@ class TracingList extends SdkInternalList<Message> {
   @Override
   public ListIterator<Message> listIterator(int index) {
     ListIterator<Message> iterator = super.listIterator(index);
-    return inAwsClient() ? iterator : TracingIterator.wrap(iterator, this);
+    return inAwsClient() ? iterator : TracingIterator.wrap(iterator, this, processingOwnership);
   }
 
   @Override
@@ -82,7 +82,9 @@ class TracingList extends SdkInternalList<Message> {
   @Override
   public Spliterator<Message> spliterator() {
     Spliterator<Message> spliterator = super.spliterator();
-    return inAwsClient() ? spliterator : new TracingSpliterator(spliterator, this);
+    return inAwsClient()
+        ? spliterator
+        : new TracingSpliterator(spliterator, this, processingOwnership);
   }
 
   Instrumenter<SqsProcessRequest, Response<?>> getInstrumenter() {
@@ -102,21 +104,59 @@ class TracingList extends SdkInternalList<Message> {
     return processParentContext;
   }
 
-  boolean isProcessingOwnedOutsideSqsSdk() {
-    return processingOwnedOutsideSqsSdk;
-  }
-
   static void markProcessingOwnedOutsideSqsSdk(List<?> messages) {
     if (messages instanceof TracingList) {
-      ((TracingList) messages).processingOwnedOutsideSqsSdk = true;
+      ((TracingList) messages).processingOwnership.ownedOutsideSqsSdk = true;
     } else if (messages instanceof TracingListView) {
-      ((TracingListView) messages).tracingList.processingOwnedOutsideSqsSdk = true;
+      ((TracingListView) messages).processingOwnership.ownedOutsideSqsSdk = true;
     }
   }
 
   @Override
   public void forEach(Consumer<? super Message> action) {
     iterator().forEachRemaining(action);
+  }
+
+  @Override
+  public boolean equals(Object object) {
+    if (object == this) {
+      return true;
+    }
+    if (!(object instanceof List)) {
+      return false;
+    }
+    List<?> list = (List<?>) object;
+    if (size() != list.size()) {
+      return false;
+    }
+    for (int i = 0; i < size(); i++) {
+      if (!Objects.equals(get(i), list.get(i))) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    int hashCode = 1;
+    for (int i = 0; i < size(); i++) {
+      Message message = get(i);
+      hashCode = 31 * hashCode + (message == null ? 0 : message.hashCode());
+    }
+    return hashCode;
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder string = new StringBuilder("[");
+    for (int i = 0; i < size(); i++) {
+      if (i > 0) {
+        string.append(", ");
+      }
+      string.append(get(i));
+    }
+    return string.append(']').toString();
   }
 
   private static boolean inAwsClient() {
@@ -136,6 +176,7 @@ class TracingList extends SdkInternalList<Message> {
   private static final class TracingListView extends AbstractList<Message> {
     private final List<Message> delegate;
     private final TracingList tracingList;
+    private final ProcessingOwnership processingOwnership = new ProcessingOwnership();
 
     private TracingListView(List<Message> delegate, TracingList tracingList) {
       this.delegate = delegate;
@@ -213,6 +254,11 @@ class TracingList extends SdkInternalList<Message> {
     }
 
     @Override
+    public String toString() {
+      return delegate.toString();
+    }
+
+    @Override
     public Message set(int index, Message element) {
       return delegate.set(index, element);
     }
@@ -270,7 +316,9 @@ class TracingList extends SdkInternalList<Message> {
     @Override
     public ListIterator<Message> listIterator(int index) {
       ListIterator<Message> iterator = delegate.listIterator(index);
-      return inAwsClient() ? iterator : TracingIterator.wrap(iterator, tracingList);
+      return inAwsClient()
+          ? iterator
+          : TracingIterator.wrap(iterator, tracingList, processingOwnership);
     }
 
     @Override
@@ -286,38 +334,51 @@ class TracingList extends SdkInternalList<Message> {
     @Override
     public Spliterator<Message> spliterator() {
       Spliterator<Message> spliterator = delegate.spliterator();
-      return inAwsClient() ? spliterator : new TracingSpliterator(spliterator, tracingList);
+      return inAwsClient()
+          ? spliterator
+          : new TracingSpliterator(spliterator, tracingList, processingOwnership);
     }
   }
 
   private static final class TracingSpliterator implements Spliterator<Message> {
     private final Spliterator<Message> delegate;
     private final TracingList tracingList;
+    private final ProcessingOwnership processingOwnership;
 
-    private TracingSpliterator(Spliterator<Message> delegate, TracingList tracingList) {
+    private TracingSpliterator(
+        Spliterator<Message> delegate,
+        TracingList tracingList,
+        ProcessingOwnership processingOwnership) {
       this.delegate = delegate;
       this.tracingList = tracingList;
+      this.processingOwnership = processingOwnership;
     }
 
     @Override
     public boolean tryAdvance(Consumer<? super Message> action) {
       requireNonNull(action);
       return delegate.tryAdvance(
-          message -> TracingIterator.processCallback(tracingList, message, action));
+          message ->
+              TracingIterator.processCallback(
+                  tracingList, processingOwnership, message, action));
     }
 
     @Override
     public void forEachRemaining(Consumer<? super Message> action) {
       requireNonNull(action);
       delegate.forEachRemaining(
-          message -> TracingIterator.processCallback(tracingList, message, action));
+          message ->
+              TracingIterator.processCallback(
+                  tracingList, processingOwnership, message, action));
     }
 
     @Override
     @Nullable
     public Spliterator<Message> trySplit() {
       Spliterator<Message> split = delegate.trySplit();
-      return split == null ? null : new TracingSpliterator(split, tracingList);
+      return split == null
+          ? null
+          : new TracingSpliterator(split, tracingList, processingOwnership);
     }
 
     @Override
@@ -334,6 +395,14 @@ class TracingList extends SdkInternalList<Message> {
     @Nullable
     public Comparator<? super Message> getComparator() {
       return delegate.getComparator();
+    }
+  }
+
+  static final class ProcessingOwnership {
+    private volatile boolean ownedOutsideSqsSdk;
+
+    boolean isOwnedOutsideSqsSdk() {
+      return ownedOutsideSqsSdk;
     }
   }
 
