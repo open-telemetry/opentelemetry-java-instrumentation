@@ -24,8 +24,9 @@ import java.util.List;
 
 public class Couchbase26Util {
 
-  private static final boolean EXPERIMENTAL_ATTRIBUTES =
-      Boolean.getBoolean("otel.instrumentation.couchbase.experimental-span-attributes");
+  private static final boolean EXPERIMENTAL_TELEMETRY =
+      Boolean.getBoolean("otel.instrumentation.couchbase.emit-experimental-telemetry")
+          || Boolean.getBoolean("otel.instrumentation.couchbase.experimental-span-attributes");
 
   public static DefaultCouchbaseEnvironment.Builder envBuilder(
       BucketSettings bucketSettings, int carrierDirectPort, int httpDirectPort) {
@@ -86,14 +87,14 @@ public class Couchbase26Util {
     }
 
     AttributeAssertionBuilder withLocalAddress() {
-      if (EXPERIMENTAL_ATTRIBUTES) {
+      if (EXPERIMENTAL_TELEMETRY) {
         assertions.add(satisfies(stringKey("couchbase.local.address"), val -> val.isNotNull()));
       }
       return this;
     }
 
     AttributeAssertionBuilder withOperationId() {
-      if (EXPERIMENTAL_ATTRIBUTES) {
+      if (EXPERIMENTAL_TELEMETRY) {
         assertions.add(satisfies(stringKey("couchbase.operation_id"), val -> val.isNotNull()));
       }
       return this;

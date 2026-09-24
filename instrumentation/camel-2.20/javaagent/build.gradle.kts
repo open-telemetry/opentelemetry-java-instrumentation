@@ -118,7 +118,7 @@ tasks {
 
       jvmArgs("-Dotel.instrumentation.experimental.span-suppression-strategy=semconv")
       jvmArgs("-Dotel.semconv-stability.opt-in=database,messaging")
-      jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
       systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,messaging")
       filter {
         includeTestsMatching("*KafkaCamelTest")

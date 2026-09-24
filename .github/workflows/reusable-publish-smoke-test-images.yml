@@ -33,7 +33,7 @@ jobs:
       contents: read
       packages: write
     env:
-      LATEST_JAVA_VERSION: 25 # renovate(java-version)
+      LATEST_JAVA_VERSION: 26 # renovate(java-version)
       PROJECT: ${{ inputs.project }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -77,6 +77,9 @@ jobs:
 
       - name: Build Java 21 Docker image
         run: ./gradlew "$PROJECT:jib" -Ptag="$TAG" -PtargetJDK=21 -Djib.httpTimeout=120000 -Djib.console=plain
+
+      - name: Build Java 25 Docker image
+        run: ./gradlew "$PROJECT:jib" -Ptag="$TAG" -PtargetJDK=25 -Djib.httpTimeout=120000 -Djib.console=plain
 
       - name: Build Java ${{ env.LATEST_JAVA_VERSION }} Docker image
         run: ./gradlew "$PROJECT:jib" -Ptag="$TAG" -PtargetJDK="$LATEST_JAVA_VERSION" -Djib.httpTimeout=120000 -Djib.console=plain

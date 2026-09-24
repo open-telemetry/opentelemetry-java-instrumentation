@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
@@ -33,26 +32,19 @@ public class VertxSqlClientInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public boolean isHelperClass(String className) {
-    return "io.vertx.sqlclient.impl.QueryExecutorUtil".equals(className);
-  }
-
-  @Override
-  public List<String> injectedClassNames() {
-    return singletonList("io.vertx.sqlclient.impl.QueryExecutorUtil");
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new ClientBuilderInstrumentation(),
         new CommandSchedulerInstrumentation(),
+        new ConnectionFactoryInstrumentation(),
+        new ConnectionPoolInstrumentation(),
         new DriverInstrumentation(),
         new PoolInstrumentation(),
+        new CloseablePoolInstrumentation(),
+        new PoolWaiterInstrumentation(),
         new SqlClientBaseInstrumentation(),
         new SqlConnectionBaseInstrumentation(),
-        new PreparedStatementInstrumentation(),
-        new QueryBaseInstrumentation(),
+        new SqlConnectionPoolInstrumentation(),
         new QueryExecutorInstrumentation(),
         new QueryResultBuilderInstrumentation(),
         new TransactionImplInstrumentation());
@@ -65,8 +57,12 @@ public class VertxSqlClientInstrumentationModule extends InstrumentationModule
     // used in 5.0
     virtualFieldRegistrar.accept(
         "io.vertx.sqlclient.internal.command.CommandBase", Context.class.getName());
+    virtualFieldRegistrar.accept(
+        "io.vertx.sqlclient.internal.Connection", VertxSqlClientState.class.getName());
     // used in 5.1
     virtualFieldRegistrar.accept(
         "io.vertx.sqlclient.spi.protocol.CommandBase", Context.class.getName());
+    virtualFieldRegistrar.accept(
+        "io.vertx.sqlclient.spi.connection.Connection", VertxSqlClientState.class.getName());
   }
 }

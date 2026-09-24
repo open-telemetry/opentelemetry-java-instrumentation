@@ -12,8 +12,11 @@ import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -26,32 +29,31 @@ final class LettuceBatchRequest {
   private final String operationName;
   @Nullable private final String queryText;
   @Nullable private final Long batchSize;
-  @Nullable private final InetSocketAddress serverAddress;
-  @Nullable private final Integer databaseIndex;
+  private final List<RedisCommand<?, ?, ?>> commands;
+  @Nullable private final LettuceConnectionState connectionState;
 
   private LettuceBatchRequest(
       String operationName,
       @Nullable String queryText,
       @Nullable Long batchSize,
-      @Nullable InetSocketAddress serverAddress,
-      @Nullable Integer databaseIndex) {
+      List<RedisCommand<?, ?, ?>> commands,
+      @Nullable LettuceConnectionState connectionState) {
     this.operationName = operationName;
     this.queryText = queryText;
     this.batchSize = batchSize;
-    this.serverAddress = serverAddress;
-    this.databaseIndex = databaseIndex;
+    this.commands = commands;
+    this.connectionState = connectionState;
   }
 
   static LettuceBatchRequest create(
-      List<RedisCommand<?, ?, ?>> commands,
-      @Nullable InetSocketAddress serverAddress,
-      @Nullable Integer databaseIndex) {
+      List<RedisCommand<?, ?, ?>> commands, @Nullable LettuceConnectionState connectionState) {
+    List<RedisCommand<?, ?, ?>> commandSnapshot = new ArrayList<>(commands);
     return new LettuceBatchRequest(
-        operationName(commands),
-        queryText(commands),
-        commands.size() != 1 ? (long) commands.size() : null,
-        serverAddress,
-        databaseIndex);
+        operationName(commandSnapshot),
+        queryText(commandSnapshot),
+        commandSnapshot.size() != 1 ? (long) commandSnapshot.size() : null,
+        commandSnapshot,
+        connectionState);
   }
 
   String getOperationName() {
@@ -70,12 +72,23 @@ final class LettuceBatchRequest {
 
   @Nullable
   InetSocketAddress getServerAddress() {
-    return serverAddress;
+    return connectionState == null ? null : connectionState.serverAddress;
+  }
+
+  @Nullable
+  SocketAddress getPeerAddress() {
+    // Read when the span ends so an outbound write after the flush can still supply the peer.
+    return LettuceCommandPeer.batchAddress(commands);
   }
 
   @Nullable
   Integer getDatabaseIndex() {
-    return databaseIndex;
+    return connectionState == null ? null : connectionState.databaseIndex;
+  }
+
+  @Nullable
+  RedisServerTarget getServerTarget() {
+    return connectionState == null ? null : connectionState.serverTarget;
   }
 
   private static String operationName(List<RedisCommand<?, ?, ?>> commands) {

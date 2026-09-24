@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import io.opentelemetry.instrumentation.api.internal.StringUtils;
 import java.util.regex.Pattern;
 
 %%
@@ -61,7 +62,7 @@ WHITESPACE           = [ \t\r\n]+
     }
   }
 
-  // max length of the sanitized statement - SQLs longer than this will be trimmed
+  // maximum sanitized statement length
   static final int LIMIT = 32 * 1024;
 
   // Match on strings like "IN(?, ?, ...)"
@@ -393,9 +394,7 @@ WHITESPACE           = [ \t\r\n]+
   private class Alter extends DdlOperation {}
 
   private SqlQuery getResult() {
-    if (builder.length() > LIMIT) {
-      builder.delete(LIMIT, builder.length());
-    }
+    StringUtils.truncate(builder, LIMIT);
     String fullStatement = builder.toString();
 
     // Normalize all 'in (?, ?, ...)' statements to in (?) to reduce cardinality

@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.jdbc.internal;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.databaseSchemaUrl;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -67,6 +68,7 @@ public final class JdbcInstrumenterFactory {
             openTelemetry, INSTRUMENTATION_NAME, CodeSpanNameExtractor.create(getter))
         .addAttributesExtractor(CodeAttributesExtractor.create(getter))
         .addAttributesExtractor(new DataSourceDbAttributesExtractor())
+        .setSchemaUrl(databaseSchemaUrl())
         .setEnabled(enabled)
         .buildInstrumenter();
   }

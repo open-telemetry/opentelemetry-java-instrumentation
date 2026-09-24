@@ -39,6 +39,18 @@ public class MyLibrary10InstrumentationModule extends InstrumentationModule {
   `Arrays.asList(...)` for multiple items and `Collections.singletonList(...)` for a single
   item.
 
+### Multiple modules in one Gradle project
+
+When a javaagent Gradle project contains independently selected `InstrumentationModule` classes,
+give each one a unique instrumentation name. Muzzle passes use that name with
+`excludeInstrumentationName(...)` to select only the module covered by each compatibility range or
+target artifact. Every name passed to the `InstrumentationModule` constructor is also a user-facing
+`otel.instrumentation.<name>.enabled` alias, checked in constructor argument order. When adding a
+unique name, preserve the existing first (main) name and the order of existing names.
+
+See [Compatibility range ownership](gradle-conventions.md#compatibility-range-ownership) for when
+modules should share a javaagent project and how to separate their Muzzle passes and dependencies.
+
 ### `classLoaderMatcher()` — Version-Boundary Detection
 
 Override `classLoaderMatcher()` only when the instrumentation targets a specific library
@@ -535,12 +547,10 @@ prevent `ClassCastException`.
 - Reference the advice class using `getClass().getName() + "$InnerClassName"` — not
   `this.getClass().getName() + "$InnerClassName"`, `InnerClassName.class.getName()`,
   `OuterClass.class.getName()`, or a string literal.
-  Any `.class.getName()` reference — whether to the inner advice class or the outer
-  instrumentation class — causes class loading in the agent's class loader, where library
-  types used by the advice are unavailable (causing `NoClassDefFoundError`).
-  `getClass().getName()` avoids this because it is a virtual call on the already-loaded
-  instance, not a class literal. Omit the redundant `this.` qualifier and use the shorter
-  repository convention.
+  Do not use `.class.getName()` to construct an advice class name in `transform()`. Resolving the
+  class literal loads the advice class in the agent class loader, where library types referenced
+  by the advice may be unavailable (causing `NoClassDefFoundError`). Omit the redundant `this.`
+  qualifier and use the shorter repository convention.
 
 ## CallDepth (Preventing Recursive Instrumentation)
 
