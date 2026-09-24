@@ -36,7 +36,7 @@ public final class SapUrlParser implements JdbcUrlParser {
   public void parse(String jdbcUrl, ParseContext ctx) {
     ctx.system(SAP_HANA);
     ctx.oldSemconvSystem(HANADB);
-    ctx.host(DEFAULT_HOST);
+    ctx.defaultHost(DEFAULT_HOST);
 
     // SAP HANA driver doesn't support serverName/portNumber/databaseName DataSource properties
     ctx.applyUserProperty();

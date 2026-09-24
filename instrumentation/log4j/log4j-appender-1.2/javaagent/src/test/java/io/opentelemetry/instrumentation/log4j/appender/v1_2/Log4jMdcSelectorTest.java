@@ -24,6 +24,10 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class Log4jMdcSelectorTest {
 
+  static {
+    Log4jMdcTestHelper.enableMdc();
+  }
+
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 

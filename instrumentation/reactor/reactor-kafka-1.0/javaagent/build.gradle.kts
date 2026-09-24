@@ -121,7 +121,7 @@ tasks {
         classpath = suite.sources.runtimeClasspath
 
         val semconvConfig = "otel.semconv-stability.preview=messaging"
-        jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+        jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
         jvmArgs("-D$semconvConfig")
         systemProperty(
           "metadataConfig",
@@ -142,7 +142,7 @@ tasks {
         classpath = suite.sources.runtimeClasspath
 
         val semconvConfig = "otel.semconv-stability.preview=messaging/dup"
-        jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+        jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
         jvmArgs("-D$semconvConfig")
         systemProperty(
           "metadataConfig",
@@ -164,7 +164,7 @@ tasks {
           classpath = suite.sources.runtimeClasspath
 
           val semconvConfig = "otel.semconv-stability.preview=messaging"
-          jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+          jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
           jvmArgs("-D$semconvConfig")
           systemProperty("metadataConfig", semconvConfig)
           isEnabled = sourceTask.enabled
@@ -173,10 +173,10 @@ tasks {
 
   test {
     systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true",
+      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
     )
   }
 

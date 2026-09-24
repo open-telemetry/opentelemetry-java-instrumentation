@@ -5,13 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceInstrumentationUtil.expectsResponse;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.COMMAND_ADDRESS;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.COMMAND_DATABASE_INDEX;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONTEXT;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_ADDRESS;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_DATABASE_INDEX;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -19,9 +16,11 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.CommandWrapper;
+import io.lettuce.core.protocol.DecoratedCommand;
 import io.lettuce.core.protocol.DefaultEndpoint;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -62,8 +61,8 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.This DefaultEndpoint endpoint, @Advice.Argument(0) RedisCommand<?, ?, ?> command) {
       AsyncCommand<?, ?, ?> asyncCommand = asAsyncCommand(command);
-      COMMAND_ADDRESS.set(command, ENDPOINT_ADDRESS.get(endpoint));
-      COMMAND_DATABASE_INDEX.set(command, ENDPOINT_DATABASE_INDEX.get(endpoint));
+      RedisServerTarget commandTarget = commandTarget(command);
+      LettuceConnectionState.copy(endpoint, command, commandTarget);
 
       if (LettuceBatchContext.isBatching(endpoint)) {
         LettuceBatchContext.capture(endpoint, command, asyncCommand);
@@ -74,6 +73,9 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
       // LettuceReactiveCommandsInstrumentation; only async/sync commands backed by an
       // AsyncCommand get their span created here, to avoid a duplicate span for reactive commands.
       if (asyncCommand == null) {
+        return;
+      }
+      if (emitStableDatabaseSemconv() && !LettuceCommandPeer.markSpanStarted(asyncCommand)) {
         return;
       }
 
@@ -94,16 +96,35 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
+    public static RedisServerTarget commandTarget(RedisCommand<?, ?, ?> command) {
+      RedisCommand<?, ?, ?> current = command;
+      while (current != null) {
+        RedisServerTarget target = LettuceConnectionState.serverTarget(current);
+        if (target != null) {
+          return target;
+        }
+        if (current instanceof AsyncCommand) {
+          current = ((AsyncCommand<?, ?, ?>) current).getDelegate();
+        } else if (current instanceof CommandWrapper) {
+          current = ((CommandWrapper<?, ?, ?>) current).getDelegate();
+        } else {
+          break;
+        }
+      }
+      return null;
+    }
+
+    @Nullable
     public static AsyncCommand<?, ?, ?> asAsyncCommand(RedisCommand<?, ?, ?> command) {
-      // AsyncCommand itself is a CommandWrapper, so CommandWrapper.unwrap would strip past it to
-      // the inner command. Walk the wrapper chain instead and stop at the AsyncCommand layer.
+      // A full unwrap would strip past AsyncCommand to the inner command. Walk the wrapper chain
+      // instead and stop at the AsyncCommand layer.
       RedisCommand<?, ?, ?> current = command;
       while (current != null) {
         if (current instanceof AsyncCommand) {
           return (AsyncCommand<?, ?, ?>) current;
         }
-        if (current instanceof CommandWrapper) {
-          current = ((CommandWrapper<?, ?, ?>) current).getDelegate();
+        if (current instanceof DecoratedCommand) {
+          current = ((DecoratedCommand<?, ?, ?>) current).getDelegate();
         } else {
           break;
         }

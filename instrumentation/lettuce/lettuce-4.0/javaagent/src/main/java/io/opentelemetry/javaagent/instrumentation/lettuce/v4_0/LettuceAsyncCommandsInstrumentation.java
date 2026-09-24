@@ -94,6 +94,9 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
         @Advice.This AbstractRedisAsyncCommands<?, ?> commands,
         @Advice.Argument(0) RedisCommand<?, ?, ?> command) {
       LettuceSingletons.attachAddress(command, commands.getConnection());
+      // Every buffered command needs its own peer state so a later netty write can record the
+      // address it observed, whether or not this command starts its own span.
+      LettuceSingletons.initializeCommandPeer(command);
       if (LettuceBatchContext.isBatching(commands)) {
         return AdviceScope.captureForBatching(commands);
       }
