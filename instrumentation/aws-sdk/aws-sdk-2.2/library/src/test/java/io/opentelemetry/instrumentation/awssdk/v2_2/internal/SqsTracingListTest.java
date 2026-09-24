@@ -427,8 +427,7 @@ class SqsTracingListTest {
     ordinaryList.add(
         equal ? tracingList.get(0) : Message.builder().messageId("different-message").build());
 
-    List<Message> left =
-        viewFirst ? tracingList.subList(0, tracingList.size()) : tracingList;
+    List<Message> left = viewFirst ? tracingList.subList(0, tracingList.size()) : tracingList;
     assertThat(left.equals(ordinaryList)).isEqualTo(equal);
     if (equal) {
       assertThat(left.hashCode()).isEqualTo(ordinaryList.hashCode());
