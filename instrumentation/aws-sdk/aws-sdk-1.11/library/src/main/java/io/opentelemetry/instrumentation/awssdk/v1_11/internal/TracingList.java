@@ -105,13 +105,14 @@ class TracingList extends SdkInternalList<Message> {
     return SqsProcessTracing.isProcessingOwnedOutsideSqsSdk(this);
   }
 
-  static List<?> processingOwner(List<?> messages) {
-    if (messages instanceof TracingList) {
-      return messages;
+  @Nullable
+  static SdkInternalList<?> processingOwner(List<?> messages) {
+    if (messages instanceof SdkInternalList) {
+      return (SdkInternalList<?>) messages;
     } else if (messages instanceof TracingListView) {
       return ((TracingListView) messages).tracingList;
     }
-    return messages;
+    return null;
   }
 
   @Override
