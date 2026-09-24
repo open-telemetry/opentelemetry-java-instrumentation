@@ -627,3 +627,4 @@ rediscala-1.8:javaagent-unit-tests
 lettuce-4.0:javaagent-unit-tests
 jedis-4.0:javaagent-unit-tests
 jedis-3.0:javaagent-unit-tests
+vertx-redis-client-4.0:javaagent-unit-tests

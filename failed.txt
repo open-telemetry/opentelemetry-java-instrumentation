@@ -14,3 +14,4 @@ rediscala-1.8:javaagent-unit-tests	2026-09-21T02:45:09Z	agent artifact missing c
 lettuce-4.0:javaagent-unit-tests	2026-09-21T08:09:12Z	agent artifact missing cleanup.patch/cleanup.noop
 jedis-4.0:javaagent-unit-tests	2026-09-22T20:38:59Z	agent_result=failure
 jedis-3.0:javaagent-unit-tests	2026-09-22T21:32:52Z	agent_result=failure
+vertx-redis-client-4.0:javaagent-unit-tests	2026-09-24T15:36:13Z	agent_result=failure
