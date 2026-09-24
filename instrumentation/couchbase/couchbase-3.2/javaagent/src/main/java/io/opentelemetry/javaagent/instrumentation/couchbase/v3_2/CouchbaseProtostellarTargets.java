@@ -10,6 +10,8 @@ import com.couchbase.client.core.CoreProtostellar;
 import com.couchbase.client.core.cnc.RequestSpan;
 import com.couchbase.client.core.env.SeedNode;
 import com.couchbase.client.core.util.ConnectionString;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseConnectionStrings;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseServerTarget;
@@ -18,6 +20,8 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 public final class CouchbaseProtostellarTargets {
+
+  private static final int PROTOSTELLAR_DEFAULT_PORT = 18098;
 
   private static final VirtualField<CoreProtostellar, CouchbaseServerTarget> CORE_TARGETS =
       VirtualField.find(CoreProtostellar.class, CouchbaseServerTarget.class);
@@ -31,9 +35,16 @@ public final class CouchbaseProtostellarTargets {
   }
 
   public static void registerCore(Core core, Set<SeedNode> seedNodes) {
-    if (CouchbaseServerTargets.get(core) == null) {
-      CouchbaseServerTargets.registerFromSeedNodes(core, seedNodes, core.context().environment());
+    DbServerTargetBuilder target =
+        DbServerTarget.builder(PROTOSTELLAR_DEFAULT_PORT).setSorted(true);
+    for (SeedNode seedNode : seedNodes) {
+      if (seedNode == null) {
+        target.addEndpoint(null, -1);
+      } else {
+        target.addEndpoint(seedNode.address(), seedNode.protostellarPort().orElse(-1));
+      }
     }
+    CouchbaseServerTargets.register(core, CouchbaseServerTarget.direct(target.build()), null);
   }
 
   public static void captureRequestSpan(Core core, RequestSpan span) {

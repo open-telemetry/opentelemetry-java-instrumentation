@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v3_2;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singleton;
 
@@ -59,7 +60,8 @@ class CouchbaseProtostellar343Test {
                     span ->
                         span.hasName("get node")
                             .hasKind(CLIENT)
-                            .hasAttributesSatisfyingExactly(equalTo(SERVER_ADDRESS, "node"))));
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(SERVER_ADDRESS, "node"), equalTo(SERVER_PORT, 18099L))));
       } finally {
         core.close();
       }
