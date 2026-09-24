@@ -5,6 +5,8 @@
 
 package io.opentelemetry.smoketest;
 
+import static java.util.Collections.emptyMap;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
 import io.opentelemetry.instrumentation.testing.internal.MetaDataCollector;
@@ -48,7 +50,7 @@ public class SmokeTestRunner extends InstrumentationTestRunner {
       String path = new File("").getAbsolutePath();
 
       MetaDataCollector.writeTelemetryToFiles(
-          path, metricsByScope, tracesByScope, instrumentationScopes);
+          path, metricsByScope, tracesByScope, emptyMap(), instrumentationScopes);
     }
   }
 

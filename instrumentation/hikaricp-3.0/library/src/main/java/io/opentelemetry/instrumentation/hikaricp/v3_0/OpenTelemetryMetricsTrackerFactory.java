@@ -21,11 +21,15 @@ final class OpenTelemetryMetricsTrackerFactory implements MetricsTrackerFactory 
 
   private final OpenTelemetry openTelemetry;
   @Nullable private final MetricsTrackerFactory userMetricsFactory;
+  private final Attributes databaseAttributes;
 
   OpenTelemetryMetricsTrackerFactory(
-      OpenTelemetry openTelemetry, @Nullable MetricsTrackerFactory userMetricsFactory) {
+      OpenTelemetry openTelemetry,
+      @Nullable MetricsTrackerFactory userMetricsFactory,
+      Attributes databaseAttributes) {
     this.openTelemetry = openTelemetry;
     this.userMetricsFactory = userMetricsFactory;
+    this.databaseAttributes = databaseAttributes;
   }
 
   @Override
@@ -36,7 +40,8 @@ final class OpenTelemetryMetricsTrackerFactory implements MetricsTrackerFactory 
             : userMetricsFactory.create(poolName, poolStats);
 
     DbConnectionPoolMetrics metrics =
-        DbConnectionPoolMetrics.create(openTelemetry, INSTRUMENTATION_NAME, poolName);
+        DbConnectionPoolMetrics.create(
+            openTelemetry, INSTRUMENTATION_NAME, poolName, databaseAttributes);
 
     ObservableLongMeasurement connections = metrics.connections();
     ObservableLongMeasurement minIdleConnections = metrics.minIdleConnections();

@@ -29,7 +29,7 @@ class StructuredTaskScopeTest {
     "rawtypes"
   }) // type arguments for StructuredTaskScope change between jdk 21 and 25
   @Test
-  void multipleForkJoin() throws Exception {
+  void multipleForkJoin() throws Throwable {
     StructuredTaskScope tmp;
     try {
       // since jdk 25-ea+24
