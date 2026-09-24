@@ -359,8 +359,7 @@ class TracingList extends SdkInternalList<Message> {
       requireNonNull(action);
       return delegate.tryAdvance(
           message ->
-              TracingIterator.processCallback(
-                  tracingList, processingOwnership, message, action));
+              TracingIterator.processCallback(tracingList, processingOwnership, message, action));
     }
 
     @Override
@@ -368,17 +367,14 @@ class TracingList extends SdkInternalList<Message> {
       requireNonNull(action);
       delegate.forEachRemaining(
           message ->
-              TracingIterator.processCallback(
-                  tracingList, processingOwnership, message, action));
+              TracingIterator.processCallback(tracingList, processingOwnership, message, action));
     }
 
     @Override
     @Nullable
     public Spliterator<Message> trySplit() {
       Spliterator<Message> split = delegate.trySplit();
-      return split == null
-          ? null
-          : new TracingSpliterator(split, tracingList, processingOwnership);
+      return split == null ? null : new TracingSpliterator(split, tracingList, processingOwnership);
     }
 
     @Override
