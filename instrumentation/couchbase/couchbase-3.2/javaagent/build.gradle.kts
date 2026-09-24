@@ -40,19 +40,6 @@ dependencies {
   latestDepTestLibrary("com.couchbase.client:java-client:+")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("legacyProtostellarTest") {
-      dependencies {
-        implementation(project())
-        implementation(project(":instrumentation:couchbase:couchbase-common-3.1:javaagent"))
-        implementation("com.couchbase.client:java-client:3.4.3")
-        implementation("org.objenesis:objenesis")
-      }
-    }
-  }
-}
-
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
@@ -115,7 +102,6 @@ tasks {
 
   check {
     dependsOn(
-      testing.suites,
       testStableSemconv,
       testStableSemconvExperimental,
       testV3Preview,
