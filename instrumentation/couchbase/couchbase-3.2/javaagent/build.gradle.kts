@@ -67,21 +67,21 @@ testing {
           }
         }
       }
+    }
 
-      register<JvmTestSuite>("version344Test") {
-        sources {
-          java {
-            setSrcDirs(listOf("src/version344Test/java"))
-          }
+    register<JvmTestSuite>("version344Test") {
+      sources {
+        java {
+          setSrcDirs(listOf("src/version344Test/java"))
         }
-        dependencies {
-          implementation("com.couchbase.client:java-client:3.4.4")
-        }
-        targets {
-          all {
-            testTask.configure {
-              jvmArgs("-Dotel.semconv-stability.opt-in=database")
-            }
+      }
+      dependencies {
+        implementation("com.couchbase.client:java-client:3.4.4")
+      }
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.semconv-stability.opt-in=database")
           }
         }
       }

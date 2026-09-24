@@ -38,7 +38,7 @@ class CouchbaseProtostellar344Test {
           new CoreProtostellar(
               environment,
               PasswordAuthenticator.create("user", "password"),
-              ConnectionString.create("couchbase2://node:18099"));
+              ConnectionString.create("protostellar://node:18099"));
       try {
         RequestSpan requestSpan = environment.requestTracer().requestSpan("get", null);
         ProtostellarRequest<Object> request =
