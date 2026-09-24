@@ -186,9 +186,7 @@ public final class RocketMqBatchSendHelper {
       Context fallbackContext = sendContext == null ? parentContext : sendContext;
       for (int i = 0; i < messagesWithoutCreationContext.size(); i++) {
         propagator.inject(
-            extractedContextsWithoutCreationContext
-                .get(i)
-                .with(Span.fromContext(fallbackContext)),
+            extractedContextsWithoutCreationContext.get(i).with(Span.fromContext(fallbackContext)),
             messagesWithoutCreationContext.get(i),
             MessagePropertySetter.INSTANCE);
       }
