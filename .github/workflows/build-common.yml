@@ -286,7 +286,7 @@ jobs:
           - 21
           - 25
           - 25-deny-unsafe
-          - 26 # renovate(java-version)
+          - 27 # renovate(java-version)
         vm:
           - hotspot
           - openj9
