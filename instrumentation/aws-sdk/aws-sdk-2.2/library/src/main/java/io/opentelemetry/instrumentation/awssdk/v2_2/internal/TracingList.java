@@ -207,6 +207,19 @@ public final class TracingList extends ArrayList<Message> {
     }
 
     @Override
+    public boolean equals(Object object) {
+      if (object instanceof TracingListView tracingListView) {
+        object = tracingListView.delegate;
+      }
+      return delegate.equals(object);
+    }
+
+    @Override
+    public int hashCode() {
+      return delegate.hashCode();
+    }
+
+    @Override
     public Message set(int index, Message element) {
       return delegate.set(index, element);
     }

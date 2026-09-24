@@ -31,18 +31,20 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_ME
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import io.awspring.cloud.sqs.MessageHeaderUtils;
-import io.awspring.cloud.sqs.listener.adapter.AsyncMessagingMessageListenerAdapter;
-import io.awspring.cloud.sqs.listener.adapter.MessagingMessageListenerAdapter;
+import io.awspring.cloud.sqs.listener.AsyncMessageListener;
+import io.awspring.cloud.sqs.listener.MessageProcessingContext;
+import io.awspring.cloud.sqs.listener.pipeline.MessageListenerExecutionStage;
+import io.awspring.cloud.sqs.listener.pipeline.MessageProcessingConfiguration;
 import io.awspring.cloud.sqs.operations.SqsTemplate;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import java.lang.reflect.Method;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.apache.pekko.http.scaladsl.Http;
@@ -257,9 +259,13 @@ class AwsSqsTest {
 
       Message<String> retainedMessage = MessageHeaderUtils.addHeaderIfAbsent(result, "retry", true);
       RetriedMessageHandler handler = new RetriedMessageHandler();
-      Method method = RetriedMessageHandler.class.getDeclaredMethod("handle");
-      new MessagingMessageListenerAdapter<String>(new InvocableHandlerMethod(handler, method))
-          .onMessage(retainedMessage);
+      processMessage(
+              retainedMessage,
+              message -> {
+                handler.handle();
+                return completedFuture(null);
+              })
+          .join();
 
       assertThat(handler.invoked).isTrue();
       await()
@@ -405,11 +411,8 @@ class AwsSqsTest {
       Message<String> retainedMessage, AsyncCompletion completion) throws Exception {
     testing.clearData();
     AsyncRetriedMessageHandler handler = new AsyncRetriedMessageHandler();
-    Method method = AsyncRetriedMessageHandler.class.getDeclaredMethod("handle");
-    CompletableFuture<Void> listenerResult =
-        new AsyncMessagingMessageListenerAdapter<String>(
-                new InvocableHandlerMethod(handler, method))
-            .onMessage(retainedMessage);
+    CompletableFuture<Message<String>> listenerResult =
+        processMessage(retainedMessage, message -> handler.result);
 
     assertThat(testing.spans())
         .filteredOn(span -> span.getName().equals("process test-queue"))
@@ -436,10 +439,17 @@ class AwsSqsTest {
                                 .hasStatus(expectedStatus)));
   }
 
+  private static CompletableFuture<Message<String>> processMessage(
+      Message<String> message, AsyncMessageListener<String> listener) {
+    MessageProcessingConfiguration<String> configuration =
+        MessageProcessingConfiguration.<String>builder().messageListener(listener).build();
+    return new MessageListenerExecutionStage<>(configuration)
+        .process(message, MessageProcessingContext.create());
+  }
+
   private static class RetriedMessageHandler {
     private boolean invoked;
 
-    @SuppressWarnings("unused")
     void handle() {
       invoked = true;
     }
@@ -448,10 +458,6 @@ class AwsSqsTest {
   private static class AsyncRetriedMessageHandler {
     private final CompletableFuture<Void> result = new CompletableFuture<>();
 
-    @SuppressWarnings("unused")
-    CompletableFuture<Void> handle() {
-      return result;
-    }
   }
 
   private enum AsyncCompletion {

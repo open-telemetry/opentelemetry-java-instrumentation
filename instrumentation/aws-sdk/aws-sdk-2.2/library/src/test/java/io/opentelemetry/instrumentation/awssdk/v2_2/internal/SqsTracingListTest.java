@@ -216,6 +216,30 @@ class SqsTracingListTest {
   }
 
   @Test
+  void viewEqualityAndHashCodeDoNotTraceTraversal() {
+    TracingList tracingList = tracingMessages(2, new ArrayList<>());
+    List<Message> first = tracingList.subList(0, 1);
+    List<Message> second = tracingList.subList(1, 2);
+    ContextKey<String> markerKey = ContextKey.named("equality-test-marker");
+    Context expectedContext = Context.root().with(markerKey, "present");
+
+    try (Scope ignored = expectedContext.makeCurrent()) {
+      assertThat(first).isNotEqualTo(second);
+      assertThat(first.hashCode()).isNotZero();
+
+      assertThat(Context.current()).isSameAs(expectedContext);
+      assertThat(testing.spans()).isEmpty();
+    }
+
+    Iterator<Message> iterator = first.iterator();
+    assertThat(iterator.next()).isSameAs(first.get(0));
+    assertThat(iterator.hasNext()).isFalse();
+
+    testing.waitForTraces(1);
+    assertThat(testing.spans()).hasSize(1);
+  }
+
+  @Test
   void explicitSuppressionSkipsCallbackProcessing() {
     TracingList tracingList = tracingMessages(1, new ArrayList<>());
     AtomicBoolean callbackInvoked = new AtomicBoolean();

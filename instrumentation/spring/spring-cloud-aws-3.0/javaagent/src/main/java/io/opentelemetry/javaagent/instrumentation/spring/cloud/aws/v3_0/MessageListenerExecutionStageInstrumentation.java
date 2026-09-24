@@ -18,24 +18,24 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.messaging.Message;
 
-class AsyncMessagingMessageListenerAdapterInstrumentation implements TypeInstrumentation {
+class MessageListenerExecutionStageInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("io.awspring.cloud.sqs.listener.adapter.AsyncMessagingMessageListenerAdapter");
+    return named("io.awspring.cloud.sqs.listener.pipeline.MessageListenerExecutionStage");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("onMessage")
+        named("process")
             .and(takesArgument(0, named("org.springframework.messaging.Message")))
             .and(returns(CompletableFuture.class)),
-        getClass().getName() + "$OnMessageAdvice");
+        getClass().getName() + "$ProcessAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class OnMessageAdvice {
+  public static class ProcessAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static SpringAwsUtil.ProcessingInvocation methodEnter(
