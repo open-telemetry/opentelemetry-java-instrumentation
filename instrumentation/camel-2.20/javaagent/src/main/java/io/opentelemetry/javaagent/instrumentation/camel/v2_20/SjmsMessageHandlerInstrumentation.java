@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
+import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelJmsProcessingOwnership.PROCESSING_STATE;
 import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.jms.JmsMessageProcessingState;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -43,9 +43,6 @@ class SjmsMessageHandlerInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class MessageHandlerAdvice {
-
-    public static final VirtualField<Message, JmsMessageProcessingState> PROCESSING_STATE =
-        VirtualField.find(Message.class, JmsMessageProcessingState.class);
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static JmsMessageProcessingState onEnter(@Advice.Argument(0) Message message) {
