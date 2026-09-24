@@ -17,6 +17,10 @@
 
 ### 🚫 Deprecations
 
+- Deprecate the source-specific experimental selectors for Log4j `MapMessage` entries, Logback
+  key-value pairs, Logstash markers, and Logstash structured arguments in favor of the common
+  structured logging attribute selector. The source-specific properties are ignored under
+  v3-preview.
 - Deprecate `otel.instrumentation.couchbase.experimental-span-attributes` in favor of
   `otel.instrumentation.couchbase.emit-experimental-telemetry`. It will be removed in the next minor
   release.
@@ -33,6 +37,11 @@
 - Deprecate `otel.instrumentation.opensearch.capture-search-query`. There is no replacement.
 - Deprecate `otel.instrumentation.elasticsearch.capture-search-query` There is no replacement.
   ([#19675](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19675))
+- Deprecate `otel.instrumentation.messaging.experimental.receive-telemetry.enabled`,
+  `otel.instrumentation.messaging.experimental.headers.included`,
+  and `otel.instrumentation.messaging.experimental.headers.excluded` in favor of the corresponding
+  `otel.instrumentation.common.messaging.experimental` properties.
+  ([#20060](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20060))
 
 ## Version 2.31.1 (2026-08-23)
 

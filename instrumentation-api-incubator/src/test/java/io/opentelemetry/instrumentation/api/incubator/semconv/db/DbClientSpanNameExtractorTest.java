@@ -189,6 +189,21 @@ class DbClientSpanNameExtractorTest {
   }
 
   @Test
+  void shouldUseConfiguredTargetWithoutAddingAPort() {
+    DbRequest dbRequest = new DbRequest();
+    if (emitStableDatabaseSemconv()) {
+      when(dbAttributesGetter.getServerAddress(dbRequest))
+          .thenReturn("db1.example:5432,db2.example:5432");
+      when(dbAttributesGetter.getServerPort(dbRequest)).thenReturn(null);
+    }
+
+    String spanName = DbClientSpanNameExtractor.create(dbAttributesGetter).extract(dbRequest);
+
+    assertThat(spanName)
+        .isEqualTo(emitStableDatabaseSemconv() ? "db1.example:5432,db2.example:5432" : "DB Query");
+  }
+
+  @Test
   void shouldFallBackToDefaultSpanName() {
     // given
     DbRequest dbRequest = new DbRequest();
