@@ -83,7 +83,6 @@ jobs:
           ./gradlew
           ${test_tasks}
           -PtestLatestDeps=true
-          -PtestJavaVersion=25
           ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
       - name: Build scan

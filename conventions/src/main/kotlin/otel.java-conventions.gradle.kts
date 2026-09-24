@@ -396,15 +396,9 @@ afterEvaluate {
   val useJ9 = otelProps.testJavaVM == "openj9"
   tasks.withType<Test>().configureEach {
     if (testJavaVersion != null) {
-      val testLauncherVersion =
-        if (otelProps.testLatestDeps) {
-          maxOf(testJavaVersion, otelJava.maxJavaVersionSupported.getOrElse(testJavaVersion))
-        } else {
-          testJavaVersion
-        }
       javaLauncher.set(
         javaToolchains.launcherFor {
-          languageVersion.set(JavaLanguageVersion.of(testLauncherVersion.majorVersion))
+          languageVersion.set(JavaLanguageVersion.of(testJavaVersion.majorVersion))
           implementation.set(if (useJ9) JvmImplementation.J9 else JvmImplementation.VENDOR_SPECIFIC)
         }
       )
