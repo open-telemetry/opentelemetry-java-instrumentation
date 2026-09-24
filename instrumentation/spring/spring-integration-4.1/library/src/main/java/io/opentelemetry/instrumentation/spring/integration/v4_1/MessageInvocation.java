@@ -76,13 +76,14 @@ final class MessageInvocation {
     addCallback(new Callback(channel, handler, handler != null, invocation));
   }
 
-  static boolean enterDuplicateSend(Message<?> message, MessageChannel channel) {
-    return enterDuplicate(message, channel, null, false);
+  static boolean enterDuplicateSend(
+      Message<?> message, MessageChannel channel, int interceptorCount) {
+    return enterDuplicate(message, channel, null, false, interceptorCount);
   }
 
   static boolean enterDuplicateHandler(
-      Message<?> message, MessageChannel channel, MessageHandler handler) {
-    return enterDuplicate(message, channel, handler, true);
+      Message<?> message, MessageChannel channel, MessageHandler handler, int interceptorCount) {
+    return enterDuplicate(message, channel, handler, true, interceptorCount);
   }
 
   static void startNoopSend(MessageChannel channel) {
@@ -147,17 +148,30 @@ final class MessageInvocation {
       Message<?> message,
       MessageChannel channel,
       @Nullable MessageHandler handler,
-      boolean handlerInvocation) {
+      boolean handlerInvocation,
+      int interceptorCount) {
     MessageInvocation invocation = find(message, channel, handler, handlerInvocation);
     Deque<Callback> callbacks = currentCallbacks.get();
     if (invocation == null
         || callbacks == null
         || callbacks.isEmpty()
-        || callbacks.peekLast().owner != invocation) {
+        || callbacks.peekLast().owner != invocation
+        || countCallbacks(callbacks, invocation) >= interceptorCount) {
       return false;
     }
     addCallback(new Callback(channel, handler, handlerInvocation, null, invocation));
     return true;
+  }
+
+  private static int countCallbacks(
+      Deque<Callback> callbacks, MessageInvocation invocation) {
+    int count = 0;
+    for (Callback callback : callbacks) {
+      if (callback.owner == invocation) {
+        count++;
+      }
+    }
+    return count;
   }
 
   @Nullable
