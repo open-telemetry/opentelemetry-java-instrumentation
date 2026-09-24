@@ -10,7 +10,6 @@ import static io.opentelemetry.semconv.OtelAttributes.OTEL_EVENT_NAME;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -20,11 +19,14 @@ import java.util.List;
 import java.util.Map;
 import org.apache.log4j.Logger;
 import org.apache.log4j.MDC;
-import org.apache.log4j.helpers.Loader;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class Log4jMdcSelectorTest {
+
+  static {
+    Log4jMdcTestHelper.enableMdc();
+  }
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -35,9 +37,6 @@ class Log4jMdcSelectorTest {
 
   @Test
   void capturesConfiguredMdcAttributes() {
-    // Log4j 1.2 disables MDC when java.version has no dot, as on JDK 27.
-    assumeFalse(Loader.isJava1());
-
     MDC_ENTRIES.forEach(MDC::put);
     MDC.put("otel.event.name", "MyEventName");
     try {
