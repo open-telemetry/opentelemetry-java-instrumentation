@@ -11,8 +11,9 @@ import io.opentelemetry.instrumentation.testing.junit.{
   InstrumentationExtension
 }
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
+import io.opentelemetry.sdk.trace.data.StatusData
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
-import io.opentelemetry.semconv.HttpAttributes
+import io.opentelemetry.semconv.{ErrorAttributes, HttpAttributes}
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.scaladsl.Http
 import org.apache.pekko.http.scaladsl.model.{HttpRequest, HttpResponse}
@@ -66,6 +67,46 @@ class PekkoHttpServerParsingErrorTest {
             trace.hasSpansSatisfyingExactly(new Consumer[SpanDataAssert] {
               override def accept(span: SpanDataAssert): Unit = {
                 assertParsingErrorSpan(span, 400)
+                assertResponseHasCustomizedHeaders(span, response)
+                ()
+              }
+            })
+        })
+      } finally Await.result(binding.unbind(), 10.seconds)
+    } finally Await.result(system.terminate(), 10.seconds)
+  }
+
+  /** pekko-http answers a method it does not know with a 501 while parsing the
+    * method token, so that request never reaches the handler either. The method
+    * is what failed to parse, so the span does not report one, not even
+    * `_OTHER`.
+    */
+  @Test def unknownMethodIsTraced(): Unit = {
+    implicit val system: ActorSystem = ActorSystem(
+      "parsing-error-unknown-method-test"
+    )
+    try {
+      val handler: HttpRequest => HttpResponse = _ => HttpResponse()
+      val binding =
+        Await.result(
+          Http().bindAndHandleSync(handler, "localhost", 0),
+          10.seconds
+        )
+      val port = binding.localAddress.getPort
+
+      try {
+        val response = send(
+          port,
+          "TEST /success HTTP/1.1\r\nHost: localhost:" + port + "\r\n\r\n"
+        )
+        assertThat(response.head).contains("501 Not Implemented")
+
+        testing.waitAndAssertTraces(new Consumer[TraceAssert] {
+          override def accept(trace: TraceAssert): Unit =
+            trace.hasSpansSatisfyingExactly(new Consumer[SpanDataAssert] {
+              override def accept(span: SpanDataAssert): Unit = {
+                assertParsingErrorSpan(span, 501)
+                assertResponseHasCustomizedHeaders(span, response)
                 ()
               }
             })
@@ -167,17 +208,50 @@ class PekkoHttpServerParsingErrorTest {
   private def assertParsingErrorSpan(
       span: SpanDataAssert,
       statusCode: Long
-  ): SpanDataAssert =
+  ): SpanDataAssert = {
+    val statusAttribute = equalTo(
+      HttpAttributes.HTTP_RESPONSE_STATUS_CODE,
+      java.lang.Long.valueOf(statusCode)
+    )
     span
       .hasName("HTTP")
       .hasKind(SpanKind.SERVER)
       .hasNoParent()
-      .hasAttributesSatisfyingExactly(
-        equalTo(
-          HttpAttributes.HTTP_RESPONSE_STATUS_CODE,
-          java.lang.Long.valueOf(statusCode)
+    if (statusCode >= 500) {
+      span
+        .hasStatus(StatusData.error())
+        .hasAttributesSatisfyingExactly(
+          statusAttribute,
+          equalTo(ErrorAttributes.ERROR_TYPE, statusCode.toString)
         )
-      )
+    } else {
+      span.hasAttributesSatisfyingExactly(statusAttribute)
+    }
+  }
+
+  /** The response customizer runs on the rejection too, so the response carries
+    * the ids of the span that describes it, the same check the shared server
+    * tests make.
+    */
+  private def assertResponseHasCustomizedHeaders(
+      span: SpanDataAssert,
+      response: List[String]
+  ): SpanDataAssert = {
+    val headers = response.tail
+      .takeWhile(_.nonEmpty)
+      .map { line =>
+        val colon = line.indexOf(':')
+        line.substring(0, colon).trim.toLowerCase -> line
+          .substring(colon + 1)
+          .trim
+      }
+      .toMap
+    assertThat(headers.contains("x-test-traceid")).isTrue
+    assertThat(headers.contains("x-test-spanid")).isTrue
+    span
+      .hasTraceId(headers("x-test-traceid"))
+      .hasSpanId(headers("x-test-spanid"))
+  }
 
   private def send(port: Int, request: String): List[String] = {
     val socket = new Socket("localhost", port)
