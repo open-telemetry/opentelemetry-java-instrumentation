@@ -9,8 +9,8 @@ import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.couchbase.client.core.Core;
-import com.couchbase.client.core.env.SeedNode;
 import com.couchbase.client.core.env.CoreEnvironment;
+import com.couchbase.client.core.env.SeedNode;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.objenesis.ObjenesisStd;
