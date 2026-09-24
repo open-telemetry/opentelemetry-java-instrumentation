@@ -448,9 +448,7 @@ public abstract class AbstractRedissonAsyncClientTest {
         executionModeClass.getMethod("valueOf", String.class).invoke(null, executionModeName);
     Class<?> batchOptionsClass = Class.forName("org.redisson.api.BatchOptions");
     Object options = batchOptionsClass.getMethod("defaults").invoke(null);
-    batchOptionsClass
-        .getMethod("executionMode", executionModeClass)
-        .invoke(options, executionMode);
+    batchOptionsClass.getMethod("executionMode", executionModeClass).invoke(options, executionMode);
     RBatch batch =
         (RBatch)
             RedissonClient.class

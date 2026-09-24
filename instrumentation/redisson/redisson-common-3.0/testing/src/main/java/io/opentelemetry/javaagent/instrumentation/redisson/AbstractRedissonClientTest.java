@@ -1150,8 +1150,7 @@ public abstract class AbstractRedissonClientTest {
     return redisson.createBatch(BatchOptions.defaults());
   }
 
-  private static Object batchOptions(String executionModeName)
-      throws ReflectiveOperationException {
+  private static Object batchOptions(String executionModeName) throws ReflectiveOperationException {
     Class<?> batchOptionsClass = Class.forName("org.redisson.api.BatchOptions");
     Object options = batchOptionsClass.getMethod("defaults").invoke(null);
     if (executionModeName != null) {
@@ -1162,8 +1161,7 @@ public abstract class AbstractRedissonClientTest {
 
   private static void setBatchExecutionMode(Object options, String executionModeName)
       throws ReflectiveOperationException {
-    Class<?> executionModeClass =
-        Class.forName("org.redisson.api.BatchOptions$ExecutionMode");
+    Class<?> executionModeClass = Class.forName("org.redisson.api.BatchOptions$ExecutionMode");
     Object executionMode =
         executionModeClass.getMethod("valueOf", String.class).invoke(null, executionModeName);
     options
@@ -1175,9 +1173,7 @@ public abstract class AbstractRedissonClientTest {
   private static RBatch createBatch(RedissonClient redisson, Object options)
       throws ReflectiveOperationException {
     return (RBatch)
-        RedissonClient.class
-            .getMethod("createBatch", options.getClass())
-            .invoke(redisson, options);
+        RedissonClient.class.getMethod("createBatch", options.getClass()).invoke(redisson, options);
   }
 
   private static final class BatchScenario {
