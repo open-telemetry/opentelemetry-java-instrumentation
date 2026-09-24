@@ -14,15 +14,16 @@ import org.junit.jupiter.api.condition.DisabledIf;
 
 /**
  * Verifies that the agent starts up and instruments an application when configured with the
- * generated {@code docs/declarative-configuration-example.yaml}, which lists every declarative
- * configuration option known to the agent. The file is copied onto the test classpath by the {@code
- * processTestResources} task.
+ * generated {@code docs/declarative-configuration-example.yaml}, which sets every declarative
+ * configuration option known to the agent to its default, except deprecated ones. The file is
+ * copied onto the test classpath by the {@code processTestResources} task.
  */
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
 class DeclarativeConfigurationExampleSmokeTest extends AbstractSmokeTest<Integer> {
 
   private static final String CONFIG_FILE = "declarative-configuration-example.yaml";
   private static final String AGENT_START_FAILURE = "OpenTelemetry Javaagent failed to start";
+  private static final String AGENT_LOG_PREFIX = "[otel.javaagent";
 
   @Override
   protected void configure(SmokeTestOptions<Integer> options) {
@@ -43,6 +44,15 @@ class DeclarativeConfigurationExampleSmokeTest extends AbstractSmokeTest<Integer
     // application responding above is not enough to tell that the configuration file was accepted
     assertThat(
             output.logLines().filter(line -> line.contains(AGENT_START_FAILURE)).collect(toList()))
+        .isEmpty();
+
+    // copying the example must not configure deprecated settings, which some settings detect by
+    // their mere presence rather than by their value
+    assertThat(
+            output
+                .logLines()
+                .filter(line -> line.contains(AGENT_LOG_PREFIX) && line.contains("deprecated"))
+                .collect(toList()))
         .isEmpty();
   }
 }

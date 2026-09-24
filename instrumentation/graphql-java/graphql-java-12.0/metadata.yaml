@@ -22,3 +22,17 @@ configurations:
       clients.
     type: boolean
     default: false
+  - name: otel.instrumentation.graphql.query-sanitizer.enabled
+    declarative_name: java.graphql.query_sanitizer.enabled
+    description: "Deprecated: use `otel.instrumentation.graphql.query-sanitization.enabled` instead. It is ignored under v3 preview and will be removed in 3.0."
+    type: boolean
+    default: true
+    deprecated: true
+    replaced_by: otel.instrumentation.graphql.query-sanitization.enabled
+  - name: otel.instrumentation.graphql.add-operation-name-to-span-name.enabled
+    declarative_name: java.graphql.add_operation_name_to_span_name.enabled
+    description: "Deprecated: use `otel.instrumentation.graphql.operation-name-in-span-name.enabled` instead. It is ignored under v3 preview and will be removed in 3.0."
+    type: boolean
+    default: false
+    deprecated: true
+    replaced_by: otel.instrumentation.graphql.operation-name-in-span-name.enabled
