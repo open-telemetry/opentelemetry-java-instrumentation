@@ -26,6 +26,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.web.client.RestTemplate;
 
@@ -45,6 +46,18 @@ class OtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
   // can't use @LocalServerPort annotation since it moved packages between Spring Boot 2 and 3
   @Value("${local.server.port}")
   private int port;
+
+  @Test
+  void debugLogsSpans(CapturedOutput output) {
+    // No console exporter is configured in application.yaml. Bootstrap discovery and conversion
+    // of spring_starter.debug must install it before the SDK is built.
+    openTelemetry
+        .getTracer("debug-smoke-test")
+        .spanBuilder("declarative-debug-span")
+        .startSpan()
+        .end();
+    assertThat(output.getAll()).containsOnlyOnce("declarative-debug-span");
+  }
 
   @Test
   void configProviderReflectsDeclarativeConfig() {
