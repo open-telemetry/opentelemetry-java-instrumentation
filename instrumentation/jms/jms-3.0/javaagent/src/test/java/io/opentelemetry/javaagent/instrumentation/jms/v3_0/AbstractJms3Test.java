@@ -331,7 +331,7 @@ abstract class AbstractJms3Test {
 
   @Test
   @EnabledIfSystemProperty(
-      named = "otel.instrumentation.messaging.experimental.receive-telemetry.enabled",
+      named = "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled",
       matches = "true")
   void shouldObserveNestedDistinctMessageProcessing() throws Exception {
     Destination destination = session.createQueue("nestedProcessingQueue");

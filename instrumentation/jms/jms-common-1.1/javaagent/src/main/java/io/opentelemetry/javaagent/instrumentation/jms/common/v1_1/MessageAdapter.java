@@ -51,10 +51,10 @@ public interface MessageAdapter {
   default void endProcessingAfterStartFailure(Throwable startFailure) {
     try {
       endProcessing();
-    } catch (Throwable cleanupFailure) {
-      if (cleanupFailure != startFailure) {
+    } catch (Throwable t) {
+      if (t != startFailure) {
         try {
-          startFailure.addSuppressed(cleanupFailure);
+          startFailure.addSuppressed(t);
         } catch (Throwable ignored) {
           // Keep the setup failure as the throwable suppressed by the advice.
         }
