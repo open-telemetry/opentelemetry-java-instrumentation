@@ -28,7 +28,7 @@ afterEvaluate {
 }
 
 // Version to use to compile code and run tests.
-val repositoryDefaultJavaVersion = JavaVersion.VERSION_21
+val repositoryDefaultJavaVersion = JavaVersion.VERSION_25
 
 java {
   toolchain {
@@ -396,17 +396,22 @@ afterEvaluate {
   val useJ9 = otelProps.testJavaVM == "openj9"
   tasks.withType<Test>().configureEach {
     if (testJavaVersion != null) {
+      val testLauncherVersion =
+        if (otelProps.testLatestDeps) {
+          maxOf(testJavaVersion, otelJava.maxJavaVersionSupported.getOrElse(testJavaVersion))
+        } else {
+          testJavaVersion
+        }
       javaLauncher.set(
         javaToolchains.launcherFor {
-          languageVersion.set(JavaLanguageVersion.of(testJavaVersion.majorVersion))
+          languageVersion.set(JavaLanguageVersion.of(testLauncherVersion.majorVersion))
           implementation.set(if (useJ9) JvmImplementation.J9 else JvmImplementation.VENDOR_SPECIFIC)
         }
       )
       isEnabled = isEnabled && isJavaVersionAllowed(testJavaVersion)
     } else {
-      // We default to testing with Java 11 for most tests, but some tests don't support it, where we change
-      // the default test task's version so commands like `./gradlew check` can test all projects regardless
-      // of Java version.
+      // Tests capped below the repository default use their maximum supported test version,
+      // so commands like `./gradlew check` can cover all projects.
       if (!isJavaVersionAllowed(repositoryDefaultJavaVersion) && otelJava.maxJavaVersionForTests.isPresent) {
         javaLauncher.set(
           javaToolchains.launcherFor {
