@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
+import com.amazonaws.internal.SdkInternalList;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.List;
 
@@ -16,8 +17,8 @@ import java.util.List;
  */
 public final class SqsProcessTracing {
 
-  private static final VirtualField<List<?>, Boolean> PROCESSING_OWNERSHIP =
-      VirtualField.find(List.class, Boolean.class);
+  private static final VirtualField<SdkInternalList<?>, Boolean> PROCESSING_OWNERSHIP =
+      VirtualField.find(SdkInternalList.class, Boolean.class);
 
   /**
    * Disables raw process spans for a traced response list and its views. The owner must mark the
@@ -27,10 +28,13 @@ public final class SqsProcessTracing {
    * <p>Ownership does not follow message objects into copied lists or other responses.
    */
   public static void markProcessingOwnedOutsideSqsSdk(List<?> messages) {
-    PROCESSING_OWNERSHIP.set(TracingList.processingOwner(messages), true);
+    SdkInternalList<?> processingOwner = TracingList.processingOwner(messages);
+    if (processingOwner != null) {
+      PROCESSING_OWNERSHIP.set(processingOwner, true);
+    }
   }
 
-  static boolean isProcessingOwnedOutsideSqsSdk(List<?> messages) {
+  static boolean isProcessingOwnedOutsideSqsSdk(SdkInternalList<?> messages) {
     return PROCESSING_OWNERSHIP.get(messages) != null;
   }
 
