@@ -1,0 +1,1 @@
+Document the repository convention that instrumentation treats OpenTelemetry `Scope.close()` as non-throwing. Advice should close the scope and run subsequent cleanup directly, reserving `try`/`finally` for earlier fallible work that must run before cleanup.
