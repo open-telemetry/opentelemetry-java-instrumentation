@@ -19,7 +19,7 @@ muzzle {
     versions.set("[4.4.5,)")
     assertInverse.set(true)
 
-    excludeInstrumentationName("vertx-redis-client-4.0")
+    excludeInstrumentationName("vertx-redis-client-4.0-core")
   }
 }
 
