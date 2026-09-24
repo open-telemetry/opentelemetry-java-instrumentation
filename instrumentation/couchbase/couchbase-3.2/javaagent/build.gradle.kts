@@ -43,6 +43,11 @@ dependencies {
 testing {
   suites {
     register<JvmTestSuite>("version343Test") {
+      sources {
+        java {
+          setSrcDirs(listOf("src/version343Test/java"))
+        }
+      }
       dependencies {
         implementation("com.couchbase.client:java-client:3.4.3")
       }

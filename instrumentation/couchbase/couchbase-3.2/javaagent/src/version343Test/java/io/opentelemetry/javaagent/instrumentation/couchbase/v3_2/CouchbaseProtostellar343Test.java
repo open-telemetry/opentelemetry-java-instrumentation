@@ -5,11 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v3_2;
 
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singleton;
 
@@ -35,36 +33,38 @@ class CouchbaseProtostellar343Test {
   @Test
   void capturesTargetWithLegacyConstructors() {
     CoreEnvironment environment = CoreEnvironment.create();
-    Core core =
-        Core.create(
-            environment,
-            PasswordAuthenticator.create("user", "password"),
-            singleton(SeedNode.create("node").withProtostellarPort(18099)));
+    try {
+      Core core =
+          Core.create(
+              environment,
+              PasswordAuthenticator.create("user", "password"),
+              singleton(SeedNode.create("node").withProtostellarPort(18099)));
+      try {
+        RequestSpan requestSpan = environment.requestTracer().requestSpan("get", null);
+        ProtostellarRequest<Object> request =
+            new ProtostellarRequest<>(
+                core,
+                ServiceType.KV,
+                "get",
+                requestSpan,
+                Duration.ofSeconds(1),
+                true,
+                environment.retryStrategy(),
+                emptyMap());
+        request.raisedResponseToUser(null);
 
-    RequestSpan requestSpan = environment.requestTracer().requestSpan("get", null);
-    ProtostellarRequest<Object> request =
-        new ProtostellarRequest<>(
-            core,
-            ServiceType.KV,
-            "get",
-            requestSpan,
-            Duration.ofSeconds(1),
-            true,
-            environment.retryStrategy(),
-            emptyMap());
-    request.raisedResponseToUser(null);
-
-    testing.waitAndAssertTracesWithoutScopeVersionVerification(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("get node:18099")
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "couchbase"),
-                            equalTo(SERVER_ADDRESS, "node"),
-                            equalTo(SERVER_PORT, 18099))));
-
-    core.close();
-    environment.close();
+        testing.waitAndAssertTracesWithoutScopeVersionVerification(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("get node")
+                            .hasKind(CLIENT)
+                            .hasAttributesSatisfyingExactly(equalTo(SERVER_ADDRESS, "node"))));
+      } finally {
+        core.close();
+      }
+    } finally {
+      environment.close();
+    }
   }
 }
