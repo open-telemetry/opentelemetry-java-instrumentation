@@ -296,7 +296,7 @@ public abstract class AbstractRedissonClientTest {
     RedissonClient databaseOne = Redisson.create(createConfig(1, null, false));
     try {
       testing.clearData();
-      RBatch batch = createBatch(databaseOne, batchOptions("REDIS_WRITE_ATOMIC"));
+      RBatch batch = createBatchWithOptions(databaseOne, batchOptions("REDIS_WRITE_ATOMIC"));
       batch.getBucket("batch1").setAsync("v1");
       batch.execute();
 
@@ -658,7 +658,7 @@ public abstract class AbstractRedissonClientTest {
   @Test
   void atomicBatchSingleCommand() throws ReflectiveOperationException {
     assumeStableAtomicBatchSupport();
-    RBatch batch = createBatch(redisson, batchOptions("REDIS_WRITE_ATOMIC"));
+    RBatch batch = createBatchWithOptions(redisson, batchOptions("REDIS_WRITE_ATOMIC"));
     batch.getBucket("batch1").setAsync("v1");
     batch.execute();
     assertStableAtomicBatch("MULTI SET", null, "SET batch1 ?");
@@ -668,7 +668,7 @@ public abstract class AbstractRedissonClientTest {
   void batchChangedToAtomicAfterCommandsQueued() throws ReflectiveOperationException {
     assumeStableAtomicBatchSupport();
     Object options = batchOptions(null);
-    RBatch batch = createBatch(redisson, options);
+    RBatch batch = createBatchWithOptions(redisson, options);
     batch.getBucket("batch1").setAsync("v1");
     batch.getBucket("batch2").setAsync("v2");
     setBatchExecutionMode(options, "IN_MEMORY_ATOMIC");
@@ -681,7 +681,7 @@ public abstract class AbstractRedissonClientTest {
   void batchChangedFromAtomicAfterCommandsQueued() throws ReflectiveOperationException {
     assumeStableAtomicBatchSupport();
     Object options = batchOptions("IN_MEMORY_ATOMIC");
-    RBatch batch = createBatch(redisson, options);
+    RBatch batch = createBatchWithOptions(redisson, options);
     batch.getBucket("batch1").setAsync("v1");
     batch.getBucket("batch2").setAsync("v2");
     setBatchExecutionMode(options, "IN_MEMORY");
@@ -731,7 +731,7 @@ public abstract class AbstractRedissonClientTest {
   @Test
   void atomicBatchCannotExecuteTwice() throws ReflectiveOperationException {
     assumeStableAtomicBatchSupport();
-    RBatch batch = createBatch(redisson, batchOptions("REDIS_WRITE_ATOMIC"));
+    RBatch batch = createBatchWithOptions(redisson, batchOptions("REDIS_WRITE_ATOMIC"));
     batch.getBucket("batch1").setAsync("v1");
     batch.execute();
 
@@ -742,7 +742,7 @@ public abstract class AbstractRedissonClientTest {
   @Test
   void atomicBatchMixedCommands() throws ReflectiveOperationException {
     assumeStableAtomicBatchSupport();
-    RBatch batch = createBatch(redisson, batchOptions("REDIS_WRITE_ATOMIC"));
+    RBatch batch = createBatchWithOptions(redisson, batchOptions("REDIS_WRITE_ATOMIC"));
     batch.getBucket("batch1").setAsync("v1");
     batch.getBucket("batch1").getAsync();
     batch.execute();
@@ -752,7 +752,7 @@ public abstract class AbstractRedissonClientTest {
   @Test
   void atomicBatchAsyncCommand() throws ReflectiveOperationException {
     assumeStableAtomicBatchSupport();
-    RBatch batch = createBatch(redisson, batchOptions("REDIS_WRITE_ATOMIC"));
+    RBatch batch = createBatchWithOptions(redisson, batchOptions("REDIS_WRITE_ATOMIC"));
     batch.getBucket("batch1").setAsync("v1");
     batch.getBucket("batch2").setAsync("v2");
     batch.executeAsync().toCompletableFuture().join();
@@ -771,7 +771,7 @@ public abstract class AbstractRedissonClientTest {
       Assumptions.abort();
     }
 
-    RBatch batch = createBatch(redisson, batchOptions("REDIS_WRITE_ATOMIC"));
+    RBatch batch = createBatchWithOptions(redisson, batchOptions("REDIS_WRITE_ATOMIC"));
     batch.getBucket("batch1").setAsync("v1");
     batch.getClass().getMethod("discard").invoke(batch);
 
@@ -792,7 +792,7 @@ public abstract class AbstractRedissonClientTest {
       Assumptions.abort();
     }
 
-    RBatch batch = createBatch(redisson, batchOptions("IN_MEMORY_ATOMIC"));
+    RBatch batch = createBatchWithOptions(redisson, batchOptions("IN_MEMORY_ATOMIC"));
     batch.getBucket("batch1").setAsync("v1");
     batch.getClass().getMethod("discard").invoke(batch);
 
@@ -809,7 +809,7 @@ public abstract class AbstractRedissonClientTest {
     assumeStableAtomicBatchSupport();
     String bucketName = "bucket" + String.join("", nCopies(15_000, "a"));
     int batchSize = 4;
-    RBatch batch = createBatch(redisson, batchOptions("REDIS_WRITE_ATOMIC"));
+    RBatch batch = createBatchWithOptions(redisson, batchOptions("REDIS_WRITE_ATOMIC"));
     for (int i = 0; i < batchSize; i++) {
       batch.getBucket(bucketName).setAsync("v" + i);
     }
@@ -825,7 +825,7 @@ public abstract class AbstractRedissonClientTest {
     redisson.getBucket("wrongtype").set("value");
     testing.clearData();
 
-    RBatch batch = createBatch(redisson, batchOptions("REDIS_WRITE_ATOMIC"));
+    RBatch batch = createBatchWithOptions(redisson, batchOptions("REDIS_WRITE_ATOMIC"));
     batch.getMap("wrongtype").getAsync("field");
     batch.getBucket("after").setAsync("value");
 
@@ -1170,7 +1170,7 @@ public abstract class AbstractRedissonClientTest {
         .invoke(options, executionMode);
   }
 
-  private static RBatch createBatch(RedissonClient redisson, Object options)
+  private static RBatch createBatchWithOptions(RedissonClient redisson, Object options)
       throws ReflectiveOperationException {
     return (RBatch)
         RedissonClient.class.getMethod("createBatch", options.getClass()).invoke(redisson, options);
