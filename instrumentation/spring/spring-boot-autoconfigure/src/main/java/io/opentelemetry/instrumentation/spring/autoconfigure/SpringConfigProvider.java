@@ -15,8 +15,13 @@ import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryC
 import java.util.Map;
 
 /**
- * Spring flavor of {@code SdkConfigProvider} that tries to coerce types, because spring doesn't
- * tell what the original type was.
+ * Adapts Spring-resolved configuration so each typed getter converts to the consumer's requested
+ * type. Values resolved from properties, placeholders, and system-property overrides can be
+ * Strings.
+ *
+ * <p>Runtime consumers share the provider built from the final SDK configuration. Bootstrap model
+ * customizers use a separate view of their current model because the final provider is not yet
+ * available and later customizers may still change the configuration.
  *
  * <p>The entire class is a copy of <a
  * href="https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/declarative-config/src/main/java/io/opentelemetry/sdk/autoconfigure/declarativeconfig/SdkConfigProvider.java">SdkConfigProvider</a>

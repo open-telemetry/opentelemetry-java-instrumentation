@@ -259,6 +259,11 @@ Closing it in `finally` also avoids a leak, but unnecessarily keeps the context 
 preceding work. Defer the close only when that exit work intentionally requires the context to
 remain current.
 
+Instrumentation in this repository assumes OpenTelemetry `Scope.close()` does not throw. If another
+cleanup action follows it, close the scope and then perform that action directly; do not wrap the
+close in `try`/`finally` solely to guard against a hypothetical failure from `Scope.close()`. Use
+`try`/`finally` when earlier fallible work must complete before the scope can be closed.
+
 ### Pattern 1 — Nullable `AdviceScope` for ordinary advice
 
 Use this by default when enter advice may decide not to start instrumentation.

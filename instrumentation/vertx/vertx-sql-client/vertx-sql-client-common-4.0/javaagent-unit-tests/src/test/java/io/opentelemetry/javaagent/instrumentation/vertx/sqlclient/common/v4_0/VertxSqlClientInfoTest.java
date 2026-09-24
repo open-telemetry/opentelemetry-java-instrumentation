@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -19,12 +20,19 @@ class VertxSqlClientInfoTest {
   void copiesSingleConfiguration() {
     SqlConnectOptions options = options("db.example", 5432, "database", "user");
     VertxSqlClientInfo info = VertxSqlClientInfo.create(options, "postgresql");
+    VertxSqlClientRequest request = new VertxSqlClientRequest("select 1", info, false, null);
 
     options.setHost("mutated.example").setPort(15432).setDatabase("other").setUser("other");
 
     assertInfo(info, "postgresql", "database", "user", "db.example", 5432);
     assertThat(info.getServerTarget().getAddress()).isEqualTo("db.example");
     assertThat(info.getServerTarget().getPort()).isNull();
+    assertThat(request.getDatabase()).isEqualTo("database");
+    assertThat(request.getUser()).isEqualTo("user");
+    assertThat(request.getHost()).isEqualTo("db.example");
+    assertThat(request.getPort()).isEqualTo(5432);
+    assertThat(request.getConfiguredServerAddress()).isEqualTo("db.example");
+    assertThat(request.getConfiguredServerPort()).isNull();
   }
 
   @Test
@@ -60,23 +68,61 @@ class VertxSqlClientInfoTest {
     VertxSqlClientInfo unrepresentable =
         VertxSqlClientInfo.create(options("invalid host", 5432, "database", "user"), "postgresql");
 
-    assertThat(unrepresentable.isServerTargetCaptured()).isTrue();
     assertThat(unrepresentable.getServerTarget()).isNull();
     VertxSqlClientRequest request =
         new VertxSqlClientRequest("select 1", unrepresentable, false, null);
-    assertThat(request.isServerTargetCaptured()).isTrue();
+    assertThat(request.getHost()).isEqualTo("invalid host");
+    assertThat(request.getPort()).isEqualTo(5432);
     assertThat(request.getConfiguredServerAddress()).isNull();
     assertThat(request.getConfiguredServerPort()).isNull();
+    VertxSqlClientAttributesGetter getter = new VertxSqlClientAttributesGetter();
+    assertThat(getter.getServerAddress(request))
+        .isEqualTo(emitStableDatabaseSemconv() ? null : "invalid host");
+    assertThat(getter.getServerPort(request)).isEqualTo(emitStableDatabaseSemconv() ? null : 5432);
   }
 
   @Test
-  void legacySnapshotDoesNotClaimStableTargetCapture() {
-    VertxSqlClientInfo info =
-        VertxSqlClientInfo.createLegacy(
-            options("db.example", 5432, "database", "user"), "postgresql");
+  void unknownInfoContainsOnlyTheDatabaseSystem() {
+    VertxSqlClientInfo info = VertxSqlClientInfo.createUnknown("postgresql");
 
-    assertThat(info.isServerTargetCaptured()).isFalse();
+    assertThat(info.getDbSystemName()).isEqualTo("postgresql");
+    assertThat(info.getNamespace()).isNull();
+    assertThat(info.getUser()).isNull();
+    assertThat(info.getLegacyServerAddress()).isNull();
+    assertThat(info.getLegacyServerPort()).isNull();
     assertThat(info.getServerTarget()).isNull();
+    assertThat(VertxSqlClientInfo.createUnknown(null).getDbSystemName()).isEqualTo("other_sql");
+  }
+
+  @Test
+  void newSnapshotsDoNotChangeExistingRequests() {
+    SqlConnectOptions options = options("db.example", 5432, "database", "user");
+    VertxSqlClientInfo initialInfo = VertxSqlClientInfo.create(options, null);
+    VertxSqlClientRequest request = new VertxSqlClientRequest("select 1", initialInfo, false, null);
+
+    VertxSqlClientInfo resolved = VertxSqlClientInfo.create(options, "postgresql");
+    VertxSqlClientRequest resolvedRequest =
+        new VertxSqlClientRequest("select 1", resolved, false, null);
+
+    assertThat(resolvedRequest.getInfo()).isSameAs(resolved);
+    assertThat(resolvedRequest.getDbSystemName()).isEqualTo("postgresql");
+    assertThat(resolvedRequest.getConfiguredServerPort()).isNull();
+    assertThat(request.getInfo()).isSameAs(initialInfo);
+    assertThat(request.getDbSystemName()).isEqualTo("other_sql");
+    assertThat(request.getConfiguredServerPort()).isEqualTo(5432);
+  }
+
+  @Test
+  void missingOptionsDoNotCreateSnapshots() {
+    assertThat(VertxSqlClientInfo.create((SqlConnectOptions) null, "postgresql")).isNull();
+    assertThat(VertxSqlClientInfo.create((List<SqlConnectOptions>) null, "postgresql")).isNull();
+  }
+
+  @Test
+  void resolvesDbSystemWithoutOptions() {
+    assertThat(VertxSqlClientUtil.resolveDbSystemName(null, "io.vertx.pgclient.PgPool"))
+        .isEqualTo("postgresql");
+    assertThat(VertxSqlClientUtil.resolveDbSystemName(null, null)).isEqualTo("other_sql");
   }
 
   @Test

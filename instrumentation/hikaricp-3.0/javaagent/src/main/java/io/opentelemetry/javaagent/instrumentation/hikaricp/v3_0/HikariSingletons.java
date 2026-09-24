@@ -8,9 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.hikaricp.v3_0;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.hikaricp.v3_0.HikariTelemetry;
-import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolNameUtil;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolMetricsUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
 import javax.annotation.Nullable;
@@ -38,29 +39,30 @@ public class HikariSingletons {
 
   public static MetricsTrackerFactory createMetricsTrackerFactory(
       @Nullable MetricsTrackerFactory delegate, HikariConfig config) {
+    DbInfo dbInfo = getDbInfo(config);
+    Attributes databaseAttributes = JdbcConnectionPoolMetricsUtil.databaseAttributes(dbInfo);
     if (!Boolean.TRUE.equals(GENERATED_POOL_NAME_FIELD.get(config))) {
-      return hikariTelemetry.createMetricsTrackerFactory(delegate);
+      return hikariTelemetry.createMetricsTrackerFactory(delegate, databaseAttributes);
     }
 
-    String dataSourceName = getDataSourceName(config);
+    String poolName =
+        JdbcConnectionPoolMetricsUtil.poolName(dbInfo, null, DEFAULT_DATA_SOURCE_NAME);
     return (hikariPoolName, poolStats) ->
         hikariTelemetry
             .createMetricsTrackerFactory(
                 delegate == null
                     ? null
-                    : (ignored, stats) -> delegate.create(hikariPoolName, stats))
-            .create(dataSourceName, poolStats);
+                    : (ignored, stats) -> delegate.create(hikariPoolName, stats),
+                databaseAttributes)
+            .create(poolName, poolStats);
   }
 
-  private static String getDataSourceName(HikariConfig config) {
+  private static DbInfo getDbInfo(HikariConfig config) {
     if (config.getDataSource() == null && config.getDataSourceClassName() != null) {
-      return JdbcConnectionPoolNameUtil.poolName(
-          config.getDataSourceProperties(), DEFAULT_DATA_SOURCE_NAME);
+      return JdbcConnectionPoolMetricsUtil.dbInfo(config.getDataSourceProperties());
     }
 
-    DbInfo dbInfo =
-        JdbcConnectionUrlParser.parse(config.getJdbcUrl(), config.getDataSourceProperties());
-    return JdbcConnectionPoolNameUtil.poolName(dbInfo, DEFAULT_DATA_SOURCE_NAME);
+    return JdbcConnectionUrlParser.parse(config.getJdbcUrl(), config.getDataSourceProperties());
   }
 
   private HikariSingletons() {}

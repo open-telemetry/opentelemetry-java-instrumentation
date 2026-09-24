@@ -71,7 +71,7 @@ dependencies {
   implementation("ru.vyarus:gradle-animalsniffer-plugin:2.0.1")
   implementation("org.spdx:spdx-gradle-plugin:0.12.0")
   // When updating, also update dependencyManagement/build.gradle.kts
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.18.13")
+  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.18.14")
   // Generates OSGi bundle metadata for published library artifacts (see otel.osgi-conventions)
   implementation("biz.aQute.bnd:biz.aQute.bnd.gradle:7.4.0")
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.6")
@@ -81,7 +81,7 @@ dependencies {
   implementation("me.champeau.gradle:japicmp-gradle-plugin:0.4.6")
   // Used by otel.spring-native-test-conventions for typed access to the metadata repository
   // extension. Provided at runtime by smoke-test modules that apply this plugin via settings.
-  compileOnly("org.graalvm.buildtools:native-gradle-plugin:1.1.12")
+  compileOnly("org.graalvm.buildtools:native-gradle-plugin:1.1.14")
 
   testImplementation(enforcedPlatform("org.junit:junit-bom:5.14.4"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")

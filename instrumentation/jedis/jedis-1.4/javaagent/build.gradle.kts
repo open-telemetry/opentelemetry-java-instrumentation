@@ -26,8 +26,20 @@ dependencies {
   latestDepTestLibrary("redis.clients:jedis:1.+") // see jedis-2.0 module
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation-api-incubator"))
+        implementation("redis.clients:jedis:1.4.0")
+      }
+    }
+  }
+}
+
 tasks {
-  withType<Test>().configureEach {
+  test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
@@ -36,11 +48,13 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
     jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testStableSemconv, testing.suites)
   }
 }

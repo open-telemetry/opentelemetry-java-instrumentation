@@ -58,11 +58,11 @@ tasks {
         includeTestsMatching("io.opentelemetry.instrumentation.kafkaconnect.v2_6.MongoKafkaConnectSinkTaskTest.testSingleMessage")
       }
       jvmArgs("-Dotel.semconv-stability.preview=messaging")
-      jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
       systemProperty(
         "metadataConfig",
         "otel.semconv-stability.preview=messaging," +
-          "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true"
+          "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true"
       )
     }
 

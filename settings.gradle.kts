@@ -7,7 +7,7 @@ pluginManagement {
     id("org.jetbrains.kotlin.jvm") version "2.4.10"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.9.1"
-    id("org.graalvm.buildtools.native") version "1.1.12"
+    id("org.graalvm.buildtools.native") version "1.1.14"
     id("com.google.osdetector") version "1.7.3"
     id("com.google.protobuf") version "0.10.0"
   }
@@ -423,7 +423,9 @@ include(":instrumentation:jdbc:testing")
 include(":instrumentation:jedis:jedis-1.4:javaagent")
 include(":instrumentation:jedis:jedis-2.0:javaagent")
 include(":instrumentation:jedis:jedis-3.0:javaagent")
+include(":instrumentation:jedis:jedis-3.0:javaagent-unit-tests")
 include(":instrumentation:jedis:jedis-4.0:javaagent")
+include(":instrumentation:jedis:jedis-4.0:javaagent-unit-tests")
 include(":instrumentation:jedis:jedis-common-1.4:javaagent")
 include(":instrumentation:jetty:jetty-8.0:javaagent")
 include(":instrumentation:jetty:jetty-11.0:javaagent")
@@ -477,6 +479,7 @@ include(":instrumentation:ktor:ktor-3.0:testing")
 include(":instrumentation:kubernetes-client-7.0:javaagent")
 include(":instrumentation:kubernetes-client-7.0:javaagent-unit-tests")
 include(":instrumentation:lettuce:lettuce-4.0:javaagent")
+include(":instrumentation:lettuce:lettuce-4.0:javaagent-unit-tests")
 include(":instrumentation:lettuce:lettuce-5.0:javaagent")
 include(":instrumentation:lettuce:lettuce-5.1:javaagent")
 include(":instrumentation:lettuce:lettuce-5.1:library")
@@ -619,8 +622,11 @@ include(":instrumentation:reactor:reactor-netty:reactor-netty-0.9:javaagent")
 include(":instrumentation:reactor:reactor-netty:reactor-netty-1.0:javaagent")
 include(":instrumentation:reactor:reactor-netty:reactor-netty-1.0:javaagent-unit-tests")
 include(":instrumentation:rediscala-1.8:javaagent")
+include(":instrumentation:rediscala-1.8:javaagent-unit-tests")
 include(":instrumentation:redisson:redisson-3.0:javaagent")
+include(":instrumentation:redisson:redisson-3.0:javaagent-unit-tests")
 include(":instrumentation:redisson:redisson-3.17:javaagent")
+include(":instrumentation:redisson:redisson-3.17:javaagent-unit-tests")
 include(":instrumentation:redisson:redisson-common-3.0:javaagent")
 include(":instrumentation:redisson:redisson-common-3.0:testing")
 include(":instrumentation:redisson:redisson-metrics-2.3:javaagent")
@@ -761,7 +767,8 @@ include(":instrumentation:vertx:vertx-kafka-client-3.6:testing")
 include(":instrumentation:vertx:vertx-kafka-client-3.6:vertx-kafka-client-3.6-testing")
 include(":instrumentation:vertx:vertx-kafka-client-3.6:vertx-kafka-client-4-testing")
 include(":instrumentation:vertx:vertx-kafka-client-3.6:vertx-kafka-client-5-testing")
-include(":instrumentation:vertx:vertx-redis-client-4.0:javaagent")
+include(":instrumentation:vertx:vertx-redis-client:vertx-redis-client-4.0:javaagent")
+include(":instrumentation:vertx:vertx-redis-client:vertx-redis-client-4.0:javaagent-unit-tests")
 include(":instrumentation:vertx:vertx-rx-java-3.5:javaagent")
 include(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-4.0:javaagent")
 include(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-4.0:javaagent-unit-tests")

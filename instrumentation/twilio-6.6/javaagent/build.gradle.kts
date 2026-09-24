@@ -34,7 +34,16 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.twilio.experimental-span-attributes=true")
   }
 
+  val testDisabled = register<Test>("testDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*DefaultEnablementTest")
+    }
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+  }
+
   check {
-    dependsOn(testExperimental)
+    dependsOn(testDisabled, testExperimental)
   }
 }
