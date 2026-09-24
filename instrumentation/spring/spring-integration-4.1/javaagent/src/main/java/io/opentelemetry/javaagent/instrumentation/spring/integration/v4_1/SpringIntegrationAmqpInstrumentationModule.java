@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class SpringIntegrationAmqpInstrumentationModule extends InstrumentationModule {
 
   public SpringIntegrationAmqpInstrumentationModule() {
-    super("spring-integration", "spring-integration-4.1");
+    super("spring-integration", "spring-integration-4.1", "spring-integration-amqp-4.1");
   }
 
   @Override
