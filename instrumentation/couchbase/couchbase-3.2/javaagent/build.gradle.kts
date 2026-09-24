@@ -42,6 +42,14 @@ dependencies {
 
 testing {
   suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation("com.couchbase.client:java-client:3.4.3")
+        implementation("org.objenesis:objenesis")
+      }
+    }
+
     register<JvmTestSuite>("version343Test") {
       sources {
         java {

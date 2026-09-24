@@ -35,4 +35,15 @@ class CouchbaseProtostellarTargetsTest {
     assertThat(target.getAddress()).isEqualTo("node");
     assertThat(target.getPort()).isEqualTo(18099);
   }
+
+  @Test
+  void preservesTargetWhenSeedHasNoProtostellarPort() {
+    Core core = new ObjenesisStd().newInstance(Core.class);
+    CouchbaseServerTarget configuredTarget = CouchbaseConnectionStrings.target("couchbase://node");
+    CouchbaseServerTargets.register(core, configuredTarget, null);
+
+    CouchbaseProtostellarTargets.registerCore(core, singleton(SeedNode.create("node")));
+
+    assertThat(CouchbaseServerTargets.get(core)).isSameAs(configuredTarget);
+  }
 }

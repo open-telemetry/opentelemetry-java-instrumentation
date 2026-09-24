@@ -35,6 +35,17 @@ public final class CouchbaseProtostellarTargets {
   }
 
   public static void registerCore(Core core, Set<SeedNode> seedNodes) {
+    boolean hasProtostellarPort = false;
+    for (SeedNode seedNode : seedNodes) {
+      if (seedNode != null && seedNode.protostellarPort().isPresent()) {
+        hasProtostellarPort = true;
+        break;
+      }
+    }
+    if (!hasProtostellarPort) {
+      return;
+    }
+
     DbServerTargetBuilder target =
         DbServerTarget.builder(PROTOSTELLAR_DEFAULT_PORT).setSorted(true);
     for (SeedNode seedNode : seedNodes) {

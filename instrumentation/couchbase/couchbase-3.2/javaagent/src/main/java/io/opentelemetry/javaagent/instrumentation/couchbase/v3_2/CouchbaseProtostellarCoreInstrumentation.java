@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.v3_2;
 
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
+import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -47,7 +48,8 @@ class CouchbaseProtostellarCoreInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isConstructor()
             .and(takesArguments(3))
-            .and(takesArgument(2, named("com.couchbase.client.core.util.ConnectionString"))),
+            .and(takesArgument(2, named("com.couchbase.client.core.util.ConnectionString")))
+            .and(isDeclaredBy(named("com.couchbase.client.core.CoreProtostellar"))),
         getClass().getName() + "$CurrentConstructorAdvice");
   }
 
