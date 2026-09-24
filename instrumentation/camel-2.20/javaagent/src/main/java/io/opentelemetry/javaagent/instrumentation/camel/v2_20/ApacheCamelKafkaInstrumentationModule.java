@@ -48,6 +48,7 @@ public class ApacheCamelKafkaInstrumentationModule extends InstrumentationModule
     return asList(
         new CamelMuzzleInstrumentation(),
         new KafkaConsumerInstrumentation(),
-        new KafkaFetchRecordsInstrumentation());
+        new KafkaFetchRecordsInstrumentation(),
+        new KafkaEndpointInstrumentation());
   }
 }
