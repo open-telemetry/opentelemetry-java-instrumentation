@@ -16,7 +16,7 @@ import java.util.List;
  */
 public final class SqsProcessTracing {
 
-  private static final VirtualField<List, Boolean> PROCESSING_OWNERSHIP =
+  private static final VirtualField<List<?>, Boolean> PROCESSING_OWNERSHIP =
       VirtualField.find(List.class, Boolean.class);
 
   /**
