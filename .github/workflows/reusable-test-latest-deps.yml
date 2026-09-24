@@ -91,9 +91,7 @@ jobs:
           ./gradlew
           ${test_tasks}
           -PtestLatestDeps=true
-          -PtestJavaVersion=27
           -Porg.gradle.java.installations.paths=${STEPS_SETUP_TEST_JAVA_OUTPUTS_PATH}
-          -Porg.gradle.java.installations.auto-download=false
           ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
       - name: Build scan
