@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -242,6 +243,74 @@ class SqsTracingListTest {
 
     testing.waitForTraces(1);
     assertThat(testing.spans()).hasSize(1);
+  }
+
+  @Test
+  void rootAndViewNonProcessingOperationsDoNotTraceTraversal() {
+    List<List<Message>> comparedLists = new ArrayList<>();
+    ContextKey<String> markerKey = ContextKey.named("non-processing-test-marker");
+    Context expectedContext = Context.root().with(markerKey, "present");
+
+    try (Scope ignored = expectedContext.makeCurrent()) {
+      TracingList root = tracingMessages(1, new ArrayList<>());
+      comparedLists.add(root);
+      assertThat(root.toString()).contains("message-0");
+
+      TracingList toStringList = tracingMessages(1, new ArrayList<>());
+      List<Message> toStringView = toStringList.subList(0, toStringList.size());
+      comparedLists.add(toStringView);
+      assertThat(toStringView.toString()).contains("message-0");
+
+      TracingList toArrayList = tracingMessages(1, new ArrayList<>());
+      List<Message> toArrayView = toArrayList.subList(0, toArrayList.size());
+      comparedLists.add(toArrayView);
+      assertThat(toArrayView.toArray()).containsExactly(toArrayView.get(0));
+
+      TracingList typedToArrayList = tracingMessages(1, new ArrayList<>());
+      List<Message> typedToArrayView =
+          typedToArrayList.subList(0, typedToArrayList.size());
+      comparedLists.add(typedToArrayView);
+      assertThat(typedToArrayView.toArray(new Message[0]))
+          .containsExactly(typedToArrayView.get(0));
+
+      TracingList removeAllList = tracingMessages(1, new ArrayList<>());
+      List<Message> removeAllView = removeAllList.subList(0, removeAllList.size());
+      comparedLists.add(removeAllView);
+      assertThat(removeAllView.removeAll(emptyList())).isFalse();
+
+      TracingList retainAllList = tracingMessages(1, new ArrayList<>());
+      List<Message> retainAllView = retainAllList.subList(0, retainAllList.size());
+      comparedLists.add(retainAllView);
+      assertThat(retainAllView.retainAll(singletonList(retainAllView.get(0)))).isFalse();
+
+      TracingList removeIfList = tracingMessages(1, new ArrayList<>());
+      List<Message> removeIfView = removeIfList.subList(0, removeIfList.size());
+      comparedLists.add(removeIfView);
+      assertThat(removeIfView.removeIf(unused -> false)).isFalse();
+
+      TracingList replaceAllList = tracingMessages(1, new ArrayList<>());
+      List<Message> replaceAllView = replaceAllList.subList(0, replaceAllList.size());
+      comparedLists.add(replaceAllView);
+      replaceAllView.replaceAll(message -> message);
+
+      TracingList sortList = tracingMessages(1, new ArrayList<>());
+      List<Message> sortView = sortList.subList(0, sortList.size());
+      comparedLists.add(sortView);
+      sortView.sort((left, right) -> left.messageId().compareTo(right.messageId()));
+
+      assertThat(Context.current()).isSameAs(expectedContext);
+      assertThat(testing.spans()).isEmpty();
+    }
+
+    comparedLists.forEach(
+        list -> {
+          Iterator<Message> iterator = list.iterator();
+          assertThat(iterator.next()).isSameAs(list.get(0));
+          assertThat(iterator.hasNext()).isFalse();
+        });
+
+    testing.waitForTraces(comparedLists.size());
+    assertThat(testing.spans()).hasSize(comparedLists.size());
   }
 
   @Test

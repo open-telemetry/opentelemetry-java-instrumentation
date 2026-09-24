@@ -11,6 +11,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.AbstractList;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -19,6 +21,8 @@ import java.util.Objects;
 import java.util.RandomAccess;
 import java.util.Spliterator;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.services.sqs.model.Message;
@@ -117,6 +121,11 @@ public final class TracingList extends ArrayList<Message> {
     return hashCodeWithoutTracing(this);
   }
 
+  @Override
+  public String toString() {
+    return toStringWithoutTracing(this);
+  }
+
   private static boolean equalsWithoutTracing(List<?> left, List<?> right) {
     if (left == right) {
       return true;
@@ -140,6 +149,18 @@ public final class TracingList extends ArrayList<Message> {
       hashCode = 31 * hashCode + (element == null ? 0 : element.hashCode());
     }
     return hashCode;
+  }
+
+  private static String toStringWithoutTracing(List<?> list) {
+    StringBuilder result = new StringBuilder("[");
+    for (int i = 0; i < list.size(); i++) {
+      if (i != 0) {
+        result.append(", ");
+      }
+      Object element = list.get(i);
+      result.append(element == list ? "(this Collection)" : element);
+    }
+    return result.append(']').toString();
   }
 
   private Iterator<Message> tracingIterator(Iterator<Message> delegateIterator) {
@@ -259,6 +280,21 @@ public final class TracingList extends ArrayList<Message> {
     }
 
     @Override
+    public String toString() {
+      return toStringWithoutTracing(this);
+    }
+
+    @Override
+    public Object[] toArray() {
+      return delegate.toArray();
+    }
+
+    @Override
+    public <T> T[] toArray(T[] array) {
+      return delegate.toArray(array);
+    }
+
+    @Override
     public Message set(int index, Message element) {
       return delegate.set(index, element);
     }
@@ -281,6 +317,31 @@ public final class TracingList extends ArrayList<Message> {
     @Override
     public void clear() {
       delegate.clear();
+    }
+
+    @Override
+    public boolean removeAll(Collection<?> collection) {
+      return delegate.removeAll(collection);
+    }
+
+    @Override
+    public boolean retainAll(Collection<?> collection) {
+      return delegate.retainAll(collection);
+    }
+
+    @Override
+    public boolean removeIf(Predicate<? super Message> filter) {
+      return delegate.removeIf(filter);
+    }
+
+    @Override
+    public void replaceAll(UnaryOperator<Message> operator) {
+      delegate.replaceAll(operator);
+    }
+
+    @Override
+    public void sort(Comparator<? super Message> comparator) {
+      delegate.sort(comparator);
     }
 
     @Override
