@@ -55,8 +55,7 @@ class CouchbaseProtostellarCoreInstrumentation implements TypeInstrumentation {
   public static class CoreConstructorAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(
-        @Advice.This Core core, @Advice.Argument(2) Set<SeedNode> seedNodes) {
+    public static void onExit(@Advice.This Core core, @Advice.Argument(2) Set<SeedNode> seedNodes) {
       CouchbaseProtostellarTargets.registerCore(core, seedNodes);
     }
   }
