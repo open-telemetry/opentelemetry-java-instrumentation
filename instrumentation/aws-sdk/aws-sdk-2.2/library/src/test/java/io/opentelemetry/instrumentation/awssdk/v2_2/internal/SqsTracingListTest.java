@@ -267,11 +267,9 @@ class SqsTracingListTest {
       assertThat(toArrayView.toArray()).containsExactly(toArrayView.get(0));
 
       TracingList typedToArrayList = tracingMessages(1, new ArrayList<>());
-      List<Message> typedToArrayView =
-          typedToArrayList.subList(0, typedToArrayList.size());
+      List<Message> typedToArrayView = typedToArrayList.subList(0, typedToArrayList.size());
       comparedLists.add(typedToArrayView);
-      assertThat(typedToArrayView.toArray(new Message[0]))
-          .containsExactly(typedToArrayView.get(0));
+      assertThat(typedToArrayView.toArray(new Message[0])).containsExactly(typedToArrayView.get(0));
 
       TracingList removeAllList = tracingMessages(1, new ArrayList<>());
       List<Message> removeAllView = removeAllList.subList(0, removeAllList.size());
