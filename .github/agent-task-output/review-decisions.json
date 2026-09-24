@@ -1,0 +1,14 @@
+{
+  "schema": {
+    "id": "github.copilot.copilot-review-loop-decision-report",
+    "version": 3
+  },
+  "decisions": [
+    {
+      "finding_id": "finding-29556c5b9b6d5c736b35842e",
+      "disposition": "no_change",
+      "reason": "The source head already awaits processingCompleted, which is released after the nested poll and all observed-state updates.",
+      "proposed_reply": "Already addressed: the test awaits processingCompleted before asserting the route and nested-consumer state."
+    }
+  ]
+}
