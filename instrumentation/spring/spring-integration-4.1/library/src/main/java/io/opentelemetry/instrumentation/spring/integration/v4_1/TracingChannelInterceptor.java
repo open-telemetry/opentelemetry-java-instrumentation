@@ -22,6 +22,7 @@ import org.springframework.aop.support.AopUtils;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
+import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.ExecutorChannelInterceptor;
 import org.springframework.messaging.support.ExecutorSubscribableChannel;
 import org.springframework.messaging.support.MessageBuilder;
@@ -99,7 +100,8 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
 
   @Override
   public Message<?> preSend(Message<?> message, MessageChannel messageChannel) {
-    if (MessageInvocation.enterDuplicateSend(message, messageChannel)) {
+    int interceptorCount = interceptorCount(messageChannel);
+    if (MessageInvocation.enterDuplicateSend(message, messageChannel, interceptorCount)) {
       // GlobalChannelInterceptorProcessor.afterSingletonsInstantiated() adds the global
       // interceptors for every bean name / channel pair, which means it's possible that this
       // interceptor is added twice to the same channel if the channel is registered twice under
@@ -194,7 +196,8 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
   @CanIgnoreReturnValue
   public Message<?> beforeHandle(
       Message<?> message, MessageChannel channel, MessageHandler handler) {
-    if (MessageInvocation.enterDuplicateHandler(message, channel, handler)) {
+    if (MessageInvocation.enterDuplicateHandler(
+        message, channel, handler, interceptorCount(channel))) {
       // see comment explaining the same conditional in preSend()
       return message;
     }
@@ -299,6 +302,31 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
     return messageChannel instanceof ExecutorSubscribableChannel
         || (EXECUTOR_CHANNEL_INTERCEPTOR_AWARE_CLASS != null
             && EXECUTOR_CHANNEL_INTERCEPTOR_AWARE_CLASS.isInstance(messageChannel));
+  }
+
+  private int interceptorCount(MessageChannel messageChannel) {
+    messageChannel = unwrapProxy(messageChannel);
+    List<ChannelInterceptor> interceptors;
+    if (messageChannel instanceof org.springframework.integration.channel.AbstractMessageChannel) {
+      interceptors =
+          ((org.springframework.integration.channel.AbstractMessageChannel) messageChannel)
+              .getChannelInterceptors();
+    } else if (messageChannel
+        instanceof org.springframework.messaging.support.AbstractMessageChannel) {
+      interceptors =
+          ((org.springframework.messaging.support.AbstractMessageChannel) messageChannel)
+              .getInterceptors();
+    } else {
+      return 1;
+    }
+
+    int count = 0;
+    for (ChannelInterceptor interceptor : interceptors) {
+      if (interceptor == this) {
+        count++;
+      }
+    }
+    return Math.max(count, 1);
   }
 
   // unwrap spring aop proxy
