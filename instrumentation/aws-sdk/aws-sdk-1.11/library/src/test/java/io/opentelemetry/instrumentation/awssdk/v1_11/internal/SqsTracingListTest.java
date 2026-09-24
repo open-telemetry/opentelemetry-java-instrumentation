@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
@@ -210,7 +211,10 @@ class SqsTracingListTest {
     assertThat(Context.current()).isSameAs(previous);
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactly(span -> span.hasName("process").hasException(failure)));
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("process")
+                        .hasException(emitExceptionAsSpanEvents() ? failure : null)));
   }
 
   @Test
