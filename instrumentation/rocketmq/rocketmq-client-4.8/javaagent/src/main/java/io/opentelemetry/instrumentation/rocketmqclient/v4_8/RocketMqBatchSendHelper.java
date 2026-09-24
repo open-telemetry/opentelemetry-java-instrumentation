@@ -158,6 +158,7 @@ public final class RocketMqBatchSendHelper {
       request = new BatchSendContext(batch, namespace);
       List<Context> creationContexts = new ArrayList<>();
       List<Message> messagesWithoutCreationContext = new ArrayList<>();
+      List<Context> extractedContextsWithoutCreationContext = new ArrayList<>();
       Context extractionContext = parentContext.with(Span.getInvalid());
       for (Object item : (Iterable<?>) batch) {
         Message message = (Message) item;
@@ -173,6 +174,7 @@ public final class RocketMqBatchSendHelper {
         }
         if (!Span.fromContext(creationContext).getSpanContext().isValid()) {
           messagesWithoutCreationContext.add(message);
+          extractedContextsWithoutCreationContext.add(creationContext);
         }
         creationContexts.add(creationContext);
       }
@@ -182,11 +184,12 @@ public final class RocketMqBatchSendHelper {
         sendContext = sendInstrumenter.start(parentContext, request);
       }
       Context fallbackContext = sendContext == null ? parentContext : sendContext;
-      for (Message message : messagesWithoutCreationContext) {
-        Context extracted = propagator.extract(extractionContext, message, getter);
+      for (int i = 0; i < messagesWithoutCreationContext.size(); i++) {
         propagator.inject(
-            extracted.with(Span.fromContext(fallbackContext)),
-            message,
+            extractedContextsWithoutCreationContext
+                .get(i)
+                .with(Span.fromContext(fallbackContext)),
+            messagesWithoutCreationContext.get(i),
             MessagePropertySetter.INSTANCE);
       }
       BATCH_SEND_STATE.set(batch, this);
