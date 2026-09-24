@@ -120,8 +120,7 @@ class TracingIterator implements ListIterator<Message> {
     }
 
     ProcessingInvocation invocation =
-        ProcessingInvocation.start(
-            tracingList, processingOwnership, SqsMessageImpl.wrap(message));
+        ProcessingInvocation.start(tracingList, processingOwnership, SqsMessageImpl.wrap(message));
     try {
       action.accept(message);
     } catch (Throwable t) {
