@@ -137,31 +137,14 @@ jobs:
         with:
           category: "/language:kotlin-manual"
 
-  analyze-java:
-    name: Analyze (java)
-    needs:
-      - analyze-java-none
-      - analyze-kotlin-manual
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check Java and Kotlin analysis results
-        env:
-          JAVA_RESULT: ${{ needs.analyze-java-none.result }}
-          KOTLIN_RESULT: ${{ needs.analyze-kotlin-manual.result }}
-        run: |
-          if [[ "$JAVA_RESULT" != "success" || "$KOTLIN_RESULT" != "success" ]]; then
-            echo "Java or Kotlin CodeQL analysis failed"
-            exit 1
-          fi
-
   workflow-notification:
     permissions:
       issues: write
     needs:
       - analyze-actions
-      - analyze-java
+      - analyze-java-none
+      - analyze-kotlin-manual
     if: always() && github.event_name == 'schedule'
     uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@03559ef555db0eae5d85c3c6347d1530243e7aa7 # v0.13.0
     with:
-      success: ${{ needs.analyze-actions.result == 'success' && needs.analyze-java.result == 'success' }}
+      success: ${{ needs.analyze-actions.result == 'success' && needs.analyze-java-none.result == 'success' && needs.analyze-kotlin-manual.result == 'success' }}
