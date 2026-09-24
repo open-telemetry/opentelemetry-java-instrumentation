@@ -59,12 +59,15 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
         @Advice.This CircuitBreaker circuitBreaker,
         @Advice.Enter @Nullable Resilience4jCircuitBreakerSpans.AttemptToken token,
         @Advice.Thrown @Nullable Throwable throwable) {
-      if (throwable == null) {
-        Resilience4jCircuitBreakerSpans.start(circuitBreaker);
-      } else {
-        Resilience4jCircuitBreakerSpans.reject(circuitBreaker, throwable);
+      try {
+        if (throwable == null) {
+          Resilience4jCircuitBreakerSpans.start(circuitBreaker);
+        } else {
+          Resilience4jCircuitBreakerSpans.reject(circuitBreaker, throwable);
+        }
+      } finally {
+        Resilience4jCircuitBreakerSpans.finishAcquisition(token);
       }
-      Resilience4jCircuitBreakerSpans.finishAcquisition(token);
     }
   }
 
@@ -83,14 +86,17 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
         @Advice.Enter @Nullable Resilience4jCircuitBreakerSpans.AttemptToken token,
         @Advice.Return boolean permitted,
         @Advice.Thrown @Nullable Throwable throwable) {
-      if (throwable == null) {
-        if (permitted) {
-          Resilience4jCircuitBreakerSpans.start(circuitBreaker);
-        } else {
-          Resilience4jCircuitBreakerSpans.reject(circuitBreaker, null);
+      try {
+        if (throwable == null) {
+          if (permitted) {
+            Resilience4jCircuitBreakerSpans.start(circuitBreaker);
+          } else {
+            Resilience4jCircuitBreakerSpans.reject(circuitBreaker, null);
+          }
         }
+      } finally {
+        Resilience4jCircuitBreakerSpans.finishAcquisition(token);
       }
-      Resilience4jCircuitBreakerSpans.finishAcquisition(token);
     }
   }
 
