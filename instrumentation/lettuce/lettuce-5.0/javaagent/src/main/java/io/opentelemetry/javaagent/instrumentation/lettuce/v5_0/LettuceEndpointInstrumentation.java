@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceInstrumentationUtil.expectsResponse;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONTEXT;
@@ -15,6 +16,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.CommandWrapper;
+import io.lettuce.core.protocol.DecoratedCommand;
 import io.lettuce.core.protocol.DefaultEndpoint;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.context.Context;
@@ -73,6 +75,9 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
       if (asyncCommand == null) {
         return;
       }
+      if (emitStableDatabaseSemconv() && !LettuceCommandPeer.markSpanStarted(asyncCommand)) {
+        return;
+      }
 
       // parent context captured when the AsyncCommand was constructed during dispatch
       Context parentContext = CONTEXT.get(asyncCommand);
@@ -118,8 +123,8 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
         if (current instanceof AsyncCommand) {
           return (AsyncCommand<?, ?, ?>) current;
         }
-        if (current instanceof CommandWrapper) {
-          current = ((CommandWrapper<?, ?, ?>) current).getDelegate();
+        if (current instanceof DecoratedCommand) {
+          current = ((DecoratedCommand<?, ?, ?>) current).getDelegate();
         } else {
           break;
         }

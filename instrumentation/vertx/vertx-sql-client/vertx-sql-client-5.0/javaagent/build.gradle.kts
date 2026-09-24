@@ -15,6 +15,18 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_11)
 }
 
+sourceSets {
+  test {
+    java.srcDir(
+      if (otelProps.testLatestDeps) {
+        "src/testVersion5_1/java"
+      } else {
+        "src/testVersion5_0/java"
+      },
+    )
+  }
+}
+
 dependencies {
   val version = "5.0.0"
   library("io.vertx:vertx-sql-client:$version")
@@ -29,17 +41,33 @@ dependencies {
   testInstrumentation(project(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-4.0:javaagent"))
 
   testLibrary("io.vertx:vertx-pg-client:$version")
+  testLibrary("io.vertx:vertx-oracle-client:$version")
   testLibrary("io.vertx:vertx-jdbc-client:$version")
   testImplementation("io.agroal:agroal-pool:2.5")
   testImplementation("org.hsqldb:hsqldb:2.3.4")
 }
 
-tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-common-4.0:javaagent"))
+        implementation(project(":javaagent-extension-api"))
+        implementation("io.vertx:vertx-sql-client:5.0.0")
+      }
+    }
   }
+}
+
+tasks {
+  withType<Test>()
+    .matching { it.name != "unitTests" }
+    .configureEach {
+      usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+      systemProperty("collectMetadata", otelProps.collectMetadata)
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    }
 
   val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
@@ -49,6 +77,6 @@ tasks {
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites, testStableSemconv)
   }
 }
