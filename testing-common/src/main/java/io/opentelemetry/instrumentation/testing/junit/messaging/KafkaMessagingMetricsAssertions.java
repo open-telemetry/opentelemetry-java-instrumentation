@@ -150,7 +150,10 @@ public final class KafkaMessagingMetricsAssertions {
     assertDeprecatedMetricsAbsent(testing);
   }
 
-  /** Asserts the process operation's duration metric. */
+  /**
+   * Asserts the process operation's duration metric, and that the process operation never records
+   * the consumed messages count. That count is owned by the receive operation.
+   */
   public static void assertProcessMetrics(
       InstrumentationExtension testing,
       String instrumentationName,
@@ -166,9 +169,14 @@ public final class KafkaMessagingMetricsAssertions {
 
     assertProcessDurationMetrics(
         testing, instrumentationName, destination, group, partition, operationCount, errorType);
+    assertNoProcessConsumedMessages(testing, instrumentationName);
   }
 
-  /** Asserts the process operation's duration and consumed-message metrics. */
+  /**
+   * Asserts the process operation's duration metric, and that the process operation also records
+   * the consumed messages count. That happens when no receive operation runs for the consumer, so
+   * the process operation is the only operation that can report the delivery.
+   */
   public static void assertProcessMetricsWithConsumedMessages(
       InstrumentationExtension testing,
       String instrumentationName,
@@ -258,7 +266,11 @@ public final class KafkaMessagingMetricsAssertions {
                     assertThat(metric.getHistogramData().getPoints()).hasSize(durationPointCount)));
   }
 
-  /** Asserts the consumed-message count summed across all attribute combinations. */
+  /**
+   * Asserts that the given number of messages was consumed in total, summed over every attribute
+   * combination. Since the consumed messages count must be reported exactly once per delivery, this
+   * catches a delivery being counted by more than one operation.
+   */
   public static void assertTotalConsumedMessages(
       InstrumentationExtension testing, String instrumentationName, long total) {
     if (!emitStableMessagingSemconv()) {
@@ -383,6 +395,20 @@ public final class KafkaMessagingMetricsAssertions {
             metric -> metric.getInstrumentationScopeInfo().getName().equals(instrumentationName))
         .extracting(MetricData::getName)
         .doesNotContain(metricName);
+  }
+
+  private static void assertNoProcessConsumedMessages(
+      InstrumentationExtension testing, String instrumentationName) {
+    assertThat(testing.metrics())
+        .filteredOn(
+            metric ->
+                metric.getInstrumentationScopeInfo().getName().equals(instrumentationName)
+                    && metric.getName().equals(CONSUMED_MESSAGES))
+        .flatExtracting(metric -> metric.getLongSumData().getPoints())
+        .allSatisfy(
+            point ->
+                assertThat(point.getAttributes().get(stringKey("messaging.operation.name")))
+                    .isNotEqualTo("process"));
   }
 
   private static void assertDeprecatedMetricsAbsent(InstrumentationExtension testing) {
