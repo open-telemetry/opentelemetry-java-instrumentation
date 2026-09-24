@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.javaagent.bootstrap.jms.JmsMessageProcessingState;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -34,7 +35,7 @@ class JmsMessageProcessingStateTest {
   }
 
   @Test
-  void coordinatesConcurrentProcessingObservers() throws Exception {
+  void coordinatesConcurrentProcessingObservers() throws ExecutionException, InterruptedException {
     JmsMessageProcessingState state = new JmsMessageProcessingState();
     CyclicBarrier barrier = new CyclicBarrier(2);
     AtomicInteger firstObservers = new AtomicInteger();
