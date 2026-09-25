@@ -50,6 +50,24 @@ class ShadingTest {
     assertThat(unexpectedEntries).isEmpty();
   }
 
+  @Test
+  void agentJarContainsComposableRuleBasedSamplerOnly() throws Exception {
+    String agentJarPath = getAgentJarPath();
+    assertThat(agentJarPath).isNotNull();
+
+    try (JarFile jarFile = new JarFile(agentJarPath)) {
+      assertThat(
+              jarFile.getJarEntry(
+                  "inst/io/opentelemetry/sdk/extension/incubator/trace/samplers/"
+                      + "ComposableRuleBasedSamplerBuilder.classdata"))
+          .isNotNull();
+      assertThat(
+              jarFile.getJarEntry(
+                  "inst/io/opentelemetry/contrib/sampler/RuleBasedRoutingSampler.classdata"))
+          .isNull();
+    }
+  }
+
   private static String getAgentJarPath() {
     RuntimeMXBean runtimeMxBean = ManagementFactory.getRuntimeMXBean();
     for (String arg : runtimeMxBean.getInputArguments()) {

@@ -4,6 +4,10 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Stop bundling the contrib `RuleBasedRoutingSampler` in the Java agent and Spring Boot starter.
+  Migrate declarative configurations from `rule_based_routing` to the SDK incubator
+  `composite/development` `rule_based` sampler.
+  ([#20239](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20239))
 - Add the required `isRequestStreaming(REQUEST)` method to `GenAiAttributesGetter`.
   ([#19879](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19879))
 - Elasticsearch REST javaagent and 7.x library instrumentation now capture sanitized search query

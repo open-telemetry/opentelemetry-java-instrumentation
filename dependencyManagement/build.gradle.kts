@@ -104,7 +104,6 @@ val DEPENDENCIES = listOf(
   "io.opentelemetry.contrib:opentelemetry-gcp-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-cloudfoundry-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-baggage-processor:${otelContribVersion}",
-  "io.opentelemetry.contrib:opentelemetry-samplers:${otelContribVersion}",
   "io.opentelemetry.proto:opentelemetry-proto:1.11.0-alpha",
   "io.opentelemetry:opentelemetry-exporter-zipkin:${otelZipkinVersion}",
   "io.opentelemetry:opentelemetry-extension-annotations:1.18.0", // deprecated, no longer part of bom
