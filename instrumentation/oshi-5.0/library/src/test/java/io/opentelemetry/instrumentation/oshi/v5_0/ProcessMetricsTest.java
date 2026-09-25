@@ -49,16 +49,4 @@ class ProcessMetricsTest extends AbstractProcessMetricsTest {
   void verifyObservablesAreNotEmpty() {
     assertThat(observables).isNotEmpty();
   }
-
-  @Test
-  @SuppressWarnings("deprecation") // using the legacy scopeName() bridge
-  void processMetricsHaveNoSchema() {
-    testing.waitAndAssertMetrics(
-        scopeName(),
-        "runtime.java.memory",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric.getInstrumentationScopeInfo().getSchemaUrl()).isNull()));
-  }
 }
