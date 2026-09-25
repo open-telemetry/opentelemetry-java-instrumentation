@@ -571,12 +571,12 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
       // stack: builder
       virtualFieldMappings.forEach(
           (mapping) -> {
-            mv.visitLdcInsn(mapping.getFieldName());
-            // stack: builder, fieldName
             mv.visitLdcInsn(mapping.getTypeName());
-            // stack: builder, fieldName, typeName
+            // stack: builder, typeName
             mv.visitLdcInsn(mapping.getFieldTypeName());
-            // stack: builder, fieldName, typeName, fieldTypeName
+            // stack: builder, typeName, fieldTypeName
+            mv.visitLdcInsn(mapping.getFieldName());
+            // stack: builder, typeName, fieldTypeName, fieldName
             mv.visitMethodInsn(
                 Opcodes.INVOKEINTERFACE,
                 "io/opentelemetry/javaagent/tooling/muzzle/VirtualFieldMappingsBuilder",

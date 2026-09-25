@@ -36,19 +36,19 @@ final class RealFieldInjector implements AsmVisitorWrapper {
       Type.getInternalName(VirtualFieldInstalledMarker.class);
 
   private final FieldAccessorInterfaces fieldAccessorInterfaces;
-  private final String fieldName;
   private final String typeName;
   private final String fieldTypeName;
+  private final String fieldName;
 
   RealFieldInjector(
       FieldAccessorInterfaces fieldAccessorInterfaces,
-      String fieldName,
       String typeName,
-      String fieldTypeName) {
+      String fieldTypeName,
+      String fieldName) {
     this.fieldAccessorInterfaces = fieldAccessorInterfaces;
-    this.fieldName = fieldName;
     this.typeName = typeName;
     this.fieldTypeName = fieldTypeName;
+    this.fieldName = fieldName;
   }
 
   @Override
@@ -77,11 +77,11 @@ final class RealFieldInjector implements AsmVisitorWrapper {
       // We are using Object class name instead of fieldTypeName here because this gets
       // injected onto the bootstrap class loader where context class may be unavailable
       private final TypeDescription fieldType = TypeDescription.ForLoadedType.of(Object.class);
-      private final String realFieldName = getRealFieldName(fieldName, typeName, fieldTypeName);
-      private final String getterMethodName = getRealGetterName(fieldName, typeName, fieldTypeName);
-      private final String setterMethodName = getRealSetterName(fieldName, typeName, fieldTypeName);
+      private final String realFieldName = getRealFieldName(typeName, fieldTypeName, fieldName);
+      private final String getterMethodName = getRealGetterName(typeName, fieldTypeName, fieldName);
+      private final String setterMethodName = getRealSetterName(typeName, fieldTypeName, fieldName);
       private final TypeDescription interfaceType =
-          fieldAccessorInterfaces.find(fieldName, typeName, fieldTypeName);
+          fieldAccessorInterfaces.find(typeName, fieldTypeName, fieldName);
       private boolean foundField = false;
       private boolean foundGetter = false;
       private boolean foundSetter = false;

@@ -35,16 +35,16 @@ public abstract class VirtualField<T, F> {
    *
    * @param type The type that will contain the new virtual field.
    * @param fieldType The field type that will be added to {@code type}.
-   * @see VirtualField#find(String, Class, Class)
+   * @see VirtualField#find(Class, Class, String)
    */
   public static <U extends T, V extends F, T, F> VirtualField<U, V> find(
       Class<T> type, Class<F> fieldType) {
-    return find(RuntimeVirtualFieldSupplier.DEFAULT_FIELD_NAME, type, fieldType);
+    return find(type, fieldType, RuntimeVirtualFieldSupplier.DEFAULT_FIELD_NAME);
   }
 
   /**
-   * Finds a {@link VirtualField} instance for given {@code fieldName}, {@code type} and {@code
-   * fieldType}.
+   * Finds a {@link VirtualField} instance for given {@code type}, {@code fieldType} and {@code
+   * fieldName}.
    *
    * <p>Conceptually this can be thought of as adding a field with name {@code fieldName} to class
    * {@code type} with type {@code fieldType}. Alternatively this can be viewed as a map where an
@@ -57,16 +57,16 @@ public abstract class VirtualField<T, F> {
    * <p>Unlike calls to {@link VirtualField#find(Class, Class)} calls to this method are never
    * rewritten.
    *
-   * @param fieldName The name of the virtual field.
    * @param type The type that will contain the new virtual field.
    * @param fieldType The field type that will be added to {@code type}.
+   * @param fieldName The name of the virtual field.
    */
   public static <U extends T, V extends F, T, F> VirtualField<U, V> find(
-      String fieldName, Class<T> type, Class<F> fieldType) {
-    requireNonNull(fieldName);
+      Class<T> type, Class<F> fieldType, String fieldName) {
     requireNonNull(type);
     requireNonNull(fieldType);
-    return RuntimeVirtualFieldSupplier.get().find(fieldName, type, fieldType);
+    requireNonNull(fieldName);
+    return RuntimeVirtualFieldSupplier.get().find(type, fieldType, fieldName);
   }
 
   /** Gets the value of this virtual field. */

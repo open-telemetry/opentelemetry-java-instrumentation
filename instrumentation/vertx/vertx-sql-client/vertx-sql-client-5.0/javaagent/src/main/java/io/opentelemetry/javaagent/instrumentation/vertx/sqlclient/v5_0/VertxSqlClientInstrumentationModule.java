@@ -56,12 +56,12 @@ public class VertxSqlClientInstrumentationModule extends InstrumentationModule
     // used in 5.0
     virtualFieldRegistration.register(
         "io.vertx.sqlclient.internal.command.CommandBase", Context.class.getName());
-    virtualFieldRegistrar.accept(
+    virtualFieldRegistration.register(
         "io.vertx.sqlclient.internal.Connection", VertxSqlClientState.class.getName());
     // used in 5.1
     virtualFieldRegistration.register(
         "io.vertx.sqlclient.spi.protocol.CommandBase", Context.class.getName());
-    virtualFieldRegistrar.accept(
+    virtualFieldRegistration.register(
         "io.vertx.sqlclient.spi.connection.Connection", VertxSqlClientState.class.getName());
   }
 }

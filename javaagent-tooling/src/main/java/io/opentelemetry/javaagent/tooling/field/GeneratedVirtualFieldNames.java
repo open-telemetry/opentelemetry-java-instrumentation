@@ -25,7 +25,7 @@ final class GeneratedVirtualFieldNames {
   }
 
   static String getVirtualFieldImplementationClassName(
-      String fieldName, String typeName, String fieldTypeName) {
+      String typeName, String fieldTypeName, String fieldName) {
     return DYNAMIC_CLASSES_PACKAGE
         + "VirtualFieldImpl$"
         + (!fieldName.isEmpty() ? fieldName + "$" : "")
@@ -35,7 +35,7 @@ final class GeneratedVirtualFieldNames {
   }
 
   static String getFieldAccessorInterfaceName(
-      String fieldName, String typeName, String fieldTypeName) {
+      String typeName, String fieldTypeName, String fieldName) {
     return DYNAMIC_CLASSES_PACKAGE
         + "VirtualFieldAccessor$"
         + (!fieldName.isEmpty() ? fieldName + "$" : "")
@@ -44,7 +44,7 @@ final class GeneratedVirtualFieldNames {
         + sanitizeClassName(fieldTypeName);
   }
 
-  static String getRealFieldName(String fieldName, String typeName, String fieldTypeName) {
+  static String getRealFieldName(String typeName, String fieldTypeName, String fieldName) {
     return "__opentelemetryVirtualField$"
         + (!fieldName.isEmpty() ? fieldName + "$" : "")
         + sanitizeClassName(typeName)
@@ -52,12 +52,12 @@ final class GeneratedVirtualFieldNames {
         + sanitizeClassName(fieldTypeName);
   }
 
-  static String getRealGetterName(String fieldName, String typeName, String fieldTypeName) {
-    return "__get" + getRealFieldName(fieldName, typeName, fieldTypeName);
+  static String getRealGetterName(String typeName, String fieldTypeName, String fieldName) {
+    return "__get" + getRealFieldName(typeName, fieldTypeName, fieldName);
   }
 
-  static String getRealSetterName(String fieldName, String typeName, String fieldTypeName) {
-    return "__set" + getRealFieldName(fieldName, typeName, fieldTypeName);
+  static String getRealSetterName(String typeName, String fieldTypeName, String fieldName) {
+    return "__set" + getRealFieldName(typeName, fieldTypeName, fieldName);
   }
 
   private static String sanitizeClassName(String className) {

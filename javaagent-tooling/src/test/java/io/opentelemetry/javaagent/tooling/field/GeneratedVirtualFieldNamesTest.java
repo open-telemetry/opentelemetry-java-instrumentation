@@ -21,9 +21,9 @@ class GeneratedVirtualFieldNamesTest {
   void virtualFieldImplementation(String fieldName, String expected) {
     assertThat(
             GeneratedVirtualFieldNames.getVirtualFieldImplementationClassName(
-                fieldName,
                 getType(Runnable.class).getClassName(),
-                getType(String[][].class).getClassName()))
+                getType(String[][].class).getClassName(),
+                fieldName))
         .isEqualTo(expected);
   }
 
@@ -35,9 +35,9 @@ class GeneratedVirtualFieldNamesTest {
   void accessorInterface(String fieldName, String expected) {
     assertThat(
             GeneratedVirtualFieldNames.getFieldAccessorInterfaceName(
-                fieldName,
                 getType(Runnable.class).getClassName(),
-                getType(String[].class).getClassName()))
+                getType(String[].class).getClassName(),
+                fieldName))
         .isEqualTo(expected);
   }
 
@@ -49,9 +49,9 @@ class GeneratedVirtualFieldNamesTest {
   void field(String fieldName, String expected) {
     assertThat(
             GeneratedVirtualFieldNames.getRealFieldName(
-                fieldName,
                 getType(Runnable.class).getClassName(),
-                getType(String[].class).getClassName()))
+                getType(String[].class).getClassName(),
+                fieldName))
         .isEqualTo(expected);
   }
 
@@ -63,9 +63,9 @@ class GeneratedVirtualFieldNamesTest {
   void setter(String fieldName, String expected) {
     assertThat(
             GeneratedVirtualFieldNames.getRealSetterName(
-                fieldName,
                 getType(Runnable.class).getClassName(),
-                getType(String[].class).getClassName()))
+                getType(String[].class).getClassName(),
+                fieldName))
         .isEqualTo(expected);
   }
 
@@ -77,9 +77,9 @@ class GeneratedVirtualFieldNamesTest {
   void getter(String fieldName, String expected) {
     assertThat(
             GeneratedVirtualFieldNames.getRealGetterName(
-                fieldName,
                 getType(Runnable.class).getClassName(),
-                getType(String[].class).getClassName()))
+                getType(String[].class).getClassName(),
+                fieldName))
         .isEqualTo(expected);
   }
 }

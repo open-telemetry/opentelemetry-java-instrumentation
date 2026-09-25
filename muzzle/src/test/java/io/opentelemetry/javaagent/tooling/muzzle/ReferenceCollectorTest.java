@@ -346,11 +346,11 @@ class ReferenceCollectorTest {
     VirtualFieldMappings virtualFieldMappings = collector.getVirtualFieldMappings();
     assertThat(virtualFieldMappings.getMappings())
         .containsExactlyInAnyOrder(
-            new Mapping("", VirtualFieldTestClasses.Key1.class.getName(), Context.class.getName()),
+            new Mapping(VirtualFieldTestClasses.Key1.class.getName(), Context.class.getName(), ""),
             new Mapping(
-                "namedField",
                 VirtualFieldTestClasses.Key2.class.getName(),
-                Context.class.getName()));
+                Context.class.getName(),
+                "namedField"));
   }
 
   @Test
@@ -363,9 +363,9 @@ class ReferenceCollectorTest {
     VirtualFieldMappings virtualFieldMappings = collector.getVirtualFieldMappings();
     assertThat(virtualFieldMappings.getMappings())
         .containsExactlyInAnyOrder(
-            new Mapping("", VirtualFieldTestClasses.Key1.class.getName(), Context.class.getName()),
+            new Mapping(VirtualFieldTestClasses.Key1.class.getName(), Context.class.getName(), ""),
             new Mapping(
-                "namedField", VirtualFieldTestClasses.Key1.class.getName(), State.class.getName()));
+                VirtualFieldTestClasses.Key1.class.getName(), State.class.getName(), "namedField"));
   }
 
   @Test
@@ -378,8 +378,8 @@ class ReferenceCollectorTest {
     VirtualFieldMappings virtualFieldMappings = collector.getVirtualFieldMappings();
     assertThat(virtualFieldMappings.getMappings())
         .containsExactlyInAnyOrder(
-            new Mapping("", VirtualFieldTestClasses.Key1.class.getName(), Context.class.getName()),
-            new Mapping("", VirtualFieldTestClasses.Key2.class.getName(), Context.class.getName()));
+            new Mapping(VirtualFieldTestClasses.Key1.class.getName(), Context.class.getName(), ""),
+            new Mapping(VirtualFieldTestClasses.Key2.class.getName(), Context.class.getName(), ""));
   }
 
   @ParameterizedTest
@@ -426,9 +426,9 @@ class ReferenceCollectorTest {
     assertThat(virtualFieldMappings.getMappings())
         .containsExactly(
             new Mapping(
-                "",
                 VirtualFieldTestClasses.Key1.class.getName(),
-                Type.getType(Context[].class).getClassName()));
+                Type.getType(Context[].class).getClassName(),
+                ""));
   }
 
   private static void assertHelperSuperClassMethod(ClassRef reference, boolean isAbstract) {

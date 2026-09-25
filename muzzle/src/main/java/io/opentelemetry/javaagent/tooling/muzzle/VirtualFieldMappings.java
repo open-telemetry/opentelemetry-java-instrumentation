@@ -25,7 +25,7 @@ public final class VirtualFieldMappings {
   }
 
   public boolean hasMapping(String typeName, String fieldTypeName) {
-    return mappings.contains(new Mapping("", typeName, fieldTypeName));
+    return mappings.contains(new Mapping(typeName, fieldTypeName, ""));
   }
 
   public Set<Mapping> getMappings() {
@@ -39,18 +39,14 @@ public final class VirtualFieldMappings {
   }
 
   public static final class Mapping {
-    private final String fieldName;
     private final String typeName;
     private final String fieldTypeName;
+    private final String fieldName;
 
-    Mapping(String fieldName, String typeName, String fieldTypeName) {
-      this.fieldName = fieldName;
+    Mapping(String typeName, String fieldTypeName, String fieldName) {
       this.typeName = typeName;
       this.fieldTypeName = fieldTypeName;
-    }
-
-    public String getFieldName() {
-      return fieldName;
+      this.fieldName = fieldName;
     }
 
     public String getTypeName() {
@@ -59,6 +55,10 @@ public final class VirtualFieldMappings {
 
     public String getFieldTypeName() {
       return fieldTypeName;
+    }
+
+    public String getFieldName() {
+      return fieldName;
     }
 
     @Override

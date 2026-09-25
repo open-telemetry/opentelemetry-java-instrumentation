@@ -43,8 +43,8 @@ public final class VirtualFieldImplementationInstallerFactory {
                 }
 
                 @Override
-                public void register(String fieldName, String typeName, String fieldTypeName) {
-                  builder.register(fieldName, typeName, fieldTypeName);
+                public void register(String typeName, String fieldTypeName, String fieldName) {
+                  builder.register(typeName, fieldTypeName, fieldName);
                 }
               });
     }

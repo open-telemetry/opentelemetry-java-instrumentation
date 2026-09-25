@@ -92,10 +92,10 @@ public interface ExperimentalInstrumentationModule {
     /**
      * Register a virtual field.
      *
-     * @param fieldName Name of the field
      * @param typeName Dot class name of the type where the field is added.
      * @param fieldTypeName Dot class name of the field type.
+     * @param fieldName Name of the field.
      */
-    void register(String fieldName, String typeName, String fieldTypeName);
+    void register(String typeName, String fieldTypeName, String fieldName);
   }
 }

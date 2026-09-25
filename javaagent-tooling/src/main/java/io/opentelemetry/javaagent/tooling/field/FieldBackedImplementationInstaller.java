@@ -166,7 +166,7 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
   }
 
   /*
-  Set of mappings (field name, type name, field type name) for which we have matchers installed.
+  Set of mappings (type name, field type name, field name) for which we have matchers installed.
   We use this to make sure we do not install matchers repeatedly for cases when same
   context class is used by multiple instrumentations.
    */
@@ -219,9 +219,9 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
                   .type(typeMatcher)
                   .and(
                       safeToInjectFieldMatcher(
-                          mapping.getFieldName(),
                           mapping.getTypeName(),
-                          mapping.getFieldTypeName()))
+                          mapping.getFieldTypeName(),
+                          mapping.getFieldName()))
                   .and(InstrumentationModuleInstaller.NOT_DECORATOR_MATCHER)
                   .transform(NoOpTransformer.INSTANCE);
 
@@ -237,9 +237,9 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
                   getTransformerForAsmVisitor(
                       new RealFieldInjector(
                           fieldAccessorInterfaces,
-                          mapping.getFieldName(),
                           mapping.getTypeName(),
-                          mapping.getFieldTypeName())));
+                          mapping.getFieldTypeName(),
+                          mapping.getFieldName())));
         }
       }
     }
@@ -247,7 +247,7 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
   }
 
   private static AgentBuilder.RawMatcher safeToInjectFieldMatcher(
-      String fieldName, String typeName, String fieldTypeName) {
+      String typeName, String fieldTypeName, String fieldName) {
     return (typeDescription, classLoader, module, classBeingRedefined, protectionDomain) -> {
       /*
        * The idea here is that we can add fields if class is just being loaded
@@ -257,7 +257,7 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
       return classBeingRedefined == null
           || VirtualFieldDetector.hasVirtualField(
               classBeingRedefined,
-              getFieldAccessorInterfaceName(fieldName, typeName, fieldTypeName));
+              getFieldAccessorInterfaceName(typeName, fieldTypeName, fieldName));
     };
   }
 

@@ -614,9 +614,9 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
       String getVirtualField3ArgDescriptor =
           Type.getMethodDescriptor(
               Type.getType(VirtualField.class),
-              Type.getType(String.class),
               Type.getType(Class.class),
-              Type.getType(Class.class));
+              Type.getType(Class.class),
+              Type.getType(String.class));
 
       Type methodType = Type.getMethodType(descriptor);
       Type ownerType = Type.getType("L" + owner + ";");
@@ -628,18 +628,18 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
               || methodType.getDescriptor().equals(getVirtualField3ArgDescriptor))) {
         int argCount = methodType.getDescriptor().equals(getVirtualField2ArgDescriptor) ? 2 : 3;
         String methodName =
-            "VirtualField#find(" + (argCount == 3 ? "String, " : "") + " Class, Class)";
+            "VirtualField#find(Class, Class" + (argCount == 3 ? ", String" : "") + ")";
 
         // in case of invalid scenario (not using .class ref directly) don't store anything and
         // clear the last LDC <class> stack
         // note that FieldBackedProvider also check for an invalid context call in the runtime
         if (lastConstants.size() >= argCount) {
-          Type fieldType = removeLastConstant(Type.class);
-          Type type = removeLastConstant(Type.class);
           String fieldName = RuntimeVirtualFieldSupplier.DEFAULT_FIELD_NAME;
           if (argCount == 3) {
             fieldName = removeLastConstant(String.class);
           }
+          Type fieldType = removeLastConstant(Type.class);
+          Type type = removeLastConstant(Type.class);
 
           if (type.getSort() != Type.OBJECT) {
             throw new MuzzleCompilationException(
@@ -657,7 +657,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
           }
 
           virtualFieldMappingsBuilder.register(
-              fieldName, type.getClassName(), fieldType.getClassName());
+              type.getClassName(), fieldType.getClassName(), fieldName);
         } else {
           throw new MuzzleCompilationException(
               "Invalid "

@@ -17,18 +17,18 @@ public final class VirtualFieldMappingsBuilderImpl implements VirtualFieldMappin
   @Override
   @CanIgnoreReturnValue
   public VirtualFieldMappingsBuilder register(String typeName, String fieldTypeName) {
-    return register(RuntimeVirtualFieldSupplier.DEFAULT_FIELD_NAME, typeName, fieldTypeName);
+    return register(typeName, fieldTypeName, RuntimeVirtualFieldSupplier.DEFAULT_FIELD_NAME);
   }
 
   @Override
   public VirtualFieldMappingsBuilder register(
-      String fieldName, String typeName, String fieldTypeName) {
+      String typeName, String fieldTypeName, String fieldName) {
     // since we are going to use the field name as part of generated class and method names we are
     // not going to allow all kinds of names
     if (!isIdentifier(fieldName)) {
       throw new IllegalArgumentException("Invalid field name: " + fieldName);
     }
-    mappingSet.add(new Mapping(fieldName, typeName, fieldTypeName));
+    mappingSet.add(new Mapping(typeName, fieldTypeName, fieldName));
     return this;
   }
 

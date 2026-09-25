@@ -43,7 +43,7 @@ final class VirtualFieldFindRewriter implements AsmVisitorWrapper {
     try {
       FIND_VIRTUAL_FIELD_METHOD = VirtualField.class.getMethod("find", Class.class, Class.class);
       FIND_VIRTUAL_FIELD_WITH_NAME_METHOD =
-          VirtualField.class.getMethod("find", String.class, Class.class, Class.class);
+          VirtualField.class.getMethod("find", Class.class, Class.class, String.class);
       FIND_VIRTUAL_FIELD_IMPL_METHOD =
           VirtualFieldImplementationsGenerator.VirtualFieldImplementationTemplate.class.getMethod(
               "getVirtualField", Class.class, Class.class);
@@ -124,7 +124,7 @@ final class VirtualFieldFindRewriter implements AsmVisitorWrapper {
                 String typeName = ((Type) stack[1]).getClassName();
                 TypeDescription virtualFieldImplementationClass =
                     virtualFieldImplementations.find(
-                        RuntimeVirtualFieldSupplier.DEFAULT_FIELD_NAME, typeName, fieldTypeName);
+                        typeName, fieldTypeName, RuntimeVirtualFieldSupplier.DEFAULT_FIELD_NAME);
                 if (logger.isLoggable(FINEST)) {
                   logger.log(
                       FINEST,
@@ -162,7 +162,7 @@ final class VirtualFieldFindRewriter implements AsmVisitorWrapper {
                     .equals(descriptor)) {
               logger.log(
                   WARNING,
-                  "Found VirtualField#find(String, Class, Class) access in {0}. Unlike calls to VirtualField#find(Class, Class) the call to this method is not rewritten and may have a performance impact.",
+                  "Found VirtualField#find(Class, Class, String) access in {0}. Unlike calls to VirtualField#find(Class, Class) the call to this method is not rewritten and may have a performance impact.",
                   instrumentationModuleClass.getName());
             }
 

@@ -29,7 +29,7 @@ public final class RuntimeVirtualFieldSupplier {
    */
   public interface VirtualFieldSupplier {
     <U extends T, V extends F, T, F> VirtualField<U, V> find(
-        String fieldName, Class<T> type, Class<F> fieldType);
+        Class<T> type, Class<F> fieldType, String fieldName);
   }
 
   private static final VirtualFieldSupplier DEFAULT = new CacheBasedVirtualFieldSupplier();
@@ -59,7 +59,7 @@ public final class RuntimeVirtualFieldSupplier {
     // storing VirtualField instances in a map loses the generic types
     @SuppressWarnings("unchecked")
     public <U extends T, V extends F, T, F> VirtualField<U, V> find(
-        String fieldName, Class<T> type, Class<F> fieldType) {
+        Class<T> type, Class<F> fieldType, String fieldName) {
       return (VirtualField<U, V>)
           ownerToFieldToImplementationMap
               .computeIfAbsent(type, c -> Cache.weak())
