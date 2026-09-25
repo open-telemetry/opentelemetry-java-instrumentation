@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v3_2;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.couchbase.client.core.Core;
 import com.couchbase.client.core.CoreProtostellar;
@@ -30,18 +29,18 @@ class CouchbaseProtostellarRequestInstrumentation implements TypeInstrumentation
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isConstructor()
-            .and(takesArguments(8))
-            .and(takesArgument(0, named("com.couchbase.client.core.Core"))),
+            .and(takesArgument(0, named("com.couchbase.client.core.Core")))
+            .and(takesArgument(3, named("com.couchbase.client.core.cnc.RequestSpan"))),
         getClass().getName() + "$LegacyConstructorAdvice");
     transformer.applyAdviceToMethod(
         isConstructor()
-            .and(takesArguments(8))
-            .and(takesArgument(0, named("com.couchbase.client.core.CoreProtostellar"))),
+            .and(takesArgument(0, named("com.couchbase.client.core.CoreProtostellar")))
+            .and(takesArgument(3, named("com.couchbase.client.core.cnc.RequestSpan"))),
         getClass().getName() + "$OriginalConstructorAdvice");
     transformer.applyAdviceToMethod(
         isConstructor()
-            .and(takesArguments(11))
-            .and(takesArgument(1, named("com.couchbase.client.core.CoreProtostellar"))),
+            .and(takesArgument(1, named("com.couchbase.client.core.CoreProtostellar")))
+            .and(takesArgument(4, named("com.couchbase.client.core.cnc.RequestSpan"))),
         getClass().getName() + "$CurrentConstructorAdvice");
   }
 
