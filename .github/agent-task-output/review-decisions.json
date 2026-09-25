@@ -1,0 +1,20 @@
+{
+  "schema": {
+    "id": "github.copilot.copilot-review-loop-decision-report",
+    "version": 3
+  },
+  "decisions": [
+    {
+      "finding_id": "finding-e78cfb7f90833eab03c7cd5b",
+      "disposition": "no_change",
+      "reason": "The repository documentation already states the implemented behavior; the stale text is PR metadata, which this task must not mutate.",
+      "proposed_reply": "The documentation is correct. The PR description should say both deprecated fallbacks remain active under v3-preview until 3.0."
+    },
+    {
+      "finding_id": "finding-b82b37d880c0cbd646233b52",
+      "disposition": "no_change",
+      "reason": "This duplicates the thread finding and concerns only PR metadata, which this task must not mutate.",
+      "proposed_reply": "The PR description should be updated to say both deprecated fallbacks remain active under v3-preview until 3.0."
+    }
+  ]
+}
