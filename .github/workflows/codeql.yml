@@ -13,6 +13,7 @@ on:
       - release/*
       - cloudfoundry
       - gh-pages
+      - trask-codeql-java25-cache-test
   schedule:
     - cron: "29 13 * * 2"  # weekly at 13:29 UTC on Tuesday
 
@@ -22,6 +23,7 @@ permissions:
 jobs:
   analyze-actions:
     name: Analyze (actions)
+    if: github.event_name != 'push' || github.ref != 'refs/heads/trask-codeql-java25-cache-test'
     permissions:
       contents: read
       actions: read  # for github/codeql-action/init to get workflow details
@@ -79,6 +81,7 @@ jobs:
 
   analyze-kotlin-manual:
     name: Analyze Kotlin (manual)
+    if: github.event_name != 'push' || github.ref != 'refs/heads/trask-codeql-java25-cache-test'
     permissions:
       contents: read
       actions: read  # for github/codeql-action/init to get workflow details
