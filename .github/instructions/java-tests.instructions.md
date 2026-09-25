@@ -111,7 +111,9 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
   metric-point checks.
 - Do not introduce redundant `(long)` casts in `equalTo(longKey(...), value)`
   when `value` is already an `int` — the `equalTo(AttributeKey<Long>, int)`
-  overload exists.
+  overload exists. Keep the cast when a nullable conditional expression such
+  as `condition ? (long) intValue : null` must produce a boxed `Long`; removing
+  it can select the primitive overload and unbox `null`.
 
 ## [Testing] Mode-Dependent Expected Values
 
