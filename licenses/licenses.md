@@ -174,159 +174,163 @@
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java-contrib](https://github.com/open-telemetry/opentelemetry-java-contrib)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**41** **Group:** `io.opentelemetry.semconv` **Name:** `opentelemetry-semconv` **Version:** `1.44.0`
+**41** **Group:** `io.opentelemetry.contrib` **Name:** `opentelemetry-samplers` **Version:** `1.60.0-alpha`
+> - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java-contrib](https://github.com/open-telemetry/opentelemetry-java-contrib)
+> - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
+
+**42** **Group:** `io.opentelemetry.semconv` **Name:** `opentelemetry-semconv` **Version:** `1.44.0`
 > - **POM Project URL**: [https://github.com/open-telemetry/semantic-conventions-java](https://github.com/open-telemetry/semantic-conventions-java)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**42** **Group:** `io.opentelemetry.semconv` **Name:** `opentelemetry-semconv-incubating` **Version:** `1.44.0-alpha`
+**43** **Group:** `io.opentelemetry.semconv` **Name:** `opentelemetry-semconv-incubating` **Version:** `1.44.0-alpha`
 > - **POM Project URL**: [https://github.com/open-telemetry/semantic-conventions-java](https://github.com/open-telemetry/semantic-conventions-java)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**43** **Group:** `io.prometheus` **Name:** `prometheus-metrics-config` **Version:** `1.8.0`
+**44** **Group:** `io.prometheus` **Name:** `prometheus-metrics-config` **Version:** `1.8.0`
 > - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**44** **Group:** `io.prometheus` **Name:** `prometheus-metrics-exporter-common` **Version:** `1.8.0`
+**45** **Group:** `io.prometheus` **Name:** `prometheus-metrics-exporter-common` **Version:** `1.8.0`
 > - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**45** **Group:** `io.prometheus` **Name:** `prometheus-metrics-exporter-httpserver` **Version:** `1.8.0`
+**46** **Group:** `io.prometheus` **Name:** `prometheus-metrics-exporter-httpserver` **Version:** `1.8.0`
 > - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**46** **Group:** `io.prometheus` **Name:** `prometheus-metrics-exposition-formats-no-protobuf` **Version:** `1.8.0`
+**47** **Group:** `io.prometheus` **Name:** `prometheus-metrics-exposition-formats-no-protobuf` **Version:** `1.8.0`
 > - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**47** **Group:** `io.prometheus` **Name:** `prometheus-metrics-exposition-textformats` **Version:** `1.8.0`
+**48** **Group:** `io.prometheus` **Name:** `prometheus-metrics-exposition-textformats` **Version:** `1.8.0`
 > - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**48** **Group:** `io.prometheus` **Name:** `prometheus-metrics-model` **Version:** `1.8.0`
+**49** **Group:** `io.prometheus` **Name:** `prometheus-metrics-model` **Version:** `1.8.0`
 > - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**49** **Group:** `io.zipkin.reporter2` **Name:** `zipkin-reporter` **Version:** `3.5.3`
+**50** **Group:** `io.zipkin.reporter2` **Name:** `zipkin-reporter` **Version:** `3.5.3`
 > - **Manifest Project URL**: [https://zipkin.io/](https://zipkin.io/)
 > - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM Project URL**: [https://github.com/openzipkin/zipkin-reporter-java/zipkin-reporter](https://github.com/openzipkin/zipkin-reporter-java/zipkin-reporter)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **Embedded license files**: [zipkin-reporter-3.5.3.jar/META-INF/LICENSE](zipkin-reporter-3.5.3.jar/META-INF/LICENSE)
 
-**50** **Group:** `io.zipkin.reporter2` **Name:** `zipkin-sender-okhttp3` **Version:** `3.5.3`
+**51** **Group:** `io.zipkin.reporter2` **Name:** `zipkin-sender-okhttp3` **Version:** `3.5.3`
 > - **Manifest Project URL**: [https://zipkin.io/](https://zipkin.io/)
 > - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM Project URL**: [https://github.com/openzipkin/zipkin-reporter-java/zipkin-sender-okhttp3](https://github.com/openzipkin/zipkin-reporter-java/zipkin-sender-okhttp3)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **Embedded license files**: [zipkin-sender-okhttp3-3.5.3.jar/META-INF/LICENSE](zipkin-sender-okhttp3-3.5.3.jar/META-INF/LICENSE)
 
-**51** **Group:** `io.zipkin.zipkin2` **Name:** `zipkin` **Version:** `2.27.1`
+**52** **Group:** `io.zipkin.zipkin2` **Name:** `zipkin` **Version:** `2.27.1`
 > - **Manifest Project URL**: [http://zipkin.io/](http://zipkin.io/)
 > - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **Embedded license files**: [zipkin-2.27.1.jar/META-INF/LICENSE](zipkin-2.27.1.jar/META-INF/LICENSE)
 
-**52** **Group:** `net.bytebuddy` **Name:** `byte-buddy-dep` **Version:** `1.18.14`
+**53** **Group:** `net.bytebuddy` **Name:** `byte-buddy-dep` **Version:** `1.18.14`
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **Embedded license files**: [byte-buddy-dep-1.18.14.jar/META-INF/LICENSE](byte-buddy-dep-1.18.14.jar/META-INF/LICENSE)
     - [byte-buddy-dep-1.18.14.jar/META-INF/NOTICE](byte-buddy-dep-1.18.14.jar/META-INF/NOTICE)
 
-**53** **Group:** `org.jetbrains` **Name:** `annotations` **Version:** `13.0`
+**54** **Group:** `org.jetbrains` **Name:** `annotations` **Version:** `13.0`
 > - **POM Project URL**: [http://www.jetbrains.org](http://www.jetbrains.org)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**54** **Group:** `org.jetbrains.kotlin` **Name:** `kotlin-stdlib` **Version:** `2.4.10`
+**55** **Group:** `org.jetbrains.kotlin` **Name:** `kotlin-stdlib` **Version:** `2.4.10`
 > - **POM Project URL**: [https://kotlinlang.org/](https://kotlinlang.org/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**55** **Group:** `org.ow2.asm` **Name:** `asm` **Version:** `9.10.1`
+**56** **Group:** `org.ow2.asm` **Name:** `asm` **Version:** `9.10.1`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**56** **Group:** `org.ow2.asm` **Name:** `asm-analysis` **Version:** `9.10.1`
+**57** **Group:** `org.ow2.asm` **Name:** `asm-analysis` **Version:** `9.10.1`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**57** **Group:** `org.ow2.asm` **Name:** `asm-commons` **Version:** `9.10.1`
+**58** **Group:** `org.ow2.asm` **Name:** `asm-commons` **Version:** `9.10.1`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**58** **Group:** `org.ow2.asm` **Name:** `asm-tree` **Version:** `9.10.1`
+**59** **Group:** `org.ow2.asm` **Name:** `asm-tree` **Version:** `9.10.1`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**59** **Group:** `org.ow2.asm` **Name:** `asm-util` **Version:** `9.10.1`
+**60** **Group:** `org.ow2.asm` **Name:** `asm-util` **Version:** `9.10.1`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**60** **Group:** `org.snakeyaml` **Name:** `snakeyaml-engine` **Version:** `2.10`
+**61** **Group:** `org.snakeyaml` **Name:** `snakeyaml-engine` **Version:** `2.10`
 > - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM Project URL**: [https://bitbucket.org/snakeyaml/snakeyaml-engine](https://bitbucket.org/snakeyaml/snakeyaml-engine)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
 ## MIT License
 
-**61** **Group:** `org.slf4j` **Name:** `slf4j-api` **Version:** `2.0.19`
+**62** **Group:** `org.slf4j` **Name:** `slf4j-api` **Version:** `2.0.19`
 > - **Project URL**: [http://www.slf4j.org](http://www.slf4j.org)
 > - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
 > - **Embedded license files**: [slf4j-api-2.0.19.jar/META-INF/LICENSE.txt](slf4j-api-2.0.19.jar/META-INF/LICENSE.txt)
 
-**62** **Group:** `org.slf4j` **Name:** `slf4j-simple` **Version:** `2.0.19`
+**63** **Group:** `org.slf4j` **Name:** `slf4j-simple` **Version:** `2.0.19`
 > - **Project URL**: [http://www.slf4j.org](http://www.slf4j.org)
 > - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
 > - **Embedded license files**: [slf4j-simple-2.0.19.jar/META-INF/LICENSE.txt](slf4j-simple-2.0.19.jar/META-INF/LICENSE.txt)
 
 ## The 3-Clause BSD License
 
-**63** **Group:** `com.google.protobuf` **Name:** `protobuf-java` **Version:** `4.35.0`
+**64** **Group:** `com.google.protobuf` **Name:** `protobuf-java` **Version:** `4.35.0`
 > - **Manifest Project URL**: [https://developers.google.com/protocol-buffers/](https://developers.google.com/protocol-buffers/)
 > - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**64** **Group:** `org.ow2.asm` **Name:** `asm` **Version:** `9.10.1`
+**65** **Group:** `org.ow2.asm` **Name:** `asm` **Version:** `9.10.1`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**65** **Group:** `org.ow2.asm` **Name:** `asm-analysis` **Version:** `9.10.1`
+**66** **Group:** `org.ow2.asm` **Name:** `asm-analysis` **Version:** `9.10.1`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**66** **Group:** `org.ow2.asm` **Name:** `asm-commons` **Version:** `9.10.1`
+**67** **Group:** `org.ow2.asm` **Name:** `asm-commons` **Version:** `9.10.1`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**67** **Group:** `org.ow2.asm` **Name:** `asm-tree` **Version:** `9.10.1`
+**68** **Group:** `org.ow2.asm` **Name:** `asm-tree` **Version:** `9.10.1`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**68** **Group:** `org.ow2.asm` **Name:** `asm-util` **Version:** `9.10.1`
+**69** **Group:** `org.ow2.asm` **Name:** `asm-util` **Version:** `9.10.1`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)

@@ -4,10 +4,6 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
-- Stop bundling the contrib `RuleBasedRoutingSampler` in the Java agent and Spring Boot starter.
-  Migrate declarative configurations from `rule_based_routing` to the SDK incubator
-  `composite/development` `rule_based` sampler.
-  ([#20239](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20239))
 - Add the required `isRequestStreaming(REQUEST)` method to `GenAiAttributesGetter`.
   ([#19879](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19879))
 - Elasticsearch REST javaagent and 7.x library instrumentation now capture sanitized search query
@@ -21,6 +17,11 @@
 
 ### 🚫 Deprecations
 
+- Deprecate the Java agent and Spring Boot starter's bundled contrib samplers, including the
+  `rule_based_routing` declarative sampler and `linksbased_parentbased_always_on` flat sampler.
+  Both names continue to work. For rule-based routing, consider the SDK incubator
+  `composite/development` `rule_based` sampler; there is no confirmed links-based replacement.
+  ([#20239](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20239))
 - Deprecate the source-specific experimental selectors for Log4j `MapMessage` entries, Logback
   key-value pairs, Logstash markers, and Logstash structured arguments in favor of the common
   structured logging attribute selector. The source-specific properties are ignored under

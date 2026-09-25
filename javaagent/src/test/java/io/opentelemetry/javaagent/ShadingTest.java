@@ -50,29 +50,6 @@ class ShadingTest {
     assertThat(unexpectedEntries).isEmpty();
   }
 
-  @Test
-  void agentJarContainsExpectedSamplers() throws Exception {
-    String agentJarPath = getAgentJarPath();
-    assertThat(agentJarPath).isNotNull();
-
-    try (JarFile jarFile = new JarFile(agentJarPath)) {
-      assertThat(
-              jarFile.getJarEntry(
-                  "inst/io/opentelemetry/sdk/extension/incubator/trace/samplers/"
-                      + "ComposableRuleBasedSamplerBuilder.classdata"))
-          .isNotNull();
-      assertThat(
-              jarFile.getJarEntry(
-                  "inst/io/opentelemetry/contrib/sampler/RuleBasedRoutingSampler.classdata"))
-          .isNull();
-      assertThat(
-              jarFile.getJarEntry(
-                  "inst/io/opentelemetry/javaagent/shaded/instrumentation/sampler/internal/"
-                      + "LinksParentAlwaysOnSamplerProvider.classdata"))
-          .isNotNull();
-    }
-  }
-
   private static String getAgentJarPath() {
     RuntimeMXBean runtimeMxBean = ManagementFactory.getRuntimeMXBean();
     for (String arg : runtimeMxBean.getInputArguments()) {

@@ -35,3 +35,20 @@ provides.
   - Log injection of IDs (logback, log4j2, log4j)
   - Automatic context propagation across `Executor`s
   - Ability to instrument methods in the application if user adds `@WithSpan` annotation
+
+## Bundled sampler deprecations
+
+The Java agent and Spring Boot starter still bundle `io.opentelemetry.contrib:opentelemetry-samplers`.
+The following sampler names supplied by that dependency are deprecated in these distributions:
+
+- `rule_based_routing` in declarative configuration.
+- `linksbased_parentbased_always_on` with `otel.traces.sampler` or `OTEL_TRACES_SAMPLER`.
+
+Both names continue to work without configuration changes. We plan to stop bundling the dependency
+and supporting these names in 3.0. This does not deprecate the contrib library itself.
+
+For `rule_based_routing`, consider the SDK incubator's `composite/development` `rule_based`
+sampler. Its configuration and matching behavior differ; see the
+[migration example](https://github.com/open-telemetry/opentelemetry-java-contrib/issues/3099)
+before switching. There is no confirmed replacement for `linksbased_parentbased_always_on`;
+evaluate alternatives based on your sampling requirements.
