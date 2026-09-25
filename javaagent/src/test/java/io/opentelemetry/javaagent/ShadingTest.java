@@ -67,7 +67,7 @@ class ShadingTest {
           .isNull();
       assertThat(
               jarFile.getJarEntry(
-                  "inst/io/opentelemetry/instrumentation/sampler/internal/"
+                  "inst/io/opentelemetry/javaagent/shaded/instrumentation/sampler/internal/"
                       + "LinksParentAlwaysOnSamplerProvider.classdata"))
           .isNotNull();
     }

@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.sampler.internal;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
+import io.opentelemetry.sdk.trace.samplers.Sampler;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -27,7 +28,9 @@ class LinksParentAlwaysOnSamplerProviderTest {
         .addSamplerCustomizer(
             (sampler, config) -> {
               assertThat(sampler.getDescription())
-                  .isEqualTo("LinksBased{root:ParentBased{root:AlwaysOnSampler}}");
+                  .isEqualTo(
+                      new LinksBasedSampler(Sampler.parentBased(Sampler.alwaysOn()))
+                          .getDescription());
               return sampler;
             })
         .build();
