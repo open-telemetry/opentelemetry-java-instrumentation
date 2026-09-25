@@ -117,16 +117,10 @@ class TracingIterator implements Iterator<Message> {
       action.accept(message);
     } catch (Throwable t) {
       error = t;
-      throw sneakyThrow(t);
+      throw t;
     } finally {
       tracingList.getInstrumenter().end(context, request, tracingList.getResponse(), error);
     }
-  }
-
-  // The unchecked cast preserves callback failures that use a sneaky throw.
-  @SuppressWarnings({"TypeParameterUnusedInFormals", "unchecked"})
-  private static <T extends Throwable> T sneakyThrow(Throwable t) throws T {
-    throw (T) t;
   }
 
   private static boolean shouldStartProcessing(
