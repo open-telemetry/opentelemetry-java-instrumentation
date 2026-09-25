@@ -28,6 +28,12 @@ testing {
         val version = baseVersion("2.7.0").orLatest()
         implementation("org.apache.dubbo:dubbo:$version")
         implementation("org.apache.dubbo:dubbo-config-api:$version")
+        if (otelProps.testLatestDeps) {
+          implementation("com.alibaba:fastjson:2.0.65")
+          implementation("com.google.code.gson:gson:2.14.0")
+          implementation("com.fasterxml.jackson.core:jackson-databind")
+          implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+        }
       }
     }
   }

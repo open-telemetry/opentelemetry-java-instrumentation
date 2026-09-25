@@ -24,6 +24,7 @@ otelJava {
       )
     )
   )
+  maxJavaVersionSupported.set(minJavaVersionSupported)
 }
 
 tasks.withType<JavaCompile>().configureEach {
