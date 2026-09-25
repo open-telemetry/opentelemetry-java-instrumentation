@@ -1,5 +1,9 @@
 # [Config] metadata.yaml Format and Declarative Name Conversion
 
+Consult this article when editing instrumentation `metadata.yaml` or
+investigating a non-obvious flat-property to declarative-key mapping. It
+documents the schema, conversion examples, and validation for metadata edits.
+
 ## General
 
 - General enabled/disabled configs for an instrumentation module (example: `otel.instrumentation.apache-commons-pool.enabled`)
@@ -186,7 +190,7 @@ Add `examples` only for module-specific configs with non-obvious format (lists, 
     - "header1,header2,header3"
 ```
 
-## Validation Procedure
+## Checking an Edited Metadata File
 
 ### 1. Validate experimental markers match
 
@@ -210,9 +214,9 @@ If a module has a dependency on other modules (for example, a "-common" module, 
 
 Match type and default value with actual code usage.
 
-## Automated Test (MANDATORY)
+## Automated Validation After Editing Metadata
 
-**Run after any metadata.yaml changes:**
+Run after changing `metadata.yaml`:
 
 ```bash
 ./gradlew :instrumentation-docs:test --tests DeclarativeConfigValidationTest
@@ -237,12 +241,12 @@ FAIL in ../instrumentation/liberty/liberty-20.0/metadata.yaml:
 
 ## Validation Outcomes
 
-| Issue                        | Action                                  |
-| ---------------------------- | --------------------------------------- |
-| Config not used              | Flag for removal                        |
-| Default/type mismatch        | Update metadata.yaml to match code      |
-| Missing config (in code)     | Add to metadata.yaml                    |
-| Experimental marker mismatch | Fix flat and declarative names to agree |
+| Issue                        | Action                                    |
+| ---------------------------- | ----------------------------------------- |
+| Config not used              | Remove after confirming it has no readers |
+| Default/type mismatch        | Update metadata.yaml to match code        |
+| Missing config (in code)     | Add to metadata.yaml                      |
+| Experimental marker mismatch | Fix flat and declarative names to agree   |
 
 ## Output Format
 

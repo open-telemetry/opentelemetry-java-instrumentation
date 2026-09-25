@@ -1,5 +1,9 @@
 # [Testing] Spring Boot Starter Test Locations
 
+Use this article when locating or adding Spring Boot starter tests. It
+distinguishes starter coverage from javaagent smoke tests and maps the
+unit, full-stack, and declarative test locations.
+
 ## Two Separate Spring Smoke-Test Layers
 
 This repo has two unrelated things that both look like "the Spring smoke test":
@@ -14,9 +18,6 @@ This repo has two unrelated things that both look like "the Spring smoke test":
   suites), `spring-boot-common` (shared abstract test base classes and app), `spring-boot-reactive-*`
   (WebFlux variant), and `spring-smoke-testing` (shared runner/assertion infra used across all of
   the above).
-
-Before reporting a smoke-test gap for the starter, check `smoke-tests-otel-starter/` — not just
-`smoke-tests/`.
 
 ## Where Starter Tests Live, By Layer
 

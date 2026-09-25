@@ -1,5 +1,9 @@
 # [Naming] Module and Package Naming Conventions
 
+Use this article when adding or renaming an instrumentation module or
+package. It shows the directory, Gradle include, and Java package naming
+patterns for versioned and shared modules.
+
 ## Top-level instrumentation module directory
 
 - Single-version library: `instrumentation/<library>-<minimum-version>/`

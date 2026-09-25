@@ -1,5 +1,9 @@
 # [Semconv] Dual Semconv Testing
 
+Use this article when changing semconv opt-in tests or their Gradle tasks.
+It shows which modes each domain requires and how to express their
+expected attributes without hiding mode differences.
+
 ## Background: The Three Modes
 
 The system property `otel.semconv-stability.opt-in` (or env `OTEL_SEMCONV_STABILITY_OPT_IN`)

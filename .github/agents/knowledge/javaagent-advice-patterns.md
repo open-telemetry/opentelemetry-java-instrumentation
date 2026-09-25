@@ -1,5 +1,9 @@
 # [Javaagent] Advice Patterns
 
+Consult this article when implementing or changing executable Byte Buddy advice
+and its helpers. It explains advice registration, exception handling, and
+scope ownership with examples of the relevant runtime behavior.
+
 ## Advice Classes as Nested Classes
 
 Advice classes (those containing `@Advice.OnMethodEnter` / `@Advice.OnMethodExit` methods) should
@@ -58,7 +62,7 @@ Advice classes should also have **no instance fields** — they are never instan
 
 ## `Java8BytecodeBridge`
 
-When building or reviewing advice, inspect both the annotated advice bodies and every helper they
+When changing advice, inspect both the annotated advice bodies and every helper they
 call for `Java8BytecodeBridge` usage.
 
 Use the bridge only for supported OpenTelemetry API calls written directly in
@@ -137,8 +141,8 @@ Keep `suppress = Throwable.class` in both cases — it is always required.
 - **Test code** (`testing-common/`, test sources): Not production instrumentation — suppress
   is not required.
 
-When reviewing, **do not flag** these patterns. Focus on advice methods with non-trivial
-bodies (library calls, collection iteration, reflection) that are missing `suppress`.
+These exceptions do not need `suppress`. For methods with non-trivial bodies
+(library calls, collection iteration, reflection), retain it.
 
 ### When omitting `suppress` is also acceptable — provably throw-free bodies
 
@@ -162,14 +166,13 @@ public static OpenTelemetry methodExit() {
 }
 ```
 
-**Do not add `suppress = Throwable.class`** when writing or reviewing such trivially-safe advice
-methods. Equally, **do not flag the absence of `suppress`** on these methods as a review issue.
+Do not add `suppress = Throwable.class` to such trivially safe advice methods.
 
 ### Helper-injection-only advice (`none()` selector) — `suppress` is meaningless
 
 Some instrumentations use a "dummy" advice class solely to force helper class injection.
 The `transform()` call uses `none()` as the method matcher, so the advice **never runs**. Check
-for this registration pattern before adding or flagging missing `suppress = Throwable.class`:
+for this registration pattern before adding `suppress = Throwable.class`:
 
 ```java
 @Override
@@ -189,9 +192,8 @@ public static class InitAdvice {
 ```
 
 Because `none()` matches no methods, ByteBuddy never inlines this advice into anything.
-`suppress = Throwable.class` on such a method is entirely meaningless — **do not add it**,
-**remove it when found**, and **do not flag its absence** during review, even if the advice body
-contains a helper call.
+`suppress = Throwable.class` on such a method is meaningless. Remove it if
+present, and leave it out even if the advice body contains a helper call.
 
 ## AdviceScope Patterns
 
@@ -237,7 +239,7 @@ dedicated `AdviceScope` remains valid when it clearly owns both acquisition and 
 established `start()` / `end()` pattern below.
 
 `AdviceScope` usage in this repository falls into **two justified state patterns**.
-Review new code against these patterns instead of treating every existing variation as equally
+Use these patterns for new advice instead of treating every existing variation as equally
 canonical.
 
 ### Close `Scope` before fallible completion work

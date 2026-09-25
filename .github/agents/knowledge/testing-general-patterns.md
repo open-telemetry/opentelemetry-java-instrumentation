@@ -1,5 +1,9 @@
 # [Testing] General Test Patterns
 
+Consult this article when changing test structure, assertions, resource
+cleanup, or mode-dependent expectations. It gives the setup and API details
+behind the shorter Java test instructions.
+
 ## Javaagent integration coverage versus unit coverage
 
 Unit suites and legacy `javaagent-unit-tests` projects exercise helper or instrumentation classes

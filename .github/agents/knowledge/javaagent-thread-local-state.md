@@ -1,5 +1,9 @@
 # [Javaagent] Temporary ThreadLocal State
 
+Use this article when adding or changing temporary per-operation thread
+state in javaagent advice. It explains when to restore a previous value,
+release suppression, or leave a longer-lived holder alone.
+
 ## Match cleanup to the lifecycle
 
 Trace every writer, reader, and cleanup point. Thread confinement does not prevent recursion,
@@ -76,7 +80,7 @@ public static void onExit(@Advice.Enter boolean acquired) {
 Use `isActive()` when code only needs to check whether suppression is active. A nested caller that
 received `false` from `tryAcquire()` must not release suppression owned by an outer caller.
 
-The review invariant must be visible in each advice pair. The previous value or acquisition result
+The lifecycle invariant must be visible in each advice pair. The previous value or acquisition result
 flows from entry advice through `@Advice.Enter`, and exit advice uses
 `onThrowable = Throwable.class` to perform the matching `restore` or conditional `release`.
 

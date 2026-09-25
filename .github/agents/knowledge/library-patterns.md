@@ -1,5 +1,9 @@
 # [Library] TelemetryBuilder and Getter Patterns
 
+Use this article when creating or changing a published library
+instrumentation entry point. It shows when a `*Telemetry` factory needs a
+builder and how its methods and getters fit together.
+
 ## How `{Library}Telemetry` Instances Are Created
 
 Library instrumentations expose a `{Library}Telemetry` class as the user-facing entry point.

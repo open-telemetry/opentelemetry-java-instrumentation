@@ -1,5 +1,9 @@
 # [Javaagent] Virtual Fields
 
+Use this article when choosing storage for state associated with a
+third-party object. It distinguishes attached state from caches and weak
+links, then covers carrier selection, lookup placement, and cleanup.
+
 ## Prefer `VirtualField` for State Attached to Library Objects
 
 Use `VirtualField<T, F>` when javaagent instrumentation needs to attach instrumentation-owned state

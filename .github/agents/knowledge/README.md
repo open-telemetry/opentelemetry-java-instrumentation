@@ -1,14 +1,18 @@
 # Knowledge Index
 
-Detailed repository guidance for coding agents and for investigating a review
-question. GitHub Copilot code review's applicable rules are in
+These articles explain repository behavior, implementation steps, examples, and
+exceptions for coding agents or a specific investigation. GitHub Copilot code
+review's applicable rules are in
 `.github/copilot-instructions.md` and `.github/instructions/*.instructions.md`;
 review quality must not depend on following links from those instructions to
 these articles.
 
-Load only articles relevant to the current investigation. If an article and
-an applicable native instruction differ on review policy, use the native
-instruction; update the stale article separately.
+Load only articles relevant to the current change or investigation; a coding
+workflow may require one when its technical detail is needed. Keep reportable
+review rules and their exceptions in the native instructions rather than
+repeating them as "what to flag" lists here. If an article and an applicable
+native instruction differ on review policy, use the native instruction and
+update the stale article separately.
 
 ## Topics
 

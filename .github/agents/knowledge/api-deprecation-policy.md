@@ -1,5 +1,9 @@
 # [API] Breaking Changes and Deprecation Policy
 
+Use this article when changing a published API or renaming a module. It
+explains how artifact stability sets removal timing and how to preserve
+configuration aliases and telemetry identity during migration.
+
 ## What Counts as "Public API"
 
 "API" here means **anything a user's code or configuration depends on by name**, including:

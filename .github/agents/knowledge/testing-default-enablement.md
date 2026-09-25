@@ -1,5 +1,9 @@
 # [Testing] Default instrumentation enablement
 
+Use this article when testing instrumentation that is disabled by default
+or becomes disabled in v3-preview. The examples run one operation in
+enabled and disabled JVMs and verify its observable telemetry.
+
 ## Test observable behavior
 
 Test enablement through the installed Java agent and a representative library operation. Do not

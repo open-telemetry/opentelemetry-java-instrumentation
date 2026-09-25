@@ -1,5 +1,9 @@
 # [Config] Configuration Property Stability and Breaking Changes
 
+Use this article when adding, renaming, or deprecating a user-facing flat
+property or declarative key. It explains the bridge between the two forms,
+their different stability rules, and the migration behavior.
+
 ## How Configuration Is Read
 
 Instrumentation code reads configuration through the **declarative config API**

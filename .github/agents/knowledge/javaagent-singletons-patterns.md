@@ -1,5 +1,9 @@
 # [Javaagent] Singletons Patterns
 
+Consult this article when creating a holder for javaagent collaborators or
+changing its accessors and callers. The examples distinguish stored
+collaborators from constants and methods that compute values.
+
 Javaagent modules keep shared `Instrumenter` instances and related collaborators in a dedicated
 `Singletons` holder class such as `MyLibrarySingletons`. Some modules also use focused helper
 holders such as `*ServerSpanNaming` for shared span-name or route-name collaborators; apply the
@@ -48,7 +52,7 @@ same accessor and call-site rules when these classes expose stored singleton fie
   rule.
 - Methods on a `*Singletons` class that take arguments (for example `addressAndPort(client)` or
   `getAddressAndPort(client)`) are not singleton accessors. Do not apply the field-style
-  accessor naming rule to them, and do not flag their `get*` prefix on that basis.
+  accessor naming rule to them; retain their `get*` prefix when appropriate.
 
 ## Preferred Pattern
 

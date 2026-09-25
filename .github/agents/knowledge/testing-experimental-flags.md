@@ -1,5 +1,9 @@
 # [Testing] Experimental Feature Flag Tests
 
+Consult this article when adding experimental-attribute coverage or moving a
+flag out of the default test task. It shows how to wire `testExperimental` and
+assert both flag modes.
+
 ## What `testExperimental` Is For
 
 Some instrumentation modules support extra attributes that are disabled by default because they

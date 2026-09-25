@@ -1,9 +1,9 @@
 # Java nullability and attribute overloads
 
-The upstream OpenTelemetry SDK declares nullable carrier parameters on some
-propagation interfaces. Those declarations are not visible in this repository,
-so check the upstream contract when changing an implementation's annotations
-or carrier handling:
+Use the upstream carrier contracts here when changing a propagation
+implementation's annotations or carrier handling, and the overload examples
+below when simplifying an attribute setter's null guard. The SDK's nullable
+carrier declarations are not visible in this repository:
 
 | Interface                 | Method                          | Nullable parameter |
 | ------------------------- | ------------------------------- | ------------------ |
