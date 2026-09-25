@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.jmx.rules.kafka;
 
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attribute;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
+import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
@@ -76,6 +77,10 @@ class KafkaBrokerTest extends TargetSystemTest {
         attributeGroup(attribute("type", "FetchConsumer"));
     AttributeMatcherGroup requestTypeFetchFollower =
         attributeGroup(attribute("type", "FetchFollower"));
+    AttributeMatcherGroup isrExpand = attributeGroup(attribute("operation", "expand"));
+    AttributeMatcherGroup isrShrink = attributeGroup(attribute("operation", "shrink"));
+    AttributeMatcherGroup directionIn = attributeGroup(attribute("direction", "in"));
+    AttributeMatcherGroup directionOut = attributeGroup(attribute("direction", "out"));
 
     MetricsVerifier verifier =
         MetricsVerifier.create()
@@ -236,7 +241,164 @@ class KafkaBrokerTest extends TargetSystemTest {
                         .isGauge()
                         .hasUnit("ms")
                         .hasDescription("Log flush time - 99th percentile")
-                        .hasDataPointsWithoutAttributes());
+                        .hasDataPointsWithoutAttributes())
+            .add(
+                "kafka.leader.count",
+                metric ->
+                    metric
+                        .isGauge()
+                        .hasUnit("{leader}")
+                        .hasDescription("The number of leaders assigned to the broker.")
+                        .hasDataPointsWithoutAttributes())
+            .add(
+                "kafka.isr.operation.rate.1m",
+                metric ->
+                    metric
+                        .isGauge()
+                        .hasUnit("{operation}/s")
+                        .hasDescription("The one-minute rate of ISR expand and shrink operations.")
+                        .hasDataPointsWithAttributes(isrExpand, isrShrink))
+            .add(
+                "kafka.isr.operation.rate.5m",
+                metric ->
+                    metric
+                        .isGauge()
+                        .hasUnit("{operation}/s")
+                        .hasDescription("The five-minute rate of ISR expand and shrink operations.")
+                        .hasDataPointsWithAttributes(isrExpand, isrShrink))
+            .add(
+                "kafka.isr.operation.rate.15m",
+                metric ->
+                    metric
+                        .isGauge()
+                        .hasUnit("{operation}/s")
+                        .hasDescription(
+                            "The fifteen-minute rate of ISR expand and shrink operations.")
+                        .hasDataPointsWithAttributes(isrExpand, isrShrink))
+            .add(
+                "kafka.isr.operation.rate.mean",
+                metric ->
+                    metric
+                        .isGauge()
+                        .hasUnit("{operation}/s")
+                        .hasDescription("The mean rate of ISR expand and shrink operations.")
+                        .hasDataPointsWithAttributes(isrExpand, isrShrink))
+            .add(
+                "kafka.network.io.rate.1m",
+                metric ->
+                    metric
+                        .isGauge()
+                        .hasUnit("By/s")
+                        .hasDescription("The one-minute inbound or outbound byte rate.")
+                        .hasDataPointsWithAttributes(directionIn, directionOut))
+            .add(
+                "kafka.network.io.rate.5m",
+                metric ->
+                    metric
+                        .isGauge()
+                        .hasUnit("By/s")
+                        .hasDescription("The five-minute inbound or outbound byte rate.")
+                        .hasDataPointsWithAttributes(directionIn, directionOut))
+            .add(
+                "kafka.network.io.rate.15m",
+                metric ->
+                    metric
+                        .isGauge()
+                        .hasUnit("By/s")
+                        .hasDescription("The fifteen-minute inbound or outbound byte rate.")
+                        .hasDataPointsWithAttributes(directionIn, directionOut))
+            .add(
+                "kafka.network.io.rate.mean",
+                metric ->
+                    metric
+                        .isGauge()
+                        .hasUnit("By/s")
+                        .hasDescription("The mean inbound or outbound byte rate.")
+                        .hasDataPointsWithAttributes(directionIn, directionOut))
+            .add(
+                "kafka.request.total.time.p99",
+                metric ->
+                    metric
+                        .isGauge()
+                        .hasUnit("s")
+                        .hasDescription("The 99th percentile total request time.")
+                        .hasDataPointsWithOneAttribute(attributeWithAnyValue("type")))
+            .add(
+                "kafka.request.queue.time.p99",
+                metric ->
+                    metric
+                        .isGauge()
+                        .hasUnit("s")
+                        .hasDescription(
+                            "The 99th percentile time requests spend queued before processing.")
+                        .hasDataPointsWithOneAttribute(attributeWithAnyValue("type")))
+            .add(
+                "kafka.request.local.time.p99",
+                metric ->
+                    metric
+                        .isGauge()
+                        .hasUnit("s")
+                        .hasDescription("The 99th percentile local processing time for requests.")
+                        .hasDataPointsWithOneAttribute(attributeWithAnyValue("type")))
+            .add(
+                "kafka.request.remote.time.p99",
+                metric ->
+                    metric
+                        .isGauge()
+                        .hasUnit("s")
+                        .hasDescription("The 99th percentile remote processing time for requests.")
+                        .hasDataPointsWithOneAttribute(attributeWithAnyValue("type")))
+            .add(
+                "kafka.request.response.queue.time.p99",
+                metric ->
+                    metric
+                        .isGauge()
+                        .hasUnit("s")
+                        .hasDescription(
+                            "The 99th percentile time responses spend queued before send.")
+                        .hasDataPointsWithOneAttribute(attributeWithAnyValue("type")))
+            .add(
+                "kafka.request.response.send.time.p99",
+                metric ->
+                    metric
+                        .isGauge()
+                        .hasUnit("s")
+                        .hasDescription("The 99th percentile response send time.")
+                        .hasDataPointsWithOneAttribute(attributeWithAnyValue("type")))
+            .add(
+                "kafka.network.processor.idle.average",
+                metric ->
+                    metric
+                        .isGauge()
+                        .hasUnit("1")
+                        .hasDescription("The average fraction of time network processors are idle.")
+                        .hasDataPointsWithoutAttributes())
+            .add(
+                "kafka.request.handler.idle.mean",
+                metric ->
+                    metric
+                        .isGauge()
+                        .hasUnit("1")
+                        .hasDescription("The mean fraction of time request handlers are idle.")
+                        .hasDataPointsWithoutAttributes())
+            .add(
+                "kafka.request.handler.idle.1m",
+                metric ->
+                    metric
+                        .isGauge()
+                        .hasUnit("1")
+                        .hasDescription(
+                            "The one-minute fraction of time request handlers are idle.")
+                        .hasDataPointsWithoutAttributes())
+            .add(
+                "kafka.network.processor.idle.utilization",
+                metric ->
+                    metric
+                        .isGauge()
+                        .hasUnit("1")
+                        .hasDescription("The idle fraction of an individual network processor.")
+                        .hasDataPointsWithOneAttribute(
+                            attributeWithAnyValue("kafka.network.processor.id")));
 
     if (useZookeeper) {
       // those metrics are only reported when using zookeeper

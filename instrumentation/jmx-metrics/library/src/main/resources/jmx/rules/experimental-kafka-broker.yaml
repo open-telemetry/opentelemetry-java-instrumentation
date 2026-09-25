@@ -202,3 +202,227 @@ rules:
       99thPercentile:
         metric: time.99p
         desc: Log flush time - 99th percentile
+
+  # Additional broker metrics
+
+  - bean: kafka.server:type=ReplicaManager,name=LeaderCount
+    mapping:
+      Value:
+        metric: kafka.leader.count
+        type: gauge
+        unit: "{leader}"
+        desc: The number of leaders assigned to the broker.
+
+  - bean: kafka.server:type=ReplicaManager,name=IsrExpandsPerSec
+    metricAttribute:
+      operation: const(expand)
+    prefix: kafka.isr.operation.
+    mapping:
+      OneMinuteRate:
+        metric: rate.1m
+        type: gauge
+        unit: "{operation}/s"
+        desc: The one-minute rate of ISR expand and shrink operations.
+      FiveMinuteRate:
+        metric: rate.5m
+        type: gauge
+        unit: "{operation}/s"
+        desc: The five-minute rate of ISR expand and shrink operations.
+      FifteenMinuteRate:
+        metric: rate.15m
+        type: gauge
+        unit: "{operation}/s"
+        desc: The fifteen-minute rate of ISR expand and shrink operations.
+      MeanRate:
+        metric: rate.mean
+        type: gauge
+        unit: "{operation}/s"
+        desc: The mean rate of ISR expand and shrink operations.
+
+  - bean: kafka.server:type=ReplicaManager,name=IsrShrinksPerSec
+    metricAttribute:
+      operation: const(shrink)
+    prefix: kafka.isr.operation.
+    mapping:
+      OneMinuteRate:
+        metric: rate.1m
+        type: gauge
+        unit: "{operation}/s"
+        desc: The one-minute rate of ISR expand and shrink operations.
+      FiveMinuteRate:
+        metric: rate.5m
+        type: gauge
+        unit: "{operation}/s"
+        desc: The five-minute rate of ISR expand and shrink operations.
+      FifteenMinuteRate:
+        metric: rate.15m
+        type: gauge
+        unit: "{operation}/s"
+        desc: The fifteen-minute rate of ISR expand and shrink operations.
+      MeanRate:
+        metric: rate.mean
+        type: gauge
+        unit: "{operation}/s"
+        desc: The mean rate of ISR expand and shrink operations.
+
+  - bean: kafka.server:type=BrokerTopicMetrics,name=BytesInPerSec
+    metricAttribute:
+      direction: const(in)
+    prefix: kafka.network.io.
+    mapping:
+      OneMinuteRate:
+        metric: rate.1m
+        type: gauge
+        unit: By/s
+        desc: The one-minute inbound or outbound byte rate.
+      FiveMinuteRate:
+        metric: rate.5m
+        type: gauge
+        unit: By/s
+        desc: The five-minute inbound or outbound byte rate.
+      FifteenMinuteRate:
+        metric: rate.15m
+        type: gauge
+        unit: By/s
+        desc: The fifteen-minute inbound or outbound byte rate.
+      MeanRate:
+        metric: rate.mean
+        type: gauge
+        unit: By/s
+        desc: The mean inbound or outbound byte rate.
+
+  - bean: kafka.server:type=BrokerTopicMetrics,name=BytesOutPerSec
+    metricAttribute:
+      direction: const(out)
+    prefix: kafka.network.io.
+    mapping:
+      OneMinuteRate:
+        metric: rate.1m
+        type: gauge
+        unit: By/s
+        desc: The one-minute inbound or outbound byte rate.
+      FiveMinuteRate:
+        metric: rate.5m
+        type: gauge
+        unit: By/s
+        desc: The five-minute inbound or outbound byte rate.
+      FifteenMinuteRate:
+        metric: rate.15m
+        type: gauge
+        unit: By/s
+        desc: The fifteen-minute inbound or outbound byte rate.
+      MeanRate:
+        metric: rate.mean
+        type: gauge
+        unit: By/s
+        desc: The mean inbound or outbound byte rate.
+
+  # The existing target reports total request time for the primary
+  # Produce/Fetch request types. These rules add the 99th percentile for every
+  # request type exposed by Kafka without redefining that existing metric.
+
+  - bean: kafka.network:type=RequestMetrics,name=TotalTimeMs,*
+    metricAttribute:
+      type: param(request)
+    prefix: kafka.request.total.time.
+    mapping:
+      99thPercentile:
+        metric: p99
+        type: gauge
+        sourceUnit: ms
+        unit: s
+        desc: The 99th percentile total request time.
+
+  - bean: kafka.network:type=RequestMetrics,name=RequestQueueTimeMs,*
+    metricAttribute:
+      type: param(request)
+    prefix: kafka.request.queue.time.
+    mapping:
+      99thPercentile:
+        metric: p99
+        type: gauge
+        sourceUnit: ms
+        unit: s
+        desc: The 99th percentile time requests spend queued before processing.
+
+  - bean: kafka.network:type=RequestMetrics,name=LocalTimeMs,*
+    metricAttribute:
+      type: param(request)
+    prefix: kafka.request.local.time.
+    mapping:
+      99thPercentile:
+        metric: p99
+        type: gauge
+        sourceUnit: ms
+        unit: s
+        desc: The 99th percentile local processing time for requests.
+
+  - bean: kafka.network:type=RequestMetrics,name=RemoteTimeMs,*
+    metricAttribute:
+      type: param(request)
+    prefix: kafka.request.remote.time.
+    mapping:
+      99thPercentile:
+        metric: p99
+        type: gauge
+        sourceUnit: ms
+        unit: s
+        desc: The 99th percentile remote processing time for requests.
+
+  - bean: kafka.network:type=RequestMetrics,name=ResponseQueueTimeMs,*
+    metricAttribute:
+      type: param(request)
+    prefix: kafka.request.response.queue.time.
+    mapping:
+      99thPercentile:
+        metric: p99
+        type: gauge
+        sourceUnit: ms
+        unit: s
+        desc: The 99th percentile time responses spend queued before send.
+
+  - bean: kafka.network:type=RequestMetrics,name=ResponseSendTimeMs,*
+    metricAttribute:
+      type: param(request)
+    prefix: kafka.request.response.send.time.
+    mapping:
+      99thPercentile:
+        metric: p99
+        type: gauge
+        sourceUnit: ms
+        unit: s
+        desc: The 99th percentile response send time.
+
+  - bean: kafka.network:type=SocketServer,name=NetworkProcessorAvgIdlePercent
+    mapping:
+      Value:
+        metric: kafka.network.processor.idle.average
+        type: gauge
+        unit: "1"
+        desc: The average fraction of time network processors are idle.
+
+  # Kafka exposes these idle measurements as fractions from 0 to 1 through
+  # Meter rate attributes, despite the Percent suffix in the MBean name.
+  - bean: kafka.server:type=KafkaRequestHandlerPool,name=RequestHandlerAvgIdlePercent
+    prefix: kafka.request.handler.idle.
+    mapping:
+      MeanRate:
+        metric: mean
+        type: gauge
+        unit: "1"
+        desc: The mean fraction of time request handlers are idle.
+      OneMinuteRate:
+        metric: 1m
+        type: gauge
+        unit: "1"
+        desc: The one-minute fraction of time request handlers are idle.
+
+  - bean: kafka.network:type=Processor,name=IdlePercent,*
+    metricAttribute:
+      kafka.network.processor.id: param(networkProcessor)
+    mapping:
+      Value:
+        metric: kafka.network.processor.idle.utilization
+        type: gauge
+        unit: "1"
+        desc: The idle fraction of an individual network processor.
