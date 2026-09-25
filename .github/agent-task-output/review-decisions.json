@@ -1,0 +1,20 @@
+{
+  "decisions": [
+    {
+      "disposition": "fixed",
+      "finding_id": "finding-a1c5c063c1d326c61dcb9416"
+    },
+    {
+      "disposition": "fixed",
+      "finding_id": "finding-387ed55aa3db6cad14ca3acc"
+    },
+    {
+      "disposition": "fixed",
+      "finding_id": "finding-bfee67c9570201e711b70369"
+    }
+  ],
+  "schema": {
+    "id": "github.copilot.copilot-review-loop-decision-report",
+    "version": 3
+  }
+}
