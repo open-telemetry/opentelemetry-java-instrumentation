@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
 class KafkaConsumerBatchStateTest {
 
   @Test
-  void shouldTraceUnclaimedApplicationPoll() {
+  void shouldTraceApplicationPoll() {
     ConsumerRecords<String, String> records = records();
     KafkaProcessingOwnershipUtil.recordPoll(records, true);
 
@@ -71,18 +71,6 @@ class KafkaConsumerBatchStateTest {
             KafkaProcessingOwnershipUtil.rawProcessingEligibility(records, () -> false)
                 .getAsBoolean())
         .isFalse();
-  }
-
-  @Test
-  void newPollRestoresFirstTraversalForReusedBatch() {
-    ConsumerRecords<String, String> records = records();
-    KafkaProcessingOwnershipUtil.recordPoll(records, true);
-
-    assertThat(KafkaProcessingOwnershipUtil.claimFirstTraversal(records)).isTrue();
-    assertThat(KafkaProcessingOwnershipUtil.claimFirstTraversal(records)).isFalse();
-
-    KafkaProcessingOwnershipUtil.recordPoll(records, true);
-    assertThat(KafkaProcessingOwnershipUtil.claimFirstTraversal(records)).isTrue();
   }
 
   private static ConsumerRecords<String, String> records() {

@@ -9,7 +9,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.Collection;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BooleanSupplier;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
@@ -24,9 +23,8 @@ public class TracingList<K, V> extends TracingIterable<K, V> implements List<Con
       List<ConsumerRecord<K, V>> delegate,
       Instrumenter<KafkaProcessRequest, Void> instrumenter,
       BooleanSupplier wrappingEnabled,
-      KafkaConsumerContext consumerContext,
-      BooleanSupplier firstTraversal) {
-    super(delegate, instrumenter, wrappingEnabled, consumerContext, firstTraversal);
+      KafkaConsumerContext consumerContext) {
+    super(delegate, instrumenter, wrappingEnabled, consumerContext);
     this.delegate = delegate;
   }
 
@@ -38,23 +36,7 @@ public class TracingList<K, V> extends TracingIterable<K, V> implements List<Con
     if (!wrappingEnabled.getAsBoolean()) {
       return delegate;
     }
-    AtomicBoolean traversalClaimed = new AtomicBoolean();
-    return wrap(
-        delegate,
-        instrumenter,
-        wrappingEnabled,
-        consumerContext,
-        () -> traversalClaimed.compareAndSet(false, true));
-  }
-
-  public static <K, V> List<ConsumerRecord<K, V>> wrap(
-      List<ConsumerRecord<K, V>> delegate,
-      Instrumenter<KafkaProcessRequest, Void> instrumenter,
-      BooleanSupplier wrappingEnabled,
-      KafkaConsumerContext consumerContext,
-      BooleanSupplier firstTraversal) {
-    return new TracingList<>(
-        delegate, instrumenter, wrappingEnabled, consumerContext, firstTraversal);
+    return new TracingList<>(delegate, instrumenter, wrappingEnabled, consumerContext);
   }
 
   @Override
@@ -156,26 +138,18 @@ public class TracingList<K, V> extends TracingIterable<K, V> implements List<Con
   @Override
   public ListIterator<ConsumerRecord<K, V>> listIterator() {
     ListIterator<ConsumerRecord<K, V>> iterator = delegate.listIterator();
-    return firstTraversal.getAsBoolean()
-        ? TracingListIterator.wrap(iterator, instrumenter, wrappingEnabled, consumerContext)
-        : iterator;
+    return TracingListIterator.wrap(iterator, instrumenter, wrappingEnabled, consumerContext);
   }
 
   @Override
   public ListIterator<ConsumerRecord<K, V>> listIterator(int index) {
     ListIterator<ConsumerRecord<K, V>> iterator = delegate.listIterator(index);
-    return firstTraversal.getAsBoolean()
-        ? TracingListIterator.wrap(iterator, instrumenter, wrappingEnabled, consumerContext)
-        : iterator;
+    return TracingListIterator.wrap(iterator, instrumenter, wrappingEnabled, consumerContext);
   }
 
   @Override
   public List<ConsumerRecord<K, V>> subList(int fromIndex, int toIndex) {
     return new TracingList<>(
-        delegate.subList(fromIndex, toIndex),
-        instrumenter,
-        wrappingEnabled,
-        consumerContext,
-        firstTraversal);
+        delegate.subList(fromIndex, toIndex), instrumenter, wrappingEnabled, consumerContext);
   }
 }
