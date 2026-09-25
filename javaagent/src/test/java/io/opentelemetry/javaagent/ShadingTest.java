@@ -51,7 +51,7 @@ class ShadingTest {
   }
 
   @Test
-  void agentJarContainsComposableRuleBasedSamplerOnly() throws Exception {
+  void agentJarContainsExpectedSamplers() throws Exception {
     String agentJarPath = getAgentJarPath();
     assertThat(agentJarPath).isNotNull();
 
@@ -65,6 +65,11 @@ class ShadingTest {
               jarFile.getJarEntry(
                   "inst/io/opentelemetry/contrib/sampler/RuleBasedRoutingSampler.classdata"))
           .isNull();
+      assertThat(
+              jarFile.getJarEntry(
+                  "inst/io/opentelemetry/instrumentation/sampler/internal/"
+                      + "LinksParentAlwaysOnSamplerProvider.classdata"))
+          .isNotNull();
     }
   }
 
