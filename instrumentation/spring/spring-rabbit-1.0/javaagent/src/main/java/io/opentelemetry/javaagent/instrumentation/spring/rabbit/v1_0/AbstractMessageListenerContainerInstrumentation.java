@@ -105,11 +105,8 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
       }
 
       public void end(@Nullable Throwable throwable) {
-        try {
-          scope.close();
-        } finally {
-          request.restoreProcessingContext(context);
-        }
+        scope.close();
+        request.restoreProcessingContext(context);
         instrumenter()
             .end(context, request, null, SpringRabbitErrorHolder.getOrDefault(context, throwable));
       }
