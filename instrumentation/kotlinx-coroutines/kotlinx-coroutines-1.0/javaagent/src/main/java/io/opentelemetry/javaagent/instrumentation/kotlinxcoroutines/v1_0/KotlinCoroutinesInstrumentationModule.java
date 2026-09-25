@@ -16,7 +16,7 @@ import java.util.List;
 public class KotlinCoroutinesInstrumentationModule extends InstrumentationModule {
 
   public KotlinCoroutinesInstrumentationModule() {
-    super("kotlinx-coroutines", "kotlinx-coroutines-1.0");
+    super("kotlinx-coroutines", "kotlinx-coroutines-1.0", "kotlinx-coroutines-1.0-core");
   }
 
   @Override
