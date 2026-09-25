@@ -1038,6 +1038,9 @@ targets:
       target: ':instrumentation:spring:spring-cloud-aws-3.0:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:spring:spring-cloud-gcp-5.0:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:spring:spring-core-2.0:javaagent'
     - type: gradle
       path: ./
