@@ -16,6 +16,7 @@ muzzle {
     versions.set("[1.7.0,)")
     assertInverse.set(true)
     excludeInstrumentationName("ratpack-1.4")
+    excludeInstrumentationName("netty-4.1")
   }
 }
 
