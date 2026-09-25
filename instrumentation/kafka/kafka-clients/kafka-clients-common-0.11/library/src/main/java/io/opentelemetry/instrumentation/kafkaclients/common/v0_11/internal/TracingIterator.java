@@ -5,12 +5,15 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
+import static java.util.Objects.requireNonNull;
+
 import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.Iterator;
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
@@ -34,7 +37,7 @@ public class TracingIterator<K, V> implements Iterator<ConsumerRecord<K, V>> {
   @Nullable private Context currentContext;
   @Nullable private Scope currentScope;
 
-  private TracingIterator(
+  TracingIterator(
       Iterator<ConsumerRecord<K, V>> delegateIterator,
       Instrumenter<KafkaProcessRequest, Void> instrumenter,
       BooleanSupplier wrappingEnabled,
@@ -98,10 +101,29 @@ public class TracingIterator<K, V> implements Iterator<ConsumerRecord<K, V>> {
     return next;
   }
 
-  private void closeScopeAndEndSpan() {
+  @Override
+  public void forEachRemaining(Consumer<? super ConsumerRecord<K, V>> action) {
+    requireNonNull(action);
+    while (hasNext()) {
+      ConsumerRecord<K, V> record = next();
+      try {
+        action.accept(record);
+      } catch (Throwable t) {
+        closeScopeAndEndSpan(t);
+        throw t;
+      }
+      closeScopeAndEndSpan();
+    }
+  }
+
+  void closeScopeAndEndSpan() {
+    closeScopeAndEndSpan(null);
+  }
+
+  void closeScopeAndEndSpan(@Nullable Throwable error) {
     if (currentScope != null) {
       currentScope.close();
-      instrumenter.end(currentContext, currentRequest, null, null);
+      instrumenter.end(currentContext, currentRequest, null, error);
       currentScope = null;
       currentRequest = null;
       currentContext = null;
