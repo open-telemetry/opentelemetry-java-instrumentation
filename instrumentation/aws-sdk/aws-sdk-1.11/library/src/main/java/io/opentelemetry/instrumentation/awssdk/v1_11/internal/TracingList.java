@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Objects;
 import java.util.Spliterator;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
@@ -36,7 +35,6 @@ class TracingList extends SdkInternalList<Message> {
   private final transient Response<?> response;
   @Nullable private final transient Context processParentContext;
   private final transient ProcessingOwnership processingOwnership = new ProcessingOwnership();
-  private final transient AtomicBoolean firstTraversal = new AtomicBoolean(true);
 
   static SdkInternalList<Message> wrap(
       List<Message> messages,
@@ -73,9 +71,7 @@ class TracingList extends SdkInternalList<Message> {
   @Override
   public ListIterator<Message> listIterator(int index) {
     ListIterator<Message> iterator = super.listIterator(index);
-    return !claimFirstTraversal()
-        ? iterator
-        : TracingIterator.wrap(iterator, this, processingOwnership);
+    return inAwsClient() ? iterator : TracingIterator.wrap(iterator, this, processingOwnership);
   }
 
   @Override
@@ -86,7 +82,7 @@ class TracingList extends SdkInternalList<Message> {
   @Override
   public Spliterator<Message> spliterator() {
     Spliterator<Message> spliterator = super.spliterator();
-    return !claimFirstTraversal()
+    return inAwsClient()
         ? spliterator
         : new TracingSpliterator(spliterator, this, processingOwnership);
   }
@@ -170,10 +166,6 @@ class TracingList extends SdkInternalList<Message> {
       }
     }
     return false;
-  }
-
-  private boolean claimFirstTraversal() {
-    return !inAwsClient() && firstTraversal.getAndSet(false);
   }
 
   private Object writeReplace() {
@@ -324,7 +316,7 @@ class TracingList extends SdkInternalList<Message> {
     @Override
     public ListIterator<Message> listIterator(int index) {
       ListIterator<Message> iterator = delegate.listIterator(index);
-      return !tracingList.claimFirstTraversal()
+      return inAwsClient()
           ? iterator
           : TracingIterator.wrap(iterator, tracingList, processingOwnership);
     }
@@ -342,7 +334,7 @@ class TracingList extends SdkInternalList<Message> {
     @Override
     public Spliterator<Message> spliterator() {
       Spliterator<Message> spliterator = delegate.spliterator();
-      return !tracingList.claimFirstTraversal()
+      return inAwsClient()
           ? spliterator
           : new TracingSpliterator(spliterator, tracingList, processingOwnership);
     }
