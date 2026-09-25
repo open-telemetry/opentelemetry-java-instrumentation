@@ -45,6 +45,7 @@ sourceSets {
 
 tasks.compileJava {
   dependsOn(generateThriftSources)
+  options.compilerArgs.add("-Xlint:-dangling-doc-comments")
 }
 
 tasks.sourcesJar {
