@@ -1,0 +1,1 @@
+Make Copilot code review instructions self-contained
