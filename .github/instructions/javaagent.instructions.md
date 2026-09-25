@@ -1,5 +1,5 @@
 ---
-applyTo: "instrumentation/**/javaagent/**/*.java,instrumentation/**/bootstrap/**/*.java,javaagent/**/*.java,javaagent-bootstrap/**/*.java,javaagent-tooling/**/*.java,examples/**/instrumentation/**/*.java,smoke-tests/extensions/extension/**/*.java"
+applyTo: "instrumentation/**/javaagent/**/*.java,instrumentation/**/bootstrap/**/*.java,instrumentation/**/javaagent-integration-tests/**/*.java,javaagent/**/*.java,javaagent-bootstrap/**/*.java,javaagent-tooling/**/*.java,examples/**/instrumentation/**/*.java,smoke-tests/extensions/extension/**/*.java,testing/agent-exporter/**/*.java,testing-common/integration-tests/**/*.java"
 ---
 
 # Javaagent instrumentation
@@ -24,8 +24,9 @@ library lifecycle before deciding whether an exception applies.
   release it, preferably before fallible completion work. Return-only advice that processes
   `@Advice.Return` without cleanup should omit `onThrowable = Throwable.class`; on an
   exceptional exit the return value is null or zero.
-- Keep advice as static nested classes with static methods. In `transform()`, reference
-  nested advice by `getClass().getName() + "$AdviceName"`; resolving
+- Keep advice as static nested classes with no instance fields and static methods. Every advice
+  class needs class-level `@SuppressWarnings("unused")`. In `transform()`, reference nested
+  advice by `getClass().getName() + "$AdviceName"`; resolving
   `InnerAdvice.class` or a library class literal from the agent loader can cause premature
   class loading. Do not name an exit advice method `onEnter` or vice versa. Method
   signature matchers may use accessible `java.base` types available at the minimum

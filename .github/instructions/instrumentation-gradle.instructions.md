@@ -34,6 +34,10 @@ or test failure that CI will report.
   variant of a custom `JvmTestSuite`, preserve source-suite JVM settings and create a variant
   only for suites exercising that behavior. A filtered test task copied to an irrelevant
   suite can select no tests.
+- Keep the baseline dependency in `library(...)`. Adding `testLibrary(...)` for a newer version
+  of the same coordinate does not test both versions: Gradle resolves one dependency graph,
+  normally selecting the higher version. Exercise the newer runtime in a wired version-specific
+  test suite.
 - Inspect test sources before requiring `testcontainersBuildService`: declare `usesService`
   on tasks that really use containers, not every task with a transitive dependency. Use
   `withType<Test>().configureEach` for configuration shared by multiple explicitly declared

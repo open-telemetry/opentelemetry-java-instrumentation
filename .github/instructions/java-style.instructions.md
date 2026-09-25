@@ -10,9 +10,10 @@ the stated exception before reporting a repository convention.
 
 - **Visibility**: use the narrowest access that works. Add `// visible for
   testing` if a production member has broader visibility solely for direct
-  test access; inlined advice may require public visibility for members it
-  references directly. A single public class in a module may be needed for
-  Javadoc.
+  test access. Members referenced directly by advice must remain public because
+  the transformer may inline the advice even when its source annotation sets
+  `inline = false`; transitive helper members may use narrower visibility. A
+  single public class in a module may be needed for Javadoc.
 - **Public API**: make public API classes `final` where possible; name
   public getters `get*` or `is*` for booleans. Javaagent singleton accessors
   directly returning stored fields are an exception to getter naming.
