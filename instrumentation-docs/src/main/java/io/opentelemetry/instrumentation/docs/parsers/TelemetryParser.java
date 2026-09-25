@@ -62,6 +62,7 @@ class TelemetryParser {
             entry(
                 "io.opentelemetry.jaxrs-3.0-resteasy-6.0",
                 singleton("io.opentelemetry.jaxrs-3.0-annotations")),
+            entry("io.opentelemetry.mongo-3.1", singleton("io.opentelemetry.mongo-3.7")),
             entry(
                 "io.opentelemetry.couchbase-3.0",
                 singleton("io.opentelemetry.javaagent.couchbase-3.0")),

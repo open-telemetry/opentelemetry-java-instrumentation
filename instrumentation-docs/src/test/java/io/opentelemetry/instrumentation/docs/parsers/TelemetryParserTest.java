@@ -12,6 +12,22 @@ import org.junit.jupiter.api.Test;
 class TelemetryParserTest {
 
   @Test
+  void acceptsMongo37ScopeForMongo31Owner() {
+    assertThat(
+            TelemetryParser.scopeIsValid(
+                "io.opentelemetry.mongo-3.7", "io.opentelemetry.mongo-3.1"))
+        .isTrue();
+  }
+
+  @Test
+  void rejectsUnrelatedScopeForMongo31Owner() {
+    assertThat(
+            TelemetryParser.scopeIsValid(
+                "io.opentelemetry.mongo-4.0", "io.opentelemetry.mongo-3.1"))
+        .isFalse();
+  }
+
+  @Test
   void normalizeWhenConditionStripsQuotes() {
     String content =
         """
