@@ -53,16 +53,17 @@ Ordinary paired advice need not add an invocation object.
 
 ## Finish the work you started
 
-Capture the parent context at the handoff, then make the Process context current while
-application code runs. Keep enough state to finish that exact invocation, including across
-nested callbacks or asynchronous completion. Close the thread scope when the callback returns.
-At the completion you can observe, record its error and duration and end the operation. Restore
-previous thread state on exit, including failure. Do not look up the parent from the context
-current on the completion thread.
+Resolve the parent context when each callback or supported traversal invocation begins, then make
+the Process context current while application code runs. Retain that exact parent and enough state
+to finish the invocation, including across nested callbacks or asynchronous completion. Close the
+thread scope when the callback returns. At the completion you can observe, record its error and
+duration and end the operation. Restore previous thread state on exit, including failure. Do not
+look up the parent from the context current on the completion thread.
 
 Ordinary paired advice can use [AdviceScope](javaagent-advice-patterns.md#advicescope-patterns).
-When suppressing lower-level processing with `ScopedThreadSuppression`, release it only if
-this invocation acquired it; see [thread-state guidance](javaagent-thread-local-state.md).
+When suppressing lower-level processing with `MessagingTelemetrySuppression`, retain the previous
+suppression set returned by `suppress` and restore it on every exit; see
+[thread-state guidance](javaagent-thread-local-state.md).
 
 Raw Kafka and SQS traversal is best effort. Instrument the supported iterator or callback
 boundary, not arbitrary list access. An abandoned iterator has no reliable completion event.
