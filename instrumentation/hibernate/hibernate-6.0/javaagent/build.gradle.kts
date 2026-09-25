@@ -20,7 +20,6 @@ dependencies {
   // Added to ensure cross compatibility:
   testInstrumentation(project(":instrumentation:hibernate:hibernate-3.3:javaagent"))
   testInstrumentation(project(":instrumentation:hibernate:hibernate-4.0:javaagent"))
-  testInstrumentation(project(":instrumentation:hibernate:hibernate-procedure-call-4.3:javaagent"))
 
   testImplementation("com.h2database:h2:1.4.197")
   testImplementation("javax.xml.bind:jaxb-api:2.2.11")

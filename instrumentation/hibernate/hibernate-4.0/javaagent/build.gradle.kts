@@ -8,11 +8,21 @@ muzzle {
     module.set("hibernate-core")
     versions.set("[4.0.0.Final,6)")
     assertInverse.set(true)
+    excludeInstrumentationName("hibernate-procedure-call-4.3")
+  }
+  pass {
+    name.set("Hibernate procedure call instrumentation")
+    group.set("org.hibernate")
+    module.set("hibernate-core")
+    versions.set("[4.3.0.Final,)")
+    assertInverse.set(true)
+    excludeInstrumentationName("hibernate-4.0")
   }
 }
 
 dependencies {
   compileOnly("org.hibernate:hibernate-core:4.0.0.Final")
+  compileOnly("org.hibernate:hibernate-core:4.3.0.Final")
 
   implementation(project(":instrumentation:hibernate:hibernate-common-3.3:javaagent"))
 
@@ -20,7 +30,6 @@ dependencies {
   // Added to ensure cross compatibility:
   testInstrumentation(project(":instrumentation:hibernate:hibernate-3.3:javaagent"))
   testInstrumentation(project(":instrumentation:hibernate:hibernate-6.0:javaagent"))
-  testInstrumentation(project(":instrumentation:hibernate:hibernate-procedure-call-4.3:javaagent"))
 
   testImplementation("com.h2database:h2:1.4.197")
   testImplementation("javax.xml.bind:jaxb-api:2.2.11")
@@ -71,6 +80,16 @@ testing {
         implementation("org.springframework.data:spring-data-jpa:${baseVersion("(2.4.0,3)").orLatest("2.3.0.RELEASE")}")
       }
     }
+    register<JvmTestSuite>("procedureCallTest") {
+      dependencies {
+        implementation(project(":instrumentation:hibernate:testing"))
+        implementation("org.hibernate:hibernate-core:4.3.0.Final")
+        implementation("org.hibernate:hibernate-entitymanager:4.3.0.Final")
+        implementation("org.hsqldb:hsqldb:2.0.0")
+        implementation("javax.xml.bind:jaxb-api:2.3.1")
+        implementation("org.glassfish.jaxb:jaxb-runtime:2.3.3")
+      }
+    }
   }
 }
 
@@ -92,9 +111,28 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
   }
 
+  val procedureCallTestExperimental = register<Test>("procedureCallTestExperimental") {
+    testClassesDirs = sourceSets["procedureCallTest"].output.classesDirs
+    classpath = sourceSets["procedureCallTest"].runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
+  }
+
   val testDisabled = register<Test>("testDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*DefaultEnablementTest")
+    }
+
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    jvmArgs("-Dotel.instrumentation.jdbc.enabled=false")
+  }
+
+  val procedureCallTestDisabled = register<Test>("procedureCallTestDisabled") {
+    testClassesDirs = sourceSets["procedureCallTest"].output.classesDirs
+    classpath = sourceSets["procedureCallTest"].runtimeClasspath
     filter {
       includeTestsMatching("*DefaultEnablementTest")
     }
@@ -115,6 +153,13 @@ tasks {
     }
 
   check {
-    dependsOn(testing.suites, testDisabled, testExperimental, stableSemconvSuites)
+    dependsOn(
+      testing.suites,
+      testDisabled,
+      testExperimental,
+      procedureCallTestDisabled,
+      procedureCallTestExperimental,
+      stableSemconvSuites,
+    )
   }
 }

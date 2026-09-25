@@ -558,9 +558,6 @@ targets:
       target: ':instrumentation:hibernate:hibernate-common-3.3:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:hibernate:hibernate-procedure-call-4.3:javaagent'
-    - type: gradle
-      path: ./
       target: ':instrumentation:hibernate:hibernate-reactive-1.0:javaagent'
     - type: gradle
       path: ./
