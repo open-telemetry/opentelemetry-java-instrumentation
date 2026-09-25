@@ -8,11 +8,10 @@
 | `otel.instrumentation.graphql.operation-name-in-span-name.enabled` | Boolean | `false` | Whether GraphQL operation name is added to the span name. <p>**WARNING**: GraphQL operation name is provided by the client and can have high cardinality. Use only when the server is not exposed to malicious clients. |
 | `otel.instrumentation.graphql.capture-query`                       | Boolean | `true`  | Whether to capture the query in `graphql.document` span attribute.                                                                                                                                                      |
 
-With `otel.instrumentation.common.v3-preview=true`, GraphQL operation spans have the
-[v1.44.0 GraphQL schema URL](https://opentelemetry.io/schemas/1.44.0). Without preview, they have
-no schema URL. They remain `INTERNAL` in both modes because GraphQL execution can run under an
-existing HTTP server span; the GraphQL convention recommends `SERVER` kind but does not require it.
-GraphQL 20 data-fetcher spans remain `INTERNAL` and have no schema URL in either mode.
+GraphQL operation spans use the [v1.44.0 GraphQL schema URL](https://opentelemetry.io/schemas/1.44.0)
+and retain `INTERNAL` kind. The convention recommends `SERVER` kind, but GraphQL execution can
+run beneath an HTTP server or controller span, where a nested `SERVER` span could be suppressed.
+GraphQL 20 data-fetcher spans remain `INTERNAL` and have no schema URL.
 
 ## Settings for the GraphQL 20 instrumentation
 

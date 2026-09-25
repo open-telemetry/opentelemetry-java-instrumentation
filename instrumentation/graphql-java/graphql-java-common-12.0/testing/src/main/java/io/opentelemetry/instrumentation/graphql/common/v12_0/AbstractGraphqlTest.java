@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.graphql.common.v12_0;
 
 import static graphql.schema.idl.TypeRuntimeWiring.newTypeWiring;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -186,7 +185,7 @@ public abstract class AbstractGraphqlTest {
                           .satisfies(
                               spanData ->
                                   assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
-                                      .isEqualTo(v3Preview() ? SchemaUrls.V1_44_0 : null))
+                                      .isEqualTo(SchemaUrls.V1_44_0))
                           .hasAttributesSatisfyingExactly(
                               equalTo(GRAPHQL_OPERATION_NAME, "findBookById"),
                               equalTo(GRAPHQL_OPERATION_TYPE, "query"),

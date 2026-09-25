@@ -26,24 +26,11 @@ dependencies {
   latestDepTestLibrary("com.graphql-java:graphql-java:19.+") // see graphql-java-20.0 module
 }
 
-tasks {
-  withType<Test>().configureEach {
-    jvmArgs(
-      "-Dotel.instrumentation.graphql.operation-name-in-span-name.enabled=true",
-      "-Dotel.instrumentation.graphql.add-operation-name-to-span-name.enabled=false",
-    )
+tasks.test {
+  jvmArgs(
+    "-Dotel.instrumentation.graphql.operation-name-in-span-name.enabled=true",
+    "-Dotel.instrumentation.graphql.add-operation-name-to-span-name.enabled=false",
+  )
 
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  val testV3Preview = register<Test>("testV3Preview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
-  }
-
-  check {
-    dependsOn(testV3Preview)
-  }
+  systemProperty("collectMetadata", otelProps.collectMetadata)
 }
