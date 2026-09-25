@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.logging;
+package io.opentelemetry.instrumentation.spring.autoconfigure;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration.OpenTelemetrySdkConfig.EmbeddedConfigFileConfig.SpanLoggingCustomizerProvider;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigurationCustomizer;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryConfigurationModel;
@@ -52,12 +53,13 @@ class SpanLoggingCustomizerProviderTest {
                 + "    - simple:\n"
                 + "        exporter:\n"
                 + "          console: {}\n"
+                + debug
             : "file_format: \"1.1\"\n" + debug;
 
     OpenTelemetryConfigurationModel model =
         applyCustomizer(
             DeclarativeConfiguration.parse(new ByteArrayInputStream(yaml.getBytes(UTF_8))),
-            new DeclarativeConfigLoggingExporterAutoConfiguration.SpanLoggingCustomizerProvider());
+            new SpanLoggingCustomizerProvider());
 
     String console = "ConsoleExporterModel";
     if (expected) {
@@ -68,8 +70,7 @@ class SpanLoggingCustomizerProviderTest {
   }
 
   private static OpenTelemetryConfigurationModel applyCustomizer(
-      OpenTelemetryConfigurationModel model,
-      DeclarativeConfigLoggingExporterAutoConfiguration.SpanLoggingCustomizerProvider provider) {
+      OpenTelemetryConfigurationModel model, SpanLoggingCustomizerProvider provider) {
     List<Function<OpenTelemetryConfigurationModel, OpenTelemetryConfigurationModel>> customizers =
         new ArrayList<>();
     provider.customize(new ModelCustomizerCollector(customizers));
