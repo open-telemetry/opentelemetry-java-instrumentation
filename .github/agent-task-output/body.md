@@ -1,0 +1,1 @@
+Runtime JMX metrics report `https://opentelemetry.io/schemas/1.44.0`; JFR reports the same URL only when its selected metrics conform to that schema. JFR selections that can emit non-convention metrics remain schema-less. Emitted telemetry and caller-supplied meter behavior stay unchanged. Part of #11939.
