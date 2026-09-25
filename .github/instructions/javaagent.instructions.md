@@ -1,5 +1,5 @@
 ---
-applyTo: "instrumentation/**/javaagent/**/*.java,instrumentation/**/bootstrap/**/*.java,javaagent/**/*.java,javaagent-bootstrap/**/*.java,javaagent-tooling/**/*.java"
+applyTo: "instrumentation/**/javaagent/**/*.java,instrumentation/**/bootstrap/**/*.java,javaagent/**/*.java,javaagent-bootstrap/**/*.java,javaagent-tooling/**/*.java,examples/**/instrumentation/**/*.java,smoke-tests/extensions/extension/**/*.java"
 ---
 
 # Javaagent instrumentation

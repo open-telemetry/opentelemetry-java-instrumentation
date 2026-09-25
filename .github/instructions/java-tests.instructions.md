@@ -1,5 +1,5 @@
 ---
-applyTo: "**/src/test*/**/*.java,**/src/*Test*/**/*.java,**/src/unitTests/**/*.java,**/testing/**/*.java,testing-common/**/*.java,smoke-tests*/**/*.java"
+applyTo: "**/src/test*/**/*.java,**/src/*Test*/**/*.java,**/src/unitTests/**/*.java,**/*-testing/**/src/main/**/*.java,**/*-tests/**/src/main/**/*.java,**/testing/**/*.java,testing-common/**/*.java,smoke-tests*/**/*.java"
 ---
 
 # Java tests
