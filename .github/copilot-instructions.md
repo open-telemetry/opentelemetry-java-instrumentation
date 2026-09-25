@@ -60,8 +60,10 @@ of where its implementation lives.
   `getName()` must match the YAML node. If the replacement config value already determines
   an ordinary property's result, merely carrying the deprecated name must not cause a
   warning; deduplicate warnings when reads may repeat.
-- Ordinary instrumentation settings are read through `DeclarativeConfigUtil`, with a default
-  for unavailable YAML. A nullable read is intentional when probing for a replacement or
-  deprecated name before choosing a default. Flat `ConfigProperties` reads are reserved for
-  enablement bootstrapping in `AgentDistributionConfig`. Structured YAML-only settings need
-  declarative-mode coverage.
+- In javaagent instrumentation, ordinary instrumentation settings are read through
+  `DeclarativeConfigUtil`, with a default for unavailable YAML. A nullable read is intentional
+  when probing for a replacement or deprecated name before choosing a default. Flat
+  `ConfigProperties` reads are reserved for enablement bootstrapping in
+  `AgentDistributionConfig`. Outside javaagent instrumentation, direct reads remain valid when
+  required by an SDK SPI or bridge contract. Structured YAML-only settings need declarative-mode
+  coverage.
