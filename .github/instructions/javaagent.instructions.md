@@ -1,5 +1,5 @@
 ---
-applyTo: "instrumentation/**/javaagent/**/*.java,instrumentation/**/bootstrap/**/*.java,instrumentation/**/javaagent-integration-tests/**/*.java,javaagent/**/*.java,javaagent-bootstrap/**/*.java,javaagent-tooling/**/*.java,examples/**/instrumentation/**/*.java,smoke-tests/extensions/extension/**/*.java,testing/agent-exporter/**/*.java,testing-common/integration-tests/**/*.java"
+applyTo: "instrumentation/**/javaagent/**/*.java,instrumentation/**/javaagent*/**/*.kt,instrumentation/**/bootstrap/**/*.java,instrumentation/**/javaagent-integration-tests/**/*.java,javaagent/**/*.java,javaagent-bootstrap/**/*.java,javaagent-tooling/**/*.java,examples/**/instrumentation/**/*.java,smoke-tests/extensions/extension/**/*.java,testing/agent-exporter/**/*.java,testing-common/integration-tests/**/*.java"
 ---
 
 # Javaagent instrumentation

@@ -1,10 +1,10 @@
 ---
-applyTo: "**/*.java,**/*.scala"
+applyTo: "**/*.java,**/*.kt,**/*.scala"
 ---
 
-# Java and Scala tests
+# Java, Kotlin, and Scala tests
 
-This file is loaded for all Java and Scala changes. Apply the behavior-coverage
+This file is loaded for all Java, Kotlin, and Scala changes. Apply the behavior-coverage
 checks when the corresponding production behavior changes. Apply the
 remaining sections only to test code and shared testing modules. Comment
 only on a changed line for a substantive coverage gap or an explicit
@@ -173,8 +173,8 @@ value. Fluent calls like `taskId.contains(jobName)` are already proper
 assertions — do **not** wrap them in `assertThat(value.contains(x)).isTrue()`,
 which degrades the failure message.
 
-Name the outer parameter `val` in Java (or `value` in Scala, where `val` is
-reserved). Use `v` only for a nested inner-lambda parameter.
+Name the outer parameter `val` in Java (or `value` in Kotlin and Scala, where
+`val` is reserved). Use `v` only for a nested inner-lambda parameter.
 
 This guidance applies only to attribute-assertion `satisfies(...)`; for
 `span.satisfies(...)`, `point.satisfies(...)`, etc. use a descriptive name
