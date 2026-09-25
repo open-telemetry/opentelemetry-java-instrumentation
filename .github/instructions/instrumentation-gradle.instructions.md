@@ -11,7 +11,9 @@ or test failure that CI will report.
   documentation and module metadata, choose the correct plugin (`otel.javaagent-instrumentation`,
   `otel.library-instrumentation`, or `otel.java-conventions` for testing), and wire actual test
   variants. A third-party single-version module's directory includes its minimum supported
-  version; versionless leaves are for JDK instrumentation. In shared modules, use a `-common`
+  version. For multiple versions grouped under a parent directory, prefix each child with the
+  parent component name (for example, `yarpc/yarpc-2.0`). Versionless leaves are for JDK
+  instrumentation. In shared modules, use a `-common`
   suffix qualified by the minimum version or API variant only when needed. For new javaagent
   modules, check that Muzzle covers their supported ranges and that the main enablement name
   matches the module directory without its version suffix. Include new test variants in
