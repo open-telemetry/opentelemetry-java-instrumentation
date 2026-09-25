@@ -1,10 +1,10 @@
 ---
-applyTo: "**/*.java"
+applyTo: "**/*.java,**/*.scala"
 ---
 
-# Java tests
+# Java and Scala tests
 
-This file is loaded for all Java changes. Apply the behavior-coverage
+This file is loaded for all Java and Scala changes. Apply the behavior-coverage
 checks when the corresponding production behavior changes. Apply the
 remaining sections only to test code and shared testing modules. Comment
 only on a changed line for a substantive coverage gap or an explicit
@@ -38,6 +38,21 @@ convention not caught by CI.
 - Test methods do not need `throws Exception` clauses unless actually required.
 - Prefer the nearest common parent in `catch` (including `Exception` /
   `Throwable`) over multi-catch.
+- Allocate test ports through `PortUtils` so allocations are coordinated across
+  the test process. Use `findOpenPorts(count)` when a service needs a consecutive
+  range instead of assuming ports adjacent to a separately allocated port are
+  available.
+- Register `AutoCleanupExtension` with the lifecycle that owns the resource:
+  use `deferCleanup` for per-test resources and `deferAfterAll` for class-scoped
+  resources. Do not replace it with an earlier lifecycle cleanup that can leak
+  on test failure; its outermost-container handling intentionally prevents
+  duplicate `deferAfterAll` cleanup for nested tests.
+- Keep fixture state that depends on a concrete test subclass on that subclass
+  or initialize it separately for each subclass. Do not cache subclass-specific
+  state in a shared static field on an abstract test base.
+- In Scala tests, import `org.assertj.core.api.Assertions.assertThat` for
+  ordinary values and call `OpenTelemetryAssertions.assertThat(...)` explicitly
+  for telemetry data. Do not statically import both `assertThat` methods.
 
 ## [Testing] Trace Clearing After Asynchronous Operations
 
