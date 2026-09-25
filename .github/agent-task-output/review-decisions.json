@@ -1,0 +1,28 @@
+{
+  "decisions": [
+    {
+      "disposition": "fixed",
+      "finding_id": "finding-776487514970d73d5fc58796"
+    },
+    {
+      "disposition": "fixed",
+      "finding_id": "finding-3f97b40f6f3ae390527c4bd1"
+    },
+    {
+      "disposition": "fixed",
+      "finding_id": "finding-558a1b6e761bf81ce9282baa"
+    },
+    {
+      "disposition": "fixed",
+      "finding_id": "finding-24315af6431639e2383ce9a9"
+    },
+    {
+      "disposition": "fixed",
+      "finding_id": "finding-66d4d5549f209ff903b16216"
+    }
+  ],
+  "schema": {
+    "id": "github.copilot.copilot-review-loop-decision-report",
+    "version": 3
+  }
+}
