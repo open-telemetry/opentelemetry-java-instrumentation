@@ -4463,6 +4463,26 @@ definitions:
       attributes:
       - name: client-id
         type: STRING
+    mcp.client.operation.duration-3691ba75:
+      name: mcp.client.operation.duration
+      description: The duration of the MCP request or notification as observed on
+        the sender from the time it was sent until the response or ack is received.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: gen_ai.operation.name
+        type: STRING
+      - name: gen_ai.tool.name
+        type: STRING
+      - name: mcp.method.name
+        type: STRING
+      - name: mcp.protocol.version
+        type: STRING
+      - name: rpc.response.status_code
+        type: STRING
     messaging.client.consumed.messages-2353494f:
       name: messaging.client.consumed.messages
       description: Number of messages that were delivered to the application.
@@ -14144,6 +14164,25 @@ libraries:
   - otel.instrumentation.common.logging.trace-id-key
   - otel.instrumentation.common.mdc.resource-attributes
   - otel.instrumentation.logback-mdc.add-baggage
+- name: mcp-java-sdk-0.14
+  display_name: MCP Java SDK
+  description: This instrumentation enables MCP client spans and metrics for tool
+    calls made with the Model Context Protocol Java SDK 0.14.1 and later.
+  semantic_conventions:
+  - GENAI_CLIENT_SPANS
+  - GENAI_CLIENT_METRICS
+  library_link: https://github.com/modelcontextprotocol/java-sdk
+  source_path: instrumentation/mcp-java-sdk-0.14
+  minimum_java_version: 17
+  scope:
+    name: io.opentelemetry.mcp-java-sdk-0.14
+  has_javaagent: true
+  javaagent_target_versions:
+  - io.modelcontextprotocol.sdk:mcp-core:[0.14.1,)
+  telemetry:
+  - when: default
+    metric_refs:
+    - mcp.client.operation.duration-3691ba75
 - name: micrometer-1.5
   display_name: Micrometer
   description: |
