@@ -2,7 +2,16 @@
 
 Provides OpenTelemetry instrumentation for [OSHI](https://github.com/oshi/oshi).
 
-This instrumentation collects system metrics such as memory usage, network I/O, and disk operations.
+This instrumentation collects system metrics such as memory usage, network
+I/O, and disk operations.
+
+By default, `SystemMetrics.registerObservers(openTelemetry)` uses the 1.19.0
+system metric conventions and schema. Set
+`otel.instrumentation.common.v3-preview=true` in the supplied OpenTelemetry
+configuration to opt into the 1.44.0 conventions and schema. For example,
+`system.network.packets` (`{packets}`) becomes `system.network.packet.count`
+(`{packet}`). The deprecated `registerObservers(Meter)` overload always uses
+the legacy conventions; `ProcessMetrics` remains schema-less.
 
 ## Quickstart
 

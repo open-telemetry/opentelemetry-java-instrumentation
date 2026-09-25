@@ -5,167 +5,43 @@
 
 package io.opentelemetry.instrumentation.oshi.v5_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
+import static io.opentelemetry.instrumentation.oshi.v5_0.internal.SchemaUrls.V1_19_0;
+import static io.opentelemetry.instrumentation.oshi.v5_0.internal.SchemaUrls.V1_44_0;
+
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
-import java.util.ArrayList;
+import io.opentelemetry.instrumentation.oshi.v5_0.internal.SystemMetricsInternal;
 import java.util.List;
-import oshi.SystemInfo;
-import oshi.hardware.GlobalMemory;
-import oshi.hardware.HWDiskStore;
-import oshi.hardware.HardwareAbstractionLayer;
-import oshi.hardware.NetworkIF;
 
 /** System Metrics Utility. */
 public final class SystemMetrics {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.oshi-5.0";
 
-  private static final AttributeKey<String> DEVICE_KEY = AttributeKey.stringKey("device");
-  private static final AttributeKey<String> DIRECTION_KEY = AttributeKey.stringKey("direction");
-
-  // copied from OtherIncubatingAttributes
-  private static final AttributeKey<String> STATE_KEY = AttributeKey.stringKey("state");
-
-  private static final Attributes ATTRIBUTES_USED = Attributes.of(STATE_KEY, "used");
-  private static final Attributes ATTRIBUTES_FREE = Attributes.of(STATE_KEY, "free");
-
   /** Register observers for system metrics. */
   public static List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry) {
-    return registerObservers(buildMeter(openTelemetry));
+    boolean preview = v3Preview(openTelemetry);
+    return SystemMetricsInternal.registerObservers(buildMeter(openTelemetry, preview), preview);
   }
 
   /**
-   * Like {@link #registerObservers(OpenTelemetry)}, but accepts a pre-built {@link Meter}.
+   * Like {@link #registerObservers(OpenTelemetry)}, but accepts a pre-built {@link Meter} and
+   * retains the legacy metric conventions.
    *
    * @deprecated Exists only so the javaagent can emit the pre-rename {@code io.opentelemetry.oshi}
    *     scope by default; to be removed in 3.0 once v3-preview becomes the default.
    */
   @Deprecated
   public static List<AutoCloseable> registerObservers(Meter meter) {
-    SystemInfo systemInfo = new SystemInfo();
-    HardwareAbstractionLayer hal = systemInfo.getHardware();
-    List<AutoCloseable> observables = new ArrayList<>();
-
-    observables.add(
-        meter
-            .upDownCounterBuilder("system.memory.usage")
-            .setDescription("System memory usage")
-            .setUnit("By")
-            .buildWithCallback(
-                r -> {
-                  GlobalMemory mem = hal.getMemory();
-                  r.record(mem.getTotal() - mem.getAvailable(), ATTRIBUTES_USED);
-                  r.record(mem.getAvailable(), ATTRIBUTES_FREE);
-                }));
-
-    observables.add(
-        meter
-            .gaugeBuilder("system.memory.utilization")
-            .setDescription("System memory utilization")
-            .setUnit("1")
-            .buildWithCallback(
-                r -> {
-                  GlobalMemory mem = hal.getMemory();
-                  r.record(
-                      ((double) (mem.getTotal() - mem.getAvailable())) / mem.getTotal(),
-                      ATTRIBUTES_USED);
-                  r.record(((double) mem.getAvailable()) / mem.getTotal(), ATTRIBUTES_FREE);
-                }));
-
-    observables.add(
-        meter
-            .counterBuilder("system.network.io")
-            .setDescription("System network IO")
-            .setUnit("By")
-            .buildWithCallback(
-                r -> {
-                  for (NetworkIF networkIf : hal.getNetworkIFs()) {
-                    networkIf.updateAttributes();
-                    long recv = networkIf.getBytesRecv();
-                    long sent = networkIf.getBytesSent();
-                    String device = networkIf.getName();
-                    r.record(recv, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "receive"));
-                    r.record(sent, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "transmit"));
-                  }
-                }));
-
-    observables.add(
-        meter
-            .counterBuilder("system.network.packets")
-            .setDescription("System network packets")
-            .setUnit("{packets}")
-            .buildWithCallback(
-                r -> {
-                  for (NetworkIF networkIf : hal.getNetworkIFs()) {
-                    networkIf.updateAttributes();
-                    long recv = networkIf.getPacketsRecv();
-                    long sent = networkIf.getPacketsSent();
-                    String device = networkIf.getName();
-                    r.record(recv, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "receive"));
-                    r.record(sent, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "transmit"));
-                  }
-                }));
-
-    observables.add(
-        meter
-            .counterBuilder("system.network.errors")
-            .setDescription("System network errors")
-            .setUnit("{errors}")
-            .buildWithCallback(
-                r -> {
-                  for (NetworkIF networkIf : hal.getNetworkIFs()) {
-                    networkIf.updateAttributes();
-                    long recv = networkIf.getInErrors();
-                    long sent = networkIf.getOutErrors();
-                    String device = networkIf.getName();
-                    r.record(recv, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "receive"));
-                    r.record(sent, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "transmit"));
-                  }
-                }));
-
-    observables.add(
-        meter
-            .counterBuilder("system.disk.io")
-            .setDescription("System disk IO")
-            .setUnit("By")
-            .buildWithCallback(
-                r -> {
-                  for (HWDiskStore diskStore : hal.getDiskStores()) {
-                    diskStore.updateAttributes();
-                    long read = diskStore.getReadBytes();
-                    long write = diskStore.getWriteBytes();
-                    String device = diskStore.getName();
-                    r.record(read, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "read"));
-                    r.record(write, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "write"));
-                  }
-                }));
-
-    observables.add(
-        meter
-            .counterBuilder("system.disk.operations")
-            .setDescription("System disk operations")
-            .setUnit("{operations}")
-            .buildWithCallback(
-                r -> {
-                  for (HWDiskStore diskStore : hal.getDiskStores()) {
-                    diskStore.updateAttributes();
-                    long read = diskStore.getReads();
-                    long write = diskStore.getWrites();
-                    String device = diskStore.getName();
-                    r.record(read, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "read"));
-                    r.record(write, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "write"));
-                  }
-                }));
-
-    return observables;
+    return SystemMetricsInternal.registerObservers(meter, false);
   }
 
-  private static Meter buildMeter(OpenTelemetry openTelemetry) {
+  private static Meter buildMeter(OpenTelemetry openTelemetry, boolean preview) {
     MeterBuilder meterBuilder = openTelemetry.getMeterProvider().meterBuilder(INSTRUMENTATION_NAME);
+    meterBuilder.setSchemaUrl(preview ? V1_44_0 : V1_19_0);
     String version = EmbeddedInstrumentationProperties.findVersion(INSTRUMENTATION_NAME);
     if (version != null) {
       meterBuilder.setInstrumentationVersion(version);
