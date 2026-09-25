@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.v3_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -35,6 +36,9 @@ import org.testcontainers.couchbase.CouchbaseContainer;
 import org.testcontainers.couchbase.CouchbaseService;
 
 class CouchbaseClient30Test {
+
+  private static final boolean EXPERIMENTAL_TELEMETRY =
+      Boolean.getBoolean("otel.instrumentation.couchbase.emit-experimental-telemetry");
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -94,19 +98,36 @@ class CouchbaseClient30Test {
                   v3Preview()
                       ? "io.opentelemetry.couchbase-3.0"
                       : "io.opentelemetry.javaagent.couchbase-3.0");
-          trace.hasSpansSatisfyingExactly(
-              span ->
-                  span.hasKind(INTERNAL)
-                      .hasName("get")
-                      .hasStatus(StatusData.unset())
-                      .hasNoParent()
-                      .hasAttributesSatisfying(
-                          equalTo(stringKey("peer.service"), "kv"),
-                          satisfies(
-                              stringKey("couchbase.operation_id"), value -> value.startsWith("0x")),
-                          equalTo(stringKey("couchbase.document_id"), "id")),
-              span ->
-                  span.hasKind(INTERNAL).hasName("dispatch_to_server").hasParent(trace.getSpan(0)));
+          if (emitSdkDetailSpans()) {
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(v3Preview() ? CLIENT : INTERNAL)
+                        .hasName("get")
+                        .hasStatus(StatusData.unset())
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("peer.service"), "kv"),
+                            satisfies(
+                                stringKey("couchbase.operation_id"),
+                                value -> value.startsWith("0x")),
+                            equalTo(stringKey("couchbase.document_id"), "id")),
+                span ->
+                    span.hasKind(INTERNAL)
+                        .hasName("dispatch_to_server")
+                        .hasParent(trace.getSpan(0)));
+          } else {
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(CLIENT)
+                        .hasName("get")
+                        .hasStatus(StatusData.unset())
+                        .hasNoParent()
+                        .hasTotalAttributeCount(0));
+          }
         });
+  }
+
+  private static boolean emitSdkDetailSpans() {
+    return !v3Preview() || EXPERIMENTAL_TELEMETRY;
   }
 }

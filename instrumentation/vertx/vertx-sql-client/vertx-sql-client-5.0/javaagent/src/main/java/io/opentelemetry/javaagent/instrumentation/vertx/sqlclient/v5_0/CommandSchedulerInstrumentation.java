@@ -70,7 +70,8 @@ class CommandSchedulerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
-    public static Scope onEnter(@Advice.Argument(0) Object command) {
+    public static Scope onEnter(
+        @Advice.This Object commandScheduler, @Advice.Argument(0) Object command) {
       Context stored = VertxSqlClientSingletons.getCommandContext(command);
       if (stored == null) {
         // First schedule call (query executor → pool or direct connection).
@@ -79,8 +80,11 @@ class CommandSchedulerInstrumentation implements TypeInstrumentation {
         return null;
       }
       // Subsequent schedule call (pool → connection).
-      // Restore the stored context so that executeBlocking dispatches with
-      // the correct parent for downstream instrumentation (e.g. JDBC).
+      // Supplier metadata comes from the connection selected for this command.
+      Context captured = VertxSqlClientSingletons.captureConnectionInfo(command, commandScheduler);
+      if (captured != null) {
+        return captured.makeCurrent();
+      }
       return stored.makeCurrent();
     }
 

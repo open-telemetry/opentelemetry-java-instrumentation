@@ -35,7 +35,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.core.Ordered;
 import org.springframework.web.servlet.HandlerExecutionChain;
 import org.springframework.web.servlet.HandlerMapping;
-import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
+import org.springframework.web.servlet.mvc.method.RequestMappingInfoHandlerMapping;
 
 public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
   private static final Logger logger =
@@ -142,7 +142,9 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
       // classes here. Although now that we run findMapping after the request, and only when server
       // span name has not been updated by a controller, the probability of bad side-effects is much
       // reduced even if we did add all HandlerMapping classes here.
-      if (mapping instanceof RequestMappingHandlerMapping) {
+      // Use RequestMappingInfoHandlerMapping to also include Spring Boot Actuator mappings,
+      // which don't extend RequestMappingHandlerMapping.
+      if (mapping instanceof RequestMappingInfoHandlerMapping) {
         handlerMappings.add(mapping);
         if (usePathPatterns(mapping)) {
           this.parseRequestPath = true;

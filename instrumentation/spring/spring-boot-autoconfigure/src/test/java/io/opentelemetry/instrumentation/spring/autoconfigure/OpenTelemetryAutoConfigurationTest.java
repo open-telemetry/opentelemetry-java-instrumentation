@@ -133,6 +133,7 @@ class OpenTelemetryAutoConfigurationTest {
                                   "io.opentelemetry.contrib.aws.resource.LambdaResourceProvider",
                                   "io.opentelemetry.contrib.gcp.resource.GCPResourceProvider",
                                   "io.opentelemetry.contrib.cloudfoundry.resources.CloudFoundryResourceProvider",
+                                  "io.opentelemetry.instrumentation.resources.HostIdResourceProvider",
                                   "io.opentelemetry.instrumentation.resources.internal.ResourceProviderPropertiesCustomizerTest$Provider");
                         }));
   }

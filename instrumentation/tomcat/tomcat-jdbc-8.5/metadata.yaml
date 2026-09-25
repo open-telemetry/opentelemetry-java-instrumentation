@@ -2,8 +2,11 @@ display_name: Tomcat JDBC
 description: >
   This instrumentation enables database connection pool metrics for Tomcat JDBC. When no pool name
   is explicitly configured, the JDBC URL and connection properties are used to derive
-  `server.address[:server.port][/db.namespace]`. If no server address or database namespace is
-  available, `tomcat-jdbc` is used.
+  the pool name. With legacy database semantic conventions, the derived format is
+  `server.address[:server.port][/db.namespace]`. With stable database semantic conventions, the
+  first available value among `db.namespace`, the configured endpoint
+  (`server.address[:server.port]`), and `db.system.name` is used. If none is available, `tomcat-jdbc`
+  is used.
 library_link: https://tomcat.apache.org/tomcat-8.5-doc/jdbc-pool.html
 semantic_conventions:
   - DATABASE_POOL_METRICS
