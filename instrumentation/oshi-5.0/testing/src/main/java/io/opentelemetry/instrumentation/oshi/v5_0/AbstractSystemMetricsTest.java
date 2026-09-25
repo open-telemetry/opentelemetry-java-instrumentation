@@ -49,6 +49,10 @@ public abstract class AbstractSystemMetricsTest {
                 metrics.anySatisfy(
                     metric ->
                         assertThat(metric)
+                            .hasDescription(
+                                v3Preview()
+                                    ? "Reports memory in use by state."
+                                    : "System memory usage")
                             .hasUnit("By")
                             .hasLongSumSatisfying(
                                 sum ->
@@ -80,6 +84,10 @@ public abstract class AbstractSystemMetricsTest {
                 metrics.anySatisfy(
                     metric ->
                         assertThat(metric)
+                            .hasDescription(
+                                v3Preview()
+                                    ? "Percentage of memory bytes in use."
+                                    : "System memory utilization")
                             .hasUnit("1")
                             .hasDoubleGaugeSatisfying(
                                 gauge ->
@@ -113,6 +121,10 @@ public abstract class AbstractSystemMetricsTest {
                 metrics.anySatisfy(
                     metric -> {
                       assertThat(metric)
+                          .hasDescription(
+                              v3Preview()
+                                  ? "The number of bytes transmitted and received."
+                                  : "System network IO")
                           .hasUnit("By")
                           .hasLongSumSatisfying(sum -> sum.isMonotonic());
                       assertNetworkPoints(
@@ -127,6 +139,10 @@ public abstract class AbstractSystemMetricsTest {
                 metrics.anySatisfy(
                     metric -> {
                       assertThat(metric)
+                          .hasDescription(
+                              v3Preview()
+                                  ? "The number of packets transferred."
+                                  : "System network packets")
                           .hasUnit(v3Preview() ? "{packet}" : "{packets}")
                           .hasLongSumSatisfying(sum -> sum.isMonotonic());
                       assertNetworkPoints(
@@ -141,6 +157,10 @@ public abstract class AbstractSystemMetricsTest {
                 metrics.anySatisfy(
                     metric -> {
                       assertThat(metric)
+                          .hasDescription(
+                              v3Preview()
+                                  ? "Count of network errors detected."
+                                  : "System network errors")
                           .hasUnit(v3Preview() ? "{error}" : "{errors}")
                           .hasLongSumSatisfying(sum -> sum.isMonotonic());
                       assertNetworkPoints(
@@ -155,6 +175,7 @@ public abstract class AbstractSystemMetricsTest {
                 metrics.anySatisfy(
                     metric -> {
                       assertThat(metric)
+                          .hasDescription(v3Preview() ? "Disk bytes transferred." : "System disk IO")
                           .hasUnit("By")
                           .hasLongSumSatisfying(sum -> sum.isMonotonic());
                       assertDiskPoints(metric.getLongSumData().getPoints());
@@ -167,6 +188,8 @@ public abstract class AbstractSystemMetricsTest {
                 metrics.anySatisfy(
                     metric -> {
                       assertThat(metric)
+                          .hasDescription(
+                              v3Preview() ? "Disk operations count." : "System disk operations")
                           .hasUnit(v3Preview() ? "{operation}" : "{operations}")
                           .hasLongSumSatisfying(sum -> sum.isMonotonic());
                       assertDiskPoints(metric.getLongSumData().getPoints());
@@ -181,7 +204,7 @@ public abstract class AbstractSystemMetricsTest {
             scopeName(),
             "system.memory.usage",
             metrics ->
-                metrics.allSatisfy(
+                metrics.anySatisfy(
                     metric -> {
                       assertThat(metric.getInstrumentationScopeInfo().getSchemaUrl())
                           .isEqualTo(

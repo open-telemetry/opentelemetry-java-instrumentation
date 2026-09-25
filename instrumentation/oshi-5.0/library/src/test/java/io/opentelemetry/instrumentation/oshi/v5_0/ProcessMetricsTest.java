@@ -56,7 +56,7 @@ class ProcessMetricsTest extends AbstractProcessMetricsTest {
         scopeName(),
         "runtime.java.memory",
         metrics ->
-            metrics.allSatisfy(
+            metrics.anySatisfy(
                 metric ->
                     assertThat(metric.getInstrumentationScopeInfo().getSchemaUrl()).isNull()));
   }
