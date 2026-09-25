@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.sofarpc.v5_4;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcExceptionEventExtractors.setRpcClientExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcExceptionEventExtractors.setRpcServerExceptionEventExtractor;
+
 import com.alipay.sofa.rpc.core.response.SofaResponse;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
@@ -98,6 +101,7 @@ public final class SofaRpcTelemetryBuilder {
             .addOperationMetrics(RpcServerMetrics.get())
             .addContextCustomizer(
                 RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
+    setRpcServerExceptionEventExtractor(serverInstrumenterBuilder);
 
     InstrumenterBuilder<SofaRpcRequest, SofaResponse> clientInstrumenterBuilder =
         Instrumenter.<SofaRpcRequest, SofaResponse>builder(
@@ -110,6 +114,7 @@ public final class SofaRpcTelemetryBuilder {
             .addOperationMetrics(RpcClientMetrics.get())
             .addContextCustomizer(
                 RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
+    setRpcClientExceptionEventExtractor(clientInstrumenterBuilder);
 
     return new SofaRpcTelemetry(
         serverInstrumenterBuilder.buildServerInstrumenter(new SofaRpcHeadersGetter()),
