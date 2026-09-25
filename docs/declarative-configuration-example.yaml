@@ -81,7 +81,7 @@ instrumentation/development:
         # otel.instrumentation.common.db.query-sanitization.enabled.
         enabled: true
     common:
-      controller_telemetry/development:
+      controller_telemetry:
         # Enables the creation of experimental controller spans.
         enabled: false
       db:
@@ -221,7 +221,7 @@ instrumentation/development:
           # Enables capturing the user.roles attribute when v3 preview is enabled. This property and
           # the associated attribute are not supported when v3 preview is disabled.
           enabled: false
-      view_telemetry/development:
+      view_telemetry:
         # Enables the creation of experimental view spans.
         enabled: false
     couchbase:

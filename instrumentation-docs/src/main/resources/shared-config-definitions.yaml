@@ -85,8 +85,8 @@ configurations:
     default: false
 
   common.controller-telemetry.enabled:
-    name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-    declarative_name: java.common.controller_telemetry/development.enabled
+    name: otel.instrumentation.common.controller-telemetry.enabled
+    declarative_name: java.common.controller_telemetry.enabled
     description: "Enables the creation of experimental controller spans."
     type: boolean
     default: false
