@@ -1,0 +1,26 @@
+{
+  "schema": {
+    "id": "github.copilot.copilot-review-loop-decision-report",
+    "version": 3
+  },
+  "decisions": [
+    {
+      "finding_id": "finding-4164eb9aac85b3b1e2d7554a",
+      "disposition": "no_change",
+      "reason": "The frozen head already matches Java, Kotlin, and Scala files and names all three languages in the scope text.",
+      "proposed_reply": "Already addressed: this instruction applies to **/*.kt and its heading and scope text explicitly include Kotlin."
+    },
+    {
+      "finding_id": "finding-bd2a68735bd0c73d92203549",
+      "disposition": "fixed"
+    },
+    {
+      "finding_id": "finding-958394ae30f7208ed94a131a",
+      "disposition": "fixed"
+    },
+    {
+      "finding_id": "finding-2aaffa2222a89334ca24420c",
+      "disposition": "fixed"
+    }
+  ]
+}
