@@ -38,6 +38,11 @@ library lifecycle before deciding whether an exception applies.
 - Use `Java8BytecodeBridge` only for supported API calls directly in annotated advice;
   helper methods use the normal API even when nested inside the advice class. Add a
   `classLoaderMatcher()` only for a real version boundary Muzzle cannot distinguish.
+  Verify every version-landmark class against the artifact versions and keep its role explicit:
+  a positive floor uses `// added in X.Y`, a positive ceiling uses `// removed in X.Y`, and a
+  negated exclusion class uses `// added in X.Y`. A positive class that supplies both bounds
+  states both. If the landmark comes from a different artifact, identify that artifact in the
+  comment; label a non-version optional-artifact check as an artifact-presence gate.
   Javaagent production code may import both stable and incubating semconv constants
   directly when their key name and type match; the agent vendors those artifacts.
 

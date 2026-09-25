@@ -32,7 +32,36 @@ applicable repository review rules; use their stated conditions and exceptions. 
   alias and emitted `otel.scope.name`, including v3-preview behavior and scope-version lookup.
   Preserving one does not preserve the other. Do not require a deprecation cycle for
   implementation-only javaagent symbols.
-- For any instrumentation module changed, compare new or changed configuration reads with its
-  `metadata.yaml`, including settings read in a dependent common module. If metadata did not
-  change, comment only where the change introduced a demonstrable mismatch. Do not request an
-  entry for the general module enable/disable property.
+- For any instrumentation module changed, compare new or changed configuration reads, types, and
+  defaults with its `metadata.yaml`, including settings read in a dependent common module. If
+  metadata did not change, comment only where the change introduced a demonstrable mismatch. Do
+  not request an entry for the general module enable/disable property. Check explicit metadata
+  edits under the metadata-specific instructions.
+
+## Configuration
+
+Apply these checks when changed code defines, maps, or reads user-facing configuration, regardless
+of where its implementation lives.
+
+- When adding or changing an `otel.instrumentation.*` setting, check both its flat property
+  and declarative YAML name. Experimental or preview names are unstable; an experimental
+  flat name must map to the corresponding `/development` YAML form. Do not rename an
+  already-published declarative name merely to match mechanical conversion; determine whether
+  the bridge needs a `SPECIAL_MAPPINGS` entry instead.
+- Stable flat property names remain stable even when read by alpha implementation code.
+  On rename, retain the old name until the next major version: read the replacement first,
+  fall back to the old name only outside v3-preview, and warn once at startup *when the old
+  value is applied*. Add the deprecation to the CHANGELOG. Experimental/preview names may
+  be removed after a subsequent minor release and do not need the v3-preview guard.
+  Instrumentation enablement aliases have distinct warning semantics; do not apply ordinary
+  replacement-first warning logic to them.
+- Read module settings from `java.<module>` and general settings from `general`; HTTP
+  header capture is general configuration. For a declarative `ComponentProvider`, its
+  `getName()` must match the YAML node. If the replacement config value already determines
+  an ordinary property's result, merely carrying the deprecated name must not cause a
+  warning; deduplicate warnings when reads may repeat.
+- Ordinary instrumentation settings are read through `DeclarativeConfigUtil`, with a default
+  for unavailable YAML. A nullable read is intentional when probing for a replacement or
+  deprecated name before choosing a default. Flat `ConfigProperties` reads are reserved for
+  enablement bootstrapping in `AgentDistributionConfig`. Structured YAML-only settings need
+  declarative-mode coverage.

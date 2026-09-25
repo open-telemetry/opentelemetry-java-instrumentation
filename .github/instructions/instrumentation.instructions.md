@@ -7,34 +7,14 @@ applyTo: "instrumentation/**/*,instrumentation-api/**/*,instrumentation-api-incu
 Apply a check only if the changed code affects that contract. Inspect unchanged neighboring
 files when necessary, but comment on a changed line and only for a supported issue.
 
-## Configuration
+## Package naming
 
-- When adding or changing an `otel.instrumentation.*` setting, check both its flat property
-  and declarative YAML name. Experimental or preview names are unstable; an experimental
-  flat name must map to the corresponding `/development` YAML form. Do not rename an
-  already-published declarative name merely to match mechanical conversion; determine whether
-  the bridge needs a `SPECIAL_MAPPINGS` entry instead.
-- Stable flat property names remain stable even when read by alpha implementation code.
-  On rename, retain the old name until the next major version: read the replacement first,
-  fall back to the old name only outside v3-preview, and warn once at startup *when the old
-  value is applied*. Add the deprecation to the CHANGELOG. Experimental/preview names may
-  be removed after a subsequent minor release and do not need the v3-preview guard.
-  Instrumentation enablement aliases have distinct warning semantics; do not apply ordinary
-  replacement-first warning logic to them.
-- Read module settings from `java.<module>` and general settings from `general`; HTTP
-  header capture is general configuration. For a declarative `ComponentProvider`, its
-  `getName()` must match the YAML node. If the replacement config value already determines
-  an ordinary property's result, merely carrying the deprecated name must not cause a
-  warning; deduplicate warnings when reads may repeat.
-- Ordinary instrumentation settings are read through `DeclarativeConfigUtil`, with a default
-  for unavailable YAML. A nullable read is intentional when probing for a replacement or
-  deprecated name before choosing a default. Flat `ConfigProperties` reads are reserved for
-  enablement bootstrapping in `AgentDistributionConfig`. Structured YAML-only settings need
-  declarative-mode coverage.
-- For module code changes, check the associated `metadata.yaml` against actual reads, types,
-  and defaults, including common-module dependencies. Do not add the module's general enabled
-  setting to its configuration list. Check explicit metadata edits under the metadata-specific
-  instructions.
+- New or renamed library packages use `io.opentelemetry.instrumentation.<library>...`; javaagent
+  packages use `io.opentelemetry.javaagent.instrumentation.<library>...`.
+- Encode version segments as one identifier such as `v4_0`, not dotted package segments such as
+  `v4.0`. Put `common` after the version only for a version-scoped common module
+  (`<library>.v4_0.common`); a non-versioned common module uses the ordinary library package
+  without a trailing `common` segment.
 
 ## Emitted telemetry
 
