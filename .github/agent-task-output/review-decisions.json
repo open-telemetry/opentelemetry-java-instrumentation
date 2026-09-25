@@ -1,0 +1,22 @@
+{
+  "decisions": [
+    {
+      "finding_id": "finding-5c4570d2d81eb2548ca892c4",
+      "disposition": "no_change",
+      "reason": "The immutable source head already limits the package-private visibility convention to Java.",
+      "proposed_reply": "Already addressed: the rule now begins with \"In Java\" and does not apply this visibility convention to Kotlin or Scala."
+    },
+    {
+      "finding_id": "finding-8730b0c80ae0bba2312da770",
+      "disposition": "fixed"
+    },
+    {
+      "finding_id": "finding-fe8fab4b3c5d191a898de416",
+      "disposition": "fixed"
+    }
+  ],
+  "schema": {
+    "id": "github.copilot.copilot-review-loop-decision-report",
+    "version": 3
+  }
+}
