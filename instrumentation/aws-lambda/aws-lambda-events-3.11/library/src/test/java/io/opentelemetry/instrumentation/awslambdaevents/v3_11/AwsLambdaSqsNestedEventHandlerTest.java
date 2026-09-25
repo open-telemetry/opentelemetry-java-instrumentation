@@ -59,12 +59,12 @@ class AwsLambdaSqsNestedEventHandlerTest {
                     span.hasName(
                             emitStableMessagingSemconv() ? "process queue1" : "aws:sqs process")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasParentSpanId(trace.getSpan(0).getSpanId()),
+                        .hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName(
                             emitStableMessagingSemconv() ? "process queue1" : "aws:sqs process")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasParentSpanId(trace.getSpan(1).getSpanId())));
+                        .hasParent(trace.getSpan(1))));
     assertMetrics(testing, TracingSqsEventHandler.INSTRUMENTATION_NAME, "queue1", 2, 2, null);
   }
 
