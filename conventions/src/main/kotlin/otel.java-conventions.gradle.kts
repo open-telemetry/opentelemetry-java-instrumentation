@@ -28,7 +28,7 @@ afterEvaluate {
 }
 
 // Versions to use to compile code and run tests.
-val repositoryDefaultJavaVersion = JavaVersion.VERSION_21
+val repositoryDefaultJavaVersion = JavaVersion.VERSION_25
 val repositoryDefaultTestJavaVersion = JavaVersion.VERSION_25
 
 java {
@@ -404,18 +404,15 @@ afterEvaluate {
         }
       )
       isEnabled = isEnabled && isJavaVersionAllowed(testJavaVersion)
-    } else {
+    } else if (
+      otelJava.maxJavaVersionForTests.isPresent &&
+      otelJava.maxJavaVersionForTests.get().compareTo(repositoryDefaultTestJavaVersion) < 0
+    ) {
       // Tests capped below the repository default use their maximum supported test version,
       // so commands like `./gradlew check` can cover all projects.
-      val defaultTestJavaVersion =
-        if (!isJavaVersionAllowed(repositoryDefaultTestJavaVersion) && otelJava.maxJavaVersionForTests.isPresent) {
-          otelJava.maxJavaVersionForTests.get()
-        } else {
-          repositoryDefaultTestJavaVersion
-        }
       javaLauncher.set(
         javaToolchains.launcherFor {
-          languageVersion.set(JavaLanguageVersion.of(defaultTestJavaVersion.majorVersion))
+          languageVersion.set(JavaLanguageVersion.of(otelJava.maxJavaVersionForTests.get().majorVersion))
         }
       )
     }
