@@ -175,7 +175,8 @@ public abstract class AbstractSystemMetricsTest {
                 metrics.anySatisfy(
                     metric -> {
                       assertThat(metric)
-                          .hasDescription(v3Preview() ? "Disk bytes transferred." : "System disk IO")
+                          .hasDescription(
+                              v3Preview() ? "Disk bytes transferred." : "System disk IO")
                           .hasUnit("By")
                           .hasLongSumSatisfying(sum -> sum.isMonotonic());
                       assertDiskPoints(metric.getLongSumData().getPoints());
