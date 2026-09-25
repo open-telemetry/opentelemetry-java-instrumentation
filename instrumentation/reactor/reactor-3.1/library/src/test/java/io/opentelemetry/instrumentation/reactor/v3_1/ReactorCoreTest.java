@@ -471,23 +471,25 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
             "produce before retry 0",
             "produce before retry 1",
             "produce after retry 0",
-            "produce after retry 1"),
+            "produce after retry 1",
+            "process 0",
+            "process 1"),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("produce before retry 0").hasNoParent(),
-                span -> span.hasName("process 0").hasParent(trace.getSpan(0))),
+                span -> span.hasName("produce before retry 0").hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("produce before retry 1").hasNoParent(),
-                span -> span.hasName("process 1").hasParent(trace.getSpan(0))),
+                span -> span.hasName("produce before retry 1").hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("produce after retry 0").hasNoParent(),
-                span -> span.hasName("process 0").hasParent(trace.getSpan(0))),
+                span -> span.hasName("produce after retry 0").hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("produce after retry 1").hasNoParent(),
-                span -> span.hasName("process 1").hasParent(trace.getSpan(0))));
+                span -> span.hasName("produce after retry 1").hasNoParent()),
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("process 0").hasNoParent()),
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("process 0").hasNoParent()),
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("process 1").hasNoParent()),
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("process 1").hasNoParent()));
   }
 
   @Test
