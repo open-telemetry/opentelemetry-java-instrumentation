@@ -12,33 +12,29 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseCoreInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseMessageHandlerInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseSeedNodesInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class CouchbaseInstrumentationModule extends InstrumentationModule {
-  public CouchbaseInstrumentationModule() {
+public class CouchbaseProtostellarInstrumentationModule extends InstrumentationModule {
+
+  public CouchbaseProtostellarInstrumentationModule() {
     super(
         "couchbase",
         expandDeprecatedNames(
-            "couchbase-3.2|deprecated:couchbase-3.4", "couchbase", "couchbase-3.2-core"));
+            "couchbase-3.2|deprecated:couchbase-3.4", "couchbase", "couchbase-3.4.3-protostellar"));
   }
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // added in 3.2.0 (via com.couchbase.client:core-io 2.2.0)
-    return hasClassesNamed("com.couchbase.client.core.cnc.RequestSpan$StatusCode");
+    // added in 3.4.3 (via com.couchbase.client:core-io 2.4.3)
+    return hasClassesNamed("com.couchbase.client.core.CoreProtostellar");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
-        new CouchbaseEnvironmentInstrumentation(),
-        new CouchbaseCoreInstrumentation(),
-        new CouchbaseSeedNodesInstrumentation(),
-        new CouchbaseMessageHandlerInstrumentation());
+        new CouchbaseProtostellarCoreInstrumentation(),
+        new CouchbaseProtostellarRequestInstrumentation());
   }
 }
