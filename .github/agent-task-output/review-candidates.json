@@ -1,0 +1,12 @@
+{
+  "outcome": "complete",
+  "candidates": [
+    {
+      "path": "instrumentation/pekko/pekko-http-1.0/javaagent/src/main/java/io/opentelemetry/javaagent/instrumentation/pekkohttp/v1_0/server/ParsingErrorHandlerInstrumentation.java",
+      "line": 59,
+      "side": "RIGHT",
+      "body": "[General] Cover Pekko HTTP 2.0's five-argument `handle` override as well. The 2.0 API calls that overload directly, and although its base implementation delegates to this four-argument method for compatibility, a custom handler that overrides the new overload bypasses this advice entirely, so rejected requests stop producing spans. Please instrument the invoked five-argument path too while avoiding a duplicate span when the inherited implementation delegates.",
+      "evidence": "This module declares compatibility with Pekko HTTP `[1.0,)`, while Pekko HTTP tag `v2.0.0-M1` adds `ParsingErrorHandler.handle(StatusCode, ErrorInfo, LoggingAdapter, ServerSettings, IllegalRequestContext)` and `HttpServerBluePrint` invokes that five-argument method. The base implementation delegates to the four-argument overload, but the API explicitly permits applications to override the five-argument overload to consume `IllegalRequestContext`; such an override never reaches the matcher anchored here because it requires exactly four arguments."
+    }
+  ]
+}
