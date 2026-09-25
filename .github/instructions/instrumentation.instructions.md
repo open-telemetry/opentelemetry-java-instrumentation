@@ -13,9 +13,8 @@ files when necessary, but comment on a changed line and only for a supported iss
   packages use `io.opentelemetry.javaagent.instrumentation.<library>...`.
 - Encode version segments as one identifier such as `v4_0`, not dotted package segments such as
   `v4.0`.
-- In javaagent common modules, put `common` after the version
-  (`io.opentelemetry.javaagent.instrumentation.<library>.v4_0.common`); a non-versioned common
-  module uses the ordinary javaagent package without a trailing `common` segment.
-- In library common modules, put `common` before the version
-  (`io.opentelemetry.instrumentation.<library>.common.v4_0`). A non-versioned library common
-  package may retain a trailing `common` segment.
+- In versioned common modules, put `common` before the version in both javaagent and library
+  packages (`io.opentelemetry.javaagent.instrumentation.<library>.common.v4_0` and
+  `io.opentelemetry.instrumentation.<library>.common.v4_0`). A non-versioned javaagent common
+  module uses the ordinary javaagent package without a trailing `common` segment; a non-versioned
+  library common package may retain one.
