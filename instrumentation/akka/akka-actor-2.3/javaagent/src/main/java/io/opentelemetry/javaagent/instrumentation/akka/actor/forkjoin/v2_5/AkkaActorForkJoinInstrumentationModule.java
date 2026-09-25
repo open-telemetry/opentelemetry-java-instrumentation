@@ -21,7 +21,8 @@ public class AkkaActorForkJoinInstrumentationModule extends InstrumentationModul
         expandDeprecatedNames(
             "akka-actor-forkjoin|deprecated:akka-actor-fork-join",
             "akka-actor-forkjoin-2.5|deprecated:akka-actor-fork-join-2.5",
-            "akka-actor"));
+            "akka-actor",
+            "akka-actor-2.5-forkjoin"));
   }
 
   @Override
