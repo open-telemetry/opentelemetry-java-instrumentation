@@ -58,18 +58,12 @@ public class SpringRabbitRequest {
 
   void installProcessingContext(Context context) {
     ProcessingContextInstallation installation = null;
-    try {
-      for (Message message : messages) {
-        installation =
-            new ProcessingContextInstallation(
-                message, PROCESSING_CONTEXT.get(message), installation);
-        PROCESSING_CONTEXT.set(message, context);
-      }
-      processingContextInstallation = installation;
-    } catch (RuntimeException | Error e) {
-      restoreProcessingContext(context, installation);
-      throw e;
+    for (Message message : messages) {
+      installation =
+          new ProcessingContextInstallation(message, PROCESSING_CONTEXT.get(message), installation);
+      PROCESSING_CONTEXT.set(message, context);
     }
+    processingContextInstallation = installation;
   }
 
   void restoreProcessingContext(Context context) {
