@@ -22,6 +22,7 @@ import org.springframework.aop.support.AopUtils;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
+import org.springframework.messaging.support.ErrorMessage;
 import org.springframework.messaging.support.ExecutorChannelInterceptor;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.messaging.support.MessageHeaderAccessor;
@@ -234,9 +235,29 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
 
   private static Message<?> createMessageWithHeaders(
       Message<?> message, MessageHeaderAccessor messageHeaderAccessor) {
-    return MessageBuilder.fromMessage(message)
-        .copyHeaders(messageHeaderAccessor.toMessageHeaders())
-        .build();
+    MessageHeaderAccessor boundAccessor =
+        MessageHeaderAccessor.getAccessor(message, MessageHeaderAccessor.class);
+
+    // an ErrorMessage carries an originalMessage that only MessageBuilder propagates
+    if (boundAccessor == null || message instanceof ErrorMessage) {
+      return MessageBuilder.fromMessage(message)
+          .copyHeaders(messageHeaderAccessor.toMessageHeaders())
+          .build();
+    }
+
+    if (boundAccessor == messageHeaderAccessor) {
+      // getMutableAccessor() hands back the message's own accessor when its headers are mutable,
+      // so the context has already been written into this message
+      return message;
+    }
+
+    // Sealing the copy gives the new message an id and keeps it from sharing mutable headers with
+    // the accessor. Passing the accessor's own MessageHeaders preserves the binding that Spring
+    // components such as StompBrokerRelayMessageHandler recover through
+    // MessageHeaderAccessor.getAccessor().
+    messageHeaderAccessor.setImmutable();
+    return MessageBuilder.createMessage(
+        message.getPayload(), messageHeaderAccessor.getMessageHeaders());
   }
 
   private boolean createProducerSpan(MessageChannel messageChannel) {
