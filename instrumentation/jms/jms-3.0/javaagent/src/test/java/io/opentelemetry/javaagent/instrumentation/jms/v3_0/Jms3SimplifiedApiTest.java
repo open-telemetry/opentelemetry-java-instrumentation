@@ -15,16 +15,17 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Collections.emptyEnumeration;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import jakarta.jms.Destination;
 import jakarta.jms.JMSConsumer;
+import jakarta.jms.JMSException;
+import jakarta.jms.JMSProducer;
 import jakarta.jms.Message;
 import jakarta.jms.Queue;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.util.Enumeration;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -51,13 +52,16 @@ class Jms3SimplifiedApiTest {
   private static final String QUEUE_NAME = "stubQueue";
   private static final String MESSAGE_ID = "ID:stub-message";
 
+  @SuppressWarnings("DirectInvocationOnMock")
   @Test
-  void sendEmitsExactlyOneProducerSpan() {
+  void sendEmitsExactlyOneProducerSpan() throws JMSException {
+    JMSProducer producer = mock(JMSProducer.class);
+
     Destination queue = queue();
     // a message that has not been sent has no destination yet, so the send argument is used
     Message message = message(null);
 
-    testing.runWithSpan("parent", () -> new StubJmsProducer().send(queue, message));
+    testing.runWithSpan("parent", () -> producer.send(queue, message));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -78,8 +82,11 @@ class Jms3SimplifiedApiTest {
 
   @ParameterizedTest
   @MethodSource("receivers")
-  void receiveEmitsExactlyOneReceiveSpan(Function<JMSConsumer, Message> receiver) {
-    JMSConsumer consumer = new StubJmsConsumer(message(queue()));
+  void receiveEmitsExactlyOneReceiveSpan(Function<JMSConsumer, Message> receiver)
+      throws JMSException {
+    JMSConsumer consumer = mock(JMSConsumer.class);
+    Message message = message(queue());
+    when(receiver.apply(consumer)).thenReturn(message);
 
     testing.runWithSpan("consumer parent", () -> receiver.apply(consumer));
 
@@ -103,7 +110,7 @@ class Jms3SimplifiedApiTest {
   @ParameterizedTest
   @MethodSource("receivers")
   void emptyReceiveEmitsNoSpan(Function<JMSConsumer, Message> receiver) {
-    JMSConsumer consumer = new StubJmsConsumer(null);
+    JMSConsumer consumer = mock(JMSConsumer.class);
 
     testing.runWithSpan("consumer parent", () -> receiver.apply(consumer));
 
@@ -120,72 +127,17 @@ class Jms3SimplifiedApiTest {
             "receiveNoWait()", (Function<JMSConsumer, Message>) JMSConsumer::receiveNoWait));
   }
 
-  private static Destination queue() {
-    return (Destination)
-        Proxy.newProxyInstance(
-            Jms3SimplifiedApiTest.class.getClassLoader(),
-            new Class<?>[] {TestQueue.class},
-            (proxy, method, args) ->
-                method.getName().equals("getQueueName")
-                    ? QUEUE_NAME
-                    : defaultValue(proxy, method, args));
+  private static Destination queue() throws JMSException {
+    Queue queue = mock(Queue.class);
+    when(queue.getQueueName()).thenReturn(QUEUE_NAME);
+    return queue;
   }
 
-  private static Message message(Destination destination) {
-    return (Message)
-        Proxy.newProxyInstance(
-            Jms3SimplifiedApiTest.class.getClassLoader(),
-            new Class<?>[] {TestMessage.class},
-            (proxy, method, args) -> {
-              switch (method.getName()) {
-                case "getJMSMessageID":
-                  return MESSAGE_ID;
-                case "getJMSDestination":
-                  return destination;
-                default:
-                  return defaultValue(proxy, method, args);
-              }
-            });
+  private static Message message(Destination destination) throws JMSException {
+    Message message = mock(Message.class);
+    when(message.getJMSMessageID()).thenReturn(MESSAGE_ID);
+    when(message.getJMSDestination()).thenReturn(destination);
+    when(message.getPropertyNames()).thenReturn(emptyEnumeration());
+    return message;
   }
-
-  // a proxy has to return a value that fits the method's return type: null for a primitive fails,
-  // and the advice iterates the property names
-  private static Object defaultValue(Object proxy, Method method, Object[] args) {
-    if (method.getDeclaringClass() == Object.class) {
-      switch (method.getName()) {
-        case "equals":
-          return proxy == args[0];
-        case "hashCode":
-          return System.identityHashCode(proxy);
-        default:
-          return "stub " + proxy.getClass().getInterfaces()[0].getSimpleName();
-      }
-    }
-    Class<?> type = method.getReturnType();
-    if (type == boolean.class) {
-      return false;
-    } else if (type == byte.class) {
-      return (byte) 0;
-    } else if (type == short.class) {
-      return (short) 0;
-    } else if (type == char.class) {
-      return (char) 0;
-    } else if (type == int.class) {
-      return 0;
-    } else if (type == long.class) {
-      return 0L;
-    } else if (type == float.class) {
-      return 0f;
-    } else if (type == double.class) {
-      return 0d;
-    } else if (type == Enumeration.class) {
-      return emptyEnumeration();
-    }
-    return null;
-  }
-
-  // These interfaces are package-private so that the agent instruments the generated proxy classes.
-  interface TestQueue extends Queue {}
-
-  interface TestMessage extends Message {}
 }

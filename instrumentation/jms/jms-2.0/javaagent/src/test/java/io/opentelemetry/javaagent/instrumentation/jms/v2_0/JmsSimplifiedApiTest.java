@@ -18,7 +18,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.io.File;
-import java.nio.file.Files;
 import java.util.HashSet;
 import java.util.stream.Stream;
 import javax.jms.Connection;
@@ -47,6 +46,7 @@ import org.hornetq.jms.client.HornetQConnectionFactory;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -73,10 +73,7 @@ class JmsSimplifiedApiTest {
   private static Session session;
 
   @BeforeAll
-  static void setUp() throws Exception {
-    File tempDir = Files.createTempDirectory("jms2SimplifiedTempDir").toFile();
-    tempDir.deleteOnExit();
-
+  static void setUp(@TempDir File tempDir) throws Exception {
     Configuration config = new ConfigurationImpl();
     config.setBindingsDirectory(tempDir.getPath());
     config.setJournalDirectory(tempDir.getPath());
