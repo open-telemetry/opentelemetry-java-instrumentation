@@ -263,6 +263,22 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   }
 
   @Test
+  void testSpanSuppressionStrategyIsDeclarativeOnly() {
+    Map<String, String> properties = new HashMap<>();
+    properties.put("otel.instrumentation.common.span-suppression-strategy", "none");
+    properties.put("otel.instrumentation.experimental.span-suppression-strategy", "span-kind");
+
+    DeclarativeConfigProperties common =
+        ConfigPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig(
+                DefaultConfigProperties.createFromMap(properties))
+            .getStructured("java")
+            .getStructured("common");
+
+    assertThat(common.getString("span_suppression_strategy")).isNull();
+    assertThat(common.getString("span_suppression_strategy/development")).isEqualTo("span-kind");
+  }
+
+  @Test
   void testDeprecatedCommonDbStatementSanitizerMapping() {
     DeclarativeConfigProperties config =
         createConfig("otel.instrumentation.common.db-statement-sanitizer.enabled", "false");

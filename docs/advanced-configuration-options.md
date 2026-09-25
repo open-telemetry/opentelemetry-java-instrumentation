@@ -5,6 +5,27 @@ These are not meant to be used under normal circumstances.
 If you find yourself needing to use any of them, it would be great if you could drop us an issue
 explaining why, so that we can try to come up with a better solution to address your need.
 
+## Span suppression strategy
+
+To choose a span suppression strategy in declarative configuration, set
+`java.common.span_suppression_strategy` under `instrumentation/development`:
+
+```yaml
+instrumentation/development:
+  java:
+    common:
+      span_suppression_strategy: span-kind
+```
+
+The supported values are `semconv` (the default), `span-kind`, and `none`.
+The previous YAML key, `java.common.span_suppression_strategy/development`,
+and the already deprecated flat property,
+`otel.instrumentation.experimental.span-suppression-strategy`, remain available
+until 3.0. Neither legacy setting is used under v3-preview. The replacement
+is YAML-only; there is no new flat property. Programmatic
+`Experimental.setSpanSuppressionStrategy(...)` takes precedence over
+configuration.
+
 ## Excluding specific classes from being instrumented
 
 This can be used to completely silence spans from a given class/package.
