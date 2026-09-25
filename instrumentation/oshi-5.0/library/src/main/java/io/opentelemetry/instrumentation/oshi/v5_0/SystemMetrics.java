@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.oshi.v5_0;
 
+import static io.opentelemetry.instrumentation.oshi.v5_0.internal.SchemaUrls.V1_19_0;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -166,6 +168,7 @@ public final class SystemMetrics {
 
   private static Meter buildMeter(OpenTelemetry openTelemetry) {
     MeterBuilder meterBuilder = openTelemetry.getMeterProvider().meterBuilder(INSTRUMENTATION_NAME);
+    meterBuilder.setSchemaUrl(V1_19_0);
     String version = EmbeddedInstrumentationProperties.findVersion(INSTRUMENTATION_NAME);
     if (version != null) {
       meterBuilder.setInstrumentationVersion(version);
