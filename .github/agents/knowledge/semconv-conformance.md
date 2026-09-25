@@ -1,12 +1,5 @@
 # [Semconv] Semantic convention conformance
 
-## Quick reference
-
-- Use when: reviewing changes that implement or emit telemetry governed by semantic conventions,
-  or when explicitly evaluating semantic-convention conformance
-- Review focus: applicability, telemetry shape, requirement levels, value rules, safety, and
-  stability
-
 ## Establish the review target
 
 Determine the semantic-conventions version from the affected instrumentation's existing telemetry

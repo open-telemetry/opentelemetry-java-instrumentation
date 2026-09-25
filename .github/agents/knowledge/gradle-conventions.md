@@ -1,10 +1,5 @@
 # [Build] Gradle Conventions
 
-## Quick Reference
-
-- Use when: reviewing `build.gradle.kts`, `settings.gradle.kts`, or Gradle test tasks
-- Review focus: muzzle config, plugin type, include ordering, test task wiring, `withType` usage
-
 ## `settings.gradle.kts` Ordering
 
 New `include(...)` entries must be in **alphabetical order** within the surrounding group.

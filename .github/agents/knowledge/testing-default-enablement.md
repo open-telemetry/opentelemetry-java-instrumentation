@@ -1,13 +1,5 @@
 # [Testing] Default instrumentation enablement
 
-## Quick reference
-
-- Use when: adding or reviewing coverage for instrumentation that is disabled by default, or that
-  becomes disabled by default under `otel.instrumentation.common.v3-preview`
-- Review focus: run one representative operation in enabled and disabled modes, prove that the
-  operation emits telemetry when enabled, and prove that it emits no instrumentation telemetry
-  when disabled
-
 ## Test observable behavior
 
 Test enablement through the installed Java agent and a representative library operation. Do not

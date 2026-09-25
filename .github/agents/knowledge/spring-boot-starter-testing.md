@@ -1,12 +1,5 @@
 # [Testing] Spring Boot Starter Test Locations
 
-## Quick Reference
-
-- Use when: locating or adding tests for `opentelemetry-spring-boot-starter` /
-  `OpenTelemetryAutoConfiguration` behavior, or judging whether smoke-test coverage exists for it
-- Review focus: don't conclude "no smoke tests exist" from `smoke-tests/` alone — the
-  library-mode starter has its own top-level module
-
 ## Two Separate Spring Smoke-Test Layers
 
 This repo has two unrelated things that both look like "the Spring smoke test":

@@ -16,7 +16,7 @@ instruction; update the stale article separately.
 | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `api-deprecation-policy.md`        | Public API removal, rename, or deprecation; stable vs alpha breaking changes                                                                                                                                |
 | `config-property-stability.md`     | `otel.instrumentation.*` property add, remove, rename, or deprecation                                                                                                                                       |
-| `general-rules.md`                 | Additional reasoning, examples, and topic index for coding or review investigations                                                                                                                         |
+| `java-nullability-contracts.md`    | Upstream `TextMapGetter`/`TextMapSetter` nullable-carrier table; Java attribute-setter overload examples                                                                                                    |
 | `metadata-yaml-format.md`          | Instrumentation metadata or configuration shape and validation                                                                                                                                              |
 | `gradle-conventions.md`            | `build.gradle.kts` or `settings.gradle.kts` changes, custom test task registration or wiring                                                                                                                |
 | `java-reflection.md`               | `Method`, `MethodHandle`, `Constructor`, `Field`, reflective compatibility helpers, or package-local lookups                                                                                                |
@@ -39,4 +39,4 @@ instruction; update the stale article separately.
 
 - File names are topic-oriented and kebab-cased.
 - Prefer `<domain>-<focus>.md` patterns (for example `testing-semconv-stability.md`).
-- Keep titles aligned with category tags used in agent checklists (`[Build]`, `[Testing]`, etc.).
+- Keep titles aligned with category tags used in the native review instructions (`[Build]`, `[Testing]`, etc.).

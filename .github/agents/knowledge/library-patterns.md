@@ -1,10 +1,5 @@
 # [Library] TelemetryBuilder and Getter Patterns
 
-## Quick Reference
-
-- Use when: reviewing library instrumentation telemetry/builder/getter/setter patterns
-- Review focus: factory entry points, fluent builder contract
-
 ## How `{Library}Telemetry` Instances Are Created
 
 Library instrumentations expose a `{Library}Telemetry` class as the user-facing entry point.

@@ -26,6 +26,7 @@ applicable repository review rules; use their stated conditions and exceptions. 
   alpha API that should be removed immediately. A replacement must be at least as stable as
   the old API; deprecated methods delegate to their replacements, not vice versa. Include
   replacement and removal timing in `@deprecated` Javadoc and a deprecation CHANGELOG entry.
+  Document a breaking change to a published alpha API under the appropriate CHANGELOG heading.
 - User-facing configuration names and outgoing telemetry identities also have compatibility
   contracts. When a module is renamed, inspect both its `otel.instrumentation.<name>.enabled`
   alias and emitted `otel.scope.name`, including v3-preview behavior and scope-version lookup.

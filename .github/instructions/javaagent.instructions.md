@@ -27,8 +27,9 @@ library lifecycle before deciding whether an exception applies.
 - Keep advice as static nested classes with static methods. In `transform()`, reference
   nested advice by `getClass().getName() + "$AdviceName"`; resolving
   `InnerAdvice.class` or a library class literal from the agent loader can cause premature
-  class loading. Method signature matchers may use accessible `java.base` types available
-  at the minimum supported Java version; keep `named(...)` for instrumented-library types.
+  class loading. Do not name an exit advice method `onEnter` or vice versa. Method
+  signature matchers may use accessible `java.base` types available at the minimum
+  supported Java version; keep `named(...)` for instrumented-library types.
   With dynamic advice typing, match only signatures that guarantee assignability.
 - Do not require `isDeclaredBy` on a Byte Buddy method matcher by default. Use it only
   when a type matcher covers several types but advice targets a member declared by one
@@ -69,4 +70,5 @@ library lifecycle before deciding whether an exception applies.
 - In `*Singletons`, `*SpanNaming`, and similar holders, a zero-argument accessor directly
   returning a stored collaborator has the same lower-camel name as its field, without `get`.
   Callers static-import that accessor. This does not apply to methods that compute values,
-  take arguments, or perform work. Uppercase constant-like fields may be exposed directly.
+  take arguments, or perform work; do not static-import verb-named helper methods on this
+  basis. Uppercase constant-like fields may be exposed directly.

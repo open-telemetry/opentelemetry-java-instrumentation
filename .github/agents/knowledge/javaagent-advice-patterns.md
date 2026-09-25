@@ -1,12 +1,5 @@
 # [Javaagent] Advice Patterns
 
-## Quick Reference
-
-- Use when: reviewing ByteBuddy advice classes/methods (`@Advice.OnMethodEnter` /
-  `@Advice.OnMethodExit`), helpers called by advice, or `Java8BytecodeBridge` usage
-- Review focus: nested advice classes, static advice methods, advice-called helpers,
-  `suppress = Throwable.class`, no-throw behavior
-
 ## Advice Classes as Nested Classes
 
 Advice classes (those containing `@Advice.OnMethodEnter` / `@Advice.OnMethodExit` methods) should
@@ -356,20 +349,3 @@ the instrumentation automatically rather than letting it fail at runtime.
 - Do not throw exceptions in advice code.
 - Do not throw exceptions in helper classes called from advice.
 - Use `suppress = Throwable.class` as the last safety net (see above).
-
-## What to Flag in Review
-
-- **Advice class is a top-level file** instead of a static nested class inside the `TypeInstrumentation` — move it inside.
-- **Advice class missing `@SuppressWarnings("unused")`** — ByteBuddy invokes it reflectively; IDEs will flag it as dead code without the annotation. Always place the annotation **at the class level**, never moved down to individual methods.
-- **`@Advice.OnMethodEnter` or `@Advice.OnMethodExit` method is not `static`** — advice methods must be static.
-- **Advice class has instance fields** — advice classes are never instantiated; state must not be stored on them.
-- **Incorrect `Java8BytecodeBridge` use** — use the bridge for supported calls directly in
-  annotated advice methods, but direct APIs in helpers called by advice. Ignore source-level
-  `inline = false`; the transformer controls inlining.
-- **`@Advice.OnMethodEnter` or `@Advice.OnMethodExit` missing `suppress = Throwable.class`** when the method has a non-trivial body (library calls, collection iteration, reflection). Exceptions: helper-injection-only advice registered with `none()`, `instrumentation/internal/` infrastructure code, test sources, and methods whose bodies provably cannot throw (e.g., `return true;`, returning a literal or a single constant). Do not add or flag `suppress` on these exceptions.
-- **Exception thrown in advice code or a helper called from advice** — javaagent code must never throw; use `suppress = Throwable.class` as the safety net.
-- **`@Advice.OnMethodExit` method named `onEnter`** (or vice versa) — the method name should match the annotation. A mismatch is a copy-paste bug that compiles but confuses readers and may mask intent errors.
-- **Advice referenced in `transform()` using anything other than `getClass().getName() + "$InnerAdvice"`** — see `javaagent-module-patterns.md` for the canonical pattern. Flag `this.getClass().getName() + "$InnerAdvice"` as a redundant qualifier, and flag both `InnerAdvice.class.getName()` and `OuterInstrumentation.class.getName() + "$InnerAdvice"` because any `.class` literal in a `transform()` method triggers unwanted class loading.
-- **`onThrowable = Throwable.class` on return-only exit advice** — if the exit method only processes `@Advice.Return` and has no `@Advice.Enter` state to clean up, `onThrowable` should be omitted. The return value is `null`/zero on the exceptional path, and dereferencing it causes a suppressed exception for no benefit. Keep `suppress = Throwable.class` but remove `onThrowable`.
-- **One-off `AdviceScope` method naming** — for new ordinary advice, prefer `start()` / `end()` for `AdviceScope` methods, and avoid introducing unique names such as `create()`.
-- **Defensive hybrid `AdviceScope` in simple advice** — if `@Advice.Enter` is already nullable, flag simple advice that also stores a nullable inner `Scope`/`Context` and re-checks it inside `AdviceScope.end()`. Prefer returning `null` from the factory and keeping the created `AdviceScope` fully initialized.

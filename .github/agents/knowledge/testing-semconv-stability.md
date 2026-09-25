@@ -1,10 +1,5 @@
 # [Semconv] Dual Semconv Testing
 
-## Quick Reference
-
-- Use when: reviewing semconv dual-mode assertions or `testStableSemconv` / `testBothSemconv` tasks
-- Review focus: mode-specific assertions, `maybeStable()` usage boundaries
-
 ## Background: The Three Modes
 
 The system property `otel.semconv-stability.opt-in` (or env `OTEL_SEMCONV_STABILITY_OPT_IN`)

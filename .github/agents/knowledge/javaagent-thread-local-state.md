@@ -1,18 +1,5 @@
 # [Javaagent] Temporary ThreadLocal State
 
-## Quick Reference
-
-- Use when: designing, implementing, or reviewing temporary `ThreadLocal` state in javaagent advice
-  or helpers
-- Requirement: every value that holds operation-specific temporary state needs cleanup on every
-  exit, including exceptional exits
-- Default for temporary state installed on entry and cleaned up on exit: restore the previous value
-- Suppression: only the caller that acquires a `ScopedThreadSuppression` releases it
-- Advice lifecycle: keep each thread-local mutation and its cleanup visible in the paired entry and
-  exit advice
-- Naming: use `current*` for ambient state that belongs to the executing thread, except for
-  suppression holders and accessors
-
 ## Match cleanup to the lifecycle
 
 Trace every writer, reader, and cleanup point. Thread confinement does not prevent recursion,

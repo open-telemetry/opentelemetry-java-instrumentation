@@ -1,10 +1,5 @@
 # [Config] metadata.yaml Format and Declarative Name Conversion
 
-## Quick Reference
-
-- Use when: reviewing or creating `metadata.yaml` files, converting config names
-- Review focus: declarative_name format, examples guidelines, special mappings, config validation
-
 ## General
 
 - General enabled/disabled configs for an instrumentation module (example: `otel.instrumentation.apache-commons-pool.enabled`)

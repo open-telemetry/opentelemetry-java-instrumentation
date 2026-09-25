@@ -1,10 +1,5 @@
 # [Javaagent] Module Structure Patterns
 
-## Quick Reference
-
-- Use when: reviewing `InstrumentationModule`, `TypeInstrumentation`, or `CallDepth` code
-- Review focus: registration and naming, matcher performance, safe advice wiring
-
 ## InstrumentationModule
 
 Every javaagent instrumentation module has a central `InstrumentationModule` subclass that

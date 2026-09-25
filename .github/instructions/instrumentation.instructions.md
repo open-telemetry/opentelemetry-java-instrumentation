@@ -21,6 +21,11 @@ files when necessary, but comment on a changed line and only for a supported iss
   be removed after a subsequent minor release and do not need the v3-preview guard.
   Instrumentation enablement aliases have distinct warning semantics; do not apply ordinary
   replacement-first warning logic to them.
+- Read module settings from `java.<module>` and general settings from `general`; HTTP
+  header capture is general configuration. For a declarative `ComponentProvider`, its
+  `getName()` must match the YAML node. If the replacement config value already determines
+  an ordinary property's result, merely carrying the deprecated name must not cause a
+  warning; deduplicate warnings when reads may repeat.
 - Ordinary instrumentation settings are read through `DeclarativeConfigUtil`, with a default
   for unavailable YAML. A nullable read is intentional when probing for a replacement or
   deprecated name before choosing a default. Flat `ConfigProperties` reads are reserved for

@@ -1,12 +1,5 @@
 # [Testing] Experimental Feature Flag Tests
 
-## Quick Reference
-
-- Use when: any `experimental` flag (e.g., `experimental-span-attributes`,
-  `emit-experimental-telemetry`, `experimental-metrics.enabled`) appears in JVM args or
-  system properties of a test task
-- Review focus: task wiring/metadata config and assertion patterns for flag-on vs flag-off behavior
-
 ## What `testExperimental` Is For
 
 Some instrumentation modules support extra attributes that are disabled by default because they

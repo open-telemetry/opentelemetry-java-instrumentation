@@ -68,4 +68,6 @@ the stated exception before reporting a repository convention.
 - **Other conventions**: do not add `final` to parameters or locals;
   prefer `value == null` to `null == value`; do not flip
   `value.equals(CONSTANT)` solely for speculative null safety.
-  Avoid `Optional` in public API signatures and hot-path code.
+  Avoid `Optional` in public API signatures and hot-path code. Omit
+  explicit type arguments on generic method calls when type inference
+  already works; keep them where compilation actually requires them.

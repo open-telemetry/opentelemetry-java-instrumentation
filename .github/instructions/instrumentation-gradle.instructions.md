@@ -14,7 +14,10 @@ or test failure that CI will report.
   version; versionless leaves are for JDK instrumentation. In shared modules, use a `-common`
   suffix qualified by the minimum version or API variant only when needed. For new javaagent
   modules, check that Muzzle covers their supported ranges and that the main enablement name
-  matches the module directory without its version suffix.
+  matches the module directory without its version suffix. Include new test variants in
+  `.github/scripts/instrumentations.sh`, keep `settings.gradle.kts` entries alphabetical,
+  add the supported-library entry and module READMEs where applicable, and regenerate
+  `.fossa.yml` with `generateFossaConfiguration` when adding a module.
 - Muzzle `pass` blocks need the target group, artifact, version range and inverse assertion
   where an inverse exists. A pass covering all versions has no meaningful inverse. If
   multiple `InstrumentationModule`s share a project, separate their ranges and exclude

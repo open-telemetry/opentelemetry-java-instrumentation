@@ -1,10 +1,5 @@
 # [Naming] Module and Package Naming Conventions
 
-## Quick Reference
-
-- Use when: reviewing module names, package layout, or `settings.gradle.kts` includes
-- Review focus: directory and module naming rules, common-module forms, package version segment conventions
-
 ## Top-level instrumentation module directory
 
 - Single-version library: `instrumentation/<library>-<minimum-version>/`
@@ -87,11 +82,3 @@ General rules:
 - Javaagent packages use `io.opentelemetry.javaagent.instrumentation.<lib>...`
 - Library packages use `io.opentelemetry.instrumentation.<lib>...`
 - Internal-only classes go in a `.internal` subpackage
-
-## What to Flag in Review
-
-- **Module directory name missing the minimum version** for a third-party library.
-- **`InstrumentationModule` first `super()` name doesn't match the Gradle module directory**.
-- **`common` module name doesn't follow the `<lib>-common` / `<lib>-common-<version>` pattern**.
-- **Version in Java package uses dots instead of underscores** (e.g., `v3.0` instead of `v3_0`).
-- **`include(...)` entries in `settings.gradle.kts` not in alphabetical order**.
