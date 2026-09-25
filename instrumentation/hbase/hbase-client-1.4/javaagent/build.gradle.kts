@@ -59,6 +59,7 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     usesService(gradle.sharedServices.registrations["hbaseBuildService"].service)
     systemProperty("collectMetadata", otelProps.collectMetadata)
+    jvmArgs("-Djava.security.manager=allow")
   }
 
   val stableSemconvSuites =
