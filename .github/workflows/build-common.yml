@@ -6,6 +6,7 @@ on:
       cache-read-only:
         type: boolean
         required: false
+        default: true
       no-build-cache:
         type: boolean
         required: false
@@ -286,7 +287,7 @@ jobs:
           - 21
           - 25
           - 25-deny-unsafe
-          - 26 # renovate(java-version)
+          - 27 # renovate(java-version)
         vm:
           - hotspot
           - openj9
@@ -301,6 +302,8 @@ jobs:
         exclude:
           - vm: ${{ inputs.skip-openj9-tests && 'openj9' || '' }}
           - test-java-version: 25-deny-unsafe
+            vm: openj9
+          - test-java-version: 27
             vm: openj9
       fail-fast: false
     steps:

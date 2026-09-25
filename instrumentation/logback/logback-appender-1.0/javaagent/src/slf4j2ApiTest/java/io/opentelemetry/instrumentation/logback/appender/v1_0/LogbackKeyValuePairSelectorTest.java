@@ -66,7 +66,8 @@ class LogbackKeyValuePairSelectorTest {
   }
 
   private static Map<String, String> expectedKeyValuePairAttributes() {
-    if ("legacy".equals(System.getProperty("testKeyValuePairConfiguration"))) {
+    String configuration = System.getProperty("testKeyValuePairConfiguration");
+    if ("legacy".equals(configuration) || "all".equals(configuration)) {
       return new HashMap<>(KEY_VALUE_PAIRS);
     }
     Map<String, String> expected = new HashMap<>();

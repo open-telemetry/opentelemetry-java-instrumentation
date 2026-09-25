@@ -55,16 +55,14 @@ instrumentation/development:
       # Flush timeout in milliseconds.
       flush_timeout: 10000
     aws_sdk:
-      batch_send:
-        message_creation_spans:
-          # Determines whether to create a producer span for each eligible message in an SQS batch
-          # send when stable messaging semantic conventions are enabled. Overrides
-          # `otel.instrumentation.messaging.batch-send.message-creation-spans.enabled`.
-          enabled: true
-
       # Enables the experimental span attributes `aws.agent`, `aws.queue.name`,
       # `aws.lambda.function.arn` and `aws.lambda.function.name` for AWS SDK instrumentation.
       experimental_span_attributes/development: false
+      message_create_spans:
+        # Determines whether to create a producer span for each eligible message in an SQS batch
+        # send when stable messaging semantic conventions are enabled. Overrides
+        # `otel.instrumentation.common.messaging.message-create-spans.enabled`.
+        enabled: true
 
       # Determines whether errors returned by each individual HTTP request should be recorded as
       # events for the SDK span.
@@ -148,6 +146,23 @@ instrumentation/development:
       logging:
         # Specifies the key name used to store the span ID in the logging context.
         span_id_key: span_id
+        structured_attributes:
+          # Comma-separated list of case-sensitive glob patterns for event-local structured log
+          # attribute keys not to capture. Applies to Log4j MapMessage entries, SLF4J key-value
+          # pairs, Logback Logstash markers, and Logstash structured arguments. Excluded patterns
+          # take precedence over included patterns. An exclude-only selector captures every key not
+          # excluded; "*" captures no structured attributes. This does not affect otel.event.name,
+          # MDC, or logger context.
+          excluded: []
+
+          # Comma-separated list of case-sensitive glob patterns for event-local structured log
+          # attribute keys to capture. Applies to Log4j MapMessage entries, SLF4J key-value pairs,
+          # Logback Logstash markers, and Logstash structured arguments. "*" matches any number of
+          # characters and "?" matches one character. Excluded patterns take precedence. An
+          # exclude-only selector captures every key not excluded. Under v3-preview, an absent or
+          # empty selector captures all structured attributes by default. MDC and logger-context
+          # attributes remain separate and opt-in.
+          included: []
 
         # Specifies the key name used to store the trace flags in the logging context.
         trace_flags_key: trace_flags
@@ -159,17 +174,10 @@ instrumentation/development:
         # list of attribute keys.
         resource_attributes: []
       messaging:
-        batch_send:
-          message_creation_spans:
-            # Provides the default for whether to create a producer span for each eligible message
-            # in a batch send when stable messaging semantic conventions are enabled. An
-            # instrumentation-specific setting takes precedence.
-            enabled: true
-
-        # Deprecated: use `otel.instrumentation.messaging.experimental.headers.included` instead. A
-        # comma-separated list of header names to capture as span attributes. It does not support
-        # glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other
-        # entry is matched as a literal header name.
+        # Deprecated: use `otel.instrumentation.common.messaging.experimental.headers.included`
+        # instead. A comma-separated list of header names to capture as span attributes. It does not
+        # support glob patterns: an entry containing `*` or `?` is ignored with a warning, and every
+        # other entry is matched as a literal header name.
         capture_headers/development: []
         headers/development:
           # A comma-separated list of message header name patterns to exclude from span attributes.
@@ -183,6 +191,11 @@ instrumentation/development:
           # Matching is case-sensitive. `?` matches one character and `*` matches zero or more
           # characters.
           included: []
+        message_create_spans:
+          # Provides the default for whether to create a producer span for each eligible message in
+          # a batch send when stable messaging semantic conventions are enabled. An
+          # instrumentation-specific setting takes precedence.
+          enabled: true
         receive_telemetry/development:
           # Enables experimental receive telemetry, which will cause consumers to start a new trace,
           # with only a span link connecting it to the producer trace.
@@ -214,6 +227,10 @@ instrumentation/development:
     couchbase:
       # Enables experimental span attributes `couchbase.operation_id` and `couchbase.local.address`.
       # Different operation types receive different experimental attributes.
+      emit_experimental_telemetry/development: false
+
+      # Deprecated and will be removed in the next minor release. Use
+      # otel.instrumentation.couchbase.emit-experimental-telemetry instead.
       experimental_span_attributes/development: false
     elasticsearch:
       # Deprecated for removal in 3.0 with no replacement. Outside v3-preview, explicitly set this
@@ -452,10 +469,10 @@ instrumentation/development:
       # name, and line number.
       capture_code_attributes/development: false
 
-      # Deprecated boolean alias for
-      # otel.instrumentation.log4j-appender.experimental.map-message-attributes.included, where true
-      # captures all MapMessage attributes and false captures none. It is ignored when an included
-      # or excluded pattern is configured, and it may be removed in the next minor release.
+      # Deprecated; use otel.instrumentation.common.logging.structured-attributes.included instead.
+      # This setting is ignored under v3-preview and will be removed in 3.0. Outside v3-preview,
+      # true captures all MapMessage attributes and false captures none. It is ignored when a
+      # source-specific included or excluded pattern is configured.
       capture_map_message_attributes/development: false
 
       # Enables the capture of the Log4j marker attribute.
@@ -475,6 +492,8 @@ instrumentation/development:
       # Enables the capture of experimental log attributes, including thread name and thread ID.
       experimental_log_attributes/development: false
       map_message_attributes/development:
+        # Deprecated; use otel.instrumentation.common.logging.structured-attributes.excluded
+        # instead. This setting is ignored under v3-preview and will be removed in 3.0.
         # Comma-separated list of case-sensitive glob patterns for MapMessage keys not to capture as
         # log attributes. "*" matches any number of characters and "?" matches one character.
         # Excluded patterns take precedence over included patterns. No MapMessage attributes are
@@ -484,6 +503,8 @@ instrumentation/development:
         # not match them. Captured MapMessage attributes may contain sensitive information.
         excluded: []
 
+        # Deprecated; use otel.instrumentation.common.logging.structured-attributes.included
+        # instead. This setting is ignored under v3-preview and will be removed in 3.0.
         # Comma-separated list of case-sensitive glob patterns for MapMessage keys to capture as log
         # attributes. "*" matches any number of characters and "?" matches one character. Excluded
         # patterns take precedence over included patterns. No MapMessage attributes are captured
@@ -521,13 +542,10 @@ instrumentation/development:
       # name, and line number.
       capture_code_attributes/development: false
 
-      # Deprecated setting that enables the capture of all attributes from Logback key value pairs.
-      # It is ignored when
-      # otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included or
-      # otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.excluded is
-      # configured, and it may be removed in the next minor release. Use
-      # otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included
-      # instead.
+      # Deprecated; use otel.instrumentation.common.logging.structured-attributes.included instead.
+      # This setting is ignored under v3-preview and will be removed in 3.0. Outside v3-preview, it
+      # enables capture of all Logback key-value pair attributes unless a source-specific included
+      # or excluded pattern is configured.
       capture_key_value_pair_attributes/development: false
 
       # Deprecated setting that enables the capture of all attributes from the Logback logger
@@ -539,25 +557,17 @@ instrumentation/development:
       # instead.
       capture_logger_context_attributes/development: false
 
-      # Deprecated setting that enables the capture of all attributes from Logstash markers,
-      # supported are those added to logs via Markers.append(), Markers.appendEntries(),
-      # Markers.appendArray() and Markers.appendRaw() methods. It is ignored when
-      # otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.included or
-      # otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.excluded is
-      # configured, and it may be removed in the next minor release. Use
-      # otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.included
-      # instead.
+      # Deprecated; use otel.instrumentation.common.logging.structured-attributes.included instead.
+      # This setting is ignored under v3-preview and will be removed in 3.0. Outside v3-preview, it
+      # enables capture of attributes added via Markers.append(), Markers.appendEntries(),
+      # Markers.appendArray(), and Markers.appendRaw() unless a source-specific included or excluded
+      # pattern is configured.
       capture_logstash_marker_attributes/development: false
 
-      # Deprecated setting that enables the capture of all attributes from Logstash structured
-      # arguments (e.g., StructuredArguments.v() and StructuredArguments.keyValue()). It is ignored
-      # when
-      # otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included
-      # or
-      # otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.excluded
-      # is configured, and it may be removed in the next minor release. Use
-      # otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included
-      # instead.
+      # Deprecated; use otel.instrumentation.common.logging.structured-attributes.included instead.
+      # This setting is ignored under v3-preview and will be removed in 3.0. Outside v3-preview, it
+      # enables capture of Logstash structured arguments unless a source-specific included or
+      # excluded pattern is configured.
       capture_logstash_structured_arguments/development: false
 
       # Enables the capture of the Logback marker attribute.
@@ -578,6 +588,8 @@ instrumentation/development:
       # Enables the capture of experimental log attributes, including thread name and thread ID.
       experimental_log_attributes/development: false
       key_value_pair_attributes/development:
+        # Deprecated; use otel.instrumentation.common.logging.structured-attributes.excluded
+        # instead. This setting is ignored under v3-preview and will be removed in 3.0.
         # Comma-separated list of case-sensitive glob patterns for Logback key value pair keys not
         # to capture as log attributes. "*" matches any number of characters and "?" matches one
         # character. Excluded patterns take precedence over included patterns. No key value pair
@@ -588,6 +600,8 @@ instrumentation/development:
         # sensitive information.
         excluded: []
 
+        # Deprecated; use otel.instrumentation.common.logging.structured-attributes.included
+        # instead. This setting is ignored under v3-preview and will be removed in 3.0.
         # Comma-separated list of case-sensitive glob patterns for Logback key value pair keys to
         # capture as log attributes. "*" matches any number of characters and "?" matches one
         # character, so "*" captures all key value pair attributes. Excluded patterns take
@@ -621,6 +635,8 @@ instrumentation/development:
         # sensitive information.
         included: []
       logstash_marker_attributes/development:
+        # Deprecated; use otel.instrumentation.common.logging.structured-attributes.excluded
+        # instead. This setting is ignored under v3-preview and will be removed in 3.0.
         # Comma-separated list of case-sensitive glob patterns for Logstash marker keys not to
         # capture as log attributes. "*" matches any number of characters and "?" matches one
         # character. Excluded patterns take precedence over included patterns. No Logstash marker
@@ -631,6 +647,8 @@ instrumentation/development:
         # sensitive information.
         excluded: []
 
+        # Deprecated; use otel.instrumentation.common.logging.structured-attributes.included
+        # instead. This setting is ignored under v3-preview and will be removed in 3.0.
         # Comma-separated list of case-sensitive glob patterns for Logstash marker keys to capture
         # as log attributes. "*" matches any number of characters and "?" matches one character, so
         # "*" captures all Logstash marker attributes. Excluded patterns take precedence over
@@ -642,6 +660,8 @@ instrumentation/development:
         # sensitive information.
         included: []
       logstash_structured_argument_attributes/development:
+        # Deprecated; use otel.instrumentation.common.logging.structured-attributes.excluded
+        # instead. This setting is ignored under v3-preview and will be removed in 3.0.
         # Comma-separated list of case-sensitive glob patterns for Logstash structured argument keys
         # not to capture as log attributes. "*" matches any number of characters and "?" matches one
         # character. Excluded patterns take precedence over included patterns. No Logstash
@@ -653,6 +673,8 @@ instrumentation/development:
         # attributes may contain sensitive information.
         excluded: []
 
+        # Deprecated; use otel.instrumentation.common.logging.structured-attributes.included
+        # instead. This setting is ignored under v3-preview and will be removed in 3.0.
         # Comma-separated list of case-sensitive glob patterns for Logstash structured argument keys
         # to capture as log attributes. "*" matches any number of characters and "?" matches one
         # character, so "*" captures all Logstash structured argument attributes. Excluded patterns
@@ -776,6 +798,11 @@ instrumentation/development:
       # `messaging.rocketmq.broker_address`, `messaging.rocketmq.send_result`,
       # `messaging.rocketmq.queue_id`, and `messaging.rocketmq.queue_offset`.
       experimental_span_attributes/development: false
+      message_create_spans:
+        # Enables per-message Create spans for batch sends when stable messaging semantic
+        # conventions are enabled. Overrides the common messaging setting. Disabling this retains
+        # Send spans and context propagation and does not affect single-message sends.
+        enabled: true
     runtime_telemetry:
       # Enables the capture of experimental JFR-based JVM runtime metrics on Java 17+.
       emit_experimental_jfr_metrics/development: false

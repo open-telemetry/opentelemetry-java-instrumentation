@@ -61,9 +61,8 @@ duration and end the operation. Restore previous thread state on exit, including
 look up the parent from the context current on the completion thread.
 
 Ordinary paired advice can use [AdviceScope](javaagent-advice-patterns.md#advicescope-patterns).
-When suppressing lower-level processing with `MessagingTelemetrySuppression`, retain the previous
-suppression set returned by `suppress` and restore it on every exit; see
-[thread-state guidance](javaagent-thread-local-state.md).
+When suppressing lower-level processing with `ScopedThreadSuppression`, release it only if
+this invocation acquired it; see [thread-state guidance](javaagent-thread-local-state.md).
 
 Raw Kafka and SQS traversal is best effort. Instrument the supported iterator or callback
 boundary, not arbitrary list access. An abandoned iterator has no reliable completion event.
