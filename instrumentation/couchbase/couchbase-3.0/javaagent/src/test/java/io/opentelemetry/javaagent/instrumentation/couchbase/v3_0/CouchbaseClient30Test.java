@@ -12,6 +12,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3P
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.couchbase.client.core.env.TimeoutConfig;
 import com.couchbase.client.core.error.DocumentNotFoundException;
@@ -111,6 +112,42 @@ class CouchbaseClient30Test {
                                 stringKey("couchbase.operation_id"),
                                 value -> value.startsWith("0x")),
                             equalTo(stringKey("couchbase.document_id"), "id")),
+                span ->
+                    span.hasKind(INTERNAL)
+                        .hasName("dispatch_to_server")
+                        .hasParent(trace.getSpan(0)));
+          } else {
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(CLIENT)
+                        .hasName("get")
+                        .hasStatus(StatusData.unset())
+                        .hasNoParent()
+                        .hasTotalAttributeCount(0));
+          }
+        });
+  }
+
+  @Test
+  void testAsyncErrorEmitsSpans() {
+    assertThatThrownBy(() -> collection.async().get("async-id").join())
+        .hasCauseInstanceOf(DocumentNotFoundException.class);
+
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(
+        trace -> {
+          if (emitSdkDetailSpans()) {
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(v3Preview() ? CLIENT : INTERNAL)
+                        .hasName("get")
+                        .hasStatus(StatusData.unset())
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("peer.service"), "kv"),
+                            satisfies(
+                                stringKey("couchbase.operation_id"),
+                                value -> value.startsWith("0x")),
+                            equalTo(stringKey("couchbase.document_id"), "async-id")),
                 span ->
                     span.hasKind(INTERNAL)
                         .hasName("dispatch_to_server")
