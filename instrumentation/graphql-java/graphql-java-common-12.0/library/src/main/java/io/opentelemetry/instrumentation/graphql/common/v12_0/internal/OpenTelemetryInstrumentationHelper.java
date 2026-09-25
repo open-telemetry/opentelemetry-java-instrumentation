@@ -37,7 +37,10 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.Locale;
 
 /**
@@ -77,8 +80,17 @@ public class OpenTelemetryInstrumentationHelper {
                 });
     builder.addAttributesExtractor(new GraphqlAttributesExtractor());
 
+    boolean v3Preview = SemconvStability.v3Preview(openTelemetry);
+    if (v3Preview) {
+      builder.setSchemaUrl(SchemaUrls.V1_44_0);
+    }
     return new OpenTelemetryInstrumentationHelper(
-        builder.buildInstrumenter(), captureQuery, sanitizeQuery, addOperationNameToSpanName);
+        v3Preview
+            ? builder.buildInstrumenter(SpanKindExtractor.alwaysServer())
+            : builder.buildInstrumenter(),
+        captureQuery,
+        sanitizeQuery,
+        addOperationNameToSpanName);
   }
 
   private OpenTelemetryInstrumentationHelper(

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.graphql.common.v12_0;
 
 import static graphql.schema.idl.TypeRuntimeWiring.newTypeWiring;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -34,6 +35,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -179,8 +181,12 @@ public abstract class AbstractGraphqlTest {
               assertions.add(
                   span ->
                       span.hasName("query findBookById")
-                          .hasKind(SpanKind.INTERNAL)
+                          .hasKind(v3Preview() ? SpanKind.SERVER : SpanKind.INTERNAL)
                           .hasNoParent()
+                          .satisfies(
+                              spanData ->
+                                  assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
+                                      .isEqualTo(v3Preview() ? SchemaUrls.V1_44_0 : null))
                           .hasAttributesSatisfyingExactly(
                               equalTo(GRAPHQL_OPERATION_NAME, "findBookById"),
                               equalTo(GRAPHQL_OPERATION_TYPE, "query"),
@@ -191,7 +197,13 @@ public abstract class AbstractGraphqlTest {
                 assertions.add(
                     span ->
                         span.hasName("bookById")
+                            .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))
+                            .satisfies(
+                                spanData ->
+                                    assertThat(
+                                            spanData.getInstrumentationScopeInfo().getSchemaUrl())
+                                        .isNull())
                             .hasAttributesSatisfyingExactly(
                                 equalTo(stringKey("graphql.field.path"), "/bookById"),
                                 equalTo(stringKey("graphql.field.name"), "bookById")));
@@ -225,7 +237,7 @@ public abstract class AbstractGraphqlTest {
               assertions.add(
                   span ->
                       span.hasName("query")
-                          .hasKind(SpanKind.INTERNAL)
+                          .hasKind(v3Preview() ? SpanKind.SERVER : SpanKind.INTERNAL)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
                               equalTo(GRAPHQL_OPERATION_TYPE, "query"),
@@ -235,6 +247,7 @@ public abstract class AbstractGraphqlTest {
                 assertions.add(
                     span ->
                         span.hasName("bookById")
+                            .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(stringKey("graphql.field.path"), "/bookById"),
@@ -262,7 +275,7 @@ public abstract class AbstractGraphqlTest {
                 trace.hasSpansSatisfyingExactly(
                     span ->
                         span.hasName("GraphQL Operation")
-                            .hasKind(SpanKind.INTERNAL)
+                            .hasKind(v3Preview() ? SpanKind.SERVER : SpanKind.INTERNAL)
                             .hasNoParent()
                             .hasTotalAttributeCount(0)
                             .hasStatus(StatusData.error())
@@ -304,7 +317,7 @@ public abstract class AbstractGraphqlTest {
                 trace.hasSpansSatisfyingExactly(
                     span ->
                         span.hasName("GraphQL Operation")
-                            .hasKind(SpanKind.INTERNAL)
+                            .hasKind(v3Preview() ? SpanKind.SERVER : SpanKind.INTERNAL)
                             .hasNoParent()
                             .hasTotalAttributeCount(0)
                             .hasStatus(StatusData.error())
@@ -338,7 +351,7 @@ public abstract class AbstractGraphqlTest {
                 trace.hasSpansSatisfyingExactly(
                     span ->
                         span.hasName("mutation addNewBook")
-                            .hasKind(SpanKind.INTERNAL)
+                            .hasKind(v3Preview() ? SpanKind.SERVER : SpanKind.INTERNAL)
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
                                 equalTo(GRAPHQL_OPERATION_NAME, "addNewBook"),

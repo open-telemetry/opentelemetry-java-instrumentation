@@ -41,8 +41,22 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.graphql.data-fetcher.enabled=true")
   }
 
+  val testV3Preview = register<Test>("testV3Preview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs(
+      "-Dotel.instrumentation.common.v3-preview=true",
+      "-Dotel.instrumentation.graphql.data-fetcher.enabled=true",
+    )
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.v3-preview=true,otel.instrumentation.graphql.data-fetcher.enabled=true",
+    )
+  }
+
   check {
-    dependsOn(testDataFetcher)
+    dependsOn(testDataFetcher, testV3Preview)
   }
 }
 

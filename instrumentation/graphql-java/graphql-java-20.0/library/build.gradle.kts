@@ -18,3 +18,18 @@ if (otelProps.testLatestDeps) {
 tasks.test {
   jvmArgs("-Dotel.instrumentation.graphql.data-fetcher.enabled=true")
 }
+
+tasks {
+  val testV3Preview = register<Test>("testV3Preview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs(
+      "-Dotel.instrumentation.common.v3-preview=true",
+      "-Dotel.instrumentation.graphql.data-fetcher.enabled=true",
+    )
+  }
+
+  check {
+    dependsOn(testV3Preview)
+  }
+}
