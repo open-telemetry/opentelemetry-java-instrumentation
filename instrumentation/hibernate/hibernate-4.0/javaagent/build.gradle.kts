@@ -82,9 +82,10 @@ testing {
     }
     register<JvmTestSuite>("procedureCallTest") {
       dependencies {
+        val hibernateVersion = baseVersion("4.3.0.Final").orLatest("5.+")
         implementation(project(":instrumentation:hibernate:testing"))
-        implementation("org.hibernate:hibernate-core:4.3.0.Final")
-        implementation("org.hibernate:hibernate-entitymanager:4.3.0.Final")
+        implementation("org.hibernate:hibernate-core:$hibernateVersion")
+        implementation("org.hibernate:hibernate-entitymanager:$hibernateVersion")
         implementation("org.hsqldb:hsqldb:2.0.0")
         implementation("javax.xml.bind:jaxb-api:2.3.1")
         implementation("org.glassfish.jaxb:jaxb-runtime:2.3.3")
@@ -94,6 +95,18 @@ testing {
 }
 
 tasks {
+  named("generateInstrumentationVersionFile") {
+    val instrumentationName = "io.opentelemetry.hibernate-procedure-call-4.3"
+    val instrumentationVersion = project.version as String
+    val propertiesDir =
+      layout.buildDirectory.dir("generated/instrumentationVersion/META-INF/io/opentelemetry/instrumentation")
+    inputs.property("procedureCallInstrumentationName", instrumentationName)
+
+    doLast {
+      File(propertiesDir.get().asFile, "$instrumentationName.properties").writeText("version=$instrumentationVersion")
+    }
+  }
+
   withType<Test>().configureEach {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
