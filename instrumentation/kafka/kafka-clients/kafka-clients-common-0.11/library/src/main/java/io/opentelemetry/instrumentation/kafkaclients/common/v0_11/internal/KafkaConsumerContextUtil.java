@@ -115,9 +115,7 @@ public final class KafkaConsumerContextUtil {
     List<ConsumerRecord<?, ?>> result = new ArrayList<>(records.count());
     for (TopicPartition partition : records.partitions()) {
       List<? extends ConsumerRecord<?, ?>> partitionRecords = records.records(partition);
-      for (int i = 0; i < partitionRecords.size(); i++) {
-        result.add(partitionRecords.get(i));
-      }
+      result.addAll(partitionRecords);
     }
     return result;
   }
