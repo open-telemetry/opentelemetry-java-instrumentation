@@ -181,7 +181,7 @@ public abstract class AbstractGraphqlTest {
               assertions.add(
                   span ->
                       span.hasName("query findBookById")
-                          .hasKind(v3Preview() ? SpanKind.SERVER : SpanKind.INTERNAL)
+                          .hasKind(SpanKind.INTERNAL)
                           .hasNoParent()
                           .satisfies(
                               spanData ->
@@ -237,7 +237,7 @@ public abstract class AbstractGraphqlTest {
               assertions.add(
                   span ->
                       span.hasName("query")
-                          .hasKind(v3Preview() ? SpanKind.SERVER : SpanKind.INTERNAL)
+                          .hasKind(SpanKind.INTERNAL)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
                               equalTo(GRAPHQL_OPERATION_TYPE, "query"),
@@ -275,7 +275,7 @@ public abstract class AbstractGraphqlTest {
                 trace.hasSpansSatisfyingExactly(
                     span ->
                         span.hasName("GraphQL Operation")
-                            .hasKind(v3Preview() ? SpanKind.SERVER : SpanKind.INTERNAL)
+                            .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
                             .hasTotalAttributeCount(0)
                             .hasStatus(StatusData.error())
@@ -317,7 +317,7 @@ public abstract class AbstractGraphqlTest {
                 trace.hasSpansSatisfyingExactly(
                     span ->
                         span.hasName("GraphQL Operation")
-                            .hasKind(v3Preview() ? SpanKind.SERVER : SpanKind.INTERNAL)
+                            .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
                             .hasTotalAttributeCount(0)
                             .hasStatus(StatusData.error())
@@ -351,7 +351,7 @@ public abstract class AbstractGraphqlTest {
                 trace.hasSpansSatisfyingExactly(
                     span ->
                         span.hasName("mutation addNewBook")
-                            .hasKind(v3Preview() ? SpanKind.SERVER : SpanKind.INTERNAL)
+                            .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
                                 equalTo(GRAPHQL_OPERATION_NAME, "addNewBook"),

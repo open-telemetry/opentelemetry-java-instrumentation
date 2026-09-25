@@ -87,7 +87,7 @@ class GraphqlTest extends AbstractGraphqlTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("query findBookById")
-                        .hasKind(v3Preview() ? SpanKind.SERVER : SpanKind.INTERNAL)
+                        .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .satisfies(
                             spanData ->
@@ -164,7 +164,7 @@ class GraphqlTest extends AbstractGraphqlTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("query findBookById")
-                        .hasKind(v3Preview() ? SpanKind.SERVER : SpanKind.INTERNAL)
+                        .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(GRAPHQL_OPERATION_NAME, "findBookById"),
@@ -243,7 +243,7 @@ class GraphqlTest extends AbstractGraphqlTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("query findBookById")
-                        .hasKind(v3Preview() ? SpanKind.SERVER : SpanKind.INTERNAL)
+                        .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(GRAPHQL_OPERATION_NAME, "findBookById"),
@@ -295,7 +295,7 @@ class GraphqlTest extends AbstractGraphqlTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("query findBookById")
-                        .hasKind(v3Preview() ? SpanKind.SERVER : SpanKind.INTERNAL)
+                        .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(GRAPHQL_OPERATION_NAME, "findBookById"),
@@ -368,7 +368,7 @@ class GraphqlTest extends AbstractGraphqlTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("query findBookById")
-                        .hasKind(v3Preview() ? SpanKind.SERVER : SpanKind.INTERNAL)
+                        .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(GRAPHQL_OPERATION_NAME, "findBookById"),

@@ -37,7 +37,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.SchemaUrls;
@@ -85,12 +84,7 @@ public class OpenTelemetryInstrumentationHelper {
       builder.setSchemaUrl(SchemaUrls.V1_44_0);
     }
     return new OpenTelemetryInstrumentationHelper(
-        v3Preview
-            ? builder.buildInstrumenter(SpanKindExtractor.alwaysServer())
-            : builder.buildInstrumenter(),
-        captureQuery,
-        sanitizeQuery,
-        addOperationNameToSpanName);
+        builder.buildInstrumenter(), captureQuery, sanitizeQuery, addOperationNameToSpanName);
   }
 
   private OpenTelemetryInstrumentationHelper(
