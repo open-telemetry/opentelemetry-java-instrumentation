@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.Iterator;
 import java.util.Spliterator;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -22,19 +21,16 @@ public class TracingIterable<K, V> implements Iterable<ConsumerRecord<K, V>> {
   protected final Instrumenter<KafkaProcessRequest, Void> instrumenter;
   protected final BooleanSupplier wrappingEnabled;
   protected final KafkaConsumerContext consumerContext;
-  protected final BooleanSupplier firstTraversal;
 
   protected TracingIterable(
       Iterable<ConsumerRecord<K, V>> delegate,
       Instrumenter<KafkaProcessRequest, Void> instrumenter,
       BooleanSupplier wrappingEnabled,
-      KafkaConsumerContext consumerContext,
-      BooleanSupplier firstTraversal) {
+      KafkaConsumerContext consumerContext) {
     this.delegate = delegate;
     this.instrumenter = instrumenter;
     this.wrappingEnabled = wrappingEnabled;
     this.consumerContext = consumerContext;
-    this.firstTraversal = firstTraversal;
   }
 
   public static <K, V> Iterable<ConsumerRecord<K, V>> wrap(
@@ -45,31 +41,13 @@ public class TracingIterable<K, V> implements Iterable<ConsumerRecord<K, V>> {
     if (!wrappingEnabled.getAsBoolean()) {
       return delegate;
     }
-    AtomicBoolean traversalClaimed = new AtomicBoolean();
-    return wrap(
-        delegate,
-        instrumenter,
-        wrappingEnabled,
-        consumerContext,
-        () -> traversalClaimed.compareAndSet(false, true));
-  }
-
-  public static <K, V> Iterable<ConsumerRecord<K, V>> wrap(
-      Iterable<ConsumerRecord<K, V>> delegate,
-      Instrumenter<KafkaProcessRequest, Void> instrumenter,
-      BooleanSupplier wrappingEnabled,
-      KafkaConsumerContext consumerContext,
-      BooleanSupplier firstTraversal) {
-    return new TracingIterable<>(
-        delegate, instrumenter, wrappingEnabled, consumerContext, firstTraversal);
+    return new TracingIterable<>(delegate, instrumenter, wrappingEnabled, consumerContext);
   }
 
   @Override
   public Iterator<ConsumerRecord<K, V>> iterator() {
     Iterator<ConsumerRecord<K, V>> iterator = delegate.iterator();
-    return firstTraversal.getAsBoolean()
-        ? TracingIterator.wrap(iterator, instrumenter, wrappingEnabled, consumerContext)
-        : iterator;
+    return TracingIterator.wrap(iterator, instrumenter, wrappingEnabled, consumerContext);
   }
 
   @Override
@@ -80,7 +58,7 @@ public class TracingIterable<K, V> implements Iterable<ConsumerRecord<K, V>> {
   @Override
   public Spliterator<ConsumerRecord<K, V>> spliterator() {
     Spliterator<ConsumerRecord<K, V>> spliterator = delegate.spliterator();
-    return firstTraversal.getAsBoolean() && wrappingEnabled.getAsBoolean()
+    return wrappingEnabled.getAsBoolean()
         ? new TracingSpliterator<>(spliterator, instrumenter, wrappingEnabled, consumerContext)
         : spliterator;
   }

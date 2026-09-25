@@ -55,14 +55,6 @@ public final class KafkaProcessingOwnershipUtil {
     };
   }
 
-  public static boolean claimFirstTraversal(ConsumerRecords<?, ?> records) {
-    return batchState(records, true).claimFirstTraversal();
-  }
-
-  public static BooleanSupplier firstTraversal(ConsumerRecords<?, ?> records) {
-    return () -> claimFirstTraversal(records);
-  }
-
   private static KafkaConsumerBatchState batchState(
       ConsumerRecords<?, ?> records, boolean applicationPoll) {
     KafkaConsumerBatchState batchState = BATCH_STATE.get(records);
