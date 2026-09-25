@@ -17,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("deprecation") // old semconv getters are used for old semconv span names
 class RedisSpanNameDbAttributesGetterTest {
 
   private final Object request = new Object();
@@ -30,7 +31,6 @@ class RedisSpanNameDbAttributesGetterTest {
     getter = new RedisSpanNameDbAttributesGetter<>(delegate);
   }
 
-  @SuppressWarnings("deprecation") // getDbName is used for old semconv span names
   @Test
   void omitsNamespace() {
     assertThat(getter.getDbNamespace(request)).isNull();
@@ -39,7 +39,6 @@ class RedisSpanNameDbAttributesGetterTest {
     verifyNoInteractions(delegate);
   }
 
-  @SuppressWarnings("deprecation") // getDbOperation is used for old semconv span names
   @Test
   void delegatesSpanNameAttributes() {
     when(delegate.getDbQuerySummary(request)).thenReturn("query summary");
