@@ -1,5 +1,5 @@
 ---
-applyTo: "**/build.gradle.kts,**/settings.gradle.kts"
+applyTo: "**/build.gradle.kts,settings.gradle.kts,**/settings.gradle.kts"
 ---
 
 # Instrumentation build and test wiring
