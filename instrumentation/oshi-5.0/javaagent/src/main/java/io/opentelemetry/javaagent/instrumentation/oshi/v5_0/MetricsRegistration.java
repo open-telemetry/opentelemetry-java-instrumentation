@@ -23,12 +23,7 @@ import javax.annotation.Nullable;
 
 public class MetricsRegistration {
 
-  // version file is generated from the gradle module name; look it up explicitly so the legacy
-  // scope name still resolves to a version
   private static final String VERSION_LOOKUP_NAME = "io.opentelemetry.oshi-5.0";
-  // under v3-preview switch the emitted scope name to match the gradle module name, otherwise
-  // keep the pre-rename scope so existing dashboards/filters on
-  // otel.scope.name="io.opentelemetry.oshi" continue to work
   private static final String INSTRUMENTATION_NAME =
       AgentCommonConfig.get().isV3Preview() ? VERSION_LOOKUP_NAME : "io.opentelemetry.oshi";
 

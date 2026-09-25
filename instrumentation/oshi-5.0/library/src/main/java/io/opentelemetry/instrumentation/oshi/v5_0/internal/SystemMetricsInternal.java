@@ -17,7 +17,7 @@ import oshi.hardware.HardwareAbstractionLayer;
 import oshi.hardware.NetworkIF;
 
 /**
- * Internal registration bridge for the javaagent's pre-rename meter scope.
+ * Registers OSHI system metrics with a supplied meter and convention mode.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.

@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.oshi.v5_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.instrumentation.oshi.v5_0.internal.SchemaUrls.V1_19_0;
-import static io.opentelemetry.instrumentation.oshi.v5_0.internal.SchemaUrls.V1_44_0;
+import static io.opentelemetry.semconv.SchemaUrls.V1_44_0;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.Meter;
@@ -31,8 +31,8 @@ public final class SystemMetrics {
    * Like {@link #registerObservers(OpenTelemetry)}, but accepts a pre-built {@link Meter} and
    * retains the legacy metric conventions.
    *
-   * @deprecated Exists only so the javaagent can emit the pre-rename {@code io.opentelemetry.oshi}
-   *     scope by default; to be removed in 3.0 once v3-preview becomes the default.
+   * @deprecated Use {@link #registerObservers(OpenTelemetry)} to select the metric conventions and
+   *     schema URL from the supplied OpenTelemetry configuration.
    */
   @Deprecated
   public static List<AutoCloseable> registerObservers(Meter meter) {
