@@ -11,7 +11,6 @@ dependencies {
   testImplementation(project(":instrumentation:apache-dubbo-2.7:testing"))
 
   testLibrary("org.apache.dubbo:dubbo-config-api:2.7.0")
-  testLibrary("org.apache.dubbo:dubbo-config-api:3.3.6")
   if (otelProps.testLatestDeps) {
     // these dependencies should be optional but when running on jdk25 more classes are loaded than
     // on earlier jdk versions and DubboRegistryTest fails with NoClassDefFoundError

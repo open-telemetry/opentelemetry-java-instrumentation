@@ -55,7 +55,9 @@ tasks {
     usesService(gradle.sharedServices.registrations["hbaseBuildService"].service)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
     systemProperty("collectMetadata", otelProps.collectMetadata)
-    jvmArgs("-Djava.security.manager=allow")
+    if (otelProps.testLatestDeps) {
+      jvmArgs("-Djava.security.manager=allow")
+    }
   }
 
   val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
