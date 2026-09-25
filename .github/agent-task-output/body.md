@@ -1,0 +1,3 @@
+When a messaging client and another instrumentation observe the same processing work, only one should create its Process span. This guidance ties ownership to the callback or response handoff and names both sides: `markSpringKafkaAsProcessingOwner(records)` where the integration is known, and `markProcessingOwnedOutsideKafkaClient(records)` where shared client code only knows to yield.
+
+RabbitMQ, Kafka, and SQS examples cover fallback when an integration cannot handle the callback, matching parent and completion to the invocation, scoped suppression, and abandoned traversal. Receive, Send, Create, and consumed-message metric deduplication remain separate; the latter is tracked in #20214.
