@@ -73,6 +73,18 @@ class KafkaConsumerBatchStateTest {
         .isFalse();
   }
 
+  @Test
+  void newPollRestoresFirstTraversalForReusedBatch() {
+    ConsumerRecords<String, String> records = records();
+    KafkaProcessingOwnershipUtil.recordPoll(records, true);
+
+    assertThat(KafkaProcessingOwnershipUtil.claimFirstTraversal(records)).isTrue();
+    assertThat(KafkaProcessingOwnershipUtil.claimFirstTraversal(records)).isFalse();
+
+    KafkaProcessingOwnershipUtil.recordPoll(records, true);
+    assertThat(KafkaProcessingOwnershipUtil.claimFirstTraversal(records)).isTrue();
+  }
+
   private static ConsumerRecords<String, String> records() {
     TopicPartition partition = new TopicPartition("test", 0);
     return new ConsumerRecords<>(singletonMap(partition, singletonList(record())));

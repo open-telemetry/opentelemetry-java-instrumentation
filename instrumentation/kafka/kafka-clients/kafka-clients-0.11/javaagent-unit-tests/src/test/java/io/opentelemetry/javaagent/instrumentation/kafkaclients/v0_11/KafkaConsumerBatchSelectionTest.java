@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.api.trace.Span;
@@ -20,11 +21,16 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaInstrumenterFactory;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.TracingIterable;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.TracingIterator;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.TracingList;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Spliterator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.TopicPartition;
@@ -170,6 +176,212 @@ class KafkaConsumerBatchSelectionTest {
     assertProcessSpans(1);
   }
 
+  @Test
+  void unconsumedIteratorClaimsBatchAcrossViews() {
+    ConsumerRecords<String, String> records = records(record(0));
+    KafkaProcessingOwnershipUtil.recordPoll(records, true);
+    Iterator<ConsumerRecord<String, String>> claimed = iterable(records).iterator();
+    assertThat(claimed.hasNext()).isTrue();
+    List<ConsumerRecord<String, String>> partition = list(records);
+
+    partition.forEach(record -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    assertThat(partition.subList(0, 1).listIterator().next().offset()).isZero();
+    assertThat(testing.spans()).isEmpty();
+  }
+
+  @Test
+  void subListAndRootListShareOneTraversal() {
+    ConsumerRecords<String, String> records = records(record(0), record(1));
+    KafkaProcessingOwnershipUtil.recordPoll(records, true);
+    List<ConsumerRecord<String, String>> list = list(records);
+    List<ConsumerRecord<String, String>> subList = list.subList(0, 1);
+    Iterator<ConsumerRecord<String, String>> first = subList.iterator();
+    assertThat(first.next().offset()).isZero();
+    assertThat(first.hasNext()).isFalse();
+
+    list.forEach(record -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    assertProcessSpans(1);
+  }
+
+  @Test
+  void listIteratorAcquisitionClaimsEvenBeforeReading() {
+    ConsumerRecords<String, String> records = records(record(0));
+    KafkaProcessingOwnershipUtil.recordPoll(records, true);
+    List<ConsumerRecord<String, String>> list = list(records);
+    assertThat(list.listIterator().hasNext()).isTrue();
+
+    assertThat(list.iterator().next().offset()).isZero();
+    assertThat(testing.spans()).isEmpty();
+  }
+
+  @Test
+  void directIteratorAndPartitionListShareTraversal() {
+    ConsumerRecords<String, String> records = records(record(0));
+    KafkaProcessingOwnershipUtil.recordPoll(records, true);
+    Iterator<ConsumerRecord<String, String>> first = iterator(records);
+    assertThat(first.hasNext()).isTrue();
+
+    assertThat(list(records).listIterator().next().offset()).isZero();
+    assertThat(testing.spans()).isEmpty();
+  }
+
+  @Test
+  void topicIterableForEachClosesSpansAndClaimsPartitionView() {
+    ConsumerRecords<String, String> records = records(record(0), record(1));
+    KafkaProcessingOwnershipUtil.recordPoll(records, true);
+
+    iterable(records)
+        .forEach(record -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
+    list(records)
+        .forEach(record -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+
+    assertProcessSpans(2);
+  }
+
+  @Test
+  void unusedSpliteratorClaimsTraversal() {
+    ConsumerRecords<String, String> records = records(record(0));
+    KafkaProcessingOwnershipUtil.recordPoll(records, true);
+    List<ConsumerRecord<String, String>> list = list(records);
+    Spliterator<ConsumerRecord<String, String>> first = list.subList(0, 1).spliterator();
+    assertThat(first.estimateSize()).isEqualTo(1);
+
+    assertThat(list.iterator().next().offset()).isZero();
+    assertThat(testing.spans()).isEmpty();
+  }
+
+  @Test
+  void reverseListIteratorEndsForwardSpan() {
+    ConsumerRecords<String, String> records = records(record(0));
+    KafkaProcessingOwnershipUtil.recordPoll(records, true);
+    ListIterator<ConsumerRecord<String, String>> iterator = list(records).listIterator();
+    assertThat(iterator.next().offset()).isZero();
+    assertThat(Span.current().getSpanContext().isValid()).isTrue();
+    assertThat(iterator.previous().offset()).isZero();
+
+    assertProcessSpans(1);
+  }
+
+  @Test
+  void forEachClosesSpanAfterEachCallbackAndOnThrow() {
+    ConsumerRecords<String, String> records = records(record(0), record(1));
+    KafkaProcessingOwnershipUtil.recordPoll(records, true);
+    List<ConsumerRecord<String, String>> list = list(records);
+
+    assertThatThrownBy(
+            () ->
+                list.forEach(
+                    record -> {
+                      assertThat(Span.current().getSpanContext().isValid()).isTrue();
+                      throw new IllegalStateException("callback failed");
+                    }))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("callback failed");
+
+    assertThat(list.iterator().next().offset()).isZero();
+    assertProcessSpans(1);
+  }
+
+  @Test
+  void invalidCallbackStillClaimsFirstTraversal() {
+    ConsumerRecords<String, String> records = records(record(0));
+    KafkaProcessingOwnershipUtil.recordPoll(records, true);
+    List<ConsumerRecord<String, String>> list = list(records);
+
+    assertThatThrownBy(() -> list.forEach(null)).isInstanceOf(NullPointerException.class);
+    assertThat(list.iterator().next().offset()).isZero();
+    assertThat(testing.spans()).isEmpty();
+  }
+
+  @Test
+  void splitSpliteratorClosesEachCallbackAndClaimsBatch() {
+    ConsumerRecords<String, String> records = records(record(0), record(1), record(2));
+    KafkaProcessingOwnershipUtil.recordPoll(records, true);
+    List<ConsumerRecord<String, String>> list = list(records);
+    Spliterator<ConsumerRecord<String, String>> tail = list.spliterator();
+    Spliterator<ConsumerRecord<String, String>> head = tail.trySplit();
+    assertThat(head).isNotNull();
+
+    head.forEachRemaining(record -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
+    assertThat(Span.current().getSpanContext().isValid()).isFalse();
+    tail.forEachRemaining(record -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
+    list.forEach(record -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    assertProcessSpans(3);
+  }
+
+  @Test
+  void spliteratorCallbackThrowClosesSpan() {
+    ConsumerRecords<String, String> records = records(record(0));
+    KafkaProcessingOwnershipUtil.recordPoll(records, true);
+    Spliterator<ConsumerRecord<String, String>> spliterator = list(records).spliterator();
+
+    assertThatThrownBy(
+            () ->
+                spliterator.tryAdvance(
+                    record -> {
+                      assertThat(Span.current().getSpanContext().isValid()).isTrue();
+                      throw new IllegalStateException("callback failed");
+                    }))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("callback failed");
+
+    assertProcessSpans(1);
+  }
+
+  @Test
+  void splitCallbackThrowDoesNotLeakIntoParentTraversal() {
+    ConsumerRecords<String, String> records = records(record(0), record(1));
+    KafkaProcessingOwnershipUtil.recordPoll(records, true);
+    Spliterator<ConsumerRecord<String, String>> tail = list(records).spliterator();
+    Spliterator<ConsumerRecord<String, String>> head = tail.trySplit();
+    assertThat(head).isNotNull();
+
+    assertThatThrownBy(
+            () ->
+                head.tryAdvance(
+                    record -> {
+                      throw new IllegalStateException("callback failed");
+                    }))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("callback failed");
+    assertThat(Span.current().getSpanContext().isValid()).isFalse();
+    assertThat(
+            tail.tryAdvance(
+                record -> assertThat(Span.current().getSpanContext().isValid()).isTrue()))
+        .isTrue();
+    assertProcessSpans(2);
+  }
+
+  @Test
+  void claimBeforeFrameworkHandoffStillSuppressesProcessSpan() {
+    ConsumerRecords<String, String> records = records(record(0));
+    KafkaProcessingOwnershipUtil.recordPoll(records, true);
+    Spliterator<ConsumerRecord<String, String>> spliterator = list(records).spliterator();
+    KafkaProcessingOwnershipUtil.markProcessingOwnedOutsideKafkaClient(records);
+
+    assertThat(spliterator.tryAdvance(record -> {})).isTrue();
+    assertThat(testing.spans()).isEmpty();
+  }
+
+  private List<ConsumerRecord<String, String>> list(ConsumerRecords<String, String> records) {
+    return TracingList.wrap(
+        records.records(new TopicPartition("orders", 0)),
+        factory.createConsumerProcessInstrumenter(),
+        KafkaProcessingOwnershipUtil.rawProcessingEligibility(records, () -> true),
+        KafkaConsumerContextUtil.create(null, "group", "client"),
+        KafkaProcessingOwnershipUtil.firstTraversal(records));
+  }
+
+  private Iterable<ConsumerRecord<String, String>> iterable(
+      ConsumerRecords<String, String> records) {
+    return TracingIterable.wrap(
+        records.records("orders"),
+        factory.createConsumerProcessInstrumenter(),
+        KafkaProcessingOwnershipUtil.rawProcessingEligibility(records, () -> true),
+        KafkaConsumerContextUtil.create(null, "group", "client"),
+        KafkaProcessingOwnershipUtil.firstTraversal(records));
+  }
+
   private Iterator<ConsumerRecord<String, String>> iterator(
       ConsumerRecords<String, String> records) {
     Instrumenter<KafkaProcessRequest, Void> instrumenter =
@@ -177,7 +389,9 @@ class KafkaConsumerBatchSelectionTest {
     return TracingIterator.wrap(
         records.iterator(),
         instrumenter,
-        KafkaProcessingOwnershipUtil.rawProcessingEligibility(records, () -> true),
+        KafkaProcessingOwnershipUtil.claimFirstTraversal(records)
+            ? KafkaProcessingOwnershipUtil.rawProcessingEligibility(records, () -> true)
+            : () -> false,
         KafkaConsumerContextUtil.create(null, "group", "client"));
   }
 
