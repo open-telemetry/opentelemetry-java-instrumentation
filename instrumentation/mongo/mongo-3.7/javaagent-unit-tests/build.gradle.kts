@@ -6,5 +6,7 @@ dependencies {
   testImplementation(project(":instrumentation:mongo:mongo-3.1:javaagent"))
   testImplementation(project(":instrumentation:mongo:mongo-3.1:library"))
   testImplementation(project(":instrumentation-api"))
+  testImplementation(project(":javaagent-extension-api"))
+  testImplementation(project(":muzzle"))
   testImplementation("org.mongodb:mongo-java-driver:3.11.0")
 }

@@ -5,6 +5,7 @@ plugins {
 
 muzzle {
   pass {
+    name.set("Mongo 3.1 instrumentation")
     group.set("org.mongodb")
     module.set("mongo-java-driver")
     versions.set("[3.1,)")
@@ -12,6 +13,7 @@ muzzle {
     excludeInstrumentationName("mongo-3.7-core")
   }
   pass {
+    name.set("Mongo 3.7 instrumentation")
     group.set("org.mongodb")
     module.set("mongo-java-driver")
     versions.set("[3.7, 4.0)")
