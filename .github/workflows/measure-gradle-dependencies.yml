@@ -1,0 +1,57 @@
+name: Measure clean Gradle dependency cache
+
+on:
+  push:
+    branches:
+      - trask-gradle-cache-size-experiment
+
+permissions:
+  contents: read
+
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      GRADLE_USER_HOME: ${{ runner.temp }}/clean-gradle-user-home
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Free disk space
+        run: .github/scripts/gha-free-disk-space.sh
+
+      - name: Set up JDK for running Gradle
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version-file: .java-version
+
+      - name: Increase Gradle daemon heap size
+        run: sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx4g /" gradle.properties
+
+      - name: Set up Gradle without Actions caching
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        with:
+          cache-disabled: true
+
+      - name: Verify empty dependency cache
+        run: test ! -e "$GRADLE_USER_HOME/caches/modules-2/files-2.1"
+
+      - name: Build
+        run: ./gradlew check javadoc sourcesJar spdxSbom -x spotlessCheck -PskipTests=true
+
+      - name: Measure dependencies without uploading
+        run: |
+          dependencies="$GRADLE_USER_HOME/caches/modules-2/files-2.1"
+          test -d "$dependencies"
+          raw=$(du -sb "$dependencies" | cut -f1)
+          compressed=$(tar --posix -cf - -C "$GRADLE_USER_HOME/caches/modules-2" files-2.1 | zstdmt | wc -c)
+          printf 'Dependency files: %s bytes\nCompressed dependency archive: %s bytes\n' "$raw" "$compressed"
+          {
+            echo "Clean Gradle dependency cache estimate"
+            echo
+            printf 'Raw dependency files: %s bytes\n\n' "$raw"
+            printf 'Compressed dependency archive: %s bytes\n' "$compressed"
+          } >> "$GITHUB_STEP_SUMMARY"
