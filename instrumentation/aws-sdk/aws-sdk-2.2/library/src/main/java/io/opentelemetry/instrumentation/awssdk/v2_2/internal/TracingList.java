@@ -20,6 +20,7 @@ import java.util.ListIterator;
 import java.util.Objects;
 import java.util.RandomAccess;
 import java.util.Spliterator;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
@@ -40,8 +41,8 @@ public final class TracingList extends ArrayList<Message> {
   private final TracingExecutionInterceptor config;
   private final IdentityHashMap<Message, SqsMessage> tracingMessages;
   @Nullable private final Context processParentContext;
-  private boolean processingOwnedOutsideSqsSdk;
-  private boolean firstIterator = true;
+  private final AtomicBoolean firstTraversal = new AtomicBoolean(true);
+  private volatile boolean processingOwnedOutsideSqsSdk;
 
   public static TracingList wrap(
       List<Message> messages,
@@ -185,12 +186,7 @@ public final class TracingList extends ArrayList<Message> {
   }
 
   private boolean shouldTraceTraversal() {
-    // We should only return one traversal with tracing.
-    // However, this is not thread-safe, but usually the first (hopefully only) traversal of
-    // List is performed in the same thread that called receiveMessage()
-    boolean shouldTrace = !processingOwnedOutsideSqsSdk && firstIterator;
-    firstIterator = false;
-    return shouldTrace;
+    return firstTraversal.getAndSet(false) && !processingOwnedOutsideSqsSdk;
   }
 
   private Consumer<? super Message> tracingAction(Consumer<? super Message> action) {

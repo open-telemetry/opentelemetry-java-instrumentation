@@ -12,6 +12,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -38,13 +39,19 @@ import java.util.Map;
 import java.util.RandomAccess;
 import java.util.Spliterator;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.http.SdkHttpResponse;
 import software.amazon.awssdk.services.sqs.model.Message;
@@ -123,6 +130,127 @@ class SqsTracingListTest {
 
     testing.waitForTraces(4);
     assertThat(testing.spans()).hasSize(4);
+  }
+
+  @ParameterizedTest
+  @MethodSource("firstTraversalSelections")
+  void unusedFirstTraversalConsumesBatch(Function<TracingList, ?> selectTraversal) {
+    TracingList tracingList = tracingMessages(1, new ArrayList<>());
+
+    assertThat(selectTraversal.apply(tracingList)).isNotNull();
+    tracingList.forEach(unused -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    tracingList
+        .subList(0, 1)
+        .iterator()
+        .forEachRemaining(
+            unused -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+
+    assertThat(testing.spans()).isEmpty();
+  }
+
+  private static Stream<Arguments> firstTraversalSelections() {
+    return Stream.of(
+        argumentSet(
+            "root iterator", (Function<TracingList, ?>) tracingList -> tracingList.iterator()),
+        argumentSet(
+            "empty view iterator",
+            (Function<TracingList, ?>) tracingList -> tracingList.subList(0, 0).iterator()),
+        argumentSet(
+            "root list iterator",
+            (Function<TracingList, ?>) tracingList -> tracingList.listIterator()),
+        argumentSet(
+            "root indexed list iterator",
+            (Function<TracingList, ?>) tracingList -> tracingList.listIterator(0)),
+        argumentSet(
+            "empty nested view list iterator",
+            (Function<TracingList, ?>)
+                tracingList -> tracingList.subList(0, 1).subList(0, 0).listIterator(0)),
+        argumentSet(
+            "root spliterator",
+            (Function<TracingList, ?>) tracingList -> tracingList.spliterator()),
+        argumentSet(
+            "empty view spliterator",
+            (Function<TracingList, ?>) tracingList -> tracingList.subList(0, 0).spliterator()));
+  }
+
+  @Test
+  void emptyViewForEachConsumesTraversalForRoot() {
+    TracingList tracingList = tracingMessages(1, new ArrayList<>());
+
+    tracingList.subList(0, 0).forEach(unused -> {});
+    tracingList.forEach(unused -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+
+    assertThat(testing.spans()).isEmpty();
+  }
+
+  @Test
+  void rootForEachConsumesTraversalForViews() {
+    TracingList tracingList = tracingMessages(2, new ArrayList<>());
+    List<Message> view = tracingList.subList(0, tracingList.size());
+
+    tracingList.forEach(unused -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
+    view.spliterator()
+        .forEachRemaining(
+            unused -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+
+    testing.waitForTraces(2);
+    assertThat(testing.spans()).hasSize(2);
+  }
+
+  @Test
+  void concurrentTraversalSelectionClaimsOnlyOneProcessingTraversal() throws Exception {
+    TracingList tracingList = tracingMessages(1, new ArrayList<>());
+    CyclicBarrier barrier = new CyclicBarrier(2);
+    ExecutorService executor = Executors.newFixedThreadPool(2);
+    try {
+      Future<Boolean> first =
+          executor.submit(
+              () -> {
+                barrier.await(10, SECONDS);
+                Iterator<Message> iterator = tracingList.iterator();
+                iterator.forEachRemaining(unused -> {});
+                return iterator instanceof TracingIterator;
+              });
+      Future<Boolean> second =
+          executor.submit(
+              () -> {
+                barrier.await(10, SECONDS);
+                Iterator<Message> iterator = tracingList.subList(0, 1).iterator();
+                iterator.forEachRemaining(unused -> {});
+                return iterator instanceof TracingIterator;
+              });
+
+      assertThat(first.get(10, SECONDS)).isNotEqualTo(second.get(10, SECONDS));
+    } finally {
+      executor.shutdownNow();
+    }
+
+    testing.waitForTraces(1);
+    assertThat(testing.spans()).hasSize(1);
+  }
+
+  @Test
+  void splitSpliteratorEndsProcessingWhenActionThrows() {
+    TracingList tracingList = tracingMessages(2, new ArrayList<>());
+    Spliterator<Message> split =
+        requireNonNull(tracingList.subList(0, tracingList.size()).spliterator().trySplit());
+    IllegalStateException failure = new IllegalStateException("processing failed");
+
+    assertThatThrownBy(
+            () ->
+                split.tryAdvance(
+                    unused -> {
+                      assertThat(Span.current().getSpanContext().isValid()).isTrue();
+                      throw failure;
+                    }))
+        .isSameAs(failure);
+    assertThat(Span.current().getSpanContext().isValid()).isFalse();
+
+    testing.waitForTraces(1);
+    assertThat(testing.spans())
+        .singleElement()
+        .satisfies(
+            span -> assertThat(span.getStatus().getStatusCode()).isEqualTo(StatusCode.ERROR));
   }
 
   @Test
