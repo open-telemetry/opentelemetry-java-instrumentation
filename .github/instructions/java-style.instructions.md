@@ -53,6 +53,9 @@ the stated exception before reporting a repository convention.
   production call may repeatedly compile them. `String.split` has a fast
   path for simple separators such as `","` and `"\\."`; do not ask for
   a `Pattern` there, in test code, or for one-time initialization.
+- **Lambda allocation**: do not ask to hoist a non-capturing lambda or
+  method reference into a field to avoid allocation. HotSpot caches it at
+  the `invokedynamic` call site.
 - **Byte buffers**: `Value<ByteBuffer>.getValue()` returns a fresh read-only
   buffer on each call. Do not add `.duplicate()` solely to get independent
   position and limit state.

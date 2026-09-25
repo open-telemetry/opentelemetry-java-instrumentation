@@ -42,11 +42,14 @@ convention not caught by CI.
   the test process. Use `findOpenPorts(count)` when a service needs a consecutive
   range instead of assuming ports adjacent to a separately allocated port are
   available.
-- Register `AutoCleanupExtension` with the lifecycle that owns the resource:
-  use `deferCleanup` for per-test resources and `deferAfterAll` for class-scoped
-  resources. Do not replace it with an earlier lifecycle cleanup that can leak
-  on test failure; its outermost-container handling intentionally prevents
-  duplicate `deferAfterAll` cleanup for nested tests.
+- Prefer plain `@AfterEach` or `@AfterAll` teardown when direct cleanup is
+  safe. Introduce `AutoCleanupExtension` when deferred cleanup improves
+  clarity or protects partially completed setup. Register it with the
+  lifecycle that owns the resource: use `deferCleanup` for per-test resources
+  and `deferAfterAll` for class-scoped resources. Do not replace deferred
+  cleanup with an earlier lifecycle cleanup that can leak on test failure; its
+  outermost-container handling intentionally prevents duplicate
+  `deferAfterAll` cleanup for nested tests.
 - Keep fixture state that depends on a concrete test subclass on that subclass
   or initialize it separately for each subclass. Do not cache subclass-specific
   state in a shared static field on an abstract test base.
