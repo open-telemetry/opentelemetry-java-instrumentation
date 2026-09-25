@@ -1,12 +1,14 @@
 ---
-applyTo: "**/src/test*/**/*.java,**/src/*Test*/**/*.java,**/src/unitTests/**/*.java,**/*-testing/**/src/main/**/*.java,**/*-tests/**/src/main/**/*.java,**/testing/**/*.java,testing-common/**/*.java,smoke-tests*/**/*.java"
+applyTo: "**/*.java"
 ---
 
 # Java tests
 
-Apply to test code and shared testing modules. Comment only on a changed
-line for a substantive coverage gap or an explicit convention not caught
-by CI.
+This file is loaded for all Java changes. Apply the behavior-coverage
+checks when the corresponding production behavior changes. Apply the
+remaining sections only to test code and shared testing modules. Comment
+only on a changed line for a substantive coverage gap or an explicit
+convention not caught by CI.
 
 ## Behavior coverage
 

@@ -1,5 +1,5 @@
 ---
-applyTo: "instrumentation/**/library/**/*.java"
+applyTo: "instrumentation/**/library/**/*.java,instrumentation/**/library-autoconfigure/**/*.java"
 ---
 
 # Library instrumentation

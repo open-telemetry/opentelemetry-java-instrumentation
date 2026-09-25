@@ -62,9 +62,18 @@ the stated exception before reporting a repository convention.
   not have this nullable-carrier contract. Do not add `@Nullable` in
   test code.
 - **Stateless telemetry collaborators**: prefer constructing Java
-  `TextMapGetter`, `TextMapSetter`, and attribute extractors at
-  registration instead of singleton `INSTANCE` fields. Retain
-  singletons on per-request hot paths; Kotlin `object` is unrelated.
+  `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`,
+  `AttributesExtractor`, `SpanNameExtractor`, and
+  `HttpServerResponseMutator` implementations at registration instead
+  of singleton `INSTANCE` fields. Retain singletons on per-request hot
+  paths; Kotlin `object` is unrelated.
+- **Class organization**: order static fields (final before non-final),
+  static initializers, instance fields (final before non-final),
+  constructors, methods, then nested classes. Place callers before
+  callees. A private static initializer helper or `static` block may
+  immediately follow its field. Place public static factory entry points
+  immediately above constructors; in static utility classes, place the
+  private constructor after all methods.
 - **Other conventions**: do not add `final` to parameters or locals;
   prefer `value == null` to `null == value`; do not flip
   `value.equals(CONSTANT)` solely for speculative null safety.
