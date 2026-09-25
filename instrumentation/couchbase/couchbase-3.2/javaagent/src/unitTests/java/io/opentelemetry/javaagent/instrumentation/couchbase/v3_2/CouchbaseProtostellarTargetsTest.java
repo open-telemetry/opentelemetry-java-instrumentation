@@ -19,9 +19,7 @@ import org.objenesis.ObjenesisStd;
 class CouchbaseProtostellarTargetsTest {
 
   @Test
-  void replacesPortlessTargetForLegacyCore() throws ClassNotFoundException {
-    Class.forName("com.couchbase.client.core.CoreProtostellar");
-
+  void replacesPortlessTargetForLegacyCore() {
     Core core = new ObjenesisStd().newInstance(Core.class);
 
     CouchbaseServerTarget configuredTarget =
