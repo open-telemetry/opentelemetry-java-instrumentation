@@ -1,0 +1,20 @@
+{
+  "schema": {
+    "id": "github.copilot.copilot-review-loop-decision-report",
+    "version": 3
+  },
+  "decisions": [
+    {
+      "finding_id": "finding-ed83c1ab36417d0dbaf81b5c",
+      "disposition": "no_change",
+      "reason": "The pinned SDK dependency does not support the always_record sampler or expose SamplerModel.getAlwaysRecord().",
+      "proposed_reply": "This branch uses OpenTelemetry SDK 1.66.0, whose declarative model and sampler factory do not support always_record. This configuration cannot be selected until a future SDK dependency update."
+    },
+    {
+      "finding_id": "finding-4e9735918a7e0fd10e9ddd11",
+      "disposition": "no_change",
+      "reason": "The pinned SDK dependency does not support the always_record sampler or expose SamplerModel.getAlwaysRecord().",
+      "proposed_reply": "This branch uses OpenTelemetry SDK 1.66.0, whose declarative model and sampler factory do not support always_record. This configuration cannot be selected until a future SDK dependency update."
+    }
+  ]
+}
