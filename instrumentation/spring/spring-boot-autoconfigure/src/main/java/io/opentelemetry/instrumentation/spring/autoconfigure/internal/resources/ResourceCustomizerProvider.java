@@ -13,6 +13,7 @@ import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigura
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.ResourceModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalResourceDetectionModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalResourceDetectorModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ResourceModelAccessor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -35,17 +36,17 @@ public class ResourceCustomizerProvider implements DeclarativeConfigurationCusto
           ResourceModel resource = model.getResource();
           if (resource == null) {
             resource = new ResourceModel();
-            model.withResource(resource);
+            model.setResource(resource);
           }
-          ExperimentalResourceDetectionModel detectionModel = resource.getDetectionDevelopment();
+          ExperimentalResourceDetectionModel detectionModel =
+              ResourceModelAccessor.getDetection(resource);
           if (detectionModel == null) {
             detectionModel = new ExperimentalResourceDetectionModel();
-            resource.withDetectionDevelopment(detectionModel);
           }
           List<ExperimentalResourceDetectorModel> detectors = detectionModel.getDetectors();
           if (detectors == null) {
             detectors = new ArrayList<>();
-            detectionModel.withDetectors(detectors);
+            detectionModel.setDetectors(detectors);
           }
           Set<String> names =
               detectors.stream()
@@ -61,6 +62,7 @@ public class ResourceCustomizerProvider implements DeclarativeConfigurationCusto
               detectors.add(0, detector);
             }
           }
+          ResourceModelAccessor.setDetection(resource, detectionModel);
           return model;
         });
   }

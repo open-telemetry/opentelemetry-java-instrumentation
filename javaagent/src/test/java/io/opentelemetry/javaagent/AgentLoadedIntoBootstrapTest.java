@@ -24,6 +24,24 @@ class AgentLoadedIntoBootstrapTest {
     assertThat(exitCode).isZero();
   }
 
+  @Test
+  void agentLoadsWhenAgentJarIsAlreadyOnBootstrapClasspath() throws Exception {
+    String agentJarPath = IntegrationTestUtils.getAgentJarPath();
+
+    IntegrationTestUtils.ProcessResult result =
+        IntegrationTestUtils.runOnSeparateJvmAndCaptureOutput(
+            AgentLoadedChecker.class.getName(),
+            new String[] {"-Xbootclasspath/a:" + agentJarPath, "-Djdk.instrument.traceUsage=true"},
+            new String[0],
+            emptyMap(),
+            System.getProperty("java.class.path"),
+            true);
+
+    assertThat(result.getExitCode()).isZero();
+    assertThat(result.getOutput())
+        .doesNotContain("Instrumentation.appendToBootstrapClassLoaderSearch has been called");
+  }
+
   // this tests the case where someone adds the contents of opentelemetry-javaagent.jar by mistake
   // to their application's "uber.jar"
   //

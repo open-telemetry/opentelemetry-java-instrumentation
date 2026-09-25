@@ -43,7 +43,7 @@ public class HbaseClientUtil {
   }
 
   public static HbaseRequest createRequest(
-      Object md, Object param, User ticket, InetSocketAddress addr) {
+      Object md, Object param, User ticket, InetSocketAddress addr, @Nullable String serverTarget) {
     String operation = methodDescriptorName(md);
     Long batchSize = null;
     if (emitStableDatabaseSemconv() && param instanceof ClientProtos.MultiRequest) {
@@ -59,6 +59,7 @@ public class HbaseClientUtil {
         ticket.getName(),
         addr.getHostString(),
         addr.getPort(),
+        serverTarget,
         batchSize);
   }
 

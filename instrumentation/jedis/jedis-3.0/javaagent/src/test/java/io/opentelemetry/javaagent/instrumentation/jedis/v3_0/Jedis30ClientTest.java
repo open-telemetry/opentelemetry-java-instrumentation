@@ -46,7 +46,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.testcontainers.containers.GenericContainer;
+import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Transaction;
 
@@ -119,6 +121,55 @@ class Jedis30ClientTest {
         SERVER_PORT,
         NETWORK_PEER_ADDRESS,
         NETWORK_PEER_PORT);
+  }
+
+  @Test
+  void pooledCommand() {
+    JedisPool pool = new JedisPool(host, port);
+    cleanup.deferCleanup(pool);
+    try (Jedis pooled = pool.getResource()) {
+      pooled.set("pooled", "value");
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "SET pooled ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
+  }
+
+  @Test
+  void directHostAndPortCommandUsesOriginalTarget() {
+    HostAndPort endpoint = HostAndPort.parseString("localhost:" + port);
+    try (Jedis direct = new Jedis(endpoint)) {
+      direct.set("direct-host-and-port", "value");
+    }
+
+    assertHostAndPortTarget(endpoint);
+  }
+
+  private static void assertHostAndPortTarget(HostAndPort endpoint) {
+    testing.waitForTraces(1);
+    assertThat(testing.spans())
+        .singleElement()
+        .satisfies(
+            span -> {
+              assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                  .isEqualTo(emitStableDatabaseSemconv() ? "localhost" : endpoint.getHost());
+              assertThat(span.getAttributes().get(SERVER_PORT)).isEqualTo((long) port);
+            });
   }
 
   @Test

@@ -8,11 +8,18 @@ semantic_conventions:
   - DATABASE_CLIENT_METRICS
 library_link: https://github.com/couchbase/couchbase-java-client
 configurations:
-  - name: otel.instrumentation.couchbase.experimental-span-attributes
-    declarative_name: java.couchbase.experimental_span_attributes/development
+  - name: otel.instrumentation.couchbase.emit-experimental-telemetry
+    declarative_name: java.couchbase.emit_experimental_telemetry/development
     description: >
       Enables experimental span attributes `couchbase.operation_id` and `couchbase.local.address`.
       Different operation types receive different experimental attributes.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.couchbase.experimental-span-attributes
+    declarative_name: java.couchbase.experimental_span_attributes/development
+    description: >
+      Deprecated and will be removed in the next minor release. Use
+      otel.instrumentation.couchbase.emit-experimental-telemetry instead.
     type: boolean
     default: false
   - ref: common.db.query-sanitization.enabled

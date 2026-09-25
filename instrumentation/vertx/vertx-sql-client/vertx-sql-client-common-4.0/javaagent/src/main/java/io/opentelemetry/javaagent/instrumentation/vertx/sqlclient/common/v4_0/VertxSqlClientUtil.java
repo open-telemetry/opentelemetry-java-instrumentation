@@ -11,6 +11,7 @@ import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.POSTGRESQ
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.IBM_DB2;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ORACLE_DB;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OTHER_SQL;
+import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -18,88 +19,28 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.sqlclient.Pool;
-import io.vertx.sqlclient.PreparedStatement;
 import io.vertx.sqlclient.SqlConnectOptions;
-import io.vertx.sqlclient.impl.QueryExecutorUtil;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 public class VertxSqlClientUtil {
 
-  private static final ThreadLocal<SqlConnectOptions> connectOptions = new ThreadLocal<>();
-  private static final ThreadLocal<String> dbSystem = new ThreadLocal<>();
-  private static final VirtualField<Pool, SqlConnectOptions> POOL_CONNECT_OPTIONS =
-      VirtualField.find(Pool.class, SqlConnectOptions.class);
+  private static final Logger logger = Logger.getLogger(VertxSqlClientUtil.class.getName());
+
   private static final Map<String, String> dbSystemNameByPackage = buildPackageDbSystemNameMap();
   private static final VirtualField<Promise<?>, RequestData> REQUEST_DATA =
       VirtualField.find(Promise.class, RequestData.class);
-  private static final VirtualField<PreparedStatement, VertxSqlClientData> PREPARED_STATEMENT_DATA =
-      VirtualField.find(PreparedStatement.class, VertxSqlClientData.class);
-
-  public static void setSqlConnectOptions(@Nullable SqlConnectOptions sqlConnectOptions) {
-    if (sqlConnectOptions == null) {
-      connectOptions.remove();
-    } else {
-      connectOptions.set(sqlConnectOptions);
-    }
-  }
-
-  @Nullable
-  public static SqlConnectOptions getSqlConnectOptions() {
-    return connectOptions.get();
-  }
-
-  public static void setDbSystem(@Nullable String value) {
-    if (value == null) {
-      dbSystem.remove();
-    } else {
-      dbSystem.set(value);
-    }
-  }
-
-  @Nullable
-  public static String getDbSystem() {
-    return dbSystem.get();
-  }
-
-  public static void setPoolConnectOptions(Pool pool, SqlConnectOptions sqlConnectOptions) {
-    POOL_CONNECT_OPTIONS.set(pool, sqlConnectOptions);
-  }
-
-  @Nullable
-  public static SqlConnectOptions getPoolSqlConnectOptions(Pool pool) {
-    return POOL_CONNECT_OPTIONS.get(pool);
-  }
-
-  public static void setQueryExecutorData(Object queryExecutor, VertxSqlClientData data) {
-    QueryExecutorUtil.setData(queryExecutor, data);
-  }
-
-  @Nullable
-  public static VertxSqlClientData getQueryExecutorData(Object queryExecutor) {
-    return (VertxSqlClientData) QueryExecutorUtil.getData(queryExecutor);
-  }
-
-  public static Future<PreparedStatement> attachPreparedStatementData(
-      Future<PreparedStatement> future, VertxSqlClientData data) {
-    return future.map(
-        preparedStatement -> {
-          PREPARED_STATEMENT_DATA.set(preparedStatement, data);
-          return preparedStatement;
-        });
-  }
-
-  @Nullable
-  public static VertxSqlClientData getPreparedStatementData(PreparedStatement preparedStatement) {
-    return PREPARED_STATEMENT_DATA.get(preparedStatement);
-  }
 
   public static String getDbSystemNameFromClassName(@Nullable Object instance) {
-    if (instance != null) {
-      String className = instance.getClass().getName();
+    return getDbSystemNameFromClassName(instance != null ? instance.getClass().getName() : null);
+  }
+
+  public static String getDbSystemNameFromClassName(@Nullable String className) {
+    if (className != null) {
       for (Map.Entry<String, String> entry : dbSystemNameByPackage.entrySet()) {
         if (className.startsWith(entry.getKey())) {
           return entry.getValue();
@@ -107,6 +48,18 @@ public class VertxSqlClientUtil {
       }
     }
     return OTHER_SQL;
+  }
+
+  public static boolean isKnownDbSystem(String value) {
+    return dbSystemNameByPackage.containsValue(value);
+  }
+
+  public static String resolveDbSystemName(
+      @Nullable SqlConnectOptions connectOptions, @Nullable String declaringTypeName) {
+    String dbSystemName = getDbSystemNameFromClassName(connectOptions);
+    return isKnownDbSystem(dbSystemName)
+        ? dbSystemName
+        : getDbSystemNameFromClassName(declaringTypeName);
   }
 
   // See https://github.com/eclipse-vertx/vertx-sql-client for the full list of supported
@@ -131,18 +84,37 @@ public class VertxSqlClientUtil {
       Instrumenter<VertxSqlClientRequest, Void> instrumenter,
       Promise<?> promise,
       @Nullable Throwable throwable) {
+    Context parentContext = endQuerySpanAndGetParentContext(instrumenter, promise, throwable);
+    return parentContext != null ? parentContext.makeCurrent() : null;
+  }
+
+  @Nullable
+  public static Context endQuerySpanAndGetParentContext(
+      Instrumenter<VertxSqlClientRequest, Void> instrumenter,
+      Promise<?> promise,
+      @Nullable Throwable throwable) {
     RequestData requestData = REQUEST_DATA.get(promise);
-    if (requestData == null) {
+    if (requestData == null || !requestData.ended.compareAndSet(false, true)) {
       return null;
     }
+    REQUEST_DATA.set(promise, null);
+    if (requestData.request instanceof VertxSqlClientDeferredRequest
+        && ((VertxSqlClientDeferredRequest) requestData.request).freezeInfo()) {
+      try {
+        VertxSqlInstrumenterFactory.updateSpanName(requestData.context, requestData.request);
+      } catch (Throwable t) {
+        logger.log(FINE, "Failed to update Vert.x SQL span name", t);
+      }
+    }
     instrumenter.end(requestData.context, requestData.request, null, throwable);
-    return requestData.parentContext.makeCurrent();
+    return requestData.parentContext;
   }
 
   private static class RequestData {
     private final VertxSqlClientRequest request;
     private final Context context;
     private final Context parentContext;
+    private final AtomicBoolean ended = new AtomicBoolean();
 
     RequestData(VertxSqlClientRequest request, Context context, Context parentContext) {
       this.request = request;
