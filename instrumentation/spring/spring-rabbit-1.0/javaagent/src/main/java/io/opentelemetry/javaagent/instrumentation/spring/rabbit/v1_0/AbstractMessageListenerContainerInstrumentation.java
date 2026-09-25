@@ -95,12 +95,7 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
           context = instrumenter().start(parentContext, request);
         }
         request.installProcessingContext(context);
-        try {
-          return new AdviceScope(context, request);
-        } catch (RuntimeException | Error e) {
-          request.restoreProcessingContext(context);
-          throw e;
-        }
+        return new AdviceScope(context, request);
       }
 
       private AdviceScope(Context context, SpringRabbitRequest request) {
