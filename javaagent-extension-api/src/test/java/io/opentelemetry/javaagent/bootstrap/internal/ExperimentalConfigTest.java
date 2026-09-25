@@ -9,9 +9,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Answers.RETURNS_DEEP_STUBS;
-import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
@@ -30,7 +28,7 @@ class ExperimentalConfigTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"controller", "view"})
-  void telemetryConfigPrefersStableNamesAndIgnoresOldNamesInV3Preview(String telemetry) {
+  void telemetryConfigPrefersStableNamesAndCachesValues(String telemetry) {
     ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
     DeclarativeConfigProperties commonConfig = openTelemetry.getInstrumentationConfig("common");
     String name = telemetry + "_telemetry";
@@ -53,9 +51,8 @@ class ExperimentalConfigTest {
       when(stable.getBoolean("enabled")).thenReturn(null);
       ExperimentalConfig config = new ExperimentalConfig(openTelemetry);
       assertThat(telemetryEnabled(config, telemetry)).isTrue();
-      assertThat(telemetryEnabled(config, telemetry)).isTrue();
       when(deprecated.getBoolean("enabled")).thenReturn(false);
-      assertThat(telemetryEnabled(config, telemetry)).isFalse();
+      assertThat(telemetryEnabled(config, telemetry)).isTrue();
       assertThat(handler.records).hasSize(1);
       assertThat(handler.records.get(0).getMessage())
           .contains(
@@ -63,11 +60,8 @@ class ExperimentalConfigTest {
               "otel.instrumentation.common." + telemetry + "-telemetry.enabled");
 
       when(commonConfig.getBoolean("v3_preview", false)).thenReturn(true);
-      clearInvocations(deprecated);
-      assertThat(telemetryEnabled(config, telemetry)).isFalse();
-      when(stable.getBoolean("enabled")).thenReturn(true);
-      assertThat(telemetryEnabled(config, telemetry)).isTrue();
-      verifyNoInteractions(deprecated);
+      when(deprecated.getBoolean("enabled")).thenReturn(true);
+      assertThat(telemetryEnabled(new ExperimentalConfig(openTelemetry), telemetry)).isTrue();
       assertThat(handler.records).hasSize(1);
     } finally {
       logger.removeHandler(handler);

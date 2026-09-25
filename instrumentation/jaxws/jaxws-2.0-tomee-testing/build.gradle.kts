@@ -26,5 +26,5 @@ tasks.test {
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("--add-exports=java.base/sun.misc=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
 }
