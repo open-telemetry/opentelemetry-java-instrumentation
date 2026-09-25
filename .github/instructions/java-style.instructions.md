@@ -16,7 +16,8 @@ the stated exception before reporting a repository convention.
   single public class in a module may be needed for Javadoc.
 - **Public API**: make public API classes `final` where possible; name
   public getters `get*` or `is*` for booleans. Javaagent singleton accessors
-  directly returning stored fields are an exception to getter naming.
+  directly returning stored fields are an exception to getter naming. Public
+  implementation classes that are not API belong in an `.internal` package.
 - **Fields**: use `SCREAMING_SNAKE_CASE` for immutable value constants and
   semantic keys/handles, not just because a field is `static final`. A
   `static final VirtualField` *must* be uppercase regardless of visibility

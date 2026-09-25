@@ -50,3 +50,5 @@ or test failure that CI will report.
   assertions need a stable-mode task for the relevant domain; `/dup` coverage is required
   for RPC, not database, code, or service-peer. For default enablement under v3-preview,
   use a separate `testDisabled` JVM rather than setting a property after agent startup.
+  Because `testDisabled` intentionally emits no target instrumentation telemetry, do not add it
+  to `.github/scripts/instrumentations.sh` or give it `collectMetadata` / `metadataConfig`.

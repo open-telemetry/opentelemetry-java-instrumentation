@@ -30,6 +30,7 @@ convention not caught by CI.
 
 ## [Testing] General Patterns
 
+- Keep JUnit test classes and test methods package-private unless broader visibility is required.
 - Use AssertJ (`assertThat(...)`) for assertions in new test code. Do not
   use JUnit `Assert.*` or Hamcrest `assertThat`.
 - Do not add AssertJ `.as(...)` descriptions or `.withFailMessage(...)` in

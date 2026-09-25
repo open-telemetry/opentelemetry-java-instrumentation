@@ -23,7 +23,11 @@ library lifecycle before deciding whether an exception applies.
 - Exit advice owning a `Scope` or temporary state must run on exceptional method exits and
   release it, preferably before fallible completion work. Return-only advice that processes
   `@Advice.Return` without cleanup should omit `onThrowable = Throwable.class`; on an
-  exceptional exit the return value is null or zero.
+  exceptional exit the return value is null or zero. Do not hide acquisition of an open raw
+  `Scope` behind a general helper; advice that carries a raw `Scope` through `@Advice.Enter`
+  acquires it directly. An ordinary nullable `AdviceScope` is fully initialized when present,
+  with non-null context and scope internals. Nullable internals belong only in a non-null
+  placeholder needed to carry bookkeeping state through exit advice.
 - Keep advice as static nested classes with no instance fields and static methods. Every advice
   class needs class-level `@SuppressWarnings("unused")`. In `transform()`, reference nested
   advice by `getClass().getName() + "$AdviceName"`; resolving
@@ -35,7 +39,9 @@ library lifecycle before deciding whether an exception applies.
 - Do not require `isDeclaredBy` on a Byte Buddy method matcher by default. Use it only
   when a type matcher covers several types but advice targets a member declared by one
   specific type; a name and signature that already identify the method need no extra
-  restriction.
+  restriction. `isMethod()` is redundant after a non-empty `named(...)` or
+  `namedOneOf(...)` matcher. Keep it when the name can be empty, because `named("")`
+  can match constructors and class initializers.
 - Use `Java8BytecodeBridge` only for supported API calls directly in annotated advice;
   helper methods use the normal API even when nested inside the advice class. Add a
   `classLoaderMatcher()` only for a real version boundary Muzzle cannot distinguish.
