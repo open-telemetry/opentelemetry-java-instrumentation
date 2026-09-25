@@ -48,7 +48,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.ArrayList;
@@ -168,7 +167,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"iterator", "forEach", "spliterator", "view"})
-  void testOnlyFirstTraversalCreatesProcessSpan(String traversal) {
+  void testRepeatedTraversalCompletesEachProcessInvocation(String traversal) {
     assumeTrue(emitStableMessagingSemconv());
     String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
     sqsClient.createQueue("testSdkSqs");
@@ -179,41 +178,34 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
     List<Message> messages = sqsClient.receiveMessage(queueUrl).getMessages();
     Context previous = Context.current();
     for (int attempt = 0; attempt < 2; attempt++) {
-      boolean firstAttempt = attempt == 0;
       switch (traversal) {
         case "iterator":
           for (Message ignored : messages) {
-            assertThat(Span.current().getSpanContext().isValid()).isEqualTo(firstAttempt);
+            assertThat(Span.current().getSpanContext().isValid()).isTrue();
           }
           break;
         case "spliterator":
           messages
               .spliterator()
               .forEachRemaining(
-                  message ->
-                      assertThat(Span.current().getSpanContext().isValid())
-                          .isEqualTo(firstAttempt));
+                  message -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
           break;
         case "view":
           messages
               .subList(0, 1)
-              .forEach(
-                  message ->
-                      assertThat(Span.current().getSpanContext().isValid())
-                          .isEqualTo(firstAttempt));
+              .forEach(message -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
           break;
         default:
           messages.forEach(
-              message ->
-                  assertThat(Span.current().getSpanContext().isValid()).isEqualTo(firstAttempt));
+              message -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
       }
       assertThat(Span.current().getSpanContext())
           .isEqualTo(Span.fromContext(previous).getSpanContext());
     }
     assertThat(testing().spans())
         .filteredOn(span -> span.getName().equals("process testSdkSqs"))
-        .hasSize(1);
-    SqsMetricsAssertions.assertProcessMetrics(testing(), sqsPort, 1);
+        .hasSize(2);
+    SqsMetricsAssertions.assertProcessMetrics(testing(), sqsPort, 2);
   }
 
   @Test
@@ -247,7 +239,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
   }
 
   @Test
-  void testExplicitSuppressionConsumesRawTraversal() {
+  void testExplicitSuppressionLeavesLaterRawFallbackEnabled() {
     assumeTrue(emitStableMessagingSemconv());
     String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
     sqsClient.createQueue("testSdkSqs");
@@ -258,12 +250,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
     List<Message> messages = sqsClient.receiveMessage(queueUrl).getMessages();
     InstrumentationUtil.suppressInstrumentation(() -> messages.forEach(message -> {}));
     messages.forEach(message -> {});
-    assertThat(testing().spans())
-        .filteredOn(span -> span.getName().equals("process testSdkSqs"))
-        .isEmpty();
-    assertThat(testing().metrics())
-        .extracting(MetricData::getName)
-        .doesNotContain("messaging.process.duration");
+    SqsMetricsAssertions.assertProcessMetrics(testing(), sqsPort, 1);
   }
 
   @Test
