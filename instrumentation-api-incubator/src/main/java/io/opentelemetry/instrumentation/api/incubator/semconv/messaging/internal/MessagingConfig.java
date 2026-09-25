@@ -63,20 +63,12 @@ public final class MessagingConfig {
     DeclarativeConfigProperties deprecatedHeaders =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "messaging")
             .get("headers/development");
-    boolean v3Preview =
-        Boolean.TRUE.equals(
-            getBoolean(
-                commonConfig,
-                "v3_preview",
-                "otel.instrumentation.common.v3-preview",
-                systemPropertyFallback));
     List<String> included =
         getHeaderPatterns(
             "included",
             headers,
             deprecatedCommonHeaders,
             deprecatedHeaders,
-            v3Preview,
             systemPropertyFallback);
     List<String> excluded =
         getHeaderPatterns(
@@ -84,7 +76,6 @@ public final class MessagingConfig {
             headers,
             deprecatedCommonHeaders,
             deprecatedHeaders,
-            v3Preview,
             systemPropertyFallback);
     IncludeExclude selector =
         IncludeExclude.builder()
@@ -113,7 +104,6 @@ public final class MessagingConfig {
       DeclarativeConfigProperties headers,
       DeclarativeConfigProperties deprecatedCommonHeaders,
       DeclarativeConfigProperties deprecatedHeaders,
-      boolean v3Preview,
       boolean systemPropertyFallback) {
     String replacementProperty = COMMON_MESSAGING_PROPERTY_PREFIX + ".headers." + name;
     List<String> patterns = getList(headers, name, replacementProperty, systemPropertyFallback);
@@ -122,16 +112,14 @@ public final class MessagingConfig {
     }
 
     // The common experimental selector remains an alias until 3.0.
-    if (!v3Preview) {
-      String deprecatedCommonProperty =
-          COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.headers." + name;
-      patterns =
-          getList(deprecatedCommonHeaders, name, deprecatedCommonProperty, systemPropertyFallback);
-      if (patterns != null && !patterns.isEmpty()) {
-        warnDeprecatedProperty(
-            deprecatedCommonProperty, replacementProperty, "will be removed in 3.0");
-        return patterns;
-      }
+    String deprecatedCommonProperty =
+        COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.headers." + name;
+    patterns =
+        getList(deprecatedCommonHeaders, name, deprecatedCommonProperty, systemPropertyFallback);
+    if (patterns != null && !patterns.isEmpty()) {
+      warnDeprecatedProperty(
+          deprecatedCommonProperty, replacementProperty, "will be removed in 3.0");
+      return patterns;
     }
 
     // TODO: remove the deprecated flat messaging names in a future minor release.
