@@ -78,6 +78,7 @@ class CodeAttributesExtractorTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // exercising the legacy API
   void shouldExtractNoAttributesIfNoneAreAvailable() {
     // given
     AttributesExtractor<Map<String, String>, Void> underTest =

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.incubator.semconv.code;
+package io.opentelemetry.instrumentation.api.semconv.code;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -19,59 +19,43 @@ class CodeSpanNameExtractorTest {
   @Mock CodeAttributesGetter<Object> getter;
 
   @Test
-  @SuppressWarnings("deprecation") // exercising the legacy API
-  void shouldExtractFullSpanName() {
-    // given
+  void extractsFullSpanName() {
     Object request = new Object();
-
     when(getter.getCodeClass(request)).thenAnswer(invocation -> TestClass.class);
     when(getter.getMethodName(request)).thenReturn("doSomething");
 
-    SpanNameExtractor<Object> underTest = CodeSpanNameExtractor.create(getter);
+    SpanNameExtractor<Object> extractor = CodeSpanNameExtractor.create(getter);
 
-    // when
-    String spanName = underTest.extract(request);
-
-    // then
-    assertThat(spanName).isEqualTo("TestClass.doSomething");
+    assertThat(extractor.extract(request)).isEqualTo("TestClass.doSomething");
   }
 
   @Test
-  @SuppressWarnings("deprecation") // exercising the legacy API
-  void shouldExtractFullSpanNameForAnonymousClass() {
-    // given
+  void extractsAnonymousClassName() {
     AnonymousBaseClass anon = new AnonymousBaseClass() {};
     Object request = new Object();
-
     when(getter.getCodeClass(request)).thenAnswer(invocation -> anon.getClass());
     when(getter.getMethodName(request)).thenReturn("doSomething");
 
-    SpanNameExtractor<Object> underTest = CodeSpanNameExtractor.create(getter);
-
-    // when
-    String spanName = underTest.extract(request);
-
-    // then
-    assertThat(spanName).isEqualTo(getClass().getSimpleName() + "$1.doSomething");
+    assertThat(CodeSpanNameExtractor.create(getter).extract(request))
+        .isEqualTo(getClass().getSimpleName() + "$1.doSomething");
   }
 
   @Test
-  @SuppressWarnings("deprecation") // exercising the legacy API
-  void shouldExtractFullSpanNameForLambda() {
-    // given
+  void extractsLambdaClassName() {
     Runnable lambda = () -> {};
     Object request = new Object();
-
     when(getter.getCodeClass(request)).thenAnswer(invocation -> lambda.getClass());
     when(getter.getMethodName(request)).thenReturn("doSomething");
 
-    SpanNameExtractor<Object> underTest = CodeSpanNameExtractor.create(getter);
+    assertThat(CodeSpanNameExtractor.create(getter).extract(request))
+        .isEqualTo(getClass().getSimpleName() + "$$Lambda.doSomething");
+  }
 
-    // when
-    String spanName = underTest.extract(request);
+  @Test
+  void handlesMissingClassAndMethod() {
+    Object request = new Object();
 
-    // then
-    assertThat(spanName).isEqualTo(getClass().getSimpleName() + "$$Lambda.doSomething");
+    assertThat(CodeSpanNameExtractor.create(getter).extract(request)).isEqualTo("<unknown>");
   }
 
   static class TestClass {}

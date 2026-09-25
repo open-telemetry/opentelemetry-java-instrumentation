@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.annotations;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesGetter;
 
 final class JoinPointCodeAttributesExtractor implements CodeAttributesGetter<JoinPointRequest> {
   @Override

@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.util;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
 import javax.annotation.Nullable;
 
+@SuppressWarnings("deprecation") // implements the published legacy getter until 3.0
 enum ClassAndMethodAttributesGetter implements CodeAttributesGetter<ClassAndMethod> {
   INSTANCE;
 

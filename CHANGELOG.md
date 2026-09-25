@@ -17,6 +17,8 @@
 
 ### 🚫 Deprecations
 
+- Deprecate `CodeAttributesGetter`, `CodeAttributesExtractor`, and `CodeSpanNameExtractor` in
+  `instrumentation-api-incubator` in favor of the equivalents in `instrumentation-api`.
 - Deprecate the source-specific experimental selectors for Log4j `MapMessage` entries, Logback
   key-value pairs, Logstash markers, and Logstash structured arguments in favor of the common
   structured logging attribute selector. The source-specific properties are ignored under

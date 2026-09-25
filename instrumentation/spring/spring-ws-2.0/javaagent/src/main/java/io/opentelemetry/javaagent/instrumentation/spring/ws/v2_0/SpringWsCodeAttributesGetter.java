@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesGetter;
 
 class SpringWsCodeAttributesGetter implements CodeAttributesGetter<SpringWsRequest> {
 

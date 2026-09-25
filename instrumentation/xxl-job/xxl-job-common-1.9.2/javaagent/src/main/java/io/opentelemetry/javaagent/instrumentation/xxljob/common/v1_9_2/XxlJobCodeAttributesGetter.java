@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.xxljob.common.v1_9_2;
 
 import com.xxl.job.core.glue.GlueTypeEnum;
-import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesGetter;
 import javax.annotation.Nullable;
 
 class XxlJobCodeAttributesGetter implements CodeAttributesGetter<XxlJobProcessRequest> {

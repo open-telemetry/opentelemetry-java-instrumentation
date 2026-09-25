@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttribute
 @AutoValue
 public abstract class ClassAndMethod {
 
+  @SuppressWarnings("deprecation") // keep the published return type until 3.0
   public static CodeAttributesGetter<ClassAndMethod> codeAttributesGetter() {
     return ClassAndMethodAttributesGetter.INSTANCE;
   }

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesGetter;
 
 class JaxrsCodeAttributesGetter implements CodeAttributesGetter<HandlerData> {
 

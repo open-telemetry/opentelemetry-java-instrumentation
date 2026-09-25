@@ -34,6 +34,7 @@ dependencies {
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("io.opentelemetry:opentelemetry-exporter-common")
+  testImplementation("io.opentelemetry.semconv:opentelemetry-semconv-incubating")
 
   jmhImplementation(project(":instrumentation-api-incubator"))
 }
@@ -69,7 +70,24 @@ tasks {
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs/dup")
   }
 
+  val testStableCodeSemconv = register<Test>("testStableCodeSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=code")
+  }
+
+  val testBothCodeSemconv = register<Test>("testBothCodeSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=code/dup")
+  }
+
   check {
-    dependsOn(testExceptionSignalLogs, testExceptionSignalLogsDup)
+    dependsOn(
+      testExceptionSignalLogs,
+      testExceptionSignalLogsDup,
+      testStableCodeSemconv,
+      testBothCodeSemconv,
+    )
   }
 }

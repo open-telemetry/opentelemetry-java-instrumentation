@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesGetter;
 import javax.sql.DataSource;
 
 final class DataSourceCodeAttributesGetter implements CodeAttributesGetter<DataSource> {

@@ -3,18 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.incubator.semconv.code;
+package io.opentelemetry.instrumentation.api.semconv.code;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.ClassNames;
 
 /**
  * A helper {@link SpanNameExtractor} implementation for instrumentations that target specific Java
  * classes/methods.
- *
- * @deprecated Use {@link io.opentelemetry.instrumentation.api.semconv.code.CodeSpanNameExtractor}
- *     instead. Will be removed in 3.0.
  */
-@Deprecated // to be removed in 3.0
 public final class CodeSpanNameExtractor<REQUEST> implements SpanNameExtractor<REQUEST> {
 
   /**
@@ -25,15 +22,25 @@ public final class CodeSpanNameExtractor<REQUEST> implements SpanNameExtractor<R
     return new CodeSpanNameExtractor<>(getter);
   }
 
-  private final SpanNameExtractor<REQUEST> delegate;
+  private final CodeAttributesGetter<REQUEST> getter;
 
   private CodeSpanNameExtractor(CodeAttributesGetter<REQUEST> getter) {
-    delegate =
-        io.opentelemetry.instrumentation.api.semconv.code.CodeSpanNameExtractor.create(getter);
+    this.getter = getter;
   }
 
   @Override
   public String extract(REQUEST request) {
-    return delegate.extract(request);
+    Class<?> cls = getter.getCodeClass(request);
+    String className = cls != null ? ClassNames.simpleName(cls) : "<unknown>";
+    int lambdaIdx = className.indexOf("$$Lambda");
+    if (lambdaIdx > -1) {
+      // need to produce low-cardinality name, since lambda class names change with each restart
+      className = className.substring(0, lambdaIdx + "$$Lambda".length());
+    }
+    String methodName = getter.getMethodName(request);
+    if (methodName == null) {
+      return className;
+    }
+    return className + "." + methodName;
   }
 }

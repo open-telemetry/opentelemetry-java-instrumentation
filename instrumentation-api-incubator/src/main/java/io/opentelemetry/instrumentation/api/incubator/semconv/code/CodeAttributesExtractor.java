@@ -5,11 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.code;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldCodeSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableCodeSemconv;
-import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
-
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -19,14 +14,13 @@ import javax.annotation.Nullable;
  * Extractor of <a
  * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/attributes.md#source-code-attributes">source
  * code attributes</a>.
+ *
+ * @deprecated Use {@link io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesExtractor}
+ *     instead. Will be removed in 3.0.
  */
+@Deprecated // to be removed in 3.0
 public final class CodeAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
-
-  // copied from CodeIncubatingAttributes
-  private static final AttributeKey<String> CODE_NAMESPACE =
-      AttributeKey.stringKey("code.namespace");
-  private static final AttributeKey<String> CODE_FUNCTION = AttributeKey.stringKey("code.function");
 
   /** Creates the code attributes extractor. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
@@ -34,36 +28,16 @@ public final class CodeAttributesExtractor<REQUEST, RESPONSE>
     return new CodeAttributesExtractor<>(getter);
   }
 
-  private final CodeAttributesGetter<REQUEST> getter;
+  private final AttributesExtractor<REQUEST, RESPONSE> delegate;
 
   private CodeAttributesExtractor(CodeAttributesGetter<REQUEST> getter) {
-    this.getter = getter;
+    delegate =
+        io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesExtractor.create(getter);
   }
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    StringBuilder sb = new StringBuilder();
-    Class<?> cls = getter.getCodeClass(request);
-    if (cls != null) {
-      sb.append(cls.getName());
-
-      if (emitOldCodeSemconv()) {
-        attributes.put(CODE_NAMESPACE, cls.getName());
-      }
-    }
-    String methodName = getter.getMethodName(request);
-    if (methodName != null) {
-      if (sb.length() > 0) {
-        sb.append(".");
-      }
-      sb.append(methodName);
-      if (emitOldCodeSemconv()) {
-        attributes.put(CODE_FUNCTION, methodName);
-      }
-    }
-    if (emitStableCodeSemconv() && sb.length() > 0) {
-      attributes.put(CODE_FUNCTION_NAME, sb.toString());
-    }
+    delegate.onStart(attributes, parentContext, request);
   }
 
   @Override
@@ -72,5 +46,7 @@ public final class CodeAttributesExtractor<REQUEST, RESPONSE>
       Context context,
       REQUEST request,
       @Nullable RESPONSE response,
-      @Nullable Throwable error) {}
+      @Nullable Throwable error) {
+    delegate.onEnd(attributes, context, request, response, error);
+  }
 }

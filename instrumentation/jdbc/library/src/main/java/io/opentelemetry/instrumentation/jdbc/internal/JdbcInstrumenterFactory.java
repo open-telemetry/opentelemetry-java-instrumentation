@@ -10,8 +10,6 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.dat
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
@@ -19,6 +17,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesExtractor;
+import io.opentelemetry.instrumentation.api.semconv.code.CodeSpanNameExtractor;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.util.List;
 import javax.sql.DataSource;

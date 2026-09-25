@@ -10,15 +10,20 @@ import javax.annotation.Nullable;
 /**
  * An interface for getting code attributes.
  *
- * <p>Instrumentation authors will create implementations of this interface for their specific
- * library/framework. It will be used by the {@link CodeAttributesExtractor} to obtain the various
- * code attributes in a type-generic way.
+ * <p>Instrumentation authors implement this interface for their library or framework.
+ *
+ * @deprecated Use {@link io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesGetter}
+ *     instead. Will be removed in 3.0.
  */
-public interface CodeAttributesGetter<REQUEST> {
+@Deprecated // to be removed in 3.0
+public interface CodeAttributesGetter<REQUEST>
+    extends io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesGetter<REQUEST> {
 
+  @Override
   @Nullable
   Class<?> getCodeClass(REQUEST request);
 
+  @Override
   @Nullable
   String getMethodName(REQUEST request);
 }

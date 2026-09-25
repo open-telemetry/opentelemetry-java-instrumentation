@@ -9,13 +9,13 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesExtractor;
+import io.opentelemetry.instrumentation.api.semconv.code.CodeSpanNameExtractor;
 import tech.powerjob.worker.core.processor.ProcessResult;
 
 public class PowerJobSingletons {
