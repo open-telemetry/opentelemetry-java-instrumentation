@@ -44,10 +44,11 @@ Apply these checks when changed code defines, maps, or reads user-facing configu
 of where its implementation lives.
 
 - When adding or changing an `otel.instrumentation.*` setting, check both its flat property
-  and declarative YAML name. Experimental or preview names are unstable; an experimental
-  flat name must map to the corresponding `/development` YAML form. Do not rename an
-  already-published declarative name merely to match mechanical conversion; determine whether
-  the bridge needs a `SPECIAL_MAPPINGS` entry instead.
+  and declarative YAML name. New flat-property segments use kebab-case; new declarative YAML
+  keys use snake_case. Experimental or preview names are unstable; an experimental flat name
+  must map to the corresponding `/development` YAML form. Do not rename an already-published
+  declarative name merely to match these naming rules or mechanical conversion; determine
+  whether the bridge needs a `SPECIAL_MAPPINGS` entry instead.
 - Stable flat property names remain stable even when read by alpha implementation code.
   On rename, retain the old name until the next major version: read the replacement first,
   fall back to the old name only outside v3-preview, and warn once at startup *when the old

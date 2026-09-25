@@ -53,6 +53,13 @@ convention not caught by CI.
 - In Scala tests, import `org.assertj.core.api.Assertions.assertThat` for
   ordinary values and call `OpenTelemetryAssertions.assertThat(...)` explicitly
   for telemetry data. Do not statically import both `assertThat` methods.
+- Assert complete exported traces with `waitAndAssertTraces(...)` and metrics
+  with `waitAndAssertMetrics(...)`; do not use fixed sleeps to wait for telemetry.
+  Direct assertions are appropriate only when the test intentionally inspects
+  telemetry already synchronized or captured at an intermediate point.
+- Preserve span order in expected traces when execution order is deterministic.
+  Use unordered assertions only when supported concurrency or asynchronous
+  execution makes the order nondeterministic.
 
 ## [Testing] Trace Clearing After Asynchronous Operations
 
