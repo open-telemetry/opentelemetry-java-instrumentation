@@ -33,9 +33,10 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.mock;
 
+import com.couchbase.client.core.CoreProtostellar;
 import com.couchbase.client.core.cnc.RequestSpan;
-import com.couchbase.client.core.cnc.RequestTracer;
 import com.couchbase.client.core.error.DocumentNotFoundException;
+import com.couchbase.client.core.protostellar.ProtostellarRequest;
 import com.couchbase.client.core.retry.RetryStrategy;
 import com.couchbase.client.core.service.ServiceType;
 import com.couchbase.client.core.util.ConnectionString;
@@ -53,8 +54,6 @@ import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -168,8 +167,7 @@ class CouchbaseClient32Test {
 
   @ParameterizedTest
   @MethodSource("protostellarTargets")
-  void testEmitsProtostellarTarget(String portSuffix, Long expectedPort)
-      throws ReflectiveOperationException {
+  void testEmitsProtostellarTarget(String portSuffix, Long expectedPort) {
     assumeTrue(testLatestDeps());
     Cluster protostellar =
         Cluster.connect(
@@ -178,45 +176,23 @@ class CouchbaseClient32Test {
             couchbase.getPassword());
     cleanup.deferCleanup(protostellar::disconnect);
 
-    Object core =
-        protostellar.async().getClass().getMethod("couchbaseOps").invoke(protostellar.async());
-    Class<?> protostellarRequestClass =
-        Class.forName("com.couchbase.client.core.protostellar.ProtostellarRequest");
-
-    Object coreResources =
-        cluster.core().getClass().getMethod("coreResources").invoke(cluster.core());
-    RequestTracer requestTracer =
-        (RequestTracer) coreResources.getClass().getMethod("requestTracer").invoke(coreResources);
-    RequestSpan requestSpan = requestTracer.requestSpan("get", null);
-    Object protostellarRequest =
-        protostellarRequestClass
-            .getConstructor(
-                Object.class,
-                core.getClass(),
-                ServiceType.class,
-                String.class,
-                RequestSpan.class,
-                Duration.class,
-                boolean.class,
-                RetryStrategy.class,
-                Map.class,
-                long.class,
-                Consumer.class)
-            .newInstance(
-                null,
-                core,
-                ServiceType.KV,
-                "get",
-                requestSpan,
-                Duration.ofSeconds(1),
-                true,
-                mock(RetryStrategy.class),
-                emptyMap(),
-                0L,
-                null);
-    protostellarRequestClass
-        .getMethod("raisedResponseToUser", Throwable.class)
-        .invoke(protostellarRequest, (Object) null);
+    CoreProtostellar core = (CoreProtostellar) protostellar.async().couchbaseOps();
+    RequestSpan requestSpan =
+        cluster.core().coreResources().requestTracer().requestSpan("get", null);
+    ProtostellarRequest<Object> protostellarRequest =
+        new ProtostellarRequest<>(
+            null,
+            core,
+            ServiceType.KV,
+            "get",
+            requestSpan,
+            Duration.ofSeconds(1),
+            true,
+            mock(RetryStrategy.class),
+            emptyMap(),
+            0L,
+            null);
+    protostellarRequest.raisedResponseToUser(null);
 
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace ->

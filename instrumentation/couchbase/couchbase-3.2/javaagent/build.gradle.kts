@@ -29,6 +29,7 @@ dependencies {
 
   library("com.couchbase.client:java-client:3.2.0")
   compileOnly("com.couchbase.client:core-io:2.4.3") // For Protostellar types added in 3.4.3
+  testCompileOnly("com.couchbase.client:java-client:3.12.0")
 
   testImplementation("org.testcontainers:testcontainers-couchbase")
 
