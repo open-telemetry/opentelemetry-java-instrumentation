@@ -16,6 +16,7 @@ on:
       cache-read-only:
         type: boolean
         required: false
+        default: true
       skip-java-8:
         type: boolean
         required: false
