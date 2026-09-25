@@ -114,6 +114,32 @@ class SpringRabbitProcessTest {
   }
 
   @Test
+  void batchWithSharedCreationContextLinksEachMessage() {
+    Message first = message();
+    Message second = message();
+    SpanContext creation = injectCreation(first, "creation");
+    second.getMessageProperties().getHeaders().putAll(first.getMessageProperties().getHeaders());
+
+    testing.runWithSpan("parent", () -> process(asList(first, second), () -> {}));
+
+    testing.waitAndAssertTraces(
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("creation")),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent"),
+                span ->
+                    span.hasAttribute(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2))
+                        .satisfies(
+                            data ->
+                                assertThat(data.getLinks())
+                                    .extracting(link -> link.getSpanContext().getSpanId())
+                                    .containsExactlyElementsOf(
+                                        emitStableMessagingSemconv()
+                                            ? asList(creation.getSpanId(), creation.getSpanId())
+                                            : emptyList()))));
+  }
+
+  @Test
   void independentNestedMessageUsesItsOwnProcessContext() {
     Message outer = message();
     Message inner = message();

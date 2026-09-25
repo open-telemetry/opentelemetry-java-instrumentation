@@ -26,8 +26,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
-import java.util.HashSet;
-import java.util.Set;
 import javax.annotation.Nullable;
 import org.springframework.amqp.core.Message;
 
@@ -70,7 +68,6 @@ public class SpringRabbitSingletons {
     if (emitStableMessagingSemconv()) {
       builder.addSpanLinksExtractor(
           (links, parentContext, request) -> {
-            Set<SpanContext> linked = new HashSet<>();
             for (Message message : request.getMessages()) {
               SpanContext creationContext =
                   Span.fromContext(
@@ -79,9 +76,7 @@ public class SpringRabbitSingletons {
                               .getTextMapPropagator()
                               .extract(Context.root(), message, headerGetter))
                       .getSpanContext();
-              if (linked.add(creationContext)) {
-                links.addLink(creationContext);
-              }
+              links.addLink(creationContext);
             }
           });
       builder.addContextCustomizer(
