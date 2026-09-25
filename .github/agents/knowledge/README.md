@@ -1,8 +1,14 @@
 # Knowledge Index
 
-Reusable repository guidance for review and coding agents.
+Detailed repository guidance for coding agents and for investigating a review
+question. GitHub Copilot code review's applicable rules are in
+`.github/copilot-instructions.md` and `.github/instructions/*.instructions.md`;
+review quality must not depend on following links from those instructions to
+these articles.
 
-Load only files relevant to the current scope to reduce noise and avoid over-constraining edits.
+Load only articles relevant to the current investigation. If an article and
+an applicable native instruction differ on review policy, use the native
+instruction; update the stale article separately.
 
 ## Topics
 
@@ -10,8 +16,8 @@ Load only files relevant to the current scope to reduce noise and avoid over-con
 | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `api-deprecation-policy.md`        | Public API removal, rename, or deprecation; stable vs alpha breaking changes                                                                                                                                |
 | `config-property-stability.md`     | `otel.instrumentation.*` property add, remove, rename, or deprecation                                                                                                                                       |
-| `general-rules.md`                 | Always — review checklist table and core rules enforced on every review                                                                                                                                     |
-| `metadata-yaml-format.md`          | Always — mandatory review of metadata.yaml for config coverage                                                                                                                                              |
+| `general-rules.md`                 | Additional reasoning, examples, and topic index for coding or review investigations                                                                                                                         |
+| `metadata-yaml-format.md`          | Instrumentation metadata or configuration shape and validation                                                                                                                                              |
 | `gradle-conventions.md`            | `build.gradle.kts` or `settings.gradle.kts` changes, custom test task registration or wiring                                                                                                                |
 | `java-reflection.md`               | `Method`, `MethodHandle`, `Constructor`, `Field`, reflective compatibility helpers, or package-local lookups                                                                                                |
 | `javaagent-advice-patterns.md`     | ByteBuddy `@Advice` classes or methods, helpers called by advice, or `Java8BytecodeBridge` usage                                                                                                            |

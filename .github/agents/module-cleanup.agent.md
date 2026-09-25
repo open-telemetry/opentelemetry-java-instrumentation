@@ -35,16 +35,19 @@ Do not stop until all in-scope files are reviewed and fixed where possible.
 Always load:
 
 - `docs/contributing/style-guide.md`
-- `knowledge/general-rules.md` — review checklist and core rules
+- `.github/copilot-instructions.md` and matching `.github/instructions/*.instructions.md`
+  — repository review rules; apply them within cleanup scope
+- `knowledge/general-rules.md` — detailed examples when needed
 - `knowledge/metadata-yaml-format.md` — **MANDATORY** for any instrumentation module
 
 Load other knowledge files only when their scope trigger applies.
-Use the **Knowledge File** column in the checklist table.
+Use the **Knowledge File** column in the topic index for deeper reference.
 
-## Review Checklist and Core Rules
+## Review rules and reference
 
-Load `knowledge/general-rules.md` — it contains the review checklist table and all
-core rules that apply to every review.
+Use the applicable native instruction files for review rules. Consult
+`knowledge/general-rules.md` for detailed examples and related topics
+when the native rule does not resolve a cleanup decision.
 
 ## Scope
 

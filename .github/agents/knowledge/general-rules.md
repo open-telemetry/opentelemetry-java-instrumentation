@@ -1,15 +1,20 @@
-# General Rules (Always Enforce)
+# General review reference
 
 ## Quick Reference
 
-- Use when: always — load this file for every review
-- Review focus: engineering correctness, performance, style, naming, semconv, config, testing, new modules
+- Use when: investigating a rule or example not resolved by the applicable
+  `.github/instructions/*.instructions.md` file
+- Review focus: engineering correctness, performance, style, naming, semconv,
+  config, testing, new modules
 
-## Review Checklist
+## Topic index
 
-Use category tags like `[Style]`, `[Naming]`, `[Javaagent]`, `[Testing]`.
+GitHub Copilot code review applies the native instruction files directly.
+Use this index only to locate deeper rationale for a question raised by the
+review. In particular, do not treat the table as a second set of requirements
+for comments or override an exception in a native instruction.
 
-When a "Knowledge File" is listed, load it from `knowledge/` before reviewing that category.
+When a "Knowledge File" is listed, find it in this directory.
 
 | Category     | Rule                                                                                                                                                                                                                                                                                                                                                                                                          | Scope Trigger                                                                                                                                                   | Knowledge File                     |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |

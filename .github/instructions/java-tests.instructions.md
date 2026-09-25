@@ -1,12 +1,30 @@
 ---
-applyTo: "**/*.java"
+applyTo: "**/src/test*/**/*.java,**/src/*Test*/**/*.java,**/src/unitTests/**/*.java,**/testing/**/*.java,testing-common/**/*.java,smoke-tests*/**/*.java"
 ---
 
-# Java Test Rules (first-pass review)
+# Java tests
 
-This file is loaded for all Java changes, but the rules below apply only when
-reviewing test code (e.g. `src/test/**`, `src/*Test/**`, and `testing/`
-modules). Skip them on production sources.
+Apply to test code and shared testing modules. Comment only on a changed
+line for a substantive coverage gap or an explicit convention not caught
+by CI.
+
+## Behavior coverage
+
+- For a javaagent change supporting multiple runtime library versions,
+  look for tests with the installed agent against the required versions.
+  Direct helper tests and `javaagent-unit-tests` do not exercise class
+  transformation or the actual library; do not count them as integration
+  coverage.
+- For a module whose default enablement changes, the same representative
+  operation must emit instrumentation telemetry in an enabled JVM and no
+  instrumentation telemetry in a disabled JVM. A `DefaultEnablementTest`
+  can run in both modes through `testDisabled`. In the negative mode,
+  wait for operation completion and assert exactly a manually created
+  parent span; an immediate `spans().isEmpty()` can pass before export.
+- For starter tests, check `smoke-tests-otel-starter/` for real Spring
+  starter coverage; `smoke-tests/images/spring-boot` tests the javaagent
+  instead. Declarative mode uses separate `testDeclarativeConfig` source
+  sets, not a flag toggled inside the normal tests.
 
 ## [Testing] General Patterns
 
@@ -18,8 +36,6 @@ modules). Skip them on production sources.
 - Test methods do not need `throws Exception` clauses unless actually required.
 - Prefer the nearest common parent in `catch` (including `Exception` /
   `Throwable`) over multi-catch.
-- Use `e` / `f` / `t` / `ignored` for catch variables (per the catch-variable
-  naming rule in `.github/copilot-instructions.md`).
 
 ## [Testing] Trace Clearing After Asynchronous Operations
 
