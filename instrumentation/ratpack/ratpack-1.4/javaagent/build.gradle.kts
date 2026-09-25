@@ -38,8 +38,8 @@ dependencies {
     testImplementation("com.sun.activation:jakarta.activation:1.2.2")
   }
 
-  latestDepTestLibrary("io.ratpack:ratpack-core:1.6.+") // see ratpack-1.7 module
-  latestDepTestLibrary("io.ratpack:ratpack-test:1.6.+") // see ratpack-1.7 module
+  latestDepTestLibrary("io.ratpack:ratpack-core:1.6.+") // see library17Test suite
+  latestDepTestLibrary("io.ratpack:ratpack-test:1.6.+") // see library17Test suite
 }
 
 // Requires old Guava. Can't use enforcedPlatform since predates BOM
