@@ -110,7 +110,7 @@ class CouchbaseClient30Test {
                             equalTo(stringKey("peer.service"), "kv"),
                             satisfies(
                                 stringKey("couchbase.operation_id"),
-                                value -> value.startsWith("0x")),
+                                val -> val.startsWith("0x")),
                             equalTo(stringKey("couchbase.document_id"), "id")),
                 span ->
                     span.hasKind(INTERNAL)
@@ -146,7 +146,7 @@ class CouchbaseClient30Test {
                             equalTo(stringKey("peer.service"), "kv"),
                             satisfies(
                                 stringKey("couchbase.operation_id"),
-                                value -> value.startsWith("0x")),
+                                val -> val.startsWith("0x")),
                             equalTo(stringKey("couchbase.document_id"), "async-id")),
                 span ->
                     span.hasKind(INTERNAL)

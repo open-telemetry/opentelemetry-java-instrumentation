@@ -35,7 +35,6 @@ import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.Collection;
 import com.couchbase.client.java.json.JsonObject;
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -185,11 +184,11 @@ class CouchbaseClient32Test {
                 },
                 span ->
                     span.hasName("request_encoding")
-                        .hasKind(sdkDetailSpanKind())
+                        .hasKind(v3Preview() ? INTERNAL : (testLatestDeps() ? CLIENT : INTERNAL))
                         .hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("dispatch_to_server")
-                        .hasKind(sdkDetailSpanKind())
+                        .hasKind(v3Preview() ? INTERNAL : (testLatestDeps() ? CLIENT : INTERNAL))
                         .hasParent(trace.getSpan(0)));
           } else {
             trace.hasSpansSatisfyingExactly(
@@ -217,10 +216,6 @@ class CouchbaseClient32Test {
             equalTo(stringKey("db.couchbase.service"), experimental("kv")),
             equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? seedAddress : null),
             equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? (long) seedPort : null));
-  }
-
-  private static SpanKind sdkDetailSpanKind() {
-    return v3Preview() ? INTERNAL : (testLatestDeps() ? CLIENT : INTERNAL);
   }
 
   private static boolean emitSdkDetailSpans() {
