@@ -13,10 +13,9 @@ class MongoInstrumentationModuleTest {
 
   @Test
   void modulesHaveDistinctOrderedNames() {
-    io.opentelemetry.javaagent.instrumentation.mongo.v3_1.MongoClientInstrumentationModule
-        mongo31 =
-            new io.opentelemetry.javaagent.instrumentation.mongo.v3_1
-                .MongoClientInstrumentationModule();
+    io.opentelemetry.javaagent.instrumentation.mongo.v3_1.MongoClientInstrumentationModule mongo31 =
+        new io.opentelemetry.javaagent.instrumentation.mongo.v3_1
+            .MongoClientInstrumentationModule();
     MongoClientInstrumentationModule mongo37 = new MongoClientInstrumentationModule();
 
     assertThat(mongo31.instrumentationNames())
