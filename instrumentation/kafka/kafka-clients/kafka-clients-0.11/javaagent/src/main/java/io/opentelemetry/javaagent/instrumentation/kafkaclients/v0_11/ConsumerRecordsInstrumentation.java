@@ -82,8 +82,7 @@ class ConsumerRecordsInstrumentation implements TypeInstrumentation {
           consumerProcessInstrumenter(),
           KafkaProcessingOwnershipUtil.rawProcessingEligibility(
               records, processSpanEnabledSupplier()),
-          consumerContext,
-          KafkaProcessingOwnershipUtil.firstTraversal(records));
+          consumerContext);
     }
   }
 
@@ -106,8 +105,7 @@ class ConsumerRecordsInstrumentation implements TypeInstrumentation {
           consumerProcessInstrumenter(),
           KafkaProcessingOwnershipUtil.rawProcessingEligibility(
               records, processSpanEnabledSupplier()),
-          consumerContext,
-          KafkaProcessingOwnershipUtil.firstTraversal(records));
+          consumerContext);
     }
   }
 
@@ -128,10 +126,8 @@ class ConsumerRecordsInstrumentation implements TypeInstrumentation {
       return TracingIterator.wrap(
           iterator,
           consumerProcessInstrumenter(),
-          KafkaProcessingOwnershipUtil.claimFirstTraversal(records)
-              ? KafkaProcessingOwnershipUtil.rawProcessingEligibility(
-                  records, processSpanEnabledSupplier())
-              : () -> false,
+          KafkaProcessingOwnershipUtil.rawProcessingEligibility(
+              records, processSpanEnabledSupplier()),
           consumerContext);
     }
   }
@@ -153,10 +149,8 @@ class ConsumerRecordsInstrumentation implements TypeInstrumentation {
       return TracingListIterator.wrap(
           listIterator,
           consumerProcessInstrumenter(),
-          KafkaProcessingOwnershipUtil.claimFirstTraversal(records)
-              ? KafkaProcessingOwnershipUtil.rawProcessingEligibility(
-                  records, processSpanEnabledSupplier())
-              : () -> false,
+          KafkaProcessingOwnershipUtil.rawProcessingEligibility(
+              records, processSpanEnabledSupplier()),
           consumerContext);
     }
   }
