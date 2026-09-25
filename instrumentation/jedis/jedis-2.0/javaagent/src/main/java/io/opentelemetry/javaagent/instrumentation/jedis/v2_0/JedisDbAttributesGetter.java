@@ -13,7 +13,7 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIn
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
-class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
+final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
 
   @Override
   public String getDbSystemName(JedisRequest request) {

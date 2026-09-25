@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisSpanNameDbAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -49,22 +50,13 @@ public class JedisSingletons {
 
   static {
     JedisDbAttributesGetter dbAttributesGetter = new JedisDbAttributesGetter();
-    // Redis semantic conventions don't follow the regular pattern of adding db.namespace to the
-    // span name.
-    JedisDbAttributesGetter spanNameAttributesGetter =
-        new JedisDbAttributesGetter() {
-          @Override
-          @Nullable
-          public String getDbNamespace(JedisRequest request) {
-            return null;
-          }
-        };
 
     InstrumenterBuilder<JedisRequest, Void> builder =
         Instrumenter.<JedisRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(spanNameAttributesGetter))
+                DbClientSpanNameExtractor.create(
+                    new RedisSpanNameDbAttributesGetter<>(dbAttributesGetter)))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(
                 ServicePeerAttributesExtractor.create(

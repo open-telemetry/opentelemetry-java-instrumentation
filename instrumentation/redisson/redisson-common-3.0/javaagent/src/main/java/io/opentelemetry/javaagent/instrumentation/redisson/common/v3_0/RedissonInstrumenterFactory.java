@@ -11,31 +11,22 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisSpanNameDbAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import javax.annotation.Nullable;
 
 public class RedissonInstrumenterFactory {
 
   public static Instrumenter<RedissonRequest, Void> createInstrumenter(String instrumentationName) {
     RedissonDbAttributesGetter dbAttributesGetter = new RedissonDbAttributesGetter();
-    // Redis semantic conventions don't follow the regular pattern of adding db.namespace to the
-    // span name.
-    RedissonDbAttributesGetter spanNameAttributesGetter =
-        new RedissonDbAttributesGetter() {
-          @Nullable
-          @Override
-          public String getDbNamespace(RedissonRequest request) {
-            return null;
-          }
-        };
 
     InstrumenterBuilder<RedissonRequest, Void> builder =
         Instrumenter.<RedissonRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 instrumentationName,
-                DbClientSpanNameExtractor.create(spanNameAttributesGetter))
+                DbClientSpanNameExtractor.create(
+                    new RedisSpanNameDbAttributesGetter<>(dbAttributesGetter)))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(builder);
