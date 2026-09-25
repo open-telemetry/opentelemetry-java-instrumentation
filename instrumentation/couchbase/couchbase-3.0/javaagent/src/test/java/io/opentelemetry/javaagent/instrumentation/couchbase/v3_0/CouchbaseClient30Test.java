@@ -109,8 +109,7 @@ class CouchbaseClient30Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(stringKey("peer.service"), "kv"),
                             satisfies(
-                                stringKey("couchbase.operation_id"),
-                                val -> val.startsWith("0x")),
+                                stringKey("couchbase.operation_id"), val -> val.startsWith("0x")),
                             equalTo(stringKey("couchbase.document_id"), "id")),
                 span ->
                     span.hasKind(INTERNAL)
@@ -145,8 +144,7 @@ class CouchbaseClient30Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(stringKey("peer.service"), "kv"),
                             satisfies(
-                                stringKey("couchbase.operation_id"),
-                                val -> val.startsWith("0x")),
+                                stringKey("couchbase.operation_id"), val -> val.startsWith("0x")),
                             equalTo(stringKey("couchbase.document_id"), "async-id")),
                 span ->
                     span.hasKind(INTERNAL)
