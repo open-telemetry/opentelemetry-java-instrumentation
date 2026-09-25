@@ -564,6 +564,15 @@ targets:
       target: ':instrumentation:hibernate:hibernate-reactive-1.0:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:ibmmq:ibmmq-9.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:ibmmq:ibmmq-9.3:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:ibmmq:ibmmq-common:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:internal:internal-application-logger:bootstrap'
     - type: gradle
       path: ./
