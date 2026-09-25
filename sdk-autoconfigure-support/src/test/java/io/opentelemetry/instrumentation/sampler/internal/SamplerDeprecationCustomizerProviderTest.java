@@ -8,10 +8,12 @@ package io.opentelemetry.instrumentation.sampler.internal;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.logging.Level.WARNING;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfiguration;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -100,6 +102,21 @@ class SamplerDeprecationCustomizerProviderTest {
   }
 
   @Test
+  void rejectsFlatLinksBasedSamplerWhenV3PreviewEnabled() {
+    Map<String, String> properties = flatProperties("linksbased_parentbased_always_on");
+    properties.put("otel.instrumentation.common.v3-preview", "true");
+
+    assertThatThrownBy(
+            () ->
+                AutoConfiguredOpenTelemetrySdk.builder()
+                    .addPropertiesSupplier(() -> properties)
+                    .build())
+        .isInstanceOf(ConfigurationException.class)
+        .hasMessageContaining("linksbased_parentbased_always_on sampler is not supported");
+    assertThat(handler.records).isEmpty();
+  }
+
+  @Test
   void warnsOnceForNestedDeclarativeRuleBasedRoutingSampler() {
     String sampler =
         "    parent_based:\n"
@@ -123,8 +140,26 @@ class SamplerDeprecationCustomizerProviderTest {
     }
   }
 
+  @Test
+  void rejectsDeclarativeRuleBasedRoutingSamplerWhenV3PreviewEnabled() {
+    assertThatThrownBy(() -> createDeclarativeSdk(RULE_BASED_ROUTING, true))
+        .isInstanceOf(ConfigurationException.class)
+        .hasMessageContaining("rule_based_routing sampler is not supported");
+    assertThat(handler.records).isEmpty();
+  }
+
   private static OpenTelemetrySdk createDeclarativeSdk(String sampler) {
-    String yaml = "file_format: \"1.1\"\ntracer_provider:\n  sampler:\n" + sampler;
+    return createDeclarativeSdk(sampler, false);
+  }
+
+  private static OpenTelemetrySdk createDeclarativeSdk(String sampler, boolean v3Preview) {
+    String yaml =
+        "file_format: \"1.1\"\n"
+            + (v3Preview
+                ? "instrumentation/development:\n  java:\n    common:\n      v3_preview: true\n"
+                : "")
+            + "tracer_provider:\n  sampler:\n"
+            + sampler;
     return DeclarativeConfiguration.create(
             DeclarativeConfiguration.parse(new ByteArrayInputStream(yaml.getBytes(UTF_8))))
         .getSdk();

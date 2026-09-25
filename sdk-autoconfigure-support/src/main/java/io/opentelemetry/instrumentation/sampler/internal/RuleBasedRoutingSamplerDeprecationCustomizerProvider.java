@@ -5,18 +5,21 @@
 
 package io.opentelemetry.instrumentation.sampler.internal;
 
+import io.opentelemetry.instrumentation.config.internal.DeclarativeConfigV3Preview;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigurationCustomizer;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryConfigurationModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.ParentBasedSamplerModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.SamplerModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.TracerProviderModel;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 /**
- * Warns when the bundled declarative rule-based routing sampler is selected.
+ * Warns when the bundled declarative rule-based routing sampler is selected, or rejects it when the
+ * v3 preview is enabled.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
@@ -32,7 +35,15 @@ public final class RuleBasedRoutingSamplerDeprecationCustomizerProvider
     AtomicBoolean warned = new AtomicBoolean();
     customizer.addModelCustomizer(
         model -> {
-          if (isSelected(model) && warned.compareAndSet(false, true)) {
+          if (!isSelected(model)) {
+            return model;
+          }
+          if (DeclarativeConfigV3Preview.isEnabled(model)) {
+            throw new ConfigurationException(
+                "The declarative rule_based_routing sampler is not supported when the v3 preview"
+                    + " is enabled");
+          }
+          if (warned.compareAndSet(false, true)) {
             logger.warning(
                 "The declarative rule_based_routing sampler is deprecated in the Java agent and"
                     + " Spring Boot starter and will be removed in 3.0. Consider migrating to the"
