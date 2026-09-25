@@ -62,4 +62,9 @@ public final class JmxTelemetry {
   public AutoCloseable start(Supplier<List<? extends MBeanServerConnection>> connections) {
     return service.start(metricConfiguration, connections, handlerRegistry, metrics);
   }
+
+  // package-private for testing
+  IncludeExclude getMetrics() {
+    return metrics;
+  }
 }

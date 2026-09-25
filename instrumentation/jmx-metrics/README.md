@@ -14,26 +14,38 @@ To control the time interval between MBean detection attempts, one can use the `
 
 JMX is a popular metrics technology used throughout the JVM (see [runtime metrics](../runtime-telemetry/library/README.md)), application servers, third-party libraries, and applications.
 JMX Metric Insight comes with a number of predefined configurations containing curated sets of JMX metrics for frequently used application servers or frameworks.
-To enable collection of the predefined metrics, specify a list of targets as the value for the `otel.jmx.target.system` property. For example
+
+Before 3.0, no targets are enabled by default. To enable collection of the predefined metrics, specify a list of targets as the value for the `otel.jmx.target.system` property. For example:
 
 ```bash
 $ java -javaagent:path/to/opentelemetry-javaagent.jar \
-     -Dotel.jmx.target.system=jetty,experimental-kafka-broker \
+     -Dotel.jmx.target.system=jetty,kafka-broker \
      ... \
      -jar myapp.jar
 ```
 
-No targets are enabled by default. The supported target environments are listed below.
+Starting with 3.0 (or with the `otel.instrumentation.common.v3-preview=true` option), the stable pre-defined metrics are always enabled by default, the non-stable metrics are opt-in using the `otel.jmx.metrics.experimental.included` property. For example:
+
+```bash
+$ java -javaagent:path/to/opentelemetry-javaagent.jar \
+     -Dotel.jmx.metrics.experimental.included=jetty.*,kafka.* \
+     ... \
+     -jar myapp.jar
+```
+
+This example will enable all stable metrics except the JMX-based `jvm` definitions (which are provided by `runtime-telemetry`) and all the non-stable metrics matching the `jetty.*` and `kafka.*` patterns.
+
+The supported target systems are listed below.
 
 - [activemq](library/activemq.md)
 - [camel](library/camel.md)
 - [jetty](library/jetty.md)
-- [experimental-kafka-broker](library/kafka-broker.md)
-- [experimental-kafka-connect](library/kafka-connect.md)
+- [kafka-broker](library/kafka-broker.md)
+- [kafka-connect](library/kafka-connect.md)
 - [tomcat](library/tomcat.md)
 - [wildfly](library/wildfly.md)
 - [hadoop](library/hadoop.md)
-- [experimental-cassandra](library/cassandra.md)
+- [cassandra](library/cassandra.md)
 
 The [jvm](library/jvm.md) metrics definitions are also included in the [jmx-metrics library](./library)
 to allow reusing them without instrumentation. When using instrumentation, the [runtime-telemetry](../runtime-telemetry)
@@ -546,3 +558,8 @@ To contribute to pre-defined metrics definitions or extend them through custom c
 - when a metric represents a percentile, use the `.pXX` suffix where `XX` is the percentile value, for example:
   - `request.duration.p50` for the 50th percentile (median)
   - `request.duration.p99` for the 99th percentile
+- metrics definitions should have a semantic-convention compliant registry definition in the `model` subfolder, those definitions should be verified with weaver live-check when testing with real target systems.
+- metrics definitions must be split between stable and unstable metrics with the following convention:
+  - `xxx.yaml` : stable metrics for `xxx` target system, where `xxx` is identifier for system
+  - `xxx_unstable.yaml` : non-stable (experimental, development, ...) metrics for `xxx` target system, where `xxx` is identifier for system
+  - metric promotion to stable should be done by moving definitions from `xxx_unstable.yaml` to `xxx.yaml` and updating the stability of the metrics definitions in the `model` subfolder.

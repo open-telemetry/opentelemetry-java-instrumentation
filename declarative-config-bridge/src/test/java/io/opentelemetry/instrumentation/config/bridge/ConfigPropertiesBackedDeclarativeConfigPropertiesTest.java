@@ -108,6 +108,17 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
 
     assertThat(metrics.getScalarList("included", String.class)).containsExactly("jvm.*", "kafka.*");
     assertThat(metrics.getScalarList("excluded", String.class)).containsExactly("kafka.connect.*");
+
+    metrics = createConfig("otel.jmx.metrics.experimental.included", "jvm.*");
+
+    assertThat(
+            metrics
+                .getStructured("java")
+                .getStructured("jmx")
+                .getStructured("metrics")
+                .getStructured("experimental")
+                .getScalarList("included", String.class))
+        .containsExactly("jvm.*");
   }
 
   @Test
