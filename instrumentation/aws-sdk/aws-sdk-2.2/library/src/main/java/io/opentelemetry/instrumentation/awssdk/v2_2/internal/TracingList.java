@@ -20,7 +20,6 @@ import java.util.ListIterator;
 import java.util.Objects;
 import java.util.RandomAccess;
 import java.util.Spliterator;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
@@ -41,7 +40,6 @@ public final class TracingList extends ArrayList<Message> {
   private final TracingExecutionInterceptor config;
   private final IdentityHashMap<Message, SqsMessage> tracingMessages;
   @Nullable private final Context processParentContext;
-  private final AtomicBoolean firstTraversal = new AtomicBoolean(true);
   private volatile boolean processingOwnedOutsideSqsSdk;
 
   public static TracingList wrap(
@@ -165,36 +163,28 @@ public final class TracingList extends ArrayList<Message> {
   }
 
   private Iterator<Message> tracingIterator(Iterator<Message> delegateIterator) {
-    if (shouldTraceTraversal()) {
-      return TracingIterator.wrap(delegateIterator, this);
-    }
-    return delegateIterator;
+    return processingOwnedOutsideSqsSdk
+        ? delegateIterator
+        : TracingIterator.wrap(delegateIterator, this);
   }
 
   private ListIterator<Message> tracingListIterator(ListIterator<Message> delegateIterator) {
-    if (shouldTraceTraversal()) {
-      return TracingListIterator.wrap(delegateIterator, this);
-    }
-    return delegateIterator;
+    return processingOwnedOutsideSqsSdk
+        ? delegateIterator
+        : TracingListIterator.wrap(delegateIterator, this);
   }
 
   private Spliterator<Message> tracingSpliterator(Spliterator<Message> delegateSpliterator) {
-    if (shouldTraceTraversal()) {
-      return TracingSpliterator.wrap(delegateSpliterator, this);
-    }
-    return delegateSpliterator;
-  }
-
-  private boolean shouldTraceTraversal() {
-    return firstTraversal.getAndSet(false) && !processingOwnedOutsideSqsSdk;
+    return processingOwnedOutsideSqsSdk
+        ? delegateSpliterator
+        : TracingSpliterator.wrap(delegateSpliterator, this);
   }
 
   private Consumer<? super Message> tracingAction(Consumer<? super Message> action) {
     requireNonNull(action);
-    if (shouldTraceTraversal()) {
-      return message -> TracingIterator.processCallback(this, message, action);
-    }
-    return action;
+    return processingOwnedOutsideSqsSdk
+        ? action
+        : message -> TracingIterator.processCallback(this, message, action);
   }
 
   @Override

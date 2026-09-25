@@ -39,12 +39,12 @@ import java.util.Map;
 import java.util.RandomAccess;
 import java.util.Spliterator;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -133,22 +133,22 @@ class SqsTracingListTest {
   }
 
   @ParameterizedTest
-  @MethodSource("firstTraversalSelections")
-  void unusedFirstTraversalConsumesBatch(Function<TracingList, ?> selectTraversal) {
+  @MethodSource("unusedTraversalSelections")
+  void unusedTraversalDoesNotPreventLaterProcessing(Function<TracingList, ?> selectTraversal) {
     TracingList tracingList = tracingMessages(1, new ArrayList<>());
 
     assertThat(selectTraversal.apply(tracingList)).isNotNull();
-    tracingList.forEach(unused -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    tracingList.forEach(unused -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
     tracingList
         .subList(0, 1)
         .iterator()
-        .forEachRemaining(
-            unused -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+        .forEachRemaining(unused -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
 
-    assertThat(testing.spans()).isEmpty();
+    testing.waitForTraces(2);
+    assertThat(testing.spans()).hasSize(2);
   }
 
-  private static Stream<Arguments> firstTraversalSelections() {
+  private static Stream<Arguments> unusedTraversalSelections() {
     return Stream.of(
         argumentSet(
             "root iterator", (Function<TracingList, ?>) tracingList -> tracingList.iterator()),
@@ -174,56 +174,98 @@ class SqsTracingListTest {
   }
 
   @Test
-  void emptyViewForEachConsumesTraversalForRoot() {
+  void emptyViewForEachDoesNotPreventRootProcessing() {
     TracingList tracingList = tracingMessages(1, new ArrayList<>());
 
     tracingList.subList(0, 0).forEach(unused -> {});
-    tracingList.forEach(unused -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    tracingList.forEach(unused -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
 
-    assertThat(testing.spans()).isEmpty();
+    testing.waitForTraces(1);
+    assertThat(testing.spans()).hasSize(1);
   }
 
   @Test
-  void rootForEachConsumesTraversalForViews() {
+  void rootAndViewCrossApiTraversalsTraceEachPass() {
     TracingList tracingList = tracingMessages(2, new ArrayList<>());
-    List<Message> view = tracingList.subList(0, tracingList.size());
+    List<Message> view = tracingList.subList(0, tracingList.size()).subList(0, 1);
 
     tracingList.forEach(unused -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
     view.spliterator()
-        .forEachRemaining(
-            unused -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+        .forEachRemaining(unused -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
+    tracingList
+        .listIterator()
+        .forEachRemaining(unused -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
+    view.iterator()
+        .forEachRemaining(unused -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
 
-    testing.waitForTraces(2);
-    assertThat(testing.spans()).hasSize(2);
+    testing.waitForTraces(6);
+    assertThat(testing.spans()).hasSize(6);
+  }
+
+  @ParameterizedTest
+  @MethodSource("processingTraversals")
+  void repeatedRootAndViewTraversalsTraceEveryPass(Consumer<List<Message>> traverse) {
+    TracingList tracingList = tracingMessages(1, new ArrayList<>());
+    List<Message> view = tracingList.subList(0, 1).subList(0, 1);
+
+    traverse.accept(tracingList);
+    traverse.accept(tracingList);
+    traverse.accept(view);
+    traverse.accept(view);
+
+    testing.waitForTraces(4);
+    assertThat(testing.spans()).hasSize(4);
+  }
+
+  private static Stream<Arguments> processingTraversals() {
+    return Stream.of(
+        argumentSet(
+            "iterator",
+            (Consumer<List<Message>>)
+                messages ->
+                    messages
+                        .iterator()
+                        .forEachRemaining(
+                            unused ->
+                                assertThat(Span.current().getSpanContext().isValid()).isTrue())),
+        argumentSet(
+            "list iterator",
+            (Consumer<List<Message>>)
+                messages ->
+                    messages
+                        .listIterator()
+                        .forEachRemaining(
+                            unused ->
+                                assertThat(Span.current().getSpanContext().isValid()).isTrue())),
+        argumentSet(
+            "forEach",
+            (Consumer<List<Message>>)
+                messages ->
+                    messages.forEach(
+                        unused -> assertThat(Span.current().getSpanContext().isValid()).isTrue())),
+        argumentSet(
+            "spliterator",
+            (Consumer<List<Message>>)
+                messages ->
+                    messages
+                        .spliterator()
+                        .forEachRemaining(
+                            unused ->
+                                assertThat(Span.current().getSpanContext().isValid()).isTrue())));
   }
 
   @Test
-  void concurrentTraversalSelectionClaimsOnlyOneProcessingTraversal() throws Exception {
+  void processingHandoffStopsLaterTraversals() {
     TracingList tracingList = tracingMessages(1, new ArrayList<>());
-    CyclicBarrier barrier = new CyclicBarrier(2);
-    ExecutorService executor = Executors.newFixedThreadPool(2);
-    try {
-      Future<Boolean> first =
-          executor.submit(
-              () -> {
-                barrier.await(10, SECONDS);
-                Iterator<Message> iterator = tracingList.iterator();
-                iterator.forEachRemaining(unused -> {});
-                return iterator instanceof TracingIterator;
-              });
-      Future<Boolean> second =
-          executor.submit(
-              () -> {
-                barrier.await(10, SECONDS);
-                Iterator<Message> iterator = tracingList.subList(0, 1).iterator();
-                iterator.forEachRemaining(unused -> {});
-                return iterator instanceof TracingIterator;
-              });
 
-      assertThat(first.get(10, SECONDS)).isNotEqualTo(second.get(10, SECONDS));
-    } finally {
-      executor.shutdownNow();
-    }
+    tracingList.forEach(unused -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
+    tracingList.markProcessingOwnedOutsideSqsSdk();
+    tracingList.forEach(unused -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    tracingList
+        .subList(0, 1)
+        .spliterator()
+        .forEachRemaining(
+            unused -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
 
     testing.waitForTraces(1);
     assertThat(testing.spans()).hasSize(1);
