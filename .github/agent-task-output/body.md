@@ -1,0 +1,1 @@
+Run CodeQL's Java Gradle autobuilder on the repository's JDK 25 instead of the runner's JDK 17. Matching the main build's JDK lets CodeQL reuse its compiled Kotlin DSL scripts rather than recompiling them on every PR scan.
