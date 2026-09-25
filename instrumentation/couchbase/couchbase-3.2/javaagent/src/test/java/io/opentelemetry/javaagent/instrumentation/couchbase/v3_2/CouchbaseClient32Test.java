@@ -28,8 +28,17 @@ import static io.opentelemetry.semconv.incubating.NetIncubatingAttributes.NET_HO
 import static io.opentelemetry.semconv.incubating.NetIncubatingAttributes.NET_PEER_NAME;
 import static io.opentelemetry.semconv.incubating.NetIncubatingAttributes.NET_PEER_PORT;
 import static io.opentelemetry.semconv.incubating.NetIncubatingAttributes.NET_TRANSPORT;
+import static java.util.Collections.emptyMap;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
+import static org.mockito.Mockito.mock;
 
+import com.couchbase.client.core.CoreProtostellar;
+import com.couchbase.client.core.cnc.RequestSpan;
 import com.couchbase.client.core.error.DocumentNotFoundException;
+import com.couchbase.client.core.protostellar.ProtostellarRequest;
+import com.couchbase.client.core.retry.RetryStrategy;
+import com.couchbase.client.core.service.ServiceType;
 import com.couchbase.client.core.util.ConnectionString;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
@@ -46,9 +55,13 @@ import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
@@ -198,6 +211,60 @@ class CouchbaseClient32Test {
                 });
           }
         });
+  }
+
+  @ParameterizedTest
+  @MethodSource("protostellarTargets")
+  void testEmitsProtostellarTarget(String portSuffix, Long expectedPort) {
+    assumeTrue(testLatestDeps());
+    Cluster protostellar =
+        Cluster.connect(
+            "couchbase2://" + seedAddress + portSuffix,
+            couchbase.getUsername(),
+            couchbase.getPassword());
+    cleanup.deferCleanup(protostellar::disconnect);
+
+    CoreProtostellar core = (CoreProtostellar) protostellar.async().couchbaseOps();
+    RequestSpan requestSpan =
+        cluster.core().coreResources().requestTracer().requestSpan("get", null);
+    ProtostellarRequest<Object> protostellarRequest =
+        new ProtostellarRequest<>(
+            null,
+            core,
+            ServiceType.KV,
+            "get",
+            requestSpan,
+            Duration.ofSeconds(1),
+            true,
+            mock(RetryStrategy.class),
+            emptyMap(),
+            0L,
+            null);
+    protostellarRequest.raisedResponseToUser(null);
+
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(CLIENT)
+                        .hasName(
+                            emitStableDatabaseSemconv()
+                                ? "get " + seedAddress + (expectedPort == null ? "" : portSuffix)
+                                : "get")
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), "couchbase"),
+                            equalTo(longKey("db.couchbase.retries"), experimental(0L)),
+                            equalTo(
+                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? seedAddress : null),
+                            equalTo(
+                                SERVER_PORT, emitStableDatabaseSemconv() ? expectedPort : null))));
+  }
+
+  private static Stream<Arguments> protostellarTargets() {
+    return Stream.of(
+        argumentSet("implicit default port", "", null),
+        argumentSet("explicit default port", ":18098", null),
+        argumentSet("non-default port", ":18099", 18099L));
   }
 
   private static void assertOperationSpan(
