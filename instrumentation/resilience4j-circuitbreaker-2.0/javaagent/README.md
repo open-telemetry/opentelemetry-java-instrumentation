@@ -1,10 +1,13 @@
 # Resilience4j CircuitBreaker Instrumentation
 
-The Resilience4j CircuitBreaker instrumentation for versions 2.0 and higher emits one `INTERNAL`
-span for each protected-call attempt made through decorated APIs while there is an active parent
-span. Direct `acquirePermission()` and completion callback usage is correlated on a best-effort
-basis when the callbacks occur on the same thread. The span name is `CircuitBreaker <name>`.
-Rejected and failed calls are reported as error spans.
+The Resilience4j CircuitBreaker instrumentation for versions 2.0 and higher
+emits one `INTERNAL` span for each protected-call attempt made through
+Resilience4j's Java decorators while there is an active parent span. This
+includes synchronous decorators, `CompletionStage`, and `Future`.
+Direct `acquirePermission()` / `tryAcquirePermission()` and completion callbacks
+do not create spans; Reactor and RxJava operators use separate lifecycles and
+are not covered. The span name is `CircuitBreaker <name>`. Rejected and failed
+decorated calls are reported as error spans.
 
 This instrumentation is disabled by default. Enable it by setting
 `otel.instrumentation.resilience4j-circuitbreaker.enabled=true`.

@@ -22,68 +22,25 @@ import javax.annotation.Nullable;
 
 public class Resilience4jCircuitBreakerSpans {
 
-  // Raw acquirePermission()/onSuccess()/onError() does not expose an attempt token, so arbitrary
-  // out-of-order raw callbacks cannot be correlated safely. Decorated APIs capture the exact
-  // acquisition token; raw same-thread callbacks are only best-effort for simple usage.
   private static final ThreadLocal<Deque<AttachedPendingSpan>> attachedPendingSpans =
       new ThreadLocal<>();
-  private static final ThreadLocal<Deque<AttemptToken>> currentAcquisitions = new ThreadLocal<>();
-  private static final ThreadLocal<Deque<AttemptToken>> recentAcquisitions = new ThreadLocal<>();
   private static final ThreadLocal<Deque<Capture>> captures = new ThreadLocal<>();
-  private static final ThreadLocal<Deque<CircuitBreakerCallback>> circuitBreakerCallbacks =
-      new ThreadLocal<>();
   private static final ThreadLocal<Deque<OnResult>> onResults = new ThreadLocal<>();
 
+  @Nullable
   public static AttemptToken beginAcquisition(CircuitBreaker circuitBreaker) {
-    AttemptToken token = new AttemptToken(circuitBreaker);
-    Deque<AttemptToken> tokens = currentAcquisitions.get();
-    if (tokens == null) {
-      tokens = new ArrayDeque<>();
-      currentAcquisitions.set(tokens);
+    Deque<Capture> captureStack = captures.get();
+    Capture capture = captureStack == null ? null : captureStack.peek();
+    if (capture == null || capture.circuitBreaker != circuitBreaker || capture.token != null) {
+      return null;
     }
-    tokens.push(token);
+    AttemptToken token = new AttemptToken();
+    capture.token = token;
     return token;
   }
 
-  public static void finishAcquisition(@Nullable AttemptToken token) {
-    Deque<AttemptToken> tokens = currentAcquisitions.get();
-    if (token == null) {
-      currentAcquisitions.remove();
-      return;
-    }
-    if (tokens != null) {
-      if (tokens.peek() == token) {
-        tokens.poll();
-      } else {
-        tokens.remove(token);
-      }
-      if (tokens.isEmpty()) {
-        currentAcquisitions.remove();
-      }
-    }
-    if (token.pendingSpan != null && !token.claimed) {
-      addRecentAcquisition(token);
-    } else {
-      removeRecentAcquisition(token);
-    }
-    Deque<Capture> captureStack = captures.get();
-    if (captureStack != null && !captureStack.isEmpty()) {
-      Capture capture = captureStack.peek();
-      if (capture.circuitBreaker == token.circuitBreaker && capture.token == null) {
-        capture.token = token;
-      }
-    }
-  }
-
   static Capture beginCapture(CircuitBreaker circuitBreaker) {
-    return beginCapture(circuitBreaker, false);
-  }
-
-  private static Capture beginCapture(CircuitBreaker circuitBreaker, boolean captureRecent) {
     Capture capture = new Capture(circuitBreaker);
-    if (captureRecent) {
-      capture.token = peekRecentAcquisition(circuitBreaker);
-    }
     Deque<Capture> captureStack = captures.get();
     if (captureStack == null) {
       captureStack = new ArrayDeque<>();
@@ -94,13 +51,46 @@ public class Resilience4jCircuitBreakerSpans {
   }
 
   static Capture beginCaptureAfterAcquisition(CircuitBreaker circuitBreaker) {
-    return beginCapture(circuitBreaker, true);
+    Deque<Capture> captureStack = captures.get();
+    Capture outer = captureStack == null ? null : captureStack.peek();
+    Capture capture = beginCapture(circuitBreaker);
+    if (outer != null && outer.circuitBreaker == circuitBreaker) {
+      capture.token = outer.token;
+    }
+    capture.userCodeDepth = 1;
+    return capture;
+  }
+
+  @Nullable
+  static Capture beginUserCode(CircuitBreaker circuitBreaker) {
+    Deque<Capture> captureStack = captures.get();
+    Capture capture = captureStack == null ? null : captureStack.peek();
+    if (capture != null && capture.circuitBreaker == circuitBreaker) {
+      capture.userCodeDepth++;
+      return capture;
+    }
+    return null;
+  }
+
+  static void endUserCode(@Nullable Capture capture) {
+    if (capture != null) {
+      capture.userCodeDepth--;
+    }
   }
 
   @Nullable
   static PendingSpan endCapture(Capture capture) {
     removeCapture(capture);
     return claim(capture.token);
+  }
+
+  @Nullable
+  static PendingSpan endCaptureOnFailure(Capture capture) {
+    removeCapture(capture);
+    PendingSpan pendingSpan = claim(capture.token);
+    return pendingSpan != null
+        ? pendingSpan
+        : capture.token == null ? null : capture.token.pendingSpan;
   }
 
   static void cancelCapture(Capture capture) {
@@ -122,43 +112,12 @@ public class Resilience4jCircuitBreakerSpans {
   }
 
   @Nullable
-  static PendingSpan claimRecentAcquisition(CircuitBreaker circuitBreaker) {
-    return claim(peekRecentAcquisition(circuitBreaker));
-  }
-
-  @Nullable
-  private static AttemptToken peekRecentAcquisition(CircuitBreaker circuitBreaker) {
-    Deque<AttemptToken> tokens = recentAcquisitions.get();
-    if (tokens == null) {
-      return null;
-    }
-    for (AttemptToken token : tokens) {
-      if (!token.claimed && token.pendingSpan != null && token.circuitBreaker == circuitBreaker) {
-        return token;
-      }
-    }
-    return null;
-  }
-
-  private static void addRecentAcquisition(AttemptToken token) {
-    Deque<AttemptToken> tokens = recentAcquisitions.get();
-    if (tokens == null) {
-      tokens = new ArrayDeque<>();
-      recentAcquisitions.set(tokens);
-    }
-    tokens.remove(token);
-    tokens.push(token);
-  }
-
-  private static void removeRecentAcquisition(AttemptToken token) {
-    Deque<AttemptToken> tokens = recentAcquisitions.get();
-    if (tokens == null) {
-      return;
-    }
-    tokens.remove(token);
-    if (tokens.isEmpty()) {
-      recentAcquisitions.remove();
-    }
+  static PendingSpan claimCapturedAcquisition(CircuitBreaker circuitBreaker) {
+    Deque<Capture> captureStack = captures.get();
+    Capture capture = captureStack == null ? null : captureStack.peek();
+    return capture != null && capture.circuitBreaker == circuitBreaker
+        ? claim(capture.token)
+        : null;
   }
 
   @Nullable
@@ -167,28 +126,13 @@ public class Resilience4jCircuitBreakerSpans {
       return null;
     }
     token.claimed = true;
-    removeRecentAcquisition(token);
-    detachPendingSpan(token.pendingSpan);
     return token.pendingSpan;
   }
 
-  private static void clearRecentAcquisition(PendingSpan pendingSpan) {
-    Deque<AttemptToken> tokens = recentAcquisitions.get();
-    if (tokens == null) {
+  public static void start(CircuitBreaker circuitBreaker, @Nullable AttemptToken token) {
+    if (token == null) {
       return;
     }
-    Iterator<AttemptToken> iterator = tokens.iterator();
-    while (iterator.hasNext()) {
-      if (iterator.next().pendingSpan == pendingSpan) {
-        iterator.remove();
-      }
-    }
-    if (tokens.isEmpty()) {
-      recentAcquisitions.remove();
-    }
-  }
-
-  public static void start(CircuitBreaker circuitBreaker) {
     Context parentContext = Context.current();
     if (!Span.fromContext(parentContext).getSpanContext().isValid()) {
       // Circuit breaker spans are internal and noisy without an existing trace.
@@ -202,16 +146,15 @@ public class Resilience4jCircuitBreakerSpans {
 
     Context context = instrumenter().start(parentContext, request);
     PendingSpan pendingSpan =
-        new PendingSpan(
-            circuitBreaker, request, context, openDecoratedOperationScope(circuitBreaker, context));
-    Deque<AttemptToken> tokens = currentAcquisitions.get();
-    AttemptToken token = tokens == null ? null : tokens.peek();
-    if (token != null && token.circuitBreaker == circuitBreaker) {
-      token.pendingSpan = pendingSpan;
-    }
+        new PendingSpan(circuitBreaker, request, context, context.makeCurrent());
+    token.pendingSpan = pendingSpan;
   }
 
-  public static void reject(CircuitBreaker circuitBreaker, @Nullable Throwable throwable) {
+  public static void reject(
+      CircuitBreaker circuitBreaker, @Nullable AttemptToken token, @Nullable Throwable throwable) {
+    if (token == null) {
+      return;
+    }
     Context parentContext = Context.current();
     if (!Span.fromContext(parentContext).getSpanContext().isValid()) {
       // Circuit breaker spans are internal and noisy without an existing trace.
@@ -227,78 +170,23 @@ public class Resilience4jCircuitBreakerSpans {
     instrumenter().end(context, request, "rejected", throwable);
   }
 
-  public static void enterCircuitBreakerCallback(CircuitBreaker circuitBreaker) {
-    Deque<CircuitBreakerCallback> callbacks = circuitBreakerCallbacks.get();
-    if (callbacks == null) {
-      callbacks = new ArrayDeque<>();
-      circuitBreakerCallbacks.set(callbacks);
-    }
-    callbacks.push(
-        new CircuitBreakerCallback(
-            circuitBreaker,
-            currentCompletionToken(circuitBreaker),
-            peekAttachedPendingSpan(circuitBreaker)));
-  }
-
-  public static void exitCircuitBreakerCallback(CircuitBreaker circuitBreaker) {
-    Deque<CircuitBreakerCallback> callbacks = circuitBreakerCallbacks.get();
-    if (callbacks == null) {
-      return;
-    }
-    CircuitBreakerCallback current = callbacks.peek();
-    if (current != null && current.circuitBreaker == circuitBreaker) {
-      callbacks.poll();
-    } else {
-      Iterator<CircuitBreakerCallback> iterator = callbacks.iterator();
-      while (iterator.hasNext()) {
-        if (iterator.next().circuitBreaker == circuitBreaker) {
-          iterator.remove();
-        }
-      }
-    }
-    if (callbacks.isEmpty()) {
-      circuitBreakerCallbacks.remove();
-    }
-  }
-
-  public static boolean isCurrentCircuitBreakerCallback(CircuitBreaker circuitBreaker) {
-    Deque<CircuitBreakerCallback> callbacks = circuitBreakerCallbacks.get();
-    return callbacks != null
-        && !callbacks.isEmpty()
-        && isCurrentCompletion(
-            circuitBreaker, callbacks.peek().token, callbacks.peek().pendingSpan);
-  }
-
   public static void enterOnResult(CircuitBreaker circuitBreaker) {
     Deque<OnResult> results = onResults.get();
     if (results == null) {
       results = new ArrayDeque<>();
       onResults.set(results);
     }
-    results.push(
-        new OnResult(
-            currentCompletionToken(circuitBreaker), peekAttachedPendingSpan(circuitBreaker)));
+    results.push(new OnResult(circuitBreaker, currentPendingSpan(circuitBreaker)));
   }
 
-  public static boolean isCurrentOnResultCompletion(CircuitBreaker circuitBreaker) {
-    Deque<OnResult> results = onResults.get();
-    return results != null
-        && !results.isEmpty()
-        && isCurrentCompletion(circuitBreaker, results.peek().token, results.peek().pendingSpan);
-  }
-
-  public static void endOnResult(CircuitBreaker circuitBreaker, @Nullable Throwable throwable) {
+  public static void endOnResult() {
     Deque<OnResult> results = onResults.get();
     OnResult result = results == null ? null : results.poll();
     if (results != null && results.isEmpty()) {
       onResults.remove();
     }
-    if (throwable != null) {
-      end(circuitBreaker, "failure", throwable);
-    } else if (result != null && result.resultRecordedAsFailure) {
-      end(circuitBreaker, "failure", null);
-    } else {
-      endResult(circuitBreaker);
+    if (result != null && result.resultRecordedAsFailure && result.pendingSpan != null) {
+      result.pendingSpan.recordResultFailure();
     }
   }
 
@@ -310,38 +198,6 @@ public class Resilience4jCircuitBreakerSpans {
     return throwable;
   }
 
-  public static void end(
-      CircuitBreaker circuitBreaker, String outcome, @Nullable Throwable throwable) {
-    AttemptToken captureToken = activeCaptureToken(circuitBreaker);
-    AttemptToken recentToken = peekRecentAcquisition(circuitBreaker);
-    PendingSpan pendingSpan = null;
-    // If user code performs a nested raw acquisition inside a decorated call and records that
-    // result before the outer operation completes, prefer the newer raw acquisition. Otherwise,
-    // use the active capture or attached span owned by the decorator.
-    if (recentToken != null && recentToken != captureToken) {
-      pendingSpan = claim(recentToken);
-    }
-    if (pendingSpan == null) {
-      pendingSpan = claimAttachedPendingSpan(circuitBreaker);
-    }
-    if (pendingSpan == null) {
-      pendingSpan = claim(captureToken);
-    }
-    if (pendingSpan == null) {
-      pendingSpan = claimRecentAcquisition(circuitBreaker);
-    }
-    if (pendingSpan != null) {
-      pendingSpan.end(outcome, throwable);
-    }
-  }
-
-  private static void endResult(CircuitBreaker circuitBreaker) {
-    // Do not invoke Resilience4j's recordResult predicate from instrumentation. Result predicate
-    // failures are handled when Resilience4j publishes its synthetic circuit error event.
-    // Otherwise, treat onResult() completion as success.
-    end(circuitBreaker, "success", null);
-  }
-
   public static void endIfResultRecordedAsFailure(
       CircuitBreaker circuitBreaker, @Nullable Throwable throwable) {
     Deque<OnResult> results = onResults.get();
@@ -349,7 +205,8 @@ public class Resilience4jCircuitBreakerSpans {
       return;
     }
     OnResult result = results.peek();
-    if (isCurrentCompletion(circuitBreaker, result.token, result.pendingSpan)
+    if (result.circuitBreaker == circuitBreaker
+        && result.pendingSpan != null
         && throwable instanceof ResultRecordedAsFailureException) {
       result.resultRecordedAsFailure = true;
     }
@@ -388,90 +245,25 @@ public class Resilience4jCircuitBreakerSpans {
   }
 
   @Nullable
-  private static AttemptToken currentCompletionToken(CircuitBreaker circuitBreaker) {
-    AttemptToken captureToken = activeCaptureToken(circuitBreaker);
-    return captureToken == null ? peekRecentAcquisition(circuitBreaker) : captureToken;
-  }
-
-  private static boolean isCurrentCompletion(
-      CircuitBreaker circuitBreaker,
-      @Nullable AttemptToken token,
-      @Nullable PendingSpan attachedPendingSpan) {
-    if (token != null) {
-      AttemptToken recentToken = peekRecentAcquisition(circuitBreaker);
-      if (recentToken != null && recentToken != token) {
-        return false;
-      }
-      AttemptToken captureToken = activeCaptureToken(circuitBreaker);
-      return token == recentToken || token == captureToken;
+  private static PendingSpan currentPendingSpan(CircuitBreaker circuitBreaker) {
+    Deque<OnResult> results = onResults.get();
+    if (results != null && !results.isEmpty() && results.peek().circuitBreaker == circuitBreaker) {
+      return null;
     }
-    PendingSpan pendingSpan = peekAttachedPendingSpan(circuitBreaker);
-    return attachedPendingSpan != null && attachedPendingSpan == pendingSpan;
-  }
-
-  @Nullable
-  private static PendingSpan peekAttachedPendingSpan(CircuitBreaker circuitBreaker) {
+    Deque<Capture> captureStack = captures.get();
+    Capture capture = captureStack == null ? null : captureStack.peek();
+    if (capture != null && capture.userCodeDepth > 0) {
+      return null;
+    }
+    if (capture != null && capture.circuitBreaker == circuitBreaker && capture.token != null) {
+      return capture.token.pendingSpan;
+    }
     Deque<AttachedPendingSpan> spans = attachedPendingSpans.get();
     if (spans == null) {
       return null;
     }
-    for (AttachedPendingSpan attachedPendingSpan : spans) {
-      PendingSpan pendingSpan = attachedPendingSpan.pendingSpan;
-      if (pendingSpan.isFor(circuitBreaker)) {
-        return pendingSpan;
-      }
-    }
-    return null;
-  }
-
-  @Nullable
-  private static PendingSpan claimAttachedPendingSpan(CircuitBreaker circuitBreaker) {
-    Deque<AttachedPendingSpan> spans = attachedPendingSpans.get();
-    if (spans == null) {
-      return null;
-    }
-    for (AttachedPendingSpan attachedPendingSpan : spans) {
-      PendingSpan pendingSpan = attachedPendingSpan.pendingSpan;
-      if (pendingSpan.isFor(circuitBreaker)) {
-        detachPendingSpan(pendingSpan);
-        return pendingSpan;
-      }
-    }
-    return null;
-  }
-
-  @Nullable
-  private static Scope openDecoratedOperationScope(CircuitBreaker circuitBreaker, Context context) {
-    // Raw acquirePermission()/onSuccess()/onError() has no lexical boundary where a scope can be
-    // closed reliably. Only decorated APIs install a capture around the protected operation, so
-    // only those acquisitions make the CircuitBreaker span current here. Async decorators close
-    // this operation scope when handing the PendingSpan to the async result and reopen short
-    // callback scopes through attachPendingSpan().
-    Deque<Capture> captureStack = captures.get();
-    if (captureStack == null) {
-      return null;
-    }
-    for (Capture capture : captureStack) {
-      if (capture.circuitBreaker == circuitBreaker) {
-        return context.makeCurrent();
-      }
-    }
-    return null;
-  }
-
-  @Nullable
-  private static AttemptToken activeCaptureToken(CircuitBreaker circuitBreaker) {
-    Deque<Capture> captureStack = captures.get();
-    if (captureStack == null) {
-      return null;
-    }
-    for (Capture capture : captureStack) {
-      AttemptToken token = capture.token;
-      if (token != null && token.circuitBreaker == circuitBreaker) {
-        return token;
-      }
-    }
-    return null;
+    PendingSpan pendingSpan = spans.peek().pendingSpan;
+    return pendingSpan.isFor(circuitBreaker) ? pendingSpan : null;
   }
 
   @SuppressWarnings({"ReturnValueIgnored", "unused"})
@@ -481,18 +273,14 @@ public class Resilience4jCircuitBreakerSpans {
   }
 
   public static class AttemptToken {
-    private final CircuitBreaker circuitBreaker;
     @Nullable private PendingSpan pendingSpan;
     private boolean claimed;
-
-    private AttemptToken(CircuitBreaker circuitBreaker) {
-      this.circuitBreaker = circuitBreaker;
-    }
   }
 
   static class Capture {
     private final CircuitBreaker circuitBreaker;
     @Nullable private AttemptToken token;
+    private int userCodeDepth;
 
     private Capture(CircuitBreaker circuitBreaker) {
       this.circuitBreaker = circuitBreaker;
@@ -500,27 +288,12 @@ public class Resilience4jCircuitBreakerSpans {
   }
 
   private static class OnResult {
-    @Nullable private final AttemptToken token;
+    private final CircuitBreaker circuitBreaker;
     @Nullable private final PendingSpan pendingSpan;
     private boolean resultRecordedAsFailure;
 
-    private OnResult(@Nullable AttemptToken token, @Nullable PendingSpan pendingSpan) {
-      this.token = token;
-      this.pendingSpan = pendingSpan;
-    }
-  }
-
-  private static class CircuitBreakerCallback {
-    private final CircuitBreaker circuitBreaker;
-    @Nullable private final AttemptToken token;
-    @Nullable private final PendingSpan pendingSpan;
-
-    private CircuitBreakerCallback(
-        CircuitBreaker circuitBreaker,
-        @Nullable AttemptToken token,
-        @Nullable PendingSpan pendingSpan) {
+    private OnResult(CircuitBreaker circuitBreaker, @Nullable PendingSpan pendingSpan) {
       this.circuitBreaker = circuitBreaker;
-      this.token = token;
       this.pendingSpan = pendingSpan;
     }
   }
@@ -541,12 +314,13 @@ public class Resilience4jCircuitBreakerSpans {
     private final Context context;
     @Nullable private Scope operationScope;
     private boolean ended;
+    private boolean resultRecordedAsFailure;
 
     private PendingSpan(
         CircuitBreaker circuitBreaker,
         Resilience4jCircuitBreakerRequest request,
         Context context,
-        @Nullable Scope operationScope) {
+        Scope operationScope) {
       this.circuitBreaker = circuitBreaker;
       this.request = request;
       this.context = context;
@@ -572,14 +346,21 @@ public class Resilience4jCircuitBreakerSpans {
       }
     }
 
+    synchronized void recordResultFailure() {
+      resultRecordedAsFailure = true;
+    }
+
     void end(String outcome, @Nullable Throwable throwable) {
       synchronized (this) {
         if (ended) {
           return;
         }
         ended = true;
+        if (resultRecordedAsFailure && "success".equals(outcome)) {
+          outcome = "failure";
+        }
       }
-      clearRecentAcquisition(this);
+      detachPendingSpan(this);
       closeOperationScope();
       instrumenter().end(context, request, outcome, throwable);
     }
