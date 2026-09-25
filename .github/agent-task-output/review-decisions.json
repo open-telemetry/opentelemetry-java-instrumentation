@@ -1,0 +1,14 @@
+{
+  "schema": {
+    "id": "github.copilot.copilot-review-loop-decision-report",
+    "version": 3
+  },
+  "decisions": [
+    {
+      "finding_id": "finding-655002477c4e696351c69302",
+      "disposition": "no_change",
+      "reason": "The stale statement exists only in the pull request description, which this task must not mutate.",
+      "proposed_reply": "The implementation and repository documentation already describe the fallbacks as available under v3-preview; the remaining stale text is confined to the pull request description."
+    }
+  ]
+}
