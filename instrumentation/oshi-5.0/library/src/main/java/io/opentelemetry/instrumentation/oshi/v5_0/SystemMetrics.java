@@ -32,7 +32,8 @@ public final class SystemMetrics {
    * retains the legacy metric conventions.
    *
    * @deprecated Use {@link #registerObservers(OpenTelemetry)} to select the metric conventions and
-   *     schema URL from the supplied OpenTelemetry configuration.
+   *     schema URL from the supplied OpenTelemetry configuration. This method will be removed in
+   *     3.0.
    */
   @Deprecated
   public static List<AutoCloseable> registerObservers(Meter meter) {
