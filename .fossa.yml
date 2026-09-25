@@ -768,6 +768,9 @@ targets:
       target: ':instrumentation:logback:logback-mdc-1.0:library'
     - type: gradle
       path: ./
+      target: ':instrumentation:mcp:mcp-java-sdk-0.14:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:micrometer:micrometer-1.5:javaagent'
     - type: gradle
       path: ./

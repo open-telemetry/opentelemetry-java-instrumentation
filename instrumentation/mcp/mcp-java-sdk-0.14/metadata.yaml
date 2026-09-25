@@ -1,0 +1,42 @@
+display_name: MCP Java SDK
+description: This instrumentation enables MCP client and server spans and metrics for tool calls made with the Model Context Protocol Java SDK 0.14.1 and later.
+semantic_conventions:
+  - GENAI_CLIENT_SPANS
+library_link: https://github.com/modelcontextprotocol/java-sdk
+additional_telemetry:
+  - when: default
+    metrics:
+      - name: mcp.client.operation.duration
+        description: The duration of the MCP request or notification as observed on the sender from the time it was sent until the response or ack is received.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+          - name: error.type
+            type: STRING
+          - name: gen_ai.operation.name
+            type: STRING
+          - name: gen_ai.tool.name
+            type: STRING
+          - name: mcp.method.name
+            type: STRING
+          - name: mcp.protocol.version
+            type: STRING
+          - name: rpc.response.status_code
+            type: STRING
+      - name: mcp.server.operation.duration
+        description: MCP request or notification duration as observed on the receiver from the time it was received until the result or ack is sent.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+          - name: error.type
+            type: STRING
+          - name: gen_ai.operation.name
+            type: STRING
+          - name: gen_ai.tool.name
+            type: STRING
+          - name: mcp.method.name
+            type: STRING
+          - name: mcp.protocol.version
+            type: STRING
+          - name: rpc.response.status_code
+            type: STRING
