@@ -1,0 +1,9 @@
+{
+  "outcome": "complete",
+  "comments": [
+    {
+      "candidate_id": "candidate-001",
+      "body": "[Testing] Please inline `emitExceptionAsSpanEvents() ? exception : null` at each span assertion instead of introducing `expectedSpanException`. The test rules require short mode-dependent expectations to remain visible at the assertion. Also remove both new `@Nullable` annotations: the no-`@Nullable` rule applies to this shared testing module, even though its sources are under `src/main/java`."
+    }
+  ]
+}
