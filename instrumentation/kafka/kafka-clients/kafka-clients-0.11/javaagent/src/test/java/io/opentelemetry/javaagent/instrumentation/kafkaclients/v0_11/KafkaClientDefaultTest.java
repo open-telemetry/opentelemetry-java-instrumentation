@@ -342,6 +342,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
         assertThat(record.key()).isNull();
       }
     }
+    recordsInPartition.forEach(record -> assertThat(record.value()).isEqualTo(greeting));
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
     if (emitStableMessagingSemconv()) {
@@ -356,6 +357,12 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                         .hasAttributesSatisfyingExactly(sendAttributes(null, greeting, false));
                     producerSpan.set(span.actual());
                   },
+                  span ->
+                      span.hasName("process " + SHARED_TOPIC)
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              processAttributes(null, greeting, false, false)),
                   span ->
                       span.hasName("process " + SHARED_TOPIC)
                           .hasKind(SpanKind.CONSUMER)
@@ -390,6 +397,13 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                         .hasKind(SpanKind.CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(receiveAttributes(false)),
+                span ->
+                    span.hasName(SHARED_TOPIC + " process")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            processAttributes(null, greeting, false, false)),
                 span ->
                     span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
