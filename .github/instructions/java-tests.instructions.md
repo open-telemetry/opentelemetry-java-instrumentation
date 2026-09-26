@@ -27,6 +27,11 @@ convention not caught by CI.
   starter coverage; `smoke-tests/images/spring-boot` tests the javaagent
   instead. Declarative mode uses separate `testDeclarativeConfig` source
   sets, not a flag toggled inside the normal tests.
+- When changed tests exercise behavior behind an experimental feature or
+  telemetry flag, including experimental metrics, check assertions in both
+  default-off and flag-on JVMs. A separate wired `testExperimental` task or
+  an existing equivalent variant can run the flag-on assertions; do not
+  request one for tests unrelated to the flag.
 
 ## [Testing] General Patterns
 
@@ -111,6 +116,11 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
 - Metric points are different: there is no `hasTotalAttributeCount(...)` on
   metric points, so use `point.hasAttributes(Attributes.empty())` for empty
   metric-point checks.
+- In test assertions, use stable or incubating semconv `AttributeKey` constants
+  when both the name and type match. Tests can import either artifact directly.
+  For non-semconv keys used only in assertions, keep factory calls such as
+  `stringKey("name")` and `longKey("name")` inline in `equalTo(...)` rather than
+  introducing static key constants.
 - Do not introduce redundant `(long)` casts in `equalTo(longKey(...), value)`
   when `value` is already an `int` — the `equalTo(AttributeKey<Long>, int)`
   overload exists. Keep the cast when a nullable conditional expression such
@@ -119,6 +129,13 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
 
 ## [Testing] Mode-Dependent Expected Values
 
+- Use the shared static `TestLatestDeps.testLatestDeps()` and
+  `SemconvStability.emitOld*Semconv()` / `emitStable*Semconv()` accessors,
+  preferably via static imports, rather than repeating inline
+  `Boolean.getBoolean(...)` calls with the mode property names. A
+  module-specific experimental flag may use a per-class constant such as
+  `EXPERIMENTAL_ATTRIBUTES`; keep the conventional `experimental(value)`
+  helper for attribute values absent when the flag is off.
 - Database instrumentation tests run either the default or stable database
   semconv mode. Do not add `database/dup` test tasks or expand assertions to
   cover both modes at once.

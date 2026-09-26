@@ -18,8 +18,11 @@ or test failure that CI will report.
   modules, check that Muzzle covers their supported ranges and that the main enablement name
   matches the module directory without its version suffix. Include new test variants in
   `.github/scripts/instrumentations.sh`, keep `settings.gradle.kts` entries alphabetical,
-  add the supported-library entry and module READMEs where applicable, and regenerate
-  `.fossa.yml` with `generateFossaConfiguration` when adding a module.
+  add the supported-library entry, and regenerate `.fossa.yml` with
+  `generateFossaConfiguration` when adding a module. For a new javaagent module with user-facing
+  settings, document them in a settings table in its `javaagent/README.md` or a shared parent
+  README. A standalone library instrumentation needs a library README with dependency and
+  usage details.
 - Muzzle `pass` blocks need the target group, artifact, version range and inverse assertion
   where an inverse exists. A pass covering all versions has no meaningful inverse. If
   multiple `InstrumentationModule`s share a project, separate their ranges and exclude
@@ -47,10 +50,14 @@ or test failure that CI will report.
 - If metadata-collection properties are already present, ensure non-default tasks describe
   the actual JVM setting in `metadataConfig` and also enable `collectMetadata`. Do not ask
   for these properties merely as cleanup or on unit-test suites.
-- For experimental-attribute coverage, do not enable the experimental flag for the default
-  test task and call that both modes; use a wired `testExperimental` task. Semconv opt-in
-  assertions need a stable-mode task for the relevant domain; `/dup` coverage is required
-  for RPC, not database, code, or service-peer. For default enablement under v3-preview,
-  use a separate `testDisabled` JVM rather than setting a property after agent startup.
-  Because `testDisabled` intentionally emits no target instrumentation telemetry, do not add it
-  to `.github/scripts/instrumentations.sh` or give it `collectMetadata` / `metadataConfig`.
+- When tests exercise behavior behind an experimental feature or telemetry flag, including
+  experimental metrics, cover default-off and flag-on modes in separate JVMs. Keep the flag off
+  the default test task and run the flag-on assertions through a wired `testExperimental` task
+  or an existing equivalent variant. Do not request a task for flags unrelated to the tests or
+  another task when the default test and an existing wired variant already cover both modes.
+  Semconv opt-in assertions need a stable-mode task for the relevant domain; `/dup` coverage
+  is required for RPC, not database, code, or service-peer. For default enablement under
+  v3-preview, use a separate `testDisabled` JVM rather than setting a property after agent
+  startup. Because `testDisabled` intentionally emits no target instrumentation telemetry, do
+  not add it to `.github/scripts/instrumentations.sh` or give it `collectMetadata` /
+  `metadataConfig`.
