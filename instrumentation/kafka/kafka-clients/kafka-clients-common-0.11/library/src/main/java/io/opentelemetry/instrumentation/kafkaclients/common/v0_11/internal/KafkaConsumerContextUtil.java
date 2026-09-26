@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 
-import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
@@ -49,9 +48,7 @@ public final class KafkaConsumerContextUtil {
 
   /** Checks a distinct Kafka operation without treating an ambient consumer as its owner. */
   public static Context spanSuppressionContext(Context context) {
-    return InstrumentationUtil.shouldSuppressInstrumentation(context)
-        ? context
-        : Context.root().with(Span.fromContext(context));
+    return Context.root().with(Span.fromContext(context));
   }
 
   public static Context withoutLeakedProcessSpan(Context context) {

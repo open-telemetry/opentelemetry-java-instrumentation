@@ -34,7 +34,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
@@ -89,39 +88,6 @@ class SpringKafkaInterceptorTest {
       SpringKafkaTelemetry.builder(testing.getOpenTelemetry())
           .setMessagingReceiveTelemetryEnabled(true)
           .build();
-
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void explicitSuppressionDoesNotStartSpan(boolean batch) {
-    ConsumerRecord<String, String> record = new ConsumerRecord<>("orders", 0, 1, "key", "value");
-    ConsumerRecords<String, String> records = records(record);
-    KafkaConsumerContextUtil.set(
-        record, KafkaConsumerContextUtil.create(Context.current(), null, null));
-    KafkaConsumerContextUtil.set(
-        records, KafkaConsumerContextUtil.create(Context.current(), null, null));
-    RecordInterceptor<String, String> recordInterceptor = telemetry.createRecordInterceptor();
-    BatchInterceptor<String, String> batchInterceptor = telemetry.createBatchInterceptor();
-    InstrumentationUtil.suppressInstrumentation(
-        () -> {
-          if (batch) {
-            batchInterceptor.intercept(records, null);
-            batchInterceptor.success(records, null);
-          } else {
-            recordInterceptor.intercept(record, null);
-            recordInterceptor.success(record, null);
-          }
-        });
-    assertThat(testing.spans()).isEmpty();
-
-    if (batch) {
-      batchInterceptor.intercept(records, null);
-      batchInterceptor.success(records, null);
-    } else {
-      recordInterceptor.intercept(record, null);
-      recordInterceptor.success(record, null);
-    }
-    assertThat(testing.spans()).hasSize(1);
-  }
 
   @Test
   void batchScopeParentsUnrelatedRawProcessing() {
