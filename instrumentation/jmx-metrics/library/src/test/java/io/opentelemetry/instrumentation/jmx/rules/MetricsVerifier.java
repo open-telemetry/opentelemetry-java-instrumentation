@@ -22,6 +22,7 @@ import java.util.function.Consumer;
 public class MetricsVerifier {
 
   private final Map<String, Consumer<Metric>> assertions = new HashMap<>();
+  private final Set<String> requiredMetrics = new HashSet<>();
   private boolean strictMode = true;
 
   /**
@@ -63,6 +64,24 @@ public class MetricsVerifier {
    */
   @CanIgnoreReturnValue
   public MetricsVerifier add(String metricName, Consumer<MetricAssert> assertion) {
+    return addAssertion(metricName, assertion, true);
+  }
+
+  /**
+   * Add assertion for given metric if it is present in the exported metrics, without requiring it
+   * to be exported.
+   *
+   * @param metricName name of metric to be verified by provided assertion when present
+   * @param assertion an assertion to verify properties of the metric
+   * @return this
+   */
+  @CanIgnoreReturnValue
+  public MetricsVerifier addOptional(String metricName, Consumer<MetricAssert> assertion) {
+    return addAssertion(metricName, assertion, false);
+  }
+
+  private MetricsVerifier addAssertion(
+      String metricName, Consumer<MetricAssert> assertion, boolean required) {
     if (assertions.containsKey(metricName)) {
       throw new IllegalArgumentException("Duplicate assertion for metric " + metricName);
     }
@@ -74,6 +93,9 @@ public class MetricsVerifier {
           assertion.accept(metricAssert);
           metricAssert.strictCheck();
         });
+    if (required) {
+      requiredMetrics.add(metricName);
+    }
     return this;
   }
 
@@ -109,7 +131,7 @@ public class MetricsVerifier {
 
   private void verifyAllExpectedMetricsWereReceived(List<Metric> metrics) {
     Set<String> receivedMetricNames = metrics.stream().map(Metric::getName).collect(toSet());
-    Set<String> assertionNames = new HashSet<>(assertions.keySet());
+    Set<String> assertionNames = new HashSet<>(requiredMetrics);
 
     assertionNames.removeAll(receivedMetricNames);
     if (!assertionNames.isEmpty()) {
