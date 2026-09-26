@@ -37,7 +37,8 @@ final class KafkaBatchProcessSpanLinksExtractor implements SpanLinksExtractor<Ka
         singleRecordLinkExtractor.extract(
             spanLinks,
             parentContext,
-            KafkaProcessRequest.create(record, request.getConsumerGroup(), request.getClientId()));
+            KafkaProcessRequest.create(
+                record, request.getConsumerGroup(), request.getClientId(), request.getClusterId()));
       }
       return;
     }
@@ -45,7 +46,8 @@ final class KafkaBatchProcessSpanLinksExtractor implements SpanLinksExtractor<Ka
     KafkaBatchRecordAttributes attributes = request.getBatchRecordAttributes();
     for (ConsumerRecord<?, ?> record : request.getRecords()) {
       KafkaProcessRequest processRequest =
-          KafkaProcessRequest.create(record, request.getConsumerGroup(), request.getClientId());
+          KafkaProcessRequest.create(
+              record, request.getConsumerGroup(), request.getClientId(), request.getClusterId());
       Context extracted = propagator.extract(Context.root(), processRequest, recordGetter);
       spanLinks.addLink(
           Span.fromContext(extracted).getSpanContext(), attributes.getLinkAttributes(record));

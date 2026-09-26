@@ -90,33 +90,44 @@ public final class KafkaConsumerContextUtil {
     Context receiveContext = RECORD_CONTEXT.get(records);
     String consumerGroup = null;
     String clientId = null;
+    String clusterId = null;
     String[] consumerInfo = RECORD_CONSUMER_INFO.get(records);
     if (consumerInfo != null) {
       consumerGroup = consumerInfo[0];
       clientId = consumerInfo[1];
+      clusterId = consumerInfo.length > 2 ? consumerInfo[2] : null;
     }
-    return create(receiveContext, consumerGroup, clientId);
+    return create(receiveContext, consumerGroup, clientId, clusterId);
   }
 
   public static KafkaConsumerContext get(ConsumerRecords<?, ?> records) {
     Context receiveContext = RECORDS_CONTEXT.get(records);
     String consumerGroup = null;
     String clientId = null;
+    String clusterId = null;
     String[] consumerInfo = RECORDS_CONSUMER_INFO.get(records);
     if (consumerInfo != null) {
       consumerGroup = consumerInfo[0];
       clientId = consumerInfo[1];
+      clusterId = consumerInfo.length > 2 ? consumerInfo[2] : null;
     }
-    return create(receiveContext, consumerGroup, clientId);
+    return create(receiveContext, consumerGroup, clientId, clusterId);
   }
 
   public static KafkaConsumerContext create(@Nullable Context context, Consumer<?, ?> consumer) {
-    return create(context, KafkaUtil.getConsumerGroup(consumer), KafkaUtil.getClientId(consumer));
+    return create(
+        context,
+        KafkaUtil.getConsumerGroup(consumer),
+        KafkaUtil.getClientId(consumer),
+        KafkaUtil.getClusterId(consumer));
   }
 
   public static KafkaConsumerContext create(
-      @Nullable Context context, @Nullable String consumerGroup, @Nullable String clientId) {
-    return KafkaConsumerContext.create(context, consumerGroup, clientId);
+      @Nullable Context context,
+      @Nullable String consumerGroup,
+      @Nullable String clientId,
+      @Nullable String clusterId) {
+    return KafkaConsumerContext.create(context, consumerGroup, clientId, clusterId);
   }
 
   public static void set(ConsumerRecord<?, ?> record, KafkaConsumerContext consumerContext) {
@@ -124,16 +135,18 @@ public final class KafkaConsumerContextUtil {
         record,
         consumerContext.getContext(),
         consumerContext.getConsumerGroup(),
-        consumerContext.getClientId());
+        consumerContext.getClientId(),
+        consumerContext.getClusterId());
   }
 
   private static void set(
       ConsumerRecord<?, ?> record,
       @Nullable Context context,
       @Nullable String consumerGroup,
-      @Nullable String clientId) {
+      @Nullable String clientId,
+      @Nullable String clusterId) {
     RECORD_CONTEXT.set(record, context);
-    RECORD_CONSUMER_INFO.set(record, new String[] {consumerGroup, clientId});
+    RECORD_CONSUMER_INFO.set(record, new String[] {consumerGroup, clientId, clusterId});
   }
 
   public static void set(ConsumerRecords<?, ?> records, KafkaConsumerContext consumerContext) {
@@ -141,16 +154,18 @@ public final class KafkaConsumerContextUtil {
         records,
         consumerContext.getContext(),
         consumerContext.getConsumerGroup(),
-        consumerContext.getClientId());
+        consumerContext.getClientId(),
+        consumerContext.getClusterId());
   }
 
   private static void set(
       ConsumerRecords<?, ?> records,
       @Nullable Context context,
       @Nullable String consumerGroup,
-      @Nullable String clientId) {
+      @Nullable String clientId,
+      @Nullable String clusterId) {
     RECORDS_CONTEXT.set(records, context);
-    RECORDS_CONSUMER_INFO.set(records, new String[] {consumerGroup, clientId});
+    RECORDS_CONSUMER_INFO.set(records, new String[] {consumerGroup, clientId, clusterId});
   }
 
   public static void copy(ConsumerRecord<?, ?> from, ConsumerRecord<?, ?> to) {

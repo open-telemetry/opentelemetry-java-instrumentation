@@ -779,6 +779,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
     addOffsetAssertion(assertions);
     assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
     assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
+    assertions.add(
         equalTo(
             stringKey("messaging.kafka.bootstrap.servers"),
             EXPERIMENTAL_ATTRIBUTES ? kafka.getBootstrapServers() : null));
@@ -791,6 +793,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
         messagingAttributes(topic, "receive", "poll", "receive", "consumer");
     addGroupAssertions(assertions, group);
     assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, batchSize));
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     addCommonBatchRecordAttributes(assertions);
     return assertions;
   }
@@ -814,6 +818,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                 val.isNotNegative();
               }
             }));
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     return assertions;
   }
 
@@ -823,6 +829,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
         messagingAttributes(topic, "process", "process", "process", "consumer");
     addGroupAssertions(assertions, group);
     assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, batchSize));
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     addCommonBatchRecordAttributes(assertions);
     return assertions;
   }

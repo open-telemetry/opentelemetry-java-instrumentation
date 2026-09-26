@@ -139,7 +139,8 @@ class OpenTelemetryConsumerInterceptorTest {
     Context inheritedContext =
         KafkaConsumerContextUtil.withReceiveOperation(Context.current(), true);
     try (Scope ignored = inheritedContext.makeCurrent()) {
-      receiveContext = requireNonNull(supplier.get().buildAndFinishSpan(records, "test", "client"));
+      receiveContext =
+          requireNonNull(supplier.get().buildAndFinishSpan(records, "test", "client", null));
     }
 
     assertThat(KafkaConsumerContextUtil.hasReceiveOperation(receiveContext)).isFalse();
