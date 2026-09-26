@@ -1,0 +1,9 @@
+{
+  "outcome": "complete",
+  "comments": [
+    {
+      "candidate_id": "candidate-001",
+      "body": "[Style] Please remove both new `@Nullable` annotations (on this helper and the `serverException` parameter). The repository style guide explicitly excludes test code from nullable annotations; this shared `testing` module is test code despite its `src/main/java` layout."
+    }
+  ]
+}
