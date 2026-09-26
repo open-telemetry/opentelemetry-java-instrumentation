@@ -54,8 +54,7 @@ import javax.annotation.Nullable;
 public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   private static final Logger logger = Logger.getLogger(InstrumenterBuilder.class.getName());
-  // visible for testing
-  static final AtomicBoolean spanSuppressionPropertyWarningLogged = new AtomicBoolean();
+  private static final AtomicBoolean spanSuppressionPropertyWarningLogged = new AtomicBoolean();
 
   final OpenTelemetry openTelemetry;
   final String instrumentationName;

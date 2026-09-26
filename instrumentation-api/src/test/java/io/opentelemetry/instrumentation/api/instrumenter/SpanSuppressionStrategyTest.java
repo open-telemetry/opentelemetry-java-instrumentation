@@ -25,10 +25,12 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -235,9 +237,12 @@ class SpanSuppressionStrategyTest {
   @SetSystemProperty(
       key = "otel.instrumentation.experimental.span-suppression-strategy",
       value = "span-kind")
-  void shouldWarnOnceOnlyWhenDeprecatedValueIsApplied() {
-    boolean warningWasLogged =
-        InstrumenterBuilder.spanSuppressionPropertyWarningLogged.getAndSet(false);
+  void shouldWarnOnceOnlyWhenDeprecatedValueIsApplied() throws ReflectiveOperationException {
+    Field warningLoggedField =
+        InstrumenterBuilder.class.getDeclaredField("spanSuppressionPropertyWarningLogged");
+    warningLoggedField.setAccessible(true);
+    AtomicBoolean warningLogged = (AtomicBoolean) warningLoggedField.get(null);
+    boolean warningWasLogged = warningLogged.getAndSet(false);
     List<LogRecord> records = new ArrayList<>();
     Logger logger = Logger.getLogger(InstrumenterBuilder.class.getName());
     Handler handler =
@@ -272,7 +277,7 @@ class SpanSuppressionStrategyTest {
           .contains("3.0");
 
       records.clear();
-      InstrumenterBuilder.spanSuppressionPropertyWarningLogged.set(false);
+      warningLogged.set(false);
       Instrumenter.<String, String>builder(OpenTelemetry.noop(), "test", request -> "test")
           .buildSpanSuppressor();
       Instrumenter.<String, String>builder(OpenTelemetry.noop(), "test", request -> "test")
@@ -282,7 +287,7 @@ class SpanSuppressionStrategyTest {
           .contains("otel.instrumentation.experimental.span-suppression-strategy");
     } finally {
       logger.removeHandler(handler);
-      InstrumenterBuilder.spanSuppressionPropertyWarningLogged.set(warningWasLogged);
+      warningLogged.set(warningWasLogged);
     }
   }
 
