@@ -6,14 +6,14 @@
 package io.opentelemetry.instrumentation.spring.integration.v4_1;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.spring.integration.v4_1.internal.SpringIntegrationHandoff;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -22,7 +22,9 @@ import org.springframework.aop.support.AopUtils;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
+import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.ExecutorChannelInterceptor;
+import org.springframework.messaging.support.ExecutorSubscribableChannel;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.messaging.support.NativeMessageHeaderAccessor;
@@ -30,22 +32,37 @@ import org.springframework.util.LinkedMultiValueMap;
 
 final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
 
-  private static final ThreadLocal<Map<MessageChannel, ContextAndScope>> localContextAndScope =
-      ThreadLocal.withInitial(IdentityHashMap::new);
-
   @Nullable
   private static final Class<?> DIRECT_WITH_ATTRIBUTES_CHANNEL_CLASS =
       getDirectWithAttributesChannelClass();
+
+  @Nullable
+  private static final Class<?> EXECUTOR_CHANNEL_INTERCEPTOR_AWARE_CLASS =
+      getExecutorChannelInterceptorAwareClass();
 
   @Nullable
   private static final MethodHandle CHANNEL_GET_ATTRIBUTE_MH =
       getChannelAttributeMh(DIRECT_WITH_ATTRIBUTES_CHANNEL_CLASS);
 
   @Nullable
+  private static final MethodHandle INTEGRATION_CHANNEL_GET_INTERCEPTORS_MH =
+      getIntegrationChannelInterceptorsMh();
+
+  @Nullable
   private static Class<?> getDirectWithAttributesChannelClass() {
     try {
       return Class.forName(
           "org.springframework.cloud.stream.messaging.DirectWithAttributesChannel");
+    } catch (ClassNotFoundException ignored) {
+      return null;
+    }
+  }
+
+  @Nullable
+  private static Class<?> getExecutorChannelInterceptorAwareClass() {
+    try {
+      return Class.forName(
+          "org.springframework.integration.channel.ExecutorChannelInterceptorAware");
     } catch (ClassNotFoundException ignored) {
       return null;
     }
@@ -69,6 +86,27 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
     }
   }
 
+  @Nullable
+  private static MethodHandle getIntegrationChannelInterceptorsMh() {
+    MethodHandles.Lookup lookup = MethodHandles.publicLookup();
+    MethodType methodType = MethodType.methodType(List.class);
+    try {
+      return lookup.findVirtual(
+          org.springframework.integration.channel.AbstractMessageChannel.class,
+          "getChannelInterceptors",
+          methodType);
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
+      try {
+        return lookup.findVirtual(
+            org.springframework.integration.channel.AbstractMessageChannel.class,
+            "getInterceptors",
+            methodType);
+      } catch (NoSuchMethodException | IllegalAccessException ignore) {
+        return null;
+      }
+    }
+  }
+
   private final ContextPropagators propagators;
   private final Instrumenter<MessageWithChannel, Void> consumerInstrumenter;
   private final Instrumenter<MessageWithChannel, Void> producerInstrumenter;
@@ -87,9 +125,8 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
 
   @Override
   public Message<?> preSend(Message<?> message, MessageChannel messageChannel) {
-
-    Map<MessageChannel, ContextAndScope> localMap = localContextAndScope.get();
-    if (localMap.get(messageChannel) != null) {
+    int interceptorCount = interceptorCount(messageChannel);
+    if (MessageInvocation.enterDuplicateSend(message, messageChannel, interceptorCount)) {
       // GlobalChannelInterceptorProcessor.afterSingletonsInstantiated() adds the global
       // interceptors for every bean name / channel pair, which means it's possible that this
       // interceptor is added twice to the same channel if the channel is registered twice under
@@ -104,48 +141,56 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
       return message;
     }
 
-    boolean createProducerSpan = createProducerSpan(messageChannel);
-
+    boolean outputChannel = isSpringCloudStreamOutputChannel(messageChannel);
     Context parentContext = Context.current();
     MessageWithChannel messageWithChannel = MessageWithChannel.create(message, messageChannel);
+    Context context = parentContext;
+    Context telemetryContext = null;
+    Instrumenter<MessageWithChannel, Void> instrumenter = null;
+    boolean processingInvocation = false;
 
-    Context context;
-    MessageHeaderAccessor messageHeaderAccessor = createMutableHeaderAccessor(message);
-
-    // only start a new CONSUMER span when there is no span in the context: this situation happens
-    // when there's no other messaging instrumentation that can do this - this way
-    // spring-integration instrumentation ensures proper context propagation: the new CONSUMER span
-    // will use the span context extracted from the incoming message as the parent
-    //
-    // when there already is a span in the context then it usually means one of two things:
-    // 1. spring-integration is a part of the producer invocation, e.g. invoked from a server method
-    //    that puts something into a messaging queue/system
-    // 2. another messaging instrumentation has already created a CONSUMER span, in which case this
-    //    instrumentation should not create another one
-    if (!createProducerSpan && shouldStartConsumer(parentContext, messageWithChannel)) {
-      context = consumerInstrumenter.start(parentContext, messageWithChannel);
-      localMap.put(messageChannel, ContextAndScope.create(context, context.makeCurrent()));
-    } else if (createProducerSpan
-        && producerInstrumenter.shouldStart(parentContext, messageWithChannel)) {
-      context = producerInstrumenter.start(parentContext, messageWithChannel);
-      localMap.put(messageChannel, ContextAndScope.create(context, context.makeCurrent()));
-    } else {
-      // in case there already was another span in the context: back off and just inject the current
-      // context into the message
-      context = parentContext;
-      localMap.put(messageChannel, ContextAndScope.create(null, context.makeCurrent()));
+    if (outputChannel && producerSpanEnabled) {
+      if (producerInstrumenter.shouldStart(parentContext, messageWithChannel)) {
+        telemetryContext = producerInstrumenter.start(parentContext, messageWithChannel);
+        context = telemetryContext;
+        instrumenter = producerInstrumenter;
+      }
+    } else if (!outputChannel && !supportsHandlerInterception(messageChannel)) {
+      processingInvocation = true;
+      if (isChannelProcessingEligible(parentContext, message)
+          && consumerInstrumenter.shouldStart(parentContext, messageWithChannel)) {
+        telemetryContext = startConsumer(parentContext, messageWithChannel);
+        context = telemetryContext;
+        instrumenter = consumerInstrumenter;
+      }
     }
 
+    MessageHeaderAccessor messageHeaderAccessor = createMutableHeaderAccessor(message);
     propagators
         .getTextMapPropagator()
         .inject(context, messageHeaderAccessor, MessageHeadersSetter.INSTANCE);
-    return createMessageWithHeaders(message, messageHeaderAccessor);
+    Message<?> outputMessage = createMessageWithHeaders(message, messageHeaderAccessor);
+
+    if (instrumenter != null || processingInvocation) {
+      MessageInvocation.start(
+          message,
+          outputMessage,
+          messageChannel,
+          null,
+          messageWithChannel,
+          context,
+          telemetryContext,
+          instrumenter);
+    } else {
+      MessageInvocation.startNoopSend(messageChannel);
+    }
+    return outputMessage;
   }
 
-  private boolean shouldStartConsumer(
-      Context parentContext, MessageWithChannel messageWithChannel) {
-    return consumerInstrumenter.shouldStart(parentContext, messageWithChannel)
-        && Span.fromContextOrNull(parentContext) == null;
+  private static boolean isChannelProcessingEligible(Context currentContext, Message<?> message) {
+    return !SpringIntegrationHandoff.isCurrent(message)
+        || MessageInvocation.currentUsesLowerProcessing(
+            currentContext, SpringIntegrationHandoff.currentLowerProcessing());
   }
 
   @Override
@@ -154,19 +199,7 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
   @Override
   public void afterSendCompletion(
       Message<?> message, MessageChannel messageChannel, boolean sent, Exception e) {
-    ContextAndScope contextAndScope = localContextAndScope.get().remove(messageChannel);
-    if (contextAndScope != null) {
-      contextAndScope.close();
-      Context context = contextAndScope.getContext();
-
-      if (context != null) {
-        MessageWithChannel messageWithChannel = MessageWithChannel.create(message, messageChannel);
-        boolean createProducerSpan = createProducerSpan(messageChannel);
-        Instrumenter<MessageWithChannel, Void> instrumenter =
-            createProducerSpan ? producerInstrumenter : consumerInstrumenter;
-        instrumenter.end(context, messageWithChannel, null, e);
-      }
-    }
+    MessageInvocation.endSend(messageChannel, e);
   }
 
   @Override
@@ -188,31 +221,59 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
   @CanIgnoreReturnValue
   public Message<?> beforeHandle(
       Message<?> message, MessageChannel channel, MessageHandler handler) {
-
-    Map<MessageChannel, ContextAndScope> localMap = localContextAndScope.get();
-    if (localMap.get(channel) != null) {
+    if (MessageInvocation.enterDuplicateHandler(
+        message, channel, handler, interceptorCount(channel))) {
       // see comment explaining the same conditional in preSend()
       return message;
     }
 
     MessageWithChannel messageWithChannel = MessageWithChannel.create(message, channel);
-    Context context =
+    Context ambientContext = Context.current();
+    Context parentContext =
         propagators
             .getTextMapPropagator()
-            .extract(Context.current(), messageWithChannel, MessageHeadersGetter.INSTANCE);
-    // beforeHandle()/afterMessageHandles() always execute in a different thread than send(), so
-    // there's no real risk of overwriting the send() context
-    localMap.put(channel, ContextAndScope.create(null, context.makeCurrent()));
-    return message;
+            .extract(ambientContext, messageWithChannel, MessageHeadersGetter.INSTANCE);
+
+    Context context = parentContext;
+    Context telemetryContext = null;
+    Instrumenter<MessageWithChannel, Void> instrumenter = null;
+    boolean sameSendInvocation =
+        MessageInvocation.currentIsSendFor(ambientContext, message, channel);
+    if (!isSpringCloudStreamOutputChannel(channel)
+        && !sameSendInvocation
+        && consumerInstrumenter.shouldStart(parentContext, messageWithChannel)) {
+      telemetryContext = startConsumer(parentContext, messageWithChannel);
+      context = telemetryContext;
+      instrumenter = consumerInstrumenter;
+    }
+
+    MessageHeaderAccessor messageHeaderAccessor = createMutableHeaderAccessor(message);
+    propagators
+        .getTextMapPropagator()
+        .inject(context, messageHeaderAccessor, MessageHeadersSetter.INSTANCE);
+    Message<?> outputMessage = createMessageWithHeaders(message, messageHeaderAccessor);
+    MessageInvocation.start(
+        message,
+        outputMessage,
+        channel,
+        handler,
+        messageWithChannel,
+        context,
+        telemetryContext,
+        instrumenter);
+    return outputMessage;
+  }
+
+  private Context startConsumer(Context parentContext, MessageWithChannel messageWithChannel) {
+    try (Scope ignored = Context.root().makeCurrent()) {
+      return consumerInstrumenter.start(parentContext, messageWithChannel);
+    }
   }
 
   @Override
   public void afterMessageHandled(
       Message<?> message, MessageChannel channel, MessageHandler handler, Exception ex) {
-    ContextAndScope contextAndScope = localContextAndScope.get().remove(channel);
-    if (contextAndScope != null) {
-      contextAndScope.close();
-    }
+    MessageInvocation.endHandler(channel, handler, ex);
   }
 
   private static MessageHeaderAccessor createMutableHeaderAccessor(Message<?> message) {
@@ -239,26 +300,73 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
         .build();
   }
 
-  private boolean createProducerSpan(MessageChannel messageChannel) {
-    if (!producerSpanEnabled || DIRECT_WITH_ATTRIBUTES_CHANNEL_CLASS == null) {
-      return false;
+  private static boolean isSpringCloudStreamOutputChannel(MessageChannel messageChannel) {
+    return "output".equals(getSpringCloudStreamChannelType(messageChannel));
+  }
+
+  @Nullable
+  private static Object getSpringCloudStreamChannelType(MessageChannel messageChannel) {
+    if (DIRECT_WITH_ATTRIBUTES_CHANNEL_CLASS == null || CHANNEL_GET_ATTRIBUTE_MH == null) {
+      return null;
     }
 
     messageChannel = unwrapProxy(messageChannel);
     if (!DIRECT_WITH_ATTRIBUTES_CHANNEL_CLASS.isInstance(messageChannel)) {
-      // we can only tell if it is an output channel for instances of DirectWithAttributesChannel
-      // that are used by spring cloud stream
-      return false;
-    }
-
-    if (CHANNEL_GET_ATTRIBUTE_MH == null) {
-      return false;
+      return null;
     }
 
     try {
-      return "output".equals(CHANNEL_GET_ATTRIBUTE_MH.invoke(messageChannel, "type"));
+      return CHANNEL_GET_ATTRIBUTE_MH.invoke(messageChannel, "type");
     } catch (Throwable ignored) {
-      return false;
+      return null;
+    }
+  }
+
+  private static boolean supportsHandlerInterception(MessageChannel messageChannel) {
+    messageChannel = unwrapProxy(messageChannel);
+    return messageChannel instanceof ExecutorSubscribableChannel
+        || (EXECUTOR_CHANNEL_INTERCEPTOR_AWARE_CLASS != null
+            && EXECUTOR_CHANNEL_INTERCEPTOR_AWARE_CLASS.isInstance(messageChannel));
+  }
+
+  private int interceptorCount(MessageChannel messageChannel) {
+    messageChannel = unwrapProxy(messageChannel);
+    List<ChannelInterceptor> interceptors;
+    if (messageChannel instanceof org.springframework.integration.channel.AbstractMessageChannel) {
+      interceptors = getIntegrationChannelInterceptors(messageChannel);
+    } else if (messageChannel
+        instanceof org.springframework.messaging.support.AbstractMessageChannel) {
+      interceptors =
+          ((org.springframework.messaging.support.AbstractMessageChannel) messageChannel)
+              .getInterceptors();
+    } else {
+      return 1;
+    }
+    if (interceptors == null) {
+      return 1;
+    }
+
+    int count = 0;
+    for (ChannelInterceptor interceptor : interceptors) {
+      if (interceptor == this) {
+        count++;
+      }
+    }
+    return Math.max(count, 1);
+  }
+
+  @Nullable
+  @SuppressWarnings("unchecked") // MethodHandle returns List<ChannelInterceptor>
+  private static List<ChannelInterceptor> getIntegrationChannelInterceptors(
+      MessageChannel messageChannel) {
+    if (INTEGRATION_CHANNEL_GET_INTERCEPTORS_MH == null) {
+      return null;
+    }
+    try {
+      return (List<ChannelInterceptor>)
+          INTEGRATION_CHANNEL_GET_INTERCEPTORS_MH.invoke(messageChannel);
+    } catch (Throwable ignored) {
+      return null;
     }
   }
 
