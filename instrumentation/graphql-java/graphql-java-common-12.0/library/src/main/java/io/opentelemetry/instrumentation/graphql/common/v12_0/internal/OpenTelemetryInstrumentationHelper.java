@@ -38,6 +38,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.Locale;
 
 /**
@@ -59,6 +60,9 @@ public class OpenTelemetryInstrumentationHelper {
       boolean captureQuery,
       boolean sanitizeQuery,
       boolean addOperationNameToSpanName) {
+    // The GraphQL convention recommends SERVER spans, but execution can run beneath an HTTP
+    // server or controller span, where a nested SERVER span could be suppressed. Keep the default
+    // INTERNAL kind.
     InstrumenterBuilder<OpenTelemetryInstrumentationState, ExecutionResult> builder =
         Instrumenter.<OpenTelemetryInstrumentationState, ExecutionResult>builder(
                 openTelemetry, instrumentationName, ignored -> "GraphQL Operation")
@@ -76,7 +80,7 @@ public class OpenTelemetryInstrumentationHelper {
                   }
                 });
     builder.addAttributesExtractor(new GraphqlAttributesExtractor());
-
+    builder.setSchemaUrl(SchemaUrls.V1_44_0);
     return new OpenTelemetryInstrumentationHelper(
         builder.buildInstrumenter(), captureQuery, sanitizeQuery, addOperationNameToSpanName);
   }
