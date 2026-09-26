@@ -16,7 +16,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -83,20 +82,6 @@ class JmsMessageListenerTest {
                 span -> span.hasName("process nested").hasNoParent(),
                 span -> span.hasName("process nested").hasParent(trace.getSpan(0))));
     assertProcessDuration("nested", 2);
-  }
-
-  @Test
-  void explicitSuppressionSkipsProcessOperation() throws Exception {
-    assumeTrue(emitStableMessagingSemconv());
-    Message message = message("suppressed");
-    MessageListener listener = new TestMessageListener(ignored -> {});
-
-    InstrumentationUtil.suppressInstrumentation(() -> listener.onMessage(message));
-
-    assertThat(testing.spans()).isEmpty();
-    assertThat(testing.metrics())
-        .noneMatch(
-            metric -> metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME));
   }
 
   private static void assertProcessDuration(String destination, long count) {

@@ -13,7 +13,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -106,11 +105,10 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
           }
           Instrumenter<MessageWithDestination, Void> instrumenter = consumerProcessInstrumenter();
           // Ignore an ambient process signal when processing a distinct delivery, but retain the
-          // original parent for the span and explicit instrumentation suppression.
+          // original parent for the span.
           Context eligibilityContext =
               Span.fromContext(parentContext).storeInContext(Context.root());
-          if (InstrumentationUtil.shouldSuppressInstrumentation(currentContext)
-              || !instrumenter.shouldStart(eligibilityContext, messageWithDestination)) {
+          if (!instrumenter.shouldStart(eligibilityContext, messageWithDestination)) {
             // an advice scope is still needed, to clear the listener's subscription name on exit
             return new AdviceScope(
                 instrumenter,
