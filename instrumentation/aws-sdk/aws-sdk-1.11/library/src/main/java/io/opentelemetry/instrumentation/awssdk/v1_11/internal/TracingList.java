@@ -318,7 +318,7 @@ class TracingList extends SdkInternalList<Message> {
     @Override
     public ListIterator<Message> listIterator(int index) {
       ListIterator<Message> iterator = delegate.listIterator(index);
-      return inAwsClient() ? iterator : TracingIterator.wrap(iterator, tracingList);
+      return TracingIterator.wrap(iterator, tracingList);
     }
 
     @Override
@@ -334,7 +334,7 @@ class TracingList extends SdkInternalList<Message> {
     @Override
     public Spliterator<Message> spliterator() {
       Spliterator<Message> spliterator = delegate.spliterator();
-      return inAwsClient() ? spliterator : new TracingSpliterator(spliterator, tracingList);
+      return new TracingSpliterator(spliterator, tracingList);
     }
   }
 
