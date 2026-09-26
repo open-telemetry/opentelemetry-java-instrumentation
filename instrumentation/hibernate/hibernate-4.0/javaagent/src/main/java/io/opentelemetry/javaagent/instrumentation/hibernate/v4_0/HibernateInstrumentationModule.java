@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class HibernateInstrumentationModule extends InstrumentationModule {
 
   public HibernateInstrumentationModule() {
-    super("hibernate", "hibernate-4.0");
+    super("hibernate", "hibernate-4.0", "hibernate-4.0-core");
   }
 
   @Override

@@ -73,7 +73,32 @@ class DefaultEnablementTest {
           }
         });
 
-    if (V3_PREVIEW) {
+    if (Boolean.getBoolean("testEnablement")) {
+      if (Boolean.getBoolean("testCoreEnabled")) {
+        if (Boolean.getBoolean("testProcedureEnabled")) {
+          testing.waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span -> span.hasName("parent"),
+                      span -> span.hasName("ProcedureCall.getOutputs DEFAULT_ENABLEMENT_PROC"),
+                      span -> span.hasName("Transaction.commit")));
+        } else {
+          testing.waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span -> span.hasName("parent"), span -> span.hasName("Transaction.commit")));
+        }
+      } else if (Boolean.getBoolean("testProcedureEnabled")) {
+        testing.waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent"),
+                    span -> span.hasName("ProcedureCall.getOutputs DEFAULT_ENABLEMENT_PROC")));
+      } else {
+        testing.waitAndAssertTraces(
+            trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent")));
+      }
+    } else if (V3_PREVIEW) {
       testing.waitAndAssertTraces(
           trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent")));
     } else {
