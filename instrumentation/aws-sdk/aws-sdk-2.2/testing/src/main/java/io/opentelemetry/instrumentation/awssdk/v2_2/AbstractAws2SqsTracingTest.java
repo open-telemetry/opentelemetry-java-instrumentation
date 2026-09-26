@@ -860,7 +860,8 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                   span ->
                       span.hasName("process child")
                           .hasParent(trace.getSpan(1))
-                          .hasTotalAttributeCount(0));
+                          .hasTotalAttributeCount(0),
+                  span -> assertProcessSpan(span, createSpan, createSpan, false));
             });
       }
       stableTraceAsserts.add(
@@ -948,6 +949,8 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                       span.hasName("process child")
                           .hasParent(trace.getSpan(1 + 2 * finalI))
                           .hasTotalAttributeCount(0));
+              spanAsserts.add(
+                  span -> assertProcessSpan(span, trace.getSpan(0), publishSpan.get(), false));
             }
           }
 
@@ -1014,6 +1017,13 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                       span.hasName("process child")
                           .hasParent(trace.getSpan(1 + 2 * finalI))
                           .hasTotalAttributeCount(0));
+              spanAsserts.add(
+                  span ->
+                      assertProcessSpan(
+                          span,
+                          trace.getSpan(0),
+                          finalI < propagatedMessages ? publishSpan.get() : null,
+                          false));
             }
           }
 

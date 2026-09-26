@@ -214,6 +214,7 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
                               equalTo(
                                   MESSAGING_OPERATION, emitOldMessagingSemconv() ? "create" : null),
                               equalTo(MESSAGING_OPERATION_TYPE, "create")),
+                  span -> processSpan(span, createSpan, createSpan),
                   span -> processSpan(span, createSpan, createSpan));
             });
       }
@@ -246,7 +247,7 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
 
                   int propagatedMessages =
                       isXrayInjectionEnabled() || isSqsAttributeInjectionEnabled() ? 3 : 0;
-                  for (int i = 0; i < propagatedMessages; i++) {
+                  for (int i = 0; i < 2 * propagatedMessages; i++) {
                     spanAsserts.add(span -> processSpan(span, trace.getSpan(0)));
                   }
                   trace.hasSpansSatisfyingExactly(spanAsserts);
@@ -254,7 +255,7 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
 
     int propagatedMessages = isXrayInjectionEnabled() || isSqsAttributeInjectionEnabled() ? 3 : 0;
     for (int i = propagatedMessages; i < 3; i++) {
-      traceAsserts.add(
+      Consumer<TraceAssert> processTrace =
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
@@ -290,7 +291,9 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
                                   MESSAGING_OPERATION_TYPE,
                                   emitStableMessagingSemconv() ? "process" : null),
                               satisfies(
-                                  MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)))));
+                                  MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class))));
+      traceAsserts.add(processTrace);
+      traceAsserts.add(processTrace);
     }
     getTesting().waitAndAssertTraces(traceAsserts);
   }
