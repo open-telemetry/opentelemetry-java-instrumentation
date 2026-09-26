@@ -22,7 +22,7 @@
   `java.common.messaging.headers/development` selector) in favor of the stable
   `otel.instrumentation.common.messaging.headers.included` and `.excluded` properties
   (`java.common.messaging.headers` in declarative configuration). The deprecated common selector
-  is ignored under v3-preview and will be removed in 3.0.
+  remains available, including under v3-preview, and will be removed in 3.0.
 - Deprecate the source-specific experimental selectors for Log4j `MapMessage` entries, Logback
   key-value pairs, Logstash markers, and Logstash structured arguments in favor of the common
   structured logging attribute selector. The source-specific properties are ignored under
