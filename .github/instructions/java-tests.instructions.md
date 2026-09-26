@@ -29,9 +29,9 @@ convention not caught by CI.
   sets, not a flag toggled inside the normal tests.
 - When changed tests exercise behavior behind an experimental feature or
   telemetry flag, including experimental metrics, check assertions in both
-  default-off and flag-on JVMs. A separate wired `testExperimental` task or
-  an existing equivalent variant can run the flag-on assertions; do not
-  request one for tests unrelated to the flag.
+  default-off and flag-on JVMs. Run the flag-on assertions through a separate
+  `testExperimental` task or an existing equivalent variant; either must be
+  wired into `check` or CI. Do not request one for tests unrelated to the flag.
 
 ## [Testing] General Patterns
 
