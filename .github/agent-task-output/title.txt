@@ -1,0 +1,1 @@
+Stabilize declarative span suppression strategy configuration
