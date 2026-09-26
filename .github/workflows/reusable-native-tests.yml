@@ -13,6 +13,7 @@ permissions:
 jobs:
   graalvm-native-tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     strategy:
       matrix:
         test-java-version:
