@@ -10,7 +10,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
@@ -107,8 +106,7 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
         Context parentContext = receiveContext != null ? receiveContext : Context.current();
         KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumer);
 
-        if (InstrumentationUtil.shouldSuppressInstrumentation(Context.current())
-            || !batchProcessInstrumenter().shouldStart(parentContext, request)) {
+        if (!batchProcessInstrumenter().shouldStart(parentContext, request)) {
           return null;
         }
         Context context = batchProcessInstrumenter().start(parentContext, request);
