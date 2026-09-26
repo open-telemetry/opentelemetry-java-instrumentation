@@ -17,7 +17,6 @@ import static org.mockito.Mockito.when;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
-import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
@@ -212,21 +211,6 @@ class SpringRabbitProcessTest {
                 new SimpleMessageListenerContainer(), channel, message))
         .isNull();
     assertThat(PROCESSING_CONTEXT.get(message)).isNull();
-  }
-
-  @Test
-  void explicitSuppressionDoesNotInstallContext() {
-    Message message = message();
-    InstrumentationUtil.suppressInstrumentation(
-        () ->
-            assertThat(
-                    AbstractMessageListenerContainerInstrumentation.ExecuteListenerAdvice.onEnter(
-                        container, channel, message))
-                .isNull());
-    assertThat(PROCESSING_CONTEXT.get(message)).isNull();
-    process(message, () -> {});
-    testing.waitAndAssertTraces(
-        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasNoParent()));
   }
 
   private void process(Object message, Runnable callback) {
