@@ -1,15 +1,37 @@
 ---
-applyTo: "**/*.java"
+applyTo: "**/*.java,**/*.kt,**/*.scala"
 ---
 
-# Java Test Rules (first-pass review)
+# Java, Kotlin, and Scala tests
 
-This file is loaded for all Java changes, but the rules below apply only when
-reviewing test code (e.g. `src/test/**`, `src/*Test/**`, and `testing/`
-modules). Skip them on production sources.
+This file is loaded for all Java, Kotlin, and Scala changes. Apply the behavior-coverage
+checks when the corresponding production behavior changes. Apply the
+remaining sections only to test code and shared testing modules. Comment
+only on a changed line for a substantive coverage gap or an explicit
+convention not caught by CI.
+
+## Behavior coverage
+
+- For a javaagent change supporting multiple runtime library versions,
+  look for tests with the installed agent against the required versions.
+  Direct helper tests and `javaagent-unit-tests` do not exercise class
+  transformation or the actual library; do not count them as integration
+  coverage.
+- For a module whose default enablement changes, the same representative
+  operation must emit instrumentation telemetry in an enabled JVM and no
+  instrumentation telemetry in a disabled JVM. A `DefaultEnablementTest`
+  can run in both modes through `testDisabled`. In the negative mode,
+  wait for operation completion and assert exactly a manually created
+  parent span; an immediate `spans().isEmpty()` can pass before export.
+- For starter tests, check `smoke-tests-otel-starter/` for real Spring
+  starter coverage; `smoke-tests/images/spring-boot` tests the javaagent
+  instead. Declarative mode uses separate `testDeclarativeConfig` source
+  sets, not a flag toggled inside the normal tests.
 
 ## [Testing] General Patterns
 
+- In Java, keep JUnit test classes and test methods package-private unless broader visibility is
+  required.
 - Use AssertJ (`assertThat(...)`) for assertions in new test code. Do not
   use JUnit `Assert.*` or Hamcrest `assertThat`.
 - Do not add AssertJ `.as(...)` descriptions or `.withFailMessage(...)` in
@@ -18,8 +40,31 @@ modules). Skip them on production sources.
 - Test methods do not need `throws Exception` clauses unless actually required.
 - Prefer the nearest common parent in `catch` (including `Exception` /
   `Throwable`) over multi-catch.
-- Use `e` / `f` / `t` / `ignored` for catch variables (per the catch-variable
-  naming rule in `.github/copilot-instructions.md`).
+- Allocate test ports through `PortUtils` so allocations are coordinated across
+  the test process. Use `findOpenPorts(count)` when a service needs a consecutive
+  range instead of assuming ports adjacent to a separately allocated port are
+  available.
+- Prefer plain `@AfterEach` or `@AfterAll` teardown when direct cleanup is
+  safe. Introduce `AutoCleanupExtension` when deferred cleanup improves
+  clarity or protects partially completed setup. Register it with the
+  lifecycle that owns the resource: use `deferCleanup` for per-test resources
+  and `deferAfterAll` for class-scoped resources. Do not replace deferred
+  cleanup with an earlier lifecycle cleanup that can leak on test failure; its
+  outermost-container handling intentionally prevents duplicate
+  `deferAfterAll` cleanup for nested tests.
+- Keep fixture state that depends on a concrete test subclass on that subclass
+  or initialize it separately for each subclass. Do not cache subclass-specific
+  state in a shared static field on an abstract test base.
+- In Scala tests, import `org.assertj.core.api.Assertions.assertThat` for
+  ordinary values and call `OpenTelemetryAssertions.assertThat(...)` explicitly
+  for telemetry data. Do not statically import both `assertThat` methods.
+- Assert complete exported traces with `waitAndAssertTraces(...)` and metrics
+  with `waitAndAssertMetrics(...)`; do not use fixed sleeps to wait for telemetry.
+  Direct assertions are appropriate only when the test intentionally inspects
+  telemetry already synchronized or captured at an intermediate point.
+- Preserve span order in expected traces when execution order is deterministic.
+  Use unordered assertions only when supported concurrency or asynchronous
+  execution makes the order nondeterministic.
 
 ## [Testing] Trace Clearing After Asynchronous Operations
 
@@ -68,7 +113,9 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
   metric-point checks.
 - Do not introduce redundant `(long)` casts in `equalTo(longKey(...), value)`
   when `value` is already an `int` — the `equalTo(AttributeKey<Long>, int)`
-  overload exists.
+  overload exists. Keep the cast when a nullable conditional expression such
+  as `condition ? (long) intValue : null` must produce a boxed `Long`; removing
+  it can select the primitive overload and unbox `null`.
 
 ## [Testing] Mode-Dependent Expected Values
 
@@ -140,8 +187,8 @@ value. Fluent calls like `taskId.contains(jobName)` are already proper
 assertions — do **not** wrap them in `assertThat(value.contains(x)).isTrue()`,
 which degrades the failure message.
 
-Name the outer parameter `val` in Java (or `value` in Scala, where `val` is
-reserved). Use `v` only for a nested inner-lambda parameter.
+Name the outer parameter `val` in Java (or `value` in Kotlin and Scala, where
+`val` is reserved). Use `v` only for a nested inner-lambda parameter.
 
 This guidance applies only to attribute-assertion `satisfies(...)`; for
 `span.satisfies(...)`, `point.satisfies(...)`, etc. use a descriptive name

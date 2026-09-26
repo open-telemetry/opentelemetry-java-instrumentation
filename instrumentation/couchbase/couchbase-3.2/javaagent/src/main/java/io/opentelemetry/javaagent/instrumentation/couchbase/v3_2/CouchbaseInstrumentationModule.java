@@ -22,7 +22,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class CouchbaseInstrumentationModule extends InstrumentationModule {
   public CouchbaseInstrumentationModule() {
     super(
-        "couchbase", expandDeprecatedNames("couchbase-3.2|deprecated:couchbase-3.4", "couchbase"));
+        "couchbase",
+        expandDeprecatedNames(
+            "couchbase-3.2|deprecated:couchbase-3.4", "couchbase", "couchbase-3.2-core"));
   }
 
   @Override

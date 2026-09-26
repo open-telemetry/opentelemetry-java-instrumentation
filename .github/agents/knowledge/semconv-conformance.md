@@ -1,13 +1,11 @@
 # [Semconv] Semantic convention conformance
 
-## Quick reference
+Consult this article when implementing telemetry governed by semantic
+conventions or investigating a conformance question. It explains how to find
+the applicable version and signal-specific requirements before comparing
+observable output; it is not a standing request to review every convention.
 
-- Use when: reviewing changes that implement or emit telemetry governed by semantic conventions,
-  or when explicitly evaluating semantic-convention conformance
-- Review focus: applicability, telemetry shape, requirement levels, value rules, safety, and
-  stability
-
-## Establish the review target
+## Establish the applicable convention
 
 Determine the semantic-conventions version from the affected instrumentation's existing telemetry
 contract, such as its schema URL or the migration that introduced the current shape. Do not infer
@@ -19,7 +17,7 @@ through
 The resolver applies structured per-domain settings before stability and preview flags and accounts
 for v3-preview behavior. Use the matching released documentation rather than silently comparing
 existing telemetry with the latest conventions. If the target version cannot be established, do
-not report a version-specific conformance finding. See
+not draw a version-specific conformance conclusion. See
 [testing-semconv-stability.md](testing-semconv-stability.md) for legacy opt-in test modes.
 
 Identify all dimensions of the applicable convention:
@@ -53,23 +51,23 @@ circumstance, but the implementation must understand and carefully weigh the ful
 Do not dismiss a deviation solely because the convention says `SHOULD` or `RECOMMENDED` instead
 of `MUST`. Treat these terms as compelling guidance:
 
-- Flag a deviation introduced by the change when the implementation can follow the guidance and
-  the change supplies no concrete reason not to.
+- Treat a deviation as unresolved when the implementation can follow the guidance
+  and there is no concrete reason not to.
 - Accept a deviation when a specific constraint justifies it and the implementation accounts for
   the consequences. Performance, security, privacy, unavailable source data, and compatibility
   can be valid reasons. Convenience or "not a MUST" alone are not.
 - State that an unexplained `SHOULD` or `RECOMMENDED` deviation conflicts with or departs from the
   guidance. Reserve "non-compliant" or "violates the specification" for unmet `MUST`, `MUST NOT`,
   or `REQUIRED` requirements.
-- Do not flag either permitted choice under `MAY` or `OPTIONAL` unless another requirement
-  constrains that choice.
+- Both choices under `MAY` or `OPTIONAL` are valid unless another requirement
+  constrains the choice.
 
 Only uppercase keywords have BCP 14 force. Lowercase words use their ordinary meaning.
 
 OpenTelemetry's
 [notation and compliance rules](https://opentelemetry.io/docs/specs/otel/#notation-conventions-and-compliance)
 define strict compliance in terms of `MUST`, `MUST NOT`, and `REQUIRED`. That compliance threshold
-does not make `SHOULD` and `RECOMMENDED` too weak for review findings.
+does not make `SHOULD` and `RECOMMENDED` irrelevant when assessing a deviation.
 
 ## Check the complete telemetry contract
 
@@ -138,22 +136,22 @@ and
 
 ## Use tests as evidence
 
-OpenTelemetry does not require a unit test for every convention field. Ask for tests when they
+OpenTelemetry does not require a unit test for every convention field. Add tests when they
 protect changed normative behavior. Prefer observable telemetry assertions for the contract items
 above, both branches of conditional requirements, default and opt-in modes, domain-defined error
 behavior, and required redaction.
 
-Do not request a test solely to prove omission of a `MAY` feature. Tie the requested test to a
-specific convention rule.
+There is no need to test omission of a `MAY` feature solely for conformance;
+tie new coverage to a specific convention rule.
 
-## Write actionable findings
+## Record conformance evidence
 
-A useful finding identifies:
+A conformance conclusion needs:
 
 1. A link to the exact requirement or recommendation in the targeted convention version.
 2. The changed behavior that departs from it.
 3. The observable consequence.
 4. The expected behavior, unless the pull request documents a valid reason to diverge.
 
-Do not report a conformance finding that cannot be verified against the applicable convention.
-Prefer silence over a requirement inferred from memory or a different convention version.
+Do not infer a requirement from memory or a different convention version.
+Leave an unverifiable version-specific conclusion open rather than asserting it.

@@ -12,8 +12,8 @@ description: >
   `server.address[:server.port][/db.namespace]`. With stable database semantic conventions, the
   first available value among `db.namespace`, the configured endpoint
   (`server.address[:server.port]`), and `db.system.name` is used. If none is available,
-  `tomcat-dbcp` is used. A pool registered as an MBean after it has already started switches from
-  the derived name to the `ObjectName`-based name.
+  `tomcat-dbcp` is used. The pool name selected when metrics are first registered is retained until
+  the pool is closed, including when MBean registration occurs later.
 library_link: https://tomcat.apache.org/tomcat-8.5-doc/api/org/apache/tomcat/dbcp/dbcp2/BasicDataSource.html
 semantic_conventions:
   - DATABASE_POOL_METRICS
