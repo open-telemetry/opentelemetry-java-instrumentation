@@ -313,8 +313,7 @@ class SpringRabbitRegistrationTest {
                 span ->
                     span.hasName("process first")
                         .hasException(new IOException("first registration")),
-                span -> span.hasName("process second").hasParent(trace.getSpan(0)),
-                span -> span.hasName("callback").hasParent(trace.getSpan(1)));
+                span -> span.hasName("callback").hasParent(trace.getSpan(0)));
           } else {
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -340,7 +339,7 @@ class SpringRabbitRegistrationTest {
                               metric.getLongSumData().getPoints().stream()
                                   .mapToLong(point -> point.getValue())
                                   .sum())
-                          .isEqualTo(3)));
+                          .isEqualTo(2)));
     }
   }
 

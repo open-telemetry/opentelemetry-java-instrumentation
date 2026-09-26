@@ -139,21 +139,24 @@ class SpringRabbitProcessTest {
   }
 
   @Test
-  void independentNestedMessageUsesItsOwnProcessContext() {
+  void nestedMessageHonorsProcessSuppression() {
     Message outer = message();
     Message inner = message();
     process(
         outer,
         () -> {
           SpanContext outerSpan = Span.current().getSpanContext();
-          process(inner, () -> assertThat(Span.current().getSpanContext()).isNotEqualTo(outerSpan));
+          assertThat(
+                  AbstractMessageListenerContainerInstrumentation.ExecuteListenerAdvice.onEnter(
+                      container, channel, inner))
+              .isNull();
           assertThat(Span.current().getSpanContext()).isEqualTo(outerSpan);
         });
+    process(inner, () -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
 
     testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasNoParent(), span -> span.hasParent(trace.getSpan(0))));
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasNoParent()),
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasNoParent()));
   }
 
   @Test
@@ -176,7 +179,7 @@ class SpringRabbitProcessTest {
   }
 
   @Test
-  void nestedSameMessageRestoresOuterProcessingContextAfterFailure() {
+  void suppressedNestedSameMessageLeavesOuterProcessingContextUntouched() {
     Message message = message();
 
     process(
@@ -185,22 +188,16 @@ class SpringRabbitProcessTest {
           Context outerContext = Context.current();
           assertThat(PROCESSING_CONTEXT.get(message)).isSameAs(outerContext);
 
-          assertThatThrownBy(
-                  () ->
-                      process(
-                          message,
-                          () -> {
-                            assertThat(PROCESSING_CONTEXT.get(message))
-                                .isSameAs(Context.current())
-                                .isNotSameAs(outerContext);
-                            throw new IllegalStateException("nested failure");
-                          }))
-              .isInstanceOf(IllegalStateException.class);
-
+          assertThat(
+                  AbstractMessageListenerContainerInstrumentation.ExecuteListenerAdvice.onEnter(
+                      container, channel, message))
+              .isNull();
           assertThat(PROCESSING_CONTEXT.get(message)).isSameAs(outerContext);
         });
 
     assertThat(PROCESSING_CONTEXT.get(message)).isNull();
+    testing.waitAndAssertTraces(
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasNoParent()));
   }
 
   @Test
