@@ -239,9 +239,16 @@ Do not hide `makeCurrent()` in a general helper that returns an open raw `Scope`
 close. That pattern obscures ownership and makes leaks easy. A helper may instead return a
 `Context`, target, or other state, leaving the enter advice to call `makeCurrent()`.
 
-Opening the scope must be the last fallible action before suppressed enter advice returns. A
-dedicated `AdviceScope` remains valid when it clearly owns both acquisition and closure through the
-established `start()` / `end()` pattern below.
+Instrumentation in this repository assumes OpenTelemetry `Context.makeCurrent()` does not throw,
+just as it assumes `Scope.close()` does not throw. Do not add a defensive `catch` or
+`try`/`finally` solely for a hypothetical failure from `makeCurrent()`. This is a coding
+assumption, not a guarantee about arbitrary `ContextStorage` implementations.
+
+Call `makeCurrent()` last, immediately before returning from suppressed enter advice. Complete
+fallible setup beforehand so a later failure cannot strand a scope that exit advice never receives.
+If independent fallible work must run after acquisition, close the acquired scope if that work
+fails. A dedicated `AdviceScope` remains valid when it clearly owns both acquisition and closure
+through the established `start()` / `end()` pattern below.
 
 `AdviceScope` usage in this repository falls into **two justified state patterns**.
 Review new code against these patterns instead of treating every existing variation as equally
