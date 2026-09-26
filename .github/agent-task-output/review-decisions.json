@@ -1,0 +1,14 @@
+{
+  "decisions": [
+    {
+      "disposition": "no_change",
+      "finding_id": "finding-a44716fb1a520704b64b44d1",
+      "reason": "The current implementation skips both deprecated fallbacks when v3-preview is enabled, and the documentation and tests describe the same behavior.",
+      "proposed_reply": "The description is accurate for the current implementation: v3-preview ignores both deprecated settings while the stable YAML key remains effective."
+    }
+  ],
+  "schema": {
+    "id": "github.copilot.copilot-review-loop-decision-report",
+    "version": 3
+  }
+}
