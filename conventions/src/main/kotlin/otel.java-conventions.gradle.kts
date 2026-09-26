@@ -34,7 +34,7 @@ java {
   toolchain {
     languageVersion.set(
       otelJava.minJavaVersionSupported.map {
-        val defaultJavaVersion = otelJava.maxJavaVersionSupported.getOrElse(repositoryDefaultJavaVersion).majorVersion.toInt()
+        val defaultJavaVersion = otelJava.javaToolchainVersion.getOrElse(repositoryDefaultJavaVersion).majorVersion.toInt()
         JavaLanguageVersion.of(Math.max(it.majorVersion.toInt(), defaultJavaVersion))
       }
     )

@@ -1,9 +1,8 @@
 # [Config] Configuration Property Stability and Breaking Changes
 
-## Quick Reference
-
-- Use when: reviewing configuration property definitions, stability, or deprecation
-- Review focus: stable vs unstable property policy, deprecation communication, naming conventions
+Use this article when adding, renaming, or deprecating a user-facing flat
+property or declarative key. It explains the bridge between the two forms,
+their different stability rules, and the migration behavior.
 
 ## How Configuration Is Read
 
@@ -225,51 +224,3 @@ Some configurations require structured data only expressible in YAML:
   discovered via `@AutoService(ComponentProvider.class)`
 
 These have no flat-property fallback, so tests must cover declarative config mode.
-
-## What to Flag in Review
-
-**Stability violations:**
-
-- **Stable property/key removed in a minor release**: cannot be removed before 3.0.
-- **Stable property/key deprecated without a CHANGELOG entry**: `🚫 Deprecations` entry required.
-- **Stable property/key renamed in a single PR** (old removed, new added): old must remain
-  (deprecated) until 3.0.
-- **Zero deprecation window** (deprecated and removed in same PR): needs strong justification.
-
-**Unstable marker issues:**
-
-- **Experimental feature without marker**: flat property must contain `experimental`; YAML key
-  must have `/development` suffix. Both must agree.
-- **Preview property treated as stable**: names containing `preview` have the same breaking-change
-  exemption as names containing `experimental`.
-- **Stable feature with marker**: don't use `experimental`, `preview`, or `/development` on
-  features intended to be stable — it misleads users about the guarantee.
-
-**Naming / mapping issues:**
-
-- **Property name doesn't follow conventions** (kebab-case flat, snake_case YAML, correct prefix).
-- **`SPECIAL_MAPPINGS` not updated after rename**: the bridge will resolve the old YAML path to
-  a stale flat property.
-- **`ComponentProvider.getName()` mismatch**: must exactly match the YAML node name (snake_case).
-
-**Declarative config correctness:**
-
-- **Missing default values in declarative config reads**: provide defaults
-  (`getBoolean(name, default)`, etc.) for graceful degradation when YAML is unavailable. Migration
-  probes are the exception: use the nullable overload to detect absence, then apply the default
-  after checking replacement and deprecated names.
-- **Wrong config scope**: `getInstrumentationConfig(ot, name)` → `java → <name>`;
-  `getGeneralInstrumentationConfig(ot)` → `general`. HTTP header capture lives under `general`.
-
-**Deprecated properties under v3 preview:**
-
-- **`experimental`- or `preview`-marked property gated on v3 preview**: the gate only exists to
-  reproduce 3.0 behavior for names that must survive until 3.0. An unstable name needs the warning
-  and nothing else.
-- **Stable deprecated property value read or warned about under v3 preview**: preview must neither
-  observe nor warn about a setting that 3.0 will not recognize.
-- **Warning emitted when the replacement already determines an ordinary property value**: do not
-  warn merely because shared configuration carries both names during a mixed-version rollout. This
-  does not apply to instrumentation enablement name aliases.
-- **Missing warning deduplication on a repeatable path**: use a static `AtomicBoolean` for a single
-  property or a per-key concurrent set for several.

@@ -1,9 +1,8 @@
 # [Javaagent] Module Structure Patterns
 
-## Quick Reference
-
-- Use when: reviewing `InstrumentationModule`, `TypeInstrumentation`, or `CallDepth` code
-- Review focus: registration and naming, matcher performance, safe advice wiring
+Consult this article when adding or changing an instrumentation module,
+classloader boundary, method matcher, or `CallDepth` pair. It gives registration
+examples and version-boundary mechanics.
 
 ## InstrumentationModule
 
@@ -377,9 +376,9 @@ full coordinate.
   optimization belongs on `TypeInstrumentation.classLoaderOptimization()`, not here.
   `classLoaderMatcher()` is only for **version-boundary detection**. Most modules do not need
   it.
-- **Do NOT flag modules that omit `classLoaderMatcher()`.** The default (`any()`) is correct
-  when muzzle can detect the version boundary on its own. Only flag a missing override when
-  the module truly depends on an added or removed landmark class that muzzle does not inspect.
+- **Omit `classLoaderMatcher()` when Muzzle detects the version boundary.** The default
+  (`any()`) is correct. Add an override only when the module truly depends on an
+  added or removed landmark class that Muzzle does not inspect.
 - **Version comments are required on landmark classes.** For multi-class checks, or whenever
   the landmark version differs from the module's base version, every `hasClassesNamed()` call
   needs a role comment. When the entire return expression is a single `hasClassesNamed(...)`
@@ -515,7 +514,7 @@ prevent `ClassCastException`.
 
 ### Rules
 
-- Do not flag or change the visibility of advice classes.
+- Do not change the visibility of advice classes solely for style.
 - `typeMatcher()` should match only the types the instrumentation genuinely needs. Prefer
   `named("fully.qualified.ClassName")` or `namedOneOf(...)` for single classes.
   `extendsClass(...)` and `implementsInterface(...)` are appropriate when the instrumentation
