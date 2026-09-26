@@ -1,0 +1,1 @@
+Consolidate Hibernate 4.x javaagent modules
