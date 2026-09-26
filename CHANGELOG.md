@@ -17,13 +17,11 @@
 
 ### 🚫 Deprecations
 
-<<<<<<< HEAD
 - Deprecate the `java.common.span_suppression_strategy/development` YAML key
   in favor of `java.common.span_suppression_strategy`. The replacement is
   YAML-only; the already deprecated
   `otel.instrumentation.experimental.span-suppression-strategy` flat property
   remains available until 3.0.
-=======
 - Deprecate the Java agent and Spring Boot starter's bundled contrib samplers, including the
   `rule_based_routing` declarative sampler and `linksbased_parentbased_always_on` flat sampler.
   Outside v3-preview, both names continue to work but log a warning when selected. When
@@ -31,7 +29,6 @@
   with a configuration error. For rule-based routing, consider the SDK incubator
   `composite/development` `rule_based` sampler; there is no links-based replacement.
   ([#20239](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20239))
->>>>>>> 2ff8a6b4c167050fddf498d4468d7950dd54ef72
 - Deprecate the source-specific experimental selectors for Log4j `MapMessage` entries, Logback
   key-value pairs, Logstash markers, and Logstash structured arguments in favor of the common
   structured logging attribute selector. The source-specific properties are ignored under
