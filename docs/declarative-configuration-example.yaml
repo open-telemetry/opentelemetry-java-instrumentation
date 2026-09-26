@@ -194,7 +194,8 @@ instrumentation/development:
           included: []
         headers/development:
           # Deprecated: use `otel.instrumentation.common.messaging.headers.excluded` instead. This
-          # setting is ignored under v3-preview and will be removed in 3.0. Case-sensitive header
+          # setting remains available under v3-preview and will be removed in 3.0. Case-sensitive
+          # header
           # name glob patterns: `?` matches one character and `*` matches zero or more characters.
           # Excluded patterns take precedence over included patterns. An absent or empty selector
           # captures no headers; an exclude-only selector captures every header not excluded, which
@@ -202,7 +203,8 @@ instrumentation/development:
           excluded: []
 
           # Deprecated: use `otel.instrumentation.common.messaging.headers.included` instead. This
-          # setting is ignored under v3-preview and will be removed in 3.0. Case-sensitive header
+          # setting remains available under v3-preview and will be removed in 3.0. Case-sensitive
+          # header
           # name glob patterns: `?` matches one character and `*` matches zero or more characters.
           # Excluded patterns take precedence over included patterns. An absent or empty selector
           # captures no headers; an exclude-only selector captures every header not excluded.
