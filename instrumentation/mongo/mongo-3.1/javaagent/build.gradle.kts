@@ -53,6 +53,25 @@ testing {
   }
 }
 
+val generateMongo37InstrumentationVersionFile =
+  tasks.register<WriteProperties>("generateMongo37InstrumentationVersionFile") {
+    destinationFile.set(
+      layout.buildDirectory.file(
+        "generated/mongo37InstrumentationVersion/META-INF/io/opentelemetry/instrumentation/io.opentelemetry.mongo-3.7.properties",
+      ),
+    )
+    property("version", project.version.toString())
+  }
+
+sourceSets {
+  main {
+    output.dir(
+      "build/generated/mongo37InstrumentationVersion",
+      "builtBy" to generateMongo37InstrumentationVersionFile,
+    )
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
