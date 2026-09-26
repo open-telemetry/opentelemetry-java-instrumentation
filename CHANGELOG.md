@@ -17,6 +17,9 @@
 
 ### 🚫 Deprecations
 
+- Deprecate `GrpcRequest.getLogicalHost()` and `getLogicalPort()` in favor of
+  `getServerAddress()` and `getServerPort()`.
+  ([#16161](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16161))
 - Deprecate the source-specific experimental selectors for Log4j `MapMessage` entries, Logback
   key-value pairs, Logstash markers, and Logstash structured arguments in favor of the common
   structured logging attribute selector. The source-specific properties are ignored under

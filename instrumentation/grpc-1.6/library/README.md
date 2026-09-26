@@ -34,7 +34,7 @@ The instrumentation library provides the implementation of `ClientInterceptor` a
 // For client-side, attach the interceptor to your channel builder.
 void configureClientInterceptor(OpenTelemetry openTelemetry, NettyChannelBuilder nettyChannelBuilder) {
   GrpcTelemetry grpcTelemetry = GrpcTelemetry.create(openTelemetry);
-  nettyChannelBuilder.intercept(grpcTelemetry.createClientInterceptor());
+  grpcTelemetry.addClientInterceptor(nettyChannelBuilder);
 }
 
 // For server-side, attatch the interceptor to your service.
