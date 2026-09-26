@@ -13,7 +13,8 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIn
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
-class LettuceBatchAttributesGetter implements DbClientAttributesGetter<LettuceBatchRequest, Void> {
+final class LettuceBatchAttributesGetter
+    implements DbClientAttributesGetter<LettuceBatchRequest, Void> {
 
   @Override
   public String getDbSystemName(LettuceBatchRequest request) {

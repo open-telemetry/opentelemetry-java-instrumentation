@@ -1,9 +1,8 @@
 # [Javaagent] Singletons Patterns
 
-## Quick Reference
-
-- Use when: reviewing `*Singletons`, `*SpanNaming`, and similar holder classes and their callers
-- Review focus: field/accessor naming, eager initialization, singleton accessor call sites
+Consult this article when creating a holder for javaagent collaborators or
+changing its accessors and callers. The examples distinguish stored
+collaborators from constants and methods that compute values.
 
 Javaagent modules keep shared `Instrumenter` instances and related collaborators in a dedicated
 `Singletons` holder class such as `MyLibrarySingletons`. Some modules also use focused helper
@@ -53,7 +52,7 @@ same accessor and call-site rules when these classes expose stored singleton fie
   rule.
 - Methods on a `*Singletons` class that take arguments (for example `addressAndPort(client)` or
   `getAddressAndPort(client)`) are not singleton accessors. Do not apply the field-style
-  accessor naming rule to them, and do not flag their `get*` prefix on that basis.
+  accessor naming rule to them; retain their `get*` prefix when appropriate.
 
 ## Preferred Pattern
 
@@ -115,24 +114,3 @@ class MyInstrumentation implements TypeInstrumentation {
   }
 }
 ```
-
-## What to Flag in Review
-
-- Exposed lower camel collaborator fields such as `public static final Instrumenter ...`.
-- Private or public `static final VirtualField` fields named in lower camel case, including ones
-  created via a runtime factory such as `VirtualField.find(...)`. This rule is mandatory for
-  `VirtualField` only — do not flag existing camelCase `MethodHandle` or `Pattern` fields on this
-  basis, and do not flag a non-static `VirtualField` field, such as one passed into a constructor and
-  stored as an instance field.
-- Private + accessor wrappers around uppercase constant-like fields when a direct
-  `public static final` field would be clearer and matches the naming guidance, including semantic
-  keys/handles and immutable value constants.
-- Accessor methods named `getInstrumenter()`, `getHelper()`, `getSetter()`, and similar when they
-  simply return a backing field. Do not flag `get*`-prefixed methods that take arguments or
-  compute a value rather than returning a stored singleton field.
-- Call sites that qualify singleton accessor or uppercase constant-like field usage with the holder
-  class instead of static importing the accessor or field.
-- Static imports of non-accessor helper methods on a `*Singletons` class when the method performs
-  work instead of returning a stored singleton or constant.
-- Mismatches between a field name and its accessor, such as `private static final Helper helper;`
-  with `public static Helper getHelper()`.

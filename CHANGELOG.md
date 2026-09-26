@@ -24,6 +24,13 @@
   `java.common.controller_telemetry.enabled` and `java.common.view_telemetry.enabled` instead of
   the corresponding `/development` keys. The old names remain supported until 3.0 outside
   v3-preview but are ignored when v3-preview is enabled.
+- Deprecate the Java agent and Spring Boot starter's bundled contrib samplers, including the
+  `rule_based_routing` declarative sampler and `linksbased_parentbased_always_on` flat sampler.
+  Outside v3-preview, both names continue to work but log a warning when selected. When
+  `otel.instrumentation.common.v3-preview=true`, selecting either sampler fails SDK initialization
+  with a configuration error. For rule-based routing, consider the SDK incubator
+  `composite/development` `rule_based` sampler; there is no links-based replacement.
+  ([#20239](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20239))
 - Deprecate the source-specific experimental selectors for Log4j `MapMessage` entries, Logback
   key-value pairs, Logstash markers, and Logstash structured arguments in favor of the common
   structured logging attribute selector. The source-specific properties are ignored under

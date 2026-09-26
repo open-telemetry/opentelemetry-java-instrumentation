@@ -40,6 +40,7 @@ import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.ClusterOptions;
 import com.couchbase.client.java.Collection;
 import com.couchbase.client.java.env.ClusterEnvironment;
+import com.couchbase.client.java.json.JsonObject;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -63,7 +64,6 @@ import org.testcontainers.couchbase.BucketDefinition;
 import org.testcontainers.couchbase.CouchbaseContainer;
 import org.testcontainers.couchbase.CouchbaseService;
 
-// Couchbase instrumentation is owned upstream, so limited testing is performed here.
 @SuppressWarnings("deprecation") // using deprecated semconv
 class CouchbaseClient31Test {
   private static final boolean LEGACY_EXPERIMENTAL_ATTRIBUTES =
@@ -163,14 +163,49 @@ class CouchbaseClient31Test {
         trace -> {
           if (emitSdkDetailSpans()) {
             trace.hasSpansSatisfyingExactly(
-                span -> assertGetSpan(span, testLatestDeps() ? 0L : null),
+                span -> {
+                  assertGetSpan(span, testLatestDeps() ? 0L : null);
+                  span.hasNoParent();
+                },
                 span ->
                     span.hasName("dispatch_to_server")
                         .hasKind(INTERNAL)
+                        .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(dispatchAttributes));
           } else {
             trace.hasSpansSatisfyingExactly(
-                span -> assertGetSpan(span, testLatestDeps() ? 0L : null));
+                span -> {
+                  assertGetSpan(span, testLatestDeps() ? 0L : null);
+                  span.hasNoParent();
+                });
+          }
+        });
+  }
+
+  @Test
+  void asyncWriteEmitsLifecycleSpans() {
+    collection.async().upsert("async-id", JsonObject.create().put("value", "test")).join();
+
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(
+        trace -> {
+          if (emitSdkDetailSpans()) {
+            trace.hasSpansSatisfyingExactly(
+                span -> {
+                  assertOperationSpan(span, "upsert", testLatestDeps() ? 0L : null);
+                  span.hasNoParent();
+                },
+                span ->
+                    span.hasName("request_encoding").hasKind(INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName("dispatch_to_server")
+                        .hasKind(INTERNAL)
+                        .hasParent(trace.getSpan(0)));
+          } else {
+            trace.hasSpansSatisfyingExactly(
+                span -> {
+                  assertOperationSpan(span, "upsert", testLatestDeps() ? 0L : null);
+                  span.hasNoParent();
+                });
           }
         });
   }
@@ -196,26 +231,31 @@ class CouchbaseClient31Test {
         trace -> {
           if (emitSdkDetailSpans()) {
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("query " + serverAddress()),
+                span -> span.hasName("query " + serverAddress()).hasNoParent(),
                 span ->
                     span.hasName("dispatch_to_server")
                         .hasKind(INTERNAL)
+                        .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(dispatchAttributes));
           } else {
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasKind(CLIENT).hasName("query " + serverAddress()));
+                span -> span.hasKind(CLIENT).hasName("query " + serverAddress()).hasNoParent());
           }
         });
   }
 
   private static void assertGetSpan(SpanDataAssert span, Long retries) {
+    assertOperationSpan(span, "get", retries);
+  }
+
+  private static void assertOperationSpan(SpanDataAssert span, String operation, Long retries) {
     span.hasKind(v3Preview() ? CLIENT : INTERNAL)
-        .hasName(emitStableDatabaseSemconv() ? "get _default" : "get")
+        .hasName(emitStableDatabaseSemconv() ? operation + " _default" : operation)
         .hasStatus(StatusData.unset())
         .hasAttributesSatisfyingExactly(
             equalTo(maybeStable(DB_SYSTEM), "couchbase"),
             equalTo(maybeStable(DB_NAME), "test"),
-            equalTo(maybeStable(DB_OPERATION), "get"),
+            equalTo(maybeStable(DB_OPERATION), operation),
             equalTo(maybeStable(stringKey("db.couchbase.collection")), "_default"),
             equalTo(stringKey("db.couchbase.scope"), experimental("_default")),
             equalTo(stringKey("db.couchbase.service"), experimental("kv")),
