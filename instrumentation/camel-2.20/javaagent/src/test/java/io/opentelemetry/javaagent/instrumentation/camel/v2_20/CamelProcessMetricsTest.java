@@ -56,7 +56,7 @@ class CamelProcessMetricsTest {
   }
 
   @Test
-  void explicitSuppressionDoesNotRecordFallbackMetrics() throws ReflectiveOperationException {
+  void explicitSuppressionRecordsFallbackMetrics() throws ReflectiveOperationException {
     Exchange exchange = new DefaultExchange(new DefaultCamelContext());
     Endpoint endpoint = mock(Endpoint.class);
     when(endpoint.getEndpointUri()).thenReturn("jms:queue:testQueue");
@@ -101,10 +101,16 @@ class CamelProcessMetricsTest {
     Class<?> processMetricsClass = camelHelperClass("CamelProcessMetrics");
     invokeStatic(
         processMetricsClass, "end", new Class<?>[] {Route.class, Exchange.class}, route, exchange);
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME, "messaging.process.duration", metrics -> metrics.hasSize(1));
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME, "messaging.client.consumed.messages", metrics -> metrics.hasSize(1));
     assertThat(testing.metrics())
         .filteredOn(
             metric -> INSTRUMENTATION_NAME.equals(metric.getInstrumentationScopeInfo().getName()))
-        .isEmpty();
+        .extracting(MetricData::getName)
+        .containsExactlyInAnyOrder(
+            "messaging.process.duration", "messaging.client.consumed.messages");
   }
 
   @ParameterizedTest
