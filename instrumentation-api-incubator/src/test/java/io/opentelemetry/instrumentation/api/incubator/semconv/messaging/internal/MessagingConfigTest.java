@@ -16,8 +16,10 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -69,7 +71,7 @@ class MessagingConfigTest {
   }
 
   @Test
-  void v3PreviewDeprecatedCommonSelectorWarnsOncePerAppliedLeaf() {
+  void v3PreviewDeprecatedCommonSelectorWarnsOncePerAppliedLeaf() throws Exception {
     ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
     when(openTelemetry.getInstrumentationConfig("common").getBoolean("v3_preview"))
         .thenReturn(true);
@@ -83,6 +85,7 @@ class MessagingConfigTest {
         .thenReturn(singletonList("secret"));
     TestHandler handler = new TestHandler();
     Logger logger = Logger.getLogger(MessagingConfig.class.getName());
+    clearDeprecatedWarnings();
     logger.addHandler(handler);
     try {
       IncludeExclude headers = MessagingConfig.getHeaders(openTelemetry);
@@ -116,6 +119,7 @@ class MessagingConfigTest {
       assertThat(handler.records).hasSize(2);
     } finally {
       logger.removeHandler(handler);
+      clearDeprecatedWarnings();
     }
   }
 
@@ -527,6 +531,13 @@ class MessagingConfigTest {
   private static DeclarativeConfigProperties deprecatedMessagingConfig(
       ExtendedOpenTelemetry openTelemetry) {
     return openTelemetry.getInstrumentationConfig("messaging");
+  }
+
+  private static void clearDeprecatedWarnings() throws Exception {
+    Field warnedDeprecatedPropertiesField =
+        MessagingConfig.class.getDeclaredField("warnedDeprecatedProperties");
+    warnedDeprecatedPropertiesField.setAccessible(true);
+    ((Set<?>) warnedDeprecatedPropertiesField.get(null)).clear();
   }
 
   private static final class TestHandler extends Handler {
