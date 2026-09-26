@@ -63,7 +63,7 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
         with:
-          cache-read-only: true
+          cache-disabled: true
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4.38.0
@@ -103,7 +103,7 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
         with:
-          cache-read-only: true
+          cache-disabled: true
 
       - name: Prepare Kotlin compiler classpaths
         run: ./gradlew compileKotlin -Pkotlin.daemon.jvmargs=-Xmx4g
