@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.quartz.v2_0;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -25,7 +26,7 @@ public final class QuartzTelemetryBuilder {
   private final OpenTelemetry openTelemetry;
   private final List<AttributesExtractor<? super JobExecutionContext, ? super Void>>
       additionalExtractors = new ArrayList<>();
-  private boolean captureExperimentalSpanAttributes;
+  private boolean emitExperimentalTelemetry;
   private Function<
           SpanNameExtractor<JobExecutionContext>,
           ? extends SpanNameExtractor<? super JobExecutionContext>>
@@ -47,15 +48,26 @@ public final class QuartzTelemetryBuilder {
   }
 
   /**
-   * Sets whether experimental attributes should be set to spans. These attributes may be changed or
-   * removed in the future, so only enable this if you know you do not require attributes filled by
-   * this instrumentation to be stable across versions
+   * Sets whether experimental telemetry should be emitted. This telemetry may be changed or removed
+   * in the future, so only enable this if you know you do not require telemetry emitted by this
+   * instrumentation to be stable across versions.
    */
+  @CanIgnoreReturnValue
+  public QuartzTelemetryBuilder setEmitExperimentalTelemetry(boolean emitExperimentalTelemetry) {
+    this.emitExperimentalTelemetry = emitExperimentalTelemetry;
+    return this;
+  }
+
+  /**
+   * Sets whether experimental attributes should be set to spans.
+   *
+   * @deprecated Use {@link #setEmitExperimentalTelemetry(boolean)} instead. Will be removed in 3.0.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public QuartzTelemetryBuilder setCaptureExperimentalSpanAttributes(
       boolean captureExperimentalSpanAttributes) {
-    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
-    return this;
+    return setEmitExperimentalTelemetry(captureExperimentalSpanAttributes);
   }
 
   /**
@@ -82,15 +94,21 @@ public final class QuartzTelemetryBuilder {
     InstrumenterBuilder<JobExecutionContext, Void> instrumenter =
         Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor);
 
-    if (captureExperimentalSpanAttributes) {
+    if (emitExperimentalTelemetry) {
       instrumenter.addAttributesExtractor(
           AttributesExtractor.constant(AttributeKey.stringKey("job.system"), "quartz"));
+      instrumenter.addAttributesExtractor(new SchedulerNameAttributesExtractor());
     }
     instrumenter.setErrorCauseExtractor(new QuartzErrorCauseExtractor());
     instrumenter.addAttributesExtractor(
         CodeAttributesExtractor.create(new QuartzCodeAttributesGetter()));
     instrumenter.addAttributesExtractors(additionalExtractors);
 
-    return new QuartzTelemetry(new TracingJobListener(instrumenter.buildInstrumenter()));
+    Logger eventLogger = openTelemetry.getLogsBridge().get(INSTRUMENTATION_NAME);
+
+    return new QuartzTelemetry(
+        new TracingJobListener(instrumenter.buildInstrumenter()),
+        eventLogger,
+        emitExperimentalTelemetry);
   }
 }

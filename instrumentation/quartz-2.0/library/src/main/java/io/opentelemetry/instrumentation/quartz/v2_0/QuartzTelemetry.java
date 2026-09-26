@@ -6,16 +6,20 @@
 package io.opentelemetry.instrumentation.quartz.v2_0;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.logs.Logger;
 import org.quartz.JobKey;
 import org.quartz.JobListener;
 import org.quartz.Matcher;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
+import org.quartz.SchedulerListener;
 import org.quartz.impl.matchers.EverythingMatcher;
 
 /** Entrypoint for telemetry instrumentation of Quartz jobs. */
 public final class QuartzTelemetry {
   private final JobListener jobListener;
+  private final Logger eventLogger;
+  private final boolean emitExperimentalTelemetry;
 
   /** Returns a new {@link QuartzTelemetry} configured with the given {@link OpenTelemetry}. */
   public static QuartzTelemetry create(OpenTelemetry openTelemetry) {
@@ -29,8 +33,10 @@ public final class QuartzTelemetry {
     return new QuartzTelemetryBuilder(openTelemetry);
   }
 
-  QuartzTelemetry(JobListener jobListener) {
+  QuartzTelemetry(JobListener jobListener, Logger eventLogger, boolean emitExperimentalTelemetry) {
     this.jobListener = jobListener;
+    this.eventLogger = eventLogger;
+    this.emitExperimentalTelemetry = emitExperimentalTelemetry;
   }
 
   /**
@@ -42,14 +48,13 @@ public final class QuartzTelemetry {
    * not throw exceptions.
    */
   public void configure(Scheduler scheduler) {
-    try {
-      for (JobListener listener : scheduler.getListenerManager().getJobListeners()) {
-        if (listener instanceof TracingJobListener) {
-          return;
-        }
-      }
-    } catch (SchedulerException ignored) {
-      // Ignore
+    addJobListener(scheduler);
+    addSchedulerListener(scheduler);
+  }
+
+  private void addJobListener(Scheduler scheduler) {
+    if (isJobListenerRegistered(scheduler)) {
+      return;
     }
     try {
       // We must pass a matcher to work around a bug in Quartz 2.0.0. It's unlikely anyone uses
@@ -60,5 +65,48 @@ public final class QuartzTelemetry {
     } catch (SchedulerException e) {
       throw new IllegalStateException("Could not add JobListener to Scheduler", e);
     }
+  }
+
+  private void addSchedulerListener(Scheduler scheduler) {
+    if (isSchedulerListenerRegistered(scheduler)) {
+      return;
+    }
+    try {
+      // The scheduler name is only available at configuration time, so capture it now when the
+      // experimental attribute is enabled and hand it to the listener.
+      String schedulerName = emitExperimentalTelemetry ? scheduler.getSchedulerName() : null;
+      scheduler
+          .getListenerManager()
+          .addSchedulerListener(
+              new TracingSchedulerListener(eventLogger, schedulerName, emitExperimentalTelemetry));
+    } catch (SchedulerException e) {
+      throw new IllegalStateException("Could not add SchedulerListener to Scheduler", e);
+    }
+  }
+
+  private static boolean isJobListenerRegistered(Scheduler scheduler) {
+    try {
+      for (JobListener listener : scheduler.getListenerManager().getJobListeners()) {
+        if (listener instanceof TracingJobListener) {
+          return true;
+        }
+      }
+    } catch (SchedulerException ignored) {
+      // Can't read the listeners, so fall through and try to register.
+    }
+    return false;
+  }
+
+  private static boolean isSchedulerListenerRegistered(Scheduler scheduler) {
+    try {
+      for (SchedulerListener listener : scheduler.getListenerManager().getSchedulerListeners()) {
+        if (listener instanceof TracingSchedulerListener) {
+          return true;
+        }
+      }
+    } catch (SchedulerException ignored) {
+      // Can't read the listeners, so fall through and try to register.
+    }
+    return false;
   }
 }
