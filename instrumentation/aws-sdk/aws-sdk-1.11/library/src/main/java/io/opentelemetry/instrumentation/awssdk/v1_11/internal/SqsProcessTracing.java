@@ -16,10 +16,10 @@ import java.util.List;
 public final class SqsProcessTracing {
 
   /**
-   * Disables raw process spans for the exact traced response list or list view passed to this
-   * method. The owner must mark that object before traversal, and only when it will instrument
-   * processing itself. Views have independent ownership and must be marked separately. Each
-   * eligible application traversal can produce raw process spans.
+   * Disables raw process spans for the exact traced response list passed to this method. The owner
+   * must mark that response before traversal, and only when it will instrument processing itself.
+   * Each eligible application traversal of the response can produce raw process spans. Sublist
+   * views are not traced.
    *
    * <p>Ownership does not follow message objects into copied lists or other responses.
    */

@@ -78,15 +78,6 @@ class SqsTracingListTest {
             (Consumer<List<Message>>)
                 messages -> messages.iterator().forEachRemaining(SqsTracingListTest::processing)),
         argumentSet(
-            "view",
-            (Consumer<List<Message>>)
-                messages -> messages.subList(0, 2).forEach(SqsTracingListTest::processing)),
-        argumentSet(
-            "nested view",
-            (Consumer<List<Message>>)
-                messages ->
-                    messages.subList(0, 2).subList(0, 2).forEach(SqsTracingListTest::processing)),
-        argumentSet(
             "spliterator",
             (Consumer<List<Message>>)
                 messages ->
@@ -101,11 +92,6 @@ class SqsTracingListTest {
                   }
                 }),
         argumentSet(
-            "view stream",
-            (Consumer<List<Message>>)
-                messages ->
-                    messages.subList(0, 2).stream().forEach(SqsTracingListTest::processing)),
-        argumentSet(
             "reverse",
             (Consumer<List<Message>>)
                 messages -> {
@@ -117,17 +103,7 @@ class SqsTracingListTest {
   }
 
   @ParameterizedTest
-  @ValueSource(
-      strings = {
-        "iterator",
-        "listIterator",
-        "indexed listIterator",
-        "spliterator",
-        "view iterator",
-        "view listIterator",
-        "view spliterator",
-        "nested view iterator"
-      })
+  @ValueSource(strings = {"iterator", "listIterator", "indexed listIterator", "spliterator"})
   void discardedTraversalHandleDoesNotDisableLaterTraversals(String traversal) {
     List<Message> messages = tracingMessages();
     Object unusedHandle;
@@ -144,47 +120,34 @@ class SqsTracingListTest {
       case "spliterator":
         unusedHandle = messages.spliterator();
         break;
-      case "view iterator":
-        unusedHandle = messages.subList(0, 2).iterator();
-        break;
-      case "view listIterator":
-        unusedHandle = messages.subList(0, 2).listIterator();
-        break;
-      case "view spliterator":
-        unusedHandle = messages.subList(0, 2).spliterator();
-        break;
       default:
-        unusedHandle = messages.subList(0, 2).subList(0, 1).iterator();
+        throw new IllegalArgumentException(traversal);
     }
     assertThat(unusedHandle).isNotNull();
 
     messages.forEach(SqsTracingListTest::processing);
-    messages.subList(0, 2).spliterator().forEachRemaining(SqsTracingListTest::processing);
+    messages.spliterator().forEachRemaining(SqsTracingListTest::processing);
     assertThat(testing.spans()).hasSize(4);
   }
 
   @ParameterizedTest
   @MethodSource("traversals")
-  void laterTraversalsOfResponseAndViewsTrace(Consumer<List<Message>> firstTraversal) {
+  void laterTraversalsOfResponseTrace(Consumer<List<Message>> firstTraversal) {
     List<Message> messages = tracingMessages();
     firstTraversal.accept(messages);
     assertThat(testing.spans()).hasSize(2);
 
     messages.forEach(SqsTracingListTest::processing);
-    messages.subList(0, 2).iterator().forEachRemaining(SqsTracingListTest::processing);
-    messages
-        .subList(0, 2)
-        .subList(0, 1)
-        .spliterator()
-        .forEachRemaining(SqsTracingListTest::processing);
-    assertThat(testing.spans()).hasSize(7);
+    messages.iterator().forEachRemaining(SqsTracingListTest::processing);
+    messages.spliterator().forEachRemaining(SqsTracingListTest::processing);
+    assertThat(testing.spans()).hasSize(8);
   }
 
   @Test
   void eachHandleRemainsEligibleAfterLaterHandleAcquisition() {
     List<Message> messages = tracingMessages();
     Iterator<Message> first = messages.iterator();
-    Iterator<Message> later = messages.subList(0, 2).iterator();
+    Iterator<Message> later = messages.listIterator();
     later.forEachRemaining(SqsTracingListTest::processing);
     first.forEachRemaining(SqsTracingListTest::processing);
     assertThat(testing.spans()).hasSize(4);
@@ -203,7 +166,7 @@ class SqsTracingListTest {
   }
 
   @Test
-  void listIteratorMutationsRemainVisibleInViews() {
+  void sublistMutationsRemainVisibleInResponse() {
     List<Message> messages = tracingMessages();
     ListIterator<Message> iterator = messages.subList(0, 2).listIterator();
     iterator.next();
@@ -215,8 +178,9 @@ class SqsTracingListTest {
     iterator.remove();
     assertThat(iterator.hasNext()).isFalse();
     assertThat(messages.toArray()).containsExactly(replacement, added);
+    assertThat(testing.spans()).isEmpty();
     messages.forEach(SqsTracingListTest::processing);
-    assertThat(testing.spans()).hasSize(4);
+    assertThat(testing.spans()).hasSize(2);
   }
 
   @Test
@@ -243,7 +207,7 @@ class SqsTracingListTest {
 
   @Test
   void callbacksValidateNullActionsForEmptyLists() {
-    List<Message> messages = tracingMessages().subList(0, 0);
+    List<Message> messages = tracingMessages(Context.root(), true, new ArrayList<>());
     assertThatThrownBy(() -> messages.forEach(null)).isInstanceOf(NullPointerException.class);
     assertThatThrownBy(() -> messages.iterator().forEachRemaining(null))
         .isInstanceOf(NullPointerException.class);
@@ -254,7 +218,7 @@ class SqsTracingListTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"forEach", "iterator", "spliterator", "view"})
+  @ValueSource(strings = {"forEach", "iterator", "spliterator"})
   void callbackFailureFinishesSpanAndRestoresContext(String traversal) {
     List<Message> messages = tracingMessages();
     Context previous = Context.current();
@@ -272,9 +236,6 @@ class SqsTracingListTest {
                   break;
                 case "spliterator":
                   messages.spliterator().tryAdvance(action);
-                  break;
-                case "view":
-                  messages.subList(0, 2).forEach(action);
                   break;
                 default:
                   messages.forEach(action);
@@ -337,48 +298,65 @@ class SqsTracingListTest {
         .allSatisfy(span -> assertThat(span).hasParent(parent));
   }
 
-  @Test
-  void viewProcessingOwnershipDoesNotDisableParentOrSiblingView() {
-    List<Message> messages = tracingMessages();
-    List<Message> selected = messages.subList(0, 1);
-    List<Message> sibling = messages.subList(1, 2);
-    ListIterator<Message> selectedIterator = selected.listIterator();
-    SqsProcessTracing.markProcessingOwnedOutsideSqsSdk(selected);
-
-    selectedIterator.forEachRemaining(
-        message -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
-    selected.forEach(message -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
-    messages.forEach(SqsTracingListTest::processing);
-    sibling.forEach(SqsTracingListTest::processing);
-
-    assertThat(testing.spans()).hasSize(3);
-  }
-
-  @Test
-  void parentProcessingOwnershipDoesNotDisableListView() {
-    List<Message> messages = tracingMessages();
-    List<Message> view = messages.subList(0, 1);
-    ListIterator<Message> messagesIterator = messages.listIterator();
-    SqsProcessTracing.markProcessingOwnedOutsideSqsSdk(messages);
-
-    messagesIterator.forEachRemaining(
-        message -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
-    messages.forEach(message -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
-    view.forEach(SqsTracingListTest::processing);
-
-    assertThat(testing.spans()).hasSize(1);
-  }
-
   @ParameterizedTest
-  @ValueSource(booleans = {true, false})
-  void processingOwnershipOnlyAppliesToMarkedList(boolean markRoot) {
+  @MethodSource("sublistTraversals")
+  void sublistTraversalDoesNotTraceOrDisableResponse(Consumer<List<Message>> traversal) {
+    List<Message> messages = tracingMessages();
+    Context previous = Context.current();
+    traversal.accept(messages.subList(0, 2));
+
+    assertThat(Context.current()).isSameAs(previous);
+    assertThat(testing.spans()).isEmpty();
+    messages.forEach(SqsTracingListTest::processing);
+    assertThat(testing.spans()).hasSize(2);
+  }
+
+  private static Stream<Arguments> sublistTraversals() {
+    Consumer<Message> untraced =
+        message -> assertThat(Span.current().getSpanContext().isValid()).isFalse();
+    return Stream.of(
+        argumentSet("forEach", (Consumer<List<Message>>) view -> view.forEach(untraced)),
+        argumentSet(
+            "iterator",
+            (Consumer<List<Message>>) view -> view.iterator().forEachRemaining(untraced)),
+        argumentSet(
+            "listIterator",
+            (Consumer<List<Message>>) view -> view.listIterator().forEachRemaining(untraced)),
+        argumentSet(
+            "spliterator",
+            (Consumer<List<Message>>) view -> view.spliterator().forEachRemaining(untraced)),
+        argumentSet(
+            "nested sublist",
+            (Consumer<List<Message>>) view -> view.subList(0, 1).forEach(untraced)),
+        argumentSet("stream", (Consumer<List<Message>>) view -> view.stream().forEach(untraced)),
+        argumentSet(
+            "split spliterator",
+            (Consumer<List<Message>>)
+                view -> {
+                  Spliterator<Message> first = view.spliterator();
+                  Spliterator<Message> second = requireNonNull(first.trySplit());
+                  first.forEachRemaining(untraced);
+                  second.forEachRemaining(untraced);
+                }));
+  }
+
+  @Test
+  void markingSublistDoesNotClaimResponse() {
     List<Message> messages = tracingMessages();
     List<Message> view = messages.subList(0, 1);
-    SqsProcessTracing.markProcessingOwnedOutsideSqsSdk(markRoot ? messages : view);
+    SqsProcessTracing.markProcessingOwnedOutsideSqsSdk(view);
 
-    (markRoot ? view : messages).forEach(SqsTracingListTest::processing);
+    view.forEach(message -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    messages.forEach(SqsTracingListTest::processing);
+    assertThat(testing.spans()).hasSize(2);
+  }
 
-    assertThat(testing.spans()).hasSize(markRoot ? 1 : 2);
+  @Test
+  void processingOwnershipSuppressesResponse() {
+    List<Message> messages = tracingMessages();
+    SqsProcessTracing.markProcessingOwnedOutsideSqsSdk(messages);
+    messages.forEach(message -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    assertThat(testing.spans()).isEmpty();
   }
 
   @Test
@@ -406,7 +384,7 @@ class SqsTracingListTest {
 
   @Test
   void splitTraversalPreservesCharacteristicsAndCompletesOnEachThread() {
-    Spliterator<Message> first = tracingMessages().subList(0, 2).spliterator();
+    Spliterator<Message> first = tracingMessages().spliterator();
     long size = first.estimateSize();
     int characteristics = first.characteristics();
     Spliterator<Message> second = requireNonNull(first.trySplit());

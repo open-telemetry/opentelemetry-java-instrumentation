@@ -165,7 +165,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"iterator", "forEach", "spliterator", "view"})
+  @ValueSource(strings = {"iterator", "forEach", "spliterator"})
   void testRepeatedTraversalCompletesEachProcessInvocation(String traversal) {
     assumeTrue(emitStableMessagingSemconv());
     String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
@@ -189,11 +189,6 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
               .forEachRemaining(
                   message -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
           break;
-        case "view":
-          messages
-              .subList(0, 1)
-              .forEach(message -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
-          break;
         default:
           messages.forEach(
               message -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
@@ -205,6 +200,28 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
         .filteredOn(span -> span.getName().equals("process testSdkSqs"))
         .hasSize(2);
     SqsMetricsAssertions.assertProcessMetrics(testing(), sqsPort, 2);
+  }
+
+  @Test
+  void testSublistTraversalDoesNotTraceOrDisableResponse() {
+    assumeTrue(emitStableMessagingSemconv());
+    String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
+    sqsClient.createQueue("testSdkSqs");
+    sqsClient.sendMessage(new SendMessageRequest(queueUrl, "message"));
+    testing().waitForTraces(2);
+    testing().clearData();
+
+    List<Message> messages = sqsClient.receiveMessage(queueUrl).getMessages();
+    messages
+        .subList(0, 1)
+        .forEach(message -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    messages
+        .subList(0, 1)
+        .spliterator()
+        .forEachRemaining(
+            message -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    messages.forEach(message -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
+    SqsMetricsAssertions.assertProcessMetrics(testing(), sqsPort, 1);
   }
 
   @Test
