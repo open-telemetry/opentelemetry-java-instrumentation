@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisS
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
 
-class VertxRedisClientAttributesGetter
+final class VertxRedisClientAttributesGetter
     implements DbClientAttributesGetter<VertxRedisClientRequest, Void> {
 
   @Override

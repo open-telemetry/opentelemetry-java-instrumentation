@@ -1,9 +1,8 @@
 # [Build] Gradle Conventions
 
-## Quick Reference
-
-- Use when: reviewing `build.gradle.kts`, `settings.gradle.kts`, or Gradle test tasks
-- Review focus: muzzle config, plugin type, include ordering, test task wiring, `withType` usage
+Consult this article when changing module registration, Muzzle ranges,
+dependencies, or test-task wiring. It includes the build-specific exceptions
+and steps for finding version siblings and configuring task variants.
 
 ## `settings.gradle.kts` Ordering
 
@@ -186,7 +185,7 @@ A small set of javaagent modules are bundled directly into the main agent via
 `baseJavaagentLibs(...)` in `javaagent/build.gradle.kts`, and therefore into
 `agent-for-testing` as well. For these, the sibling cross-version rule does **not** apply:
 they are already loaded in every test JVM, so adding them via `testInstrumentation`
-from a sibling's `build.gradle.kts` is redundant and should be rejected in review.
+from a sibling's `build.gradle.kts` is redundant.
 
 In particular, do not add `testInstrumentation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.N:javaagent"))`
 entries to sibling `opentelemetry-api-*` modules — all `opentelemetry-api-1.*:javaagent`
@@ -200,7 +199,7 @@ in a `baseJavaagentLibs(...)` line, omit the `testInstrumentation` entry.
 
 ### How to check for missing siblings (step by step)
 
-When reviewing a `javaagent/` module:
+When checking or wiring a `javaagent/` module:
 
 1. Identify the **library grouping directory** — the directory that contains multiple
    versioned subdirectories for the same library. For example, if the module is
@@ -229,7 +228,8 @@ When reviewing a `javaagent/` module:
 
 ## Unnecessary Dependencies
 
-Flag `build.gradle.kts` dependencies that appear unused or redundant:
+When changing `build.gradle.kts` dependencies, remove those confirmed unused
+or redundant:
 
 - A `compileOnly` or `implementation` dependency whose classes are not referenced in the module.
 - A dependency that duplicates something already provided transitively.
@@ -417,7 +417,7 @@ copies from individual tasks unless a task intentionally overrides the shared va
 
 **When the module has only a single test task, prefer the simple `tasks.test { ... }` form.**
 Do **not** convert `tasks.test { ... }` to `withType<Test>().configureEach` in single-test-task
-modules, and do **not** flag the simple form as a problem. The `withType<Test>().configureEach`
+modules; keep the simple form. The `withType<Test>().configureEach`
 form is only justified when the same `build.gradle.kts` actually registers additional `Test` tasks.
 
 **`latestDepTest` does not count as a second test task for this rule.** It is registered
@@ -452,8 +452,8 @@ tasks {
 ## `collectMetadata` and `metadataConfig`
 
 These system properties support the metadata collection pipeline. They are not required for
-test correctness and are being added as a separate migration — **do not add them during
-review**. Only verify correctness when they are already present.
+test correctness and are being added as a separate migration. Do not add them
+as unrelated cleanup; check their wiring when already present.
 
 Do not add `collectMetadata` or `metadataConfig` to `unitTests` suites or legacy
 `javaagent-unit-tests` projects. These are unit tests, and metadata collection should not run there.
