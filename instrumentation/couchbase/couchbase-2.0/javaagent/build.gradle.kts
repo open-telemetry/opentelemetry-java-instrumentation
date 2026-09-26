@@ -12,6 +12,7 @@ muzzle {
     assertInverse.set(true)
 
     excludeInstrumentationName("couchbase-2.0-network")
+    excludeInstrumentationName("couchbase-2.6-network")
   }
   pass {
     // instrumentation-docs:ignore - verification only, the directive above is the range we document
@@ -22,6 +23,20 @@ muzzle {
     assertInverse.set(true)
 
     excludeInstrumentationName("couchbase-2.0-core")
+    excludeInstrumentationName("couchbase-2.6-network")
+  }
+  pass {
+    // instrumentation-docs:ignore - verification only, the first directive is the range we document
+    name.set("Couchbase 2.6 network instrumentation")
+    group.set("com.couchbase.client")
+    module.set("java-client")
+    versions.set("[2.6.0,3)")
+    // these versions were released as ".bundle" instead of ".jar"
+    skip("2.7.5", "2.7.8")
+    assertInverse.set(true)
+
+    excludeInstrumentationName("couchbase-2.0-core")
+    excludeInstrumentationName("couchbase-2.0-network")
   }
   fail {
     group.set("com.couchbase.client")
@@ -35,16 +50,29 @@ dependencies {
   implementation(project(":instrumentation:rxjava:rxjava-1.0:library"))
 
   library("com.couchbase.client:java-client:2.0.0")
+  compileOnly("com.couchbase.client:core-io:1.6.0")
 
   testImplementation(project(":instrumentation:couchbase:couchbase-common:testing"))
 
-  testInstrumentation(project(":instrumentation:couchbase:couchbase-2.6:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.1:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.2:javaagent"))
 
-  latestDepTestLibrary("org.springframework.data:spring-data-couchbase:2.+") // see couchbase-2.6 module
-  latestDepTestLibrary("com.couchbase.client:java-client:2.5.+") // see couchbase-2.6 module
+  latestDepTestLibrary("org.springframework.data:spring-data-couchbase:2.+") // see library26Test
+  latestDepTestLibrary("com.couchbase.client:java-client:2.5.+") // see library26Test
+}
+
+testing {
+  suites {
+    register<JvmTestSuite>("library26Test") {
+      dependencies {
+        implementation(project(":instrumentation:couchbase:couchbase-common:testing"))
+        implementation("com.couchbase.client:java-client:" + if (otelProps.testLatestDeps) "2.+" else "2.6.0")
+        implementation("org.springframework.data:spring-data-couchbase:" + if (otelProps.testLatestDeps) "3.1.+" else "3.1.0.RELEASE")
+        implementation("com.couchbase.client:encryption:" + if (otelProps.testLatestDeps) "+" else "1.0.0")
+      }
+    }
+  }
 }
 
 tasks {
@@ -57,24 +85,37 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
+    register<Test>("${suite.name}StableSemconv") {
+      testClassesDirs = suite.sources.output.classesDirs
+      classpath = suite.sources.runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+      jvmArgs("-Dotel.semconv-stability.opt-in=database")
+      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+    }
   }
 
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+  val experimentalSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
+    register<Test>("${suite.name}Experimental") {
+      testClassesDirs = suite.sources.output.classesDirs
+      classpath = suite.sources.runtimeClasspath
 
-    jvmArgs("-Dotel.instrumentation.couchbase.emit-experimental-telemetry=true")
-    systemProperty("metadataConfig", "otel.instrumentation.couchbase.emit-experimental-telemetry=true")
+      jvmArgs("-Dotel.instrumentation.couchbase.emit-experimental-telemetry=true")
+      systemProperty("metadataConfig", "otel.instrumentation.couchbase.emit-experimental-telemetry=true")
+    }
+  }
+
+  val library26TestLegacyConfig = register<Test>("library26TestLegacyConfig") {
+    val suite = testing.suites.named<JvmTestSuite>("library26Test").get()
+    testClassesDirs = suite.sources.output.classesDirs
+    classpath = suite.sources.runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.couchbase.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.couchbase.experimental-span-attributes=true")
   }
 
   check {
-    dependsOn(testStableSemconv, testExperimental)
+    dependsOn(testing.suites, stableSemconvSuites, experimentalSuites, library26TestLegacyConfig)
   }
 
   if (otelProps.denyUnsafe) {

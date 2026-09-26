@@ -57,6 +57,7 @@ class CouchbaseBucketInstrumentation implements TypeInstrumentation {
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    @SuppressWarnings("deprecation") // Observable.create is required for RxJava 1.0 compatibility
     public static Observable<?> subscribeResult(
         @Advice.Origin("#t") Class<?> declaringClass,
         @Advice.Origin("#m") String methodName,
@@ -87,6 +88,7 @@ class CouchbaseBucketInstrumentation implements TypeInstrumentation {
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    @SuppressWarnings("deprecation") // Observable.create is required for RxJava 1.0 compatibility
     public static Observable<?> subscribeResult(
         @Advice.Origin("#t") Class<?> declaringClass,
         @Advice.Origin("#m") String methodName,
