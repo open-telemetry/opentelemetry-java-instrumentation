@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
 import static java.util.Objects.requireNonNull;
 
-import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -125,10 +124,6 @@ class TracingIterator implements Iterator<Message> {
 
   private static boolean shouldStartProcessing(
       TracingList tracingList, Context parentContext, SqsProcessRequest request) {
-    if (InstrumentationUtil.shouldSuppressInstrumentation(Context.current())) {
-      return false;
-    }
-
     // Iterator spans can leak if traversal is abandoned. Do not inherit ambient consumer
     // suppression when selecting another message, but retain the captured processing parent span.
     Context suppressionContext = Context.root().with(Span.fromContext(parentContext));
