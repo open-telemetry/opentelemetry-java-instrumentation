@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static java.util.logging.Level.WARNING;
@@ -25,6 +26,10 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfiguration;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryConfigurationModel;
+import io.opentelemetry.sdk.internal.SdkConfigProvider;
+import java.io.ByteArrayInputStream;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -146,6 +151,29 @@ class SpanSuppressionStrategyTest {
     InstrumenterBuilder<String, String> builder =
         Instrumenter.<String, String>builder(
             withCommonConfig("span-kind", null, false), "test", request -> "test");
+
+    SpanSuppressor suppressor = builder.buildSpanSuppressor();
+    Context context = suppressor.storeInContext(Context.root(), SpanKind.CLIENT, span);
+
+    assertThat(suppressor.shouldSuppress(context, SpanKind.CLIENT)).isTrue();
+  }
+
+  @Test
+  void shouldUseStableYamlFromSdkConfigProvider() {
+    String yaml =
+        "file_format: 1.1\n"
+            + "instrumentation/development:\n"
+            + "  java:\n"
+            + "    common:\n"
+            + "      span_suppression_strategy: span-kind\n";
+    OpenTelemetryConfigurationModel model =
+        DeclarativeConfiguration.parse(new ByteArrayInputStream(yaml.getBytes(UTF_8)));
+    ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
+    when(openTelemetry.getConfigProvider())
+        .thenReturn(
+            SdkConfigProvider.create(DeclarativeConfiguration.toConfigProperties(model)));
+    InstrumenterBuilder<String, String> builder =
+        Instrumenter.<String, String>builder(openTelemetry, "test", request -> "test");
 
     SpanSuppressor suppressor = builder.buildSpanSuppressor();
     Context context = suppressor.storeInContext(Context.root(), SpanKind.CLIENT, span);
