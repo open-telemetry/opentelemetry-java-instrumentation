@@ -149,7 +149,6 @@ public class TracingList<K, V> extends TracingIterable<K, V> implements List<Con
 
   @Override
   public List<ConsumerRecord<K, V>> subList(int fromIndex, int toIndex) {
-    return new TracingList<>(
-        delegate.subList(fromIndex, toIndex), instrumenter, wrappingEnabled, consumerContext);
+    return delegate.subList(fromIndex, toIndex);
   }
 }
