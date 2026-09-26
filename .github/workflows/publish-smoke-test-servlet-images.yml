@@ -15,7 +15,7 @@ permissions:
 jobs:
   prepare:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
     outputs:
       tag: ${{ steps.set-tag.outputs.TAG }}
     steps:
@@ -29,7 +29,7 @@ jobs:
       packages: write
     needs: prepare
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 90
+    timeout-minutes: 75
     defaults:
       run:
         shell: bash # this is needed for TAG construction below on Windows

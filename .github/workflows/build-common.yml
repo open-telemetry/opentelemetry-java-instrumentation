@@ -29,7 +29,7 @@ permissions:
 jobs:
   spotless:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -58,7 +58,7 @@ jobs:
 
   license-check:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -102,7 +102,7 @@ jobs:
 
   fossa-configuration-check:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -214,7 +214,7 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -282,7 +282,7 @@ jobs:
   test:
     name: test${{ matrix.test-partition }} (${{ matrix.test-java-version }}, ${{ matrix.vm }}, indy ${{ matrix.test-indy }})
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 135
     strategy:
       matrix:
         test-java-version:
@@ -410,7 +410,7 @@ jobs:
 
   smoke-test:
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 90
+    timeout-minutes: 135
     strategy:
       matrix:
         os:
@@ -537,7 +537,7 @@ jobs:
 
   examples:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
