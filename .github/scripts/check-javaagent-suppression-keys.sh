@@ -11,6 +11,10 @@ for file in $(find instrumentation -name "*Module.java"); do
   fi
 
   module_name=$(echo "$file" | sed 's#.*/\([^/]*\)/javaagent/src/.*#\1#')
+  if [[ "$file" == instrumentation/akka/akka-actor-2.3/javaagent/src/*/AkkaActorForkJoinInstrumentationModule.java ]]; then
+    # Forkjoin keeps its own suppression names within the shared Akka Actor owner.
+    module_name="akka-actor-forkjoin-2.5"
+  fi
   simple_module_name=$(echo "$module_name" | sed 's/-[0-9.]*$//')
 
   if [[ "$simple_module_name" == *jaxrs* ]]; then
