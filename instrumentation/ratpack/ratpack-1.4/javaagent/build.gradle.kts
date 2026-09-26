@@ -54,9 +54,9 @@ tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
     systemProperty("ratpack14Test", true) // used in AbstractRatpackHttpClientTest
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
     systemProperty("collectMetadata", otelProps.collectMetadata)
-    systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.controller-telemetry.enabled=true")
   }
 
   val testStableSemconv = register<Test>("testStableSemconv") {

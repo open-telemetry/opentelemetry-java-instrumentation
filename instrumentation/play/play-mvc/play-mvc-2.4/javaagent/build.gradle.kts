@@ -65,9 +65,9 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.common.experimental.controller-telemetry.enabled=true"
+      "otel.instrumentation.common.controller-telemetry.enabled=true"
     )
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
   }
 
   val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
@@ -79,7 +79,7 @@ tasks {
         jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
         systemProperty(
           "metadataConfig",
-          "otel.instrumentation.common.experimental.controller-telemetry.enabled=true," +
+          "otel.instrumentation.common.controller-telemetry.enabled=true," +
             "otel.semconv-stability.opt-in=service.peer"
         )
       }

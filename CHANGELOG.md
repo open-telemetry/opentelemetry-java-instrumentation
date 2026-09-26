@@ -17,6 +17,13 @@
 
 ### 🚫 Deprecations
 
+- Deprecate `otel.instrumentation.common.experimental.controller-telemetry.enabled` and
+  `otel.instrumentation.common.experimental.view-telemetry.enabled` in favor of
+  `otel.instrumentation.common.controller-telemetry.enabled` and
+  `otel.instrumentation.common.view-telemetry.enabled`, respectively. In declarative YAML, use
+  `java.common.controller_telemetry.enabled` and `java.common.view_telemetry.enabled` instead of
+  the corresponding `/development` keys. The old names remain supported until 3.0 outside
+  v3-preview but are ignored when v3-preview is enabled.
 - Deprecate the source-specific experimental selectors for Log4j `MapMessage` entries, Logback
   key-value pairs, Logstash markers, and Logstash structured arguments in favor of the common
   structured logging attribute selector. The source-specific properties are ignored under

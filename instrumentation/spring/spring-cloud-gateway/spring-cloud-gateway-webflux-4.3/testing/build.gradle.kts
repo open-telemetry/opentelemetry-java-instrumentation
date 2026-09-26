@@ -22,7 +22,7 @@ dependencies {
 
 tasks.test {
   jvmArgs("-Dotel.instrumentation.spring-cloud-gateway.experimental-span-attributes=true")
-  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
 }
 
 // spring 7 requires java 17
