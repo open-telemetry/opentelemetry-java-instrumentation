@@ -165,16 +165,24 @@ public abstract class AbstractSpringPulsarTest {
                                                     OTEL_SUBSCRIPTION),
                                                 equalTo(SERVER_ADDRESS, brokerHost),
                                                 equalTo(SERVER_PORT, brokerPort))))));
-    // the pulsar client already counts the consumed messages, so spring-pulsar must not count them
-    // a second time
-    assertThat(testing.metrics())
-        .noneMatch(
-            metric ->
-                metric
-                        .getInstrumentationScopeInfo()
-                        .getName()
-                        .equals("io.opentelemetry.spring-pulsar-1.0")
-                    && metric.getName().equals("messaging.client.consumed.messages"));
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.spring-pulsar-1.0",
+        "messaging.client.consumed.messages",
+        metrics ->
+            metrics.satisfiesExactly(
+                metric ->
+                    assertThat(metric)
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(1)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                                equalTo(
+                                                    MESSAGING_DESTINATION_NAME, OTEL_TOPIC))))));
   }
 
   protected List<AttributeAssertion> publishAttributes() {
