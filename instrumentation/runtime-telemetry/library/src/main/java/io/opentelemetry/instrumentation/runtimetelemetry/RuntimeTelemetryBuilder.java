@@ -130,8 +130,14 @@ public final class RuntimeTelemetryBuilder {
   }
 
   private boolean isJfrMetricCoveredBySchema(String metricName) {
-    return (metricName.startsWith("jvm.buffer.") || !EXPERIMENTAL_JFR_METRICS.contains(metricName))
-        && (!useLegacyJfrCpuCountMetric || !metricName.equals("jvm.cpu.limit"));
+    if (useLegacyJfrCpuCountMetric && metricName.equals("jvm.cpu.limit")) {
+      return false;
+    }
+    if (EXPERIMENTAL_JFR_METRICS.contains(metricName)) {
+      // Experimental JFR buffer metrics are covered by the schema.
+      return metricName.startsWith("jvm.buffer.");
+    }
+    return true;
   }
 
   @Nullable
