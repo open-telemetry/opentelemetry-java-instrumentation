@@ -14,9 +14,9 @@ import javax.annotation.Nullable;
 /**
  * An attribute extractor that forwards to a delegate without exposing the delegate's {@code
  * SpanKeyProvider} span key, so the resulting span neither suppresses nor is suppressed by spans
- * carrying that key. The {@code SQSEvent} batch span omits {@code CONSUMER_PROCESS} so that the
- * per-message process spans nested under it are still recorded, and the per-message spans omit it
- * under the legacy semantic conventions so that their pre-v1.43 suppression behavior is preserved.
+ * carrying that key. Lambda explicitly selects each {@code SQSEvent} batch and per-message
+ * operation, so these extractors omit the generic process key to keep independently selected
+ * operations from suppressing one another.
  */
 final class SpanKeyOmittingAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE>, SchemaUrlProvider {

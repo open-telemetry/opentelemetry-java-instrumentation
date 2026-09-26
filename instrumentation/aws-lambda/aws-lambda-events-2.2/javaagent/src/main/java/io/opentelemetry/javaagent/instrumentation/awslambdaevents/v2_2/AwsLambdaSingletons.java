@@ -24,7 +24,7 @@ public class AwsLambdaSingletons {
           INSTRUMENTATION_NAME,
           AgentCommonConfig.get().getKnownHttpRequestMethods(),
           AgentCommonConfig.get().getSensitiveQueryParameters());
-  private static final Instrumenter<SQSEvent, Void> messageInstrumenter =
+  private static final Instrumenter<SQSEvent, Void> eventInstrumenter =
       AwsLambdaSqsInstrumenterFactory.forEvent(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME);
   public static final Duration FLUSH_TIMEOUT =
       Duration.ofMillis(
@@ -37,8 +37,8 @@ public class AwsLambdaSingletons {
     return functionInstrumenter;
   }
 
-  public static Instrumenter<SQSEvent, Void> messageInstrumenter() {
-    return messageInstrumenter;
+  public static Instrumenter<SQSEvent, Void> eventInstrumenter() {
+    return eventInstrumenter;
   }
 
   private AwsLambdaSingletons() {}
