@@ -1071,7 +1071,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
     ReceiveMessageResponse response =
         client.receiveMessage(
             receiveMessageBatchRequest.toBuilder().maxNumberOfMessages(10).build());
-    response.messages().subList(0, response.messages().size()).forEach(message -> {});
+    response.messages().forEach(message -> {});
     ReceiveMessageResponse emptyResponse =
         client.receiveMessage(
             receiveMessageBatchRequest.toBuilder().maxNumberOfMessages(10).build());

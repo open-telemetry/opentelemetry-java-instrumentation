@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -42,7 +41,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -113,21 +112,15 @@ class SqsTracingListTest {
 
   @Test
   void rootSpliteratorTracesSplitCallbacks() throws Exception {
-    assertSplitTraversal(false);
+    assertSplitTraversal();
   }
 
   @Test
-  void viewSpliteratorTracesSplitCallbacks() throws Exception {
-    assertSplitTraversal(true);
-  }
+  void rootListIteratorsTraceTraversal() {
+    assertListIteratorTraversal();
 
-  @Test
-  void rootAndViewListIteratorsTraceTraversal() {
-    assertListIteratorTraversal(false);
-    assertListIteratorTraversal(true);
-
-    testing.waitForTraces(4);
-    assertThat(testing.spans()).hasSize(4);
+    testing.waitForTraces(2);
+    assertThat(testing.spans()).hasSize(2);
   }
 
   @ParameterizedTest
@@ -137,13 +130,9 @@ class SqsTracingListTest {
 
     assertThat(selectTraversal.apply(tracingList)).isNotNull();
     tracingList.forEach(unused -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
-    tracingList
-        .subList(0, 1)
-        .iterator()
-        .forEachRemaining(unused -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
 
-    testing.waitForTraces(2);
-    assertThat(testing.spans()).hasSize(2);
+    testing.waitForTraces(1);
+    assertThat(testing.spans()).hasSize(1);
   }
 
   private static Stream<Arguments> unusedTraversalSelections() {
@@ -151,28 +140,18 @@ class SqsTracingListTest {
         argumentSet(
             "root iterator", (Function<TracingList, ?>) tracingList -> tracingList.iterator()),
         argumentSet(
-            "empty view iterator",
-            (Function<TracingList, ?>) tracingList -> tracingList.subList(0, 0).iterator()),
-        argumentSet(
             "root list iterator",
             (Function<TracingList, ?>) tracingList -> tracingList.listIterator()),
         argumentSet(
             "root indexed list iterator",
             (Function<TracingList, ?>) tracingList -> tracingList.listIterator(0)),
         argumentSet(
-            "empty nested view list iterator",
-            (Function<TracingList, ?>)
-                tracingList -> tracingList.subList(0, 1).subList(0, 0).listIterator(0)),
-        argumentSet(
             "root spliterator",
-            (Function<TracingList, ?>) tracingList -> tracingList.spliterator()),
-        argumentSet(
-            "empty view spliterator",
-            (Function<TracingList, ?>) tracingList -> tracingList.subList(0, 0).spliterator()));
+            (Function<TracingList, ?>) tracingList -> tracingList.spliterator()));
   }
 
   @Test
-  void emptyViewForEachDoesNotPreventRootProcessing() {
+  void emptySubListForEachDoesNotPreventRootProcessing() {
     TracingList tracingList = tracingMessages(1, new ArrayList<>());
 
     tracingList.subList(0, 0).forEach(unused -> {});
@@ -183,73 +162,80 @@ class SqsTracingListTest {
   }
 
   @Test
-  void rootAndViewCrossApiTraversalsTraceEachPass() {
+  void rootAndSubListCrossApiTraversalsTraceOnlyRootPasses() {
     TracingList tracingList = tracingMessages(2, new ArrayList<>());
     List<Message> view = tracingList.subList(0, tracingList.size()).subList(0, 1);
 
     tracingList.forEach(unused -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
     view.spliterator()
-        .forEachRemaining(unused -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
+        .forEachRemaining(
+            unused -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
     tracingList
         .listIterator()
         .forEachRemaining(unused -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
     view.iterator()
-        .forEachRemaining(unused -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
+        .forEachRemaining(
+            unused -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
 
-    testing.waitForTraces(6);
-    assertThat(testing.spans()).hasSize(6);
+    testing.waitForTraces(4);
+    assertThat(testing.spans()).hasSize(4);
   }
 
   @ParameterizedTest
   @MethodSource("processingTraversals")
-  void repeatedRootAndViewTraversalsTraceEveryPass(Consumer<List<Message>> traverse) {
+  void repeatedRootTraversalsTraceWhileSubListsDoNot(BiConsumer<List<Message>, Boolean> traverse) {
     TracingList tracingList = tracingMessages(1, new ArrayList<>());
     List<Message> view = tracingList.subList(0, 1).subList(0, 1);
 
-    traverse.accept(tracingList);
-    traverse.accept(tracingList);
-    traverse.accept(view);
-    traverse.accept(view);
+    traverse.accept(tracingList, true);
+    traverse.accept(tracingList, true);
+    traverse.accept(view, false);
+    traverse.accept(view, false);
 
-    testing.waitForTraces(4);
-    assertThat(testing.spans()).hasSize(4);
+    testing.waitForTraces(2);
+    assertThat(testing.spans()).hasSize(2);
   }
 
   private static Stream<Arguments> processingTraversals() {
     return Stream.of(
         argumentSet(
             "iterator",
-            (Consumer<List<Message>>)
-                messages ->
+            (BiConsumer<List<Message>, Boolean>)
+                (messages, trace) ->
                     messages
                         .iterator()
                         .forEachRemaining(
                             unused ->
-                                assertThat(Span.current().getSpanContext().isValid()).isTrue())),
+                                assertThat(Span.current().getSpanContext().isValid())
+                                    .isEqualTo(trace))),
         argumentSet(
             "list iterator",
-            (Consumer<List<Message>>)
-                messages ->
+            (BiConsumer<List<Message>, Boolean>)
+                (messages, trace) ->
                     messages
                         .listIterator()
                         .forEachRemaining(
                             unused ->
-                                assertThat(Span.current().getSpanContext().isValid()).isTrue())),
+                                assertThat(Span.current().getSpanContext().isValid())
+                                    .isEqualTo(trace))),
         argumentSet(
             "forEach",
-            (Consumer<List<Message>>)
-                messages ->
+            (BiConsumer<List<Message>, Boolean>)
+                (messages, trace) ->
                     messages.forEach(
-                        unused -> assertThat(Span.current().getSpanContext().isValid()).isTrue())),
+                        unused ->
+                            assertThat(Span.current().getSpanContext().isValid())
+                                .isEqualTo(trace))),
         argumentSet(
             "spliterator",
-            (Consumer<List<Message>>)
-                messages ->
+            (BiConsumer<List<Message>, Boolean>)
+                (messages, trace) ->
                     messages
                         .spliterator()
                         .forEachRemaining(
                             unused ->
-                                assertThat(Span.current().getSpanContext().isValid()).isTrue())));
+                                assertThat(Span.current().getSpanContext().isValid())
+                                    .isEqualTo(trace))));
   }
 
   @Test
@@ -260,7 +246,6 @@ class SqsTracingListTest {
     tracingList.markProcessingOwnedOutsideSqsSdk();
     tracingList.forEach(unused -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
     tracingList
-        .subList(0, 1)
         .spliterator()
         .forEachRemaining(
             unused -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
@@ -272,8 +257,7 @@ class SqsTracingListTest {
   @Test
   void splitSpliteratorEndsProcessingWhenActionThrows() {
     TracingList tracingList = tracingMessages(2, new ArrayList<>());
-    Spliterator<Message> split =
-        requireNonNull(tracingList.subList(0, tracingList.size()).spliterator().trySplit());
+    Spliterator<Message> split = requireNonNull(tracingList.spliterator().trySplit());
     IllegalStateException failure = new IllegalStateException("processing failed");
 
     assertThatThrownBy(
@@ -294,31 +278,17 @@ class SqsTracingListTest {
   }
 
   @Test
-  void emptyRootAndViewRejectNullForEachAction() {
+  void emptyRootRejectsNullForEachAction() {
     assertThatThrownBy(() -> tracingMessages(0, new ArrayList<>()).forEach(null))
-        .isInstanceOf(NullPointerException.class);
-    assertThatThrownBy(() -> tracingMessages(0, new ArrayList<>()).subList(0, 0).forEach(null))
         .isInstanceOf(NullPointerException.class);
     assertThatThrownBy(
             () -> tracingMessages(0, new ArrayList<>()).iterator().forEachRemaining(null))
-        .isInstanceOf(NullPointerException.class);
-    assertThatThrownBy(
-            () ->
-                tracingMessages(0, new ArrayList<>())
-                    .subList(0, 0)
-                    .iterator()
-                    .forEachRemaining(null))
         .isInstanceOf(NullPointerException.class);
   }
 
   @Test
   void rootForEachEndsProcessingWhenActionThrows() {
-    assertForEachFailure(false);
-  }
-
-  @Test
-  void viewForEachEndsProcessingWhenActionThrows() {
-    assertForEachFailure(true);
+    assertForEachFailure();
   }
 
   @Test
@@ -340,182 +310,48 @@ class SqsTracingListTest {
   }
 
   @Test
-  void subListPreservesRandomAccess() {
+  void subListsKeepArrayListEqualityAndMutationWithoutTracing() {
+    TracingList tracingList = tracingMessages(3, new ArrayList<>());
+    List<Message> ordinary = new ArrayList<>(tracingList);
+    List<Message> view = tracingList.subList(0, 2);
+    List<Message> nested = view.subList(0, 1);
+    List<Message> ordinaryView = ordinary.subList(0, 2);
+    List<Message> ordinaryNested = ordinaryView.subList(0, 1);
+
+    assertThat(view).isInstanceOf(RandomAccess.class).isEqualTo(ordinaryView);
+    assertThat(nested).isInstanceOf(RandomAccess.class).isEqualTo(ordinaryNested);
+    assertThat(view.hashCode()).isEqualTo(ordinaryView.hashCode());
+    assertThat(nested.hashCode()).isEqualTo(ordinaryNested.hashCode());
+
+    Message replacement = Message.builder().messageId("replacement").build();
+    assertThat(nested.set(0, replacement)).isSameAs(ordinaryNested.set(0, replacement));
+    assertThat(nested).isEqualTo(ordinaryNested);
+    nested.clear();
+    ordinaryNested.clear();
+    assertThat(view).isEqualTo(ordinaryView);
+    assertThat(tracingList).hasSameSizeAs(ordinary);
+    assertThat(tracingList.get(0)).isSameAs(ordinary.get(0));
+    assertThat(testing.spans()).isEmpty();
+
+    tracingList.forEach(unused -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
+    testing.waitForTraces(2);
+    assertThat(testing.spans()).hasSize(2);
+  }
+
+  @Test
+  void rootEqualityHashCodeAndToStringDoNotTraceTraversal() {
     TracingList tracingList = tracingMessages(1, new ArrayList<>());
+    TracingList sameMessages = tracingMessages(1, new ArrayList<>());
+    List<Message> ordinary = singletonList(tracingList.get(0));
+    assertThat(tracingList.equals(sameMessages)).isTrue();
+    assertThat(tracingList.equals(ordinary)).isTrue();
+    assertThat(tracingList.hashCode()).isEqualTo(ordinary.hashCode());
+    assertThat(tracingList.toString()).contains("message-0");
+    assertThat(testing.spans()).isEmpty();
 
-    assertThat(tracingList.subList(0, 1)).isInstanceOf(RandomAccess.class);
-    assertThat(tracingList.subList(0, 1).subList(0, 1)).isInstanceOf(RandomAccess.class);
-  }
-
-  @Test
-  void viewLookupMethodsDoNotTraceTraversal() {
-    List<List<Message>> views = new ArrayList<>();
-    ContextKey<String> markerKey = ContextKey.named("lookup-test-marker");
-    Context expectedContext = Context.root().with(markerKey, "present");
-
-    try (Scope ignored = expectedContext.makeCurrent()) {
-      TracingList containsList = tracingMessages(1, new ArrayList<>());
-      List<Message> containsView = containsList.subList(0, containsList.size());
-      views.add(containsView);
-      assertThat(containsView.contains(containsView.get(0))).isTrue();
-
-      TracingList indexOfList = tracingMessages(1, new ArrayList<>());
-      List<Message> indexOfView = indexOfList.subList(0, indexOfList.size());
-      views.add(indexOfView);
-      assertThat(indexOfView.indexOf(indexOfView.get(0))).isZero();
-
-      TracingList lastIndexOfList = tracingMessages(1, new ArrayList<>());
-      List<Message> lastIndexOfView = lastIndexOfList.subList(0, lastIndexOfList.size());
-      views.add(lastIndexOfView);
-      assertThat(lastIndexOfView.lastIndexOf(lastIndexOfView.get(0))).isZero();
-
-      TracingList removeList = tracingMessages(2, new ArrayList<>());
-      List<Message> removeView = removeList.subList(0, removeList.size());
-      views.add(removeView);
-      assertThat(removeView.remove(removeView.get(0))).isTrue();
-      assertThat(removeView).hasSize(1);
-
-      assertThat(Context.current()).isSameAs(expectedContext);
-      assertThat(testing.spans()).isEmpty();
-    }
-
-    views.forEach(
-        view -> {
-          Iterator<Message> iterator = view.iterator();
-          assertThat(iterator.next()).isSameAs(view.get(0));
-          assertThat(iterator.hasNext()).isFalse();
-        });
-
-    testing.waitForTraces(4);
-    assertThat(testing.spans()).hasSize(4);
-  }
-
-  @Test
-  void viewClearDoesNotTraceTraversal() {
-    TracingList tracingList = tracingMessages(2, new ArrayList<>());
-    List<Message> view = tracingList.subList(0, 1);
-    ContextKey<String> markerKey = ContextKey.named("clear-test-marker");
-    Context expectedContext = Context.root().with(markerKey, "present");
-
-    try (Scope ignored = expectedContext.makeCurrent()) {
-      view.clear();
-
-      assertThat(view).isEmpty();
-      assertThat(Context.current()).isSameAs(expectedContext);
-      assertThat(testing.spans()).isEmpty();
-    }
-
-    Iterator<Message> iterator = tracingList.iterator();
-    assertThat(iterator.next().messageId()).isEqualTo("message-1");
-    assertThat(iterator.hasNext()).isFalse();
-
+    tracingList.forEach(unused -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
     testing.waitForTraces(1);
     assertThat(testing.spans()).hasSize(1);
-  }
-
-  @Test
-  void rootAndViewNonProcessingOperationsDoNotTraceTraversal() {
-    List<List<Message>> comparedLists = new ArrayList<>();
-    ContextKey<String> markerKey = ContextKey.named("non-processing-test-marker");
-    Context expectedContext = Context.root().with(markerKey, "present");
-
-    try (Scope ignored = expectedContext.makeCurrent()) {
-      TracingList root = tracingMessages(1, new ArrayList<>());
-      comparedLists.add(root);
-      assertThat(root.toString()).contains("message-0");
-
-      TracingList toStringList = tracingMessages(1, new ArrayList<>());
-      List<Message> toStringView = toStringList.subList(0, toStringList.size());
-      comparedLists.add(toStringView);
-      assertThat(toStringView.toString()).contains("message-0");
-
-      TracingList toArrayList = tracingMessages(1, new ArrayList<>());
-      List<Message> toArrayView = toArrayList.subList(0, toArrayList.size());
-      comparedLists.add(toArrayView);
-      assertThat(toArrayView.toArray()).containsExactly(toArrayView.get(0));
-
-      TracingList typedToArrayList = tracingMessages(1, new ArrayList<>());
-      List<Message> typedToArrayView = typedToArrayList.subList(0, typedToArrayList.size());
-      comparedLists.add(typedToArrayView);
-      assertThat(typedToArrayView.toArray(new Message[0])).containsExactly(typedToArrayView.get(0));
-
-      TracingList removeAllList = tracingMessages(1, new ArrayList<>());
-      List<Message> removeAllView = removeAllList.subList(0, removeAllList.size());
-      comparedLists.add(removeAllView);
-      assertThat(removeAllView.removeAll(emptyList())).isFalse();
-
-      TracingList retainAllList = tracingMessages(1, new ArrayList<>());
-      List<Message> retainAllView = retainAllList.subList(0, retainAllList.size());
-      comparedLists.add(retainAllView);
-      assertThat(retainAllView.retainAll(singletonList(retainAllView.get(0)))).isFalse();
-
-      TracingList removeIfList = tracingMessages(1, new ArrayList<>());
-      List<Message> removeIfView = removeIfList.subList(0, removeIfList.size());
-      comparedLists.add(removeIfView);
-      assertThat(removeIfView.removeIf(unused -> false)).isFalse();
-
-      TracingList replaceAllList = tracingMessages(1, new ArrayList<>());
-      List<Message> replaceAllView = replaceAllList.subList(0, replaceAllList.size());
-      comparedLists.add(replaceAllView);
-      replaceAllView.replaceAll(message -> message);
-
-      TracingList sortList = tracingMessages(1, new ArrayList<>());
-      List<Message> sortView = sortList.subList(0, sortList.size());
-      comparedLists.add(sortView);
-      sortView.sort((left, right) -> left.messageId().compareTo(right.messageId()));
-
-      assertThat(Context.current()).isSameAs(expectedContext);
-      assertThat(testing.spans()).isEmpty();
-    }
-
-    comparedLists.forEach(
-        list -> {
-          Iterator<Message> iterator = list.iterator();
-          assertThat(iterator.next()).isSameAs(list.get(0));
-          assertThat(iterator.hasNext()).isFalse();
-        });
-
-    testing.waitForTraces(comparedLists.size());
-    assertThat(testing.spans()).hasSize(comparedLists.size());
-  }
-
-  @Test
-  void rootAndViewEqualityAndHashCodeDoNotTraceTraversal() {
-    TracingList tracingList = tracingMessages(2, new ArrayList<>());
-    List<Message> first = tracingList.subList(0, 1);
-    List<Message> second = tracingList.subList(1, 2);
-    List<TracingList> comparedLists = new ArrayList<>();
-    ContextKey<String> markerKey = ContextKey.named("equality-test-marker");
-    Context expectedContext = Context.root().with(markerKey, "present");
-
-    try (Scope ignored = expectedContext.makeCurrent()) {
-      assertThat(first).isNotEqualTo(second);
-      assertThat(first.hashCode()).isNotZero();
-      comparedLists.add(assertRootAndViewEqualityDoesNotTrace(true, true));
-      comparedLists.add(assertRootAndViewEqualityDoesNotTrace(true, false));
-      comparedLists.add(assertRootAndViewEqualityDoesNotTrace(false, true));
-      comparedLists.add(assertRootAndViewEqualityDoesNotTrace(false, false));
-      comparedLists.add(assertOrdinaryListEqualityDoesNotTrace(true, true));
-      comparedLists.add(assertOrdinaryListEqualityDoesNotTrace(true, false));
-      comparedLists.add(assertOrdinaryListEqualityDoesNotTrace(false, true));
-      comparedLists.add(assertOrdinaryListEqualityDoesNotTrace(false, false));
-
-      assertThat(Context.current()).isSameAs(expectedContext);
-      assertThat(testing.spans()).isEmpty();
-    }
-
-    Iterator<Message> iterator = first.iterator();
-    assertThat(iterator.next()).isSameAs(first.get(0));
-    assertThat(iterator.hasNext()).isFalse();
-    comparedLists.forEach(
-        list -> {
-          Iterator<Message> comparedIterator = list.iterator();
-          assertThat(comparedIterator.next()).isSameAs(list.get(0));
-          assertThat(comparedIterator.hasNext()).isFalse();
-        });
-
-    testing.waitForTraces(9);
-    assertThat(testing.spans()).hasSize(9);
   }
 
   @Test
@@ -560,17 +396,11 @@ class SqsTracingListTest {
 
   @Test
   void rootIteratorForEachRemainingEndsProcessingWhenActionThrows() {
-    assertIteratorForEachRemainingFailure(false);
+    assertIteratorForEachRemainingFailure();
   }
 
-  @Test
-  void viewIteratorForEachRemainingEndsProcessingWhenActionThrows() {
-    assertIteratorForEachRemainingFailure(true);
-  }
-
-  private static void assertSplitTraversal(boolean useView) throws Exception {
+  private static void assertSplitTraversal() throws Exception {
     TracingList tracingList = tracingMessages(MESSAGE_COUNT, new ArrayList<>());
-    List<Message> messages = useView ? tracingList.subList(0, tracingList.size()) : tracingList;
     ContextKey<String> markerKey = ContextKey.named("spliterator-test-marker");
     Context expectedContext = Context.root().with(markerKey, "present");
 
@@ -579,7 +409,7 @@ class SqsTracingListTest {
     long originalSize;
     int originalCharacteristics;
     try (Scope ignored = expectedContext.makeCurrent()) {
-      remainder = messages.spliterator();
+      remainder = tracingList.spliterator();
       originalSize = remainder.estimateSize();
       originalCharacteristics = remainder.characteristics();
       split = requireNonNull(remainder.trySplit());
@@ -629,54 +459,20 @@ class SqsTracingListTest {
     }
   }
 
-  private static void assertListIteratorTraversal(boolean useView) {
+  private static void assertListIteratorTraversal() {
     TracingList forwardTracingList = tracingMessages(1, new ArrayList<>());
-    List<Message> forwardMessages =
-        useView ? forwardTracingList.subList(0, forwardTracingList.size()) : forwardTracingList;
-    ListIterator<Message> forward = forwardMessages.listIterator();
+    ListIterator<Message> forward = forwardTracingList.listIterator();
     assertThat(forward.next().messageId()).isEqualTo("message-0");
     assertThat(forward.hasNext()).isFalse();
 
     TracingList backwardTracingList = tracingMessages(1, new ArrayList<>());
-    List<Message> backwardMessages =
-        useView ? backwardTracingList.subList(0, backwardTracingList.size()) : backwardTracingList;
-    ListIterator<Message> backward = backwardMessages.listIterator(backwardMessages.size());
+    ListIterator<Message> backward = backwardTracingList.listIterator(backwardTracingList.size());
     assertThat(backward.previous().messageId()).isEqualTo("message-0");
     assertThat(backward.hasPrevious()).isFalse();
   }
 
-  private static TracingList assertRootAndViewEqualityDoesNotTrace(
-      boolean viewFirst, boolean equal) {
-    TracingList first = tracingMessages(1, new ArrayList<>());
-    TracingList second = tracingMessages(1, new ArrayList<>());
-    if (!equal) {
-      first.set(0, Message.builder().messageId("different-message").build());
-    }
-
-    List<Message> left = viewFirst ? first.subList(0, first.size()) : first;
-    List<Message> right = viewFirst ? second : second.subList(0, second.size());
-    assertThat(left.equals(right)).isEqualTo(equal);
-    return second;
-  }
-
-  private static TracingList assertOrdinaryListEqualityDoesNotTrace(
-      boolean viewFirst, boolean equal) {
-    TracingList tracingList = tracingMessages(1, new ArrayList<>());
-    List<Message> ordinaryList = new ArrayList<>();
-    ordinaryList.add(
-        equal ? tracingList.get(0) : Message.builder().messageId("different-message").build());
-
-    List<Message> left = viewFirst ? tracingList.subList(0, tracingList.size()) : tracingList;
-    assertThat(left.equals(ordinaryList)).isEqualTo(equal);
-    if (equal) {
-      assertThat(left.hashCode()).isEqualTo(ordinaryList.hashCode());
-    }
-    return tracingList;
-  }
-
-  private static void assertIteratorForEachRemainingFailure(boolean useView) {
+  private static void assertIteratorForEachRemainingFailure() {
     TracingList tracingList = tracingMessages(2, new ArrayList<>());
-    List<Message> messages = useView ? tracingList.subList(0, tracingList.size()) : tracingList;
     IllegalStateException failure = new IllegalStateException("processing failed");
     ContextKey<String> markerKey = ContextKey.named("iterator-test-marker");
     Context expectedContext = Context.root().with(markerKey, "present");
@@ -684,7 +480,7 @@ class SqsTracingListTest {
     AtomicReference<SpanContext> callbackSpanContext = new AtomicReference<>();
 
     try (Scope ignored = expectedContext.makeCurrent()) {
-      Iterator<Message> iterator = messages.iterator();
+      Iterator<Message> iterator = tracingList.iterator();
       assertThat(iterator.next().messageId()).isEqualTo("message-0");
       firstSpanContext = Span.current().getSpanContext();
       assertThat(firstSpanContext.isValid()).isTrue();
@@ -717,9 +513,8 @@ class SqsTracingListTest {
             });
   }
 
-  private static void assertForEachFailure(boolean useView) {
+  private static void assertForEachFailure() {
     TracingList tracingList = tracingMessages(1, new ArrayList<>());
-    List<Message> messages = useView ? tracingList.subList(0, tracingList.size()) : tracingList;
     IllegalStateException failure = new IllegalStateException("processing failed");
     ContextKey<String> markerKey = ContextKey.named("for-each-test-marker");
     Context expectedContext = Context.root().with(markerKey, "present");
@@ -727,7 +522,7 @@ class SqsTracingListTest {
     try (Scope ignored = expectedContext.makeCurrent()) {
       assertThatThrownBy(
               () ->
-                  messages.forEach(
+                  tracingList.forEach(
                       unused -> {
                         throw failure;
                       }))
