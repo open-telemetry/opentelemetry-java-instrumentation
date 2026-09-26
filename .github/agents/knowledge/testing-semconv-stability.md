@@ -1,9 +1,8 @@
 # [Semconv] Dual Semconv Testing
 
-## Quick Reference
-
-- Use when: reviewing semconv dual-mode assertions or `testStableSemconv` / `testBothSemconv` tasks
-- Review focus: mode-specific assertions, `maybeStable()` usage boundaries
+Use this article when changing semconv opt-in tests or their Gradle tasks.
+It shows which modes each domain requires and how to express their
+expected attributes without hiding mode differences.
 
 ## Background: The Three Modes
 
