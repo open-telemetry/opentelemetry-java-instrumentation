@@ -1,3 +1,5 @@
+import net.ltgt.gradle.errorprone.errorprone
+import net.ltgt.gradle.nullaway.nullaway
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -33,6 +35,7 @@ muzzle {
     versions.set("[1.3.0,1.3.8)")
     excludeInstrumentationName("kotlinx-coroutines-1.0-core")
     excludeInstrumentationName("kotlinx-coroutines-opentelemetry-instrumentation-annotations")
+    excludeInstrumentationName("opentelemetry-instrumentation-annotations-1.16")
   }
   // 1.3.9 (and beyond?) have changed how artifact names are resolved due to multiplatform variants
   pass {
@@ -44,6 +47,7 @@ muzzle {
     assertInverse.set(true)
     excludeInstrumentationName("kotlinx-coroutines-1.0-core")
     excludeInstrumentationName("kotlinx-coroutines-opentelemetry-instrumentation-annotations")
+    excludeInstrumentationName("opentelemetry-instrumentation-annotations-1.16")
   }
 }
 
@@ -102,6 +106,14 @@ testing {
 }
 
 tasks {
+  compileJava {
+    options.errorprone.nullaway {
+      unannotatedSubPackages.add(
+        "io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines",
+      )
+    }
+  }
+
   named("byteBuddyKotlin") {
     enabled = false
   }
