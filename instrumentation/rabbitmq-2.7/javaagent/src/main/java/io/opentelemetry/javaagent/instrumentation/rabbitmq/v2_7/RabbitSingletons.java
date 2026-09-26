@@ -15,6 +15,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Collections.emptyMap;
 
+import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.GetResponse;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.ContextKey;
@@ -34,6 +35,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,6 +43,10 @@ import java.util.List;
 import java.util.Map;
 
 public class RabbitSingletons {
+
+  // Shared with framework instrumentations through the application Consumer type.
+  public static final VirtualField<Consumer, Boolean> PROCESSING_OWNED_OUTSIDE_RABBIT_CLIENT =
+      VirtualField.find(Consumer.class, Boolean.class);
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.rabbitmq-2.7";
 
@@ -197,14 +203,14 @@ public class RabbitSingletons {
     RabbitDeliveryAttributesGetter getter = new RabbitDeliveryAttributesGetter();
     List<AttributesExtractor<DeliveryRequest, Void>> extractors = new ArrayList<>();
     extractors.add(
-        buildMessagingAttributesExtractor(
-            getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME));
+        new RabbitDeliveryExtraAttributesExtractor(
+            buildMessagingAttributesExtractor(
+                getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME)));
     RabbitDeliveryNetAttributesGetter netAttributesGetter = new RabbitDeliveryNetAttributesGetter();
     extractors.add(NetworkAttributesExtractor.create(netAttributesGetter));
     if (emitStableMessagingSemconv()) {
       extractors.add(ServerAttributesExtractor.create(netAttributesGetter));
     }
-    extractors.add(new RabbitDeliveryExtraAttributesExtractor());
     if (RabbitInstrumenterHelper.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       extractors.add(new RabbitDeliveryExperimentalAttributesExtractor());
     }

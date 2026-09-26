@@ -18,9 +18,18 @@ import org.springframework.amqp.core.Message;
 class SpringRabbitExtraAttributesExtractor
     implements AttributesExtractor<SpringRabbitRequest, Void> {
 
+  // Registration identifies the Process owner on each consumer, not via ambient span state.
+  private final AttributesExtractor<SpringRabbitRequest, Void> messagingAttributes;
+
+  SpringRabbitExtraAttributesExtractor(
+      AttributesExtractor<SpringRabbitRequest, Void> messagingAttributes) {
+    this.messagingAttributes = messagingAttributes;
+  }
+
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, SpringRabbitRequest request) {
+    messagingAttributes.onStart(attributes, parentContext, request);
     if (emitStableMessagingSemconv()) {
       Message message = request.getMessage();
       String routingKey = message.getMessageProperties().getReceivedRoutingKey();
@@ -38,5 +47,7 @@ class SpringRabbitExtraAttributesExtractor
       Context context,
       SpringRabbitRequest request,
       @Nullable Void unused,
-      @Nullable Throwable error) {}
+      @Nullable Throwable error) {
+    messagingAttributes.onEnd(attributes, context, request, null, error);
+  }
 }
