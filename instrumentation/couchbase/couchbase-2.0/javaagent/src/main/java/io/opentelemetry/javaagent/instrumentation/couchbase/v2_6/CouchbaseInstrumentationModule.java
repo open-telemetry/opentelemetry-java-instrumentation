@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_6;
 
+import static io.opentelemetry.javaagent.extension.instrumentation.internal.DeprecatedInstrumentationNames.expandDeprecatedNames;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
 
@@ -18,7 +19,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class CouchbaseInstrumentationModule extends InstrumentationModule {
 
   public CouchbaseInstrumentationModule() {
-    super("couchbase", "couchbase-2.6");
+    super(
+        "couchbase",
+        expandDeprecatedNames("couchbase-2.0|deprecated:couchbase-2.6", "couchbase-2.6-network"));
   }
 
   @Override

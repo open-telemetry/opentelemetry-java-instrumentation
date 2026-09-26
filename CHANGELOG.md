@@ -17,6 +17,10 @@
 
 ### 🚫 Deprecations
 
+- Deprecate `otel.instrumentation.couchbase-2.6.enabled` in favor of
+  `otel.instrumentation.couchbase-2.0.enabled` for Couchbase 2.6 network instrumentation. The old
+  name still works with a warning outside v3-preview, but is ignored under v3-preview.
+  ([#20270](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20270))
 - Deprecate the source-specific experimental selectors for Log4j `MapMessage` entries, Logback
   key-value pairs, Logstash markers, and Logstash structured arguments in favor of the common
   structured logging attribute selector. The source-specific properties are ignored under

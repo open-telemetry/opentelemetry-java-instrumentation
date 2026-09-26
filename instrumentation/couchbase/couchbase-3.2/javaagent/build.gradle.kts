@@ -34,7 +34,6 @@ dependencies {
   testImplementation("org.testcontainers:testcontainers-couchbase")
 
   testInstrumentation(project(":instrumentation:couchbase:couchbase-2.0:javaagent"))
-  testInstrumentation(project(":instrumentation:couchbase:couchbase-2.6:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.1:javaagent"))
 
