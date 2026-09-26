@@ -124,7 +124,7 @@ class MessagingConfigTest {
   }
 
   @Test
-  void stableLeavesOverrideDeprecatedLeavesWithoutWarnings() {
+  void stableLeavesOverrideDeprecatedLeavesWithoutWarnings() throws Exception {
     ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
     when(messagingConfig(openTelemetry).get("headers").getScalarList("included", String.class))
         .thenReturn(singletonList("*"));
@@ -140,6 +140,7 @@ class MessagingConfigTest {
         .thenReturn(singletonList("deprecated-secret"));
     TestHandler handler = new TestHandler();
     Logger logger = Logger.getLogger(MessagingConfig.class.getName());
+    clearDeprecatedWarnings();
     logger.addHandler(handler);
     try {
       IncludeExclude headers = MessagingConfig.getHeaders(openTelemetry);
@@ -148,6 +149,7 @@ class MessagingConfigTest {
       assertThat(handler.records).isEmpty();
     } finally {
       logger.removeHandler(handler);
+      clearDeprecatedWarnings();
     }
   }
 
