@@ -5,12 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.armeria.grpc.v1_14;
 
+import static io.opentelemetry.javaagent.instrumentation.armeria.grpc.v1_14.ArmeriaGrpcSingletons.serverInterceptor;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.linecorp.armeria.server.grpc.GrpcServiceBuilder;
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -34,7 +33,7 @@ class ArmeriaGrpcServiceBuilderInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This GrpcServiceBuilder builder) {
-      builder.intercept(GrpcTelemetry.create(GlobalOpenTelemetry.get()).createServerInterceptor());
+      builder.intercept(serverInterceptor());
     }
   }
 }
