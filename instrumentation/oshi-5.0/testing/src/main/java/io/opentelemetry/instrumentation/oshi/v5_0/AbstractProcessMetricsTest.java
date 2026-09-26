@@ -79,4 +79,17 @@ public abstract class AbstractProcessMetricsTest {
                                                     equalTo(stringKey("type"), "system"))
                                                 .hasValueSatisfying(v -> v.isNotNegative())))));
   }
+
+  @Test
+  @EnabledIfSystemProperty(named = "testExperimental", matches = "true")
+  void processMetricsHaveNoSchema() {
+    testing()
+        .waitAndAssertMetrics(
+            scopeName(),
+            "runtime.java.memory",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric.getInstrumentationScopeInfo().getSchemaUrl()).isNull()));
+  }
 }

@@ -36,7 +36,28 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.oshi.experimental-metrics.enabled=true")
   }
 
+  val testV3Preview = register<Test>("testV3Preview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+  }
+
+  val testV3PreviewExperimental = register<Test>("testV3PreviewExperimental") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs(
+      "-Dotel.instrumentation.common.v3-preview=true",
+      "-Dotel.instrumentation.oshi.experimental-metrics.enabled=true",
+    )
+    systemProperty("testExperimental", "true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.v3-preview=true,otel.instrumentation.oshi.experimental-metrics.enabled=true",
+    )
+  }
+
   check {
-    dependsOn(testExperimental)
+    dependsOn(testExperimental, testV3Preview, testV3PreviewExperimental)
   }
 }
