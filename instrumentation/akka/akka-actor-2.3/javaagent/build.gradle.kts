@@ -10,21 +10,21 @@ muzzle {
     module.set("akka-actor_2.11")
     versions.set("[2.3,)")
     assertInverse.set(true)
-    excludeInstrumentationName("akka-actor-2.5-forkjoin")
+    excludeInstrumentationName("akka-actor-2.3-forkjoin")
   }
   pass {
     group.set("com.typesafe.akka")
     module.set("akka-actor_2.12")
     versions.set("[2.3,)")
     assertInverse.set(true)
-    excludeInstrumentationName("akka-actor-2.5-forkjoin")
+    excludeInstrumentationName("akka-actor-2.3-forkjoin")
   }
   pass {
     group.set("com.typesafe.akka")
     module.set("akka-actor_2.13")
     versions.set("[2.3,)")
     assertInverse.set(true)
-    excludeInstrumentationName("akka-actor-2.5-forkjoin")
+    excludeInstrumentationName("akka-actor-2.3-forkjoin")
   }
 
   // Akka's fork-join was removed in 2.6, replaced with the normal java.concurrent version

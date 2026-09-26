@@ -17,6 +17,15 @@
 
 ### 🚫 Deprecations
 
+- Deprecate `otel.instrumentation.akka-actor-forkjoin.enabled`,
+  `otel.instrumentation.akka-actor-fork-join.enabled`,
+  `otel.instrumentation.akka-actor-forkjoin-2.5.enabled`, and
+  `otel.instrumentation.akka-actor-fork-join-2.5.enabled`. Use
+  `otel.instrumentation.akka-actor.enabled` or
+  `otel.instrumentation.akka-actor-2.3.enabled` for both actor modules.
+  For fork-join only, use `otel.instrumentation.akka-actor-2.3-forkjoin.enabled`.
+  The old names remain supported outside v3-preview until 3.0.
+  ([#20265](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20265))
 - Deprecate the source-specific experimental selectors for Log4j `MapMessage` entries, Logback
   key-value pairs, Logstash markers, and Logstash structured arguments in favor of the common
   structured logging attribute selector. The source-specific properties are ignored under
