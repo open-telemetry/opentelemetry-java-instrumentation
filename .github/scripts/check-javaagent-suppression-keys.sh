@@ -11,10 +11,6 @@ for file in $(find instrumentation -name "*Module.java"); do
   fi
 
   module_name=$(echo "$file" | sed 's#.*/\([^/]*\)/javaagent/src/.*#\1#')
-  if [[ "$file" == instrumentation/ratpack/ratpack-1.4/javaagent/src/main/java/io/opentelemetry/javaagent/instrumentation/ratpack/v1_7/RatpackInstrumentationModule.java ]]; then
-    # The 1.7 module shares a Gradle project with 1.4 but has its own enablement alias.
-    module_name="ratpack-1.7"
-  fi
   simple_module_name=$(echo "$module_name" | sed 's/-[0-9.]*$//')
 
   if [[ "$simple_module_name" == *jaxrs* ]]; then

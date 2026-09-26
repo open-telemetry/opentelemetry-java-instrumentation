@@ -7,7 +7,7 @@ muzzle {
     group.set("io.ratpack")
     module.set("ratpack-core")
     versions.set("[1.4.0,)")
-    excludeInstrumentationName("ratpack-1.7")
+    excludeInstrumentationName("ratpack-1.7-muzzle")
   }
   pass {
     // instrumentation-docs:ignore - verification only, the directive above is the range we document
@@ -16,7 +16,7 @@ muzzle {
     module.set("ratpack-core")
     versions.set("[1.7.0,)")
     assertInverse.set(true)
-    excludeInstrumentationName("ratpack-1.4")
+    excludeInstrumentationName("ratpack-1.4-muzzle")
     excludeInstrumentationName("netty-4.1")
   }
 }
