@@ -203,14 +203,14 @@ public class RabbitSingletons {
     RabbitDeliveryAttributesGetter getter = new RabbitDeliveryAttributesGetter();
     List<AttributesExtractor<DeliveryRequest, Void>> extractors = new ArrayList<>();
     extractors.add(
-        new RabbitDeliveryExtraAttributesExtractor(
-            buildMessagingAttributesExtractor(
-                getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME)));
+        buildMessagingAttributesExtractor(
+            getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME));
     RabbitDeliveryNetAttributesGetter netAttributesGetter = new RabbitDeliveryNetAttributesGetter();
     extractors.add(NetworkAttributesExtractor.create(netAttributesGetter));
     if (emitStableMessagingSemconv()) {
       extractors.add(ServerAttributesExtractor.create(netAttributesGetter));
     }
+    extractors.add(new RabbitDeliveryExtraAttributesExtractor());
     if (RabbitInstrumenterHelper.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       extractors.add(new RabbitDeliveryExperimentalAttributesExtractor());
     }

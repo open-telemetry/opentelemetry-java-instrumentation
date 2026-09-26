@@ -17,18 +17,9 @@ import javax.annotation.Nullable;
 
 class RabbitDeliveryExtraAttributesExtractor implements AttributesExtractor<DeliveryRequest, Void> {
 
-  // A nested delivery can belong to a different consumer registration.
-  private final AttributesExtractor<DeliveryRequest, Void> messagingAttributes;
-
-  RabbitDeliveryExtraAttributesExtractor(
-      AttributesExtractor<DeliveryRequest, Void> messagingAttributes) {
-    this.messagingAttributes = messagingAttributes;
-  }
-
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, DeliveryRequest request) {
-    messagingAttributes.onStart(attributes, parentContext, request);
     Envelope envelope = request.getEnvelope();
     String routingKey = envelope.getRoutingKey();
     if (routingKey != null && !routingKey.isEmpty()) {
@@ -45,7 +36,5 @@ class RabbitDeliveryExtraAttributesExtractor implements AttributesExtractor<Deli
       Context context,
       DeliveryRequest request,
       @Nullable Void unused,
-      @Nullable Throwable error) {
-    messagingAttributes.onEnd(attributes, context, request, null, error);
-  }
+      @Nullable Throwable error) {}
 }

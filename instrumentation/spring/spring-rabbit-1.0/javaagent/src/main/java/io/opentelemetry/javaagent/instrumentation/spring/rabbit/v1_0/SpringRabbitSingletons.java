@@ -49,12 +49,11 @@ public class SpringRabbitSingletons {
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME))
             .addAttributesExtractor(
-                new SpringRabbitExtraAttributesExtractor(
-                    MessagingAttributesExtractor.builder(
-                            getter, operationType, PROCESS_OPERATION_NAME)
-                        .setHeaders(ExperimentalConfig.get().getMessagingHeaders())
-                        .build()))
+                MessagingAttributesExtractor.builder(getter, operationType, PROCESS_OPERATION_NAME)
+                    .setHeaders(ExperimentalConfig.get().getMessagingHeaders())
+                    .build())
             .addAttributesExtractor(NetworkAttributesExtractor.create(netAttributesGetter))
+            .addAttributesExtractor(new SpringRabbitExtraAttributesExtractor())
             .addOperationMetrics(MessagingProcessMetrics.get())
             .addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages())
             .addContextCustomizer(
