@@ -11,10 +11,14 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.BooleanSupplier;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.common.TopicPartition;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -39,6 +43,13 @@ public final class KafkaConsumerContextUtil {
       VirtualField.find(ConsumerRecords.class, String[].class);
   private static final VirtualField<ConsumerRecord<?, ?>, Boolean> RECORD_COUNTED =
       VirtualField.find(ConsumerRecord.class, Boolean.class);
+  private static final VirtualField<ConsumerRecord<?, ?>, BooleanSupplier>
+      RAW_PROCESSING_ELIGIBILITY = VirtualField.find(ConsumerRecord.class, BooleanSupplier.class);
+
+  /** Checks a distinct Kafka operation without treating an ambient consumer as its owner. */
+  public static Context spanSuppressionContext(Context context) {
+    return Context.root().with(Span.fromContext(context));
+  }
 
   public static Context withoutLeakedProcessSpan(Context context) {
     if (!emitStableMessagingSemconv()) {
@@ -84,6 +95,26 @@ public final class KafkaConsumerContextUtil {
     }
     RECORD_COUNTED.set(record, true);
     return true;
+  }
+
+  public static void setRawProcessingEligibility(
+      ConsumerRecord<?, ?> record, BooleanSupplier rawProcessingEligibility) {
+    RAW_PROCESSING_ELIGIBILITY.set(record, rawProcessingEligibility);
+  }
+
+  @Nullable
+  public static BooleanSupplier getRawProcessingEligibility(ConsumerRecord<?, ?> record) {
+    return RAW_PROCESSING_ELIGIBILITY.get(record);
+  }
+
+  /** Reads batch membership without invoking tracing iterators. */
+  public static List<ConsumerRecord<?, ?>> getRecords(ConsumerRecords<?, ?> records) {
+    List<ConsumerRecord<?, ?>> result = new ArrayList<>(records.count());
+    for (TopicPartition partition : records.partitions()) {
+      List<? extends ConsumerRecord<?, ?>> partitionRecords = records.records(partition);
+      result.addAll(partitionRecords);
+    }
+    return result;
   }
 
   public static KafkaConsumerContext get(ConsumerRecord<?, ?> records) {
@@ -156,6 +187,8 @@ public final class KafkaConsumerContextUtil {
   public static void copy(ConsumerRecord<?, ?> from, ConsumerRecord<?, ?> to) {
     RECORD_CONTEXT.set(to, RECORD_CONTEXT.get(from));
     RECORD_CONSUMER_INFO.set(to, RECORD_CONSUMER_INFO.get(from));
+    RECORD_COUNTED.set(to, RECORD_COUNTED.get(from));
+    RAW_PROCESSING_ELIGIBILITY.set(to, RAW_PROCESSING_ELIGIBILITY.get(from));
   }
 
   private KafkaConsumerContextUtil() {}
