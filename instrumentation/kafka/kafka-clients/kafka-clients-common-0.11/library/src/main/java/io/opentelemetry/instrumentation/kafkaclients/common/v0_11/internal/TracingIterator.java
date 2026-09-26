@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
 import static java.util.Objects.requireNonNull;
 
-import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -86,10 +85,9 @@ public class TracingIterator<K, V> implements Iterator<ConsumerRecord<K, V>> {
       }
       KafkaProcessRequest request = KafkaProcessRequest.create(consumerContext, next);
       // Iterator spans can leak if traversal is abandoned. Ignore an ambient consumer span when
-      // selecting another record, but retain explicit instrumentation suppression and enablement.
-      if (InstrumentationUtil.shouldSuppressInstrumentation(Context.current())
-          || !instrumenter.shouldStart(
-              KafkaConsumerContextUtil.spanSuppressionContext(parentContext), request)) {
+      // selecting another record.
+      if (!instrumenter.shouldStart(
+          KafkaConsumerContextUtil.spanSuppressionContext(parentContext), request)) {
         return next;
       }
       currentRequest = request;

@@ -11,7 +11,6 @@ import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
@@ -147,23 +146,6 @@ class KafkaConsumerBatchSelectionTest {
     iterator.next();
     assertThat(iterator.hasNext()).isFalse();
     assertThat(testing.spans()).isEmpty();
-  }
-
-  @Test
-  void explicitSuppressionAfterIteratorCreationIsHonored() {
-    ConsumerRecords<String, String> records = records(record(0));
-    KafkaProcessingOwnershipUtil.recordPoll(records, true);
-    Iterator<ConsumerRecord<String, String>> iterator = iterator(records);
-
-    InstrumentationUtil.suppressInstrumentation(
-        () -> {
-          iterator.next();
-          assertThat(iterator.hasNext()).isFalse();
-        });
-    Iterator<ConsumerRecord<String, String>> nextPass = iterator(records);
-    nextPass.next();
-    assertThat(nextPass.hasNext()).isFalse();
-    assertProcessSpans(1);
   }
 
   @Test
