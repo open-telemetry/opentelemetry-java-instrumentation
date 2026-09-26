@@ -11,6 +11,12 @@ for file in $(find instrumentation -name "*Module.java"); do
   fi
 
   module_name=$(echo "$file" | sed 's#.*/\([^/]*\)/javaagent/src/.*#\1#')
+  # Some instrumentation modules retain names independent of their Gradle owner.
+  case "$file" in
+    instrumentation/hibernate/hibernate-4.0/javaagent/src/main/java/io/opentelemetry/javaagent/instrumentation/hibernate/procedure/call/v4_3/HibernateInstrumentationModule.java)
+      module_name="hibernate-procedure-call-4.3"
+      ;;
+  esac
   simple_module_name=$(echo "$module_name" | sed 's/-[0-9.]*$//')
 
   if [[ "$simple_module_name" == *jaxrs* ]]; then
