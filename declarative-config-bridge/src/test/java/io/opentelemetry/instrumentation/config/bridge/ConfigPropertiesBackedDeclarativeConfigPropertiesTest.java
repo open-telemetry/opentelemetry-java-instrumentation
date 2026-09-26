@@ -164,8 +164,9 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   @Test
   void testMessagingHeadersSelectorMapping() {
     Map<String, String> properties = new HashMap<>();
-    properties.put("otel.instrumentation.common.messaging.experimental.headers.included", "a,b");
-    properties.put("otel.instrumentation.common.messaging.experimental.headers.excluded", "c");
+    properties.put("otel.instrumentation.common.messaging.headers.included", "a,b");
+    properties.put("otel.instrumentation.common.messaging.headers.excluded", "c");
+    properties.put("otel.instrumentation.common.messaging.experimental.headers.included", "old");
     properties.put("otel.instrumentation.messaging.experimental.capture-headers", "legacy");
 
     DeclarativeConfigProperties messaging =
@@ -176,12 +177,16 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
             .getStructured("common")
             .getStructured("messaging");
 
+    assertThat(messaging.getStructured("headers").getScalarList("included", String.class))
+        .containsExactly("a", "b");
+    assertThat(messaging.getStructured("headers").getScalarList("excluded", String.class))
+        .containsExactly("c");
     assertThat(
             messaging.getStructured("headers/development").getScalarList("included", String.class))
-        .containsExactly("a", "b");
+        .containsExactly("old");
     assertThat(
             messaging.getStructured("headers/development").getScalarList("excluded", String.class))
-        .containsExactly("c");
+        .isNull();
     assertThat(messaging.getScalarList("capture_headers/development", String.class))
         .containsExactly("legacy");
   }

@@ -174,22 +174,39 @@ instrumentation/development:
         # list of attribute keys.
         resource_attributes: []
       messaging:
-        # Deprecated: use `otel.instrumentation.common.messaging.experimental.headers.included`
-        # instead. A comma-separated list of header names to capture as span attributes. It does not
-        # support glob patterns: an entry containing `*` or `?` is ignored with a warning, and every
-        # other entry is matched as a literal header name.
+        # Deprecated: use `otel.instrumentation.common.messaging.headers.included` instead. A
+        # comma-separated list of header names to capture as span attributes. It does not support
+        # glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other
+        # entry is matched as a literal header name.
         capture_headers/development: []
-        headers/development:
-          # A comma-separated list of message header name patterns to exclude from span attributes.
-          # Excluded patterns take precedence over included patterns. Matching is case-sensitive.
-          # `?` matches one character and `*` matches zero or more characters. If included is not
-          # configured, all non-excluded headers are captured, which may expose sensitive
-          # information.
+        headers:
+          # A comma-separated list of case-sensitive message header name glob patterns to exclude
+          # from span attributes. `?` matches one character and `*` matches zero or more characters.
+          # Excluded patterns take precedence over included patterns. An absent or empty selector
+          # captures no headers; an exclude-only selector captures every header not excluded, which
+          # may expose sensitive information.
           excluded: []
 
-          # A comma-separated list of message header name patterns to capture as span attributes.
-          # Matching is case-sensitive. `?` matches one character and `*` matches zero or more
-          # characters.
+          # A comma-separated list of case-sensitive message header name glob patterns to capture as
+          # span attributes. `?` matches one character and `*` matches zero or more characters.
+          # Excluded patterns take precedence over included patterns. An absent or empty selector
+          # captures no headers; an exclude-only selector captures every header not excluded.
+          included: []
+        headers/development:
+          # Deprecated: use `otel.instrumentation.common.messaging.headers.excluded` instead. This
+          # setting remains available under v3-preview and will be removed in 3.0. Case-sensitive
+          # header name glob patterns: `?` matches one character and `*` matches zero or more
+          # characters. Excluded patterns take precedence over included patterns. An absent or empty
+          # selector captures no headers; an exclude-only selector captures every header not
+          # excluded, which may expose sensitive information.
+          excluded: []
+
+          # Deprecated: use `otel.instrumentation.common.messaging.headers.included` instead. This
+          # setting remains available under v3-preview and will be removed in 3.0. Case-sensitive
+          # header name glob patterns: `?` matches one character and `*` matches zero or more
+          # characters. Excluded patterns take precedence over included patterns. An absent or empty
+          # selector captures no headers; an exclude-only selector captures every header not
+          # excluded.
           included: []
         message_create_spans:
           # Provides the default for whether to create a producer span for each eligible message in

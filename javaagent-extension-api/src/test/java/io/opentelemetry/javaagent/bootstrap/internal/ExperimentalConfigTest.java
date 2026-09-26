@@ -24,9 +24,9 @@ class ExperimentalConfigTest {
     ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
     DeclarativeConfigProperties messaging =
         openTelemetry.getInstrumentationConfig("common").get("messaging");
-    when(messaging.get("headers/development").getScalarList("included", String.class))
+    when(messaging.get("headers").getScalarList("included", String.class))
         .thenReturn(asList("Test-*", "other"));
-    when(messaging.get("headers/development").getScalarList("excluded", String.class))
+    when(messaging.get("headers").getScalarList("excluded", String.class))
         .thenReturn(singletonList("*-secret"));
 
     IncludeExclude headers = new ExperimentalConfig(openTelemetry).getMessagingHeaders();
@@ -66,6 +66,8 @@ class ExperimentalConfigTest {
         mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
     when(openTelemetry.getInstrumentationConfig("messaging")).thenReturn(deprecatedMessagingConfig);
     DeclarativeConfigProperties messaging = commonConfig.get("messaging");
+    when(messaging.get("headers").getScalarList("included", String.class)).thenReturn(null);
+    when(messaging.get("headers").getScalarList("excluded", String.class)).thenReturn(null);
     when(messaging.get("headers/development").getScalarList("included", String.class))
         .thenReturn(null);
     when(messaging.get("headers/development").getScalarList("excluded", String.class))

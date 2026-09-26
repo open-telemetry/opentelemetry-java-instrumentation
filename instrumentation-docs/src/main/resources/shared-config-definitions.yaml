@@ -106,23 +106,37 @@ configurations:
     default: true
 
   messaging.headers.included:
-    name: otel.instrumentation.common.messaging.experimental.headers.included
-    declarative_name: java.common.messaging.headers/development.included
-    description: "A comma-separated list of message header name patterns to capture as span attributes. Matching is case-sensitive. `?` matches one character and `*` matches zero or more characters."
+    name: otel.instrumentation.common.messaging.headers.included
+    declarative_name: java.common.messaging.headers.included
+    description: "A comma-separated list of case-sensitive message header name glob patterns to capture as span attributes. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. An absent or empty selector captures no headers; an exclude-only selector captures every header not excluded."
     type: list
     default: ""
 
   messaging.headers.excluded:
+    name: otel.instrumentation.common.messaging.headers.excluded
+    declarative_name: java.common.messaging.headers.excluded
+    description: "A comma-separated list of case-sensitive message header name glob patterns to exclude from span attributes. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. An absent or empty selector captures no headers; an exclude-only selector captures every header not excluded, which may expose sensitive information."
+    type: list
+    default: ""
+
+  messaging.deprecated-common-headers.included:
+    name: otel.instrumentation.common.messaging.experimental.headers.included
+    declarative_name: java.common.messaging.headers/development.included
+    description: "Deprecated: use `otel.instrumentation.common.messaging.headers.included` instead. This setting remains available under v3-preview and will be removed in 3.0. Case-sensitive header name glob patterns: `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. An absent or empty selector captures no headers; an exclude-only selector captures every header not excluded."
+    type: list
+    default: ""
+
+  messaging.deprecated-common-headers.excluded:
     name: otel.instrumentation.common.messaging.experimental.headers.excluded
     declarative_name: java.common.messaging.headers/development.excluded
-    description: "A comma-separated list of message header name patterns to exclude from span attributes. Excluded patterns take precedence over included patterns. Matching is case-sensitive. `?` matches one character and `*` matches zero or more characters. If included is not configured, all non-excluded headers are captured, which may expose sensitive information."
+    description: "Deprecated: use `otel.instrumentation.common.messaging.headers.excluded` instead. This setting remains available under v3-preview and will be removed in 3.0. Case-sensitive header name glob patterns: `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. An absent or empty selector captures no headers; an exclude-only selector captures every header not excluded, which may expose sensitive information."
     type: list
     default: ""
 
   messaging.capture-headers:
     name: otel.instrumentation.messaging.experimental.capture-headers
     declarative_name: java.common.messaging.capture_headers/development
-    description: "Deprecated: use `otel.instrumentation.common.messaging.experimental.headers.included` instead. A comma-separated list of header names to capture as span attributes. It does not support glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other entry is matched as a literal header name."
+    description: "Deprecated: use `otel.instrumentation.common.messaging.headers.included` instead. A comma-separated list of header names to capture as span attributes. It does not support glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other entry is matched as a literal header name."
     type: list
     default: ""
 
@@ -130,13 +144,13 @@ configurations:
   # them under `java.common.messaging`, so they declare no declarative_name.
   messaging.deprecated-headers.included:
     name: otel.instrumentation.messaging.experimental.headers.included
-    description: "Deprecated: use `otel.instrumentation.common.messaging.experimental.headers.included` instead. It may be removed in the next minor release."
+    description: "Deprecated: use `otel.instrumentation.common.messaging.headers.included` instead. It may be removed in the next minor release."
     type: list
     default: ""
 
   messaging.deprecated-headers.excluded:
     name: otel.instrumentation.messaging.experimental.headers.excluded
-    description: "Deprecated: use `otel.instrumentation.common.messaging.experimental.headers.excluded` instead. It may be removed in the next minor release."
+    description: "Deprecated: use `otel.instrumentation.common.messaging.headers.excluded` instead. It may be removed in the next minor release."
     type: list
     default: ""
 
