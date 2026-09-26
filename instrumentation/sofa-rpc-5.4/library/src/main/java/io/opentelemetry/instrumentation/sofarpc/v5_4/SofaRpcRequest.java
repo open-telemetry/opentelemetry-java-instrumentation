@@ -22,6 +22,14 @@ public abstract class SofaRpcRequest {
     InetSocketAddress localAddress = context != null ? context.getLocalAddress() : null;
     ProviderInfo providerInfo = context != null ? context.getProviderInfo() : null;
 
+    return create(request, remoteAddress, localAddress, providerInfo);
+  }
+
+  static SofaRpcRequest create(
+      SofaRequest request,
+      @Nullable InetSocketAddress remoteAddress,
+      @Nullable InetSocketAddress localAddress,
+      @Nullable ProviderInfo providerInfo) {
     return new AutoValue_SofaRpcRequest(request, remoteAddress, localAddress, providerInfo);
   }
 
