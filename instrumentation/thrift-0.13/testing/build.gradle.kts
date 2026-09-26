@@ -45,6 +45,7 @@ sourceSets {
 
 tasks.compileJava {
   dependsOn(generateThriftSources)
+  // Generated Thrift sources contain doc comments that are not attached to declarations.
   options.compilerArgs.add("-Xlint:-dangling-doc-comments")
 }
 
