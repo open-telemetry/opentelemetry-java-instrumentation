@@ -7,17 +7,29 @@ muzzle {
     group.set("io.ratpack")
     module.set("ratpack-core")
     versions.set("[1.4.0,)")
+    excludeInstrumentationName("ratpack-1.7-muzzle")
+  }
+  pass {
+    // instrumentation-docs:ignore - verification only, the directive above is the range we document
+    name.set("Ratpack 1.7 instrumentation")
+    group.set("io.ratpack")
+    module.set("ratpack-core")
+    versions.set("[1.7.0,)")
+    assertInverse.set(true)
+    excludeInstrumentationName("ratpack-1.4-muzzle")
+    excludeInstrumentationName("netty-4.1")
   }
 }
 
 dependencies {
   library("io.ratpack:ratpack-core:1.4.0")
+  compileOnly("io.ratpack:ratpack-core:1.7.0")
 
   implementation(project(":instrumentation:netty:netty-4.1:javaagent"))
   implementation(project(":instrumentation:netty:netty-4.1:library"))
+  implementation(project(":instrumentation:ratpack:ratpack-1.7:library"))
 
   testImplementation(project(":instrumentation:ratpack:ratpack-1.4:testing"))
-  testInstrumentation(project(":instrumentation:ratpack:ratpack-1.7:javaagent"))
 
   // 1.4.0 has a bug which makes tests flaky
   // (https://github.com/ratpack/ratpack/commit/dde536ac138a76c34df03a0642c88d64edde688e)
@@ -27,8 +39,8 @@ dependencies {
     testImplementation("com.sun.activation:jakarta.activation:1.2.2")
   }
 
-  latestDepTestLibrary("io.ratpack:ratpack-core:1.6.+") // see ratpack-1.7 module
-  latestDepTestLibrary("io.ratpack:ratpack-test:1.6.+") // see ratpack-1.7 module
+  latestDepTestLibrary("io.ratpack:ratpack-core:1.6.+") // see test suite below
+  latestDepTestLibrary("io.ratpack:ratpack-test:1.6.+") // see test suite below
 }
 
 // Requires old Guava. Can't use enforcedPlatform since predates BOM
@@ -37,8 +49,8 @@ if (!otelProps.testLatestDeps) {
 }
 
 // to allow all tests to pass we need to choose a specific netty version
-configurations.configureEach {
-  if (!name.contains("muzzle")) {
+listOf("testCompileClasspath", "testRuntimeClasspath").forEach {
+  configurations.named(it) {
     resolutionStrategy {
       eachDependency {
         // specifying a fixed version for all libraries with io.netty group
@@ -50,24 +62,54 @@ configurations.configureEach {
   }
 }
 
+val library17Test = testing.suites.register<JvmTestSuite>("library17Test") {
+  dependencies {
+    implementation(project(":instrumentation:ratpack:ratpack-1.4:testing"))
+    implementation(project(":instrumentation:ratpack:ratpack-1.7:library"))
+    val ratpackVersion = baseVersion("1.7.0").orLatest()
+    implementation("io.ratpack:ratpack-core:$ratpackVersion")
+    implementation("io.ratpack:ratpack-test:$ratpackVersion")
+  }
+}
+
 tasks {
+  processResources {
+    // The newer API emits its own scope, which needs a version resource as well.
+    from(named("generateInstrumentationVersionFile")) {
+      include("io.opentelemetry.ratpack-1.4.properties")
+      rename { "io.opentelemetry.ratpack-1.7.properties" }
+      into("META-INF/io/opentelemetry/instrumentation")
+    }
+  }
+
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    systemProperty("ratpack14Test", true) // used in AbstractRatpackHttpClientTest
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
     systemProperty("collectMetadata", otelProps.collectMetadata)
     systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  }
+
+  test {
+    systemProperty("ratpack14Test", true) // used in AbstractRatpackHttpClientTest
   }
 
   val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+    systemProperty("ratpack14Test", true) // used in AbstractRatpackHttpClientTest
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
+  }
+
+  val library17TestStableSemconv = register<Test>("library17TestStableSemconv") {
+    testClassesDirs = library17Test.get().sources.output.classesDirs
+    classpath = library17Test.get().sources.runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites, testStableSemconv, library17TestStableSemconv)
   }
 
   if (otelProps.denyUnsafe) {

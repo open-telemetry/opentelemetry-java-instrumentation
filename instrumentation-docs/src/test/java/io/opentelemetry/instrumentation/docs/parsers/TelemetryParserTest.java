@@ -8,8 +8,21 @@ package io.opentelemetry.instrumentation.docs.parsers;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 class TelemetryParserTest {
+
+  @ParameterizedTest
+  @CsvSource({
+    "io.opentelemetry.ratpack-1.4, true",
+    "io.opentelemetry.ratpack-1.7, true",
+    "io.opentelemetry.netty-4.1, false"
+  })
+  void ratpackScopes(String telemetryScope, boolean expected) {
+    assertThat(TelemetryParser.scopeIsValid(telemetryScope, "io.opentelemetry.ratpack-1.4"))
+        .isEqualTo(expected);
+  }
 
   @Test
   void normalizeWhenConditionStripsQuotes() {

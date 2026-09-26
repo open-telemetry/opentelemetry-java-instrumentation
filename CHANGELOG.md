@@ -17,6 +17,10 @@
 
 ### 🚫 Deprecations
 
+- Deprecate `otel.instrumentation.ratpack-1.7.enabled` in favor of
+  `otel.instrumentation.ratpack-1.4.enabled` for both Ratpack javaagent modules. The old name
+  remains available outside v3-preview until 3.0; `otel.instrumentation.ratpack.enabled` is
+  unchanged. ([#20266](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20266))
 - Deprecate the source-specific experimental selectors for Log4j `MapMessage` entries, Logback
   key-value pairs, Logstash markers, and Logstash structured arguments in favor of the common
   structured logging attribute selector. The source-specific properties are ignored under

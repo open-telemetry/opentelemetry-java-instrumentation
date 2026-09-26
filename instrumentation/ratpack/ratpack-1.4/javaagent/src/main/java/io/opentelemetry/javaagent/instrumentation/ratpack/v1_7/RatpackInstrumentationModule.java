@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.ratpack.v1_7;
 
+import static io.opentelemetry.javaagent.extension.instrumentation.internal.DeprecatedInstrumentationNames.expandDeprecatedNames;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
 
@@ -17,7 +18,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class RatpackInstrumentationModule extends InstrumentationModule {
   public RatpackInstrumentationModule() {
-    super("ratpack", "ratpack-1.7");
+    super(
+        "ratpack",
+        expandDeprecatedNames("ratpack-1.4|deprecated:ratpack-1.7", "ratpack-1.7-muzzle"));
   }
 
   @Override
