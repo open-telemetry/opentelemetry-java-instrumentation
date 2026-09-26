@@ -69,8 +69,6 @@ import org.testcontainers.couchbase.BucketDefinition;
 import org.testcontainers.couchbase.CouchbaseContainer;
 import org.testcontainers.couchbase.CouchbaseService;
 
-// The Couchbase SDK owns the request lifecycle hooks; the agent owns the tracing bridge and
-// adapter.
 @SuppressWarnings("deprecation") // using deprecated semconv
 class CouchbaseClient32Test {
   private static final boolean LEGACY_EXPERIMENTAL_ATTRIBUTES =
