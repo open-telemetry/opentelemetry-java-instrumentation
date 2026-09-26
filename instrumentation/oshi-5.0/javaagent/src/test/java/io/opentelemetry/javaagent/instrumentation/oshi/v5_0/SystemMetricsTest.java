@@ -36,7 +36,11 @@ class SystemMetricsTest extends AbstractSystemMetricsTest {
 
   @Test
   @DisabledIfSystemProperty(named = "testExperimental", matches = "true")
+  @SuppressWarnings("deprecation") // using the legacy scopeName() bridge
   void noProcessMetricsWhenDisabled() {
+    testing.waitAndAssertMetrics(
+        scopeName(), "system.memory.usage", metrics -> assertThat(metrics).isNotEmpty());
+
     assertThat(testing.metrics())
         .noneMatch(metric -> metric.getName().equals("runtime.java.memory"))
         .noneMatch(metric -> metric.getName().equals("runtime.java.cpu_time"));
