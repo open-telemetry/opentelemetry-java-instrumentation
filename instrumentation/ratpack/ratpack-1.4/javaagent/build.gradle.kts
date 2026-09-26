@@ -73,6 +73,15 @@ val library17Test = testing.suites.register<JvmTestSuite>("library17Test") {
 }
 
 tasks {
+  processResources {
+    // The newer API emits its own scope, which needs a version resource as well.
+    from(named("generateInstrumentationVersionFile")) {
+      include("io.opentelemetry.ratpack-1.4.properties")
+      rename { "io.opentelemetry.ratpack-1.7.properties" }
+      into("META-INF/io/opentelemetry/instrumentation")
+    }
+  }
+
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")

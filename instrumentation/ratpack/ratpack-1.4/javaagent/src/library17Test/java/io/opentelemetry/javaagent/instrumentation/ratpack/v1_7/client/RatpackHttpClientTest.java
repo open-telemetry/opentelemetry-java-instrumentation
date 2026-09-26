@@ -54,6 +54,10 @@ class RatpackHttpClientTest extends AbstractRatpackHttpClientTest {
         metric ->
             metric
                 .hasName("http.client.request.duration")
+                .satisfies(
+                    metricData ->
+                        assertThat(metricData.getInstrumentationScopeInfo().getVersion())
+                            .isNotEmpty())
                 .hasHistogramSatisfying(
                     histogram ->
                         histogram.hasPointsSatisfying(
