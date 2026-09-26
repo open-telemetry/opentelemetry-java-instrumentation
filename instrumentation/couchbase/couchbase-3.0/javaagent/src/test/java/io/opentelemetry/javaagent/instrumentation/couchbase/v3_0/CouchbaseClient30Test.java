@@ -11,6 +11,7 @@ import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -36,6 +37,7 @@ import org.testcontainers.couchbase.BucketDefinition;
 import org.testcontainers.couchbase.CouchbaseContainer;
 import org.testcontainers.couchbase.CouchbaseService;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class CouchbaseClient30Test {
 
   private static final boolean EXPERIMENTAL_TELEMETRY =
@@ -107,7 +109,7 @@ class CouchbaseClient30Test {
                         .hasStatus(StatusData.unset())
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("peer.service"), "kv"),
+                            equalTo(PEER_SERVICE, "kv"),
                             satisfies(
                                 stringKey("couchbase.operation_id"), val -> val.startsWith("0x")),
                             equalTo(stringKey("couchbase.document_id"), "id")),
@@ -142,7 +144,7 @@ class CouchbaseClient30Test {
                         .hasStatus(StatusData.unset())
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("peer.service"), "kv"),
+                            equalTo(PEER_SERVICE, "kv"),
                             satisfies(
                                 stringKey("couchbase.operation_id"), val -> val.startsWith("0x")),
                             equalTo(stringKey("couchbase.document_id"), "async-id")),
