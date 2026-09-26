@@ -170,8 +170,7 @@ class SpanSuppressionStrategyTest {
         DeclarativeConfiguration.parse(new ByteArrayInputStream(yaml.getBytes(UTF_8)));
     ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
     when(openTelemetry.getConfigProvider())
-        .thenReturn(
-            SdkConfigProvider.create(DeclarativeConfiguration.toConfigProperties(model)));
+        .thenReturn(SdkConfigProvider.create(DeclarativeConfiguration.toConfigProperties(model)));
     InstrumenterBuilder<String, String> builder =
         Instrumenter.<String, String>builder(openTelemetry, "test", request -> "test");
 
