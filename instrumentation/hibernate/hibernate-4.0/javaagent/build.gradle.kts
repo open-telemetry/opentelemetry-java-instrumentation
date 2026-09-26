@@ -18,6 +18,14 @@ muzzle {
     assertInverse.set(true)
     excludeInstrumentationName("hibernate-4.0-core")
   }
+  pass {
+    name.set("Hibernate 6+ procedure calls")
+    group.set("org.hibernate.orm")
+    module.set("hibernate-core")
+    versions.set("[6.0.0.Final,)")
+    assertInverse.set(true)
+    excludeInstrumentationName("hibernate-4.0-core")
+  }
 }
 
 dependencies {
