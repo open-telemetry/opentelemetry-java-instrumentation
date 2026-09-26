@@ -10,6 +10,11 @@ on:
     - cron: '42 9 * * 3' # weekly at 09:42 UTC on Wednesday
   workflow_dispatch:
 
+# superseded pull request runs are cancelled; other events get a unique group so they never queue or cancel
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions: {}
 
 jobs:
