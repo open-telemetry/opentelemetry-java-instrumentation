@@ -33,6 +33,7 @@ import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomi
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizerProvider;
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizerUtil;
 import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.instrumentation.api.internal.SystemProperty;
@@ -418,7 +419,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     }
 
     String result = commonConfig.getString("span_suppression_strategy");
-    if (result == null) {
+    if (result == null && !SemconvStability.v3Preview(openTelemetry)) {
       // Deprecated declarative and flat names remain available until 3.0.
       result = commonConfig.getString("span_suppression_strategy/development");
       if (result == null) {
