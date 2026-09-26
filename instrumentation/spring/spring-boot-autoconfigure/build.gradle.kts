@@ -113,6 +113,7 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
   testImplementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
   testImplementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
+  testImplementation("io.opentelemetry.contrib:opentelemetry-samplers")
   testImplementation("io.opentelemetry:opentelemetry-exporter-logging")
   testImplementation("io.opentelemetry:opentelemetry-exporter-otlp")
   testImplementation("io.opentelemetry:opentelemetry-exporter-zipkin")
