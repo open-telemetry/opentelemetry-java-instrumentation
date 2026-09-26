@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 import static java.util.Objects.requireNonNull;
 
 import com.amazonaws.services.sqs.model.Message;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.util.ListIterator;
@@ -180,8 +179,7 @@ class TracingIterator implements ListIterator<Message> {
 
       // An abandoned iterator can leave an ambient consumer span. Check suppression against the
       // captured parent so it cannot suppress unrelated raw processing.
-      Context suppressionContext = Context.root().with(Span.fromContext(parentContext));
-      if (!tracingList.getInstrumenter().shouldStart(suppressionContext, request)) {
+      if (!tracingList.getInstrumenter().shouldStart(parentContext, request)) {
         return null;
       }
       Context context = tracingList.getInstrumenter().start(parentContext, request);

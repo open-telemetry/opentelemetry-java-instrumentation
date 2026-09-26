@@ -15,11 +15,15 @@ import com.amazonaws.DefaultRequest;
 import com.amazonaws.Response;
 import com.amazonaws.internal.SdkInternalList;
 import com.amazonaws.services.sqs.model.Message;
+import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -272,12 +276,13 @@ class SqsTracingListTest {
 
   @Test
   void nestedTraversalRestoresOuterScopeAndCapturedContext() {
+    Instrumenter<SqsProcessRequest, Response<?>> instrumenter = keyedProcessInstrumenter();
     testing.runWithSpan(
         "parent",
         () -> {
           Context parent = Context.current().with(APPLICATION_KEY, "application");
-          List<Message> outer = tracingMessages(parent, true);
-          List<Message> inner = tracingMessages(parent, true);
+          List<Message> outer = tracingMessages(parent, instrumenter);
+          List<Message> inner = tracingMessages(parent, instrumenter);
           outer.forEach(
               message -> {
                 Context outerContext = Context.current();
@@ -296,6 +301,49 @@ class SqsTracingListTest {
     assertThat(testing.spans())
         .filteredOn(span -> span.getName().equals("process"))
         .allSatisfy(span -> assertThat(span).hasParent(parent));
+  }
+
+  @Test
+  void nestedProcessFromCapturedParentIsSuppressed() {
+    Instrumenter<SqsProcessRequest, Response<?>> instrumenter = keyedProcessInstrumenter();
+    List<Message> messages = tracingMessages(Context.root(), instrumenter);
+    Context previous = Context.current();
+
+    messages.forEach(
+        message -> {
+          Context processContext = Context.current();
+          assertThat(SpanKey.CONSUMER_PROCESS.fromContextOrNull(processContext)).isNotNull();
+          tracingMessages(processContext, instrumenter)
+              .forEach(nested -> assertThat(Context.current()).isSameAs(processContext));
+          assertThat(Context.current()).isSameAs(processContext);
+        });
+
+    assertThat(Context.current()).isSameAs(previous);
+    assertThat(testing.spans()).hasSize(2);
+  }
+
+  @Test
+  void abandonedIteratorDoesNotSuppressUnrelatedResponse() {
+    Instrumenter<SqsProcessRequest, Response<?>> instrumenter = keyedProcessInstrumenter();
+    Iterator<Message> abandoned = tracingMessages(Context.root(), instrumenter).iterator();
+    List<Message> unrelated = tracingMessages(Context.root(), instrumenter);
+    Context previous = Context.current();
+    abandoned.next();
+    Context ambient = Context.current();
+    assertThat(SpanKey.CONSUMER_PROCESS.fromContextOrNull(ambient)).isNotNull();
+
+    unrelated.forEach(
+        message -> {
+          assertThat(Span.current().getSpanContext())
+              .isNotEqualTo(Span.fromContext(ambient).getSpanContext());
+          assertThat(Span.current().getSpanContext().isValid()).isTrue();
+        });
+
+    assertThat(Context.current()).isSameAs(ambient);
+    assertThat(abandoned.hasNext()).isTrue();
+    assertThat(Context.current()).isSameAs(previous);
+    assertThat(testing.spans()).hasSize(3);
+    assertThat(testing.spans()).allSatisfy(span -> assertThat(span).hasNoParent());
   }
 
   @ParameterizedTest
@@ -425,6 +473,17 @@ class SqsTracingListTest {
   }
 
   private static SdkInternalList<Message> tracingMessages(
+      Context parent, Instrumenter<SqsProcessRequest, Response<?>> instrumenter) {
+    return TracingList.wrap(
+        asList(new Message().withMessageId("first"), new Message().withMessageId("second")),
+        instrumenter,
+        new DefaultRequest<>(
+            new ReceiveMessageRequest().withQueueUrl("http://localhost/queue"), "AmazonSQS"),
+        new Response<>(null, null),
+        parent);
+  }
+
+  private static SdkInternalList<Message> tracingMessages(
       Context parent, boolean enabled, List<Message> messages) {
     Instrumenter<SqsProcessRequest, Response<?>> instrumenter =
         Instrumenter.<SqsProcessRequest, Response<?>>builder(
@@ -437,5 +496,14 @@ class SqsTracingListTest {
         new DefaultRequest<>("AmazonSQS"),
         new Response<>(null, null),
         parent);
+  }
+
+  private static Instrumenter<SqsProcessRequest, Response<?>> keyedProcessInstrumenter() {
+    return Instrumenter.<SqsProcessRequest, Response<?>>builder(
+            testing.getOpenTelemetry(), "test", request -> "process")
+        .addAttributesExtractor(
+            MessagingAttributesExtractor.create(
+                new SqsProcessRequestAttributesGetter(), MessagingOperationType.PROCESS, "process"))
+        .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 }
