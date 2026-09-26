@@ -19,6 +19,14 @@ configurations:
       Enable the capture of experimental span attributes `grpc.received.message_count`,
       `grpc.sent.message_count` and `grpc.canceled`.
     default: false
+  - name: otel.instrumentation.grpc.propagate-grpc-deadline
+    declarative_name: java.grpc.propagate_grpc_deadline
+    type: boolean
+    description: >
+      Propagate gRPC deadlines/cancellation across thread hops (e.g. executors) instrumented by
+      the javaagent. When disabled (default), the javaagent avoids propagating a deadline where
+      the application did not intend it to be propagated.
+    default: false
   - name: otel.instrumentation.grpc.client.request-metadata.included
     declarative_name: java.grpc.client.request_metadata.included
     type: list

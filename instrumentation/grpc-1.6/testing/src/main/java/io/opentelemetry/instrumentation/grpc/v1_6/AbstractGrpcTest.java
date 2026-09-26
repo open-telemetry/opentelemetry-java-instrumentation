@@ -1751,7 +1751,8 @@ public abstract class AbstractGrpcTest {
     return createChannel(channelBuilder);
   }
 
-  static ManagedChannel createChannel(ManagedChannelBuilder<?> channelBuilder) throws Exception {
+  public static ManagedChannel createChannel(ManagedChannelBuilder<?> channelBuilder)
+      throws Exception {
     usePlainText(channelBuilder);
     return channelBuilder.build();
   }

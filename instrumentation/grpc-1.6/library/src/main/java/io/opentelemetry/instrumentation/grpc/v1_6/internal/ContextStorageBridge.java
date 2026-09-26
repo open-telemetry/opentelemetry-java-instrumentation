@@ -11,6 +11,7 @@ import io.grpc.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /**
  * {@link Context.Storage} override which uses OpenTelemetry context as the backing store. Both gRPC
@@ -39,12 +40,16 @@ public final class ContextStorageBridge extends Context.Storage {
   private final Context.Storage originalStorage;
 
   public ContextStorageBridge(boolean propagateGrpcDeadline) {
-    this.propagateGrpcDeadline = propagateGrpcDeadline;
-    this.originalStorage = null;
+    this(propagateGrpcDeadline, null);
   }
 
   public ContextStorageBridge(Context.Storage originalStorage) {
-    propagateGrpcDeadline = false;
+    this(false, originalStorage);
+  }
+
+  public ContextStorageBridge(
+      boolean propagateGrpcDeadline, @Nullable Context.Storage originalStorage) {
+    this.propagateGrpcDeadline = propagateGrpcDeadline;
     this.originalStorage = originalStorage;
   }
 
