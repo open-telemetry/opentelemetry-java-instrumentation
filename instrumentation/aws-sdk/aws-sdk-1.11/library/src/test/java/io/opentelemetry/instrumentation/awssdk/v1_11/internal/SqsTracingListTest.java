@@ -15,7 +15,6 @@ import com.amazonaws.DefaultRequest;
 import com.amazonaws.Response;
 import com.amazonaws.internal.SdkInternalList;
 import com.amazonaws.services.sqs.model.Message;
-import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
@@ -25,6 +24,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
@@ -114,6 +114,80 @@ class SqsTracingListTest {
                     processing(iterator.previous());
                   }
                 }));
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "iterator",
+        "listIterator",
+        "indexed listIterator",
+        "spliterator",
+        "view iterator",
+        "view listIterator",
+        "view spliterator",
+        "nested view iterator"
+      })
+  void discardedTraversalHandleDoesNotDisableLaterTraversals(String traversal) {
+    List<Message> messages = tracingMessages();
+    Object unusedHandle;
+    switch (traversal) {
+      case "iterator":
+        unusedHandle = messages.iterator();
+        break;
+      case "listIterator":
+        unusedHandle = messages.listIterator();
+        break;
+      case "indexed listIterator":
+        unusedHandle = messages.listIterator(1);
+        break;
+      case "spliterator":
+        unusedHandle = messages.spliterator();
+        break;
+      case "view iterator":
+        unusedHandle = messages.subList(0, 2).iterator();
+        break;
+      case "view listIterator":
+        unusedHandle = messages.subList(0, 2).listIterator();
+        break;
+      case "view spliterator":
+        unusedHandle = messages.subList(0, 2).spliterator();
+        break;
+      default:
+        unusedHandle = messages.subList(0, 2).subList(0, 1).iterator();
+    }
+    assertThat(unusedHandle).isNotNull();
+
+    messages.forEach(SqsTracingListTest::processing);
+    messages.subList(0, 2).spliterator().forEachRemaining(SqsTracingListTest::processing);
+    assertThat(testing.spans()).hasSize(4);
+  }
+
+  @ParameterizedTest
+  @MethodSource("traversals")
+  void laterTraversalsOfResponseAndViewsTrace(Consumer<List<Message>> firstTraversal) {
+    List<Message> messages = tracingMessages();
+    firstTraversal.accept(messages);
+    assertThat(testing.spans()).hasSize(2);
+
+    messages.forEach(SqsTracingListTest::processing);
+    messages.subList(0, 2).iterator().forEachRemaining(SqsTracingListTest::processing);
+    messages
+        .subList(0, 2)
+        .subList(0, 1)
+        .spliterator()
+        .forEachRemaining(SqsTracingListTest::processing);
+    assertThat(testing.spans()).hasSize(7);
+  }
+
+  @Test
+  void eachHandleRemainsEligibleAfterLaterHandleAcquisition() {
+    List<Message> messages = tracingMessages();
+    Iterator<Message> first = messages.iterator();
+    Iterator<Message> later = messages.subList(0, 2).iterator();
+    later.forEachRemaining(SqsTracingListTest::processing);
+    first.forEachRemaining(SqsTracingListTest::processing);
+    assertThat(testing.spans()).hasSize(4);
   }
 
   @Test
@@ -214,6 +288,28 @@ class SqsTracingListTest {
   }
 
   @Test
+  void splitCallbackFailureFinishesSpanWithoutDisablingSibling() {
+    Spliterator<Message> first = tracingMessages().spliterator();
+    Spliterator<Message> second = requireNonNull(first.trySplit());
+    Context previous = Context.current();
+    IllegalStateException failure = new IllegalStateException("split failed");
+
+    assertThatThrownBy(
+            () ->
+                second.tryAdvance(
+                    message -> {
+                      processing(message);
+                      throw failure;
+                    }))
+        .isSameAs(failure);
+    assertThat(Context.current()).isSameAs(previous);
+    first.forEachRemaining(SqsTracingListTest::processing);
+    assertThat(Context.current()).isSameAs(previous);
+    assertThat(testing.spans()).hasSize(2);
+    assertThat(testing.spans()).anySatisfy(span -> assertThat(span).hasException(failure));
+  }
+
+  @Test
   void nestedTraversalRestoresOuterScopeAndCapturedContext() {
     testing.runWithSpan(
         "parent",
@@ -255,6 +351,7 @@ class SqsTracingListTest {
             message -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
     existingIterator.forEachRemaining(
         message -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    selected.forEach(message -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
     testing.runWithSpan("framework", () -> unrelated.forEach(SqsTracingListTest::processing));
     assertThat(testing.spans())
         .extracting(SpanData::getName)
@@ -282,18 +379,6 @@ class SqsTracingListTest {
         });
     assertThat(visited.toArray()).containsExactly(messages.toArray());
     assertThat(testing.spans()).hasSize(enabled ? 2 : 0);
-  }
-
-  @Test
-  void explicitSuppressionDoesNotDisableLaterTraversal() {
-    List<Message> messages = tracingMessages();
-    InstrumentationUtil.suppressInstrumentation(
-        () ->
-            messages.forEach(
-                message -> assertThat(Span.current().getSpanContext().isValid()).isFalse()));
-    assertThat(testing.spans()).isEmpty();
-    messages.forEach(SqsTracingListTest::processing);
-    assertThat(testing.spans()).hasSize(2);
   }
 
   @Test

@@ -34,11 +34,7 @@ public final class KafkaProcessingOwnershipUtil {
       return;
     }
 
-    KafkaConsumerBatchState batchState = BATCH_STATE.get(records);
-    if (batchState == null) {
-      batchState = new KafkaConsumerBatchState(false);
-      BATCH_STATE.set(records, batchState);
-    }
+    KafkaConsumerBatchState batchState = batchState(records, false);
     batchState.markProcessingOwnedOutsideKafkaClient();
     for (ConsumerRecord<?, ?> record : KafkaConsumerContextUtil.getRecords(records)) {
       BooleanSupplier recordEligibility =
@@ -57,6 +53,21 @@ public final class KafkaProcessingOwnershipUtil {
       KafkaConsumerBatchState batchState = BATCH_STATE.get(records);
       return (batchState == null || batchState.getAsBoolean()) && processingEnabled.getAsBoolean();
     };
+  }
+
+  private static KafkaConsumerBatchState batchState(
+      ConsumerRecords<?, ?> records, boolean applicationPoll) {
+    KafkaConsumerBatchState batchState = BATCH_STATE.get(records);
+    if (batchState == null) {
+      synchronized (records) {
+        batchState = BATCH_STATE.get(records);
+        if (batchState == null) {
+          batchState = new KafkaConsumerBatchState(applicationPoll);
+          BATCH_STATE.set(records, batchState);
+        }
+      }
+    }
+    return batchState;
   }
 
   private KafkaProcessingOwnershipUtil() {}
