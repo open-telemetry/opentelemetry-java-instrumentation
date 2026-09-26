@@ -6,6 +6,10 @@ on:
       - "smoke-tests/images/early-jdk8/**"
       - ".github/workflows/pr-smoke-test-early-jdk8-images.yml"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
