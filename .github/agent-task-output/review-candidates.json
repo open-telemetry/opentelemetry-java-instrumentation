@@ -1,0 +1,14 @@
+{
+  "outcome": "complete",
+  "candidates": [
+    {
+      "path": "instrumentation/sofa-rpc-5.4/testing/src/main/java/io/opentelemetry/instrumentation/sofarpc/v5_4/AbstractSofaRpcTest.java",
+      "start_line": 898,
+      "start_side": "RIGHT",
+      "line": 903,
+      "side": "RIGHT",
+      "body": "[Testing] Please keep the mode-dependent expected exception inline at the span assertions and remove these `@Nullable` annotations. The test guidance says not to add `@Nullable` in test code and not to hide short mode-dependent expected values behind helpers; writing `emitExceptionAsSpanEvents() ? exception : null` at each assertion makes the active mode visible and eliminates this helper.",
+      "evidence": "Changed lines 591, 621, 778, 808, and 868 call `expectedSpanException` solely to select the exception or null; changed lines 898-903 add that helper and two `javax.annotation.Nullable` uses in the testing module. `.github/instructions/java-tests.instructions.md` lines 73-99 require short mode-dependent expected values to remain inline, and `.github/instructions/java-style.instructions.md` line 74 says not to add `@Nullable` in test code."
+    }
+  ]
+}
