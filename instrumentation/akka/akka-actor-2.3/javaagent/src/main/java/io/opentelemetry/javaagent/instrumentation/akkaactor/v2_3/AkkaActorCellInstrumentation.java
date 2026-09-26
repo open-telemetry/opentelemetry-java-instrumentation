@@ -40,6 +40,7 @@ class AkkaActorCellInstrumentation implements TypeInstrumentation {
   public static class InvokeAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static Scope enter(@Advice.Argument(0) Envelope envelope) {
       return TaskAdviceHelper.makePropagatedContextCurrent(
           VirtualFields.ENVELOPE_PROPAGATED_CONTEXT, envelope);
@@ -57,6 +58,7 @@ class AkkaActorCellInstrumentation implements TypeInstrumentation {
   public static class SystemInvokeAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static Scope enter(@Advice.Argument(0) SystemMessage systemMessage) {
       return TaskAdviceHelper.makePropagatedContextCurrent(
           VirtualFields.SYSTEM_MESSAGE_PROPAGATED_CONTEXT, systemMessage);

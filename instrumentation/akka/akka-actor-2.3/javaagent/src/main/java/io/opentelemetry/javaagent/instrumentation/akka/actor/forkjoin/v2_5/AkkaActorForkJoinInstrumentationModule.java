@@ -17,11 +17,14 @@ import java.util.List;
 public class AkkaActorForkJoinInstrumentationModule extends InstrumentationModule {
   public AkkaActorForkJoinInstrumentationModule() {
     super(
-        "akka-actor-forkjoin",
+        "akka-actor",
         expandDeprecatedNames(
-            "akka-actor-forkjoin|deprecated:akka-actor-fork-join",
-            "akka-actor-forkjoin-2.5|deprecated:akka-actor-fork-join-2.5",
-            "akka-actor"));
+            "akka-actor-2.3",
+            "akka-actor-2.3-forkjoin",
+            "akka-actor-2.3|deprecated:akka-actor-forkjoin",
+            "akka-actor-2.3|deprecated:akka-actor-fork-join",
+            "akka-actor-2.3|deprecated:akka-actor-forkjoin-2.5",
+            "akka-actor-2.3|deprecated:akka-actor-fork-join-2.5"));
   }
 
   @Override
