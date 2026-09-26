@@ -257,6 +257,8 @@ readonly INSTRUMENTATIONS=(
   "oracle-ucp-11.2:javaagent:testStableSemconv"
   "oshi-5.0:javaagent:test"
   "oshi-5.0:javaagent:testExperimental"
+  "oshi-5.0:javaagent:testV3Preview"
+  "oshi-5.0:javaagent:testV3PreviewExperimental"
   "pekko:pekko-http-1.0:javaagent:test"
   "play:play-mvc:play-mvc-2.4:javaagent:test"
   "play:play-mvc:play-mvc-2.6:javaagent:check"
