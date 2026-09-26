@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -59,8 +60,11 @@ class ApplicationLoggerFactoryTest {
     underTest.install(applicationLoggerBridge);
 
     verify(logStore, times(3)).currentSize();
-    verify(logStore).flush(applicationLoggerBridge);
-    verify(logStore).setApplicationLoggerFactory(applicationLoggerBridge);
+    // the agent must not call into the application logging system while a class file
+    // transformation is in progress, so install() wraps the bridge before handing it to the
+    // log store - see TransformSafeApplicationLoggerFactory
+    verify(logStore).flush(isA(TransformSafeApplicationLoggerFactory.class));
+    verify(logStore).setApplicationLoggerFactory(isA(TransformSafeApplicationLoggerFactory.class));
     verify(logStore).freeMemory();
 
     underTest.install(applicationLoggerBridge);
@@ -83,8 +87,13 @@ class ApplicationLoggerFactoryTest {
     when(applicationLoggerBridge.create("logger")).thenReturn(applicationLogger);
     underTest.install(applicationLoggerBridge);
 
+    // the logger created after install is no longer an in-memory one, it logs through the
+    // application logging system - wrapped, see TransformSafeApplicationLoggerFactory
     InternalLogger afterInstall = underTest.create("logger");
-    assertThat(afterInstall).isSameAs(applicationLogger);
+    assertThat(afterInstall).isNotInstanceOf(ApplicationLogger.class);
+
+    afterInstall.log(INFO, "direct", null);
+    verify(applicationLogger).log(INFO, "direct", null);
 
     beforeInstall.log(INFO, "after", null);
     verify(applicationLogger).log(INFO, "after", null);

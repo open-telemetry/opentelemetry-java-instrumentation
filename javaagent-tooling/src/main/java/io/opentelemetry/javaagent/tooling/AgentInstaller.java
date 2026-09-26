@@ -38,6 +38,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.EarlyInstru
 import io.opentelemetry.javaagent.tooling.asyncannotationsupport.WeakRefAsyncOperationEndStrategies;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesConfigurer;
+import io.opentelemetry.javaagent.tooling.bytebuddy.TransformationTrackingCircularityLock;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import io.opentelemetry.javaagent.tooling.field.FieldBackedImplementationConfiguration;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstaller;
@@ -251,7 +252,7 @@ public class AgentInstaller {
     // system property
     String originalNexusDisabled = System.setProperty("net.bytebuddy.nexus.disabled", "true");
     try {
-      return new AgentBuilder.Default(byteBuddy);
+      return new AgentBuilder.Default(byteBuddy).with(new TransformationTrackingCircularityLock());
     } finally {
       // restore the original value for the nexus disabled property
       if (originalNexusDisabled != null) {
