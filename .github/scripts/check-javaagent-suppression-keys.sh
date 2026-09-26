@@ -51,7 +51,9 @@ for file in $(find instrumentation -name "*Module.java"); do
     if grep -q "expandDeprecatedNames" "$file" \
       && { grep -q "\"$simple_module_name|deprecated:" "$file" \
         || perl -0ne "exit !/super\(\s*\"$simple_module_name\"/" "$file"; } \
-      && { [ "$module_name" == "$simple_module_name" ] || grep -q "\"$module_name|deprecated:" "$file"; }
+      && { [ "$module_name" == "$simple_module_name" ] \
+        || grep -q "\"$module_name|deprecated:" "$file" \
+        || perl -0ne "exit !/expandDeprecatedNames\(\s*\"$module_name\"\s*,/" "$file"; }
     then
       continue
     fi
