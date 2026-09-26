@@ -19,6 +19,7 @@ import io.nats.client.impl.Headers;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.nats.v2_17.internal.CompletableFutureWrapper;
 import io.opentelemetry.instrumentation.nats.v2_17.internal.NatsMessageWritableHeaders;
 import io.opentelemetry.instrumentation.nats.v2_17.internal.NatsRequest;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -163,33 +164,39 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
         return messageFuture;
       }
 
-      messageFuture =
-          messageFuture.whenComplete(new SpanFinisher(instrumenter, context, connection, request));
-      return CompletableFutureWrapper.wrap(messageFuture, parentContext);
+      return CompletableFutureWrapper.wrap(
+          messageFuture,
+          parentContext,
+          new SpanFinisher(instrumenter, context, connection, request));
     }
   }
 
   @SuppressWarnings("unused")
   public static class RequestBodyAdvice {
 
-    @Advice.OnMethodEnter(
-        skipOn = Advice.OnNonDefaultValue.class,
-        suppress = Throwable.class,
-        inline = false)
-    public static Message onEnter(
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, inline = false)
+    @SuppressWarnings("InterruptedExceptionSwallowed")
+    public static Object[] onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
         @Advice.Argument(1) byte[] body,
-        @Advice.Argument(2) Duration timeout)
-        throws InterruptedException {
-      // call the instrumented request method
-      return connection.request(subject, null, body, timeout);
+        @Advice.Argument(2) Duration timeout) {
+      try {
+        // call the instrumented request method
+        return new Object[] {connection.request(subject, null, body, timeout), null};
+      } catch (Throwable t) {
+        return new Object[] {null, t};
+      }
     }
 
-    @AssignReturned.ToReturned
-    @Advice.OnMethodExit(inline = false)
-    public static Message onExit(@Advice.Enter Message message) {
-      return message;
+    @AssignReturned.ToReturned(index = 0)
+    @AssignReturned.ToThrown(index = 1)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, inline = false)
+    public static Object[] onExit(
+        @Advice.Enter @Nullable Object[] enterResult,
+        @Advice.Return @Nullable Message originalResponse,
+        @Advice.Thrown @Nullable Throwable throwable) {
+      return enterResult != null ? enterResult : new Object[] {originalResponse, throwable};
     }
   }
 
@@ -266,51 +273,63 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RequestMessageAdvice {
 
-    @Advice.OnMethodEnter(
-        skipOn = Advice.OnNonDefaultValue.class,
-        suppress = Throwable.class,
-        inline = false)
-    public static Message onEnter(
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, inline = false)
+    @SuppressWarnings("InterruptedExceptionSwallowed")
+    public static Object[] onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) Message request,
-        @Advice.Argument(1) Duration timeout)
-        throws InterruptedException {
+        @Advice.Argument(1) Duration timeout) {
       if (request == null) {
         return null;
       }
 
-      // call the instrumented request method
-      return connection.request(
-          request.getSubject(), request.getHeaders(), request.getData(), timeout);
+      try {
+        // call the instrumented request method
+        return new Object[] {
+          connection.request(
+              request.getSubject(), request.getHeaders(), request.getData(), timeout),
+          null
+        };
+      } catch (Throwable t) {
+        return new Object[] {null, t};
+      }
     }
 
-    @AssignReturned.ToReturned
-    @Advice.OnMethodExit(inline = false)
-    public static Message onExit(@Advice.Enter Message response) {
-      return response;
+    @AssignReturned.ToReturned(index = 0)
+    @AssignReturned.ToThrown(index = 1)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, inline = false)
+    public static Object[] onExit(
+        @Advice.Enter @Nullable Object[] enterResult,
+        @Advice.Return @Nullable Message originalResponse,
+        @Advice.Thrown @Nullable Throwable throwable) {
+      return enterResult != null ? enterResult : new Object[] {originalResponse, throwable};
     }
   }
 
   @SuppressWarnings("unused")
   public static class RequestFutureBodyAdvice {
 
-    @Advice.OnMethodEnter(
-        skipOn = Advice.OnNonDefaultValue.class,
-        suppress = Throwable.class,
-        inline = false)
-    public static CompletableFuture<Message> onEnter(
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, inline = false)
+    public static Object[] onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
         @Advice.Argument(1) byte[] body) {
-      // call the instrumented request method
-      return connection.request(subject, null, body);
+      try {
+        // call the instrumented request method
+        return new Object[] {connection.request(subject, null, body), null};
+      } catch (Throwable t) {
+        return new Object[] {null, t};
+      }
     }
 
-    @AssignReturned.ToReturned
-    @Advice.OnMethodExit(inline = false)
-    public static CompletableFuture<Message> onExit(
-        @Advice.Enter CompletableFuture<Message> future) {
-      return future;
+    @AssignReturned.ToReturned(index = 0)
+    @AssignReturned.ToThrown(index = 1)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, inline = false)
+    public static Object[] onExit(
+        @Advice.Enter Object[] enterResult,
+        @Advice.Return @Nullable CompletableFuture<Message> originalResult,
+        @Advice.Thrown @Nullable Throwable throwable) {
+      return enterResult != null ? enterResult : new Object[] {originalResult, throwable};
     }
   }
 
@@ -348,51 +367,60 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RequestFutureMessageAdvice {
 
-    @Advice.OnMethodEnter(
-        skipOn = Advice.OnNonDefaultValue.class,
-        suppress = Throwable.class,
-        inline = false)
-    public static CompletableFuture<Message> onEnter(
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, inline = false)
+    public static Object[] onEnter(
         @Advice.This Connection connection, @Advice.Argument(0) Message message) {
       // execute original method body to handle null message
       if (message == null) {
         return null;
       }
 
-      // call the instrumented request method
-      return connection.request(message.getSubject(), message.getHeaders(), message.getData());
+      try {
+        // call the instrumented request method
+        return new Object[] {
+          connection.request(message.getSubject(), message.getHeaders(), message.getData()), null
+        };
+      } catch (Throwable t) {
+        return new Object[] {null, t};
+      }
     }
 
-    @AssignReturned.ToReturned
-    @Advice.OnMethodExit(inline = false)
-    public static CompletableFuture<Message> onExit(
-        @Advice.Return CompletableFuture<Message> originalResult,
-        @Advice.Enter CompletableFuture<Message> future) {
-      return future != null ? future : originalResult;
+    @AssignReturned.ToReturned(index = 0)
+    @AssignReturned.ToThrown(index = 1)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, inline = false)
+    public static Object[] onExit(
+        @Advice.Enter @Nullable Object[] enterResult,
+        @Advice.Return @Nullable CompletableFuture<Message> originalResult,
+        @Advice.Thrown @Nullable Throwable throwable) {
+      return enterResult != null ? enterResult : new Object[] {originalResult, throwable};
     }
   }
 
   @SuppressWarnings("unused")
   public static class RequestTimeoutFutureBodyAdvice {
 
-    @Advice.OnMethodEnter(
-        skipOn = Advice.OnNonDefaultValue.class,
-        suppress = Throwable.class,
-        inline = false)
-    public static CompletableFuture<Message> onEnter(
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, inline = false)
+    public static Object[] onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
         @Advice.Argument(1) byte[] body,
         @Advice.Argument(2) Duration timeout) {
-      // call the instrumented requestWithTimeout method
-      return connection.requestWithTimeout(subject, null, body, timeout);
+      try {
+        // call the instrumented requestWithTimeout method
+        return new Object[] {connection.requestWithTimeout(subject, null, body, timeout), null};
+      } catch (Throwable t) {
+        return new Object[] {null, t};
+      }
     }
 
-    @AssignReturned.ToReturned
-    @Advice.OnMethodExit(inline = false)
-    public static CompletableFuture<Message> onExit(
-        @Advice.Enter CompletableFuture<Message> future) {
-      return future;
+    @AssignReturned.ToReturned(index = 0)
+    @AssignReturned.ToThrown(index = 1)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, inline = false)
+    public static Object[] onExit(
+        @Advice.Enter Object[] enterResult,
+        @Advice.Return @Nullable CompletableFuture<Message> originalResult,
+        @Advice.Thrown @Nullable Throwable throwable) {
+      return enterResult != null ? enterResult : new Object[] {originalResult, throwable};
     }
   }
 
@@ -431,35 +459,34 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RequestTimeoutFutureMessageAdvice {
 
-    @AssignReturned.ToArguments(@ToArgument(value = 0, index = 1))
-    @Advice.OnMethodEnter(
-        skipOn = Advice.OnNonDefaultValue.class,
-        suppress = Throwable.class,
-        inline = false)
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, inline = false)
     public static Object[] onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) Message message,
         @Advice.Argument(1) Duration timeout) {
       if (message == null) {
-        return new Object[] {null, message};
+        return null;
       }
-      // call the instrumented requestWithTimeout method
-      CompletableFuture<Message> future =
+      try {
+        // call the instrumented requestWithTimeout method
+        return new Object[] {
           connection.requestWithTimeout(
-              message.getSubject(), message.getHeaders(), message.getData(), timeout);
-
-      return new Object[] {future, message};
+              message.getSubject(), message.getHeaders(), message.getData(), timeout),
+          null
+        };
+      } catch (Throwable t) {
+        return new Object[] {null, t};
+      }
     }
 
-    @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static CompletableFuture<Message> onExit(
+    @AssignReturned.ToReturned(index = 0)
+    @AssignReturned.ToThrown(index = 1)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, inline = false)
+    public static Object[] onExit(
+        @Advice.Enter @Nullable Object[] enterResult,
         @Advice.Return @Nullable CompletableFuture<Message> originalResult,
-        @Advice.Enter Object[] enterResult) {
-
-      @SuppressWarnings("unchecked") // fine
-      CompletableFuture<Message> future = (CompletableFuture<Message>) enterResult[0];
-      return future != null ? future : originalResult;
+        @Advice.Thrown @Nullable Throwable throwable) {
+      return enterResult != null ? enterResult : new Object[] {originalResult, throwable};
     }
   }
 }
