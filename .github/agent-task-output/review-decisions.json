@@ -1,0 +1,14 @@
+{
+  "schema": {
+    "id": "github.copilot.copilot-review-loop-decision-report",
+    "version": 3
+  },
+  "decisions": [
+    {
+      "finding_id": "finding-6462329732e9237705e75231",
+      "disposition": "no_change",
+      "reason": "The pull request description now states that both deprecated fallbacks continue to work under v3-preview, matching the implementation and documentation.",
+      "proposed_reply": "The pull request description has already been corrected to say that both deprecated fallbacks continue to work under v3-preview."
+    }
+  ]
+}
