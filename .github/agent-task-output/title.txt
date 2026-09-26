@@ -1,0 +1,1 @@
+Tighten Copilot review guidance for configuration and tests
