@@ -5,9 +5,11 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry;
 
+import static io.opentelemetry.semconv.SchemaUrls.V1_44_0;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
@@ -305,9 +307,108 @@ class RuntimeTelemetryBuilderTest {
     Collection<MetricData> metrics = telemetry.reader.collectAllMetrics();
 
     assertMetricScopes(metrics, "jvm.cpu.time", "jmx");
+    assertMetricSchema(metrics, "jvm.cpu.time", "jmx", V1_44_0);
+  }
+
+  @Test
+  void defaultJmxMetricsUseJvmSchema() {
+    TestTelemetry telemetry = buildTelemetry(include("not.a.jvm.metric"), false);
+
+    assertMetricSchema(telemetry.reader.collectAllMetrics(), "jvm.memory.used", "jmx", V1_44_0);
+  }
+
+  @Test
+  void conventionalJfrMetricsUseJvmSchemaWithoutJmx() {
+    TestTelemetry telemetry =
+        buildTelemetry(include("jvm.cpu.recent_utilization"), false, true, false, false);
+
+    await()
+        .untilAsserted(
+            () ->
+                assertMetricSchema(
+                    telemetry.reader.collectAllMetrics(),
+                    "jvm.cpu.recent_utilization",
+                    "jfr",
+                    V1_44_0));
+  }
+
+  @Test
+  void excludedNonConventionalJfrMetricsUseJvmSchema() {
+    TestTelemetry telemetry =
+        buildTelemetry(
+            IncludeExclude.builder()
+                .setIncluded(singletonList("jvm.cpu.*"))
+                .setExcluded(asList("jvm.cpu.context_switch", "jvm.cpu.longlock"))
+                .build(),
+            false);
+
+    await()
+        .untilAsserted(
+            () ->
+                assertMetricSchema(
+                    telemetry.reader.collectAllMetrics(),
+                    "jvm.cpu.recent_utilization",
+                    "jfr",
+                    V1_44_0));
+  }
+
+  @Test
+  void mixedJfrMetricsHaveNoSchema() {
+    TestTelemetry telemetry =
+        buildTelemetry(include("jvm.cpu.recent_utilization", "jvm.cpu.longlock"), false);
+
+    await()
+        .untilAsserted(
+            () ->
+                assertMetricSchema(
+                    telemetry.reader.collectAllMetrics(),
+                    "jvm.cpu.recent_utilization",
+                    "jfr",
+                    null));
+    assertMetricSchema(telemetry.reader.collectAllMetrics(), "jvm.cpu.time", "jmx", V1_44_0);
+  }
+
+  @Test
+  void experimentalJfrMetricsHaveNoSchema() {
+    TestTelemetry telemetry =
+        buildTelemetry(include("jvm.cpu.recent_utilization"), false, false, false, true);
+
+    await()
+        .untilAsserted(
+            () ->
+                assertMetricSchema(
+                    telemetry.reader.collectAllMetrics(),
+                    "jvm.cpu.recent_utilization",
+                    "jfr",
+                    null));
+  }
+
+  @Test
+  void legacyJfrCpuCountHasNoSchema() {
+    TestTelemetry telemetry =
+        buildTelemetry(
+            include("jvm.cpu.limit", "jvm.cpu.recent_utilization"), false, false, true, false);
+
+    await()
+        .untilAsserted(
+            () ->
+                assertMetricSchema(
+                    telemetry.reader.collectAllMetrics(),
+                    "jvm.cpu.recent_utilization",
+                    "jfr",
+                    null));
   }
 
   private TestTelemetry buildTelemetry(IncludeExclude jfrMetrics, boolean experimentalJmx) {
+    return buildTelemetry(jfrMetrics, experimentalJmx, false, false, false);
+  }
+
+  private TestTelemetry buildTelemetry(
+      IncludeExclude jfrMetrics,
+      boolean experimentalJmx,
+      boolean disableJmx,
+      boolean legacyJfrCpuCount,
+      boolean experimentalJfr) {
     InMemoryMetricReader reader = InMemoryMetricReader.create();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(reader).build();
@@ -317,6 +418,9 @@ class RuntimeTelemetryBuilderTest {
     RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(sdk);
     Experimental.setJfrMetrics(builder, jfrMetrics);
     Experimental.setEmitExperimentalMetrics(builder, experimentalJmx);
+    Experimental.setEmitExperimentalJfrMetrics(builder, experimentalJfr);
+    Internal.setUseLegacyJfrCpuCountMetric(builder, legacyJfrCpuCount);
+    Internal.setDisableJmx(builder, disableJmx);
     Internal.setJmxInstrumentationName(builder, "jmx");
     Internal.setJfrInstrumentationName(builder, "jfr");
     RuntimeTelemetry runtimeTelemetry = builder.build();
@@ -334,6 +438,15 @@ class RuntimeTelemetryBuilderTest {
         .filteredOn(metric -> metric.getName().equals(metricName))
         .extracting(metric -> metric.getInstrumentationScopeInfo().getName())
         .containsExactlyInAnyOrder(expectedScopes);
+  }
+
+  private static void assertMetricSchema(
+      Collection<MetricData> metrics, String metricName, String scopeName, String schemaUrl) {
+    assertThat(metrics)
+        .filteredOn(metric -> metric.getName().equals(metricName))
+        .filteredOn(metric -> metric.getInstrumentationScopeInfo().getName().equals(scopeName))
+        .extracting(metric -> metric.getInstrumentationScopeInfo().getSchemaUrl())
+        .containsExactly(schemaUrl);
   }
 
   private static final class TestTelemetry {
