@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactor.v3_4.operator;
 
+import static io.opentelemetry.javaagent.extension.instrumentation.internal.DeprecatedInstrumentationNames.expandDeprecatedNames;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Collections.singletonList;
 
@@ -20,9 +21,11 @@ public class ContextPropagationOperator34InstrumentationModule extends Instrumen
   public ContextPropagationOperator34InstrumentationModule() {
     super(
         "reactor",
-        "reactor-3.4",
-        "reactor-context-propagation-operator",
-        "reactor-3.4-context-propagation-operator");
+        expandDeprecatedNames(
+            "reactor-3.1",
+            "reactor-context-propagation-operator",
+            "reactor-3.4-context-propagation-operator",
+            "reactor-3.1|deprecated:reactor-3.4"));
   }
 
   @Override

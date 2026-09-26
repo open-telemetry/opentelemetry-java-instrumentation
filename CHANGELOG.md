@@ -17,6 +17,9 @@
 
 ### 🚫 Deprecations
 
+- Deprecate `otel.instrumentation.reactor-3.4.enabled` in favor of
+  `otel.instrumentation.reactor-3.1.enabled`. The old name remains supported outside v3-preview;
+  v3-preview ignores it. ([#20271](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20271))
 - Deprecate the source-specific experimental selectors for Log4j `MapMessage` entries, Logback
   key-value pairs, Logstash markers, and Logstash structured arguments in favor of the common
   structured logging attribute selector. The source-specific properties are ignored under

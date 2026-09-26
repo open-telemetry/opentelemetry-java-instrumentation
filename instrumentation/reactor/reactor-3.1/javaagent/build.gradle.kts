@@ -70,11 +70,36 @@ testing {
         implementation("io.projectreactor:reactor-core:${baseVersion("3.4.0").orLatest()}")
       }
     }
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":javaagent-extension-api"))
+        implementation(project(":muzzle"))
+      }
+    }
+    register<JvmTestSuite>("v3PreviewUnitTests") {
+      sources {
+        java {
+          setSrcDirs(listOf("src/unitTests/java"))
+        }
+      }
+      dependencies {
+        implementation(project())
+        implementation(project(":javaagent-extension-api"))
+        implementation(project(":muzzle"))
+      }
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+          }
+        }
+      }
+    }
   }
 }
 
 tasks {
-
   val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
