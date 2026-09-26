@@ -77,6 +77,9 @@ public class OpenTelemetryInstrumentationHelper {
                   }
                 });
     builder.addAttributesExtractor(new GraphqlAttributesExtractor());
+    // The GraphQL convention recommends SERVER spans, but execution can run beneath an HTTP
+    // server or controller span, where a nested SERVER span could be suppressed. Keep the default
+    // INTERNAL kind.
     builder.setSchemaUrl(SchemaUrls.V1_44_0);
     return new OpenTelemetryInstrumentationHelper(
         builder.buildInstrumenter(), captureQuery, sanitizeQuery, addOperationNameToSpanName);
