@@ -307,25 +307,25 @@ class RuntimeTelemetryBuilderTest {
     Collection<MetricData> metrics = telemetry.reader.collectAllMetrics();
 
     assertMetricScopes(metrics, "jvm.cpu.time", "jmx");
-    assertMetricSchema(metrics, "jvm.cpu.time", "jmx", V1_44_0);
+    assertMetricSchemaUrl(metrics, "jvm.cpu.time", "jmx", V1_44_0);
   }
 
   @Test
-  void defaultJmxMetricsUseJvmSchema() {
+  void defaultJmxMetricsUseSemconvSchemaUrl() {
     TestTelemetry telemetry = buildTelemetry(include("not.a.jvm.metric"), false);
 
-    assertMetricSchema(telemetry.reader.collectAllMetrics(), "jvm.memory.used", "jmx", V1_44_0);
+    assertMetricSchemaUrl(telemetry.reader.collectAllMetrics(), "jvm.memory.used", "jmx", V1_44_0);
   }
 
   @Test
-  void conventionalJfrMetricsUseJvmSchemaWithoutJmx() {
+  void jfrMetricsCoveredBySchemaUseSchemaUrlWithoutJmx() {
     TestTelemetry telemetry =
         buildTelemetry(include("jvm.cpu.recent_utilization"), false, true, false, false);
 
     await()
         .untilAsserted(
             () ->
-                assertMetricSchema(
+                assertMetricSchemaUrl(
                     telemetry.reader.collectAllMetrics(),
                     "jvm.cpu.recent_utilization",
                     "jfr",
@@ -333,7 +333,7 @@ class RuntimeTelemetryBuilderTest {
   }
 
   @Test
-  void excludedNonConventionalJfrMetricsUseJvmSchema() {
+  void excludingJfrMetricsNotCoveredBySchemaAllowsSchemaUrl() {
     TestTelemetry telemetry =
         buildTelemetry(
             IncludeExclude.builder()
@@ -345,7 +345,7 @@ class RuntimeTelemetryBuilderTest {
     await()
         .untilAsserted(
             () ->
-                assertMetricSchema(
+                assertMetricSchemaUrl(
                     telemetry.reader.collectAllMetrics(),
                     "jvm.cpu.recent_utilization",
                     "jfr",
@@ -353,30 +353,30 @@ class RuntimeTelemetryBuilderTest {
   }
 
   @Test
-  void mixedJfrMetricsHaveNoSchema() {
+  void jfrSelectionWithUncoveredMetricHasNoSchemaUrl() {
     TestTelemetry telemetry =
         buildTelemetry(include("jvm.cpu.recent_utilization", "jvm.cpu.longlock"), false);
 
     await()
         .untilAsserted(
             () ->
-                assertMetricSchema(
+                assertMetricSchemaUrl(
                     telemetry.reader.collectAllMetrics(),
                     "jvm.cpu.recent_utilization",
                     "jfr",
                     null));
-    assertMetricSchema(telemetry.reader.collectAllMetrics(), "jvm.cpu.time", "jmx", V1_44_0);
+    assertMetricSchemaUrl(telemetry.reader.collectAllMetrics(), "jvm.cpu.time", "jmx", V1_44_0);
   }
 
   @Test
-  void experimentalJfrMetricsHaveNoSchema() {
+  void experimentalJfrSelectionHasNoSchemaUrl() {
     TestTelemetry telemetry =
         buildTelemetry(include("jvm.cpu.recent_utilization"), false, false, false, true);
 
     await()
         .untilAsserted(
             () ->
-                assertMetricSchema(
+                assertMetricSchemaUrl(
                     telemetry.reader.collectAllMetrics(),
                     "jvm.cpu.recent_utilization",
                     "jfr",
@@ -384,7 +384,7 @@ class RuntimeTelemetryBuilderTest {
   }
 
   @Test
-  void legacyJfrCpuCountHasNoSchema() {
+  void legacyJfrCpuCountLeavesSchemaUrlUnset() {
     TestTelemetry telemetry =
         buildTelemetry(
             include("jvm.cpu.limit", "jvm.cpu.recent_utilization"), false, false, true, false);
@@ -392,7 +392,7 @@ class RuntimeTelemetryBuilderTest {
     await()
         .untilAsserted(
             () ->
-                assertMetricSchema(
+                assertMetricSchemaUrl(
                     telemetry.reader.collectAllMetrics(),
                     "jvm.cpu.recent_utilization",
                     "jfr",
@@ -440,7 +440,7 @@ class RuntimeTelemetryBuilderTest {
         .containsExactlyInAnyOrder(expectedScopes);
   }
 
-  private static void assertMetricSchema(
+  private static void assertMetricSchemaUrl(
       Collection<MetricData> metrics, String metricName, String scopeName, String schemaUrl) {
     assertThat(metrics)
         .filteredOn(metric -> metric.getName().equals(metricName))

@@ -112,7 +112,9 @@ public final class RuntimeTelemetryBuilder {
                 getMeter(
                     openTelemetry,
                     jfrName,
-                    hasNonConventionalJfrMetrics(effectiveJfrMetrics) ? null : SchemaUrls.V1_44_0),
+                    maySelectJfrMetricsNotCoveredBySchema(effectiveJfrMetrics)
+                        ? null
+                        : SchemaUrls.V1_44_0),
                 suppressOverlappingJmxMetrics && !disableJmx,
                 emitExperimentalMetrics);
     Set<String> jfrMetricNames = jfrTelemetry.getMetricNames();
@@ -130,7 +132,7 @@ public final class RuntimeTelemetryBuilder {
     return new RuntimeTelemetry(observables, jfrTelemetry.getTelemetry());
   }
 
-  private boolean hasNonConventionalJfrMetrics(IncludeExclude selector) {
+  private boolean maySelectJfrMetricsNotCoveredBySchema(IncludeExclude selector) {
     for (String metricName : EXPERIMENTAL_JFR_METRICS) {
       if (!metricName.startsWith("jvm.buffer.") && selector.matches(metricName)) {
         return true;
