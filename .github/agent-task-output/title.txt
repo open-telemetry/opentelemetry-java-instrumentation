@@ -1,0 +1,1 @@
+Stabilize controller and view telemetry configuration names
