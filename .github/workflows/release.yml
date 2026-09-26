@@ -8,6 +8,8 @@ permissions:
 jobs:
   common:
     uses: $/.github/workflows/build-common.yml
+    secrets:
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
   # test-latest-deps is intentionally not included in the release workflows
   # because any time a new library version is released to maven central

@@ -14,14 +14,18 @@ jobs:
     uses: $/.github/workflows/build-common.yml
     secrets:
       DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
   test-latest-deps:
     uses: $/.github/workflows/reusable-test-latest-deps.yml
     secrets:
       DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
   muzzle:
     uses: $/.github/workflows/reusable-muzzle.yml
+    secrets:
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
   lint:
     uses: $/.github/workflows/reusable-lint-check.yml

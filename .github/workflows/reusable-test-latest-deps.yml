@@ -13,6 +13,8 @@ on:
     secrets:
       DEVELOCITY_ACCESS_KEY:
         required: false
+      GRADLE_ENCRYPTION_KEY:
+        required: false
 
 permissions:
   contents: read
@@ -60,6 +62,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
         with:
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
           cache-read-only: ${{ inputs.cache-read-only }}
 
       - name: List tests

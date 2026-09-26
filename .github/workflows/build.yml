@@ -17,6 +17,7 @@ jobs:
       cache-read-only: ${{ github.event_name != 'push' || github.ref != 'refs/heads/main' }}
     secrets:
       DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
   test-latest-deps:
     # release branches are excluded
@@ -26,6 +27,7 @@ jobs:
     uses: $/.github/workflows/reusable-test-latest-deps.yml
     secrets:
       DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
   muzzle:
     # release branches are excluded
@@ -33,6 +35,8 @@ jobs:
     # which requires unnecessary release branch maintenance, especially for patches
     if: "!startsWith(github.ref_name, 'release/')"
     uses: $/.github/workflows/reusable-muzzle.yml
+    secrets:
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
   lint:
     # release branches are excluded because the README.md javaagent download link has to be updated

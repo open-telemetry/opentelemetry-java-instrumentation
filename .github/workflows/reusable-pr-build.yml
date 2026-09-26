@@ -20,6 +20,9 @@ on:
       skip-servlet-images:
         type: boolean
         default: false
+    secrets:
+      GRADLE_ENCRYPTION_KEY:
+        required: false
 
 permissions:
   contents: read
@@ -32,11 +35,15 @@ jobs:
       skip-windows-smoke-tests: ${{ inputs.skip-windows-smoke-tests }}
       reduced-appserver-tests: ${{ inputs.reduced-appserver-tests }}
       cache-read-only: true
+    secrets:
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
   test-latest-deps:
     uses: $/.github/workflows/reusable-test-latest-deps.yml
     with:
       cache-read-only: true
+    secrets:
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
   test-native:
     if: "!inputs.skip-native-tests"
@@ -46,6 +53,8 @@ jobs:
     uses: $/.github/workflows/reusable-muzzle.yml
     with:
       cache-read-only: true
+    secrets:
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
   lint:
     # release branches are excluded because the README.md javaagent download link has to be updated

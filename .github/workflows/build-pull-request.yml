@@ -101,3 +101,5 @@ jobs:
       skip-windows-smoke-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test windows') }}
       reduced-appserver-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test full smoke') && !contains(github.event.pull_request.labels.*.name, 'test openj9') }}
       skip-servlet-images: ${{ needs.resolve-servlet-images.outputs.build-servlet-images != 'true' }}
+    secrets:
+      GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
