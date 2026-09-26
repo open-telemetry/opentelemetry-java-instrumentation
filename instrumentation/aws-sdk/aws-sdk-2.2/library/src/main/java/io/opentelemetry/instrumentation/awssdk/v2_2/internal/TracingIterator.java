@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
 import static java.util.Objects.requireNonNull;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.util.Iterator;
@@ -66,7 +65,7 @@ class TracingIterator implements Iterator<Message> {
       }
 
       SqsProcessRequest request = SqsProcessRequest.create(tracingList.getRequest(), sqsMessage);
-      if (shouldStartProcessing(tracingList, parentContext, request)) {
+      if (tracingList.getInstrumenter().shouldStart(parentContext, request)) {
         currentRequest = request;
         currentContext = tracingList.getInstrumenter().start(parentContext, request);
         currentScope = currentContext.makeCurrent();
@@ -105,7 +104,7 @@ class TracingIterator implements Iterator<Message> {
       parentContext = sqsMessage.getCreationContext();
     }
     SqsProcessRequest request = SqsProcessRequest.create(tracingList.getRequest(), sqsMessage);
-    if (!shouldStartProcessing(tracingList, parentContext, request)) {
+    if (!tracingList.getInstrumenter().shouldStart(parentContext, request)) {
       action.accept(message);
       return;
     }
@@ -120,14 +119,6 @@ class TracingIterator implements Iterator<Message> {
     } finally {
       tracingList.getInstrumenter().end(context, request, tracingList.getResponse(), error);
     }
-  }
-
-  private static boolean shouldStartProcessing(
-      TracingList tracingList, Context parentContext, SqsProcessRequest request) {
-    // Iterator spans can leak if traversal is abandoned. Do not inherit ambient consumer
-    // suppression when selecting another message, but retain the captured processing parent span.
-    Context suppressionContext = Context.root().with(Span.fromContext(parentContext));
-    return tracingList.getInstrumenter().shouldStart(suppressionContext, request);
   }
 
   @Override

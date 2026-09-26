@@ -26,6 +26,7 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.io.IOException;
@@ -392,6 +393,69 @@ class SqsTracingListTest {
               assertThat(span.getParentSpanId())
                   .isEqualTo(capturedParent.getSpanContext().getSpanId());
             });
+  }
+
+  @Test
+  void capturedProcessContextSuppressesNestedTraversals() {
+    Instrumenter<SqsProcessRequest, Response> instrumenter = newConsumerProcessInstrumenter();
+    SqsProcessRequest outerRequest =
+        SqsProcessRequest.create(
+            new ExecutionAttributes(),
+            SqsMessageImpl.wrap(Message.builder().messageId("outer-message").build()));
+    Context parentContext = instrumenter.start(Context.root(), outerRequest);
+    assertThat(SpanKey.CONSUMER_PROCESS.fromContextOrNull(parentContext)).isNotNull();
+    TracingList tracingList = tracingMessages(1, new ArrayList<>(), instrumenter, parentContext);
+
+    try {
+      Iterator<Message> iterator = tracingList.iterator();
+      assertThat(iterator.next().messageId()).isEqualTo("message-0");
+      assertThat(Span.current().getSpanContext().isValid()).isFalse();
+      assertThat(iterator.hasNext()).isFalse();
+
+      tracingList.forEach(
+          unused -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+      tracingList
+          .spliterator()
+          .forEachRemaining(
+              unused -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+      assertThat(tracingList.listIterator().next().messageId()).isEqualTo("message-0");
+      assertThat(Span.current().getSpanContext().isValid()).isFalse();
+    } finally {
+      instrumenter.end(parentContext, outerRequest, null, null);
+    }
+
+    testing.waitForTraces(1);
+    assertThat(testing.spans())
+        .singleElement()
+        .satisfies(
+            span ->
+                assertThat(span.getAttributes().get(MESSAGING_MESSAGE_ID))
+                    .isEqualTo("outer-message"));
+  }
+
+  @Test
+  void abandonedIteratorDoesNotSuppressUnrelatedDelivery() {
+    TracingList first = tracingMessages(1, new ArrayList<>());
+    TracingList unrelated = tracingMessages(1, new ArrayList<>());
+    Iterator<Message> iterator = first.iterator();
+
+    try {
+      assertThat(iterator.next().messageId()).isEqualTo("message-0");
+      SpanContext firstSpan = Span.current().getSpanContext();
+      assertThat(firstSpan.isValid()).isTrue();
+
+      unrelated.forEach(
+          unused -> {
+            assertThat(Span.current().getSpanContext().isValid()).isTrue();
+            assertThat(Span.current().getSpanContext()).isNotEqualTo(firstSpan);
+          });
+      assertThat(Span.current().getSpanContext()).isEqualTo(firstSpan);
+    } finally {
+      assertThat(iterator.hasNext()).isFalse();
+    }
+
+    testing.waitForTraces(2);
+    assertThat(testing.spans()).hasSize(2);
   }
 
   @Test
