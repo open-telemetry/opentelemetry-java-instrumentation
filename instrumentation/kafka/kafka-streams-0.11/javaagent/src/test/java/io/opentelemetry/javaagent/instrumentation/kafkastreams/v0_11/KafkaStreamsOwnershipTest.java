@@ -50,7 +50,7 @@ class KafkaStreamsOwnershipTest extends KafkaStreamsBaseTest {
   }
 
   @Test
-  void nestedRawKafkaProcessingIsNotSuppressed() throws Exception {
+  void nestedRawKafkaProcessingIsSuppressed() throws Exception {
     KafkaStreamsReflectionUtil.StreamBuilder streamBuilder =
         KafkaStreamsReflectionUtil.createBuilder();
     KStream<Integer, String> values =
@@ -60,7 +60,7 @@ class KafkaStreamsOwnershipTest extends KafkaStreamsBaseTest {
                   ConsumerRecords<Integer, String> nestedRecords =
                       records("nested-topic", value.toLowerCase(Locale.ROOT));
                   for (ConsumerRecord<Integer, String> ignored : nestedRecords) {
-                    // Iterating a raw Kafka batch represents application-owned consumer work.
+                    // Raw iteration within the Streams Process scope must not start another span.
                   }
                   return value;
                 });
@@ -75,14 +75,16 @@ class KafkaStreamsOwnershipTest extends KafkaStreamsBaseTest {
 
     await()
         .atMost(Duration.ofSeconds(30))
-        .untilAsserted(
-            () -> {
-              SpanData streamsProcess = onlySpan("io.opentelemetry.kafka-streams-0.11", inputTopic);
-              SpanData nestedProcess =
-                  onlySpan("io.opentelemetry.kafka-clients-0.11", "nested-topic");
-              assertThat(nestedProcess.getTraceId()).isEqualTo(streamsProcess.getTraceId());
-              assertThat(nestedProcess.getParentSpanId()).isEqualTo(streamsProcess.getSpanId());
-            });
+        .untilAsserted(() -> onlySpan("io.opentelemetry.kafka-streams-0.11", inputTopic));
+    assertThat(testing.spans())
+        .filteredOn(
+            span ->
+                span.getName()
+                    .equals(
+                        emitStableMessagingSemconv()
+                            ? "process nested-topic"
+                            : "nested-topic process"))
+        .isEmpty();
   }
 
   @Test
