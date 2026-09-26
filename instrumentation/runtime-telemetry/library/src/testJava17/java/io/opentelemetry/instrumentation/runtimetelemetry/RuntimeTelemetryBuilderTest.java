@@ -353,9 +353,9 @@ class RuntimeTelemetryBuilderTest {
   }
 
   @Test
-  void jfrSelectionWithUncoveredMetricHasNoSchemaUrl() {
+  void jfrSelectionWithUncoveredMetricKeepsSchemaOnCoveredMetric() {
     TestTelemetry telemetry =
-        buildTelemetry(include("jvm.cpu.recent_utilization", "jvm.cpu.longlock"), false);
+        buildTelemetry(include("jvm.cpu.recent_utilization", "jvm.cpu.context_switch"), false);
 
     await()
         .untilAsserted(
@@ -364,12 +364,14 @@ class RuntimeTelemetryBuilderTest {
                     telemetry.reader.collectAllMetrics(),
                     "jvm.cpu.recent_utilization",
                     "jfr",
-                    null));
+                    V1_44_0));
+    assertMetricSchemaUrl(
+        telemetry.reader.collectAllMetrics(), "jvm.cpu.context_switch", "jfr", null);
     assertMetricSchemaUrl(telemetry.reader.collectAllMetrics(), "jvm.cpu.time", "jmx", V1_44_0);
   }
 
   @Test
-  void experimentalJfrSelectionHasNoSchemaUrl() {
+  void experimentalJfrSelectionKeepsSchemaOnCoveredMetrics() {
     TestTelemetry telemetry =
         buildTelemetry(include("jvm.cpu.recent_utilization"), false, false, false, true);
 
@@ -380,11 +382,13 @@ class RuntimeTelemetryBuilderTest {
                     telemetry.reader.collectAllMetrics(),
                     "jvm.cpu.recent_utilization",
                     "jfr",
-                    null));
+                    V1_44_0));
+    assertMetricSchemaUrl(
+        telemetry.reader.collectAllMetrics(), "jvm.cpu.context_switch", "jfr", null);
   }
 
   @Test
-  void legacyJfrCpuCountLeavesSchemaUrlUnset() {
+  void legacyJfrCpuCountDoesNotSuppressOtherSchemaUrls() {
     TestTelemetry telemetry =
         buildTelemetry(
             include("jvm.cpu.limit", "jvm.cpu.recent_utilization"), false, false, true, false);
@@ -396,7 +400,8 @@ class RuntimeTelemetryBuilderTest {
                     telemetry.reader.collectAllMetrics(),
                     "jvm.cpu.recent_utilization",
                     "jfr",
-                    null));
+                    V1_44_0));
+    assertMetricSchemaUrl(telemetry.reader.collectAllMetrics(), "jvm.cpu.limit", "jfr", null);
   }
 
   private TestTelemetry buildTelemetry(IncludeExclude jfrMetrics, boolean experimentalJmx) {

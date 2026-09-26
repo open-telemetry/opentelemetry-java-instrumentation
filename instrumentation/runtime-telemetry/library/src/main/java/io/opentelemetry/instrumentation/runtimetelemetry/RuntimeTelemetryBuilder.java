@@ -109,12 +109,9 @@ public final class RuntimeTelemetryBuilder {
             ? new JfrConfig.JfrTelemetry(null, emptySet())
             : jfrConfig.buildJfrTelemetry(
                 effectiveJfrMetrics::matches,
-                getMeter(
-                    openTelemetry,
-                    jfrName,
-                    maySelectJfrMetricsNotCoveredBySchema(effectiveJfrMetrics)
-                        ? null
-                        : SchemaUrls.V1_44_0),
+                this::isJfrMetricCoveredBySchema,
+                getMeter(openTelemetry, jfrName, SchemaUrls.V1_44_0),
+                getMeter(openTelemetry, jfrName, null),
                 suppressOverlappingJmxMetrics && !disableJmx,
                 emitExperimentalMetrics);
     Set<String> jfrMetricNames = jfrTelemetry.getMetricNames();
@@ -132,13 +129,9 @@ public final class RuntimeTelemetryBuilder {
     return new RuntimeTelemetry(observables, jfrTelemetry.getTelemetry());
   }
 
-  private boolean maySelectJfrMetricsNotCoveredBySchema(IncludeExclude selector) {
-    for (String metricName : EXPERIMENTAL_JFR_METRICS) {
-      if (!metricName.startsWith("jvm.buffer.") && selector.matches(metricName)) {
-        return true;
-      }
-    }
-    return useLegacyJfrCpuCountMetric && selector.matches("jvm.cpu.limit");
+  private boolean isJfrMetricCoveredBySchema(String metricName) {
+    return (metricName.startsWith("jvm.buffer.") || !EXPERIMENTAL_JFR_METRICS.contains(metricName))
+        && (!useLegacyJfrCpuCountMetric || !metricName.equals("jvm.cpu.limit"));
   }
 
   @Nullable
