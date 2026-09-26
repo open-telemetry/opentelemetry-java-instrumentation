@@ -304,11 +304,51 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
       @Override
       protected Number extractNumericalAttribute(
           MBeanServerConnection connection, ObjectName objectName) {
-        Number v = super.extractNumericalAttribute(connection, objectName);
+        Number v = extractor.extractNumericalAttribute(connection, objectName);
         if (v instanceof Long || v instanceof Integer || v instanceof Short || v instanceof Byte) {
           return v.longValue() < 0 ? null : v;
         } else if (v instanceof Double || v instanceof Float) {
           return v.doubleValue() < 0 ? null : v;
+        }
+        return v;
+      }
+    };
+  }
+
+  public static BeanAttributeExtractor filterExtremeValues(BeanAttributeExtractor extractor) {
+    return new BeanAttributeExtractor(extractor.baseName, extractor.nameChain) {
+      @Nullable
+      @Override
+      protected Number extractNumericalAttribute(
+          MBeanServerConnection connection, ObjectName objectName) {
+        Number v = extractor.extractNumericalAttribute(connection, objectName);
+        if (v instanceof Long) {
+          long longValue = v.longValue();
+          return longValue == Long.MIN_VALUE || longValue == Long.MAX_VALUE ? null : longValue;
+        }
+        if (v instanceof Integer) {
+          int intValue = v.intValue();
+          return intValue == Integer.MIN_VALUE || intValue == Integer.MAX_VALUE ? null : intValue;
+        }
+        if (v instanceof Short) {
+          short shortValue = v.shortValue();
+          return shortValue == Short.MIN_VALUE || shortValue == Short.MAX_VALUE ? null : shortValue;
+        }
+        if (v instanceof Byte) {
+          byte byteValue = v.byteValue();
+          return byteValue == Byte.MIN_VALUE || byteValue == Byte.MAX_VALUE ? null : byteValue;
+        }
+        if (v instanceof Double) {
+          double doubleValue = v.doubleValue();
+          return doubleValue == -Double.MAX_VALUE || doubleValue == Double.MAX_VALUE
+              ? null
+              : doubleValue;
+        }
+        if (v instanceof Float) {
+          float floatValue = v.floatValue();
+          return floatValue == -Float.MAX_VALUE || floatValue == Float.MAX_VALUE
+              ? null
+              : floatValue;
         }
         return v;
       }
