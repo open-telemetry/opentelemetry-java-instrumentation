@@ -28,6 +28,7 @@ dependencies {
 
   testImplementation("org.apache.activemq:activemq-client:5.16.5")
 
+  testInstrumentation(project(":instrumentation:jms:jms-2.0:javaagent"))
   testInstrumentation(project(":instrumentation:jms:jms-3.0:javaagent"))
 }
 

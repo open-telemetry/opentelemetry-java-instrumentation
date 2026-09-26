@@ -3,16 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jms.v1_1;
+package io.opentelemetry.javaagent.instrumentation.jms.v3_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.JmsReceiveSpanUtil.createReceiveSpan;
-import static io.opentelemetry.javaagent.instrumentation.jms.v1_1.JmsSingletons.consumerReceiveInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.jms.v3_0.JmsSingletons.consumerReceiveInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.instrumentation.api.internal.Timer;
@@ -20,24 +19,33 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageWithDestination;
+import jakarta.jms.Message;
+import jakarta.jms.MessageConsumer;
 import javax.annotation.Nullable;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
+/**
+ * Instruments the simplified API's {@code JMSConsumer}, introduced in JMS 2.0.
+ *
+ * <p>Only the {@code Message}-returning receive methods are instrumented. {@code receiveBody}
+ * unwraps the body inside the provider and never exposes the {@code Message}, so there is nothing
+ * to extract trace context from at this boundary.
+ *
+ * <p>Durable and shared subscription names are not recorded for the simplified API: {@link
+ * JmsSubscriptionNames} keys on {@code MessageConsumer}, and a {@code JMSConsumer} is not one.
+ */
+class JmsConsumerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("javax.jms.MessageConsumer");
+    return hasClassesNamed("jakarta.jms.JMSConsumer");
   }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("javax.jms.MessageConsumer"));
+    return implementsInterface(named("jakarta.jms.JMSConsumer"));
   }
 
   @Override
@@ -45,21 +53,15 @@ class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("receive")
             .and(takesArguments(0).or(takesArguments(1)))
-            .and(returns(named("javax.jms.Message")))
+            .and(returns(named("jakarta.jms.Message")))
             .and(isPublic()),
         getClass().getName() + "$ConsumerAdvice");
     transformer.applyAdviceToMethod(
         named("receiveNoWait")
             .and(takesArguments(0))
-            .and(returns(named("javax.jms.Message")))
+            .and(returns(named("jakarta.jms.Message")))
             .and(isPublic()),
         getClass().getName() + "$ConsumerAdvice");
-    transformer.applyAdviceToMethod(
-        named("setMessageListener")
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("javax.jms.MessageListener")))
-            .and(isPublic()),
-        getClass().getName() + "$SetMessageListenerAdvice");
   }
 
   public static class AdviceScope {
@@ -72,6 +74,9 @@ class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
     }
 
     public static AdviceScope enter() {
+      // deliberately keyed on MessageConsumer, not JMSConsumer: providers typically implement
+      // JMSConsumer.receive by delegating to a MessageConsumer, and sharing the key means the
+      // outermost receive wins and exactly one receive span is emitted
       CallDepth callDepth = CallDepth.forClass(MessageConsumer.class);
       if (callDepth.getAndIncrement() > 0) {
         return new AdviceScope(callDepth, null);
@@ -79,7 +84,7 @@ class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
       return new AdviceScope(callDepth, Timer.start());
     }
 
-    public void exit(MessageConsumer consumer, @Nullable Message message) {
+    public void exit(@Nullable Message message) {
       if (callDepth.decrementAndGet() > 0 || timer == null) {
         return;
       }
@@ -88,11 +93,8 @@ class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      String subscriptionName = JmsSubscriptionNames.get(consumer);
-      JmsSubscriptionNames.set(message, subscriptionName);
       MessageWithDestination request =
-          MessageWithDestination.create(
-              JavaxMessageAdapter.create(message), null, subscriptionName);
+          MessageWithDestination.create(JakartaMessageAdapter.create(message), null, null);
 
       createReceiveSpan(consumerReceiveInstrumenter(), request, timer, null);
     }
@@ -108,21 +110,8 @@ class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
-        @Advice.This MessageConsumer consumer,
-        @Advice.Enter AdviceScope adviceScope,
-        @Advice.Return @Nullable Message message) {
-      adviceScope.exit(consumer, message);
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class SetMessageListenerAdvice {
-
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(
-        @Advice.This MessageConsumer consumer,
-        @Advice.Argument(0) @Nullable MessageListener messageListener) {
-      JmsSubscriptionNames.copyToListener(consumer, messageListener);
+        @Advice.Enter AdviceScope adviceScope, @Advice.Return @Nullable Message message) {
+      adviceScope.exit(message);
     }
   }
 }
