@@ -14,7 +14,8 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIn
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
-class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisCommand<?, ?, ?>, Void> {
+final class LettuceDbAttributesGetter
+    implements DbClientAttributesGetter<RedisCommand<?, ?, ?>, Void> {
 
   @Override
   public String getDbSystemName(RedisCommand<?, ?, ?> request) {

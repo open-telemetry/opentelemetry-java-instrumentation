@@ -14,7 +14,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import javax.annotation.Nullable;
 
-class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
+final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
 
   @Override
   public String getDbSystemName(JedisRequest request) {
