@@ -16,7 +16,7 @@ val springBootVersion = "1.2.5.RELEASE"
 
 otelJava {
   // Grails 3 uses a Groovy compiler that cannot run on JDK 25.
-  maxJavaVersionSupported.set(JavaVersion.VERSION_21)
+  javaToolchainVersion.set(JavaVersion.VERSION_21)
 }
 
 dependencies {
