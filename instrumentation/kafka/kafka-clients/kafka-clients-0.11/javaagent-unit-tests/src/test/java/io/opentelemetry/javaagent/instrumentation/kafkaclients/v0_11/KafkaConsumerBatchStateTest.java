@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
 class KafkaConsumerBatchStateTest {
 
   @Test
-  void shouldTraceUnclaimedApplicationPoll() {
+  void shouldTraceApplicationPoll() {
     ConsumerRecords<String, String> records = records();
     KafkaProcessingOwnershipUtil.recordPoll(records, true);
 

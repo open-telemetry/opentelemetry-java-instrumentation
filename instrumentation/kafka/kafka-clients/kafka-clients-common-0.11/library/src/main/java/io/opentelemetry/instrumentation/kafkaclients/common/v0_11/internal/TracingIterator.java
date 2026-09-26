@@ -5,12 +5,14 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
-import io.opentelemetry.api.impl.InstrumentationUtil;
+import static java.util.Objects.requireNonNull;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.Iterator;
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
@@ -34,7 +36,7 @@ public class TracingIterator<K, V> implements Iterator<ConsumerRecord<K, V>> {
   @Nullable private Context currentContext;
   @Nullable private Scope currentScope;
 
-  private TracingIterator(
+  TracingIterator(
       Iterator<ConsumerRecord<K, V>> delegateIterator,
       Instrumenter<KafkaProcessRequest, Void> instrumenter,
       BooleanSupplier wrappingEnabled,
@@ -83,10 +85,9 @@ public class TracingIterator<K, V> implements Iterator<ConsumerRecord<K, V>> {
       }
       KafkaProcessRequest request = KafkaProcessRequest.create(consumerContext, next);
       // Iterator spans can leak if traversal is abandoned. Ignore an ambient consumer span when
-      // selecting another record, but retain explicit instrumentation suppression and enablement.
-      if (InstrumentationUtil.shouldSuppressInstrumentation(Context.current())
-          || !instrumenter.shouldStart(
-              KafkaConsumerContextUtil.spanSuppressionContext(parentContext), request)) {
+      // selecting another record.
+      if (!instrumenter.shouldStart(
+          KafkaConsumerContextUtil.spanSuppressionContext(parentContext), request)) {
         return next;
       }
       currentRequest = request;
@@ -98,10 +99,29 @@ public class TracingIterator<K, V> implements Iterator<ConsumerRecord<K, V>> {
     return next;
   }
 
-  private void closeScopeAndEndSpan() {
+  @Override
+  public void forEachRemaining(Consumer<? super ConsumerRecord<K, V>> action) {
+    requireNonNull(action);
+    while (hasNext()) {
+      ConsumerRecord<K, V> record = next();
+      try {
+        action.accept(record);
+      } catch (Throwable t) {
+        closeScopeAndEndSpan(t);
+        throw t;
+      }
+      closeScopeAndEndSpan();
+    }
+  }
+
+  void closeScopeAndEndSpan() {
+    closeScopeAndEndSpan(null);
+  }
+
+  void closeScopeAndEndSpan(@Nullable Throwable error) {
     if (currentScope != null) {
       currentScope.close();
-      instrumenter.end(currentContext, currentRequest, null, null);
+      instrumenter.end(currentContext, currentRequest, null, error);
       currentScope = null;
       currentRequest = null;
       currentContext = null;

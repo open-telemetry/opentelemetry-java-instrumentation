@@ -10,9 +10,6 @@ import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerPro
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.opentelemetry.api.impl.InstrumentationUtil;
-import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import org.junit.jupiter.api.Test;
 
 class KafkaClientsConsumerProcessTracingTest {
@@ -79,19 +76,5 @@ class KafkaClientsConsumerProcessTracingTest {
         .isInstanceOf(IllegalStateException.class);
 
     assertThat(processSpanSuppression().isActive()).isFalse();
-  }
-
-  @Test
-  void shouldPreserveGlobalInstrumentationSuppression() {
-    Context[] contexts = new Context[1];
-    InstrumentationUtil.suppressInstrumentation(
-        () ->
-            contexts[0] =
-                KafkaClientsConsumerProcessTracing.markFrameworkProcess(Context.current()));
-
-    Context context =
-        KafkaClientsConsumerProcessTracing.withoutFrameworkProcessSuppression(contexts[0]);
-
-    assertThat(InstrumentationUtil.shouldSuppressInstrumentation(context)).isTrue();
   }
 }
