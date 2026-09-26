@@ -11,6 +11,12 @@ for file in $(find instrumentation -name "*Module.java"); do
   fi
 
   module_name=$(echo "$file" | sed 's#.*/\([^/]*\)/javaagent/src/.*#\1#')
+  # Independently selected modules can retain legacy names within a shared Gradle project.
+  case "$file" in
+    instrumentation/mongo/mongo-3.1/javaagent/src/main/java/io/opentelemetry/javaagent/instrumentation/mongo/v3_7/MongoClientInstrumentationModule.java)
+      module_name="mongo-3.7"
+      ;;
+  esac
   simple_module_name=$(echo "$module_name" | sed 's/-[0-9.]*$//')
 
   if [[ "$simple_module_name" == *jaxrs* ]]; then
