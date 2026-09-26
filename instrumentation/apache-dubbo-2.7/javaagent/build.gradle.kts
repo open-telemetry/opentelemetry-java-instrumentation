@@ -29,6 +29,8 @@ testing {
         implementation("org.apache.dubbo:dubbo:$version")
         implementation("org.apache.dubbo:dubbo-config-api:$version")
         if (otelProps.testLatestDeps) {
+          // these dependencies should be optional but when running on jdk25 more classes are loaded than
+          // on earlier jdk versions and DubboAgentRegistryTest fails with NoClassDefFoundError
           implementation("com.alibaba:fastjson:2.0.65")
           implementation("com.google.code.gson:gson:2.14.0")
           implementation("com.fasterxml.jackson.core:jackson-databind")
