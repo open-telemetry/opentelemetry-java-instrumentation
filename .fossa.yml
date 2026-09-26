@@ -780,9 +780,6 @@ targets:
       target: ':instrumentation:mongo:mongo-3.1:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:mongo:mongo-3.7:javaagent'
-    - type: gradle
-      path: ./
       target: ':instrumentation:mongo:mongo-4.0:javaagent'
     - type: gradle
       path: ./

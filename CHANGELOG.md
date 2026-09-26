@@ -17,6 +17,11 @@
 
 ### 🚫 Deprecations
 
+- Deprecate `otel.instrumentation.mongo-3.7.enabled` in favor of
+  `otel.instrumentation.mongo-3.1.enabled` for the MongoDB 3.7 instrumentation. The old name
+  remains available outside v3-preview; `otel.instrumentation.mongo-3.7-core.enabled` remains
+  available as a separate selector.
+  ([#20269](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20269))
 - Deprecate the source-specific experimental selectors for Log4j `MapMessage` entries, Logback
   key-value pairs, Logstash markers, and Logstash structured arguments in favor of the common
   structured logging attribute selector. The source-specific properties are ignored under
