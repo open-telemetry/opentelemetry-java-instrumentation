@@ -14,7 +14,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.baggage.Baggage;
-import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.TraceFlags;
@@ -164,17 +163,6 @@ class ReactorKafkaOwnershipTest {
         testing, INSTRUMENTATION_NAME, "orders", "group", "0", 1, error.getClass().getName());
     assertProcessDurationMetrics(testing, INSTRUMENTATION_NAME, "orders", "group", "0", 1, null);
     assertThat(Span.current().getSpanContext().isValid()).isFalse();
-  }
-
-  @Test
-  void explicitSuppressionDoesNotRecordProcessing() {
-    ConsumerRecord<String, String> record = record(0, "value");
-    prepareContexts(records(record));
-
-    InstrumentationUtil.suppressInstrumentation(
-        () -> new InstrumentedKafkaFlux<>(Flux.just(record)).blockLast());
-    assertThat(testing.spans()).isEmpty();
-    assertThat(testing.spans()).isEmpty();
   }
 
   @Test

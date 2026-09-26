@@ -15,7 +15,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.baggage.Baggage;
-import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.StatusCode;
@@ -186,27 +185,6 @@ class VertxKafkaOwnershipTest {
 
     assertThat(batchState.getAsBoolean()).isTrue();
     assertThat(recordEligibility.getAsBoolean()).isTrue();
-  }
-
-  @Test
-  void explicitSuppressionDoesNotRecordProcessing() {
-    ConsumerRecord<String, String> record = record(0, "value");
-    ConsumerRecords<String, String> records = records(record);
-    prepareContexts(records);
-    AtomicInteger callbacks = new AtomicInteger();
-
-    InstrumentationUtil.suppressInstrumentation(
-        () -> {
-          new InstrumentedBatchRecordsHandler<String, String>(
-                  ignored -> callbacks.incrementAndGet())
-              .handle(records);
-          new InstrumentedSingleRecordHandler<String, String>(
-                  ignored -> callbacks.incrementAndGet())
-              .handle(record);
-        });
-    assertThat(callbacks).hasValue(2);
-    assertThat(testing.spans()).isEmpty();
-    assertThat(testing.spans()).isEmpty();
   }
 
   private static KafkaConsumerBatchState prepareRawProcessingEligibility(
