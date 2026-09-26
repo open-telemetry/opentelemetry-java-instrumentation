@@ -173,22 +173,33 @@ class KafkaConsumerBatchSelectionTest {
     ListIterator<ConsumerRecord<String, String>> subList = partition.subList(0, 1).listIterator();
     assertThat(subList.next().offset()).isZero();
     assertThat(subList.hasNext()).isFalse();
-    assertProcessSpans(2);
+    assertProcessSpans(1);
   }
 
   @Test
-  void subListAndRootListTraceEachTraversal() {
+  void subListTraversalStaysUntracedWhileRootListTraces() {
     ConsumerRecords<String, String> records = records(record(0), record(1));
     KafkaProcessingOwnershipUtil.recordPoll(records, true);
     List<ConsumerRecord<String, String>> list = list(records);
     List<ConsumerRecord<String, String>> subList = list.subList(0, 1);
-    Iterator<ConsumerRecord<String, String>> first = subList.iterator();
-    assertThat(first.next().offset()).isZero();
-    assertThat(first.hasNext()).isFalse();
+    Iterator<ConsumerRecord<String, String>> subIterator = subList.iterator();
+    assertThat(subIterator.next().offset()).isZero();
+    assertThat(subIterator.hasNext()).isFalse();
+    ListIterator<ConsumerRecord<String, String>> subListIterator = subList.listIterator();
+    assertThat(subListIterator.next().offset()).isZero();
+    assertThat(subListIterator.hasNext()).isFalse();
+    subList.forEach(record -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    Spliterator<ConsumerRecord<String, String>> subSpliterator = subList.spliterator();
+    assertThat(
+            subSpliterator.tryAdvance(
+                record -> assertThat(Span.current().getSpanContext().isValid()).isFalse()))
+        .isTrue();
+    assertThat(subSpliterator.tryAdvance(record -> {})).isFalse();
+    assertThat(testing.spans()).isEmpty();
+    assertThat(Span.current().getSpanContext().isValid()).isFalse();
 
     list.forEach(record -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
-    subList.forEach(record -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
-    assertProcessSpans(4);
+    assertProcessSpans(2);
   }
 
   @Test
@@ -232,12 +243,17 @@ class KafkaConsumerBatchSelectionTest {
   }
 
   @Test
-  void unusedSpliteratorDoesNotBlockNextTraversal() {
+  void subListSpliteratorDoesNotTraceOrBlockRootTraversal() {
     ConsumerRecords<String, String> records = records(record(0));
     KafkaProcessingOwnershipUtil.recordPoll(records, true);
     List<ConsumerRecord<String, String>> list = list(records);
     Spliterator<ConsumerRecord<String, String>> first = list.subList(0, 1).spliterator();
     assertThat(first.estimateSize()).isEqualTo(1);
+    assertThat(
+            first.tryAdvance(
+                record -> assertThat(Span.current().getSpanContext().isValid()).isFalse()))
+        .isTrue();
+    assertThat(testing.spans()).isEmpty();
 
     Iterator<ConsumerRecord<String, String>> nextPass = list.iterator();
     assertThat(nextPass.next().offset()).isZero();
