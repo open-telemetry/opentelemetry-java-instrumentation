@@ -42,7 +42,9 @@ import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -57,6 +59,8 @@ import org.elasticmq.rest.sqs.SQSRestServerBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractSqsSuppressReceiveSpansTest {
@@ -157,6 +161,96 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                     span -> span.hasName("send testSdkSqs").hasNoParent(),
                     span -> span.hasName("process testSdkSqs").hasParent(trace.getSpan(0))));
 
+    SqsMetricsAssertions.assertProcessMetrics(testing(), sqsPort, 2);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"iterator", "forEach", "spliterator"})
+  void testRepeatedTraversalCompletesEachProcessInvocation(String traversal) {
+    assumeTrue(emitStableMessagingSemconv());
+    String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
+    sqsClient.createQueue("testSdkSqs");
+    sqsClient.sendMessage(new SendMessageRequest(queueUrl, "message"));
+    testing().waitForTraces(2);
+    testing().clearData();
+
+    List<Message> messages = sqsClient.receiveMessage(queueUrl).getMessages();
+    Context previous = Context.current();
+    for (int attempt = 0; attempt < 2; attempt++) {
+      switch (traversal) {
+        case "iterator":
+          for (Message ignored : messages) {
+            assertThat(Span.current().getSpanContext().isValid()).isTrue();
+          }
+          break;
+        case "spliterator":
+          messages
+              .spliterator()
+              .forEachRemaining(
+                  message -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
+          break;
+        default:
+          messages.forEach(
+              message -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
+      }
+      assertThat(Span.current().getSpanContext())
+          .isEqualTo(Span.fromContext(previous).getSpanContext());
+    }
+    assertThat(testing().spans())
+        .filteredOn(span -> span.getName().equals("process testSdkSqs"))
+        .hasSize(2);
+    SqsMetricsAssertions.assertProcessMetrics(testing(), sqsPort, 2);
+  }
+
+  @Test
+  void testSublistTraversalDoesNotTraceOrDisableResponse() {
+    assumeTrue(emitStableMessagingSemconv());
+    String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
+    sqsClient.createQueue("testSdkSqs");
+    sqsClient.sendMessage(new SendMessageRequest(queueUrl, "message"));
+    testing().waitForTraces(2);
+    testing().clearData();
+
+    List<Message> messages = sqsClient.receiveMessage(queueUrl).getMessages();
+    messages
+        .subList(0, 1)
+        .forEach(message -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    messages
+        .subList(0, 1)
+        .spliterator()
+        .forEachRemaining(
+            message -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    messages.forEach(message -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
+    SqsMetricsAssertions.assertProcessMetrics(testing(), sqsPort, 1);
+  }
+
+  @Test
+  void testNestedTraversalRestoresOuterProcessScope() {
+    assumeTrue(emitStableMessagingSemconv());
+    String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
+    sqsClient.createQueue("testSdkSqs");
+    sqsClient.sendMessage(new SendMessageRequest(queueUrl, "outer"));
+    ReceiveMessageResult outer = sqsClient.receiveMessage(queueUrl);
+    sqsClient.sendMessage(new SendMessageRequest(queueUrl, "inner"));
+    ReceiveMessageResult inner = sqsClient.receiveMessage(queueUrl);
+    testing().waitForTraces(3);
+    testing().clearData();
+
+    outer
+        .getMessages()
+        .forEach(
+            message -> {
+              Context outerContext = Context.current();
+              inner
+                  .getMessages()
+                  .forEach(
+                      nested ->
+                          assertThat(Span.current().getSpanContext())
+                              .isNotEqualTo(Span.fromContext(outerContext).getSpanContext()));
+              assertThat(Span.current().getSpanContext())
+                  .isEqualTo(Span.fromContext(outerContext).getSpanContext());
+            });
+    assertThat(Span.current().getSpanContext().isValid()).isFalse();
     SqsMetricsAssertions.assertProcessMetrics(testing(), sqsPort, 2);
   }
 
