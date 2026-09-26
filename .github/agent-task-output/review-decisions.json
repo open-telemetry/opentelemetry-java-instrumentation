@@ -1,0 +1,14 @@
+{
+  "schema": {
+    "id": "github.copilot.copilot-review-loop-decision-report",
+    "version": 3
+  },
+  "decisions": [
+    {
+      "finding_id": "finding-e659ccbbd9ac217aa6e55eaf",
+      "disposition": "no_change",
+      "reason": "The finding concerns only the pull request description; the implementation, tests, and repository documentation already consistently ignore both deprecated settings under v3-preview.",
+      "proposed_reply": "Agreed—the pull request description should say that v3-preview ignores both deprecated settings without warnings; the implementation and repository documentation already do so."
+    }
+  ]
+}
