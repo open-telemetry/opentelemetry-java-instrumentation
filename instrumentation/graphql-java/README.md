@@ -9,10 +9,10 @@
 | `otel.instrumentation.graphql.capture-query`                       | Boolean | `true`  | Whether to capture the query in `graphql.document` span attribute.                                                                                                                                                      |
 
 GraphQL operation spans use the
-[v1.44.0 OpenTelemetry schema URL](https://opentelemetry.io/schemas/1.44.0) and retain `INTERNAL`
+[v1.44.0 OpenTelemetry schema URL](https://opentelemetry.io/schemas/1.44.0) and have `INTERNAL`
 kind. The convention recommends `SERVER` kind, but GraphQL execution can run beneath an HTTP server
 or controller span, where a nested `SERVER` span could be suppressed. GraphQL 20 data-fetcher spans
-remain `INTERNAL` and have no OpenTelemetry schema URL.
+are `INTERNAL` and have no OpenTelemetry schema URL.
 
 ## Settings for the GraphQL 20 instrumentation
 
