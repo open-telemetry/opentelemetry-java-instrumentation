@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.spring.kafka.v2_7;
 
-import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
@@ -77,8 +76,7 @@ final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, 
 
     KafkaProcessRequest request = KafkaProcessRequest.create(record, consumer);
     Context context = null;
-    if (!InstrumentationUtil.shouldSuppressInstrumentation(Context.current())
-        && processInstrumenter.shouldStart(parentContext, request)) {
+    if (processInstrumenter.shouldStart(parentContext, request)) {
       context = processInstrumenter.start(parentContext, request);
     }
     ProcessingInvocation<KafkaProcessRequest> invocation =

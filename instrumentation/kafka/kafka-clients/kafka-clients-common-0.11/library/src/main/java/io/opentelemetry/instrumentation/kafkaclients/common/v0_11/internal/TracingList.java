@@ -33,10 +33,10 @@ public class TracingList<K, V> extends TracingIterable<K, V> implements List<Con
       Instrumenter<KafkaProcessRequest, Void> instrumenter,
       BooleanSupplier wrappingEnabled,
       KafkaConsumerContext consumerContext) {
-    if (wrappingEnabled.getAsBoolean()) {
-      return new TracingList<>(delegate, instrumenter, wrappingEnabled, consumerContext);
+    if (!wrappingEnabled.getAsBoolean()) {
+      return delegate;
     }
-    return delegate;
+    return new TracingList<>(delegate, instrumenter, wrappingEnabled, consumerContext);
   }
 
   @Override
@@ -137,22 +137,19 @@ public class TracingList<K, V> extends TracingIterable<K, V> implements List<Con
 
   @Override
   public ListIterator<ConsumerRecord<K, V>> listIterator() {
-    return TracingListIterator.wrap(
-        delegate.listIterator(), instrumenter, wrappingEnabled, consumerContext);
+    ListIterator<ConsumerRecord<K, V>> iterator = delegate.listIterator();
+    return TracingListIterator.wrap(iterator, instrumenter, wrappingEnabled, consumerContext);
   }
 
   @Override
   public ListIterator<ConsumerRecord<K, V>> listIterator(int index) {
-    return TracingListIterator.wrap(
-        delegate.listIterator(index), instrumenter, wrappingEnabled, consumerContext);
+    ListIterator<ConsumerRecord<K, V>> iterator = delegate.listIterator(index);
+    return TracingListIterator.wrap(iterator, instrumenter, wrappingEnabled, consumerContext);
   }
 
   @Override
   public List<ConsumerRecord<K, V>> subList(int fromIndex, int toIndex) {
-    // TODO: the API for subList is not really good to instrument it in context of Kafka
-    // Consumer so we will not do that for now
-    // Kafka is essentially a sequential commit log. We should only enable tracing when traversing
-    // sequentially with an iterator
-    return delegate.subList(fromIndex, toIndex);
+    return new TracingList<>(
+        delegate.subList(fromIndex, toIndex), instrumenter, wrappingEnabled, consumerContext);
   }
 }
