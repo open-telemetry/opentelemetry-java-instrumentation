@@ -59,7 +59,7 @@ class OpenTelemetryInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static application.io.opentelemetry.api.OpenTelemetry methodExit() {
-      return ApplicationOpenTelemetry.INSTANCE;
+      return ApplicationOpenTelemetryAccess.getInstanceOrNoop();
     }
   }
 
