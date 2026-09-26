@@ -89,16 +89,13 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
           return null;
         }
         Context context;
+        // Span-start callbacks should not observe an ambient RabbitMQ process context.
+        // The Spring process span still uses the captured parentContext.
         try (Scope ignored = Context.root().makeCurrent()) {
           context = instrumenter().start(parentContext, request);
         }
         request.installProcessingContext(context);
-        try {
-          return new AdviceScope(context, request);
-        } catch (RuntimeException | Error e) {
-          request.restoreProcessingContext(context);
-          throw e;
-        }
+        return new AdviceScope(context, request);
       }
 
       private AdviceScope(Context context, SpringRabbitRequest request) {
@@ -108,11 +105,8 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
       }
 
       public void end(@Nullable Throwable throwable) {
-        try {
-          scope.close();
-        } finally {
-          request.restoreProcessingContext(context);
-        }
+        scope.close();
+        request.restoreProcessingContext(context);
         instrumenter()
             .end(context, request, null, SpringRabbitErrorHolder.getOrDefault(context, throwable));
       }
