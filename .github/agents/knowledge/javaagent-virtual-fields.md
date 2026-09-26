@@ -1,11 +1,8 @@
 # [Javaagent] Virtual Fields
 
-## Quick Reference
-
-- Use when: javaagent code associates instrumentation state with third-party object instances, or
-  introduces a weak reference, weak-key cache/map, identity-keyed registry, or per-object side table
-- Review focus: choosing `VirtualField`, carrier and value types, shared-helper boundaries, cleanup,
-  reuse, concurrency, and fallback-map retention
+Use this article when choosing storage for state associated with a
+third-party object. It distinguishes attached state from caches and weak
+links, then covers carrier selection, lookup placement, and cleanup.
 
 ## Prefer `VirtualField` for State Attached to Library Objects
 
@@ -168,23 +165,3 @@ When supported concurrent updates require a compound invariant, synchronize the 
 redesign ownership. See [Lock Ownership and Critical Sections](javaagent-locking.md) for choosing the
 required guarantees. Do not choose `Cache` solely for `computeIfAbsent` without establishing whether
 concurrent updates and duplicate construction are valid.
-
-## Review Guidance
-
-Flag a new weak or identity-keyed registry when all of the following are true:
-
-1. The code is javaagent instrumentation or shared code used by javaagent instrumentation.
-2. The key is a third-party object instance rather than a lookup key such as `Class` or
-   `ClassLoader`.
-3. The value is instrumentation state associated with that exact instance, not a derived value being
-   memoized.
-4. The instrumentation-specific caller can identify a narrow, stable carrier class or interface.
-5. `VirtualField` can preserve the required lifecycle and concurrency semantics.
-
-Recommend moving storage selection to the typed caller when a shared helper currently accepts
-`Object`. Do not demand one global `VirtualField<Object, F>`.
-
-Do not flag legitimate metadata caches, bounded caches, value-equality interning pools, weak
-callback/delegate links, or non-javaagent library code merely because they use weak storage. When
-the carrier type, lifecycle, or concurrency requirement is unclear, investigate callers before
-commenting and prefer silence over a speculative replacement.

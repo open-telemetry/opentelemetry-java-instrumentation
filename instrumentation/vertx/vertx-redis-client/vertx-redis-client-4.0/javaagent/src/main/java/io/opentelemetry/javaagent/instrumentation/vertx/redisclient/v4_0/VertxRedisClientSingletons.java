@@ -12,7 +12,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -38,22 +38,12 @@ public class VertxRedisClientSingletons {
 
   static {
     VertxRedisClientAttributesGetter getter = new VertxRedisClientAttributesGetter();
-    // Redis semantic conventions don't follow the regular pattern of adding db.namespace to the
-    // span name.
-    VertxRedisClientAttributesGetter spanNameAttributesGetter =
-        new VertxRedisClientAttributesGetter() {
-          @Override
-          @Nullable
-          public String getDbNamespace(VertxRedisClientRequest request) {
-            return null;
-          }
-        };
 
     InstrumenterBuilder<VertxRedisClientRequest, Void> builder =
         Instrumenter.<VertxRedisClientRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(spanNameAttributesGetter))
+                RedisSpanNameExtractor.create(getter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(getter))
             .addAttributesExtractor(new VertxRedisClientAttributesExtractor())
             .addAttributesExtractor(
