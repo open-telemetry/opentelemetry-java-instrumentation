@@ -13,13 +13,6 @@ for file in $(find instrumentation -name "*Module.java"); do
   module_name=$(echo "$file" | sed 's#.*/\([^/]*\)/javaagent/src/.*#\1#')
   simple_module_name=$(echo "$module_name" | sed 's/-[0-9.]*$//')
 
-  if [[ "$module_name" == kotlinx-coroutines-1.0 \
-    && "$file" == *"/KotlinCoroutinesFlowInstrumentationModule.java" ]]; then
-    # Flow has its own suppression keys within the shared coroutines project.
-    module_name="kotlinx-coroutines-flow-1.3"
-    simple_module_name="kotlinx-coroutines-flow"
-  fi
-
   if [[ "$simple_module_name" == *jaxrs* ]]; then
     # TODO these need some work still
     continue
@@ -58,7 +51,9 @@ for file in $(find instrumentation -name "*Module.java"); do
     if grep -q "expandDeprecatedNames" "$file" \
       && { grep -q "\"$simple_module_name|deprecated:" "$file" \
         || perl -0ne "exit !/super\(\s*\"$simple_module_name\"/" "$file"; } \
-      && { [ "$module_name" == "$simple_module_name" ] || grep -q "\"$module_name|deprecated:" "$file"; }
+      && { [ "$module_name" == "$simple_module_name" ] \
+        || grep -q "\"$module_name|deprecated:" "$file" \
+        || perl -0ne "exit !/expandDeprecatedNames\(\s*\"$module_name\"\s*,/" "$file"; }
     then
       continue
     fi

@@ -17,6 +17,12 @@
 
 ### 🚫 Deprecations
 
+- Deprecate `otel.instrumentation.kotlinx-coroutines-flow.enabled` and
+  `otel.instrumentation.kotlinx-coroutines-flow-1.3.enabled` in favor of
+  `otel.instrumentation.kotlinx-coroutines.enabled` and
+  `otel.instrumentation.kotlinx-coroutines-1.0.enabled`, respectively. The old names still work
+  outside v3-preview, but are ignored under v3-preview.
+  ([#20267](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20267))
 - Deprecate the source-specific experimental selectors for Log4j `MapMessage` entries, Logback
   key-value pairs, Logstash markers, and Logstash structured arguments in favor of the common
   structured logging attribute selector. The source-specific properties are ignored under

@@ -13,7 +13,7 @@ muzzle {
     group.set("org.jetbrains.kotlinx")
     module.set("kotlinx-coroutines-core")
     versions.set("[1.0.0,1.3.8)")
-    excludeInstrumentationName("kotlinx-coroutines-flow-1.3")
+    excludeInstrumentationName("kotlinx-coroutines-1.0-flow")
     extraDependency(project(":instrumentation-annotations"))
     extraDependency("io.opentelemetry:opentelemetry-api:1.27.0")
   }
@@ -23,7 +23,7 @@ muzzle {
     module.set("kotlinx-coroutines-core-jvm")
     versions.set("[1.3.9,)")
     assertInverse.set(true)
-    excludeInstrumentationName("kotlinx-coroutines-flow-1.3")
+    excludeInstrumentationName("kotlinx-coroutines-1.0-flow")
     extraDependency(project(":instrumentation-annotations"))
     extraDependency("io.opentelemetry:opentelemetry-api:1.27.0")
   }
