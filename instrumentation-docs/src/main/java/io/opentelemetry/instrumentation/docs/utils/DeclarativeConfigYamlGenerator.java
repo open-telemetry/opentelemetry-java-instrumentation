@@ -70,29 +70,39 @@ public class DeclarativeConfigYamlGenerator {
     Set<String> seenConfigs = new HashSet<>();
 
     for (InstrumentationModule module : modules) {
-      List<ConfigurationOption> configs = module.getMetadata().getConfigurations();
-
-      for (ConfigurationOption config : configs) {
-        String declarativeName = config.declarativeName();
-
-        // Skip configurations that don't declare a declarative config name.
-        if (declarativeName == null || declarativeName.isBlank()) {
-          continue;
-        }
-
-        // Skip duplicates (e.g. common configurations shared across many modules).
-        if (!seenConfigs.add(declarativeName)) {
-          continue;
-        }
-
-        // declarative_name is relative to the "instrumentation" config node (e.g.
-        // "java.grpc.emit_message_events" or "general.http.client.request_captured_headers"),
-        // so nest it under "instrumentation" to form a complete declarative config path.
-        insertIntoTree(tree, "instrumentation/development." + declarativeName, config);
+      for (ConfigurationOption config : module.getMetadata().getConfigurations()) {
+        addConfig(tree, seenConfigs, config);
       }
     }
 
     return tree;
+  }
+
+  private static void addConfig(
+      Map<String, Object> tree, Set<String> seenConfigs, ConfigurationOption config) {
+    String declarativeName = config.declarativeName();
+
+    // Skip configurations that don't declare a declarative config name.
+    if (declarativeName == null || declarativeName.isBlank()) {
+      return;
+    }
+
+    // The example is meant to be copied, so it only contains keys that are safe to set to the
+    // value shown. A deprecated key, or a key whose absence means falling back to another setting,
+    // can change behavior (or log a deprecation warning) merely by being present.
+    if (config.isDeprecated() || config.defaultValue() == null) {
+      return;
+    }
+
+    // Skip duplicates (e.g. common configurations shared across many modules).
+    if (!seenConfigs.add(declarativeName)) {
+      return;
+    }
+
+    // declarative_name is relative to the "instrumentation" config node (e.g.
+    // "java.grpc.emit_message_events" or "general.http.client.request_captured_headers"),
+    // so nest it under "instrumentation" to form a complete declarative config path.
+    insertIntoTree(tree, "instrumentation/development." + declarativeName, config);
   }
 
   /**

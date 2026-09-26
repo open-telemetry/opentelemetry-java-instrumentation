@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.docs;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
@@ -13,6 +14,7 @@ import io.opentelemetry.instrumentation.docs.internal.ConfigurationOption;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationType;
 import io.opentelemetry.instrumentation.docs.internal.DeclarativeSchema;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetadata;
+import io.opentelemetry.instrumentation.docs.internal.SharedConfigurationRegistry;
 import io.opentelemetry.instrumentation.docs.utils.YamlHelper;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.io.IOException;
@@ -21,10 +23,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -47,46 +52,38 @@ class DeclarativeConfigValidationTest {
   private static final Map<String, String> DEPRECATED_DECLARATIVE_NAMES =
       Map.of("general.semconv_stability.opt_in", "general.stability_opt_in_list");
 
+  private static final String SHARED_DEFINITIONS = "shared-config-definitions.yaml";
+
   @Test
   void validateDeclarativeNames() throws IOException {
     List<ValidationResult> results = new ArrayList<>();
     List<String> errors = new ArrayList<>();
 
-    try (Stream<Path> paths = Files.walk(INSTRUMENTATION_DIR)) {
-      List<Path> metadataFiles =
-          paths.filter(p -> p.getFileName().toString().equals("metadata.yaml")).toList();
+    allConfigurations()
+        .forEach(
+            (source, configs) -> {
+              for (ConfigurationOption config : configs) {
+                // Structured-list schemas are validated structurally, even for declarative-only
+                // configs (those without a flat property name, such as url_template_rules).
+                validateStructuredListSchema(source, config, errors);
 
-      for (Path metadataFile : metadataFiles) {
-        String content = Files.readString(metadataFile);
-        try {
-          InstrumentationMetadata metadata = YamlHelper.metaDataParser(content);
+                // Deprecated spellings stay resolvable at runtime, but must not be declared here.
+                validateNotDeprecated(source, config, errors);
 
-          for (ConfigurationOption config : metadata.getConfigurations()) {
-            // Structured-list schemas are validated structurally, even for declarative-only configs
-            // (those without a flat property name, such as url_template_rules).
-            validateStructuredListSchema(metadataFile, config, errors);
-
-            // Deprecated spellings stay resolvable at runtime, but must not be declared here.
-            validateNotDeprecated(metadataFile, config, errors);
-
-            // The flat -> declarative round-trip needs a flat system property to drive the bridge.
-            // Declarative-only configs (no name) are skipped here.
-            if (config.name() != null
-                && !config.name().isBlank()
-                && config.declarativeName() != null
-                && !config.declarativeName().isBlank()) {
-              ValidationResult result = validateConfig(metadataFile, config);
-              results.add(result);
-              if (!result.valid) {
-                errors.add(result.toString());
+                // The flat -> declarative round-trip needs a flat system property to drive the
+                // bridge. Declarative-only configs (no name) are skipped here.
+                if (config.name() != null
+                    && !config.name().isBlank()
+                    && config.declarativeName() != null
+                    && !config.declarativeName().isBlank()) {
+                  ValidationResult result = validateConfig(source, config);
+                  results.add(result);
+                  if (!result.valid) {
+                    errors.add(result.toString());
+                  }
+                }
               }
-            }
-          }
-        } catch (Exception e) {
-          errors.add(String.format("Failed to parse %s: %s", metadataFile, e.getMessage()));
-        }
-      }
-    }
+            });
 
     long validCount = results.stream().filter(r -> r.valid).count();
     logger.info(
@@ -107,8 +104,144 @@ class DeclarativeConfigValidationTest {
     }
   }
 
+  /**
+   * The `deprecated` flag is what keeps a deprecated setting out of
+   * docs/declarative-configuration-example.yaml and marks it in docs/instrumentation-list.yaml, so
+   * it must agree with the description, and `replaced_by` must point at a documented setting.
+   */
+  @Test
+  void deprecationIsDeclared() throws IOException {
+    Map<String, List<ConfigurationOption>> configsBySource = allConfigurations();
+    Set<String> documentedNames = new HashSet<>();
+    configsBySource.values().stream()
+        .flatMap(List::stream)
+        .forEach(
+            config -> {
+              if (config.name() != null) {
+                documentedNames.add(config.name());
+              }
+              if (config.declarativeName() != null) {
+                documentedNames.add(config.declarativeName());
+              }
+            });
+
+    List<String> errors = new ArrayList<>();
+    configsBySource.forEach(
+        (source, configs) -> {
+          for (ConfigurationOption config : configs) {
+            String id = config.name() != null ? config.name() : config.declarativeName();
+            boolean describedAsDeprecated = config.description().startsWith("Deprecated");
+            if (describedAsDeprecated != config.isDeprecated()) {
+              errors.add(
+                  source
+                      + ": '"
+                      + id
+                      + "' must set `deprecated: true` exactly when its description starts with"
+                      + " \"Deprecated\"");
+            }
+            if (config.replacedBy() != null && !documentedNames.contains(config.replacedBy())) {
+              errors.add(
+                  source
+                      + ": '"
+                      + id
+                      + "' is replaced_by '"
+                      + config.replacedBy()
+                      + "', which is not a documented name or declarative_name");
+            }
+          }
+        });
+
+    assertThat(errors).isEmpty();
+  }
+
+  /**
+   * A setting without a default falls back to another setting when unset. When that other setting
+   * is a shared definition (for example a per-module override of
+   * `otel.instrumentation.common.db.query-sanitization.enabled`), the module must also `ref` it, so
+   * that its documentation lists the setting that actually applies by default.
+   */
+  @Test
+  void fallbackSettingsAreReferenced() throws IOException {
+    Map<String, String> sharedIdsByName = new HashMap<>();
+    SharedConfigurationRegistry.getInstance()
+        .definitions()
+        .forEach(
+            (id, config) -> {
+              if (config.name() != null) {
+                sharedIdsByName.put(config.name(), id);
+              }
+            });
+
+    List<String> errors = new ArrayList<>();
+    metadataConfigurations()
+        .forEach(
+            (source, configs) -> {
+              Set<String> refs = new HashSet<>();
+              for (ConfigurationOption config : configs) {
+                if (config.id() != null) {
+                  refs.add(config.id());
+                }
+              }
+              for (ConfigurationOption config : configs) {
+                if (config.id() != null || config.defaultValue() != null) {
+                  continue;
+                }
+                sharedIdsByName.forEach(
+                    (name, id) -> {
+                      if (config.description().contains("`" + name + "`") && !refs.contains(id)) {
+                        errors.add(
+                            source
+                                + ": '"
+                                + config.name()
+                                + "' falls back to '"
+                                + name
+                                + "', so the module must also declare `- ref: "
+                                + id
+                                + "`");
+                      }
+                    });
+              }
+            });
+
+    assertThat(errors).isEmpty();
+  }
+
+  /**
+   * Returns the configurations of every metadata.yaml, plus the shared definitions (a module only
+   * carries a ref to them), keyed by where they are declared.
+   */
+  private static Map<String, List<ConfigurationOption>> allConfigurations() throws IOException {
+    Map<String, List<ConfigurationOption>> configsBySource =
+        new LinkedHashMap<>(metadataConfigurations());
+    SharedConfigurationRegistry registry = SharedConfigurationRegistry.getInstance();
+    configsBySource.put(
+        SHARED_DEFINITIONS + " (configurations)", List.copyOf(registry.definitions().values()));
+    return configsBySource;
+  }
+
+  private static Map<String, List<ConfigurationOption>> metadataConfigurations()
+      throws IOException {
+    Map<String, List<ConfigurationOption>> configsBySource = new LinkedHashMap<>();
+    try (Stream<Path> paths = Files.walk(INSTRUMENTATION_DIR)) {
+      List<Path> metadataFiles =
+          paths.filter(p -> p.getFileName().toString().equals("metadata.yaml")).toList();
+
+      for (Path metadataFile : metadataFiles) {
+        String content = Files.readString(metadataFile);
+        try {
+          InstrumentationMetadata metadata = YamlHelper.metaDataParser(content);
+          configsBySource.put(metadataFile.toString(), metadata.getConfigurations());
+        } catch (Exception e) {
+          throw new IllegalStateException(
+              String.format("Failed to parse %s: %s", metadataFile, e.getMessage()), e);
+        }
+      }
+    }
+    return configsBySource;
+  }
+
   private static void validateNotDeprecated(
-      Path metadataFile, ConfigurationOption config, List<String> errors) {
+      String source, ConfigurationOption config, List<String> errors) {
     if (config.declarativeName() == null) {
       return;
     }
@@ -119,13 +252,13 @@ class DeclarativeConfigValidationTest {
               Locale.ROOT,
               "Deprecated declarative_name in %s: '%s' is kept in the bridge for backwards"
                   + " compatibility only; use '%s' instead.",
-              metadataFile,
+              source,
               config.declarativeName(),
               replacement));
     }
   }
 
-  private static ValidationResult validateConfig(Path metadataFile, ConfigurationOption config) {
+  private static ValidationResult validateConfig(String source, ConfigurationOption config) {
     String flatProperty = config.name();
     String declarativePath = config.declarativeName();
     ConfigurationType type = config.type();
@@ -154,7 +287,7 @@ class DeclarativeConfigValidationTest {
     boolean valid = Objects.equals(testValue.expectedValue, retrievedValue);
 
     return new ValidationResult(
-        metadataFile.toString(),
+        source,
         flatProperty,
         declarativePath,
         type,
@@ -248,11 +381,11 @@ class DeclarativeConfigValidationTest {
    * such as {@code url_template_rules}, which the round-trip check above cannot exercise.
    */
   private static void validateStructuredListSchema(
-      Path metadataFile, ConfigurationOption config, List<String> errors) {
+      String source, ConfigurationOption config, List<String> errors) {
     if (config.declarativeType() != ConfigurationType.STRUCTURED_LIST) {
       return;
     }
-    String label = metadataFile + " (" + config.declarativeName() + ")";
+    String label = source + " (" + config.declarativeName() + ")";
     DeclarativeSchema schema = config.declarativeSchema();
     if (schema == null) {
       errors.add(label + ": structured_list config is missing a declarative_schema");

@@ -51,3 +51,5 @@ configurations:
       release.
     type: list
     default: ""
+    deprecated: true
+    replaced_by: otel.instrumentation.servlet.experimental.request-parameters.included

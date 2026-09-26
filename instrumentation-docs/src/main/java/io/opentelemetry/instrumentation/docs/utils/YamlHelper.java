@@ -288,12 +288,22 @@ public class YamlHelper {
     }
     conf.put("description", configuration.description());
     conf.put("type", configuration.type().toString());
-    if (configuration.type().equals(ConfigurationType.BOOLEAN)) {
-      conf.put("default", Boolean.parseBoolean(configuration.defaultValue()));
-    } else if (configuration.type().equals(ConfigurationType.INT)) {
-      conf.put("default", Integer.parseInt(configuration.defaultValue()));
-    } else {
-      conf.put("default", configuration.defaultValue());
+    // no default means that leaving the option unset falls back to another setting
+    String defaultValue = configuration.defaultValue();
+    if (defaultValue != null) {
+      if (configuration.type().equals(ConfigurationType.BOOLEAN)) {
+        conf.put("default", Boolean.parseBoolean(defaultValue));
+      } else if (configuration.type().equals(ConfigurationType.INT)) {
+        conf.put("default", Integer.parseInt(defaultValue));
+      } else {
+        conf.put("default", defaultValue);
+      }
+    }
+    if (configuration.isDeprecated()) {
+      conf.put("deprecated", true);
+      if (configuration.replacedBy() != null) {
+        conf.put("replaced_by", configuration.replacedBy());
+      }
     }
     if (configuration.examples() != null && !configuration.examples().isEmpty()) {
       conf.put("examples", configuration.examples());

@@ -72,6 +72,8 @@ configurations:
       glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other
       entry is matched as a literal metadata key.
     default: ''
+    deprecated: true
+    replaced_by: otel.instrumentation.grpc.client.request-metadata.included
   - name: otel.instrumentation.grpc.capture-metadata.server.request
     declarative_name: java.grpc.capture_metadata.server.request
     type: list
@@ -81,3 +83,5 @@ configurations:
       glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other
       entry is matched as a literal metadata key.
     default: ''
+    deprecated: true
+    replaced_by: otel.instrumentation.grpc.server.request-metadata.included

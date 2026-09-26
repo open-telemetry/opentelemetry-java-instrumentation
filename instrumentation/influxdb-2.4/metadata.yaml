@@ -8,8 +8,8 @@ configurations:
   - name: otel.instrumentation.influxdb.query-sanitization.enabled
     declarative_name: java.influxdb.query_sanitization.enabled
     description: >
-      Enables query sanitization for InfluxDB queries. Takes precedence over
-      otel.instrumentation.common.db.query-sanitization.enabled.
+      Enables query sanitization for InfluxDB queries. Overrides
+      `otel.instrumentation.common.db.query-sanitization.enabled` for this instrumentation; when
+      unset, that setting applies.
     type: boolean
-    default: true
   - ref: common.db.query-sanitization.enabled

@@ -46,8 +46,12 @@ public class DocGeneratorApplication {
       writer.write(
           "# each module references them by id via `metric_refs` and `configuration_refs`.\n");
       writer.write(
+          "# A configuration without a `default` falls back to another setting when unset, and a\n");
+      writer.write(
+          "# deprecated one is marked `deprecated: true`, with `replaced_by` naming its replacement.\n");
+      writer.write(
           "# For more information see: https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13468\n\n");
-      writer.write("file_format: 0.7\n\n");
+      writer.write("file_format: 0.8\n\n");
       YamlHelper.generateInstrumentationYaml(modules, writer);
     }
 
@@ -56,7 +60,13 @@ public class DocGeneratorApplication {
             baseRepoPath.resolve("docs/declarative-configuration-example.yaml"))) {
       configWriter.write("# This file is generated and should not be manually edited.\n");
       configWriter.write(
-          "# It shows all available instrumentation configurations in declarative config format.\n\n");
+          "# It shows the available instrumentation configurations in declarative config format,\n");
+      configWriter.write(
+          "# each set to its default value, so any entry can be copied and changed on its own.\n");
+      configWriter.write(
+          "# Deprecated configurations, and configurations that fall back to another setting when\n");
+      configWriter.write(
+          "# unset, are left out; see docs/instrumentation-list.yaml for the complete list.\n\n");
       configWriter.write(
           "# For an interactive builder, see: https://explorer.opentelemetry.io/java-agent/configuration/builder.\n\n");
       configWriter.write("file_format: '1.0'\n\n");
