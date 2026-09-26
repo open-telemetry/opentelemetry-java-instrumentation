@@ -10,6 +10,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
@@ -134,6 +136,7 @@ class CouchbaseInstrumentationModulesTest {
         assertThat(module.instrumentationNames())
             .containsExactly("couchbase", "couchbase-2.0", "couchbase-2.6-network");
         assertThat(config.isInstrumentationEnabled(module.instrumentationNames(), false)).isFalse();
+        verify(properties, never()).getBoolean("otel.instrumentation.couchbase-2.6.enabled");
         assertThat(records).isEmpty();
       } else {
         assertThat(module.instrumentationNames())
