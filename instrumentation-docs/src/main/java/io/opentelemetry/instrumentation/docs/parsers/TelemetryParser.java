@@ -69,6 +69,7 @@ class TelemetryParser {
                 "io.opentelemetry.couchbase-3.1",
                 Set.of("io.opentelemetry.javaagent.couchbase-3.1", "com.couchbase.client.jvm")),
             entry("io.opentelemetry.couchbase-3.2", singleton("com.couchbase.client.jvm")),
+            entry("io.opentelemetry.mongo-3.1", singleton("io.opentelemetry.mongo-3.7")),
             // servlet-5.0 tests use jetty-12.0 instrumentation
             entry("io.opentelemetry.servlet-5.0", singleton("io.opentelemetry.jetty-12.0")),
             // runtime-telemetry library tests use a meter named "test"

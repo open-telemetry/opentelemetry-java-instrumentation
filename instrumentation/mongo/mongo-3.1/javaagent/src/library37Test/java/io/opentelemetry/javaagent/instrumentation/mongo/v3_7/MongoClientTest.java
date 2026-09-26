@@ -236,6 +236,23 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   }
 
   @Test
+  void preservesInstrumentationScope() {
+    createCollection("test_db", createCollectionName());
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.satisfies(
+                        spanData -> {
+                          assertThat(spanData.getInstrumentationScopeInfo().getName())
+                              .isEqualTo("io.opentelemetry.mongo-3.7");
+                          assertThat(spanData.getInstrumentationScopeInfo().getVersion())
+                              .isNotEmpty();
+                        })));
+  }
+
+  @Test
   void testClientFailure() {
     MongoClient client =
         MongoClients.create("mongodb://" + host + ":" + UNUSABLE_PORT + "/?connectTimeoutMS=10");
