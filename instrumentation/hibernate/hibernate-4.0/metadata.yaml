@@ -1,5 +1,7 @@
 display_name: Hibernate
-description: This instrumentation enables spans for Hibernate ORM operations.
+description: >
+  This instrumentation enables spans for Hibernate ORM operations and stored procedure calls.
+  Stored procedure instrumentation also supports Hibernate 6 and later.
 library_link: https://hibernate.org/
 configurations:
   - name: otel.instrumentation.hibernate.experimental-span-attributes

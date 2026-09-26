@@ -112,7 +112,14 @@ class ProcedureCallTest {
                         .hasNoParent()
                         .hasTotalAttributeCount(0),
                 span ->
-                    span.hasName("ProcedureCall.getOutputs TEST_PROC")
+                    span.satisfies(
+                            spanData -> {
+                              assertThat(spanData.getInstrumentationScopeInfo().getName())
+                                  .isEqualTo("io.opentelemetry.hibernate-procedure-call-4.3");
+                              assertThat(spanData.getInstrumentationScopeInfo().getVersion())
+                                  .isNotEmpty();
+                            })
+                        .hasName("ProcedureCall.getOutputs TEST_PROC")
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
