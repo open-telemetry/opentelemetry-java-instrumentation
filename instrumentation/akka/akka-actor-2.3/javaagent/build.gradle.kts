@@ -29,6 +29,7 @@ muzzle {
 
   // Akka's fork-join was removed in 2.6, replaced with the normal java.concurrent version
   pass {
+    // instrumentation-docs:ignore - verification only, the directives above are the ranges we document
     name.set("Akka actor 2.5 forkjoin instrumentation for Scala 2.11")
     group.set("com.typesafe.akka")
     module.set("akka-actor_2.11")
@@ -37,6 +38,7 @@ muzzle {
     excludeInstrumentationName("akka-actor-2.3-core")
   }
   pass {
+    // instrumentation-docs:ignore - verification only, the directives above are the ranges we document
     name.set("Akka actor 2.5 forkjoin instrumentation for Scala 2.12")
     group.set("com.typesafe.akka")
     module.set("akka-actor_2.12")
@@ -45,6 +47,7 @@ muzzle {
     excludeInstrumentationName("akka-actor-2.3-core")
   }
   pass {
+    // instrumentation-docs:ignore - verification only, the directives above are the ranges we document
     name.set("Akka actor 2.5 forkjoin instrumentation for Scala 2.13")
     group.set("com.typesafe.akka")
     module.set("akka-actor_2.13")
