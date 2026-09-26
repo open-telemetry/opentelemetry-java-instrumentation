@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
+import com.amazonaws.internal.SdkInternalList;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.List;
 
 /**
@@ -15,16 +17,25 @@ import java.util.List;
  */
 public final class SqsProcessTracing {
 
+  private static final VirtualField<SdkInternalList<?>, Boolean> PROCESSING_OWNERSHIP =
+      VirtualField.find(SdkInternalList.class, Boolean.class);
+
   /**
-   * Disables raw process spans for the exact traced response list or list view passed to this
-   * method. The owner must mark that object before traversal, and only when it will instrument
-   * processing itself. Views have independent ownership and must be marked separately. Each
-   * eligible application traversal can produce raw process spans.
+   * Disables raw process spans for the traced response list and its views. The owner must mark that
+   * response before traversal, and only when it will instrument processing itself. Unowned
+   * responses can produce raw process spans on each eligible application traversal.
    *
    * <p>Ownership does not follow message objects into copied lists or other responses.
    */
   public static void markProcessingOwnedOutsideSqsSdk(List<?> messages) {
-    TracingList.markProcessingOwnedOutsideSqsSdk(messages);
+    SdkInternalList<?> processingOwner = TracingList.processingOwner(messages);
+    if (processingOwner != null) {
+      PROCESSING_OWNERSHIP.set(processingOwner, true);
+    }
+  }
+
+  static boolean isProcessingOwnedOutsideSqsSdk(SdkInternalList<?> messages) {
+    return PROCESSING_OWNERSHIP.get(messages) != null;
   }
 
   private SqsProcessTracing() {}

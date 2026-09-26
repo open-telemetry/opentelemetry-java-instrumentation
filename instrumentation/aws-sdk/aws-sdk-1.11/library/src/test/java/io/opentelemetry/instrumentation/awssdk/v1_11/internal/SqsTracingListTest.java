@@ -337,48 +337,25 @@ class SqsTracingListTest {
         .allSatisfy(span -> assertThat(span).hasParent(parent));
   }
 
-  @Test
-  void viewProcessingOwnershipDoesNotDisableParentOrSiblingView() {
-    List<Message> messages = tracingMessages();
-    List<Message> selected = messages.subList(0, 1);
-    List<Message> sibling = messages.subList(1, 2);
-    ListIterator<Message> selectedIterator = selected.listIterator();
-    SqsProcessTracing.markProcessingOwnedOutsideSqsSdk(selected);
-
-    selectedIterator.forEachRemaining(
-        message -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
-    selected.forEach(message -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
-    messages.forEach(SqsTracingListTest::processing);
-    sibling.forEach(SqsTracingListTest::processing);
-
-    assertThat(testing.spans()).hasSize(3);
-  }
-
-  @Test
-  void parentProcessingOwnershipDoesNotDisableListView() {
-    List<Message> messages = tracingMessages();
-    List<Message> view = messages.subList(0, 1);
-    ListIterator<Message> messagesIterator = messages.listIterator();
-    SqsProcessTracing.markProcessingOwnedOutsideSqsSdk(messages);
-
-    messagesIterator.forEachRemaining(
-        message -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
-    messages.forEach(message -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
-    view.forEach(SqsTracingListTest::processing);
-
-    assertThat(testing.spans()).hasSize(1);
-  }
-
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
-  void processingOwnershipOnlyAppliesToMarkedList(boolean markRoot) {
-    List<Message> messages = tracingMessages();
-    List<Message> view = messages.subList(0, 1);
-    SqsProcessTracing.markProcessingOwnedOutsideSqsSdk(markRoot ? messages : view);
-
-    (markRoot ? view : messages).forEach(SqsTracingListTest::processing);
-
-    assertThat(testing.spans()).hasSize(markRoot ? 1 : 2);
+  void processingOwnershipDisablesOnlyMatchingResponse(boolean selectView) {
+    List<Message> selected = tracingMessages();
+    List<Message> view = selected.subList(0, 2);
+    ListIterator<Message> existingIterator = selected.listIterator();
+    List<Message> unrelated = tracingMessages(Context.root(), true, new ArrayList<>(selected));
+    SqsProcessTracing.markProcessingOwnedOutsideSqsSdk(selectView ? view : selected);
+    selected.forEach(message -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    view.spliterator()
+        .forEachRemaining(
+            message -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    existingIterator.forEachRemaining(
+        message -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    selected.forEach(message -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    testing.runWithSpan("framework", () -> unrelated.forEach(SqsTracingListTest::processing));
+    assertThat(testing.spans())
+        .extracting(SpanData::getName)
+        .containsExactlyInAnyOrder("framework", "process", "process");
   }
 
   @Test

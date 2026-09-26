@@ -23,24 +23,17 @@ class TracingIterator implements ListIterator<Message> {
 
   private final ListIterator<Message> delegateIterator;
   private final TracingList tracingList;
-  private final TracingList.ProcessingOwnership processingOwnership;
 
   @Nullable private ProcessingInvocation currentInvocation;
 
-  private TracingIterator(
-      ListIterator<Message> delegateIterator,
-      TracingList tracingList,
-      TracingList.ProcessingOwnership processingOwnership) {
+  private TracingIterator(ListIterator<Message> delegateIterator, TracingList tracingList) {
     this.delegateIterator = delegateIterator;
     this.tracingList = tracingList;
-    this.processingOwnership = processingOwnership;
   }
 
   static ListIterator<Message> wrap(
-      ListIterator<Message> delegateIterator,
-      TracingList tracingList,
-      TracingList.ProcessingOwnership processingOwnership) {
-    return new TracingIterator(delegateIterator, tracingList, processingOwnership);
+      ListIterator<Message> delegateIterator, TracingList tracingList) {
+    return new TracingIterator(delegateIterator, tracingList);
   }
 
   @Override
@@ -76,8 +69,7 @@ class TracingIterator implements ListIterator<Message> {
     currentInvocation =
         message == null
             ? null
-            : ProcessingInvocation.start(
-                tracingList, processingOwnership, SqsMessageImpl.wrap(message));
+            : ProcessingInvocation.start(tracingList, SqsMessageImpl.wrap(message));
   }
 
   private void endCurrentInvocation() {
@@ -108,10 +100,7 @@ class TracingIterator implements ListIterator<Message> {
   }
 
   static void processCallback(
-      TracingList tracingList,
-      TracingList.ProcessingOwnership processingOwnership,
-      Message message,
-      Consumer<? super Message> action) {
+      TracingList tracingList, Message message, Consumer<? super Message> action) {
     requireNonNull(action);
     if (message == null) {
       action.accept(message);
@@ -119,7 +108,7 @@ class TracingIterator implements ListIterator<Message> {
     }
 
     ProcessingInvocation invocation =
-        ProcessingInvocation.start(tracingList, processingOwnership, SqsMessageImpl.wrap(message));
+        ProcessingInvocation.start(tracingList, SqsMessageImpl.wrap(message));
     try {
       action.accept(message);
     } catch (Throwable t) {
@@ -165,11 +154,8 @@ class TracingIterator implements ListIterator<Message> {
     private final Scope scope;
 
     @Nullable
-    private static ProcessingInvocation start(
-        TracingList tracingList,
-        TracingList.ProcessingOwnership processingOwnership,
-        SqsMessage message) {
-      if (processingOwnership.isOwnedOutsideSqsSdk()) {
+    private static ProcessingInvocation start(TracingList tracingList, SqsMessage message) {
+      if (tracingList.isProcessingOwnedOutsideSqsSdk()) {
         return null;
       }
       Context parentContext = tracingList.getProcessParentContext();

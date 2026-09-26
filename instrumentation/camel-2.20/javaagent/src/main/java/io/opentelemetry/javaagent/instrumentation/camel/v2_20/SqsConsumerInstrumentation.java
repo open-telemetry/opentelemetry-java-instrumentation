@@ -7,37 +7,37 @@ package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.instrumentation.awssdk.v1_11.internal.SqsProcessTracing;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import javax.annotation.Nullable;
+import java.util.List;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
 
-class KafkaFetchRecordsInstrumentation implements TypeInstrumentation {
+class SqsConsumerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("org.apache.camel.component.kafka.KafkaConsumer$KafkaFetchRecords");
+    return named("org.apache.camel.component.aws.sqs.SqsConsumer");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        namedOneOf("doRun", "run"), getClass().getName() + "$MarkConsumerAdvice");
+        named("createExchanges").and(takesArgument(0, List.class)),
+        getClass().getName() + "$CreateExchangesAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class MarkConsumerAdvice {
+  public static class CreateExchangesAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(
-        @Advice.FieldValue("consumer") @Nullable KafkaConsumer<?, ?> consumer) {
-      if (emitStableMessagingSemconv() && consumer != null) {
-        CamelKafkaProcessingOwnership.markConsumer(consumer);
+    public static void onEnter(@Advice.Argument(0) List<?> messages) {
+      if (emitStableMessagingSemconv()) {
+        SqsProcessTracing.markProcessingOwnedOutsideSqsSdk(messages);
       }
     }
   }
