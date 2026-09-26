@@ -37,6 +37,21 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
+        implementation(project(":instrumentation:jms:jms-3.0:javaagent"))
+        implementation(project(":instrumentation:jms:jms-common-1.1:javaagent"))
+        implementation(project(":javaagent-extension-api"))
+        implementation("jakarta.jms:jakarta.jms-api:3.0.0")
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
@@ -72,7 +87,7 @@ tasks {
     }
     jvmArgs("-Dotel.instrumentation.jms.enabled=false")
     // receive telemetry is enabled here because the jms instrumentation that would create the
-    // receive operation is disabled, so the process operation has to count the consumed message
+    // receive operation is disabled, so the process operation owns the messaging telemetry
     jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
     systemProperty("testJmsDisabled", "true")
@@ -114,6 +129,7 @@ tasks {
 
   check {
     dependsOn(
+      testing.suites,
       testReceiveSpansDisabled,
       testMessagingPreview,
       testJmsDisabled,
