@@ -10,6 +10,7 @@ muzzle {
     excludeInstrumentationName("ratpack-1.7")
   }
   pass {
+    // instrumentation-docs:ignore - verification only, the directive above is the range we document
     name.set("Ratpack 1.7 instrumentation")
     group.set("io.ratpack")
     module.set("ratpack-core")
