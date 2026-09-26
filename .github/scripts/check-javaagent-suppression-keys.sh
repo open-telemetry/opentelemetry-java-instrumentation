@@ -11,12 +11,6 @@ for file in $(find instrumentation -name "*Module.java"); do
   fi
 
   module_name=$(echo "$file" | sed 's#.*/\([^/]*\)/javaagent/src/.*#\1#')
-  # Some modules retain version-specific aliases within a shared Gradle project.
-  case "$file" in
-    instrumentation/couchbase/couchbase-2.0/javaagent/src/main/java/io/opentelemetry/javaagent/instrumentation/couchbase/v2_6/CouchbaseInstrumentationModule.java)
-      module_name="couchbase-2.6"
-      ;;
-  esac
   simple_module_name=$(echo "$module_name" | sed 's/-[0-9.]*$//')
 
   if [[ "$simple_module_name" == *jaxrs* ]]; then
