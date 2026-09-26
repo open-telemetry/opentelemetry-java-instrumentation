@@ -44,9 +44,11 @@ The following sampler names supplied by that dependency are deprecated in these 
 - `rule_based_routing` in declarative configuration.
 - `linksbased_parentbased_always_on` with `otel.traces.sampler` or `OTEL_TRACES_SAMPLER`.
 
-Both names continue to work without configuration changes, but selecting either one logs a
-deprecation warning at startup. We plan to stop bundling the dependency and supporting these names
-in 3.0. This does not deprecate the contrib library itself.
+Outside v3-preview, both names continue to work without configuration changes, but selecting either
+one logs a deprecation warning at startup. When
+`otel.instrumentation.common.v3-preview=true`, selecting either sampler fails SDK initialization
+with a configuration error. We plan to stop bundling the dependency and supporting these names in
+3.0. This does not deprecate the contrib library itself.
 
 For `rule_based_routing`, consider the SDK incubator's `composite/development` `rule_based`
 sampler. Its configuration and matching behavior differ; see the
