@@ -122,14 +122,14 @@ configurations:
   messaging.deprecated-common-headers.included:
     name: otel.instrumentation.common.messaging.experimental.headers.included
     declarative_name: java.common.messaging.headers/development.included
-    description: "Deprecated: use `otel.instrumentation.common.messaging.headers.included` instead. It will be removed in 3.0. Case-sensitive header name glob patterns: `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. An absent or empty selector captures no headers; an exclude-only selector captures every header not excluded."
+    description: "Deprecated: use `otel.instrumentation.common.messaging.headers.included` instead. This setting is ignored under v3-preview and will be removed in 3.0. Case-sensitive header name glob patterns: `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. An absent or empty selector captures no headers; an exclude-only selector captures every header not excluded."
     type: list
     default: ""
 
   messaging.deprecated-common-headers.excluded:
     name: otel.instrumentation.common.messaging.experimental.headers.excluded
     declarative_name: java.common.messaging.headers/development.excluded
-    description: "Deprecated: use `otel.instrumentation.common.messaging.headers.excluded` instead. It will be removed in 3.0. Case-sensitive header name glob patterns: `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. An absent or empty selector captures no headers; an exclude-only selector captures every header not excluded, which may expose sensitive information."
+    description: "Deprecated: use `otel.instrumentation.common.messaging.headers.excluded` instead. This setting is ignored under v3-preview and will be removed in 3.0. Case-sensitive header name glob patterns: `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. An absent or empty selector captures no headers; an exclude-only selector captures every header not excluded, which may expose sensitive information."
     type: list
     default: ""
 
