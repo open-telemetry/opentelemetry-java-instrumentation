@@ -53,4 +53,23 @@ class ContextPropagationOperator34InstrumentationTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(stringKey("foo"), "bar"), equalTo(stringKey("foo2"), "bar2"))));
   }
+
+  @Test
+  void getMissingContextWithNullFallback() {
+    Context context =
+        ContextPropagationOperator.getOpenTelemetryContextFromContextView(
+            reactor.util.context.Context.empty(), null);
+
+    assertThat(context).isNull();
+  }
+
+  @Test
+  void getMissingContextWithExplicitFallback() {
+    Context fallback = Context.root();
+    Context context =
+        ContextPropagationOperator.getOpenTelemetryContextFromContextView(
+            reactor.util.context.Context.empty(), fallback);
+
+    assertThat(context).isSameAs(fallback);
+  }
 }
