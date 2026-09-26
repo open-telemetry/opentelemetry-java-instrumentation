@@ -5,8 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactor.kafka.v1_0;
 
-import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanSuppression;
+import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaProcessingOwnershipUtil.markProcessingOwnedOutsideKafkaClient;
 
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
 import reactor.core.Scannable;
@@ -15,24 +16,25 @@ import reactor.core.publisher.FluxOperator;
 import reactor.core.publisher.Operators;
 import reactor.util.context.Context;
 
-public class TracingDisablingKafkaFlux<T> extends FluxOperator<T, T> {
+public class KafkaClientProcessingHandoffFlux
+    extends FluxOperator<ConsumerRecords<?, ?>, ConsumerRecords<?, ?>> {
 
-  public TracingDisablingKafkaFlux(Flux<? extends T> source) {
+  public KafkaClientProcessingHandoffFlux(Flux<? extends ConsumerRecords<?, ?>> source) {
     super(source);
   }
 
   @Override
-  public void subscribe(CoreSubscriber<? super T> actual) {
-    source.subscribe(new TracingDisablingSubscriber<>(actual));
+  public void subscribe(CoreSubscriber<? super ConsumerRecords<?, ?>> actual) {
+    source.subscribe(new KafkaClientProcessingHandoffSubscriber(actual));
   }
 
-  static final class TracingDisablingSubscriber<T>
-      implements CoreSubscriber<T>, Subscription, Scannable {
+  static final class KafkaClientProcessingHandoffSubscriber
+      implements CoreSubscriber<ConsumerRecords<?, ?>>, Subscription, Scannable {
 
-    private final CoreSubscriber<T> actual;
+    private final CoreSubscriber<? super ConsumerRecords<?, ?>> actual;
     private Subscription subscription;
 
-    TracingDisablingSubscriber(CoreSubscriber<T> actual) {
+    KafkaClientProcessingHandoffSubscriber(CoreSubscriber<? super ConsumerRecords<?, ?>> actual) {
       this.actual = actual;
     }
 
@@ -40,7 +42,6 @@ public class TracingDisablingKafkaFlux<T> extends FluxOperator<T, T> {
     public void onSubscribe(Subscription s) {
       if (Operators.validate(this.subscription, s)) {
         this.subscription = s;
-
         actual.onSubscribe(this);
       }
     }
@@ -51,15 +52,9 @@ public class TracingDisablingKafkaFlux<T> extends FluxOperator<T, T> {
     }
 
     @Override
-    public void onNext(T record) {
-      boolean suppressionAcquired = processSpanSuppression().tryAcquire();
-      try {
-        actual.onNext(record);
-      } finally {
-        if (suppressionAcquired) {
-          processSpanSuppression().release();
-        }
-      }
+    public void onNext(ConsumerRecords<?, ?> records) {
+      markProcessingOwnedOutsideKafkaClient(records);
+      actual.onNext(records);
     }
 
     @Override

@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveMetrics;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
+import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanEnabledSupplier;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -31,6 +32,7 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
     kafkaConsumer.handler(
         record -> {
           try {
+            assertThat(processSpanEnabledSupplier().getAsBoolean()).isTrue();
             testing().runWithSpan("consumer", () -> {});
             if ("error".equals(record.value())) {
               throw new IllegalArgumentException("boom");
