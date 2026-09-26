@@ -1,8 +1,18 @@
 # Knowledge Index
 
-Reusable repository guidance for review and coding agents.
+These articles explain repository behavior, implementation steps, examples, and
+exceptions for coding agents or a specific investigation. GitHub Copilot code
+review's applicable rules are in
+`.github/copilot-instructions.md` and `.github/instructions/*.instructions.md`;
+review quality must not depend on following links from those instructions to
+these articles.
 
-Load only files relevant to the current scope to reduce noise and avoid over-constraining edits.
+Load only articles relevant to the current change or investigation; a coding
+workflow may require one when its technical detail is needed. Keep reportable
+review rules and their exceptions in the native instructions rather than
+repeating them as "what to flag" lists here. If an article and an applicable
+native instruction differ on review policy, use the native instruction and
+update the stale article separately.
 
 ## Topics
 
@@ -10,8 +20,8 @@ Load only files relevant to the current scope to reduce noise and avoid over-con
 | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `api-deprecation-policy.md`        | Public API removal, rename, or deprecation; stable vs alpha breaking changes                                                                                                                                |
 | `config-property-stability.md`     | `otel.instrumentation.*` property add, remove, rename, or deprecation                                                                                                                                       |
-| `general-rules.md`                 | Always — review checklist table and core rules enforced on every review                                                                                                                                     |
-| `metadata-yaml-format.md`          | Always — mandatory review of metadata.yaml for config coverage                                                                                                                                              |
+| `java-nullability-contracts.md`    | Upstream `TextMapGetter`/`TextMapSetter` nullable-carrier table; Java attribute-setter overload examples                                                                                                    |
+| `metadata-yaml-format.md`          | Instrumentation metadata or configuration shape and validation                                                                                                                                              |
 | `gradle-conventions.md`            | `build.gradle.kts` or `settings.gradle.kts` changes, custom test task registration or wiring                                                                                                                |
 | `java-reflection.md`               | `Method`, `MethodHandle`, `Constructor`, `Field`, reflective compatibility helpers, or package-local lookups                                                                                                |
 | `javaagent-advice-patterns.md`     | ByteBuddy `@Advice` classes or methods, helpers called by advice, or `Java8BytecodeBridge` usage                                                                                                            |
@@ -34,4 +44,4 @@ Load only files relevant to the current scope to reduce noise and avoid over-con
 
 - File names are topic-oriented and kebab-cased.
 - Prefer `<domain>-<focus>.md` patterns (for example `testing-semconv-stability.md`).
-- Keep titles aligned with category tags used in agent checklists (`[Build]`, `[Testing]`, etc.).
+- Keep titles aligned with category tags used in the native review instructions (`[Build]`, `[Testing]`, etc.).

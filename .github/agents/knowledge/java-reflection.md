@@ -1,5 +1,9 @@
 # Java reflection and method handles
 
+Consult this article when changing reflection-based compatibility code. It
+explains how declaring types, class loaders, access, and exception wrapping
+affect the choice of lookup and cache.
+
 ## Prefer direct access
 
 Prefer a direct Java call when supported library versions expose a compatible member and ordinary
@@ -57,8 +61,8 @@ return generatedValueMethod.get(receiver.getClass()).invoke(receiver);
 
 ## Cache repeated lookup
 
-Flag production Java code that repeats the same reflective method lookup on a path that may execute
-more than once. Resolve the method once and cache the resulting `Method` or `MethodHandle`. Use a
+For production Java code that repeats the same reflective method lookup on a path that may execute
+more than once, resolve the method once and cache the resulting `Method` or `MethodHandle`. Use a
 `static final` field when the declaring class is fixed.
 
 When a fixed declaring type is optional or unavailable at compile time, load it once by name without
@@ -92,8 +96,8 @@ Keep that cache in the injected helper, or pass a loader-scoped accessor to shar
 Do not choose or recommend `MethodHandle` solely for an assumed performance
 advantage. Use the design criteria above instead.
 
-Mixed use of reflection objects and method handles is not by itself a reason to
-flag or convert the code.
+Mixed use of reflection objects and method handles does not itself require
+conversion.
 
 ## Separate access from invocation
 
@@ -112,6 +116,5 @@ required access.
 that matches the caller's catching, unwrapping, logging, and fallback behavior.
 
 Lookup and invocation failures in javaagent advice or helpers called by advice must not escape into
-application code. Follow [Javaagent advice patterns](javaagent-advice-patterns.md) for suppression
-and [best-effort suppressed failures](general-rules.md#javaagent-best-effort-suppressed-failures)
-for logging.
+application code. Follow the suppression and logging rules in
+[javaagent instructions](../../instructions/javaagent.instructions.md).
