@@ -30,6 +30,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     env:
       LATEST_JAVA_VERSION: 26 # renovate(java-version)
       PROJECT: ${{ inputs.project }}

@@ -21,6 +21,7 @@ jobs:
   test-latest-deps:
     name: testLatestDeps${{ matrix.test-partition }}
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     strategy:
       matrix:
         test-partition:
