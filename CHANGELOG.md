@@ -17,6 +17,11 @@
 
 ### 🚫 Deprecations
 
+- Deprecate the `java.common.span_suppression_strategy/development` YAML key
+  in favor of `java.common.span_suppression_strategy`. The replacement is
+  YAML-only; the already deprecated
+  `otel.instrumentation.experimental.span-suppression-strategy` flat property
+  remains available until 3.0.
 - Deprecate the source-specific experimental selectors for Log4j `MapMessage` entries, Logback
   key-value pairs, Logstash markers, and Logstash structured arguments in favor of the common
   structured logging attribute selector. The source-specific properties are ignored under

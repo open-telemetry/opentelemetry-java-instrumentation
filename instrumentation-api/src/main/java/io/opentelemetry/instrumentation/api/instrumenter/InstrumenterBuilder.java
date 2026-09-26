@@ -418,18 +418,21 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
               .getInstrumentationConfig("common");
     }
 
-    String result = commonConfig.getString("span_suppression_strategy/development");
+    String result = commonConfig.getString("span_suppression_strategy");
     if (result == null && !SemconvStability.v3Preview(openTelemetry)) {
-      String deprecatedResult =
-          SystemProperty.getString("otel.instrumentation.experimental.span-suppression-strategy");
-      if (deprecatedResult != null) {
-        if (spanSuppressionPropertyWarningLogged.compareAndSet(false, true)) {
-          logger.warning(
-              "The otel.instrumentation.experimental.span-suppression-strategy setting is"
-                  + " deprecated and will be removed in 3.0. Use the programmatic API or equivalent"
-                  + " declarative instrumentation configuration instead.");
-        }
-        result = deprecatedResult;
+      // Deprecated declarative and flat names remain available until 3.0.
+      result = commonConfig.getString("span_suppression_strategy/development");
+      if (result == null) {
+        result =
+            SystemProperty.getString("otel.instrumentation.experimental.span-suppression-strategy");
+      }
+      if (result != null && spanSuppressionPropertyWarningLogged.compareAndSet(false, true)) {
+        logger.warning(
+            "The java.common.span_suppression_strategy/development YAML key and"
+                + " otel.instrumentation.experimental.span-suppression-strategy flat property"
+                + " are deprecated and will be removed in 3.0. Use the"
+                + " java.common.span_suppression_strategy YAML key or"
+                + " Experimental.setSpanSuppressionStrategy(...) instead.");
       }
     }
     return SpanSuppressionStrategy.fromConfig(result);
