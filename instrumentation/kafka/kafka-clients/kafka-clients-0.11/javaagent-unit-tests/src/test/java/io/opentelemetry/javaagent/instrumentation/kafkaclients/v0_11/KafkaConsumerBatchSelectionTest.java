@@ -90,7 +90,7 @@ class KafkaConsumerBatchSelectionTest {
   }
 
   @Test
-  void unrelatedRawBatchRemainsVisibleInsideFrameworkBatch() {
+  void rawBatchInsideFrameworkProcessScopeIsSuppressed() {
     ConsumerRecords<String, String> frameworkRecords = records(record(0));
     KafkaProcessingOwnershipUtil.recordPoll(frameworkRecords, true);
     Iterator<ConsumerRecord<String, String>> earlyIterator = iterator(frameworkRecords);
@@ -112,12 +112,25 @@ class KafkaConsumerBatchSelectionTest {
       framework.end(context, request, null, null);
     }
 
+    assertProcessSpans(1);
+    assertThat(testing.spans())
+        .singleElement()
+        .satisfies(
+            span ->
+                assertThat(span.getSpanId())
+                    .isEqualTo(Span.fromContext(context).getSpanContext().getSpanId()));
+
+    ConsumerRecords<String, String> independentRecords = records(record(2));
+    KafkaProcessingOwnershipUtil.recordPoll(independentRecords, true);
+    Iterator<ConsumerRecord<String, String>> independent = iterator(independentRecords);
+    assertThat(independent.next().offset()).isEqualTo(2);
+    assertThat(independent.hasNext()).isFalse();
     assertProcessSpans(2);
     assertThat(testing.spans())
-        .anySatisfy(
+        .allSatisfy(
             span ->
                 assertThat(span.getParentSpanId())
-                    .isEqualTo(Span.fromContext(context).getSpanContext().getSpanId()));
+                    .isEqualTo(Span.getInvalid().getSpanContext().getSpanId()));
     if (emitStableMessagingSemconv()) {
       assertThat(testing.metrics())
           .filteredOn(metric -> metric.getName().equals("messaging.process.duration"))
@@ -130,6 +143,56 @@ class KafkaConsumerBatchSelectionTest {
                               .sum())
                       .isEqualTo(2));
     }
+  }
+
+  @Test
+  void nestedProcessWithSameParentIsSuppressed() {
+    Instrumenter<KafkaProcessRequest, Void> instrumenter =
+        factory.createConsumerProcessInstrumenter();
+    KafkaProcessRequest outerRequest = KafkaProcessRequest.create(record(0), "group", "client");
+    Context outerContext = instrumenter.start(Context.current(), outerRequest);
+    try (Scope ignored = outerContext.makeCurrent()) {
+      Iterator<ConsumerRecord<String, String>> nested =
+          TracingIterator.wrap(
+              records(record(1)).iterator(),
+              instrumenter,
+              () -> true,
+              KafkaConsumerContextUtil.create(outerContext, "group", "client"));
+      assertThat(nested.next().offset()).isEqualTo(1);
+      assertThat(nested.hasNext()).isFalse();
+      assertThat(Span.current()).isSameAs(Span.fromContext(outerContext));
+    } finally {
+      instrumenter.end(outerContext, outerRequest, null, null);
+    }
+    assertProcessSpans(1);
+  }
+
+  @Test
+  void abandonedIteratorDoesNotSuppressIndependentBatchWithOwnParent() {
+    ConsumerRecords<String, String> firstRecords = records(record(0));
+    KafkaProcessingOwnershipUtil.recordPoll(firstRecords, true);
+    Iterator<ConsumerRecord<String, String>> first = iterator(firstRecords);
+    first.next();
+    Span firstSpan = Span.current();
+
+    ConsumerRecords<String, String> secondRecords = records(record(1));
+    KafkaProcessingOwnershipUtil.recordPoll(secondRecords, true);
+    Iterator<ConsumerRecord<String, String>> second =
+        TracingIterator.wrap(
+            secondRecords.iterator(),
+            factory.createConsumerProcessInstrumenter(),
+            KafkaProcessingOwnershipUtil.rawProcessingEligibility(secondRecords, () -> true),
+            KafkaConsumerContextUtil.create(Context.root(), "group", "client"));
+    assertThat(second.next().offset()).isEqualTo(1);
+    assertThat(second.hasNext()).isFalse();
+    assertThat(Span.current()).isSameAs(firstSpan);
+    assertThat(first.hasNext()).isFalse();
+    assertProcessSpans(2);
+    assertThat(testing.spans())
+        .allSatisfy(
+            span ->
+                assertThat(span.getParentSpanId())
+                    .isEqualTo(Span.getInvalid().getSpanContext().getSpanId()));
   }
 
   @Test

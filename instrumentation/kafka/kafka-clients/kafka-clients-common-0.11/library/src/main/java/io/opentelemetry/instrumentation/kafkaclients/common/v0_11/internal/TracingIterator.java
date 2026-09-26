@@ -84,10 +84,7 @@ public class TracingIterator<K, V> implements Iterator<ConsumerRecord<K, V>> {
         return next;
       }
       KafkaProcessRequest request = KafkaProcessRequest.create(consumerContext, next);
-      // Iterator spans can leak if traversal is abandoned. Ignore an ambient consumer span when
-      // selecting another record.
-      if (!instrumenter.shouldStart(
-          KafkaConsumerContextUtil.spanSuppressionContext(parentContext), request)) {
+      if (!instrumenter.shouldStart(parentContext, request)) {
         return next;
       }
       currentRequest = request;
