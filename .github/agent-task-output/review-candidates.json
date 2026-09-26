@@ -1,0 +1,12 @@
+{
+  "outcome": "complete",
+  "candidates": [
+    {
+      "path": "instrumentation/sofa-rpc-5.4/testing/src/main/java/io/opentelemetry/instrumentation/sofarpc/v5_4/AbstractSofaRpcTest.java",
+      "line": 898,
+      "side": "RIGHT",
+      "body": "[Style] Remove the `@Nullable` annotations from this helper and its `serverException` parameter below. Repository test rules explicitly prohibit adding `@Nullable` in test code, and this class is shared test support rather than production API.",
+      "evidence": "The changed file is under the module's `testing` source set and is used by the library and javaagent test classes. The repository's Java test instructions state: “Test code: Do not add `@Nullable` annotations in test code.” This change adds annotations at lines 898 and 903."
+    }
+  ]
+}
