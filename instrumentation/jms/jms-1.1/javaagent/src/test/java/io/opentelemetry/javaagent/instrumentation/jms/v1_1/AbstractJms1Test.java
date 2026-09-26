@@ -498,7 +498,7 @@ abstract class AbstractJms1Test {
   @EnabledIfSystemProperty(
       named = "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled",
       matches = "true")
-  void shouldObserveNestedDistinctMessageProcessing() throws Exception {
+  void shouldApplyParentContextSuppressionToNestedDistinctMessages() throws Exception {
     Destination destination = session.createQueue("nestedProcessingQueue");
     MessageProducer producer = session.createProducer(destination);
     cleanup.deferCleanup(producer::close);
@@ -515,7 +515,7 @@ abstract class AbstractJms1Test {
     outerListener.onMessage(outerMessage);
 
     testing.waitForTraces(4);
-    assertThat(testing.spans()).hasSize(6);
+    assertThat(testing.spans()).hasSize(emitStableMessagingSemconv() ? 5 : 6);
     assertThat(testing.spans())
         .filteredOn(
             span ->
@@ -524,7 +524,7 @@ abstract class AbstractJms1Test {
                         emitStableMessagingSemconv()
                             ? "process nestedProcessingQueue"
                             : "nestedProcessingQueue process"))
-        .hasSize(2);
+        .hasSize(emitStableMessagingSemconv() ? 1 : 2);
   }
 
   private static Attributes messagingMetricAttributes(String operationName, String destination) {

@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jms.common.v1_1;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.PROCESS_DURATION;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SpanKey.CONSUMER_PROCESS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -30,7 +31,7 @@ class JmsInstrumenterFactoryTest {
   private static final String INSTRUMENTATION_NAME = "test-jms";
 
   @Test
-  void recordsIndependentProcessDurationUnderOptedInProcessParent() {
+  void recordsIndependentProcessDurationWithoutProcessSpanKey() {
     assertThat(emitStableMessagingSemconv()).isTrue();
 
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
@@ -56,9 +57,11 @@ class JmsInstrumenterFactoryTest {
               MessagingTelemetryState.enable(Context.root().with(parent)),
               PROCESS,
               PROCESS_DURATION);
-      Context eligibilityContext = Context.root().with(parent);
-
-      assertThat(instrumenter.shouldStart(eligibilityContext, request)).isTrue();
+      assertThat(instrumenter.shouldStart(parentContext, request)).isTrue();
+      assertThat(
+              instrumenter.shouldStart(
+                  CONSUMER_PROCESS.storeInContext(parentContext, parent), request))
+          .isFalse();
       Context context = instrumenter.start(parentContext, request);
       instrumenter.end(context, request, null, null);
       parent.end();

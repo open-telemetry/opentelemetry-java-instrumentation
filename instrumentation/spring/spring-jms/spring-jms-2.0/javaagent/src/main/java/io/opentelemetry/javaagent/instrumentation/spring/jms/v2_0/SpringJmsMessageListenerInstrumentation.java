@@ -14,7 +14,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -99,11 +98,7 @@ class SpringJmsMessageListenerInstrumentation implements TypeInstrumentation {
           }
 
           Instrumenter<MessageWithDestination, Void> instrumenter = listenerInstrumenter();
-          // Ignore an ambient process signal when processing a distinct delivery, but retain the
-          // original parent for the span.
-          Context eligibilityContext =
-              Span.fromContext(parentContext).storeInContext(Context.root());
-          if (!instrumenter.shouldStart(eligibilityContext, request)) {
+          if (!instrumenter.shouldStart(parentContext, request)) {
             return new AdviceScope(instrumenter, request, messageAdapter, null, null);
           }
           Context context;
