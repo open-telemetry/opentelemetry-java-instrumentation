@@ -127,11 +127,57 @@ class VertxKafkaOwnershipTest {
   }
 
   @Test
-  void nestedUnrelatedRecordKeepsItsOwnProcessingSpan() {
+  void nestedRecordOnSameContextDoesNotStartAnotherProcessSpan() {
+    ConsumerRecord<String, String> record = record(0, "value");
+    ConsumerRecords<String, String> records = records(record);
+    prepareContexts(records);
+    AtomicInteger callbacks = new AtomicInteger();
+
+    new InstrumentedBatchRecordsHandler<String, String>(
+            ignored ->
+                new InstrumentedSingleRecordHandler<String, String>(
+                        inner -> {
+                          callbacks.incrementAndGet();
+                          assertThat(Span.current().getSpanContext().isValid()).isTrue();
+                        })
+                    .handle(record))
+        .handle(records);
+
+    assertThat(callbacks).hasValue(1);
+    assertThat(instrumentationSpans()).hasSize(1);
+    assertThat(Span.current().getSpanContext().isValid()).isFalse();
+  }
+
+  @Test
+  void nestedBatchOnSameContextDoesNotStartAnotherProcessSpan() {
+    ConsumerRecord<String, String> record = record(0, "value");
+    ConsumerRecords<String, String> records = records(record);
+    prepareContexts(records);
+    AtomicInteger callbacks = new AtomicInteger();
+
+    new InstrumentedSingleRecordHandler<String, String>(
+            ignored ->
+                new InstrumentedBatchRecordsHandler<String, String>(
+                        batch -> {
+                          callbacks.incrementAndGet();
+                          assertThat(Span.current().getSpanContext().isValid()).isTrue();
+                        })
+                    .handle(records))
+        .handle(record);
+
+    assertThat(callbacks).hasValue(1);
+    assertThat(instrumentationSpans()).hasSize(1);
+    assertThat(Span.current().getSpanContext().isValid()).isFalse();
+  }
+
+  @Test
+  void nestedUnrelatedRecordWithOwnReceiveContextKeepsItsProcessingSpan() {
     ConsumerRecords<String, String> outerRecords = records(record(0, "outer"));
     ConsumerRecord<String, String> innerRecord = record(1, "inner");
     prepareContexts(outerRecords);
-    prepareContexts(records(innerRecord));
+    SpanContext innerProducer =
+        remoteSpanContext("00000000000000000000000000000014", "0000000000000014");
+    prepareContexts(records(innerRecord), innerProducer);
 
     try (Scope ignored =
         Baggage.builder()
@@ -143,9 +189,9 @@ class VertxKafkaOwnershipTest {
               records -> {
                 assertThat(Baggage.current().getEntryValue("tenant")).isEqualTo("acme");
                 new InstrumentedSingleRecordHandler<String, String>(
-                        record ->
-                            assertThat(Baggage.current().getEntryValue("tenant")).isEqualTo("acme"))
+                        record -> assertThat(Baggage.current().getEntryValue("tenant")).isNull())
                     .handle(innerRecord);
+                assertThat(Baggage.current().getEntryValue("tenant")).isEqualTo("acme");
               })
           .handle(outerRecords);
     }
@@ -154,7 +200,7 @@ class VertxKafkaOwnershipTest {
     assertThat(spans).hasSize(2);
     SpanData inner = spans.get(0);
     SpanData outer = spans.get(1);
-    assertThat(inner.getParentSpanId()).isEqualTo(outer.getSpanId());
+    assertThat(inner.getParentSpanId()).isEqualTo(innerProducer.getSpanId());
     assertThat(outer.getParentSpanContext().isValid()).isFalse();
     assertProcessDurationMetrics(testing, INSTRUMENTATION_NAME, "orders", "group", "0", 2, null);
     assertThat(Span.current().getSpanContext().isValid()).isFalse();

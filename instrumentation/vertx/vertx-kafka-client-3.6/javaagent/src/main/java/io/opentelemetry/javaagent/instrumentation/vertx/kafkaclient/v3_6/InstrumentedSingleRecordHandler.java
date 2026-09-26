@@ -32,8 +32,7 @@ public class InstrumentedSingleRecordHandler<K, V> implements Handler<ConsumerRe
     Context parentContext = receiveContext != null ? receiveContext : Context.current();
 
     KafkaProcessRequest request = KafkaProcessRequest.create(consumerContext, record);
-    if (!processInstrumenter()
-        .shouldStart(KafkaConsumerContextUtil.spanSuppressionContext(parentContext), request)) {
+    if (!processInstrumenter().shouldStart(parentContext, request)) {
       callDelegateHandler(record);
       return;
     }

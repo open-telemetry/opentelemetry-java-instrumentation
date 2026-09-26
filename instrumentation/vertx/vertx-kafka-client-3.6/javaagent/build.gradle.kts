@@ -49,7 +49,24 @@ testing {
 }
 
 tasks {
+  val legacyUnitTests = register<Test>("legacyUnitTests") {
+    val sourceTask = named<Test>("unitTests").get()
+    testClassesDirs = sourceTask.testClassesDirs
+    classpath = sourceTask.classpath
+  }
+
   check {
-    dependsOn(testing.suites)
+    dependsOn(testing.suites, legacyUnitTests)
+  }
+}
+
+afterEvaluate {
+  tasks.named<Test>("legacyUnitTests") {
+    val sourceTask = tasks.named<Test>("unitTests").get()
+    // Unit tests run without the javaagent or its filtered test classpath.
+    jvmArgumentProviders.clear()
+    classpath = sourceTask.classpath
+    setJvmArgs(sourceTask.jvmArgs.filterNot { it.startsWith("-Dotel.semconv-stability.preview=") })
+    setSystemProperties(sourceTask.systemProperties - "otel.semconv-stability.preview")
   }
 }

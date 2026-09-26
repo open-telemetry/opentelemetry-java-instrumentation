@@ -32,8 +32,7 @@ public class InstrumentedBatchRecordsHandler<K, V> implements Handler<ConsumerRe
     Context parentContext = receiveContext != null ? receiveContext : Context.current();
 
     KafkaReceiveRequest request = KafkaReceiveRequest.create(consumerContext, records);
-    if (!batchProcessInstrumenter()
-        .shouldStart(KafkaConsumerContextUtil.spanSuppressionContext(parentContext), request)) {
+    if (!batchProcessInstrumenter().shouldStart(parentContext, request)) {
       callDelegateHandler(records);
       return;
     }
