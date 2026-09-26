@@ -8,7 +8,7 @@ muzzle {
     module.set("hibernate-core")
     versions.set("[4.0.0.Final,6)")
     assertInverse.set(true)
-    excludeInstrumentationName("hibernate-procedure-call-4.3")
+    excludeInstrumentationName("hibernate-4.0-procedure-call")
   }
   pass {
     name.set("Hibernate procedure calls")
@@ -154,11 +154,16 @@ tasks {
 
   val aliasTests = mapOf(
     "SharedAliasDisabled" to mapOf("hibernate" to false),
-    "CoreAliasDisabled" to mapOf("hibernate-4.0" to false),
-    "ProcedureAliasDisabled" to mapOf("hibernate-procedure-call" to false),
-    "ProcedureVersionAliasDisabled" to mapOf("hibernate-procedure-call-4.3" to false),
-    "AliasPrecedence" to mapOf("hibernate" to true, "hibernate-4.0" to false, "hibernate-procedure-call" to true, "hibernate-procedure-call-4.3" to false),
-    "ProcedureAliasOverride" to mapOf("hibernate" to false, "hibernate-procedure-call-4.3" to true),
+    "OwnerAliasDisabled" to mapOf("hibernate-4.0" to false),
+    "CoreAliasDisabled" to mapOf("hibernate-4.0-core" to false),
+    "ProcedureAliasDisabled" to mapOf("hibernate-4.0-procedure-call" to false),
+    "LegacyProcedureAliasDisabled" to mapOf("hibernate-procedure-call" to false),
+    "LegacyProcedureVersionAliasDisabled" to mapOf("hibernate-procedure-call-4.3" to false),
+    "AliasPrecedence" to mapOf("hibernate" to true, "hibernate-4.0" to false, "hibernate-procedure-call" to false, "hibernate-procedure-call-4.3" to false),
+    "OwnerPrecedence" to mapOf("hibernate-4.0" to true, "hibernate-procedure-call" to false, "hibernate-procedure-call-4.3" to false),
+    "ProcedureAliasOverride" to mapOf("hibernate-4.0-core" to false, "hibernate-procedure-call-4.3" to true),
+    "PreviewLegacyIgnored" to mapOf("hibernate-procedure-call" to true, "hibernate-procedure-call-4.3" to true),
+    "PreviewNewAliasEnabled" to mapOf("hibernate-4.0" to true, "hibernate-procedure-call" to false, "hibernate-procedure-call-4.3" to false),
   ).map { (name, aliases) ->
     register<Test>("procedureCallTest$name") {
       testClassesDirs = procedureCallSuite.get().sources.output.classesDirs
@@ -169,10 +174,13 @@ tasks {
       aliases.forEach { (alias, enabled) ->
         jvmArgs("-Dotel.instrumentation.$alias.enabled=$enabled")
       }
+      if (name.startsWith("Preview")) {
+        jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+      }
       jvmArgs("-Dotel.instrumentation.jdbc.enabled=false")
       systemProperty("testEnablement", true)
-      systemProperty("testCoreEnabled", name in listOf("ProcedureAliasDisabled", "ProcedureVersionAliasDisabled", "AliasPrecedence"))
-      systemProperty("testProcedureEnabled", name in listOf("CoreAliasDisabled", "AliasPrecedence", "ProcedureAliasOverride"))
+      systemProperty("testCoreEnabled", name in listOf("ProcedureAliasDisabled", "LegacyProcedureAliasDisabled", "LegacyProcedureVersionAliasDisabled", "AliasPrecedence", "OwnerPrecedence", "PreviewNewAliasEnabled"))
+      systemProperty("testProcedureEnabled", name in listOf("CoreAliasDisabled", "AliasPrecedence", "OwnerPrecedence", "ProcedureAliasOverride", "PreviewNewAliasEnabled"))
       systemProperty("collectMetadata", false)
     }
   }

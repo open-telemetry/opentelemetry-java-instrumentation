@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.procedure.call.v4_3;
 
+import static io.opentelemetry.javaagent.extension.instrumentation.internal.DeprecatedInstrumentationNames.expandDeprecatedNames;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
 
@@ -18,7 +19,13 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class HibernateInstrumentationModule extends InstrumentationModule {
   public HibernateInstrumentationModule() {
-    super("hibernate-procedure-call", "hibernate-procedure-call-4.3", "hibernate");
+    super(
+        "hibernate",
+        expandDeprecatedNames(
+            "hibernate-4.0",
+            "hibernate-4.0-procedure-call",
+            "hibernate|deprecated:hibernate-procedure-call",
+            "hibernate-4.0|deprecated:hibernate-procedure-call-4.3"));
   }
 
   @Override

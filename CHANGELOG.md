@@ -17,6 +17,11 @@
 
 ### 🚫 Deprecations
 
+- Deprecate `otel.instrumentation.hibernate-procedure-call.enabled` and
+  `otel.instrumentation.hibernate-procedure-call-4.3.enabled` in favor of
+  `otel.instrumentation.hibernate.enabled` and `otel.instrumentation.hibernate-4.0.enabled`,
+  respectively. The old names remain available outside v3-preview and will be removed in 3.0.
+  ([#20268](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20268))
 - Deprecate the source-specific experimental selectors for Log4j `MapMessage` entries, Logback
   key-value pairs, Logstash markers, and Logstash structured arguments in favor of the common
   structured logging attribute selector. The source-specific properties are ignored under
