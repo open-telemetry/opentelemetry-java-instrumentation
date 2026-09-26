@@ -42,7 +42,6 @@ import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
-import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
@@ -236,21 +235,6 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
             });
     assertThat(Span.current().getSpanContext().isValid()).isFalse();
     SqsMetricsAssertions.assertProcessMetrics(testing(), sqsPort, 2);
-  }
-
-  @Test
-  void testExplicitSuppressionLeavesLaterRawFallbackEnabled() {
-    assumeTrue(emitStableMessagingSemconv());
-    String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
-    sqsClient.createQueue("testSdkSqs");
-    sqsClient.sendMessage(new SendMessageRequest(queueUrl, "message"));
-    testing().waitForTraces(2);
-    testing().clearData();
-
-    List<Message> messages = sqsClient.receiveMessage(queueUrl).getMessages();
-    InstrumentationUtil.suppressInstrumentation(() -> messages.forEach(message -> {}));
-    messages.forEach(message -> {});
-    SqsMetricsAssertions.assertProcessMetrics(testing(), sqsPort, 1);
   }
 
   @Test

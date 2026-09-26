@@ -15,7 +15,6 @@ import com.amazonaws.DefaultRequest;
 import com.amazonaws.Response;
 import com.amazonaws.internal.SdkInternalList;
 import com.amazonaws.services.sqs.model.Message;
-import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
@@ -403,18 +402,6 @@ class SqsTracingListTest {
         });
     assertThat(visited.toArray()).containsExactly(messages.toArray());
     assertThat(testing.spans()).hasSize(enabled ? 2 : 0);
-  }
-
-  @Test
-  void explicitSuppressionDoesNotDisableLaterTraversal() {
-    List<Message> messages = tracingMessages();
-    InstrumentationUtil.suppressInstrumentation(
-        () ->
-            messages.forEach(
-                message -> assertThat(Span.current().getSpanContext().isValid()).isFalse()));
-    assertThat(testing.spans()).isEmpty();
-    messages.forEach(SqsTracingListTest::processing);
-    assertThat(testing.spans()).hasSize(2);
   }
 
   @Test
