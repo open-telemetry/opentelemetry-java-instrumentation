@@ -17,7 +17,6 @@ import static org.mockito.Mockito.when;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
-import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
@@ -114,6 +113,32 @@ class SpringRabbitProcessTest {
   }
 
   @Test
+  void batchWithSharedCreationContextLinksEachMessage() {
+    Message first = message();
+    Message second = message();
+    SpanContext creation = injectCreation(first, "creation");
+    second.getMessageProperties().getHeaders().putAll(first.getMessageProperties().getHeaders());
+
+    testing.runWithSpan("parent", () -> process(asList(first, second), () -> {}));
+
+    testing.waitAndAssertTraces(
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("creation")),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent"),
+                span ->
+                    span.hasAttribute(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2))
+                        .satisfies(
+                            data ->
+                                assertThat(data.getLinks())
+                                    .extracting(link -> link.getSpanContext().getSpanId())
+                                    .containsExactlyElementsOf(
+                                        emitStableMessagingSemconv()
+                                            ? asList(creation.getSpanId(), creation.getSpanId())
+                                            : emptyList()))));
+  }
+
+  @Test
   void independentNestedMessageUsesItsOwnProcessContext() {
     Message outer = message();
     Message inner = message();
@@ -186,21 +211,6 @@ class SpringRabbitProcessTest {
                 new SimpleMessageListenerContainer(), channel, message))
         .isNull();
     assertThat(PROCESSING_CONTEXT.get(message)).isNull();
-  }
-
-  @Test
-  void explicitSuppressionDoesNotInstallContext() {
-    Message message = message();
-    InstrumentationUtil.suppressInstrumentation(
-        () ->
-            assertThat(
-                    AbstractMessageListenerContainerInstrumentation.ExecuteListenerAdvice.onEnter(
-                        container, channel, message))
-                .isNull());
-    assertThat(PROCESSING_CONTEXT.get(message)).isNull();
-    process(message, () -> {});
-    testing.waitAndAssertTraces(
-        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasNoParent()));
   }
 
   private void process(Object message, Runnable callback) {

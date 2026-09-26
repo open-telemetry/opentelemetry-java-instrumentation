@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 import static java.util.Objects.requireNonNull;
 
 import com.amazonaws.services.sqs.model.Message;
-import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -156,8 +155,7 @@ class TracingIterator implements ListIterator<Message> {
 
     @Nullable
     private static ProcessingInvocation start(TracingList tracingList, SqsMessage message) {
-      if (tracingList.isProcessingOwnedOutsideSqsSdk()
-          || InstrumentationUtil.shouldSuppressInstrumentation(Context.current())) {
+      if (tracingList.isProcessingOwnedOutsideSqsSdk()) {
         return null;
       }
       Context parentContext = tracingList.getProcessParentContext();
@@ -166,8 +164,8 @@ class TracingIterator implements ListIterator<Message> {
       }
       SqsProcessRequest request = SqsProcessRequest.create(tracingList.getRequest(), message);
 
-      // An abandoned iterator can leave an ambient consumer span. Only explicit suppression and
-      // ownership of this response list should prevent unrelated raw processing.
+      // An abandoned iterator can leave an ambient consumer span. Check suppression against the
+      // captured parent so it cannot suppress unrelated raw processing.
       Context suppressionContext = Context.root().with(Span.fromContext(parentContext));
       if (!tracingList.getInstrumenter().shouldStart(suppressionContext, request)) {
         return null;

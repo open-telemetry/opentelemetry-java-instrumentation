@@ -21,10 +21,9 @@ public final class SqsProcessTracing {
       VirtualField.find(SdkInternalList.class, Boolean.class);
 
   /**
-   * Disables raw process spans for the exact traced response list or list view passed to this
-   * method. The owner must mark that object before traversal, and only when it will instrument
-   * processing itself. Views have independent ownership and must be marked separately. Otherwise,
-   * leave raw tracing enabled.
+   * Disables raw process spans for the traced response list and its views. The owner must mark that
+   * response before traversal, and only when it will instrument processing itself. Unowned
+   * responses can produce raw process spans on each eligible application traversal.
    *
    * <p>Ownership does not follow message objects into copied lists or other responses.
    */

@@ -34,7 +34,7 @@ testing {
       dependencies {
         implementation(project())
         implementation(project(":javaagent-extension-api"))
-        implementation("org.springframework.amqp:spring-rabbit:2.1.7.RELEASE")
+        implementation("org.springframework.amqp:spring-rabbit:${baseVersion("2.1.7.RELEASE").orLatest()}")
       }
     }
 
