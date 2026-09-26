@@ -1,0 +1,1 @@
+Use Java 25 as the default project toolchain
