@@ -13,6 +13,7 @@ muzzle {
     excludeInstrumentationName("mongo-3.7-core")
   }
   pass {
+    // instrumentation-docs:ignore - verification only, the directive above is the range we document
     name.set("mongo-3.7")
     group.set("org.mongodb")
     module.set("mongo-java-driver")
