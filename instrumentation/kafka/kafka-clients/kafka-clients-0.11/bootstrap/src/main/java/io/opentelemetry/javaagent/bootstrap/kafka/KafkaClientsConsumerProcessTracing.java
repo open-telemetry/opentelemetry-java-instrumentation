@@ -5,11 +5,6 @@
 
 package io.opentelemetry.javaagent.bootstrap.kafka;
 
-import io.opentelemetry.api.baggage.Baggage;
-import io.opentelemetry.api.impl.InstrumentationUtil;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.context.Context;
-import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.internal.ScopedThreadSuppression;
 import java.util.function.BooleanSupplier;
 
@@ -18,9 +13,6 @@ import java.util.function.BooleanSupplier;
 // contains an instrumentation that uses them, so instrumentations in different class loaders will
 // have separate copies of helper classes.
 public final class KafkaClientsConsumerProcessTracing {
-
-  private static final ContextKey<Boolean> FRAMEWORK_PROCESS_KEY =
-      ContextKey.named("opentelemetry-kafka-framework-process-span");
 
   private static final ScopedThreadSuppression processSpanSuppression =
       new ScopedThreadSuppression();
@@ -31,20 +23,6 @@ public final class KafkaClientsConsumerProcessTracing {
 
   public static BooleanSupplier processSpanEnabledSupplier() {
     return () -> !processSpanSuppression.isActive();
-  }
-
-  public static Context markFrameworkProcess(Context context) {
-    return context.with(FRAMEWORK_PROCESS_KEY, true);
-  }
-
-  public static Context withoutFrameworkProcessSuppression(Context context) {
-    if (!Boolean.TRUE.equals(context.get(FRAMEWORK_PROCESS_KEY))
-        || InstrumentationUtil.shouldSuppressInstrumentation(context)) {
-      return context;
-    }
-
-    Context parentContext = Context.root().with(Span.fromContext(context));
-    return Baggage.fromContext(context).storeInContext(parentContext);
   }
 
   private KafkaClientsConsumerProcessTracing() {}
