@@ -41,6 +41,7 @@ testing {
           filter {
             includeTestsMatching("*RedissonClientTest.configuredMasterSlaveServerTarget")
             includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
+            includeTestsMatching("*RedissonClientTest.configuredDatabaseIndexOnAtomicBatch")
           }
         }
       }
@@ -71,6 +72,7 @@ tasks {
         filter {
           includeTestsMatching("*RedissonClientTest.configuredMasterSlaveServerTarget")
           includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
+          includeTestsMatching("*RedissonClientTest.configuredDatabaseIndexOnAtomicBatch")
         }
         jvmArgs("-Dotel.semconv-stability.opt-in=database")
         systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
