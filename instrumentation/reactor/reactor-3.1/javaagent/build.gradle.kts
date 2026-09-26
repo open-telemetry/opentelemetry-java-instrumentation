@@ -1,15 +1,29 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {
   pass {
+    name.set("Reactor 3.1 instrumentation")
     group.set("io.projectreactor")
     module.set("reactor-core")
     versions.set("[3.1.0.RELEASE,)")
     assertInverse.set(true)
     extraDependency("io.opentelemetry:opentelemetry-api:1.0.0")
     excludeInstrumentationName("opentelemetry-api")
+    excludeInstrumentationName("reactor-3.4-context-propagation-operator")
+  }
+  pass {
+    name.set("Reactor 3.4 ContextView instrumentation")
+    group.set("io.projectreactor")
+    module.set("reactor-core")
+    versions.set("[3.4.0,)")
+    assertInverse.set(true)
+    extraDependency("io.opentelemetry:opentelemetry-api:1.0.0")
+    excludeInstrumentationName("opentelemetry-api")
+    excludeInstrumentationName("reactor-3.1-core")
+    excludeInstrumentationName("reactor-3.1-context-propagation-operator")
   }
 }
 
@@ -30,7 +44,6 @@ dependencies {
   compileOnly(project(":instrumentation-annotations-support"))
   compileOnly(project(":opentelemetry-api-shaded-for-instrumenting", configuration = "shadow"))
 
-  testInstrumentation(project(":instrumentation:reactor:reactor-3.4:javaagent"))
   testInstrumentation(project(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent"))
 
   testLibrary("io.projectreactor:reactor-core:3.1.0.RELEASE")
@@ -49,6 +62,12 @@ testing {
         implementation(project(":instrumentation-annotations"))
         val version = baseVersion("3.1.0.RELEASE").orLatest()
         implementation("io.projectreactor:reactor-test:$version")
+      }
+    }
+    register<JvmTestSuite>("version34Test") {
+      dependencies {
+        implementation(project(":instrumentation:reactor:reactor-3.1:library"))
+        implementation("io.projectreactor:reactor-core:${baseVersion("3.4.0").orLatest()}")
       }
     }
   }

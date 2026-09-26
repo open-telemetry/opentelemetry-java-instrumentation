@@ -927,9 +927,6 @@ targets:
       target: ':instrumentation:reactor:reactor-3.1:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:reactor:reactor-3.4:javaagent'
-    - type: gradle
-      path: ./
       target: ':instrumentation:reactor:reactor-kafka-1.0:javaagent'
     - type: gradle
       path: ./

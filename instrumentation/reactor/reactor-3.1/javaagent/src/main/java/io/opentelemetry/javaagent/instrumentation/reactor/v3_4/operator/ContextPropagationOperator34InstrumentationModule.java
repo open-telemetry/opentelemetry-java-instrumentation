@@ -18,7 +18,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class ContextPropagationOperator34InstrumentationModule extends InstrumentationModule {
 
   public ContextPropagationOperator34InstrumentationModule() {
-    super("reactor", "reactor-3.4", "reactor-context-propagation-operator");
+    super(
+        "reactor",
+        "reactor-3.4",
+        "reactor-context-propagation-operator",
+        "reactor-3.4-context-propagation-operator");
   }
 
   @Override
