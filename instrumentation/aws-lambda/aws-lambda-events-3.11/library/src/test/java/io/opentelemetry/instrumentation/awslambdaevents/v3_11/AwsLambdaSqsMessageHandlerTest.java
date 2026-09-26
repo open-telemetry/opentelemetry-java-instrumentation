@@ -283,7 +283,7 @@ class AwsLambdaSqsMessageHandlerTest {
   }
 
   @Test
-  void nestedProcessSpan() {
+  void keyedEventSuppressesSelectedMessageOnlyInStableMode() {
     String messagingPreview = System.getProperty("otel.semconv-stability.preview");
     String v3Preview = System.getProperty("otel.instrumentation.common.v3-preview");
     if ("true".equals(v3Preview)) {
@@ -319,14 +319,27 @@ class AwsLambdaSqsMessageHandlerTest {
     new TestHandler(openTelemetrySdk, eventInstrumenter).handleRequest(event, context);
 
     testing.waitAndAssertTraces(
-        trace ->
+        trace -> {
+          if (emitStableMessagingSemconv()) {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("my_function"),
-                span -> span.hasName("custom process").hasKind(SpanKind.CONSUMER),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv() ? "process queue1" : "aws:sqs process")
-                        .hasKind(SpanKind.CONSUMER)));
+                    span.hasName("custom process")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(0)));
+          } else {
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("my_function"),
+                span ->
+                    span.hasName("custom process")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName("aws:sqs process")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(1)));
+          }
+        });
   }
 
   // Constructor private in early versions.
