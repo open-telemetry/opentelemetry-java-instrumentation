@@ -23,7 +23,7 @@
   Also deprecate `otel.instrumentation.couchbase-network-2.0.enabled` and
   `otel.instrumentation.couchbase-2.0-network.enabled`, which controlled pre-2.6 network enrichment;
   replace either with `otel.instrumentation.couchbase-2.0-network-2.0.enabled`.
-  Independently controlled core instrumentation can remain active alongside network enrichment on supported versions.
+  Disabling a network selector does not disable core instrumentation.
   For broader control, use `otel.instrumentation.couchbase-2.0.enabled` for all Couchbase 2.x
   instrumentation, or `otel.instrumentation.couchbase.enabled` across versions, including 3.x.
   The deprecated keys remain supported in Java agent 2.x and will be removed in 3.0.
