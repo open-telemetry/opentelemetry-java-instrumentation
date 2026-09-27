@@ -210,16 +210,17 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
     testing.runWithSpan(
         "parent",
         () -> {
-          Iterator<? extends ConsumerRecord<?, ?>> firstIterator =
-              poll(Duration.ofSeconds(5)).iterator();
+          ConsumerRecords<?, ?> firstRecords = poll(Duration.ofSeconds(5));
+          Iterator<? extends ConsumerRecord<?, ?>> firstIterator = firstRecords.iterator();
           assertThat(firstIterator.hasNext()).isTrue();
           firstIterator.next();
 
           try (Scope ignored = Context.root().makeCurrent()) {
             producer.send(new ProducerRecord<>(SHARED_TOPIC, "second")).get(5, SECONDS);
           }
-          Iterator<? extends ConsumerRecord<?, ?>> secondIterator =
-              poll(Duration.ofSeconds(5)).iterator();
+          ConsumerRecords<?, ?> secondRecords = poll(Duration.ofSeconds(5));
+          assertThat(secondRecords).isNotSameAs(firstRecords);
+          Iterator<? extends ConsumerRecord<?, ?>> secondIterator = secondRecords.iterator();
           assertThat(secondIterator.hasNext()).isTrue();
           secondIterator.next();
           assertThat(secondIterator.hasNext()).isFalse();

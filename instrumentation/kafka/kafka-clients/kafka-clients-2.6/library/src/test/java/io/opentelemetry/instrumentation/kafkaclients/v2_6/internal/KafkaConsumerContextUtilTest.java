@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
 import org.junit.jupiter.api.Test;
@@ -31,12 +32,39 @@ class KafkaConsumerContextUtilTest {
       Context parentContext = Context.root().with(parentSpan);
       Context processContext =
           KafkaConsumerContextUtil.withProcessParentSpan(
-              parentContext.with(processSpan), parentContext);
+              SpanKey.CONSUMER_PROCESS.storeInContext(parentContext.with(processSpan), processSpan),
+              parentContext);
 
       Context restored = KafkaConsumerContextUtil.withoutLeakedProcessSpan(processContext);
 
       assertThat(Span.fromContext(restored)).isSameAs(parentSpan);
       assertThat(Span.fromContext(restored).isRecording()).isTrue();
+      assertThat(SpanKey.CONSUMER_PROCESS.fromContextOrNull(restored)).isNull();
+    } finally {
+      processSpan.end();
+      parentSpan.end();
+    }
+  }
+
+  @Test
+  void retainsParentProcessSuppressionWhenRestoringLeakedProcessSpan() {
+    assumeTrue(emitStableMessagingSemconv());
+    Span parentSpan =
+        testing.getOpenTelemetry().getTracer("test").spanBuilder("parent").startSpan();
+    Span processSpan =
+        testing.getOpenTelemetry().getTracer("test").spanBuilder("process").startSpan();
+    try {
+      Context parentContext =
+          SpanKey.CONSUMER_PROCESS.storeInContext(Context.root().with(parentSpan), parentSpan);
+      Context processContext =
+          KafkaConsumerContextUtil.withProcessParentSpan(
+              SpanKey.CONSUMER_PROCESS.storeInContext(parentContext.with(processSpan), processSpan),
+              parentContext);
+
+      Context restored = KafkaConsumerContextUtil.withoutLeakedProcessSpan(processContext);
+
+      assertThat(Span.fromContext(restored)).isSameAs(parentSpan);
+      assertThat(SpanKey.CONSUMER_PROCESS.fromContextOrNull(restored)).isSameAs(parentSpan);
     } finally {
       processSpan.end();
       parentSpan.end();
