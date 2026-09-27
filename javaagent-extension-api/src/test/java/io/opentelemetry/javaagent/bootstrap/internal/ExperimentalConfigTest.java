@@ -68,10 +68,6 @@ class ExperimentalConfigTest {
     DeclarativeConfigProperties messaging = commonConfig.get("messaging");
     when(messaging.get("headers").getScalarList("included", String.class)).thenReturn(null);
     when(messaging.get("headers").getScalarList("excluded", String.class)).thenReturn(null);
-    when(messaging.get("headers/development").getScalarList("included", String.class))
-        .thenReturn(null);
-    when(messaging.get("headers/development").getScalarList("excluded", String.class))
-        .thenReturn(null);
     when(messaging.getScalarList("capture_headers/development", String.class)).thenReturn(null);
     when(deprecatedMessagingConfig
             .get("headers/development")

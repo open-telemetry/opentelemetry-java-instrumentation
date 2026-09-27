@@ -54,15 +54,8 @@ public final class MessagingConfig {
    */
   public static IncludeExclude getHeaders(
       OpenTelemetry openTelemetry, boolean systemPropertyFallback) {
-    DeclarativeConfigProperties commonConfig =
-        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
-    Boolean v3Preview =
-        getBoolean(
-            commonConfig,
-            "v3_preview",
-            "otel.instrumentation.common.v3-preview",
-            systemPropertyFallback);
-    DeclarativeConfigProperties messagingConfig = commonConfig.get("messaging");
+    DeclarativeConfigProperties messagingConfig =
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common").get("messaging");
     DeclarativeConfigProperties headers = messagingConfig.get("headers");
     DeclarativeConfigProperties deprecatedHeaders =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "messaging")
@@ -70,21 +63,9 @@ public final class MessagingConfig {
     List<String> stableIncluded = headers.getScalarList("included", String.class);
     List<String> stableExcluded = headers.getScalarList("excluded", String.class);
     List<String> included =
-        getHeaderPatterns(
-            "included",
-            stableIncluded,
-            messagingConfig,
-            deprecatedHeaders,
-            Boolean.TRUE.equals(v3Preview),
-            systemPropertyFallback);
+        getHeaderPatterns("included", stableIncluded, deprecatedHeaders, systemPropertyFallback);
     List<String> excluded =
-        getHeaderPatterns(
-            "excluded",
-            stableExcluded,
-            messagingConfig,
-            deprecatedHeaders,
-            Boolean.TRUE.equals(v3Preview),
-            systemPropertyFallback);
+        getHeaderPatterns("excluded", stableExcluded, deprecatedHeaders, systemPropertyFallback);
     IncludeExclude selector =
         IncludeExclude.builder()
             .setIncluded(included == null ? emptyList() : included)
@@ -110,9 +91,7 @@ public final class MessagingConfig {
   private static List<String> getHeaderPatterns(
       String name,
       @Nullable List<String> stablePatterns,
-      DeclarativeConfigProperties messagingConfig,
       DeclarativeConfigProperties deprecatedHeaders,
-      boolean v3Preview,
       boolean systemPropertyFallback) {
     String replacementProperty = COMMON_MESSAGING_PROPERTY_PREFIX + ".headers." + name;
     if (stablePatterns != null) {
@@ -121,23 +100,6 @@ public final class MessagingConfig {
     if (systemPropertyFallback) {
       List<String> patterns = SystemProperty.getList(replacementProperty);
       if (patterns != null && !patterns.isEmpty()) {
-        return patterns;
-      }
-    }
-
-    // The common experimental selector remains an alias outside v3-preview until 3.0.
-    if (!v3Preview) {
-      String deprecatedCommonProperty =
-          COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.headers." + name;
-      List<String> patterns =
-          getList(
-              messagingConfig.get("headers/development"),
-              name,
-              deprecatedCommonProperty,
-              systemPropertyFallback);
-      if (patterns != null && !patterns.isEmpty()) {
-        warnDeprecatedProperty(
-            deprecatedCommonProperty, replacementProperty, "will be removed in 3.0");
         return patterns;
       }
     }

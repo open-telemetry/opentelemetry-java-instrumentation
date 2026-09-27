@@ -365,14 +365,6 @@
       "description": "A comma-separated list of case-sensitive message header name glob patterns to capture as span attributes. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. An absent or empty selector captures no headers; an exclude-only selector captures every header not excluded."
     },
     {
-      "name": "otel.instrumentation.common.messaging.experimental.headers.included",
-      "type": "java.util.List<java.lang.String>",
-      "description": "Deprecated: use otel.instrumentation.common.messaging.headers.included instead. This setting remains available under v3-preview and will be removed in 3.0. Case-sensitive header name glob patterns: `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. An absent or empty selector captures no headers; an exclude-only selector captures every header not excluded.",
-      "deprecation": {
-        "replacement": "otel.instrumentation.common.messaging.headers.included"
-      }
-    },
-    {
       "name": "otel.instrumentation.messaging.experimental.headers.included",
       "type": "java.util.List<java.lang.String>",
       "description": "Deprecated: use otel.instrumentation.common.messaging.headers.included instead. It may be removed in the next minor release. A comma-separated list of message header name patterns to capture as span attributes. Matching is case-sensitive. `?` matches one character and `*` matches zero or more characters.",
@@ -384,14 +376,6 @@
       "name": "otel.instrumentation.common.messaging.headers.excluded",
       "type": "java.util.List<java.lang.String>",
       "description": "A comma-separated list of case-sensitive message header name glob patterns to exclude from span attributes. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. An absent or empty selector captures no headers; an exclude-only selector captures every header not excluded, which may expose sensitive information."
-    },
-    {
-      "name": "otel.instrumentation.common.messaging.experimental.headers.excluded",
-      "type": "java.util.List<java.lang.String>",
-      "description": "Deprecated: use otel.instrumentation.common.messaging.headers.excluded instead. This setting remains available under v3-preview and will be removed in 3.0. Case-sensitive header name glob patterns: `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. An absent or empty selector captures no headers; an exclude-only selector captures every header not excluded, which may expose sensitive information.",
-      "deprecation": {
-        "replacement": "otel.instrumentation.common.messaging.headers.excluded"
-      }
     },
     {
       "name": "otel.instrumentation.messaging.experimental.headers.excluded",
