@@ -18,8 +18,8 @@
 ### 🚫 Deprecations
 
 - Deprecate `otel.instrumentation.mongo-3.7.enabled`. The `mongo-3.1` and `mongo-3.7`
-  settings did not divide MongoDB driver versions: both sets of instrumentation can run
-  with a MongoDB 3.7 driver. The old `mongo-3.7` setting controlled only the 3.7-specific
+  settings did not divide MongoDB driver versions: both the 3.1 and 3.7-specific
+  instrumentation target the MongoDB 3.7 driver. The old `mongo-3.7` setting controlled only the 3.7-specific
   instrumentation. For that same narrow control, use
   `otel.instrumentation.mongo-3.1-core-3.7.enabled`. To control both sets, use
   `otel.instrumentation.mongo-3.1.enabled`, or use `otel.instrumentation.mongo.enabled`
