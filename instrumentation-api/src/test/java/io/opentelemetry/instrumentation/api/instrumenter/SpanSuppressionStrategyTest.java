@@ -469,6 +469,11 @@ class SpanSuppressionStrategyTest {
     boolean propertyWarningWasLogged = propertyWarningLogged.getAndSet(false);
     List<LogRecord> records = new ArrayList<>();
     Logger logger = Logger.getLogger(InstrumenterBuilder.class.getName());
+    String warningMessage =
+        "The otel.instrumentation.experimental.span-suppression-strategy setting and the"
+            + " equivalent declarative configuration property are deprecated and will be removed"
+            + " in 3.0. Use otel.instrumentation.common.span-suppression-strategy or equivalent"
+            + " declarative configuration instead.";
     Handler handler =
         new Handler() {
           @Override
@@ -513,13 +518,7 @@ class SpanSuppressionStrategyTest {
           .buildSpanSuppressor();
       assertThat(records).hasSize(1);
       assertThat(records.get(0).getLevel()).isEqualTo(WARNING);
-      assertThat(records.get(0).getMessage())
-          .contains("java.common.span_suppression_strategy/development")
-          .contains("otel.instrumentation.experimental.span-suppression-strategy")
-          .contains("Use java.common.span_suppression_strategy (or")
-          .contains("otel.instrumentation.common.span-suppression-strategy")
-          .contains("3.0")
-          .doesNotContain("Experimental.setSpanSuppressionStrategy");
+      assertThat(records.get(0).getMessage()).isEqualTo(warningMessage);
 
       records.clear();
       Map<String, String> deprecatedFlat = new HashMap<>();
@@ -535,12 +534,7 @@ class SpanSuppressionStrategyTest {
           .buildSpanSuppressor();
       assertThat(records).hasSize(1);
       assertThat(records.get(0).getLevel()).isEqualTo(WARNING);
-      assertThat(records.get(0).getMessage())
-          .contains("otel.instrumentation.experimental.span-suppression-strategy")
-          .contains("programmatic API")
-          .contains("declarative instrumentation configuration")
-          .contains("3.0")
-          .doesNotContain("java.common.span_suppression_strategy/development");
+      assertThat(records.get(0).getMessage()).isEqualTo(warningMessage);
 
       Instrumenter.<String, String>builder(
               withCommonConfig(null, null, false), "test", request -> "test")
