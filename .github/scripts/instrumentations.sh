@@ -123,6 +123,7 @@ readonly INSTRUMENTATIONS=(
   "grpc-1.6:javaagent:testExperimental"
   "grpc-1.6:javaagent:testExceptionSignalLogs"
   "gwt-2.0:javaagent:test"
+  "gwt-2.0:javaagent:testExceptionSignalLogs"
   "hbase:hbase-client-1.0:javaagent:test"
   "hbase:hbase-client-1.0:javaagent:testStableSemconv"
   "hbase:hbase-client-1.4:javaagent:test"
