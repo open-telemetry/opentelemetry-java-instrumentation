@@ -144,7 +144,7 @@ definitions:
       type: list
       default: ''
       deprecated: true
-      replaced_by: otel.instrumentation.common.messaging.experimental.headers.included
+      replaced_by: otel.instrumentation.common.messaging.headers.included
     messaging.deprecated-common-headers.excluded:
       name: otel.instrumentation.common.messaging.experimental.headers.excluded
       declarative_name: java.common.messaging.headers/development.excluded
@@ -157,6 +157,8 @@ definitions:
         sensitive information.'
       type: list
       default: ''
+      deprecated: true
+      replaced_by: otel.instrumentation.common.messaging.headers.excluded
     messaging.deprecated-common-headers.included:
       name: otel.instrumentation.common.messaging.experimental.headers.included
       declarative_name: java.common.messaging.headers/development.included
@@ -168,6 +170,8 @@ definitions:
         exclude-only selector captures every header not excluded.'
       type: list
       default: ''
+      deprecated: true
+      replaced_by: otel.instrumentation.common.messaging.headers.included
     messaging.deprecated-headers.excluded:
       name: otel.instrumentation.messaging.experimental.headers.excluded
       description: 'Deprecated: use `otel.instrumentation.common.messaging.headers.excluded`
@@ -175,7 +179,7 @@ definitions:
       type: list
       default: ''
       deprecated: true
-      replaced_by: otel.instrumentation.common.messaging.experimental.headers.excluded
+      replaced_by: otel.instrumentation.common.messaging.headers.excluded
     messaging.deprecated-headers.included:
       name: otel.instrumentation.messaging.experimental.headers.included
       description: 'Deprecated: use `otel.instrumentation.common.messaging.headers.included`
@@ -183,7 +187,7 @@ definitions:
       type: list
       default: ''
       deprecated: true
-      replaced_by: otel.instrumentation.common.messaging.experimental.headers.included
+      replaced_by: otel.instrumentation.common.messaging.headers.included
     messaging.deprecated-receive-telemetry.enabled:
       name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
       description: 'Deprecated: use `otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled`
