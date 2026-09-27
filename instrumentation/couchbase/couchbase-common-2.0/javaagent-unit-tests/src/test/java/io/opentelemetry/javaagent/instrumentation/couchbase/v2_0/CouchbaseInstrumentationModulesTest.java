@@ -20,6 +20,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModul
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.DeprecatedInstrumentationNames;
 import io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.CouchbaseNetworkInstrumentationModule;
+import io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network26.CouchbaseNetwork26InstrumentationModule;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,9 +36,16 @@ import org.mockito.MockedStatic;
 class CouchbaseInstrumentationModulesTest {
   private final InstrumentationModule core = new CouchbaseInstrumentationModule();
   private final InstrumentationModule network = new CouchbaseNetworkInstrumentationModule();
-  private final InstrumentationModule network26 =
-      new io.opentelemetry.javaagent.instrumentation.couchbase.v2_6
-          .CouchbaseInstrumentationModule();
+  private final InstrumentationModule network26 = new CouchbaseNetwork26InstrumentationModule();
+
+  @Test
+  void registersBothNetwork26Advices() {
+    assertThat(network26.typeInstrumentations())
+        .extracting(instrumentation -> instrumentation.getClass().getName())
+        .containsExactly(
+            "io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network26.CouchbaseCoreInstrumentation",
+            "io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network26.CouchbaseNetworkInstrumentation");
+  }
 
   @Test
   void preservesOrderedEnablementNames() {
@@ -47,7 +55,8 @@ class CouchbaseInstrumentationModulesTest {
         .containsExactly(
             "couchbase", "couchbase-2.0", "couchbase-network-2.0", "couchbase-2.0-network");
     assertThat(network26.instrumentationNames())
-        .containsExactly("couchbase", "couchbase-2.0", "couchbase-2.6", "couchbase-2.6-network");
+        .containsExactly(
+            "couchbase", "couchbase-2.0", "couchbase-2.6", "couchbase-2.0-network-2.6");
   }
 
   @ParameterizedTest
@@ -58,7 +67,7 @@ class CouchbaseInstrumentationModulesTest {
     "couchbase-network-2.0, true, false, true",
     "couchbase-2.0-network, true, false, true",
     "couchbase-2.6, true, true, false",
-    "couchbase-2.6-network, true, true, false"
+    "couchbase-2.0-network-2.6, true, true, false"
   })
   void disablesOnlySelectedModules(
       String name, boolean coreEnabled, boolean networkEnabled, boolean network26Enabled) {
@@ -80,7 +89,7 @@ class CouchbaseInstrumentationModulesTest {
     ConfigProperties properties = mock(ConfigProperties.class);
     when(properties.getBoolean(anyString())).thenReturn(null);
     when(properties.getBoolean("otel.instrumentation.couchbase-2.6.enabled")).thenReturn(true);
-    when(properties.getBoolean("otel.instrumentation.couchbase-2.6-network.enabled"))
+    when(properties.getBoolean("otel.instrumentation.couchbase-2.0-network-2.6.enabled"))
         .thenReturn(false);
     AgentDistributionConfig config = AgentDistributionConfig.fromConfigProperties(properties);
 
@@ -129,19 +138,17 @@ class CouchbaseInstrumentationModulesTest {
       common.when(AgentCommonConfig::get).thenReturn(commonConfig);
       distribution.when(AgentDistributionConfig::get).thenReturn(config);
 
-      InstrumentationModule module =
-          new io.opentelemetry.javaagent.instrumentation.couchbase.v2_6
-              .CouchbaseInstrumentationModule();
+      InstrumentationModule module = new CouchbaseNetwork26InstrumentationModule();
       if (v3Preview) {
         assertThat(module.instrumentationNames())
-            .containsExactly("couchbase", "couchbase-2.0", "couchbase-2.6-network");
+            .containsExactly("couchbase", "couchbase-2.0", "couchbase-2.0-network-2.6");
         assertThat(config.isInstrumentationEnabled(module.instrumentationNames(), false)).isFalse();
         verify(properties, never()).getBoolean("otel.instrumentation.couchbase-2.6.enabled");
         assertThat(records).isEmpty();
       } else {
         assertThat(module.instrumentationNames())
             .containsExactly(
-                "couchbase", "couchbase-2.0", "couchbase-2.6", "couchbase-2.6-network");
+                "couchbase", "couchbase-2.0", "couchbase-2.6", "couchbase-2.0-network-2.6");
         assertThat(config.isInstrumentationEnabled(module.instrumentationNames(), false)).isTrue();
         assertThat(records)
             .singleElement()

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.couchbase.v2_6;
+package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network26;
 
 import com.couchbase.client.core.message.CouchbaseRequest;
 import io.opentelemetry.instrumentation.api.util.VirtualField;

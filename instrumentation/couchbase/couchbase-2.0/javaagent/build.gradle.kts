@@ -12,7 +12,7 @@ muzzle {
     assertInverse.set(true)
 
     excludeInstrumentationName("couchbase-2.0-network")
-    excludeInstrumentationName("couchbase-2.6-network")
+    excludeInstrumentationName("couchbase-2.0-network-2.6")
   }
   pass {
     // instrumentation-docs:ignore - verification only, the directive above is the range we document
@@ -23,7 +23,7 @@ muzzle {
     assertInverse.set(true)
 
     excludeInstrumentationName("couchbase-2.0-core")
-    excludeInstrumentationName("couchbase-2.6-network")
+    excludeInstrumentationName("couchbase-2.0-network-2.6")
   }
   pass {
     // instrumentation-docs:ignore - verification only, the first directive is the range we document
