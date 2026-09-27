@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.oshi.v5_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeVersion;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.DiskIncubatingAttributes.DISK_IO_DIRECTION;
@@ -206,17 +208,17 @@ public abstract class AbstractSystemMetricsTest {
             "system.memory.usage",
             metrics ->
                 metrics.anySatisfy(
-                    metric -> {
-                      assertThat(metric.getInstrumentationScopeInfo().getSchemaUrl())
-                          .isEqualTo(
-                              v3Preview()
-                                  ? SchemaUrls.V1_44_0
-                                  : "https://opentelemetry.io/schemas/1.19.0");
-                      assertThat(metric.getInstrumentationScopeInfo().getVersion())
-                          .isEqualTo(
-                              EmbeddedInstrumentationProperties.findVersion(
-                                  "io.opentelemetry.oshi-5.0"));
-                    }));
+                    metric ->
+                        assertThat(metric)
+                            .satisfies(
+                                hasScopeSchemaUrl(
+                                    v3Preview()
+                                        ? SchemaUrls.V1_44_0
+                                        : "https://opentelemetry.io/schemas/1.19.0"))
+                            .satisfies(
+                                hasScopeVersion(
+                                    EmbeddedInstrumentationProperties.findVersion(
+                                        "io.opentelemetry.oshi-5.0")))));
   }
 
   private static void assertNetworkPoints(

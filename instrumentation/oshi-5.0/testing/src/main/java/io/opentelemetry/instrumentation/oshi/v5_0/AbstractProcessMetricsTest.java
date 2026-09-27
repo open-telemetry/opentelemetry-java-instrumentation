@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.oshi.v5_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
@@ -87,9 +88,6 @@ public abstract class AbstractProcessMetricsTest {
         .waitAndAssertMetrics(
             scopeName(),
             "runtime.java.memory",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric.getInstrumentationScopeInfo().getSchemaUrl()).isNull()));
+            metrics -> metrics.anySatisfy(hasScopeSchemaUrl(null)));
   }
 }

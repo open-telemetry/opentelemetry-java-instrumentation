@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.oshi.v5_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
@@ -74,7 +75,7 @@ class SystemMetricsTest extends AbstractSystemMetricsTest {
             metric -> {
               assertThat(metric.getName()).isEqualTo("system.network.packets");
               assertThat(metric.getUnit()).isEqualTo("{packets}");
-              assertThat(metric.getInstrumentationScopeInfo().getSchemaUrl()).isNull();
+              assertThat(metric).satisfies(hasScopeSchemaUrl(null));
             });
   }
 
@@ -96,9 +97,12 @@ class SystemMetricsTest extends AbstractSystemMetricsTest {
               assertThat(metric.getName())
                   .isEqualTo(
                       v3Preview() ? "system.network.packets" : "system.network.packet.count");
-              assertThat(metric.getInstrumentationScopeInfo().getSchemaUrl())
-                  .isEqualTo(
-                      v3Preview() ? "https://opentelemetry.io/schemas/1.19.0" : SchemaUrls.V1_44_0);
+              assertThat(metric)
+                  .satisfies(
+                      hasScopeSchemaUrl(
+                          v3Preview()
+                              ? "https://opentelemetry.io/schemas/1.19.0"
+                              : SchemaUrls.V1_44_0));
             });
   }
 }
