@@ -20,10 +20,12 @@
 - Deprecate `otel.instrumentation.common.experimental.controller-telemetry.enabled` and
   `otel.instrumentation.common.experimental.view-telemetry.enabled` in favor of
   `otel.instrumentation.common.controller-telemetry.enabled` and
-  `otel.instrumentation.common.view-telemetry.enabled`, respectively. In declarative YAML, use
-  `java.common.controller_telemetry.enabled` and `java.common.view_telemetry.enabled` instead of
-  the corresponding `/development` keys. The old names remain supported until 3.0 outside
-  v3-preview but are ignored when v3-preview is enabled.
+  `otel.instrumentation.common.view-telemetry.enabled`, respectively. In declarative YAML, replace
+  `java.common.controller_telemetry/development.enabled` and
+  `java.common.view_telemetry/development.enabled` with
+  `java.common.controller_telemetry.enabled` and `java.common.view_telemetry.enabled`. Outside
+  v3-preview, the deprecated names remain fallbacks until 3.0 and warn when applied; v3-preview
+  ignores them.
 - Deprecate the Java agent and Spring Boot starter's bundled contrib samplers, including the
   `rule_based_routing` declarative sampler and `linksbased_parentbased_always_on` flat sampler.
   Outside v3-preview, both names continue to work but log a warning when selected. When
