@@ -57,6 +57,7 @@ testing {
 
 tasks {
   processResources {
+    // To be removed in 3.0
     // The non-preview 3.7 scope needs its own version resource.
     from(named("generateInstrumentationVersionFile")) {
       include("io.opentelemetry.mongo-3.1.properties")
