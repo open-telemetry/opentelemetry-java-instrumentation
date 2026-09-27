@@ -21,8 +21,9 @@ The supported values are `semconv` (the default), `span-kind`, and `none`.
 The previous YAML key, `java.common.span_suppression_strategy/development`,
 and the already deprecated flat property,
 `otel.instrumentation.experimental.span-suppression-strategy`, remain available
-until 3.0 and warn when applied, including under v3-preview. The replacement is
-YAML-only; there is no new flat property. Programmatic
+until 3.0 and warn when applied outside v3-preview. Under v3-preview, both
+deprecated names are ignored without warning. The replacement is YAML-only;
+there is no new flat property. Programmatic
 `Experimental.setSpanSuppressionStrategy(...)` takes precedence over
 configuration.
 

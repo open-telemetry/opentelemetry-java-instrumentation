@@ -21,7 +21,8 @@
   in favor of `java.common.span_suppression_strategy`. The replacement is
   YAML-only; the already deprecated
   `otel.instrumentation.experimental.span-suppression-strategy` flat property
-  remains available until 3.0.
+  remains available until 3.0. Under v3-preview, both deprecated names are
+  ignored; use the stable YAML key instead.
 - Deprecate the Java agent and Spring Boot starter's bundled contrib samplers, including the
   `rule_based_routing` declarative sampler and `linksbased_parentbased_always_on` flat sampler.
   Outside v3-preview, both names continue to work but log a warning when selected. When
