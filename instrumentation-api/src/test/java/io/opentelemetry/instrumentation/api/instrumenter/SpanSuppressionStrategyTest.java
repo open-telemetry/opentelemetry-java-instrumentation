@@ -537,10 +537,10 @@ class SpanSuppressionStrategyTest {
       assertThat(records.get(0).getLevel()).isEqualTo(WARNING);
       assertThat(records.get(0).getMessage())
           .contains("otel.instrumentation.experimental.span-suppression-strategy")
+          .contains("programmatic API")
           .contains("declarative instrumentation configuration")
           .contains("3.0")
-          .doesNotContain("java.common.span_suppression_strategy/development")
-          .doesNotContain("Experimental.setSpanSuppressionStrategy");
+          .doesNotContain("java.common.span_suppression_strategy/development");
 
       Instrumenter.<String, String>builder(
               withCommonConfig(null, null, false), "test", request -> "test")
