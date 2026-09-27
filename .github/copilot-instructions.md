@@ -45,15 +45,19 @@ of where its implementation lives.
 
 - When adding or changing an `otel.instrumentation.*` setting, check both its flat property
   and declarative YAML name. New flat-property segments use kebab-case; new declarative YAML
-  keys use snake_case. Experimental or preview names are unstable; an experimental flat name
-  must map to the corresponding `/development` YAML form. Do not rename an already-published
-  declarative name merely to match these naming rules or mechanical conversion; determine
-  whether the bridge needs a `SPECIAL_MAPPINGS` entry instead.
+  keys use snake_case. For a new feature, check intended config stability on both forms:
+  experimental flat names need an `experimental` marker and the corresponding `/development`
+  YAML form; preview flat names need a `preview` marker and an unstable YAML form
+  (`/development` or `preview` in the YAML key). Stable feature names need neither marker.
+  An alpha implementation artifact does not make its user-facing settings experimental. Do
+  not rename an already-published declarative name merely to match these naming rules or
+  mechanical conversion; determine whether the bridge needs a `SPECIAL_MAPPINGS` entry instead.
 - Stable flat property names remain stable even when read by alpha implementation code.
   On rename, retain the old name until the next major version: read the replacement first,
-  fall back to the old name only outside v3-preview, and warn once at startup *when the old
-  value is applied*. Add the deprecation to the CHANGELOG. Experimental/preview names may
-  be removed after a subsequent minor release and do not need the v3-preview guard.
+  fall back to the old name only outside v3-preview, and log a `WARN` once at startup *when
+  the old value is applied*, naming the old and replacement flat properties (or declarative
+  paths if there is no flat form). Add the deprecation to the CHANGELOG. Experimental/preview
+  names may be removed after a subsequent minor release and do not need the v3-preview guard.
   Instrumentation enablement aliases have distinct warning semantics; do not apply ordinary
   replacement-first warning logic to them.
 - Read module settings from `java.<module>` and general settings from `general`; HTTP
