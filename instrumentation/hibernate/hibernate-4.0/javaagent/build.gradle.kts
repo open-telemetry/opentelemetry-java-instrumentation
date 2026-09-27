@@ -56,7 +56,7 @@ dependencies {
 
 testing {
   suites {
-    register<JvmTestSuite>("procedureCallTest") {
+    register<JvmTestSuite>("version43Test") {
       dependencies {
         val hibernateVersion = baseVersion("4.3.0.Final").orLatest("5.+")
         implementation("org.hibernate:hibernate-core:$hibernateVersion")
@@ -131,18 +131,18 @@ tasks {
     systemProperty("collectMetadata", false)
   }
 
-  val procedureCallSuite = testing.suites.named<JvmTestSuite>("procedureCallTest")
-  val procedureCallTestExperimental = register<Test>("procedureCallTestExperimental") {
-    testClassesDirs = procedureCallSuite.get().sources.output.classesDirs
-    classpath = procedureCallSuite.get().sources.runtimeClasspath
+  val version43Suite = testing.suites.named<JvmTestSuite>("version43Test")
+  val version43TestExperimental = register<Test>("version43TestExperimental") {
+    testClassesDirs = version43Suite.get().sources.output.classesDirs
+    classpath = version43Suite.get().sources.runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
     systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
   }
 
-  val procedureCallTestDisabled = register<Test>("procedureCallTestDisabled") {
-    testClassesDirs = procedureCallSuite.get().sources.output.classesDirs
-    classpath = procedureCallSuite.get().sources.runtimeClasspath
+  val version43TestDisabled = register<Test>("version43TestDisabled") {
+    testClassesDirs = version43Suite.get().sources.output.classesDirs
+    classpath = version43Suite.get().sources.runtimeClasspath
     filter {
       includeTestsMatching("*DefaultEnablementTest")
     }
@@ -165,9 +165,9 @@ tasks {
     "PreviewLegacyIgnored" to mapOf("hibernate-procedure-call" to true, "hibernate-procedure-call-4.3" to true),
     "PreviewNewAliasEnabled" to mapOf("hibernate-4.0" to true, "hibernate-procedure-call" to false, "hibernate-procedure-call-4.3" to false),
   ).map { (name, aliases) ->
-    register<Test>("procedureCallTest$name") {
-      testClassesDirs = procedureCallSuite.get().sources.output.classesDirs
-      classpath = procedureCallSuite.get().sources.runtimeClasspath
+    register<Test>("version43Test$name") {
+      testClassesDirs = version43Suite.get().sources.output.classesDirs
+      classpath = version43Suite.get().sources.runtimeClasspath
       filter {
         includeTestsMatching("*DefaultEnablementTest")
       }
@@ -204,6 +204,6 @@ tasks {
     }
 
   check {
-    dependsOn(testing.suites, testDisabled, testExperimental, stableSemconvSuites, procedureCallTestExperimental, procedureCallTestDisabled, aliasTests)
+    dependsOn(testing.suites, testDisabled, testExperimental, stableSemconvSuites, version43TestExperimental, version43TestDisabled, aliasTests)
   }
 }
