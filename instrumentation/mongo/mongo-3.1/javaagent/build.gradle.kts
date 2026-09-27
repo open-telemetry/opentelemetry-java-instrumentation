@@ -46,7 +46,7 @@ dependencies {
 
 testing {
   suites {
-    register<JvmTestSuite>("library37Test") {
+    register<JvmTestSuite>("version37Test") {
       dependencies {
         implementation("org.mongodb:mongo-java-driver:${baseVersion("3.7.0").orLatest("3.+")}")
         implementation(project(":instrumentation:mongo:mongo-3.1:testing"))
