@@ -62,6 +62,25 @@ testing {
       }
     }
 
+    register<JvmTestSuite>("legacyUnitTests") {
+      sources {
+        java {
+          srcDir("src/unitTests/java")
+        }
+      }
+
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
+        implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
+        implementation(project(":instrumentation:reactor:reactor-3.1:library"))
+        implementation(project(":javaagent-bootstrap"))
+        implementation(project(":javaagent-extension-api"))
+        implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+        implementation("io.projectreactor.kafka:reactor-kafka:1.0.0.RELEASE")
+      }
+    }
+
     register<JvmTestSuite>("testV1_3_3") {
       dependencies {
         implementation(project(":instrumentation:reactor:reactor-kafka-1.0:testing"))
@@ -104,14 +123,14 @@ testing {
 
 tasks {
   withType<Test>().configureEach {
-    if (name != "unitTests") {
+    if (name != "unitTests" && name != "legacyUnitTests") {
       usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
       systemProperty("collectMetadata", otelProps.collectMetadata)
     }
   }
 
   val agentTestSuites = testing.suites.withType(JvmTestSuite::class)
-    .matching { it.name != "unitTests" }
+    .matching { it.name != "unitTests" && it.name != "legacyUnitTests" }
 
   val experimentalSuites = agentTestSuites
     .map { suite ->

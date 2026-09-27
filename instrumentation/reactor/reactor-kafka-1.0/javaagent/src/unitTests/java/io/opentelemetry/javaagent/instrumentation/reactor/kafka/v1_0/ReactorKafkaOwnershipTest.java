@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactor.kafka.v1_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessDurationMetrics;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
@@ -34,6 +35,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.BaseSubscriber;
@@ -87,12 +90,16 @@ class ReactorKafkaOwnershipTest {
       assertThat(spans)
           .extracting(SpanData::getParentSpanId)
           .containsExactly(firstProducer.getSpanId(), secondProducer.getSpanId());
-      assertThat(spans.get(0).getLinks())
-          .extracting(link -> link.getSpanContext().getSpanId())
-          .containsExactly(firstProducer.getSpanId());
-      assertThat(spans.get(1).getLinks())
-          .extracting(link -> link.getSpanContext().getSpanId())
-          .containsExactly(secondProducer.getSpanId());
+      if (emitStableMessagingSemconv()) {
+        assertThat(spans.get(0).getLinks())
+            .extracting(link -> link.getSpanContext().getSpanId())
+            .containsExactly(firstProducer.getSpanId());
+        assertThat(spans.get(1).getLinks())
+            .extracting(link -> link.getSpanContext().getSpanId())
+            .containsExactly(secondProducer.getSpanId());
+      } else {
+        assertThat(spans).allSatisfy(span -> assertThat(span.getLinks()).isEmpty());
+      }
       assertThat(Span.current().getSpanContext().isValid()).isFalse();
 
       assertProcessDurationMetrics(testing, INSTRUMENTATION_NAME, "orders", "group", "0", 2, null);
@@ -165,12 +172,16 @@ class ReactorKafkaOwnershipTest {
     assertThat(Span.current().getSpanContext().isValid()).isFalse();
   }
 
-  @Test
-  void nestedUnrelatedRecordKeepsItsOwnProcessingSpan() {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void nestedRecordWithAmbientProcessIsSuppressed(boolean sameRecord) {
     ConsumerRecord<String, String> outerRecord = record(0, "outer");
-    ConsumerRecord<String, String> innerRecord = record(1, "inner");
+    ConsumerRecord<String, String> innerRecord = sameRecord ? outerRecord : record(1, "inner");
     prepareContexts(records(outerRecord));
-    prepareContexts(records(innerRecord));
+    if (!sameRecord) {
+      prepareContexts(records(innerRecord));
+    }
+    List<ConsumerRecord<String, String>> observedRecords = new ArrayList<>();
 
     try (Scope ignored =
         Baggage.builder()
@@ -182,24 +193,60 @@ class ReactorKafkaOwnershipTest {
           .doOnNext(
               outer -> {
                 assertThat(Baggage.current().getEntryValue("tenant")).isEqualTo("acme");
+                SpanContext outerSpan = Span.current().getSpanContext();
+                assertThat(outerSpan.isValid()).isTrue();
                 new InstrumentedKafkaFlux<>(Flux.just(innerRecord))
                     .doOnNext(
-                        inner ->
-                            assertThat(Baggage.current().getEntryValue("tenant")).isEqualTo("acme"))
+                        inner -> {
+                          observedRecords.add(inner);
+                          assertThat(Span.current().getSpanContext()).isEqualTo(outerSpan);
+                          assertThat(Baggage.current().getEntryValue("tenant")).isEqualTo("acme");
+                        })
                     .blockLast();
               })
           .blockLast();
     }
 
+    assertThat(observedRecords).containsExactly(innerRecord);
     List<SpanData> spans = instrumentationSpans();
-    assertThat(spans).hasSize(2);
-    SpanData inner = spans.get(0);
-    SpanData outer = spans.get(1);
-    assertThat(inner.getParentSpanId()).isEqualTo(outer.getSpanId());
-    assertThat(outer.getParentSpanContext().isValid()).isFalse();
-    assertProcessDurationMetrics(testing, INSTRUMENTATION_NAME, "orders", "group", "0", 2, null);
+    assertThat(spans).hasSize(1);
+    assertThat(spans.get(0).getParentSpanContext().isValid()).isFalse();
+    assertProcessDurationMetrics(testing, INSTRUMENTATION_NAME, "orders", "group", "0", 1, null);
     assertThat(Span.current().getSpanContext().isValid()).isFalse();
     assertThat(Baggage.current().getEntryValue("tenant")).isNull();
+  }
+
+  @Test
+  void nestedRecordWithSavedParentKeepsItsProcessingSpan() {
+    ConsumerRecord<String, String> outerRecord = record(0, "outer");
+    ConsumerRecord<String, String> innerRecord = record(1, "inner");
+    SpanContext innerParent =
+        remoteSpanContext("00000000000000000000000000000005", "0000000000000005");
+    prepareContexts(records(outerRecord));
+    prepareContexts(records(innerRecord), innerParent);
+
+    new InstrumentedKafkaFlux<>(Flux.just(outerRecord))
+        .doOnNext(
+            outer -> {
+              SpanContext outerSpan = Span.current().getSpanContext();
+              assertThat(outerSpan.isValid()).isTrue();
+              new InstrumentedKafkaFlux<>(Flux.just(innerRecord))
+                  .doOnNext(
+                      inner -> {
+                        assertThat(Span.current().getSpanContext().isValid()).isTrue();
+                        assertThat(Span.current().getSpanContext()).isNotEqualTo(outerSpan);
+                      })
+                  .blockLast();
+              assertThat(Span.current().getSpanContext()).isEqualTo(outerSpan);
+            })
+        .blockLast();
+
+    List<SpanData> spans = instrumentationSpans();
+    assertThat(spans).hasSize(2);
+    assertThat(spans.get(0).getParentSpanId()).isEqualTo(innerParent.getSpanId());
+    assertThat(spans.get(1).getParentSpanContext().isValid()).isFalse();
+    assertProcessDurationMetrics(testing, INSTRUMENTATION_NAME, "orders", "group", "0", 2, null);
+    assertThat(Span.current().getSpanContext().isValid()).isFalse();
   }
 
   private static KafkaConsumerBatchState prepareRawProcessingEligibility(
