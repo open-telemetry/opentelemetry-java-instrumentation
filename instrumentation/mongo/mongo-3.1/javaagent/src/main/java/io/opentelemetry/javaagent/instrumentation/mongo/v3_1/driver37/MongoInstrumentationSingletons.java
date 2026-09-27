@@ -12,13 +12,16 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoInstrumenterFactory;
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.TracingCommandListener;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 
 public class MongoInstrumentationSingletons {
 
   private static final Instrumenter<CommandStartedEvent, Void> instrumenter =
       MongoInstrumenterFactory.createInstrumenter(
           GlobalOpenTelemetry.get(),
-          "io.opentelemetry.mongo-3.7",
+          AgentCommonConfig.get().isV3Preview()
+              ? "io.opentelemetry.mongo-3.1"
+              : "io.opentelemetry.mongo-3.7",
           DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "mongo"),
           MongoConnectionPeer::resolve);
 

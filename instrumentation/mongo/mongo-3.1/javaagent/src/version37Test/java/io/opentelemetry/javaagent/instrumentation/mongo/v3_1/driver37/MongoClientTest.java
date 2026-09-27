@@ -236,7 +236,7 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   }
 
   @Test
-  void preservesInstrumentationScope() {
+  void emitsInstrumentationScope() {
     createCollection("test_db", createCollectionName());
 
     testing.waitAndAssertTraces(
@@ -246,7 +246,10 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
                     span.satisfies(
                         spanData -> {
                           assertThat(spanData.getInstrumentationScopeInfo().getName())
-                              .isEqualTo("io.opentelemetry.mongo-3.7");
+                              .isEqualTo(
+                                  Boolean.getBoolean("otel.instrumentation.common.v3-preview")
+                                      ? "io.opentelemetry.mongo-3.1"
+                                      : "io.opentelemetry.mongo-3.7");
                           assertThat(spanData.getInstrumentationScopeInfo().getVersion())
                               .isNotEmpty();
                         })));

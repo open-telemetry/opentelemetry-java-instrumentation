@@ -58,7 +58,7 @@ testing {
 
 tasks {
   processResources {
-    // The newer API emits its own scope, which needs a version resource as well.
+    // The non-preview 3.7 scope needs its own version resource.
     from(named("generateInstrumentationVersionFile")) {
       include("io.opentelemetry.mongo-3.1.properties")
       rename { "io.opentelemetry.mongo-3.7.properties" }
@@ -81,7 +81,17 @@ tasks {
     }
   }
 
+  val version37TestV3Preview = register<Test>("version37TestV3Preview") {
+    testClassesDirs = sourceSets["version37Test"].output.classesDirs
+    classpath = sourceSets["version37Test"].runtimeClasspath
+    filter {
+      includeTestsMatching("*MongoClientTest.emitsInstrumentationScope")
+    }
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+  }
+
   check {
-    dependsOn(testing.suites, stableSemconvSuites)
+    dependsOn(testing.suites, stableSemconvSuites, version37TestV3Preview)
   }
 }

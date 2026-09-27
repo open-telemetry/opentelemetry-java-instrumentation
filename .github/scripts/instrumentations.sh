@@ -228,6 +228,7 @@ readonly INSTRUMENTATIONS=(
   "mongo:mongo-3.1:javaagent:testStableSemconv"
   "mongo:mongo-3.1:javaagent:version37Test"
   "mongo:mongo-3.1:javaagent:version37TestStableSemconv"
+  "mongo:mongo-3.1:javaagent:version37TestV3Preview"
   "mongo:mongo-4.0:javaagent:test"
   "mongo:mongo-4.0:javaagent:testStableSemconv"
   "mongo:mongo-async-3.3:javaagent:test"
