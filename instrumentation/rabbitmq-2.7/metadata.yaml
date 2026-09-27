@@ -28,6 +28,8 @@ configurations:
       semantic conventions emit these spans regardless of this setting.
     type: boolean
     default: false
+    deprecated: true
+    replaced_by: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
   - ref: messaging.headers.included
   - ref: messaging.headers.excluded
   - ref: messaging.capture-headers

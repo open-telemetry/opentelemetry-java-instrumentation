@@ -68,6 +68,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Set up Gradle
+        # zizmor: ignore[cache-poisoning] This job uploads CodeQL results, not release artifacts.
         uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
         with:
           cache-read-only: true
@@ -109,6 +110,7 @@ jobs:
           sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx8g /" gradle.properties
 
       - name: Set up Gradle
+        # zizmor: ignore[cache-poisoning] This job uploads CodeQL results, not release artifacts.
         uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
         with:
           cache-read-only: true
