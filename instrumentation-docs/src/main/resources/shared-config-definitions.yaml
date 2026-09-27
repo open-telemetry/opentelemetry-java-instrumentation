@@ -105,6 +105,18 @@ configurations:
     type: boolean
     default: true
 
+  common.db.sqlcommenter.enabled:
+    name: otel.instrumentation.common.db.experimental.sqlcommenter.enabled
+    declarative_name: java.common.db.sqlcommenter/development.enabled
+    description: >
+      Enables augmenting queries with a comment containing tracing information. An
+      instrumentation-specific setting takes precedence. See
+      [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. WARNING: augmenting
+      queries with tracing context will make query texts unique, which may have adverse impact on
+      database performance.
+    type: boolean
+    default: false
+
   messaging.headers.included:
     name: otel.instrumentation.common.messaging.experimental.headers.included
     declarative_name: java.common.messaging.headers/development.included
@@ -125,6 +137,8 @@ configurations:
     description: "Deprecated: use `otel.instrumentation.common.messaging.experimental.headers.included` instead. A comma-separated list of header names to capture as span attributes. It does not support glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other entry is matched as a literal header name."
     type: list
     default: ""
+    deprecated: true
+    replaced_by: otel.instrumentation.common.messaging.experimental.headers.included
 
   # The deprecated names below are flat properties only: the declarative configuration schema keeps
   # them under `java.common.messaging`, so they declare no declarative_name.
@@ -133,18 +147,24 @@ configurations:
     description: "Deprecated: use `otel.instrumentation.common.messaging.experimental.headers.included` instead. It may be removed in the next minor release."
     type: list
     default: ""
+    deprecated: true
+    replaced_by: otel.instrumentation.common.messaging.experimental.headers.included
 
   messaging.deprecated-headers.excluded:
     name: otel.instrumentation.messaging.experimental.headers.excluded
     description: "Deprecated: use `otel.instrumentation.common.messaging.experimental.headers.excluded` instead. It may be removed in the next minor release."
     type: list
     default: ""
+    deprecated: true
+    replaced_by: otel.instrumentation.common.messaging.experimental.headers.excluded
 
   messaging.deprecated-receive-telemetry.enabled:
     name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
     description: "Deprecated: use `otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled` instead. It may be removed in the next minor release."
     type: boolean
     default: false
+    deprecated: true
+    replaced_by: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
 
   messaging.batch-send.message-creation-spans.enabled:
     name: otel.instrumentation.common.messaging.message-create-spans.enabled
