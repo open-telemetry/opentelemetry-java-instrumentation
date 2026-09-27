@@ -17,12 +17,16 @@
 
 ### 🚫 Deprecations
 
-- Deprecate `otel.instrumentation.common.messaging.experimental.headers.included` and
-  `otel.instrumentation.common.messaging.experimental.headers.excluded` in favor of the stable
-  `otel.instrumentation.common.messaging.headers.included` and
-  `otel.instrumentation.common.messaging.headers.excluded` properties. Each stable leaf takes
-  precedence; deprecated leaves are per-leaf fallbacks that warn only when applied and will be
-  removed in 3.0.
+- Deprecate `otel.instrumentation.messaging.experimental.receive-telemetry.enabled` in favor of
+  `otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled`. For headers,
+  replace `otel.instrumentation.messaging.experimental.headers.included` and `.excluded`, or
+  `otel.instrumentation.common.messaging.experimental.headers.included` and `.excluded`, with the
+  stable `otel.instrumentation.common.messaging.headers.included` and `.excluded`. Stable selectors
+  take precedence per leaf. Deprecated common selectors warn only when applied outside v3-preview
+  and will be removed in 3.0; the older messaging header aliases remain usable in v3-preview but
+  may be removed in a later minor release.
+  ([#20060](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20060),
+  [#20260](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20260))
 - Deprecate the Java agent and Spring Boot starter's bundled contrib samplers, including the
   `rule_based_routing` declarative sampler and `linksbased_parentbased_always_on` flat sampler.
   Outside v3-preview, both names continue to work but log a warning when selected. When
@@ -50,11 +54,6 @@
 - Deprecate `otel.instrumentation.opensearch.capture-search-query`. There is no replacement.
 - Deprecate `otel.instrumentation.elasticsearch.capture-search-query` There is no replacement.
   ([#19675](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19675))
-- Deprecate `otel.instrumentation.messaging.experimental.receive-telemetry.enabled` in favor of
-  `otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled`, and deprecate
-  `otel.instrumentation.messaging.experimental.headers.included` and `.excluded` in favor of
-  `otel.instrumentation.common.messaging.headers.included` and `.excluded`.
-  ([#20060](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20060))
 
 ## Version 2.31.1 (2026-08-23)
 
