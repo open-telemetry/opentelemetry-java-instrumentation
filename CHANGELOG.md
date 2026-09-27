@@ -17,12 +17,14 @@
 
 ### 🚫 Deprecations
 
-- Deprecate `otel.instrumentation.mongo-3.7.enabled`. Use
-  `otel.instrumentation.mongo-3.1.enabled` to control MongoDB 3.1 and 3.7
-  instrumentation, or `otel.instrumentation.mongo.enabled` to control both alongside other
-  MongoDB modules sharing that name. Use `otel.instrumentation.mongo-3.1-core-3.7.enabled`
-  to control the 3.7 instrumentation alone. The deprecated name remains supported in 2.x
-  and will be removed in 3.0.
+- Deprecate `otel.instrumentation.mongo-3.7.enabled`. The `mongo-3.1` and `mongo-3.7`
+  settings did not divide MongoDB driver versions: both sets of instrumentation can run
+  with a MongoDB 3.7 driver. The old `mongo-3.7` setting controlled only the 3.7-specific
+  instrumentation. For that same narrow control, use
+  `otel.instrumentation.mongo-3.1-core-3.7.enabled`. To control both sets, use
+  `otel.instrumentation.mongo-3.1.enabled`, or use `otel.instrumentation.mongo.enabled`
+  to include other MongoDB modules. The old setting remains supported in 2.x and will
+  be removed in 3.0.
   ([#20269](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20269))
 - Deprecate the Java agent and Spring Boot starter's bundled contrib samplers, including the
   `rule_based_routing` declarative sampler and `linksbased_parentbased_always_on` flat sampler.
