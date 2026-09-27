@@ -18,10 +18,10 @@
 ### 🚫 Deprecations
 
 - Deprecate `otel.instrumentation.mongo-3.7.enabled`. Use
-  `otel.instrumentation.mongo-3.1.enabled` to control both consolidated MongoDB 3.x
-  implementations, or `otel.instrumentation.mongo.enabled` to control them along with other
+  `otel.instrumentation.mongo-3.1.enabled` to control MongoDB 3.1 and 3.7
+  instrumentation, or `otel.instrumentation.mongo.enabled` to control both alongside other
   MongoDB modules sharing that name. Use `otel.instrumentation.mongo-3.1-core-3.7.enabled`
-  to control the 3.7 implementation alone. The deprecated name remains supported in 2.x
+  to control the 3.7 instrumentation alone. The deprecated name remains supported in 2.x
   and will be removed in 3.0.
   ([#20269](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20269))
 - Deprecate the Java agent and Spring Boot starter's bundled contrib samplers, including the
