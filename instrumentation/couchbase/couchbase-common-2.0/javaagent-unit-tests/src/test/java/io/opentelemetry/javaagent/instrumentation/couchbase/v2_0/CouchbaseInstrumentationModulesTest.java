@@ -19,8 +19,8 @@ import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.DeprecatedInstrumentationNames;
-import io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.CouchbaseNetworkInstrumentationModule;
-import io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network26.CouchbaseNetwork26InstrumentationModule;
+import io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.v2_0.CouchbaseNetworkInstrumentationModule;
+import io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.v2_6.CouchbaseNetwork26InstrumentationModule;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,12 +39,21 @@ class CouchbaseInstrumentationModulesTest {
   private final InstrumentationModule network26 = new CouchbaseNetwork26InstrumentationModule();
 
   @Test
+  void registersBothPre26NetworkAdvices() {
+    assertThat(network.typeInstrumentations())
+        .extracting(instrumentation -> instrumentation.getClass().getName())
+        .containsExactly(
+            "io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.v2_0.CouchbaseCoreNetworkInstrumentation",
+            "io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.v2_0.CouchbaseNetworkInstrumentation");
+  }
+
+  @Test
   void registersBothNetwork26Advices() {
     assertThat(network26.typeInstrumentations())
         .extracting(instrumentation -> instrumentation.getClass().getName())
         .containsExactly(
-            "io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network26.CouchbaseCoreInstrumentation",
-            "io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network26.CouchbaseNetworkInstrumentation");
+            "io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.v2_6.CouchbaseCoreInstrumentation",
+            "io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.v2_6.CouchbaseNetworkInstrumentation");
   }
 
   @Test
@@ -53,7 +62,11 @@ class CouchbaseInstrumentationModulesTest {
         .containsExactly("couchbase", "couchbase-2.0", "couchbase-2.0-core");
     assertThat(network.instrumentationNames())
         .containsExactly(
-            "couchbase", "couchbase-2.0", "couchbase-network-2.0", "couchbase-2.0-network");
+            "couchbase",
+            "couchbase-2.0",
+            "couchbase-network-2.0",
+            "couchbase-2.0-network-2.0",
+            "couchbase-2.0-network");
     assertThat(network26.instrumentationNames())
         .containsExactly(
             "couchbase", "couchbase-2.0", "couchbase-2.6", "couchbase-2.0-network-2.6");
@@ -65,6 +78,7 @@ class CouchbaseInstrumentationModulesTest {
     "couchbase-2.0, false, false, false",
     "couchbase-2.0-core, false, true, true",
     "couchbase-network-2.0, true, false, true",
+    "couchbase-2.0-network-2.0, true, false, true",
     "couchbase-2.0-network, true, false, true",
     "couchbase-2.6, true, true, false",
     "couchbase-2.0-network-2.6, true, true, false"
@@ -105,6 +119,134 @@ class CouchbaseInstrumentationModulesTest {
     AgentDistributionConfig config = AgentDistributionConfig.fromConfigProperties(properties);
 
     assertThat(config.isInstrumentationEnabled(network26.instrumentationNames(), true)).isFalse();
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "couchbase, true",
+    "couchbase, false",
+    "couchbase-2.0, true",
+    "couchbase-2.0, false",
+    "couchbase-network-2.0, true",
+    "couchbase-network-2.0, false"
+  })
+  void existingAliasesTakePrecedenceOverPre26NetworkSelectors(String name, boolean enabled) {
+    ConfigProperties properties = mock(ConfigProperties.class);
+    when(properties.getBoolean(anyString())).thenReturn(null);
+    when(properties.getBoolean("otel.instrumentation." + name + ".enabled")).thenReturn(enabled);
+    when(properties.getBoolean("otel.instrumentation.couchbase-2.0-network-2.0.enabled"))
+        .thenReturn(!enabled);
+    when(properties.getBoolean("otel.instrumentation.couchbase-2.0-network.enabled"))
+        .thenReturn(!enabled);
+    AgentDistributionConfig config = AgentDistributionConfig.fromConfigProperties(properties);
+
+    assertThat(config.isInstrumentationEnabled(network.instrumentationNames(), !enabled))
+        .isEqualTo(enabled);
+  }
+
+  @ParameterizedTest
+  @CsvSource(
+      value = {
+        "false, null, null",
+        "false, null, true",
+        "false, null, false",
+        "false, true, null",
+        "false, true, true",
+        "false, true, false",
+        "false, false, null",
+        "false, false, true",
+        "false, false, false",
+        "true, null, null",
+        "true, null, true",
+        "true, null, false",
+        "true, true, null",
+        "true, true, true",
+        "true, true, false",
+        "true, false, null",
+        "true, false, true",
+        "true, false, false"
+      },
+      nullValues = "null")
+  void pre26NetworkSelectorDeprecation(
+      boolean v3Preview, Boolean canonicalEnabled, Boolean deprecatedEnabled) {
+    ConfigProperties properties = mock(ConfigProperties.class);
+    when(properties.getBoolean(anyString())).thenReturn(null);
+    when(properties.getBoolean("otel.instrumentation.couchbase-2.0-network-2.0.enabled"))
+        .thenReturn(canonicalEnabled);
+    when(properties.getBoolean("otel.instrumentation.couchbase-2.0-network.enabled"))
+        .thenReturn(deprecatedEnabled);
+    AgentDistributionConfig config = AgentDistributionConfig.fromConfigProperties(properties);
+    CommonConfig commonConfig = mock(CommonConfig.class);
+    when(commonConfig.isV3Preview()).thenReturn(v3Preview);
+    Logger logger = Logger.getLogger(DeprecatedInstrumentationNames.class.getName());
+    List<LogRecord> records = new ArrayList<>();
+    Handler handler =
+        new Handler() {
+          @Override
+          public void publish(LogRecord record) {
+            records.add(record);
+          }
+
+          @Override
+          public void flush() {}
+
+          @Override
+          public void close() {}
+        };
+    logger.addHandler(handler);
+    try (MockedStatic<AgentCommonConfig> common = mockStatic(AgentCommonConfig.class);
+        MockedStatic<AgentDistributionConfig> distribution =
+            mockStatic(AgentDistributionConfig.class)) {
+      common.when(AgentCommonConfig::get).thenReturn(commonConfig);
+      distribution.when(AgentDistributionConfig::get).thenReturn(config);
+
+      InstrumentationModule module = new CouchbaseNetworkInstrumentationModule();
+      if (v3Preview) {
+        assertThat(module.instrumentationNames())
+            .containsExactly(
+                "couchbase", "couchbase-2.0", "couchbase-network-2.0", "couchbase-2.0-network-2.0");
+      } else {
+        assertThat(module.instrumentationNames())
+            .containsExactly(
+                "couchbase",
+                "couchbase-2.0",
+                "couchbase-network-2.0",
+                "couchbase-2.0-network-2.0",
+                "couchbase-2.0-network");
+      }
+      assertThat(config.isInstrumentationEnabled(module.instrumentationNames(), false))
+          .isEqualTo(
+              canonicalEnabled != null
+                  ? canonicalEnabled
+                  : !v3Preview && Boolean.TRUE.equals(deprecatedEnabled));
+      assertThat(config.isInstrumentationEnabled(module.instrumentationNames(), true))
+          .isEqualTo(
+              canonicalEnabled != null
+                  ? canonicalEnabled
+                  : v3Preview || !Boolean.FALSE.equals(deprecatedEnabled));
+      if (v3Preview) {
+        verify(properties, never())
+            .getBoolean("otel.instrumentation.couchbase-2.0-network.enabled");
+      }
+      if (v3Preview || deprecatedEnabled == null) {
+        assertThat(records).isEmpty();
+      } else {
+        assertThat(records)
+            .singleElement()
+            .satisfies(
+                record -> {
+                  assertThat(record.getLevel()).isEqualTo(WARNING);
+                  assertThat(record.getMessage())
+                      .isEqualTo(
+                          "otel.instrumentation.{0}.enabled is deprecated; "
+                              + "use otel.instrumentation.{1}.enabled instead.");
+                  assertThat(record.getParameters())
+                      .containsExactly("couchbase-2.0-network", "couchbase-2.0-network-2.0");
+                });
+      }
+    } finally {
+      logger.removeHandler(handler);
+    }
   }
 
   @ParameterizedTest

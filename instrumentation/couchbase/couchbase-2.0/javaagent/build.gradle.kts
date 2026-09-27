@@ -11,7 +11,7 @@ muzzle {
     skip("2.7.5", "2.7.8")
     assertInverse.set(true)
 
-    excludeInstrumentationName("couchbase-2.0-network")
+    excludeInstrumentationName("couchbase-2.0-network-2.0")
     excludeInstrumentationName("couchbase-2.0-network-2.6")
   }
   pass {
@@ -36,7 +36,7 @@ muzzle {
     assertInverse.set(true)
 
     excludeInstrumentationName("couchbase-2.0-core")
-    excludeInstrumentationName("couchbase-2.0-network")
+    excludeInstrumentationName("couchbase-2.0-network-2.0")
   }
   fail {
     group.set("com.couchbase.client")
