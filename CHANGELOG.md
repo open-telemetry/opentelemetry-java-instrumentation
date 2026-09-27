@@ -20,9 +20,10 @@
 - Deprecate `otel.instrumentation.couchbase-2.6.enabled` in favor of
   `otel.instrumentation.couchbase-2.0-network-2.6.enabled` for Couchbase 2.6+ enrichment,
   or `otel.instrumentation.couchbase-2.0.enabled` for all Couchbase 2.x instrumentation.
-  Deprecate `otel.instrumentation.couchbase-2.0-network.enabled` in favor of
+  Deprecate `otel.instrumentation.couchbase-network-2.0.enabled` and
+  `otel.instrumentation.couchbase-2.0-network.enabled` in favor of
   `otel.instrumentation.couchbase-2.0-network-2.0.enabled` for pre-2.6 network enrichment.
-  The new pre-2.6 selector takes precedence over its deprecated fallback. Both deprecated
+  The new pre-2.6 selector takes precedence over both deprecated fallbacks. All deprecated
   names still work with a warning outside v3-preview, are ignored under v3-preview,
   and will be removed in 3.0.
   ([#20270](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20270))

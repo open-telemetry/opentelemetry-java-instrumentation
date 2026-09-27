@@ -28,7 +28,7 @@ public class CouchbaseNetworkInstrumentationModule extends InstrumentationModule
         "couchbase",
         expandDeprecatedNames(
             "couchbase-2.0",
-            "couchbase-network-2.0",
+            "couchbase-2.0-network-2.0|deprecated:couchbase-network-2.0",
             "couchbase-2.0-network-2.0|deprecated:couchbase-2.0-network"));
   }
 
