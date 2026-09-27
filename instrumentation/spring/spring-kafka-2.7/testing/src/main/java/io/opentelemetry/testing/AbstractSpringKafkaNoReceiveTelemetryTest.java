@@ -300,44 +300,55 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                             .hasAttributesSatisfyingExactly(withErrorType(processAttributes, true)),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(0))),
             trace -> {
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName(spanName("testBatchTopic", "process", "process"))
-                          .hasKind(SpanKind.CONSUMER)
-                          .hasNoParent()
-                          .hasLinksSatisfying(links(producer.get()))
-                          .hasStatus(StatusData.error())
-                          .hasException(new IllegalArgumentException("boom"))
-                          .hasAttributesSatisfyingExactly(withErrorType(processAttributes, true)),
-                  span -> span.hasName("consumer").hasParent(trace.getSpan(0)));
+              if (isLibraryInstrumentationTest() && testLatestDeps()) {
+                trace.hasSpansSatisfyingExactly(span -> span.hasName("consumer").hasNoParent());
+              } else {
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName(spanName("testBatchTopic", "process", "process"))
+                            .hasKind(SpanKind.CONSUMER)
+                            .hasNoParent()
+                            .hasLinksSatisfying(links(producer.get()))
+                            .hasStatus(StatusData.error())
+                            .hasException(new IllegalArgumentException("boom"))
+                            .hasAttributesSatisfyingExactly(withErrorType(processAttributes, true)),
+                    span -> span.hasName("consumer").hasParent(trace.getSpan(0)));
+              }
             },
             trace -> {
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName(spanName("testBatchTopic", "process", "process"))
-                          .hasKind(SpanKind.CONSUMER)
-                          .hasNoParent()
-                          .hasLinksSatisfying(links(producer.get()))
-                          .hasStatus(StatusData.unset())
-                          .hasAttributesSatisfyingExactly(processAttributes),
-                  span -> span.hasName("consumer").hasParent(trace.getSpan(0)));
+              if (isLibraryInstrumentationTest() && testLatestDeps()) {
+                trace.hasSpansSatisfyingExactly(span -> span.hasName("consumer").hasNoParent());
+              } else {
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName(spanName("testBatchTopic", "process", "process"))
+                            .hasKind(SpanKind.CONSUMER)
+                            .hasNoParent()
+                            .hasLinksSatisfying(links(producer.get()))
+                            .hasStatus(StatusData.unset())
+                            .hasAttributesSatisfyingExactly(processAttributes),
+                    span -> span.hasName("consumer").hasParent(trace.getSpan(0)));
+              }
             });
+    int failureCount = isLibraryInstrumentationTest() && testLatestDeps() ? 1 : 2;
     assertProcessDurationMetrics(
         testing(),
         "io.opentelemetry.spring-kafka-2.7",
         "testBatchTopic",
         "testBatchListener",
         "0",
-        2,
+        failureCount,
         IllegalArgumentException.class.getName());
-    assertProcessDurationMetrics(
-        testing(),
-        "io.opentelemetry.spring-kafka-2.7",
-        "testBatchTopic",
-        "testBatchListener",
-        "0",
-        1,
-        null);
+    if (!isLibraryInstrumentationTest() || !testLatestDeps()) {
+      assertProcessDurationMetrics(
+          testing(),
+          "io.opentelemetry.spring-kafka-2.7",
+          "testBatchTopic",
+          "testBatchListener",
+          "0",
+          1,
+          null);
+    }
   }
 
   private static List<AttributeAssertion> sendAttributes(String topic, String messageKey) {

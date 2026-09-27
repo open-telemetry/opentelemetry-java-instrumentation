@@ -90,7 +90,7 @@ class SpringKafkaInterceptorTest {
           .build();
 
   @Test
-  void batchScopeParentsUnrelatedRawProcessing() {
+  void batchScopeSuppressesNestedRawProcessing() {
     BatchInterceptor<String, String> interceptor = telemetry.createBatchInterceptor();
     ConsumerRecords<String, String> records =
         records(new ConsumerRecord<>("orders", 0, 1, "outer", "value"));
@@ -114,8 +114,7 @@ class SpringKafkaInterceptorTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> assertBatchSpan(span, 1, "0", null).hasNoParent(),
-                span -> assertRecordSpan(span, nested, null).hasParent(trace.getSpan(0))));
+                span -> assertBatchSpan(span, 1, "0", null).hasNoParent()));
   }
 
   @Test
@@ -344,14 +343,14 @@ class SpringKafkaInterceptorTest {
   }
 
   @Test
-  void mixedBatchRetryPreservesCardinalityAndBothCreationLinks() {
+  void distinctBatchesWithSharedRecordsPreserveCardinalityAndCreationLinks() {
     ConsumerRecord<String, String> first = record(0, 1, "first", FIRST_CREATION);
     ConsumerRecord<String, String> second = record(1, 2, "second", SECOND_CREATION);
     Map<TopicPartition, List<ConsumerRecord<String, String>>> partitions = new LinkedHashMap<>();
     partitions.put(new TopicPartition("orders", 0), singletonList(first));
     partitions.put(new TopicPartition("orders", 1), singletonList(second));
     ConsumerRecords<String, String> batch = new ConsumerRecords<>(partitions);
-    ConsumerRecords<String, String> retry = new ConsumerRecords<>(partitions);
+    ConsumerRecords<String, String> anotherBatch = new ConsumerRecords<>(partitions);
     RecordInterceptor<String, String> recordInterceptor = telemetry.createRecordInterceptor();
     BatchInterceptor<String, String> batchInterceptor = telemetry.createBatchInterceptor();
     IllegalStateException error = new IllegalStateException("first batch attempt");
@@ -366,8 +365,8 @@ class SpringKafkaInterceptorTest {
           batchInterceptor.intercept(batch, null);
           batchInterceptor.failure(batch, error, null);
           assertThat(Context.current()).isSameAs(parentContext);
-          batchInterceptor.intercept(retry, null);
-          batchInterceptor.success(retry, null);
+          batchInterceptor.intercept(anotherBatch, null);
+          batchInterceptor.success(anotherBatch, null);
           assertThat(Context.current()).isSameAs(parentContext);
         });
 
@@ -388,6 +387,36 @@ class SpringKafkaInterceptorTest {
                         .hasParent(trace.getSpan(0))
                         .hasLinks(batchLinks())));
     assertProcessDurationMetrics(testing, INSTRUMENTATION_NAME, "orders", null, null, 1, null);
+  }
+
+  @Test
+  void retryOfSameBatchDoesNotCreateAnotherProcessSpan() {
+    ConsumerRecords<String, String> batch =
+        records(new ConsumerRecord<>("orders", 0, 1, "first", "value"));
+    ConsumerRecords<String, String> independent =
+        records(new ConsumerRecord<>("orders", 0, 2, "second", "value"));
+    BatchInterceptor<String, String> interceptor = telemetry.createBatchInterceptor();
+    IllegalStateException error = new IllegalStateException("first attempt");
+    Context parentContext = Context.current();
+
+    interceptor.intercept(batch, null);
+    interceptor.failure(batch, error, null);
+    assertThat(Context.current()).isSameAs(parentContext);
+    interceptor.intercept(batch, null);
+    interceptor.success(batch, null);
+    assertThat(Context.current()).isSameAs(parentContext);
+    interceptor.intercept(independent, null);
+    interceptor.success(independent, null);
+    assertThat(Context.current()).isSameAs(parentContext);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> assertBatchSpan(span, 1, "0", error).hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> assertBatchSpan(span, 1, "0", null).hasNoParent()));
+    assertProcessMetricPointCounts(testing, INSTRUMENTATION_NAME, 2);
   }
 
   @Test

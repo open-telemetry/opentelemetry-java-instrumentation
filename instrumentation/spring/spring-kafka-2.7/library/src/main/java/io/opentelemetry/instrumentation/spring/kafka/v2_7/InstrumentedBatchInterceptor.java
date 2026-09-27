@@ -11,13 +11,17 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
+import java.lang.ref.WeakReference;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.springframework.kafka.listener.BatchInterceptor;
 
-@SuppressWarnings("ThreadLocalUsage") // callback state belongs to this interceptor instance
+@SuppressWarnings("ThreadLocalUsage") // invocation state and retry tracking
 final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V> {
+
+  private static final ThreadLocal<WeakReference<ConsumerRecords<?, ?>>> lastProcessed =
+      new ThreadLocal<>();
 
   private final Instrumenter<KafkaReceiveRequest, Void> batchProcessInstrumenter;
   @Nullable private final BatchInterceptor<K, V> decorated;
@@ -37,7 +41,7 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
 
     KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumer);
     Context context = null;
-    if (batchProcessInstrumenter.shouldStart(parentContext, request)) {
+    if (batchProcessInstrumenter.shouldStart(parentContext, request) && !skipProcessing(records)) {
       context = batchProcessInstrumenter.start(parentContext, request);
     }
     ProcessingInvocation<KafkaReceiveRequest> invocation =
@@ -54,6 +58,11 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
       end(invocation, t);
       throw t;
     }
+  }
+
+  private static boolean skipProcessing(ConsumerRecords<?, ?> records) {
+    WeakReference<ConsumerRecords<?, ?>> reference = lastProcessed.get();
+    return reference != null && reference.get() == records;
   }
 
   private static Context getParentContext(ConsumerRecords<?, ?> records) {
@@ -111,6 +120,7 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
     }
     if (invocation.context != null) {
       batchProcessInstrumenter.end(invocation.context, invocation.request, null, error);
+      lastProcessed.set(new WeakReference<>(invocation.request.getRecords()));
     }
   }
 
