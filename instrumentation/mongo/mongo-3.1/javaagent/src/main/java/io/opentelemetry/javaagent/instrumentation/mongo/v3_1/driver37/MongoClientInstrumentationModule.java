@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.mongo.v3_7;
+package io.opentelemetry.javaagent.instrumentation.mongo.v3_1.driver37;
 
 import static io.opentelemetry.javaagent.extension.instrumentation.internal.DeprecatedInstrumentationNames.expandDeprecatedNames;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class MongoClientInstrumentationModule extends InstrumentationModule {
 
   public MongoClientInstrumentationModule() {
-    super("mongo", expandDeprecatedNames("mongo-3.1|deprecated:mongo-3.7", "mongo-3.7-core"));
+    super("mongo", expandDeprecatedNames("mongo-3.1|deprecated:mongo-3.7", "mongo-3.1-driver-3.7"));
   }
 
   @Override

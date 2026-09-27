@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.mongo.v3_7;
+package io.opentelemetry.javaagent.instrumentation.mongo.v3_1.driver37;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.logging.Level.WARNING;
@@ -88,10 +88,10 @@ class MongoClientInstrumentationModuleTest {
     assertThat(module.instrumentationName()).isEqualTo("mongo");
     if (V3_PREVIEW) {
       assertThat(module.instrumentationNames())
-          .containsExactly("mongo", "mongo-3.1", "mongo-3.7-core");
+          .containsExactly("mongo", "mongo-3.1", "mongo-3.1-driver-3.7");
     } else {
       assertThat(module.instrumentationNames())
-          .containsExactly("mongo", "mongo-3.1", "mongo-3.7", "mongo-3.7-core");
+          .containsExactly("mongo", "mongo-3.1", "mongo-3.7", "mongo-3.1-driver-3.7");
     }
     assertThat(handler.records).isEmpty();
   }
@@ -132,7 +132,7 @@ class MongoClientInstrumentationModuleTest {
   }
 
   @Test
-  void coreSelectorRemainsIndependent() {
+  void driver37SelectorRemainsIndependent() {
     setEnabled(null, null, false);
 
     InstrumentationModule module = new MongoClientInstrumentationModule();
@@ -151,12 +151,13 @@ class MongoClientInstrumentationModuleTest {
     assertThat(handler.records).isEmpty();
   }
 
-  private static void setEnabled(Boolean replacement, Boolean legacy, Boolean core) {
+  private static void setEnabled(Boolean replacement, Boolean legacy, Boolean driver37) {
     ConfigProperties config = mock(ConfigProperties.class);
     when(config.getBoolean(anyString())).thenReturn(null);
     when(config.getBoolean("otel.instrumentation.mongo-3.1.enabled")).thenReturn(replacement);
     when(config.getBoolean("otel.instrumentation.mongo-3.7.enabled")).thenReturn(legacy);
-    when(config.getBoolean("otel.instrumentation.mongo-3.7-core.enabled")).thenReturn(core);
+    when(config.getBoolean("otel.instrumentation.mongo-3.1-driver-3.7.enabled"))
+        .thenReturn(driver37);
     AgentDistributionConfig.set(AgentDistributionConfig.fromConfigProperties(config));
   }
 
