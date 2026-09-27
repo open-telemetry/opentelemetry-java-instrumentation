@@ -64,7 +64,7 @@ dependencies {
 
 testing {
   suites {
-    register<JvmTestSuite>("library26Test") {
+    register<JvmTestSuite>("version26Test") {
       dependencies {
         implementation(project(":instrumentation:couchbase:couchbase-common:testing"))
         implementation("com.couchbase.client:java-client:" + if (otelProps.testLatestDeps) "2.+" else "2.6.0")
@@ -105,8 +105,8 @@ tasks {
     }
   }
 
-  val library26TestLegacyConfig = register<Test>("library26TestLegacyConfig") {
-    val suite = testing.suites.named<JvmTestSuite>("library26Test").get()
+  val version26TestLegacyConfig = register<Test>("version26TestLegacyConfig") {
+    val suite = testing.suites.named<JvmTestSuite>("version26Test").get()
     testClassesDirs = suite.sources.output.classesDirs
     classpath = suite.sources.runtimeClasspath
 
@@ -115,7 +115,7 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, stableSemconvSuites, experimentalSuites, library26TestLegacyConfig)
+    dependsOn(testing.suites, stableSemconvSuites, experimentalSuites, version26TestLegacyConfig)
   }
 
   if (otelProps.denyUnsafe) {
