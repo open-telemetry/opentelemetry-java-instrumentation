@@ -314,22 +314,13 @@ class AwsSqsTest {
   }
 
   @Test
-  void batchListenerKeepsSdkProcessingFallback() throws Exception {
+  void batchListenerConversionDoesNotStartSdkProcessing() throws Exception {
     CompletableFuture<List<String>> messageFuture = new CompletableFuture<>();
     AwsSqsTestApplication.batchMessageHandler = messageFuture::complete;
 
     sqsTemplate.send("batch-queue", "hello");
 
     assertThat(messageFuture.get(10, SECONDS)).containsExactly("hello");
-    assertThat(testing.spans())
-        .filteredOn(
-            span ->
-                span.getName()
-                    .equals(
-                        emitStableMessagingSemconv()
-                            ? "process batch-queue"
-                            : "batch-queue process"))
-        .hasSize(1);
     await()
         .untilAsserted(
             () ->
@@ -342,31 +333,27 @@ class AwsSqsTest {
                                         ? "delete batch-queue"
                                         : "Sqs.DeleteMessageBatch"))
                     .hasSize(1));
-    if (!emitStableMessagingSemconv()) {
-      return;
+    assertThat(testing.spans())
+        .filteredOn(
+            span ->
+                span.getInstrumentationScopeInfo().getName().equals("io.opentelemetry.aws-sdk-2.2")
+                    && span.getName()
+                        .equals(
+                            emitStableMessagingSemconv()
+                                ? "process batch-queue"
+                                : "batch-queue process"))
+        .isEmpty();
+    if (emitStableMessagingSemconv()) {
+      assertThat(testing.metrics())
+          .filteredOn(
+              metric ->
+                  metric
+                          .getInstrumentationScopeInfo()
+                          .getName()
+                          .equals("io.opentelemetry.aws-sdk-2.2")
+                      && metric.getName().equals("messaging.client.consumed.messages"))
+          .isEmpty();
     }
-    testing.waitAndAssertMetrics(
-        "io.opentelemetry.aws-sdk-2.2",
-        "messaging.client.consumed.messages",
-        metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(1)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                                                equalTo(ERROR_TYPE, null),
-                                                equalTo(MESSAGING_DESTINATION_NAME, "batch-queue"),
-                                                equalTo(SERVER_ADDRESS, "localhost"),
-                                                equalTo(
-                                                    SERVER_PORT,
-                                                    AwsSqsTestApplication.sqsPort))))));
   }
 
   private static void assertConsumedMessages() {

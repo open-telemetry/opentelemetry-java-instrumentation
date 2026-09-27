@@ -5,17 +5,14 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
-import static java.util.Objects.requireNonNull;
-
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Objects;
-import java.util.Spliterator;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
@@ -34,6 +31,7 @@ public final class TracingList extends ArrayList<Message> {
   private final TracingExecutionInterceptor config;
   private final IdentityHashMap<Message, SqsMessage> tracingMessages;
   @Nullable private final Context processParentContext;
+  private final AtomicBoolean firstIterator = new AtomicBoolean(true);
   private volatile boolean processingOwnedOutsideSqsSdk;
 
   public static TracingList wrap(
@@ -78,22 +76,10 @@ public final class TracingList extends ArrayList<Message> {
 
   @Override
   public Iterator<Message> iterator() {
-    return tracingIterator(super.iterator());
-  }
-
-  @Override
-  public ListIterator<Message> listIterator() {
-    return tracingListIterator(super.listIterator());
-  }
-
-  @Override
-  public ListIterator<Message> listIterator(int index) {
-    return tracingListIterator(super.listIterator(index));
-  }
-
-  @Override
-  public Spliterator<Message> spliterator() {
-    return tracingSpliterator(super.spliterator());
+    Iterator<Message> delegate = super.iterator();
+    return firstIterator.getAndSet(false) && !processingOwnedOutsideSqsSdk
+        ? TracingIterator.wrap(delegate, this)
+        : delegate;
   }
 
   @Override
@@ -151,34 +137,9 @@ public final class TracingList extends ArrayList<Message> {
     return result.append(']').toString();
   }
 
-  private Iterator<Message> tracingIterator(Iterator<Message> delegateIterator) {
-    return processingOwnedOutsideSqsSdk
-        ? delegateIterator
-        : TracingIterator.wrap(delegateIterator, this);
-  }
-
-  private ListIterator<Message> tracingListIterator(ListIterator<Message> delegateIterator) {
-    return processingOwnedOutsideSqsSdk
-        ? delegateIterator
-        : TracingListIterator.wrap(delegateIterator, this);
-  }
-
-  private Spliterator<Message> tracingSpliterator(Spliterator<Message> delegateSpliterator) {
-    return processingOwnedOutsideSqsSdk
-        ? delegateSpliterator
-        : TracingSpliterator.wrap(delegateSpliterator, this);
-  }
-
-  private Consumer<? super Message> tracingAction(Consumer<? super Message> action) {
-    requireNonNull(action);
-    return processingOwnedOutsideSqsSdk
-        ? action
-        : message -> TracingIterator.processCallback(this, message, action);
-  }
-
   @Override
   public void forEach(Consumer<? super Message> action) {
-    super.forEach(tracingAction(action));
+    iterator().forEachRemaining(action);
   }
 
   public Instrumenter<SqsProcessRequest, Response> getInstrumenter() {

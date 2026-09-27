@@ -57,7 +57,7 @@ class TracingIterator implements Iterator<Message> {
     if (message != null && !tracingList.isProcessingOwnedOutsideSqsSdk()) {
       SqsMessage sqsMessage = tracingList.getTracingMessage(message);
       if (sqsMessage == null) {
-        return;
+        sqsMessage = SqsMessageImpl.wrap(message, tracingList.getConfig());
       }
       Context parentContext = tracingList.getProcessParentContext();
       if (parentContext == null) {
@@ -95,8 +95,7 @@ class TracingIterator implements Iterator<Message> {
 
     SqsMessage sqsMessage = tracingList.getTracingMessage(message);
     if (sqsMessage == null) {
-      action.accept(message);
-      return;
+      sqsMessage = SqsMessageImpl.wrap(message, tracingList.getConfig());
     }
 
     Context parentContext = tracingList.getProcessParentContext();

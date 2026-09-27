@@ -5,13 +5,10 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -33,31 +30,17 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
 import java.util.RandomAccess;
 import java.util.Spliterator;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.http.SdkHttpResponse;
 import software.amazon.awssdk.services.sqs.model.Message;
 
 class SqsTracingListTest {
 
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-sdk-2.2";
-  private static final int MESSAGE_COUNT = 8;
   private static final AttributeKey<String> MESSAGING_MESSAGE_ID =
       AttributeKey.stringKey("messaging.message.id");
 
@@ -89,66 +72,61 @@ class SqsTracingListTest {
   }
 
   @Test
-  void spliteratorCreatedBeforeProcessingHandoffDoesNotStartSdkProcessing() {
-    Message message = Message.builder().messageId("message-id").build();
-    @SuppressWarnings("unchecked")
-    Instrumenter<SqsProcessRequest, Response> instrumenter = mock(Instrumenter.class);
-    TracingList tracingList =
-        TracingList.wrap(
-            singletonList(message),
-            singletonList(SqsMessageImpl.wrap(message)),
-            instrumenter,
-            new ExecutionAttributes(),
-            new Response(SdkHttpResponse.builder().statusCode(200).build()),
-            mock(TracingExecutionInterceptor.class),
-            Context.root());
+  void unusedFirstIteratorConsumesProcessingChance() {
+    TracingList tracingList = tracingMessages(1, new ArrayList<>());
 
+    assertThat(tracingList.iterator()).isNotNull();
+    tracingList.forEach(unused -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    assertThat(testing.spans()).isEmpty();
+  }
+
+  @Test
+  void otherTraversalApisRemainUntracedWithoutClaimingFirstIterator() {
+    TracingList tracingList = tracingMessages(2, new ArrayList<>());
+
+    tracingList
+        .listIterator()
+        .forEachRemaining(
+            unused -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    assertThat(tracingList.listIterator(tracingList.size()).previous().messageId())
+        .isEqualTo("message-1");
     Spliterator<Message> spliterator = tracingList.spliterator();
-    tracingList.markProcessingOwnedOutsideSqsSdk();
+    requireNonNull(spliterator.trySplit())
+        .forEachRemaining(
+            unused -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    spliterator.forEachRemaining(
+        unused -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    assertThat(
+            tracingList.stream()
+                .mapToInt(
+                    unused -> {
+                      assertThat(Span.current().getSpanContext().isValid()).isFalse();
+                      return 1;
+                    })
+                .sum())
+        .isEqualTo(2);
+    assertThat(testing.spans()).isEmpty();
 
-    assertThat(spliterator.tryAdvance(value -> assertThat(value).isSameAs(message))).isTrue();
-    assertThat(spliterator.tryAdvance(unused -> {})).isFalse();
-    verifyNoInteractions(instrumenter);
-  }
-
-  @Test
-  void rootSpliteratorTracesSplitCallbacks() throws Exception {
-    assertSplitTraversal();
-  }
-
-  @Test
-  void rootListIteratorsTraceTraversal() {
-    assertListIteratorTraversal();
-
+    tracingList.forEach(unused -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
     testing.waitForTraces(2);
     assertThat(testing.spans()).hasSize(2);
   }
 
-  @ParameterizedTest
-  @MethodSource("unusedTraversalSelections")
-  void unusedTraversalDoesNotPreventLaterProcessing(Function<TracingList, ?> selectTraversal) {
+  @Test
+  void firstRootIteratorTracesOnlyOnce() {
     TracingList tracingList = tracingMessages(1, new ArrayList<>());
 
-    assertThat(selectTraversal.apply(tracingList)).isNotNull();
-    tracingList.forEach(unused -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
+    tracingList
+        .iterator()
+        .forEachRemaining(unused -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
+    tracingList.forEach(unused -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    tracingList
+        .iterator()
+        .forEachRemaining(
+            unused -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
 
     testing.waitForTraces(1);
     assertThat(testing.spans()).hasSize(1);
-  }
-
-  private static Stream<Arguments> unusedTraversalSelections() {
-    return Stream.of(
-        argumentSet(
-            "root iterator", (Function<TracingList, ?>) tracingList -> tracingList.iterator()),
-        argumentSet(
-            "root list iterator",
-            (Function<TracingList, ?>) tracingList -> tracingList.listIterator()),
-        argumentSet(
-            "root indexed list iterator",
-            (Function<TracingList, ?>) tracingList -> tracingList.listIterator(0)),
-        argumentSet(
-            "root spliterator",
-            (Function<TracingList, ?>) tracingList -> tracingList.spliterator()));
   }
 
   @Test
@@ -163,7 +141,7 @@ class SqsTracingListTest {
   }
 
   @Test
-  void rootAndSubListCrossApiTraversalsTraceOnlyRootPasses() {
+  void rootAndSubListCrossApiTraversalsTraceOnlyFirstRootIterator() {
     TracingList tracingList = tracingMessages(2, new ArrayList<>());
     List<Message> view = tracingList.subList(0, tracingList.size()).subList(0, 1);
 
@@ -173,70 +151,18 @@ class SqsTracingListTest {
             unused -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
     tracingList
         .listIterator()
-        .forEachRemaining(unused -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
+        .forEachRemaining(
+            unused -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
     view.iterator()
         .forEachRemaining(
             unused -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
-
-    testing.waitForTraces(4);
-    assertThat(testing.spans()).hasSize(4);
-  }
-
-  @ParameterizedTest
-  @MethodSource("processingTraversals")
-  void repeatedRootTraversalsTraceWhileSubListsDoNot(BiConsumer<List<Message>, Boolean> traverse) {
-    TracingList tracingList = tracingMessages(1, new ArrayList<>());
-    List<Message> view = tracingList.subList(0, 1).subList(0, 1);
-
-    traverse.accept(tracingList, true);
-    traverse.accept(tracingList, true);
-    traverse.accept(view, false);
-    traverse.accept(view, false);
+    tracingList
+        .iterator()
+        .forEachRemaining(
+            unused -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
 
     testing.waitForTraces(2);
     assertThat(testing.spans()).hasSize(2);
-  }
-
-  private static Stream<Arguments> processingTraversals() {
-    return Stream.of(
-        argumentSet(
-            "iterator",
-            (BiConsumer<List<Message>, Boolean>)
-                (messages, trace) ->
-                    messages
-                        .iterator()
-                        .forEachRemaining(
-                            unused ->
-                                assertThat(Span.current().getSpanContext().isValid())
-                                    .isEqualTo(trace))),
-        argumentSet(
-            "list iterator",
-            (BiConsumer<List<Message>, Boolean>)
-                (messages, trace) ->
-                    messages
-                        .listIterator()
-                        .forEachRemaining(
-                            unused ->
-                                assertThat(Span.current().getSpanContext().isValid())
-                                    .isEqualTo(trace))),
-        argumentSet(
-            "forEach",
-            (BiConsumer<List<Message>, Boolean>)
-                (messages, trace) ->
-                    messages.forEach(
-                        unused ->
-                            assertThat(Span.current().getSpanContext().isValid())
-                                .isEqualTo(trace))),
-        argumentSet(
-            "spliterator",
-            (BiConsumer<List<Message>, Boolean>)
-                (messages, trace) ->
-                    messages
-                        .spliterator()
-                        .forEachRemaining(
-                            unused ->
-                                assertThat(Span.current().getSpanContext().isValid())
-                                    .isEqualTo(trace))));
   }
 
   @Test
@@ -256,7 +182,7 @@ class SqsTracingListTest {
   }
 
   @Test
-  void splitSpliteratorEndsProcessingWhenActionThrows() {
+  void splitSpliteratorDoesNotStartProcessingWhenActionThrows() {
     TracingList tracingList = tracingMessages(2, new ArrayList<>());
     Spliterator<Message> split = requireNonNull(tracingList.spliterator().trySplit());
     IllegalStateException failure = new IllegalStateException("processing failed");
@@ -265,17 +191,12 @@ class SqsTracingListTest {
             () ->
                 split.tryAdvance(
                     unused -> {
-                      assertThat(Span.current().getSpanContext().isValid()).isTrue();
+                      assertThat(Span.current().getSpanContext().isValid()).isFalse();
                       throw failure;
                     }))
         .isSameAs(failure);
     assertThat(Span.current().getSpanContext().isValid()).isFalse();
-
-    testing.waitForTraces(1);
-    assertThat(testing.spans())
-        .singleElement()
-        .satisfies(
-            span -> assertThat(span.getStatus().getStatusCode()).isEqualTo(StatusCode.ERROR));
+    assertThat(testing.spans()).isEmpty();
   }
 
   @Test
@@ -340,6 +261,41 @@ class SqsTracingListTest {
   }
 
   @Test
+  void firstIteratorTracesMessagesAddedOrReplacedBeforeTraversal() {
+    TracingList tracingList = tracingMessages(1, new ArrayList<>());
+    Message replacement = Message.builder().messageId("replacement").build();
+    Message added = Message.builder().messageId("added").build();
+    tracingList.set(0, replacement);
+    tracingList.add(added);
+
+    tracingList.forEach(unused -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
+
+    testing.waitForTraces(2);
+    assertThat(testing.spans())
+        .extracting(span -> span.getAttributes().get(MESSAGING_MESSAGE_ID))
+        .containsExactlyInAnyOrder("replacement", "added");
+  }
+
+  @Test
+  void firstIteratorNextTracesReplacedMessage() {
+    TracingList tracingList = tracingMessages(1, new ArrayList<>());
+    tracingList.set(0, Message.builder().messageId("replacement").build());
+
+    Iterator<Message> iterator = tracingList.iterator();
+    assertThat(iterator.next().messageId()).isEqualTo("replacement");
+    assertThat(Span.current().getSpanContext().isValid()).isTrue();
+    assertThat(iterator.hasNext()).isFalse();
+
+    testing.waitForTraces(1);
+    assertThat(testing.spans())
+        .singleElement()
+        .satisfies(
+            span ->
+                assertThat(span.getAttributes().get(MESSAGING_MESSAGE_ID))
+                    .isEqualTo("replacement"));
+  }
+
+  @Test
   void rootEqualityHashCodeAndToStringDoNotTraceTraversal() {
     TracingList tracingList = tracingMessages(1, new ArrayList<>());
     TracingList sameMessages = tracingMessages(1, new ArrayList<>());
@@ -372,9 +328,7 @@ class SqsTracingListTest {
     AtomicReference<SpanContext> callbackSpanContext = new AtomicReference<>();
 
     try (Scope ignored = unrelatedContext.makeCurrent()) {
-      tracingList
-          .spliterator()
-          .forEachRemaining(unused -> callbackSpanContext.set(Span.current().getSpanContext()));
+      tracingList.forEach(unused -> callbackSpanContext.set(Span.current().getSpanContext()));
       assertThat(Span.current().getSpanContext()).isEqualTo(unrelatedSpanContext);
     } finally {
       instrumenter.end(unrelatedContext, unrelatedRequest, null, null);
@@ -405,6 +359,7 @@ class SqsTracingListTest {
     Context parentContext = instrumenter.start(Context.root(), outerRequest);
     assertThat(SpanKey.CONSUMER_PROCESS.fromContextOrNull(parentContext)).isNotNull();
     TracingList tracingList = tracingMessages(1, new ArrayList<>(), instrumenter, parentContext);
+    TracingList callbackList = tracingMessages(1, new ArrayList<>(), instrumenter, parentContext);
 
     try {
       Iterator<Message> iterator = tracingList.iterator();
@@ -412,7 +367,7 @@ class SqsTracingListTest {
       assertThat(Span.current().getSpanContext().isValid()).isFalse();
       assertThat(iterator.hasNext()).isFalse();
 
-      tracingList.forEach(
+      callbackList.forEach(
           unused -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
       tracingList
           .spliterator()
@@ -461,78 +416,6 @@ class SqsTracingListTest {
   @Test
   void rootIteratorForEachRemainingEndsProcessingWhenActionThrows() {
     assertIteratorForEachRemainingFailure();
-  }
-
-  private static void assertSplitTraversal() throws Exception {
-    TracingList tracingList = tracingMessages(MESSAGE_COUNT, new ArrayList<>());
-    ContextKey<String> markerKey = ContextKey.named("spliterator-test-marker");
-    Context expectedContext = Context.root().with(markerKey, "present");
-
-    Spliterator<Message> remainder;
-    Spliterator<Message> split;
-    long originalSize;
-    int originalCharacteristics;
-    try (Scope ignored = expectedContext.makeCurrent()) {
-      remainder = tracingList.spliterator();
-      originalSize = remainder.estimateSize();
-      originalCharacteristics = remainder.characteristics();
-      split = requireNonNull(remainder.trySplit());
-
-      assertThat(Context.current()).isSameAs(expectedContext);
-      assertThat(testing.spans()).isEmpty();
-    }
-
-    assertThat(split.estimateSize() + remainder.estimateSize()).isEqualTo(originalSize);
-    assertThat(split.characteristics()).isEqualTo(originalCharacteristics);
-    assertThat(remainder.characteristics()).isEqualTo(originalCharacteristics);
-
-    Map<String, String> callbackSpanIds = new ConcurrentHashMap<>();
-    ExecutorService executor = Executors.newFixedThreadPool(2);
-    try {
-      Future<?> first = executor.submit(() -> process(split, callbackSpanIds));
-      Future<?> second = executor.submit(() -> process(remainder, callbackSpanIds));
-      first.get(10, SECONDS);
-      second.get(10, SECONDS);
-    } finally {
-      executor.shutdownNow();
-    }
-
-    testing.waitForTraces(MESSAGE_COUNT);
-    assertThat(callbackSpanIds).hasSize(MESSAGE_COUNT);
-    assertThat(testing.spans())
-        .hasSize(MESSAGE_COUNT)
-        .allSatisfy(
-            span -> {
-              String messageId = requireNonNull(span.getAttributes().get(MESSAGING_MESSAGE_ID));
-              assertThat(callbackSpanIds).containsEntry(messageId, span.getSpanId());
-            });
-
-    if (emitStableMessagingSemconv()) {
-      testing.waitAndAssertMetrics(
-          INSTRUMENTATION_NAME,
-          "messaging.client.consumed.messages",
-          metrics ->
-              metrics
-                  .singleElement()
-                  .satisfies(
-                      metric ->
-                          assertThat(metric.getLongSumData().getPoints())
-                              .singleElement()
-                              .satisfies(
-                                  point -> assertThat(point.getValue()).isEqualTo(MESSAGE_COUNT))));
-    }
-  }
-
-  private static void assertListIteratorTraversal() {
-    TracingList forwardTracingList = tracingMessages(1, new ArrayList<>());
-    ListIterator<Message> forward = forwardTracingList.listIterator();
-    assertThat(forward.next().messageId()).isEqualTo("message-0");
-    assertThat(forward.hasNext()).isFalse();
-
-    TracingList backwardTracingList = tracingMessages(1, new ArrayList<>());
-    ListIterator<Message> backward = backwardTracingList.listIterator(backwardTracingList.size());
-    assertThat(backward.previous().messageId()).isEqualTo("message-0");
-    assertThat(backward.hasPrevious()).isFalse();
   }
 
   private static void assertIteratorForEachRemainingFailure() {
@@ -602,19 +485,6 @@ class SqsTracingListTest {
               assertThat(span.getAttributes().get(MESSAGING_MESSAGE_ID)).isEqualTo("message-0");
               assertThat(span.getStatus().getStatusCode()).isEqualTo(StatusCode.ERROR);
             });
-  }
-
-  private static void process(Spliterator<Message> messages, Map<String, String> callbackSpanIds) {
-    Context previous = Context.current();
-    messages.forEachRemaining(
-        message -> {
-          assertThat(Span.current().getSpanContext().isValid()).isTrue();
-          assertThat(
-                  callbackSpanIds.put(
-                      message.messageId(), Span.current().getSpanContext().getSpanId()))
-              .isNull();
-        });
-    assertThat(Context.current()).isSameAs(previous);
   }
 
   private static TracingList tracingMessages(int messageCount, List<SqsMessage> tracingMessages) {
