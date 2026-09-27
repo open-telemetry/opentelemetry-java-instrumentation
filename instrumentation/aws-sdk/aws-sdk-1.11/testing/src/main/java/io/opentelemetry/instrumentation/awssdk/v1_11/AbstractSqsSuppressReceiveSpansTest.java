@@ -166,8 +166,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"iterator", "forEach", "spliterator"})
-  void testRepeatedTraversalCompletesEachProcessInvocation(String traversal) {
-    assumeTrue(emitStableMessagingSemconv());
+  void testOnlyFirstIteratorTraversalProducesProcessSpan(String traversal) {
     String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
     sqsClient.createQueue("testSdkSqs");
     sqsClient.sendMessage(new SendMessageRequest(queueUrl, "message"));
@@ -176,30 +175,60 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
 
     List<Message> messages = sqsClient.receiveMessage(queueUrl).getMessages();
     Context previous = Context.current();
+    boolean iteratorTraversal = !traversal.equals("spliterator");
     for (int attempt = 0; attempt < 2; attempt++) {
+      boolean traced = iteratorTraversal && attempt == 0;
       switch (traversal) {
         case "iterator":
           for (Message ignored : messages) {
-            assertThat(Span.current().getSpanContext().isValid()).isTrue();
+            assertThat(Span.current().getSpanContext().isValid()).isEqualTo(traced);
           }
           break;
         case "spliterator":
           messages
               .spliterator()
               .forEachRemaining(
-                  message -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
+                  message ->
+                      assertThat(Span.current().getSpanContext().isValid()).isEqualTo(traced));
           break;
         default:
           messages.forEach(
-              message -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
+              message -> assertThat(Span.current().getSpanContext().isValid()).isEqualTo(traced));
       }
       assertThat(Span.current().getSpanContext())
           .isEqualTo(Span.fromContext(previous).getSpanContext());
     }
     assertThat(testing().spans())
-        .filteredOn(span -> span.getName().equals("process testSdkSqs"))
-        .hasSize(2);
-    SqsMetricsAssertions.assertProcessMetrics(testing(), sqsPort, 2);
+        .filteredOn(
+            span ->
+                span.getName()
+                    .equals(
+                        emitStableMessagingSemconv() ? "process testSdkSqs" : "testSdkSqs process"))
+        .hasSize(iteratorTraversal ? 1 : 0);
+    if (iteratorTraversal) {
+      SqsMetricsAssertions.assertProcessMetrics(testing(), sqsPort, 1);
+    }
+  }
+
+  @Test
+  void testUnusedFirstIteratorDisablesLaterSdkProcessing() {
+    String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
+    sqsClient.createQueue("testSdkSqs");
+    sqsClient.sendMessage(new SendMessageRequest(queueUrl, "message"));
+    testing().waitForTraces(2);
+    testing().clearData();
+
+    List<Message> messages = sqsClient.receiveMessage(queueUrl).getMessages();
+    Iterator<Message> unused = messages.iterator();
+    assertThat(unused).isNotNull();
+    messages.forEach(message -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    assertThat(testing().spans())
+        .filteredOn(
+            span ->
+                span.getName()
+                    .equals(
+                        emitStableMessagingSemconv() ? "process testSdkSqs" : "testSdkSqs process"))
+        .isEmpty();
   }
 
   @Test

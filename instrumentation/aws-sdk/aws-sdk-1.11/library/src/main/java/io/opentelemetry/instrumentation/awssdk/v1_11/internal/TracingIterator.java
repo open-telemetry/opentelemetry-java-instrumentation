@@ -10,7 +10,7 @@ import static java.util.Objects.requireNonNull;
 import com.amazonaws.services.sqs.model.Message;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import java.util.ListIterator;
+import java.util.Iterator;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
@@ -18,16 +18,16 @@ import javax.annotation.Nullable;
  * Best-effort processing spans end at the next iterator boundary or callback completion. Abandoned
  * traversal has no observable completion point, and an iterator's scope must stay on one thread.
  */
-class TracingIterator implements ListIterator<Message> {
+class TracingIterator implements Iterator<Message> {
 
-  private final ListIterator<Message> delegateIterator;
+  private final Iterator<Message> delegateIterator;
   private final TracingList tracingList;
   private final TracingList.ProcessingOwnership processingOwnership;
 
   @Nullable private ProcessingInvocation currentInvocation;
 
   private TracingIterator(
-      ListIterator<Message> delegateIterator,
+      Iterator<Message> delegateIterator,
       TracingList tracingList,
       TracingList.ProcessingOwnership processingOwnership) {
     this.delegateIterator = delegateIterator;
@@ -35,8 +35,8 @@ class TracingIterator implements ListIterator<Message> {
     this.processingOwnership = processingOwnership;
   }
 
-  static ListIterator<Message> wrap(
-      ListIterator<Message> delegateIterator,
+  static Iterator<Message> wrap(
+      Iterator<Message> delegateIterator,
       TracingList tracingList,
       TracingList.ProcessingOwnership processingOwnership) {
     return new TracingIterator(delegateIterator, tracingList, processingOwnership);
@@ -53,20 +53,6 @@ class TracingIterator implements ListIterator<Message> {
     // in case they didn't call hasNext()...
     endCurrentInvocation();
     Message message = delegateIterator.next();
-    startInvocation(message);
-    return message;
-  }
-
-  @Override
-  public boolean hasPrevious() {
-    endCurrentInvocation();
-    return delegateIterator.hasPrevious();
-  }
-
-  @Override
-  public Message previous() {
-    endCurrentInvocation();
-    Message message = delegateIterator.previous();
     startInvocation(message);
     return message;
   }
@@ -106,55 +92,9 @@ class TracingIterator implements ListIterator<Message> {
     }
   }
 
-  static void processCallback(
-      TracingList tracingList,
-      TracingList.ProcessingOwnership processingOwnership,
-      Message message,
-      Consumer<? super Message> action) {
-    requireNonNull(action);
-    if (message == null) {
-      action.accept(message);
-      return;
-    }
-
-    ProcessingInvocation invocation =
-        ProcessingInvocation.start(tracingList, processingOwnership, SqsMessageImpl.wrap(message));
-    try {
-      action.accept(message);
-    } catch (Throwable t) {
-      if (invocation != null) {
-        invocation.end(t);
-      }
-      throw t;
-    }
-    if (invocation != null) {
-      invocation.end(null);
-    }
-  }
-
   @Override
   public void remove() {
     delegateIterator.remove();
-  }
-
-  @Override
-  public int nextIndex() {
-    return delegateIterator.nextIndex();
-  }
-
-  @Override
-  public int previousIndex() {
-    return delegateIterator.previousIndex();
-  }
-
-  @Override
-  public void set(Message message) {
-    delegateIterator.set(message);
-  }
-
-  @Override
-  public void add(Message message) {
-    delegateIterator.add(message);
   }
 
   private static final class ProcessingInvocation {

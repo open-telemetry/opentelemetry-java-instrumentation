@@ -18,8 +18,8 @@ public final class SqsProcessTracing {
   /**
    * Disables raw process spans for the exact traced response list passed to this method. The owner
    * must mark that response before traversal, and only when it will instrument processing itself.
-   * Each eligible application traversal of the response can produce raw process spans. Sublist
-   * views are not traced.
+   * Only the first eligible response iterator can produce raw process spans. Acquiring it consumes
+   * that opportunity even if it is not used. Sublist views are not traced.
    *
    * <p>Ownership does not follow message objects into copied lists or other responses.
    */

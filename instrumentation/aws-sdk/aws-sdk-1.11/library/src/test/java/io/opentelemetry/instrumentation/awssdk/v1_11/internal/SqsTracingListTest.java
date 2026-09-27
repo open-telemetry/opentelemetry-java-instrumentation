@@ -33,9 +33,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 import java.util.Spliterator;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -53,7 +50,7 @@ class SqsTracingListTest {
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @ParameterizedTest
-  @MethodSource("traversals")
+  @MethodSource("tracedTraversals")
   void observableTraversalFinishesProcessSpans(Consumer<List<Message>> traversal) {
     Context previous = Context.current();
     traversal.accept(tracingMessages());
@@ -64,7 +61,7 @@ class SqsTracingListTest {
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("process").hasNoParent()));
   }
 
-  private static Stream<Arguments> traversals() {
+  private static Stream<Arguments> tracedTraversals() {
     return Stream.of(
         argumentSet(
             "iterator",
@@ -82,84 +79,109 @@ class SqsTracingListTest {
             (Consumer<List<Message>>)
                 messages -> messages.iterator().forEachRemaining(SqsTracingListTest::processing)),
         argumentSet(
+            "iterator forEachRemaining",
+            (Consumer<List<Message>>)
+                messages -> messages.iterator().forEachRemaining(SqsTracingListTest::processing)));
+  }
+
+  @Test
+  void discardedFirstIteratorConsumesTracingOpportunity() {
+    List<Message> messages = tracingMessages();
+    Iterator<Message> unused = messages.iterator();
+    assertThat(unused).isNotNull();
+
+    messages.forEach(message -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    assertThat(testing.spans()).isEmpty();
+  }
+
+  @ParameterizedTest
+  @MethodSource("tracedTraversals")
+  void laterTraversalsOfResponseDoNotTrace(Consumer<List<Message>> firstTraversal) {
+    List<Message> messages = tracingMessages();
+    firstTraversal.accept(messages);
+    assertThat(testing.spans()).hasSize(2);
+
+    Consumer<Message> untraced =
+        message -> assertThat(Span.current().getSpanContext().isValid()).isFalse();
+    messages.forEach(untraced);
+    messages.iterator().forEachRemaining(untraced);
+    messages.spliterator().forEachRemaining(untraced);
+    assertThat(testing.spans()).hasSize(2);
+  }
+
+  @Test
+  void onlyFirstIteratorHandleTraces() {
+    List<Message> messages = tracingMessages();
+    Iterator<Message> first = messages.iterator();
+    Iterator<Message> later = messages.iterator();
+    later.forEachRemaining(
+        message -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    first.forEachRemaining(SqsTracingListTest::processing);
+    assertThat(testing.spans()).hasSize(2);
+  }
+
+  @ParameterizedTest
+  @MethodSource("untracedTraversals")
+  void otherTraversalApisDoNotTraceOrConsumeFirstIterator(Consumer<List<Message>> traversal) {
+    List<Message> messages = tracingMessages();
+    Context previous = Context.current();
+    traversal.accept(messages);
+
+    assertThat(Context.current()).isSameAs(previous);
+    assertThat(testing.spans()).isEmpty();
+    messages.forEach(SqsTracingListTest::processing);
+    assertThat(testing.spans()).hasSize(2);
+  }
+
+  private static Stream<Arguments> untracedTraversals() {
+    Consumer<Message> untraced =
+        message -> assertThat(Span.current().getSpanContext().isValid()).isFalse();
+    return Stream.of(
+        argumentSet(
+            "listIterator",
+            (Consumer<List<Message>>)
+                messages -> messages.listIterator().forEachRemaining(untraced)),
+        argumentSet(
+            "indexed listIterator",
+            (Consumer<List<Message>>)
+                messages -> messages.listIterator(1).forEachRemaining(untraced)),
+        argumentSet(
+            "reverse listIterator",
+            (Consumer<List<Message>>)
+                messages -> {
+                  ListIterator<Message> iterator = messages.listIterator(messages.size());
+                  while (iterator.hasPrevious()) {
+                    untraced.accept(iterator.previous());
+                  }
+                }),
+        argumentSet(
             "spliterator",
             (Consumer<List<Message>>)
-                messages ->
-                    messages.spliterator().forEachRemaining(SqsTracingListTest::processing)),
+                messages -> messages.spliterator().forEachRemaining(untraced)),
         argumentSet(
             "tryAdvance",
             (Consumer<List<Message>>)
                 messages -> {
                   Spliterator<Message> spliterator = messages.spliterator();
-                  while (spliterator.tryAdvance(SqsTracingListTest::processing)) {
-                    assertThat(Span.current().getSpanContext().isValid()).isFalse();
-                  }
+                  while (spliterator.tryAdvance(untraced)) {}
                 }),
         argumentSet(
-            "reverse",
+            "split spliterator",
             (Consumer<List<Message>>)
                 messages -> {
-                  ListIterator<Message> iterator = messages.listIterator(messages.size());
-                  while (iterator.hasPrevious()) {
-                    processing(iterator.previous());
-                  }
-                }));
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = {"iterator", "listIterator", "indexed listIterator", "spliterator"})
-  void discardedTraversalHandleDoesNotDisableLaterTraversals(String traversal) {
-    List<Message> messages = tracingMessages();
-    Object unusedHandle;
-    switch (traversal) {
-      case "iterator":
-        unusedHandle = messages.iterator();
-        break;
-      case "listIterator":
-        unusedHandle = messages.listIterator();
-        break;
-      case "indexed listIterator":
-        unusedHandle = messages.listIterator(1);
-        break;
-      case "spliterator":
-        unusedHandle = messages.spliterator();
-        break;
-      default:
-        throw new IllegalArgumentException(traversal);
-    }
-    assertThat(unusedHandle).isNotNull();
-
-    messages.forEach(SqsTracingListTest::processing);
-    messages.spliterator().forEachRemaining(SqsTracingListTest::processing);
-    assertThat(testing.spans()).hasSize(4);
-  }
-
-  @ParameterizedTest
-  @MethodSource("traversals")
-  void laterTraversalsOfResponseTrace(Consumer<List<Message>> firstTraversal) {
-    List<Message> messages = tracingMessages();
-    firstTraversal.accept(messages);
-    assertThat(testing.spans()).hasSize(2);
-
-    messages.forEach(SqsTracingListTest::processing);
-    messages.iterator().forEachRemaining(SqsTracingListTest::processing);
-    messages.spliterator().forEachRemaining(SqsTracingListTest::processing);
-    assertThat(testing.spans()).hasSize(8);
-  }
-
-  @Test
-  void eachHandleRemainsEligibleAfterLaterHandleAcquisition() {
-    List<Message> messages = tracingMessages();
-    Iterator<Message> first = messages.iterator();
-    Iterator<Message> later = messages.listIterator();
-    later.forEachRemaining(SqsTracingListTest::processing);
-    first.forEachRemaining(SqsTracingListTest::processing);
-    assertThat(testing.spans()).hasSize(4);
+                  Spliterator<Message> first = messages.spliterator();
+                  Spliterator<Message> second = first.trySplit();
+                  assertThat(second).isNotNull();
+                  first.forEachRemaining(untraced);
+                  second.forEachRemaining(untraced);
+                }),
+        argumentSet(
+            "stream", (Consumer<List<Message>>) messages -> messages.stream().forEach(untraced)));
   }
 
   @Test
   void nextWithoutHasNextFinishesPreviousInvocation() {
-    ListIterator<Message> iterator = tracingMessages().listIterator();
+    Iterator<Message> iterator = tracingMessages().iterator();
     Context previous = Context.current();
     iterator.next();
     iterator.next();
@@ -222,7 +244,7 @@ class SqsTracingListTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"forEach", "iterator", "spliterator"})
+  @ValueSource(strings = {"forEach", "iterator"})
   void callbackFailureFinishesSpanAndRestoresContext(String traversal) {
     List<Message> messages = tracingMessages();
     Context previous = Context.current();
@@ -238,9 +260,6 @@ class SqsTracingListTest {
                 case "iterator":
                   messages.iterator().forEachRemaining(action);
                   break;
-                case "spliterator":
-                  messages.spliterator().tryAdvance(action);
-                  break;
                 default:
                   messages.forEach(action);
               }
@@ -253,28 +272,6 @@ class SqsTracingListTest {
   }
 
   @Test
-  void splitCallbackFailureFinishesSpanWithoutDisablingSibling() {
-    Spliterator<Message> first = tracingMessages().spliterator();
-    Spliterator<Message> second = requireNonNull(first.trySplit());
-    Context previous = Context.current();
-    IllegalStateException failure = new IllegalStateException("split failed");
-
-    assertThatThrownBy(
-            () ->
-                second.tryAdvance(
-                    message -> {
-                      processing(message);
-                      throw failure;
-                    }))
-        .isSameAs(failure);
-    assertThat(Context.current()).isSameAs(previous);
-    first.forEachRemaining(SqsTracingListTest::processing);
-    assertThat(Context.current()).isSameAs(previous);
-    assertThat(testing.spans()).hasSize(2);
-    assertThat(testing.spans()).anySatisfy(span -> assertThat(span).hasException(failure));
-  }
-
-  @Test
   void nestedTraversalRestoresOuterScopeAndCapturedContext() {
     Instrumenter<SqsProcessRequest, Response<?>> instrumenter = keyedProcessInstrumenter();
     testing.runWithSpan(
@@ -282,10 +279,10 @@ class SqsTracingListTest {
         () -> {
           Context parent = Context.current().with(APPLICATION_KEY, "application");
           List<Message> outer = tracingMessages(parent, instrumenter);
-          List<Message> inner = tracingMessages(parent, instrumenter);
           outer.forEach(
               message -> {
                 Context outerContext = Context.current();
+                List<Message> inner = tracingMessages(parent, instrumenter);
                 inner.forEach(
                     nested -> {
                       assertThat(Span.current().getSpanContext())
@@ -412,8 +409,8 @@ class SqsTracingListTest {
     List<Message> messages = tracingMessages();
     SqsProcessTracing.markProcessingOwnedOutsideSqsSdk(new ArrayList<>(messages));
     messages.forEach(SqsTracingListTest::processing);
-    messages.forEach(SqsTracingListTest::processing);
-    assertThat(testing.spans()).hasSize(4);
+    messages.forEach(message -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+    assertThat(testing.spans()).hasSize(2);
   }
 
   @ParameterizedTest
@@ -428,33 +425,6 @@ class SqsTracingListTest {
         });
     assertThat(visited.toArray()).containsExactly(messages.toArray());
     assertThat(testing.spans()).hasSize(enabled ? 2 : 0);
-  }
-
-  @Test
-  void splitTraversalPreservesCharacteristicsAndCompletesOnEachThread() {
-    Spliterator<Message> first = tracingMessages().spliterator();
-    long size = first.estimateSize();
-    int characteristics = first.characteristics();
-    Spliterator<Message> second = requireNonNull(first.trySplit());
-    assertThat(first.estimateSize() + second.estimateSize()).isEqualTo(size);
-    assertThat(first.characteristics()).isEqualTo(characteristics);
-    assertThat(second.characteristics()).isEqualTo(characteristics);
-    ExecutorService executor = Executors.newFixedThreadPool(2);
-    try {
-      CompletableFuture.allOf(
-              CompletableFuture.runAsync(() -> process(first), executor),
-              CompletableFuture.runAsync(() -> process(second), executor))
-          .join();
-    } finally {
-      executor.shutdownNow();
-    }
-    assertThat(testing.spans()).hasSize(2);
-  }
-
-  private static void process(Spliterator<Message> messages) {
-    Context previous = Context.current();
-    messages.forEachRemaining(SqsTracingListTest::processing);
-    assertThat(Context.current()).isSameAs(previous);
   }
 
   private static void processing(Message message) {
