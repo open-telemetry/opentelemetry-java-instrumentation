@@ -1,0 +1,1 @@
+Stabilize common messaging header selectors
