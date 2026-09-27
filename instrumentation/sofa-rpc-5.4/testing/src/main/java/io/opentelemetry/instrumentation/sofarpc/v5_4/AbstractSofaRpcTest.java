@@ -56,7 +56,6 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
-import javax.annotation.Nullable;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.Test;
@@ -588,7 +587,7 @@ public abstract class AbstractSofaRpcTest {
                                     emitStableRpcSemconv()
                                         ? SofaRpcRuntimeException.class.getName()
                                         : null))
-                            .hasException(expectedSpanException(clientException)),
+                            .hasException(emitExceptionAsSpanEvents() ? clientException : null),
                     span ->
                         span.hasName(
                                 "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwException")
@@ -618,7 +617,7 @@ public abstract class AbstractSofaRpcTest {
                                     emitStableRpcSemconv()
                                         ? SofaRpcRuntimeException.class.getName()
                                         : null))
-                            .hasException(expectedSpanException(serverException))));
+                            .hasException(emitExceptionAsSpanEvents() ? serverException : null)));
 
     assertExceptionLogs(clientException, serverException);
 
@@ -775,7 +774,7 @@ public abstract class AbstractSofaRpcTest {
                                     emitStableRpcSemconv()
                                         ? IllegalStateException.class.getName()
                                         : null))
-                            .hasException(expectedSpanException(clientException)),
+                            .hasException(emitExceptionAsSpanEvents() ? clientException : null),
                     span ->
                         span.hasName(
                                 "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwBusinessException")
@@ -805,7 +804,7 @@ public abstract class AbstractSofaRpcTest {
                                     emitStableRpcSemconv()
                                         ? IllegalStateException.class.getName()
                                         : null))
-                            .hasException(expectedSpanException(serverException))));
+                            .hasException(emitExceptionAsSpanEvents() ? serverException : null)));
 
     assertExceptionLogs(clientException, serverException);
   }
@@ -865,7 +864,7 @@ public abstract class AbstractSofaRpcTest {
                                     emitStableRpcSemconv()
                                         ? SofaTimeOutException.class.getName()
                                         : null))
-                            .hasException(expectedSpanException(clientException)),
+                            .hasException(emitExceptionAsSpanEvents() ? clientException : null),
                     // Server span: server completes normally (after 2s), so no error status
                     span ->
                         span.hasName(
@@ -895,12 +894,7 @@ public abstract class AbstractSofaRpcTest {
     assertExceptionLogs(clientException, null);
   }
 
-  @Nullable
-  private static Throwable expectedSpanException(Throwable exception) {
-    return emitExceptionAsSpanEvents() ? exception : null;
-  }
-
-  private void assertExceptionLogs(Throwable clientException, @Nullable Throwable serverException) {
+  private void assertExceptionLogs(Throwable clientException, Throwable serverException) {
     if (!emitExceptionAsLogs()) {
       return;
     }
