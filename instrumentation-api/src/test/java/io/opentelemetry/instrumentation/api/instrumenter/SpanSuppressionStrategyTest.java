@@ -456,12 +456,17 @@ class SpanSuppressionStrategyTest {
   @SetSystemProperty(
       key = "otel.instrumentation.experimental.span-suppression-strategy",
       value = "span-kind")
-  void shouldWarnOnceOnlyWhenDeprecatedValueIsApplied() throws ReflectiveOperationException {
-    Field warningLoggedField =
+  void shouldWarnOncePerDeprecatedConfigPathOnlyWhenApplied() throws ReflectiveOperationException {
+    Field configWarningLoggedField =
+        InstrumenterBuilder.class.getDeclaredField("spanSuppressionConfigWarningLogged");
+    configWarningLoggedField.setAccessible(true);
+    AtomicBoolean configWarningLogged = (AtomicBoolean) configWarningLoggedField.get(null);
+    boolean configWarningWasLogged = configWarningLogged.getAndSet(false);
+    Field propertyWarningLoggedField =
         InstrumenterBuilder.class.getDeclaredField("spanSuppressionPropertyWarningLogged");
-    warningLoggedField.setAccessible(true);
-    AtomicBoolean warningLogged = (AtomicBoolean) warningLoggedField.get(null);
-    boolean warningWasLogged = warningLogged.getAndSet(false);
+    propertyWarningLoggedField.setAccessible(true);
+    AtomicBoolean propertyWarningLogged = (AtomicBoolean) propertyWarningLoggedField.get(null);
+    boolean propertyWarningWasLogged = propertyWarningLogged.getAndSet(false);
     List<LogRecord> records = new ArrayList<>();
     Logger logger = Logger.getLogger(InstrumenterBuilder.class.getName());
     Handler handler =
@@ -496,7 +501,8 @@ class SpanSuppressionStrategyTest {
       Instrumenter.<String, String>builder(preview, "test", request -> "test")
           .buildSpanSuppressor();
       assertThat(records).isEmpty();
-      assertThat(warningLogged.get()).isFalse();
+      assertThat(configWarningLogged.get()).isFalse();
+      assertThat(propertyWarningLogged.get()).isFalse();
       verify(preview.getInstrumentationConfig("common"), never())
           .getString("span_suppression_strategy/development");
 
@@ -509,31 +515,41 @@ class SpanSuppressionStrategyTest {
       assertThat(records.get(0).getLevel()).isEqualTo(WARNING);
       assertThat(records.get(0).getMessage())
           .contains("java.common.span_suppression_strategy/development")
-          .contains("java.common.span_suppression_strategy")
+          .contains("otel.instrumentation.experimental.span-suppression-strategy")
+          .contains("Use java.common.span_suppression_strategy (or")
           .contains("otel.instrumentation.common.span-suppression-strategy")
-          .contains("3.0");
+          .contains("3.0")
+          .doesNotContain("Experimental.setSpanSuppressionStrategy");
 
       records.clear();
-      warningLogged.set(false);
       Map<String, String> deprecatedFlat = new HashMap<>();
       deprecatedFlat.put("otel.instrumentation.experimental.span-suppression-strategy", "none");
       Instrumenter.<String, String>builder(
               withFlatConfig(deprecatedFlat), "test", request -> "test")
           .buildSpanSuppressor();
-      assertThat(records).hasSize(1);
+      assertThat(records).isEmpty();
 
-      records.clear();
-      warningLogged.set(false);
       Instrumenter.<String, String>builder(OpenTelemetry.noop(), "test", request -> "test")
           .buildSpanSuppressor();
       Instrumenter.<String, String>builder(OpenTelemetry.noop(), "test", request -> "test")
           .buildSpanSuppressor();
       assertThat(records).hasSize(1);
+      assertThat(records.get(0).getLevel()).isEqualTo(WARNING);
       assertThat(records.get(0).getMessage())
-          .contains("otel.instrumentation.experimental.span-suppression-strategy");
+          .contains("otel.instrumentation.experimental.span-suppression-strategy")
+          .contains("declarative instrumentation configuration")
+          .contains("3.0")
+          .doesNotContain("java.common.span_suppression_strategy/development")
+          .doesNotContain("Experimental.setSpanSuppressionStrategy");
+
+      Instrumenter.<String, String>builder(
+              withCommonConfig(null, null, false), "test", request -> "test")
+          .buildSpanSuppressor();
+      assertThat(records).hasSize(1);
     } finally {
       logger.removeHandler(handler);
-      warningLogged.set(warningWasLogged);
+      configWarningLogged.set(configWarningWasLogged);
+      propertyWarningLogged.set(propertyWarningWasLogged);
     }
   }
 

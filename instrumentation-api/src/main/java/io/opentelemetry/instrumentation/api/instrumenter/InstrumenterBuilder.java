@@ -55,6 +55,7 @@ import javax.annotation.Nullable;
 public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   private static final Logger logger = Logger.getLogger(InstrumenterBuilder.class.getName());
+  private static final AtomicBoolean spanSuppressionConfigWarningLogged = new AtomicBoolean();
   private static final AtomicBoolean spanSuppressionPropertyWarningLogged = new AtomicBoolean();
 
   final OpenTelemetry openTelemetry;
@@ -422,18 +423,24 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     if (result == null && !SemconvStability.v3Preview(openTelemetry)) {
       // Deprecated declarative and flat names remain available until 3.0.
       result = commonConfig.getString("span_suppression_strategy/development");
+      if (result != null && spanSuppressionConfigWarningLogged.compareAndSet(false, true)) {
+        logger.warning(
+            "The java.common.span_suppression_strategy/development setting (or its flat"
+                + " equivalent otel.instrumentation.experimental.span-suppression-strategy)"
+                + " is deprecated and will be removed in 3.0. Use"
+                + " java.common.span_suppression_strategy (or"
+                + " otel.instrumentation.common.span-suppression-strategy in flat configuration)"
+                + " instead.");
+      }
       if (result == null) {
         result =
             SystemProperty.getString("otel.instrumentation.experimental.span-suppression-strategy");
-      }
-      if (result != null && spanSuppressionPropertyWarningLogged.compareAndSet(false, true)) {
-        logger.warning(
-            "The java.common.span_suppression_strategy/development YAML key and"
-                + " otel.instrumentation.experimental.span-suppression-strategy flat property"
-                + " are deprecated and will be removed in 3.0. Use the"
-                + " java.common.span_suppression_strategy YAML key,"
-                + " otel.instrumentation.common.span-suppression-strategy flat property, or"
-                + " Experimental.setSpanSuppressionStrategy(...) instead.");
+        if (result != null && spanSuppressionPropertyWarningLogged.compareAndSet(false, true)) {
+          logger.warning(
+              "The otel.instrumentation.experimental.span-suppression-strategy setting"
+                  + " is deprecated and will be removed in 3.0. Use declarative instrumentation"
+                  + " configuration or configure the instrumenter directly instead.");
+        }
       }
     }
     return SpanSuppressionStrategy.fromConfig(result);
