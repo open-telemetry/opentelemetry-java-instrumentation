@@ -23,7 +23,6 @@ class KafkaConsumerContextUtilTest {
 
   @Test
   void restoresProcessParentWithoutSuppressionMarker() {
-    assumeTrue(emitStableMessagingSemconv());
     Span parentSpan =
         testing.getOpenTelemetry().getTracer("test").spanBuilder("parent").startSpan();
     Span processSpan =
@@ -48,7 +47,6 @@ class KafkaConsumerContextUtilTest {
 
   @Test
   void retainsParentProcessSuppressionWhenRestoringLeakedProcessSpan() {
-    assumeTrue(emitStableMessagingSemconv());
     Span parentSpan =
         testing.getOpenTelemetry().getTracer("test").spanBuilder("parent").startSpan();
     Span processSpan =
@@ -85,7 +83,6 @@ class KafkaConsumerContextUtilTest {
 
   @Test
   void leavesUnrelatedCurrentSpanUntouched() {
-    assumeTrue(emitStableMessagingSemconv());
     Span parentSpan =
         testing.getOpenTelemetry().getTracer("test").spanBuilder("parent").startSpan();
     Span processSpan =

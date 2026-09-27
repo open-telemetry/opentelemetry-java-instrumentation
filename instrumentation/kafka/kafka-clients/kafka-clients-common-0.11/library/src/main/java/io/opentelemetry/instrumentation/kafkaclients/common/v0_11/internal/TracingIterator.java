@@ -88,7 +88,9 @@ public class TracingIterator<K, V> implements Iterator<ConsumerRecord<K, V>> {
         return next;
       }
       currentRequest = request;
-      currentContext = instrumenter.start(parentContext, request);
+      try (Scope ignored = KafkaConsumerContextUtil.withoutLeakedProcessSpanDuringExtraction()) {
+        currentContext = instrumenter.start(parentContext, request);
+      }
       currentContext =
           KafkaConsumerContextUtil.withProcessParentSpan(currentContext, parentContext);
       currentScope = currentContext.makeCurrent();

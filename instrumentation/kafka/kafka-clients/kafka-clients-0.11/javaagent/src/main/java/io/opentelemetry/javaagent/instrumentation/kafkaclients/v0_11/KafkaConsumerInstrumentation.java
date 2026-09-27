@@ -19,6 +19,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
@@ -83,15 +84,18 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
         Context receiveContext = null;
         boolean receiveOperationStarted = false;
         if (consumerReceiveInstrumenter().shouldStart(spanSuppressionContext, request)) {
-          receiveContext =
-              InstrumenterUtil.startAndEnd(
-                  consumerReceiveInstrumenter(),
-                  parentContext,
-                  request,
-                  null,
-                  error,
-                  timer.startTime(),
-                  timer.now());
+          try (Scope ignored =
+              KafkaConsumerContextUtil.withoutLeakedProcessSpanDuringExtraction()) {
+            receiveContext =
+                InstrumenterUtil.startAndEnd(
+                    consumerReceiveInstrumenter(),
+                    parentContext,
+                    request,
+                    null,
+                    error,
+                    timer.startTime(),
+                    timer.now());
+          }
           receiveOperationStarted = true;
         }
 
