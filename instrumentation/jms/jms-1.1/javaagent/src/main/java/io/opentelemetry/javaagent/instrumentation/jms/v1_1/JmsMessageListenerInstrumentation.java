@@ -101,7 +101,7 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
 
           Context currentContext = Context.current();
           Context parentContext = currentContext;
-          if (!emitStableMessagingSemconv()) {
+          if (emitStableMessagingSemconv()) {
             JmsReceiveContext receiveContext = messageAdapter.getReceiveContext();
             if (receiveContext != null) {
               parentContext = receiveContext.context();

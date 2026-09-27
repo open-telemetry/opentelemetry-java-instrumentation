@@ -28,6 +28,7 @@ import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.opentelemetry.api.common.Attributes;
@@ -35,6 +36,7 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 import javax.jms.Connection;
@@ -52,7 +54,6 @@ import org.assertj.core.api.AbstractAssert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -495,10 +496,34 @@ abstract class AbstractJms1Test {
   }
 
   @Test
-  @EnabledIfSystemProperty(
-      named = "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled",
-      matches = "true")
-  void shouldApplyParentContextSuppressionToNestedDistinctMessages() throws Exception {
+  void shouldUseReceivedMessageAsStableProcessParent() throws Exception {
+    assumeTrue(emitStableMessagingSemconv());
+    Destination destination = session.createQueue("stableProcessParentQueue");
+    MessageProducer producer = session.createProducer(destination);
+    cleanup.deferCleanup(producer::close);
+    MessageConsumer consumer = session.createConsumer(destination);
+    cleanup.deferCleanup(consumer::close);
+
+    producer.send(session.createTextMessage("a message"));
+    Message receivedMessage = consumer.receive();
+    MessageListener listener = message -> {};
+    listener.onMessage(receivedMessage);
+
+    testing.waitForTraces(2);
+    assertThat(testing.spans()).hasSize(3);
+    SpanData receiveSpan =
+        testing.spans().stream()
+            .filter(span -> span.getName().equals("receive stableProcessParentQueue"))
+            .findFirst()
+            .orElseThrow(IllegalStateException::new);
+    assertThat(testing.spans())
+        .filteredOn(span -> span.getName().equals("process stableProcessParentQueue"))
+        .singleElement()
+        .satisfies(span -> assertThat(span.getParentSpanId()).isEqualTo(receiveSpan.getSpanId()));
+  }
+
+  @Test
+  void shouldProcessNestedDistinctMessagesAccordingToParentContext() throws Exception {
     Destination destination = session.createQueue("nestedProcessingQueue");
     MessageProducer producer = session.createProducer(destination);
     cleanup.deferCleanup(producer::close);
@@ -514,17 +539,20 @@ abstract class AbstractJms1Test {
     MessageListener outerListener = message -> innerListener.onMessage(innerMessage);
     outerListener.onMessage(outerMessage);
 
-    testing.waitForTraces(4);
-    assertThat(testing.spans()).hasSize(emitStableMessagingSemconv() ? 5 : 6);
-    assertThat(testing.spans())
-        .filteredOn(
-            span ->
-                span.getName()
-                    .equals(
-                        emitStableMessagingSemconv()
-                            ? "process nestedProcessingQueue"
-                            : "nestedProcessingQueue process"))
-        .hasSize(emitStableMessagingSemconv() ? 1 : 2);
+    await()
+        .untilAsserted(
+            () -> {
+              assertThat(testing.spans()).hasSize(emitStableMessagingSemconv() ? 6 : 5);
+              assertThat(testing.spans())
+                  .filteredOn(
+                      span ->
+                          span.getName()
+                              .equals(
+                                  emitStableMessagingSemconv()
+                                      ? "process nestedProcessingQueue"
+                                      : "nestedProcessingQueue process"))
+                  .hasSize(emitStableMessagingSemconv() ? 2 : 1);
+            });
   }
 
   private static Attributes messagingMetricAttributes(String operationName, String destination) {
