@@ -32,9 +32,11 @@ dependencies {
   annotationProcessor("com.google.auto.value:auto-value")
 
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  testImplementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   testImplementation("io.opentelemetry:opentelemetry-sdk-extension-declarative-config")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("io.opentelemetry:opentelemetry-exporter-common")
+  testImplementation(project(":declarative-config-bridge"))
 
   jmhImplementation(project(":instrumentation-api-incubator"))
 }

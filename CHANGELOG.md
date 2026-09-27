@@ -17,12 +17,10 @@
 
 ### 🚫 Deprecations
 
-- Deprecate the `java.common.span_suppression_strategy/development` YAML key
-  in favor of `java.common.span_suppression_strategy`. The replacement is YAML-only.
-  The old YAML key and the
-  `otel.instrumentation.experimental.span-suppression-strategy` flat property
-  (already deprecated in [#19180](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19180))
-  remain fallbacks until 3.0 and warn when applied.
+- Add `otel.instrumentation.common.span-suppression-strategy` to replace the
+  `otel.instrumentation.experimental.span-suppression-strategy` property, already deprecated in
+  [#19180](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19180).
+  The old property remains a fallback until 3.0 and warns when applied.
 - Deprecate the Java agent and Spring Boot starter's bundled contrib samplers, including the
   `rule_based_routing` declarative sampler and `linksbased_parentbased_always_on` flat sampler.
   Outside v3-preview, both names continue to work but log a warning when selected. When

@@ -31,8 +31,6 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
   private static final String JAVA_DECLARATIVE_PREFIX = "java.";
   private static final String INSTRUMENTATION_PROPERTY_PREFIX = "otel.instrumentation.";
   private static final String JAVA_COMMON_SERVICE_PEER_MAPPING = "java.common.service_peer_mapping";
-  private static final String JAVA_COMMON_SPAN_SUPPRESSION_STRATEGY =
-      "java.common.span_suppression_strategy";
 
   private static final Map<String, String> SPECIAL_MAPPINGS;
 
@@ -137,9 +135,6 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
   @Nullable
   @Override
   public String getString(String name) {
-    if (instrumentationConfig && pathWithName(name).equals(JAVA_COMMON_SPAN_SUPPRESSION_STRATEGY)) {
-      return null;
-    }
     return configProperties.getString(resolvePropertyKey(name));
   }
 

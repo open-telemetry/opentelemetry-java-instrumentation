@@ -431,7 +431,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
             "The java.common.span_suppression_strategy/development YAML key and"
                 + " otel.instrumentation.experimental.span-suppression-strategy flat property"
                 + " are deprecated and will be removed in 3.0. Use the"
-                + " java.common.span_suppression_strategy YAML key or"
+                + " java.common.span_suppression_strategy YAML key,"
+                + " otel.instrumentation.common.span-suppression-strategy flat property, or"
                 + " Experimental.setSpanSuppressionStrategy(...) instead.");
       }
     }
