@@ -154,6 +154,21 @@ class MessagingConfigTest {
   }
 
   @Test
+  void emptyStableSelectorOverridesDeprecatedSelectors() {
+    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
+    when(messagingConfig(openTelemetry).get("headers").getScalarList("included", String.class))
+        .thenReturn(emptyList());
+    when(messagingConfig(openTelemetry)
+            .get("headers/development")
+            .getScalarList("included", String.class))
+        .thenReturn(singletonList("deprecated"));
+    when(messagingConfig(openTelemetry).getScalarList("capture_headers/development", String.class))
+        .thenReturn(singletonList("deprecated-capture"));
+
+    assertThat(MessagingConfig.getHeaders(openTelemetry).isEmpty()).isTrue();
+  }
+
+  @Test
   void v3PreviewReadsDeprecatedCommonSelectorBeforeOlderExperimentalAlias() {
     ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
     when(openTelemetry.getInstrumentationConfig("common").getBoolean("v3_preview"))

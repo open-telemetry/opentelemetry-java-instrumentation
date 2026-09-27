@@ -62,17 +62,19 @@ public final class MessagingConfig {
     DeclarativeConfigProperties deprecatedHeaders =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "messaging")
             .get("headers/development");
+    List<String> stableIncluded = headers.getScalarList("included", String.class);
+    List<String> stableExcluded = headers.getScalarList("excluded", String.class);
     List<String> included =
         getHeaderPatterns(
             "included",
-            headers,
+            stableIncluded,
             deprecatedCommonHeaders,
             deprecatedHeaders,
             systemPropertyFallback);
     List<String> excluded =
         getHeaderPatterns(
             "excluded",
-            headers,
+            stableExcluded,
             deprecatedCommonHeaders,
             deprecatedHeaders,
             systemPropertyFallback);
@@ -81,7 +83,7 @@ public final class MessagingConfig {
             .setIncluded(included == null ? emptyList() : included)
             .setExcluded(excluded == null ? emptyList() : excluded)
             .build();
-    if (!selector.isEmpty()) {
+    if (!selector.isEmpty() || stableIncluded != null || stableExcluded != null) {
       return selector;
     }
 
@@ -100,20 +102,25 @@ public final class MessagingConfig {
   @Nullable
   private static List<String> getHeaderPatterns(
       String name,
-      DeclarativeConfigProperties headers,
+      @Nullable List<String> stablePatterns,
       DeclarativeConfigProperties deprecatedCommonHeaders,
       DeclarativeConfigProperties deprecatedHeaders,
       boolean systemPropertyFallback) {
     String replacementProperty = COMMON_MESSAGING_PROPERTY_PREFIX + ".headers." + name;
-    List<String> patterns = getList(headers, name, replacementProperty, systemPropertyFallback);
-    if (patterns != null && !patterns.isEmpty()) {
-      return patterns;
+    if (stablePatterns != null) {
+      return stablePatterns;
+    }
+    if (systemPropertyFallback) {
+      List<String> patterns = SystemProperty.getList(replacementProperty);
+      if (patterns != null && !patterns.isEmpty()) {
+        return patterns;
+      }
     }
 
     // The common experimental selector remains an alias until 3.0.
     String deprecatedCommonProperty =
         COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.headers." + name;
-    patterns =
+    List<String> patterns =
         getList(deprecatedCommonHeaders, name, deprecatedCommonProperty, systemPropertyFallback);
     if (patterns != null && !patterns.isEmpty()) {
       warnDeprecatedProperty(
