@@ -10,8 +10,8 @@ configurations:
   - name: otel.instrumentation.cassandra.query-sanitization.enabled
     declarative_name: java.cassandra.query_sanitization.enabled
     description: >
-      Enables query sanitization for Cassandra queries. Takes precedence over
-      otel.instrumentation.common.db.query-sanitization.enabled.
+      Enables query sanitization for Cassandra queries. Overrides
+      `otel.instrumentation.common.db.query-sanitization.enabled` for this instrumentation; when
+      unset, that setting applies.
     type: boolean
-    default: true
   - ref: common.db.query-sanitization.enabled
