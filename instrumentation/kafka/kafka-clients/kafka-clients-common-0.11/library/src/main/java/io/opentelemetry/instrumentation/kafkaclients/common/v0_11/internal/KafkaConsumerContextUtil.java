@@ -27,8 +27,8 @@ import org.apache.kafka.common.TopicPartition;
 public final class KafkaConsumerContextUtil {
   private static final ContextKey<Span> PROCESS_SPAN_KEY =
       ContextKey.named("opentelemetry-kafka-process-span");
-  private static final ContextKey<Span> PROCESS_PARENT_SPAN_KEY =
-      ContextKey.named("opentelemetry-kafka-process-parent-span");
+  private static final ContextKey<Context> PROCESS_PARENT_CONTEXT_KEY =
+      ContextKey.named("opentelemetry-kafka-process-parent-context");
   private static final ContextKey<Boolean> RECEIVE_OPERATION_KEY =
       ContextKey.named("opentelemetry-kafka-receive-operation");
   // these fields can be used for multiple instrumentations because of that we don't use a helper
@@ -66,15 +66,15 @@ public final class KafkaConsumerContextUtil {
       return context;
     }
 
-    Span parentSpan = context.get(PROCESS_PARENT_SPAN_KEY);
-    Context restored = context.with(parentSpan != null ? parentSpan : Span.getInvalid());
+    Context parentContext = context.get(PROCESS_PARENT_CONTEXT_KEY);
+    Context restored = parentContext != null ? parentContext : context.with(Span.getInvalid());
     return restored.with(RECEIVE_OPERATION_KEY, false);
   }
 
   public static Context withProcessParentSpan(Context context, Context parentContext) {
     return context
         .with(PROCESS_SPAN_KEY, Span.fromContext(context))
-        .with(PROCESS_PARENT_SPAN_KEY, Span.fromContext(parentContext));
+        .with(PROCESS_PARENT_CONTEXT_KEY, parentContext);
   }
 
   public static Context withReceiveOperation(Context context, boolean receiveOperation) {
