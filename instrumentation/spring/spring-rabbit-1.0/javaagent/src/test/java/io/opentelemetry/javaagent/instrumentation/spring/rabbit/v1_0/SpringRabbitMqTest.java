@@ -453,7 +453,13 @@ class SpringRabbitMqTest {
                             false,
                             null,
                             2L));
-                verifyLink(span, emitStableMessagingSemconv() ? producerSpan : null);
+                if (emitStableMessagingSemconv()) {
+                  span.hasLinks(
+                      LinkData.create(producerSpan.getSpanContext()),
+                      LinkData.create(producerSpan.getSpanContext()));
+                } else {
+                  span.hasTotalRecordedLinks(0);
+                }
               });
         },
         trace -> trace.hasSpansSatisfyingExactly(SpringRabbitMqTest::verifyAckSpan));
