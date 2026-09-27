@@ -17,11 +17,9 @@
 
 ### 🚫 Deprecations
 
-- Deprecate `otel.instrumentation.experimental.span-suppression-strategy` and
-  `java.common.span_suppression_strategy/development` in favor of
-  `otel.instrumentation.common.span-suppression-strategy` and
-  `java.common.span_suppression_strategy`. The old names remain fallbacks until 3.0 and warn
-  when applied.
+- Deprecate `otel.instrumentation.experimental.span-suppression-strategy` in favor of
+  `otel.instrumentation.common.span-suppression-strategy`. The old property remains a fallback
+  until 3.0 and warns when applied.
 - Deprecate the Java agent and Spring Boot starter's bundled contrib samplers, including the
   `rule_based_routing` declarative sampler and `linksbased_parentbased_always_on` flat sampler.
   Outside v3-preview, both names continue to work but log a warning when selected. When
