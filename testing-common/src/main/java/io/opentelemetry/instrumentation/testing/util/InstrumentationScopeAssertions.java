@@ -26,24 +26,17 @@ public final class InstrumentationScopeAssertions {
 
   /** Asserts that the instrumentation scope has the given name. */
   public static <T> ThrowingConsumer<T> hasScopeName(String name) {
-    return data ->
-        assertThat(scopeOf(data).getName()).as("instrumentation scope name").isEqualTo(name);
+    return data -> assertThat(scopeOf(data).getName()).isEqualTo(name);
   }
 
   /** Asserts that the instrumentation scope has the given version, or no version if null. */
   public static <T> ThrowingConsumer<T> hasScopeVersion(@Nullable String version) {
-    return data ->
-        assertThat(scopeOf(data).getVersion())
-            .as("instrumentation scope version")
-            .isEqualTo(version);
+    return data -> assertThat(scopeOf(data).getVersion()).isEqualTo(version);
   }
 
   /** Asserts that the instrumentation scope has the given schema URL, or no schema URL if null. */
   public static <T> ThrowingConsumer<T> hasScopeSchemaUrl(@Nullable String schemaUrl) {
-    return data ->
-        assertThat(scopeOf(data).getSchemaUrl())
-            .as("instrumentation scope schema url")
-            .isEqualTo(schemaUrl);
+    return data -> assertThat(scopeOf(data).getSchemaUrl()).isEqualTo(schemaUrl);
   }
 
   private static InstrumentationScopeInfo scopeOf(Object data) {
