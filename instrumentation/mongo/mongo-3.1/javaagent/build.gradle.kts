@@ -10,7 +10,6 @@ muzzle {
     module.set("mongo-java-driver")
     versions.set("[3.1,)")
     assertInverse.set(true)
-    // Both modules accept mongo-3.1; their unique selectors keep the Muzzle ranges separate.
     excludeInstrumentationName("mongo-3.1-core-3.7")
   }
   pass {
