@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.hibernate.procedure.call.v4_3;
+package io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.procedure.call;
 
 import static io.opentelemetry.javaagent.extension.instrumentation.internal.DeprecatedInstrumentationNames.expandDeprecatedNames;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
@@ -17,8 +17,8 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class HibernateInstrumentationModule extends InstrumentationModule {
-  public HibernateInstrumentationModule() {
+public class HibernateProcedureCallInstrumentationModule extends InstrumentationModule {
+  public HibernateProcedureCallInstrumentationModule() {
     super(
         "hibernate",
         expandDeprecatedNames(
