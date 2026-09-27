@@ -17,14 +17,15 @@
 
 ### 🚫 Deprecations
 
-- Deprecate `otel.instrumentation.couchbase-2.6.enabled`,
-  `otel.instrumentation.couchbase-network-2.0.enabled`, and
-  `otel.instrumentation.couchbase-2.0-network.enabled`.
-  Use `otel.instrumentation.couchbase.enabled` for Couchbase instrumentation across versions,
-  including 3.x, or `otel.instrumentation.couchbase-2.0.enabled` for all Couchbase 2.x instrumentation.
-  To preserve the narrower scope, replace `couchbase-2.6.enabled` with
-  `couchbase-2.0-network-2.6.enabled`, and either pre-2.6 network key with
-  `couchbase-2.0-network-2.0.enabled`, all under the `otel.instrumentation.` prefix.
+- Deprecate `otel.instrumentation.couchbase-2.6.enabled`, which controlled network enrichment
+  for Couchbase 2.6+ clients, not all instrumentation for those clients. Replace it with
+  `otel.instrumentation.couchbase-2.0-network-2.6.enabled` to preserve that scope.
+  Also deprecate `otel.instrumentation.couchbase-network-2.0.enabled` and
+  `otel.instrumentation.couchbase-2.0-network.enabled`, which controlled pre-2.6 network enrichment;
+  replace either with `otel.instrumentation.couchbase-2.0-network-2.0.enabled`.
+  Independently controlled core instrumentation can remain active alongside network enrichment on supported versions.
+  For broader control, use `otel.instrumentation.couchbase-2.0.enabled` for all Couchbase 2.x
+  instrumentation, or `otel.instrumentation.couchbase.enabled` across versions, including 3.x.
   The deprecated keys remain supported in Java agent 2.x and will be removed in 3.0.
   ([#20270](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20270))
 - Deprecate the Java agent and Spring Boot starter's bundled contrib samplers, including the
