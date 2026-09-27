@@ -14,9 +14,6 @@ otel:
       - simple:
           exporter:
             test:
-      - simple:
-          exporter:
-            console:
 
   logger_provider:
     processors:
@@ -44,6 +41,8 @@ otel:
 
   instrumentation/development:
     java:
+      spring_starter:
+        debug: true
       common:
         http:
           client:

@@ -13,7 +13,8 @@ import redis.clients.jedis.JedisClusterConnectionHandler;
 public final class JedisClusterTargetAccessor {
 
   private static final VirtualField<JedisClusterConnectionHandler, RedisServerTarget>
-      CLUSTER_TARGET = getClusterTargetVirtualField();
+      CLUSTER_TARGET =
+          VirtualField.find(JedisClusterConnectionHandler.class, RedisServerTarget.class);
 
   public static void setTarget(
       JedisClusterConnectionHandler handler, @Nullable RedisServerTarget target) {
@@ -23,11 +24,6 @@ public final class JedisClusterTargetAccessor {
   @Nullable
   public static RedisServerTarget getTarget(JedisClusterConnectionHandler handler) {
     return CLUSTER_TARGET.get(handler);
-  }
-
-  private static VirtualField<JedisClusterConnectionHandler, RedisServerTarget>
-      getClusterTargetVirtualField() {
-    return VirtualField.find(JedisClusterConnectionHandler.class, RedisServerTarget.class);
   }
 
   private JedisClusterTargetAccessor() {}

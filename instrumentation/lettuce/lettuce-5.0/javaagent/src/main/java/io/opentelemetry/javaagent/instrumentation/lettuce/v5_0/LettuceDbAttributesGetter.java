@@ -20,7 +20,8 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 
-class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisCommand<?, ?, ?>, Void> {
+final class LettuceDbAttributesGetter
+    implements DbClientAttributesGetter<RedisCommand<?, ?, ?>, Void> {
 
   private static final RedisCommandSanitizer sanitizer =
       RedisCommandSanitizer.create(
@@ -85,5 +86,21 @@ class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisCommand
     }
     InetSocketAddress serverAddress = LettuceConnectionState.serverAddress(request);
     return serverAddress != null ? serverAddress.getPort() : null;
+  }
+
+  @Nullable
+  @Override
+  public String getNetworkPeerAddress(RedisCommand<?, ?, ?> request, @Nullable Void unused) {
+    return emitStableDatabaseSemconv()
+        ? LettuceCommandPeer.getNetworkPeerAddress(LettuceCommandPeer.address(request))
+        : null;
+  }
+
+  @Nullable
+  @Override
+  public Integer getNetworkPeerPort(RedisCommand<?, ?, ?> request, @Nullable Void unused) {
+    return emitStableDatabaseSemconv()
+        ? LettuceCommandPeer.getNetworkPeerPort(LettuceCommandPeer.address(request))
+        : null;
   }
 }

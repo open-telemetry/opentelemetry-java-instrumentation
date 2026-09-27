@@ -139,6 +139,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
     }
 
     @Override
+    @Nullable
     public RequestContext requestContext() {
       return requestContext;
     }

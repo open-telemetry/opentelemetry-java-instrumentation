@@ -1,0 +1,107 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_4_5;
+
+import static io.vertx.redis.client.impl.RedisConnectionManagerUtil.discoveryEndpoints;
+import static java.util.logging.Level.FINE;
+
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
+import io.vertx.core.Future;
+import io.vertx.redis.client.RedisConnectOptions;
+import io.vertx.redis.client.RedisSentinelConnectOptions;
+import io.vertx.redis.client.RedisStandaloneConnectOptions;
+import java.lang.reflect.Method;
+import java.util.function.Supplier;
+import java.util.logging.Logger;
+import javax.annotation.Nullable;
+
+public final class VertxRedisServerTargets {
+
+  private static final Logger logger = Logger.getLogger(VertxRedisServerTargets.class.getName());
+
+  private static final String CONSTANT_SUPPLIER_CLASS_NAME =
+      "io.vertx.redis.client.ConstantSupplier";
+
+  @Nullable private static final Class<?> CONSTANT_SUPPLIER_CLASS = findConstantSupplierClass();
+
+  @Nullable private static final Method GET_TOPOLOGY = findGetTopology();
+
+  @Nullable
+  public static RedisServerTarget of(@Nullable RedisConnectOptions options) {
+    if (options == null) {
+      return null;
+    }
+    if (options instanceof RedisSentinelConnectOptions) {
+      return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(
+          discoveryEndpoints(options.getEndpoints()),
+          ((RedisSentinelConnectOptions) options).getMasterName());
+    }
+    if (options instanceof RedisStandaloneConnectOptions) {
+      return RedisServerTarget.ofEndpoint(options.getEndpoint());
+    }
+    if (hasStaticTopology(options)) {
+      return RedisServerTarget.ofEndpoints(options.getEndpoints());
+    }
+    return RedisServerTarget.ofUnorderedEndpoints(options.getEndpoints());
+  }
+
+  @Nullable
+  public static RedisServerTarget ofConstantSupplier(@Nullable Supplier<?> optionsSupplier) {
+    if (optionsSupplier == null || optionsSupplier.getClass() != CONSTANT_SUPPLIER_CLASS) {
+      return null;
+    }
+
+    Object supplied = optionsSupplier.get();
+    if (!(supplied instanceof Future)) {
+      return null;
+    }
+    Future<?> optionsFuture = (Future<?>) supplied;
+    Object options = optionsFuture.succeeded() ? optionsFuture.result() : null;
+    return options instanceof RedisConnectOptions ? of((RedisConnectOptions) options) : null;
+  }
+
+  @Nullable
+  private static Class<?> findConstantSupplierClass() {
+    try {
+      return Class.forName(
+          CONSTANT_SUPPLIER_CLASS_NAME, false, VertxRedisServerTargets.class.getClassLoader());
+    } catch (ClassNotFoundException ignored) {
+      return null;
+    }
+  }
+
+  private static boolean hasStaticTopology(Object options) {
+    if (GET_TOPOLOGY == null || !GET_TOPOLOGY.getDeclaringClass().isInstance(options)) {
+      return false;
+    }
+    try {
+      Object topology = GET_TOPOLOGY.invoke(options);
+      if (topology instanceof Enum<?>) {
+        return ((Enum<?>) topology).name().equals("STATIC");
+      }
+      return topology != null && topology.toString().equals("STATIC");
+    } catch (ReflectiveOperationException e) {
+      logger.log(FINE, "Failed to read the Vert.x Redis topology", e);
+      return false;
+    }
+  }
+
+  @Nullable
+  private static Method findGetTopology() {
+    try {
+      Class<?> replicationConnectOptions =
+          Class.forName(
+              "io.vertx.redis.client.RedisReplicationConnectOptions",
+              false,
+              VertxRedisServerTargets.class.getClassLoader());
+      return replicationConnectOptions.getMethod("getTopology");
+    } catch (ReflectiveOperationException ignored) {
+      return null;
+    }
+  }
+
+  private VertxRedisServerTargets() {}
+}
