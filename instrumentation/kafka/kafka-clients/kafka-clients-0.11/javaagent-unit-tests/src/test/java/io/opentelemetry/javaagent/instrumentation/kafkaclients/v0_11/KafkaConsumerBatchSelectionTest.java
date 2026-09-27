@@ -196,6 +196,30 @@ class KafkaConsumerBatchSelectionTest {
   }
 
   @Test
+  void abandonedIteratorDoesNotSuppressIndependentBatchWithoutReceive() {
+    ConsumerRecords<String, String> firstRecords = records(record(0));
+    KafkaProcessingOwnershipUtil.recordPoll(firstRecords, true);
+    Iterator<ConsumerRecord<String, String>> first = iterator(firstRecords);
+    assertThat(first.next().offset()).isZero();
+    Span firstSpan = Span.current();
+
+    ConsumerRecords<String, String> secondRecords = records(record(1));
+    KafkaProcessingOwnershipUtil.recordPoll(secondRecords, true);
+    Iterator<ConsumerRecord<String, String>> second = iterator(secondRecords);
+    assertThat(second.next().offset()).isEqualTo(1);
+    assertThat(Span.current()).isNotSameAs(firstSpan);
+    assertThat(second.hasNext()).isFalse();
+    assertThat(Span.current()).isSameAs(firstSpan);
+    assertThat(first.hasNext()).isFalse();
+    assertProcessSpans(2);
+    assertThat(testing.spans())
+        .allSatisfy(
+            span ->
+                assertThat(span.getParentSpanId())
+                    .isEqualTo(Span.getInvalid().getSpanContext().getSpanId()));
+  }
+
+  @Test
   void selectionOnAnotherThreadAffectsExistingIterator() throws InterruptedException {
     ConsumerRecords<String, String> records = records(record(0));
     KafkaProcessingOwnershipUtil.recordPoll(records, true);
