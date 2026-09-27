@@ -47,6 +47,8 @@ configurations:
       release.
     type: list
     default: ""
+    deprecated: true
+    replaced_by: otel.instrumentation.servlet.experimental.request-parameters.included
   - name: otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
     declarative_name: java.servlet.trace_id_request_attribute/development.enabled
     description: Enables adding the trace ID and span ID as request attributes for downstream servlet access.
