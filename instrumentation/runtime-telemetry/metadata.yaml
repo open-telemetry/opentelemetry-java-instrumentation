@@ -24,6 +24,8 @@ configurations:
       instead. Prefer JFR over JMX for metrics available from both sources, on Java 17+.
     type: boolean
     default: false
+    deprecated: true
+    replaced_by: otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included
   - name: otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included
     declarative_name: java.runtime_telemetry.jfr_metrics/development.included
     description: >
