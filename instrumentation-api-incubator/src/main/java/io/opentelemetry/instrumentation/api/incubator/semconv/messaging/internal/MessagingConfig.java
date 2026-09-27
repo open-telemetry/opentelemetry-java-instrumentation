@@ -54,11 +54,16 @@ public final class MessagingConfig {
    */
   public static IncludeExclude getHeaders(
       OpenTelemetry openTelemetry, boolean systemPropertyFallback) {
-    DeclarativeConfigProperties messagingConfig =
-        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common").get("messaging");
+    DeclarativeConfigProperties commonConfig =
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
+    Boolean v3Preview =
+        getBoolean(
+            commonConfig,
+            "v3_preview",
+            "otel.instrumentation.common.v3-preview",
+            systemPropertyFallback);
+    DeclarativeConfigProperties messagingConfig = commonConfig.get("messaging");
     DeclarativeConfigProperties headers = messagingConfig.get("headers");
-    DeclarativeConfigProperties deprecatedCommonHeaders =
-        messagingConfig.get("headers/development");
     DeclarativeConfigProperties deprecatedHeaders =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "messaging")
             .get("headers/development");
@@ -68,15 +73,17 @@ public final class MessagingConfig {
         getHeaderPatterns(
             "included",
             stableIncluded,
-            deprecatedCommonHeaders,
+            messagingConfig,
             deprecatedHeaders,
+            Boolean.TRUE.equals(v3Preview),
             systemPropertyFallback);
     List<String> excluded =
         getHeaderPatterns(
             "excluded",
             stableExcluded,
-            deprecatedCommonHeaders,
+            messagingConfig,
             deprecatedHeaders,
+            Boolean.TRUE.equals(v3Preview),
             systemPropertyFallback);
     IncludeExclude selector =
         IncludeExclude.builder()
@@ -103,8 +110,9 @@ public final class MessagingConfig {
   private static List<String> getHeaderPatterns(
       String name,
       @Nullable List<String> stablePatterns,
-      DeclarativeConfigProperties deprecatedCommonHeaders,
+      DeclarativeConfigProperties messagingConfig,
       DeclarativeConfigProperties deprecatedHeaders,
+      boolean v3Preview,
       boolean systemPropertyFallback) {
     String replacementProperty = COMMON_MESSAGING_PROPERTY_PREFIX + ".headers." + name;
     if (stablePatterns != null) {
@@ -117,21 +125,28 @@ public final class MessagingConfig {
       }
     }
 
-    // The common experimental selector remains an alias until 3.0.
-    String deprecatedCommonProperty =
-        COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.headers." + name;
-    List<String> patterns =
-        getList(deprecatedCommonHeaders, name, deprecatedCommonProperty, systemPropertyFallback);
-    if (patterns != null && !patterns.isEmpty()) {
-      warnDeprecatedProperty(
-          deprecatedCommonProperty, replacementProperty, "will be removed in 3.0");
-      return patterns;
+    // The common experimental selector remains an alias outside v3-preview until 3.0.
+    if (!v3Preview) {
+      String deprecatedCommonProperty =
+          COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.headers." + name;
+      List<String> patterns =
+          getList(
+              messagingConfig.get("headers/development"),
+              name,
+              deprecatedCommonProperty,
+              systemPropertyFallback);
+      if (patterns != null && !patterns.isEmpty()) {
+        warnDeprecatedProperty(
+            deprecatedCommonProperty, replacementProperty, "will be removed in 3.0");
+        return patterns;
+      }
     }
 
     // TODO: remove the deprecated flat messaging names in a future minor release.
     String deprecatedProperty =
         DEPRECATED_MESSAGING_PROPERTY_PREFIX + ".experimental.headers." + name;
-    patterns = getList(deprecatedHeaders, name, deprecatedProperty, systemPropertyFallback);
+    List<String> patterns =
+        getList(deprecatedHeaders, name, deprecatedProperty, systemPropertyFallback);
     if (patterns != null && !patterns.isEmpty()) {
       warnDeprecatedProperty(
           deprecatedProperty, replacementProperty, "may be removed in the next minor release");

@@ -22,7 +22,7 @@
   `java.common.messaging.headers/development` selector) in favor of the stable
   `otel.instrumentation.common.messaging.headers.included` and `.excluded` properties
   (`java.common.messaging.headers` in declarative configuration). The deprecated common selector
-  remains available, including under v3-preview, and will be removed in 3.0.
+  remains available outside v3-preview and will be removed in 3.0; v3-preview ignores it.
 - Deprecate the Java agent and Spring Boot starter's bundled contrib samplers, including the
   `rule_based_routing` declarative sampler and `linksbased_parentbased_always_on` flat sampler.
   Outside v3-preview, both names continue to work but log a warning when selected. When
