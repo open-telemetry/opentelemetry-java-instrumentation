@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.procedure.call
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.instrumentation.hibernate.common.v3_3.HibernateInstrumenterFactory;
 import io.opentelemetry.javaagent.instrumentation.hibernate.common.v3_3.HibernateOperation;
 import io.opentelemetry.javaagent.instrumentation.hibernate.common.v3_3.SessionInfo;
@@ -17,7 +18,10 @@ public class Hibernate43Singletons {
 
   private static final Instrumenter<HibernateOperation, Void> instrumenter =
       HibernateInstrumenterFactory.createInstrumenter(
-          "io.opentelemetry.hibernate-procedure-call-4.3", "io.opentelemetry.hibernate-4.0");
+          AgentCommonConfig.get().isV3Preview()
+              ? "io.opentelemetry.hibernate-4.0"
+              : "io.opentelemetry.hibernate-procedure-call-4.3",
+          "io.opentelemetry.hibernate-4.0");
 
   public static final VirtualField<ProcedureCall, SessionInfo> PROCEDURE_CALL_SESSION_INFO =
       VirtualField.find(ProcedureCall.class, SessionInfo.class);

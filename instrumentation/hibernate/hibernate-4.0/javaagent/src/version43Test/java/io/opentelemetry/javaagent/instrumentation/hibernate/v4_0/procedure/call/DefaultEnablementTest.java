@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.procedure.call;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -80,7 +81,18 @@ class DefaultEnablementTest {
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span -> span.hasName("parent"),
-                      span -> span.hasName("ProcedureCall.getOutputs DEFAULT_ENABLEMENT_PROC"),
+                      span ->
+                          span.hasName("ProcedureCall.getOutputs DEFAULT_ENABLEMENT_PROC")
+                              .satisfies(
+                                  spanData -> {
+                                    assertThat(spanData.getInstrumentationScopeInfo().getName())
+                                        .isEqualTo(
+                                            V3_PREVIEW
+                                                ? "io.opentelemetry.hibernate-4.0"
+                                                : "io.opentelemetry.hibernate-procedure-call-4.3");
+                                    assertThat(spanData.getInstrumentationScopeInfo().getVersion())
+                                        .isNotEmpty();
+                                  }),
                       span -> span.hasName("Transaction.commit")));
         } else {
           testing.waitAndAssertTraces(
