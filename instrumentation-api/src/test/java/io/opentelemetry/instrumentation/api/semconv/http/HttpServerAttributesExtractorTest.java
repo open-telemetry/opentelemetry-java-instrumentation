@@ -508,6 +508,21 @@ class HttpServerAttributesExtractorTest {
   }
 
   @Test
+  void shouldExtractIpv6ServerAddressAndPortFromHostHeader() {
+    Map<String, String> request = new HashMap<>();
+    request.put("header.host", "[2001:db8::1]:8080");
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+
+    AttributesBuilder startAttributes = Attributes.builder();
+    extractor.onStart(startAttributes, Context.root(), request);
+
+    assertThat(startAttributes.build())
+        .containsOnly(entry(SERVER_ADDRESS, "2001:db8::1"), entry(SERVER_PORT, 8080L));
+  }
+
+  @Test
   void shouldExtractPeerAddressEvenIfItDuplicatesClientAddress() {
     Map<String, String> request = new HashMap<>();
     request.put("networkPeerAddress", "1.2.3.4");

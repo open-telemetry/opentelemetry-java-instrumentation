@@ -67,6 +67,10 @@ class ForwardedHostAddressAndPortExtractorTest {
         arguments(singletonList("host=\"example.com:42\""), "example.com", 42),
         arguments(singletonList("host=example.com:42; test=abc:1234"), "example.com", 42),
         arguments(singletonList("host=\"example.com:42\"; test=abc:1234"), "example.com", 42),
+        arguments(singletonList("host=\"[::1]\""), "::1", null),
+        arguments(singletonList("host=\"[::1]:42\""), "::1", 42),
+        arguments(singletonList("host=\"[2001:db8::1]:42\"; test=abc:1234"), "2001:db8::1", 42),
+        arguments(singletonList("host=\"[::1\""), null, null),
 
         // multiple headers
         arguments(
@@ -135,6 +139,12 @@ class ForwardedHostAddressAndPortExtractorTest {
         arguments(singletonList("\"example.com\""), "example.com", null),
         arguments(singletonList("\"example.com:port\""), "example.com", null),
         arguments(singletonList("\"example.com:42\""), "example.com", 42),
+        arguments(singletonList("[::1]"), "::1", null),
+        arguments(singletonList("[::1]:42"), "::1", 42),
+        arguments(singletonList("[2001:db8::1]:42"), "2001:db8::1", 42),
+        arguments(singletonList("\"[::1]:42\""), "::1", 42),
+        arguments(singletonList("[::1]:port"), "::1", null),
+        arguments(singletonList("[::1"), null, null),
 
         // multiple headers
         arguments(asList("example.com", "github.com:1234"), "example.com", null));
