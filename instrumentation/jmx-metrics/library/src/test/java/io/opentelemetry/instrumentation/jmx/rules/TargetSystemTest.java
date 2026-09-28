@@ -195,7 +195,7 @@ public class TargetSystemTest {
   /**
    * Generates otel configuration for JMX testing with opt-in for experimental unstable metrics
    *
-   * @param experimentalInclude comma-separated list of systems for which we need to enable
+   * @param experimentalInclude comma-separated list of metric-name glob patterns used to enable
    *     non-stable metrics
    * @return map of otel configuration properties for JMX testing
    */

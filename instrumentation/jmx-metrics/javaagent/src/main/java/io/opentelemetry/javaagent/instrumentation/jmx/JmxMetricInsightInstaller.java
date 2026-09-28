@@ -66,7 +66,7 @@ public class JmxMetricInsightInstaller implements AgentListener {
         .forEach(path -> addFileRules(path, jmx));
 
     if (v3Preview) {
-      // include all stable metrics excepted for jvm metrics as they overlap runtime-telemetry
+      // include all stable metrics except for jvm metrics as they overlap runtime-telemetry
       jmx.setInternalMetricsSystemFilter(IncludeExclude.builder().setExcluded("jvm").build());
 
       List<String> unstableInclude =
