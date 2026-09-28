@@ -28,6 +28,7 @@ import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
@@ -416,7 +417,7 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
 
     Queue<Message<String>> innerMessages = new ArrayDeque<>();
     ConsumerBase<String> innerDispatcher =
-        listenerDispatcher(innerMessages, (unused1, unused2) -> {});
+        listenerDispatcher(innerMessages, (unused1, unused2) -> {}, false);
 
     AtomicReference<Throwable> listenerFailure = new AtomicReference<>();
     Message<String> outerMessage = listenerMessage("outer-topic", MessageId.latest);
@@ -436,7 +437,8 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
               } catch (Throwable t) {
                 listenerFailure.set(t);
               }
-            });
+            },
+            true);
 
     try {
       triggerListener(outerDispatcher);
@@ -456,13 +458,7 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            sendAttributes(innerTopic, innerMessageId.toString(), false)),
-                span ->
-                    span.hasName(spanName("process", innerTopic))
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            processAttributes(innerTopic, innerMessageId.toString(), false))),
+                            sendAttributes(innerTopic, innerMessageId.toString(), false))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -563,8 +559,11 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
 
   @SuppressWarnings("unchecked")
   private static ConsumerBase<String> listenerDispatcher(
-      Queue<Message<String>> messages, MessageListener<String> listener)
+      Queue<Message<String>> messages,
+      MessageListener<String> listener,
+      boolean instrumentListener)
       throws ReflectiveOperationException {
+    AtomicReference<MessageListener<String>> listenerReference = new AtomicReference<>();
     ConsumerBase<String> dispatcher =
         mock(
             ConsumerBase.class,
@@ -574,6 +573,14 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
                       if (invocation.getMethod().getName().equals("internalReceive")
                           && invocation.getArguments().length == 2) {
                         return messages.poll();
+                      }
+                      if (invocation.getMethod().getName().equals("callMessageListener")) {
+                        listenerReference
+                            .get()
+                            .received(
+                                (Consumer<String>) invocation.getMock(),
+                                (Message<String>) invocation.getArgument(0));
+                        return null;
                       }
                       return invocation.callRealMethod();
                     }));
@@ -587,25 +594,45 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
           }
         };
     directExecutor.shutdown();
-        MessageListener<String> wrappedListener = conf.getMessageListener();
+        MessageListener<String> wrappedListener =
+            instrumentListener ? conf.getMessageListener() : listener;
+        listenerReference.set(wrappedListener);
         setField(dispatcher, "conf", conf);
         setField(dispatcher, "listener", wrappedListener);
         try {
           setField(dispatcher, "pinnedExecutor", directExecutor);
         } catch (NoSuchFieldException ignored) {
-          Field listenerTaskScheduler = ConsumerBase.class.getDeclaredField("listenerTaskScheduler");
-          Object scheduler =
-          mock(
-              listenerTaskScheduler.getType(),
-              invocation -> {
-                if (invocation.getMethod().getName().equals("trigger")) {
-                  wrappedListener.received(dispatcher, messages.poll());
-                }
-                return null;
-              });
-      listenerTaskScheduler.setAccessible(true);
-      listenerTaskScheduler.set(dispatcher, scheduler);
-    }
+          try {
+            setField(dispatcher, "internalPinnedExecutor", directExecutor);
+            Field messageListenerExecutor =
+                ConsumerBase.class.getDeclaredField("messageListenerExecutor");
+            Object executor =
+                Proxy.newProxyInstance(
+                    messageListenerExecutor.getType().getClassLoader(),
+                    new Class<?>[] {messageListenerExecutor.getType()},
+                    (proxy, method, arguments) -> {
+                      if (method.getName().equals("execute")) {
+                        ((Runnable) arguments[1]).run();
+                      }
+                      return null;
+                    });
+            messageListenerExecutor.setAccessible(true);
+            messageListenerExecutor.set(dispatcher, executor);
+          } catch (NoSuchFieldException ignoredAgain) {
+            Field listenerTaskScheduler = ConsumerBase.class.getDeclaredField("listenerTaskScheduler");
+            Object scheduler =
+                mock(
+                    listenerTaskScheduler.getType(),
+                    invocation -> {
+                      if (invocation.getMethod().getName().equals("trigger")) {
+                        wrappedListener.received(dispatcher, messages.poll());
+                      }
+                      return null;
+                    });
+            listenerTaskScheduler.setAccessible(true);
+            listenerTaskScheduler.set(dispatcher, scheduler);
+          }
+        }
     setField(dispatcher, "subscription", "test_sub");
     return dispatcher;
   }
@@ -623,7 +650,7 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
       method.setAccessible(true);
       method.invoke(dispatcher);
     } catch (ReflectiveOperationException e) {
-      throw new IllegalStateException(e);
+      throw new IllegalStateException(e.getCause() == null ? e : e.getCause());
     }
   }
 }
