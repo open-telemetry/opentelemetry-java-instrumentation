@@ -2,9 +2,11 @@
 # The structure and contents are a work in progress and subject to change.
 # Common metrics and configurations are collected in the top-level `definitions` catalog;
 # each module references them by id via `metric_refs` and `configuration_refs`.
+# A configuration without a `default` falls back to another setting when unset, and a
+# deprecated one is marked `deprecated: true`, with `replaced_by` naming its replacement.
 # For more information see: https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13468
 
-file_format: 0.7
+file_format: 0.8
 
 definitions:
   configurations:
@@ -20,6 +22,13 @@ definitions:
       description: Enables query sanitization for database queries.
       type: boolean
       default: true
+    common.db.sqlcommenter.enabled:
+      name: otel.instrumentation.common.db.experimental.sqlcommenter.enabled
+      declarative_name: java.common.db.sqlcommenter/development.enabled
+      description: |
+        Enables augmenting queries with a comment containing tracing information. An instrumentation-specific setting takes precedence. See [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. WARNING: augmenting queries with tracing context will make query texts unique, which may have adverse impact on database performance.
+      type: boolean
+      default: false
     common.peer-service-mapping:
       name: otel.instrumentation.common.peer-service-mapping
       declarative_name: java.common.service_peer_mapping
@@ -134,24 +143,32 @@ definitions:
         with a warning, and every other entry is matched as a literal header name.'
       type: list
       default: ''
+      deprecated: true
+      replaced_by: otel.instrumentation.common.messaging.experimental.headers.included
     messaging.deprecated-headers.excluded:
       name: otel.instrumentation.messaging.experimental.headers.excluded
       description: 'Deprecated: use `otel.instrumentation.common.messaging.experimental.headers.excluded`
         instead. It may be removed in the next minor release.'
       type: list
       default: ''
+      deprecated: true
+      replaced_by: otel.instrumentation.common.messaging.experimental.headers.excluded
     messaging.deprecated-headers.included:
       name: otel.instrumentation.messaging.experimental.headers.included
       description: 'Deprecated: use `otel.instrumentation.common.messaging.experimental.headers.included`
         instead. It may be removed in the next minor release.'
       type: list
       default: ''
+      deprecated: true
+      replaced_by: otel.instrumentation.common.messaging.experimental.headers.included
     messaging.deprecated-receive-telemetry.enabled:
       name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
       description: 'Deprecated: use `otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled`
         instead. It may be removed in the next minor release.'
       type: boolean
       default: false
+      deprecated: true
+      replaced_by: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
     messaging.headers.excluded:
       name: otel.instrumentation.common.messaging.experimental.headers.excluded
       declarative_name: java.common.messaging.headers/development.excluded
@@ -237,11 +254,9 @@ definitions:
     otel.instrumentation.aws-sdk.message-create-spans.enabled:
       name: otel.instrumentation.aws-sdk.message-create-spans.enabled
       declarative_name: java.aws_sdk.message_create_spans.enabled
-      description: Determines whether to create a producer span for each eligible
-        message in an SQS batch send when stable messaging semantic conventions are
-        enabled. Overrides `otel.instrumentation.common.messaging.message-create-spans.enabled`.
+      description: |
+        Determines whether to create a producer span for each eligible message in an SQS batch send when stable messaging semantic conventions are enabled. Overrides `otel.instrumentation.common.messaging.message-create-spans.enabled` for this instrumentation; when unset, that setting applies.
       type: boolean
-      default: true
     otel.instrumentation.camel.experimental-span-attributes:
       name: otel.instrumentation.camel.experimental-span-attributes
       declarative_name: java.camel.experimental_span_attributes/development
@@ -253,9 +268,8 @@ definitions:
       name: otel.instrumentation.cassandra.query-sanitization.enabled
       declarative_name: java.cassandra.query_sanitization.enabled
       description: |
-        Enables query sanitization for Cassandra queries. Takes precedence over otel.instrumentation.common.db.query-sanitization.enabled.
+        Enables query sanitization for Cassandra queries. Overrides `otel.instrumentation.common.db.query-sanitization.enabled` for this instrumentation; when unset, that setting applies.
       type: boolean
-      default: true
     otel.instrumentation.common.enduser.id.enabled:
       name: otel.instrumentation.common.enduser.id.enabled
       declarative_name: java.common.enduser.id.enabled
@@ -376,6 +390,8 @@ definitions:
         Deprecated and will be removed in the next minor release. Use otel.instrumentation.couchbase.emit-experimental-telemetry instead.
       type: boolean
       default: false
+      deprecated: true
+      replaced_by: otel.instrumentation.couchbase.emit-experimental-telemetry
     otel.instrumentation.elasticsearch.capture-search-query:
       name: otel.instrumentation.elasticsearch.capture-search-query
       declarative_name: java.elasticsearch.capture_search_query
@@ -383,6 +399,7 @@ definitions:
         Deprecated for removal in 3.0 with no replacement. Outside v3-preview, explicitly set this to capture or omit search query bodies. Under v3-preview and in 3.0, the setting is ignored and search query bodies are always captured. Sanitization remains separately configurable with otel.instrumentation.elasticsearch.query-sanitization.enabled.
       type: boolean
       default: false
+      deprecated: true
     otel.instrumentation.elasticsearch.experimental-span-attributes-4728abdb:
       name: otel.instrumentation.elasticsearch.experimental-span-attributes
       declarative_name: java.elasticsearch.experimental_span_attributes/development
@@ -408,9 +425,8 @@ definitions:
       name: otel.instrumentation.elasticsearch.query-sanitization.enabled
       declarative_name: java.elasticsearch.query_sanitization.enabled
       description: |
-        Enables sanitization of the captured search query bodies. Takes precedence over otel.instrumentation.common.db.query-sanitization.enabled.
+        Enables sanitization of the captured search query bodies. Overrides `otel.instrumentation.common.db.query-sanitization.enabled` for this instrumentation; when unset, that setting applies.
       type: boolean
-      default: true
     otel.instrumentation.executors.include:
       name: otel.instrumentation.executors.include
       declarative_name: java.executors.include
@@ -499,6 +515,8 @@ definitions:
         Deprecated: use `otel.instrumentation.grpc.client.request-metadata.included` instead. A comma-separated list of request metadata keys to capture on client spans. It does not support glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other entry is matched as a literal metadata key.
       type: list
       default: ''
+      deprecated: true
+      replaced_by: otel.instrumentation.grpc.client.request-metadata.included
     otel.instrumentation.grpc.capture-metadata.server.request:
       name: otel.instrumentation.grpc.capture-metadata.server.request
       declarative_name: java.grpc.capture_metadata.server.request
@@ -506,6 +524,8 @@ definitions:
         Deprecated: use `otel.instrumentation.grpc.server.request-metadata.included` instead. A comma-separated list of request metadata keys to capture on server spans. It does not support glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other entry is matched as a literal metadata key.
       type: list
       default: ''
+      deprecated: true
+      replaced_by: otel.instrumentation.grpc.server.request-metadata.included
     otel.instrumentation.grpc.client.request-metadata.excluded:
       name: otel.instrumentation.grpc.client.request-metadata.excluded
       declarative_name: java.grpc.client.request_metadata.excluded
@@ -589,9 +609,8 @@ definitions:
       name: otel.instrumentation.influxdb.query-sanitization.enabled
       declarative_name: java.influxdb.query_sanitization.enabled
       description: |
-        Enables query sanitization for InfluxDB queries. Takes precedence over otel.instrumentation.common.db.query-sanitization.enabled.
+        Enables query sanitization for InfluxDB queries. Overrides `otel.instrumentation.common.db.query-sanitization.enabled` for this instrumentation; when unset, that setting applies.
       type: boolean
-      default: true
     otel.instrumentation.java-util-logging.experimental-log-attributes:
       name: otel.instrumentation.java-util-logging.experimental-log-attributes
       declarative_name: java.java_util_logging.experimental_log_attributes/development
@@ -639,6 +658,8 @@ definitions:
         Deprecated: use `otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.included` instead. Entries are matched as exact MDC keys rather than as glob patterns, except that a list containing only `*` captures all MDC attributes; in a multi-entry list, `*` and `?` are literal characters. It is ignored when an included or excluded pattern is configured, and it may be removed in the next minor release.
       type: list
       default: ''
+      deprecated: true
+      replaced_by: otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.included
     otel.instrumentation.jboss-logmanager.experimental.capture-template:
       name: otel.instrumentation.jboss-logmanager.experimental.capture-template
       declarative_name: java.jboss_logmanager.capture_template/development
@@ -682,9 +703,8 @@ definitions:
       name: otel.instrumentation.jdbc.experimental.sqlcommenter.enabled
       declarative_name: java.jdbc.sqlcommenter/development.enabled
       description: |
-        Enables augmenting queries with a comment containing the tracing information. See [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. WARNING: augmenting queries with tracing context will make query texts unique, which may have adverse impact on database performance. Consult with database experts before enabling.
+        Enables augmenting queries with a comment containing the tracing information. See [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. Overrides `otel.instrumentation.common.db.experimental.sqlcommenter.enabled` for this instrumentation; when unset, that setting applies. WARNING: augmenting queries with tracing context will make query texts unique, which may have adverse impact on database performance. Consult with database experts before enabling.
       type: boolean
-      default: false
     otel.instrumentation.jdbc.experimental.transaction.enabled:
       name: otel.instrumentation.jdbc.experimental.transaction.enabled
       declarative_name: java.jdbc.transaction/development.enabled
@@ -695,10 +715,9 @@ definitions:
     otel.instrumentation.jdbc.query-sanitization.enabled:
       name: otel.instrumentation.jdbc.query-sanitization.enabled
       declarative_name: java.jdbc.query_sanitization.enabled
-      description: Enables query sanitization for database queries. Takes precedence
-        over otel.instrumentation.common.db.query-sanitization.enabled.
+      description: |
+        Enables query sanitization for database queries. Overrides `otel.instrumentation.common.db.query-sanitization.enabled` for this instrumentation; when unset, that setting applies.
       type: boolean
-      default: true
     otel.instrumentation.jsp.experimental-span-attributes:
       name: otel.instrumentation.jsp.experimental-span-attributes
       declarative_name: java.jsp.experimental_span_attributes/development
@@ -793,6 +812,8 @@ definitions:
         Deprecated; use otel.instrumentation.common.logging.structured-attributes.included instead. This setting is ignored under v3-preview and will be removed in 3.0. Outside v3-preview, true captures all MapMessage attributes and false captures none. It is ignored when a source-specific included or excluded pattern is configured.
       type: boolean
       default: false
+      deprecated: true
+      replaced_by: otel.instrumentation.common.logging.structured-attributes.included
     otel.instrumentation.log4j-appender.experimental.capture-marker-attribute:
       name: otel.instrumentation.log4j-appender.experimental.capture-marker-attribute
       declarative_name: java.log4j_appender.capture_marker_attribute/development
@@ -800,23 +821,27 @@ definitions:
         Enables the capture of the Log4j marker attribute.
       type: boolean
       default: false
-    otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes-1a2270b1:
+    otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes-bb9cf4ea:
       name: otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes
       declarative_name: java.log4j_appender.capture_mdc_attributes/development
       description: |
         Deprecated include-only alias for otel.instrumentation.log4j-appender.experimental.mdc-attributes.included. It does not support glob patterns: a list containing only "*" captures all context data attributes, and otherwise every entry, including one containing "*" or "?", is matched as a literal context data key. It is ignored when an included or excluded pattern is configured, and it may be removed in the next minor release.
       type: list
       default: ''
+      deprecated: true
+      replaced_by: otel.instrumentation.log4j-appender.experimental.mdc-attributes.included
       examples:
       - '*'
       - key1,key2
-    otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes-1ef38043:
+    otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes-e87180dc:
       name: otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes
       declarative_name: java.log4j_appender.capture_mdc_attributes/development
       description: |
         Deprecated include-only alias for otel.instrumentation.log4j-appender.experimental.mdc-attributes.included. It does not support glob patterns: a list containing only "*" captures all MDC attributes, and otherwise every entry, including one containing "*" or "?", is matched as a literal MDC key. It is ignored when an included or excluded pattern is configured, and it may be removed in the next minor release.
       type: list
       default: ''
+      deprecated: true
+      replaced_by: otel.instrumentation.log4j-appender.experimental.mdc-attributes.included
       examples:
       - custom-mdc-key
       - key1,key2,key3
@@ -834,6 +859,8 @@ definitions:
         Deprecated; use otel.instrumentation.common.logging.structured-attributes.excluded instead. This setting is ignored under v3-preview and will be removed in 3.0. Comma-separated list of case-sensitive glob patterns for MapMessage keys not to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No MapMessage attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes setting is configured; configuring only excluded patterns captures all MapMessage attributes that do not match them. Captured MapMessage attributes may contain sensitive information.
       type: list
       default: ''
+      deprecated: true
+      replaced_by: otel.instrumentation.common.logging.structured-attributes.excluded
       examples:
       - '*-secret'
       - password,token
@@ -844,6 +871,8 @@ definitions:
         Deprecated; use otel.instrumentation.common.logging.structured-attributes.included instead. This setting is ignored under v3-preview and will be removed in 3.0. Comma-separated list of case-sensitive glob patterns for MapMessage keys to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No MapMessage attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes setting is configured; configuring only excluded patterns captures all MapMessage attributes that do not match them. Captured MapMessage attributes may contain sensitive information.
       type: list
       default: ''
+      deprecated: true
+      replaced_by: otel.instrumentation.common.logging.structured-attributes.included
       examples:
       - custom-map-message-key
       - request-*,user-?
@@ -922,6 +951,8 @@ definitions:
         Deprecated; use otel.instrumentation.common.logging.structured-attributes.included instead. This setting is ignored under v3-preview and will be removed in 3.0. Outside v3-preview, it enables capture of all Logback key-value pair attributes unless a source-specific included or excluded pattern is configured.
       type: boolean
       default: false
+      deprecated: true
+      replaced_by: otel.instrumentation.common.logging.structured-attributes.included
     otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes:
       name: otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes
       declarative_name: java.logback_appender.capture_logger_context_attributes/development
@@ -929,6 +960,8 @@ definitions:
         Deprecated setting that enables the capture of all attributes from the Logback logger context. It is ignored when otel.instrumentation.logback-appender.experimental.logger-context-attributes.included or otel.instrumentation.logback-appender.experimental.logger-context-attributes.excluded is configured, and it may be removed in the next minor release. Use otel.instrumentation.logback-appender.experimental.logger-context-attributes.included instead.
       type: boolean
       default: false
+      deprecated: true
+      replaced_by: otel.instrumentation.logback-appender.experimental.logger-context-attributes.included
     otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes:
       name: otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes
       declarative_name: java.logback_appender.capture_logstash_marker_attributes/development
@@ -936,6 +969,8 @@ definitions:
         Deprecated; use otel.instrumentation.common.logging.structured-attributes.included instead. This setting is ignored under v3-preview and will be removed in 3.0. Outside v3-preview, it enables capture of attributes added via Markers.append(), Markers.appendEntries(), Markers.appendArray(), and Markers.appendRaw() unless a source-specific included or excluded pattern is configured.
       type: boolean
       default: false
+      deprecated: true
+      replaced_by: otel.instrumentation.common.logging.structured-attributes.included
     otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments:
       name: otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments
       declarative_name: java.logback_appender.capture_logstash_structured_arguments/development
@@ -943,6 +978,8 @@ definitions:
         Deprecated; use otel.instrumentation.common.logging.structured-attributes.included instead. This setting is ignored under v3-preview and will be removed in 3.0. Outside v3-preview, it enables capture of Logstash structured arguments unless a source-specific included or excluded pattern is configured.
       type: boolean
       default: false
+      deprecated: true
+      replaced_by: otel.instrumentation.common.logging.structured-attributes.included
     otel.instrumentation.logback-appender.experimental.capture-marker-attribute:
       name: otel.instrumentation.logback-appender.experimental.capture-marker-attribute
       declarative_name: java.logback_appender.capture_marker_attribute/development
@@ -957,6 +994,8 @@ definitions:
         Deprecated comma-separated list of MDC keys to capture as log attributes. Keys are matched literally, including "*" and "?", except that the single value "*" captures all MDC attributes. It is ignored when otel.instrumentation.logback-appender.experimental.mdc-attributes.included or otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded is configured, and it may be removed in the next minor release. Use otel.instrumentation.logback-appender.experimental.mdc-attributes.included instead.
       type: list
       default: ''
+      deprecated: true
+      replaced_by: otel.instrumentation.logback-appender.experimental.mdc-attributes.included
       examples:
       - custom-mdc-key
       - key1,key2,key3
@@ -974,6 +1013,8 @@ definitions:
         Deprecated; use otel.instrumentation.common.logging.structured-attributes.excluded instead. This setting is ignored under v3-preview and will be removed in 3.0. Comma-separated list of case-sensitive glob patterns for Logback key value pair keys not to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No key value pair attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes setting is configured; configuring only excluded patterns captures all key value pair attributes that do not match them. Captured key value pair attributes may contain sensitive information.
       type: list
       default: ''
+      deprecated: true
+      replaced_by: otel.instrumentation.common.logging.structured-attributes.excluded
       examples:
       - '*-secret'
       - password,token
@@ -984,6 +1025,8 @@ definitions:
         Deprecated; use otel.instrumentation.common.logging.structured-attributes.included instead. This setting is ignored under v3-preview and will be removed in 3.0. Comma-separated list of case-sensitive glob patterns for Logback key value pair keys to capture as log attributes. "*" matches any number of characters and "?" matches one character, so "*" captures all key value pair attributes. Excluded patterns take precedence over included patterns. No key value pair attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes setting is configured; configuring only excluded patterns captures all key value pair attributes that do not match them. Captured key value pair attributes may contain sensitive information.
       type: list
       default: ''
+      deprecated: true
+      replaced_by: otel.instrumentation.common.logging.structured-attributes.included
       examples:
       - custom-key
       - request-*,user-?
@@ -1014,6 +1057,8 @@ definitions:
         Deprecated; use otel.instrumentation.common.logging.structured-attributes.excluded instead. This setting is ignored under v3-preview and will be removed in 3.0. Comma-separated list of case-sensitive glob patterns for Logstash marker keys not to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No Logstash marker attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes setting is configured; configuring only excluded patterns captures all Logstash marker attributes that do not match them. Captured Logstash marker attributes may contain sensitive information.
       type: list
       default: ''
+      deprecated: true
+      replaced_by: otel.instrumentation.common.logging.structured-attributes.excluded
       examples:
       - '*-secret'
       - password,token
@@ -1024,6 +1069,8 @@ definitions:
         Deprecated; use otel.instrumentation.common.logging.structured-attributes.included instead. This setting is ignored under v3-preview and will be removed in 3.0. Comma-separated list of case-sensitive glob patterns for Logstash marker keys to capture as log attributes. "*" matches any number of characters and "?" matches one character, so "*" captures all Logstash marker attributes. Excluded patterns take precedence over included patterns. No Logstash marker attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes setting is configured; configuring only excluded patterns captures all Logstash marker attributes that do not match them. Captured Logstash marker attributes may contain sensitive information.
       type: list
       default: ''
+      deprecated: true
+      replaced_by: otel.instrumentation.common.logging.structured-attributes.included
       examples:
       - custom-key
       - request-*,user-?
@@ -1034,6 +1081,8 @@ definitions:
         Deprecated; use otel.instrumentation.common.logging.structured-attributes.excluded instead. This setting is ignored under v3-preview and will be removed in 3.0. Comma-separated list of case-sensitive glob patterns for Logstash structured argument keys not to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No Logstash structured argument attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments setting is configured; configuring only excluded patterns captures all Logstash structured argument attributes that do not match them. Captured Logstash structured argument attributes may contain sensitive information.
       type: list
       default: ''
+      deprecated: true
+      replaced_by: otel.instrumentation.common.logging.structured-attributes.excluded
       examples:
       - '*-secret'
       - password,token
@@ -1044,6 +1093,8 @@ definitions:
         Deprecated; use otel.instrumentation.common.logging.structured-attributes.included instead. This setting is ignored under v3-preview and will be removed in 3.0. Comma-separated list of case-sensitive glob patterns for Logstash structured argument keys to capture as log attributes. "*" matches any number of characters and "?" matches one character, so "*" captures all Logstash structured argument attributes. Excluded patterns take precedence over included patterns. No Logstash structured argument attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments setting is configured; configuring only excluded patterns captures all Logstash structured argument attributes that do not match them. Captured Logstash structured argument attributes may contain sensitive information.
       type: list
       default: ''
+      deprecated: true
+      replaced_by: otel.instrumentation.common.logging.structured-attributes.included
       examples:
       - custom-key
       - request-*,user-?
@@ -1080,6 +1131,8 @@ definitions:
         Deprecated: use `otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled` instead. It may be removed in the next minor release. Enables consumer spans for RabbitMQ `basicGet` receive operations when legacy messaging semantic conventions are emitted. Stable messaging semantic conventions emit these spans regardless of this setting.
       type: boolean
       default: false
+      deprecated: true
+      replaced_by: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
     otel.instrumentation.methods.include:
       name: otel.instrumentation.methods.include
       declarative_name: java.methods.include
@@ -1114,6 +1167,8 @@ definitions:
         Deprecated alias for `otel.instrumentation.micrometer.experimental.histogram-gauges.enabled`. It will be removed in 3.0.
       type: boolean
       default: false
+      deprecated: true
+      replaced_by: otel.instrumentation.micrometer.experimental.histogram-gauges.enabled
     otel.instrumentation.micrometer.prometheus-mode.enabled:
       name: otel.instrumentation.micrometer.prometheus-mode.enabled
       declarative_name: java.micrometer.prometheus_mode.enabled
@@ -1125,9 +1180,8 @@ definitions:
       name: otel.instrumentation.mongo.query-sanitization.enabled
       declarative_name: java.mongo.query_sanitization.enabled
       description: |
-        Enables query sanitization for MongoDB queries. Takes precedence over otel.instrumentation.common.db.query-sanitization.enabled.
+        Enables query sanitization for MongoDB queries. Overrides `otel.instrumentation.common.db.query-sanitization.enabled` for this instrumentation; when unset, that setting applies.
       type: boolean
-      default: true
     otel.instrumentation.netty.connection-telemetry.enabled:
       name: otel.instrumentation.netty.connection-telemetry.enabled
       declarative_name: java.netty.connection_telemetry.enabled
@@ -1147,13 +1201,13 @@ definitions:
         Deprecated and will be removed in 3.0, when search query bodies are always captured. There is no replacement. Until then, set this to false to disable capture. Search queries may contain personal or sensitive information.
       type: boolean
       default: true
+      deprecated: true
     otel.instrumentation.opensearch.query-sanitization.enabled:
       name: otel.instrumentation.opensearch.query-sanitization.enabled
       declarative_name: java.opensearch.query_sanitization.enabled
       description: |
-        Enables sanitization of captured search query bodies. Takes precedence over otel.instrumentation.common.db.query-sanitization.enabled. When disabled, bodies are captured verbatim and may contain personal or sensitive information.
+        Enables sanitization of captured search query bodies. Overrides `otel.instrumentation.common.db.query-sanitization.enabled` for this instrumentation; when unset, that setting applies. When disabled, bodies are captured verbatim and may contain personal or sensitive information.
       type: boolean
-      default: true
     otel.instrumentation.opentelemetry-annotations.exclude-methods:
       name: otel.instrumentation.opentelemetry-annotations.exclude-methods
       declarative_name: java.opentelemetry_extension_annotations.exclude_methods
@@ -1212,16 +1266,14 @@ definitions:
       name: otel.instrumentation.r2dbc.experimental.sqlcommenter.enabled
       declarative_name: java.r2dbc.sqlcommenter/development.enabled
       description: |
-        Enables augmenting queries with a comment containing the tracing information. See [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. WARNING: augmenting queries with tracing context will make query texts unique, which may have adverse impact on database performance.
+        Enables augmenting queries with a comment containing the tracing information. See [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. Overrides `otel.instrumentation.common.db.experimental.sqlcommenter.enabled` for this instrumentation; when unset, that setting applies. WARNING: augmenting queries with tracing context will make query texts unique, which may have adverse impact on database performance.
       type: boolean
-      default: false
     otel.instrumentation.r2dbc.query-sanitization.enabled:
       name: otel.instrumentation.r2dbc.query-sanitization.enabled
       declarative_name: java.r2dbc.query_sanitization.enabled
       description: |
-        Enables query sanitization for database queries. Takes precedence over otel.instrumentation.common.db.query-sanitization.enabled.
+        Enables query sanitization for database queries. Overrides `otel.instrumentation.common.db.query-sanitization.enabled` for this instrumentation; when unset, that setting applies.
       type: boolean
-      default: true
     otel.instrumentation.rabbitmq.experimental-span-attributes:
       name: otel.instrumentation.rabbitmq.experimental-span-attributes
       declarative_name: java.rabbitmq.experimental_span_attributes/development
@@ -1312,6 +1364,8 @@ definitions:
         Deprecated: use `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included` instead. Prefer JFR over JMX for metrics available from both sources, on Java 17+.
       type: boolean
       default: false
+      deprecated: true
+      replaced_by: otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included
     otel.instrumentation.rxjava.experimental-span-attributes:
       name: otel.instrumentation.rxjava.experimental-span-attributes
       declarative_name: java.rxjava.experimental_span_attributes/development
@@ -1332,6 +1386,8 @@ definitions:
         Deprecated include-only alias for `otel.instrumentation.servlet.experimental.request-parameters.included`. It does not support glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other entry is matched as a literal request parameter name. It may be removed in the next minor release.
       type: list
       default: ''
+      deprecated: true
+      replaced_by: otel.instrumentation.servlet.experimental.request-parameters.included
     otel.instrumentation.servlet.experimental.request-parameters.excluded:
       name: otel.instrumentation.servlet.experimental.request-parameters.excluded
       declarative_name: java.servlet.request_parameters/development.excluded
@@ -4661,6 +4717,26 @@ definitions:
         type: STRING
       - name: messaging.system
         type: STRING
+    messaging.client.operation.duration-83802976:
+      name: messaging.client.operation.duration
+      description: Duration of messaging operation initiated by a producer or consumer
+        client.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: messaging.consumer.group.name
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
     messaging.client.operation.duration-bcc65266:
       name: messaging.client.operation.duration
       description: Duration of messaging operation initiated by a producer or consumer
@@ -4717,7 +4793,7 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    messaging.client.operation.duration-f4822aab:
+    messaging.client.operation.duration-df200871:
       name: messaging.client.operation.duration
       description: Duration of messaging operation initiated by a producer or consumer
         client.
@@ -4725,9 +4801,9 @@ definitions:
       data_type: HISTOGRAM
       unit: s
       attributes:
-      - name: messaging.consumer.group.name
-        type: STRING
       - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.subscription.name
         type: STRING
       - name: messaging.operation.name
         type: STRING
@@ -4735,6 +4811,10 @@ definitions:
         type: STRING
       - name: messaging.system
         type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
     messaging.client.sent.messages-38a90199:
       name: messaging.client.sent.messages
       description: Number of messages producer attempted to send to the broker.
@@ -4822,25 +4902,6 @@ definitions:
       unit: s
       attributes:
       - name: error.type
-        type: STRING
-      - name: messaging.destination.name
-        type: STRING
-      - name: messaging.destination.partition.id
-        type: STRING
-      - name: messaging.operation.name
-        type: STRING
-      - name: messaging.system
-        type: STRING
-    messaging.process.duration-43b43ca1:
-      name: messaging.process.duration
-      description: Duration of processing operation.
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: s
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: messaging.consumer.group.name
         type: STRING
       - name: messaging.destination.name
         type: STRING
@@ -5767,7 +5828,7 @@ libraries:
   display_name: Apache DBCP
   description: |
     This instrumentation enables database connection pools metrics for Apache DBCP.
-    The auto-instrumentation registers metrics when the connection pool is initialized (`BasicDataSource.startPoolMaintenance()`) or when `BasicDataSource.preRegister(...)` is invoked during MBean registration, whichever comes first, and unregisters them when the `BasicDataSource` is closed. JMX registration is not required. When a JMX `ObjectName` is available, its `name` property is used as the pool name; if the property is absent, the full `ObjectName` is used. Otherwise, the JDBC URL and connection properties are used to derive the pool name. With legacy database semantic conventions, the derived format is `server.address[:server.port][/db.namespace]`. With stable database semantic conventions, the first available value among `db.namespace`, the configured endpoint (`server.address[:server.port]`), and `db.system.name` is used. If none is available, `apache-dbcp2` is used. A pool registered as an MBean after it has already started switches from the derived name to the `ObjectName`-based name.
+    The auto-instrumentation registers metrics when the connection pool is initialized (`BasicDataSource.startPoolMaintenance()`) or when `BasicDataSource.preRegister(...)` is invoked during MBean registration, whichever comes first, and unregisters them when the `BasicDataSource` is closed. JMX registration is not required. When a JMX `ObjectName` is available, its `name` property is used as the pool name; if the property is absent, the full `ObjectName` is used. Otherwise, the JDBC URL and connection properties are used to derive the pool name. With legacy database semantic conventions, the derived format is `server.address[:server.port][/db.namespace]`. With stable database semantic conventions, the first available value among `db.namespace`, the configured endpoint (`server.address[:server.port]`), and `db.system.name` is used. If none is available, `apache-dbcp2` is used. The pool name selected when metrics are first registered is retained until the pool is closed, including when MBean registration occurs later.
   semantic_conventions:
   - DATABASE_POOL_METRICS
   library_link: https://commons.apache.org/proper/commons-dbcp/
@@ -8956,6 +9017,7 @@ libraries:
   has_javaagent: true
   javaagent_target_versions:
   - com.couchbase.client:java-client:[3.2.0,)
+  - com.couchbase.client:java-client:[3.4.3,)
   configuration_refs:
   - otel.instrumentation.couchbase.emit-experimental-telemetry-28ea332f
   - otel.instrumentation.couchbase.experimental-span-attributes
@@ -8967,6 +9029,8 @@ libraries:
       - name: db.couchbase.collection
         type: STRING
       - name: db.couchbase.document_id
+        type: STRING
+      - name: db.couchbase.durability
         type: STRING
       - name: db.couchbase.local_id
         type: STRING
@@ -9023,6 +9087,8 @@ libraries:
       - name: db.collection.name
         type: STRING
       - name: db.couchbase.document_id
+        type: STRING
+      - name: db.couchbase.durability
         type: STRING
       - name: db.couchbase.local_id
         type: STRING
@@ -9560,8 +9626,6 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
-      - name: server.port
-        type: LONG
 - name: executors
   display_name: Java Executors
   description: |
@@ -9784,6 +9848,7 @@ libraries:
   source_path: instrumentation/graphql-java/graphql-java-12.0
   scope:
     name: io.opentelemetry.graphql-java-12.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -9812,6 +9877,7 @@ libraries:
   source_path: instrumentation/graphql-java/graphql-java-20.0
   scope:
     name: io.opentelemetry.graphql-java-20.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -11325,6 +11391,7 @@ libraries:
   - Java 8+
   configuration_refs:
   - common.db.query-sanitization.enabled
+  - common.db.sqlcommenter.enabled
   - common.peer-service-mapping
   - otel.instrumentation.jdbc-datasource.enabled
   - otel.instrumentation.jdbc.experimental.capture-query-parameters
@@ -12698,7 +12765,7 @@ libraries:
     - kafka.producer.txn_send_offsets_time_ns_total-dba88b13
     - kafka.producer.waiting_threads-e7152d0f
     - messaging.client.consumed.messages-554a6d90
-    - messaging.client.operation.duration-bcc65266
+    - messaging.client.operation.duration-83802976
     - messaging.client.sent.messages-fec1f156
     - messaging.process.duration-6404ad2a
     spans:
@@ -14008,7 +14075,7 @@ libraries:
   configuration_refs:
   - otel.instrumentation.log4j-appender.experimental-log-attributes
   - otel.instrumentation.log4j-appender.experimental.capture-code-attributes
-  - otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes-1ef38043
+  - otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes-e87180dc
   - otel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded-d9baaae0
   - otel.instrumentation.log4j-appender.experimental.mdc-attributes.included-1e38a871
 - name: log4j-appender-2.17
@@ -14033,7 +14100,7 @@ libraries:
   - otel.instrumentation.log4j-appender.experimental.capture-code-attributes
   - otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes
   - otel.instrumentation.log4j-appender.experimental.capture-marker-attribute
-  - otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes-1a2270b1
+  - otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes-bb9cf4ea
   - otel.instrumentation.log4j-appender.experimental.capture-template
   - otel.instrumentation.log4j-appender.experimental.map-message-attributes.excluded
   - otel.instrumentation.log4j-appender.experimental.map-message-attributes.included
@@ -15941,7 +16008,7 @@ libraries:
   - when: otel.semconv-stability.preview=messaging
     metric_refs:
     - messaging.client.consumed.messages-5c21579f
-    - messaging.client.operation.duration-dab7c60a
+    - messaging.client.operation.duration-df200871
     - messaging.client.sent.messages-38a90199
     - messaging.process.duration-9ee3dd0a
     spans:
@@ -16065,6 +16132,7 @@ libraries:
   - io.r2dbc:r2dbc-spi:[0.9.0.RELEASE,)
   configuration_refs:
   - common.db.query-sanitization.enabled
+  - common.db.sqlcommenter.enabled
   - common.peer-service-mapping
   - otel.instrumentation.r2dbc.experimental.sqlcommenter.enabled
   - otel.instrumentation.r2dbc.query-sanitization.enabled
@@ -17344,7 +17412,7 @@ libraries:
   - when: otel.semconv-stability.preview=messaging
     metric_refs:
     - messaging.client.consumed.messages-73097de6
-    - messaging.client.operation.duration-f4822aab
+    - messaging.client.operation.duration-68138657
     - messaging.client.sent.messages-a16c8de0
     - messaging.process.duration-b45860c7
     spans:
@@ -18190,7 +18258,7 @@ libraries:
         type: STRING
   - when: otel.semconv-stability.preview=messaging
     metric_refs:
-    - messaging.process.duration-43b43ca1
+    - messaging.process.duration-6404ad2a
     spans:
     - span_kind: CONSUMER
       attributes:
@@ -19248,7 +19316,7 @@ libraries:
   display_name: Tomcat DBCP
   description: |
     This instrumentation enables database connection pool metrics for Tomcat DBCP.
-    The auto-instrumentation registers metrics when the connection pool is initialized (`BasicDataSource.startPoolMaintenance()`) or when `BasicDataSource.preRegister(...)` is invoked during MBean registration, whichever comes first, and unregisters them when the `BasicDataSource` is closed. JMX registration is not required. When a JMX `ObjectName` is available, its `name` property is used as the pool name; if the property is absent, the full `ObjectName` is used. Otherwise, the JDBC URL and connection properties are used to derive the pool name. With legacy database semantic conventions, the derived format is `server.address[:server.port][/db.namespace]`. With stable database semantic conventions, the first available value among `db.namespace`, the configured endpoint (`server.address[:server.port]`), and `db.system.name` is used. If none is available, `tomcat-dbcp` is used. A pool registered as an MBean after it has already started switches from the derived name to the `ObjectName`-based name.
+    The auto-instrumentation registers metrics when the connection pool is initialized (`BasicDataSource.startPoolMaintenance()`) or when `BasicDataSource.preRegister(...)` is invoked during MBean registration, whichever comes first, and unregisters them when the `BasicDataSource` is closed. JMX registration is not required. When a JMX `ObjectName` is available, its `name` property is used as the pool name; if the property is absent, the full `ObjectName` is used. Otherwise, the JDBC URL and connection properties are used to derive the pool name. With legacy database semantic conventions, the derived format is `server.address[:server.port][/db.namespace]`. With stable database semantic conventions, the first available value among `db.namespace`, the configured endpoint (`server.address[:server.port]`), and `db.system.name` is used. If none is available, `tomcat-dbcp` is used. The pool name selected when metrics are first registered is retained until the pool is closed, including when MBean registration occurs later.
   semantic_conventions:
   - DATABASE_POOL_METRICS
   library_link: https://tomcat.apache.org/tomcat-8.5-doc/api/org/apache/tomcat/dbcp/dbcp2/BasicDataSource.html

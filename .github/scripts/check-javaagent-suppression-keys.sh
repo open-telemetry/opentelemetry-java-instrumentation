@@ -1,6 +1,17 @@
 #!/bin/bash -e
 
-for file in $(find instrumentation -name "*Module.java"); do
+has_preview_constructor() {
+  EXPECTED_OWNER="$simple_module_name" EXPECTED_VERSION="$module_name" perl -0ne '
+    my $owner = quotemeta($ENV{EXPECTED_OWNER});
+    my $version = quotemeta($ENV{EXPECTED_VERSION});
+    my $preview = qr/AgentCommonConfig\.get\(\)\.isV3Preview\(\)/;
+    my $first_arg = qr/(?:"$owner"|$preview\s*\?\s*"$owner"\s*:\s*"[^"]+")/;
+    my $preview_second_arg = qr/$preview\s*\?\s*new\s+String\[\]\s*\{\s*"$version"/;
+    exit !/super\(\s*$first_arg\s*,\s*$preview_second_arg/;
+  ' "$file"
+}
+
+for file in $(find "${1:-instrumentation}" -name "*Module.java"); do
 
   if ! grep -q "extends InstrumentationModule" "$file"; then
     continue
@@ -48,6 +59,9 @@ for file in $(find instrumentation -name "*Module.java"); do
 
   matches=$(perl -0 -ne "print if /$expected/" "$file" | wc -l)
   if [ "$matches" == 0 ]; then
+    if has_preview_constructor; then
+      continue
+    fi
     if grep -q "expandDeprecatedNames" "$file" \
       && { grep -q "\"$simple_module_name|deprecated:" "$file" \
         || perl -0ne "exit !/super\(\s*\"$simple_module_name\"/" "$file"; } \
