@@ -912,9 +912,6 @@ targets:
       target: ':instrumentation:ratpack:ratpack-1.4:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:ratpack:ratpack-1.7:javaagent'
-    - type: gradle
-      path: ./
       target: ':instrumentation:ratpack:ratpack-1.7:library'
     - type: gradle
       path: ./
