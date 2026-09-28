@@ -58,6 +58,9 @@ import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.SchemaUrls;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -680,6 +683,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     String method = "HEAD";
     URI uri = URI.create(options.getTestHttps() ? "https://192.0.2.1/" : "http://192.0.2.1/");
+    assumeTrue(!canConnectToRemoteAddress(uri), "The test address accepts TCP connections");
 
     Throwable thrown =
         catchThrowable(() -> testing.runWithSpan("parent", () -> doRequest(method, uri)));
@@ -709,6 +713,16 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     if (emitExceptionAsLogs()) {
       assertParentExceptionLog(ex);
       assertClientExceptionLog(clientError, "http.client.request.exception");
+    }
+  }
+
+  private static boolean canConnectToRemoteAddress(URI uri) {
+    int port = uri.getScheme().equals("https") ? 443 : 80;
+    try (Socket socket = new Socket()) {
+      socket.connect(new InetSocketAddress(uri.getHost(), port), 500);
+      return true;
+    } catch (IOException ignored) {
+      return false;
     }
   }
 
