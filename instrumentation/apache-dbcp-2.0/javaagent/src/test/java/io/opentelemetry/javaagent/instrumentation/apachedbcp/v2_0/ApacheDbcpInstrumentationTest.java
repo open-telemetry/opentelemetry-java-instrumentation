@@ -155,7 +155,7 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
   }
 
   @Test
-  void shouldUpdateDataSourceNameWhenMBeanIsRegisteredAfterPoolStart() throws Exception {
+  void shouldKeepDataSourceNameWhenMBeanIsRegisteredAfterPoolStart() throws Exception {
     BasicDataSource dataSource = createDataSource();
     dataSource.setUrl("jdbc:postgresql://db.example:5432/orders");
     ObjectName objectName =
@@ -167,7 +167,8 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
       assertDataSourceMetrics(emitStableDatabaseSemconv() ? "orders" : "db.example:5432/orders");
 
       objectName = mbeanServer.registerMBean(dataSource, objectName).getObjectName();
-      assertDataSourceMetrics("lateRegisteredPool");
+      testing.clearData();
+      assertDataSourceMetrics(emitStableDatabaseSemconv() ? "orders" : "db.example:5432/orders");
     } finally {
       dataSource.close();
       if (mbeanServer.isRegistered(objectName)) {

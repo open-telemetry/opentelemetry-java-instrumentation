@@ -53,6 +53,8 @@ configurations:
       match them. Captured MapMessage attributes may contain sensitive information.
     type: list
     default: ''
+    deprecated: true
+    replaced_by: otel.instrumentation.common.logging.structured-attributes.included
     examples:
       - "custom-map-message-key"
       - "request-*,user-?"
@@ -70,6 +72,8 @@ configurations:
       match them. Captured MapMessage attributes may contain sensitive information.
     type: list
     default: ''
+    deprecated: true
+    replaced_by: otel.instrumentation.common.logging.structured-attributes.excluded
     examples:
       - "*-secret"
       - "password,token"
@@ -82,6 +86,8 @@ configurations:
       source-specific included or excluded pattern is configured.
     type: boolean
     default: false
+    deprecated: true
+    replaced_by: otel.instrumentation.common.logging.structured-attributes.included
   - name: otel.instrumentation.log4j-appender.experimental.capture-marker-attribute
     declarative_name: java.log4j_appender.capture_marker_attribute/development
     description: >
@@ -141,6 +147,14 @@ configurations:
       next minor release.
     type: list
     default: ''
+    deprecated: true
+    replaced_by: otel.instrumentation.log4j-appender.experimental.mdc-attributes.included
     examples:
       - "*"
       - "key1,key2"
+  - ref: common.logging.trace-id-key
+  - ref: common.logging.span-id-key
+  - ref: common.logging.trace-flags-key
+  - ref: common.logging.trace-id
+  - ref: common.logging.span-id
+  - ref: common.logging.trace-flags

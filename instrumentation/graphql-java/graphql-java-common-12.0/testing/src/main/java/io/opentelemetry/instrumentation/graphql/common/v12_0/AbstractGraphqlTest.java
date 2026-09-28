@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.graphql.common.v12_0;
 
 import static graphql.schema.idl.TypeRuntimeWiring.newTypeWiring;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -34,6 +35,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -181,6 +183,7 @@ public abstract class AbstractGraphqlTest {
                       span.hasName("query findBookById")
                           .hasKind(SpanKind.INTERNAL)
                           .hasNoParent()
+                          .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                           .hasAttributesSatisfyingExactly(
                               equalTo(GRAPHQL_OPERATION_NAME, "findBookById"),
                               equalTo(GRAPHQL_OPERATION_TYPE, "query"),
@@ -191,7 +194,9 @@ public abstract class AbstractGraphqlTest {
                 assertions.add(
                     span ->
                         span.hasName("bookById")
+                            .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))
+                            .satisfies(hasScopeSchemaUrl(null))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(stringKey("graphql.field.path"), "/bookById"),
                                 equalTo(stringKey("graphql.field.name"), "bookById")));
@@ -235,6 +240,7 @@ public abstract class AbstractGraphqlTest {
                 assertions.add(
                     span ->
                         span.hasName("bookById")
+                            .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(stringKey("graphql.field.path"), "/bookById"),
