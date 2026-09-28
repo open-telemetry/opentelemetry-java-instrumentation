@@ -456,9 +456,6 @@ targets:
       target: ':instrumentation:couchbase:couchbase-2.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:couchbase:couchbase-2.6:javaagent'
-    - type: gradle
-      path: ./
       target: ':instrumentation:couchbase:couchbase-3.0:javaagent'
     - type: gradle
       path: ./
