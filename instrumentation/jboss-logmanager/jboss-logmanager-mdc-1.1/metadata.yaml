@@ -3,3 +3,10 @@ description: >
   LogManager MDC, it does not emit any telemetry on its own.
 display_name: JBoss Log Manager
 library_link: https://github.com/jboss-logging/jboss-logmanager
+configurations:
+  - ref: common.logging.trace-id-key
+  - ref: common.logging.span-id-key
+  - ref: common.logging.trace-flags-key
+  - ref: common.logging.trace-id
+  - ref: common.logging.span-id
+  - ref: common.logging.trace-flags

@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.graphql.v20_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
@@ -88,10 +89,7 @@ class GraphqlTest extends AbstractGraphqlTest {
                     span.hasName("query findBookById")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .satisfies(
-                            spanData ->
-                                assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
-                                    .isEqualTo(SchemaUrls.V1_44_0))
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(GRAPHQL_OPERATION_NAME, "findBookById"),
                             equalTo(GRAPHQL_OPERATION_TYPE, "query"),
@@ -102,10 +100,7 @@ class GraphqlTest extends AbstractGraphqlTest {
                     span.hasName("bookById")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(spanWithName("query findBookById"))
-                        .satisfies(
-                            spanData ->
-                                assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
-                                    .isNull())
+                        .satisfies(hasScopeSchemaUrl(null))
                         .hasAttributesSatisfyingExactly(
                             equalTo(stringKey("graphql.field.name"), "bookById"),
                             equalTo(stringKey("graphql.field.path"), "/bookById")),
@@ -118,10 +113,7 @@ class GraphqlTest extends AbstractGraphqlTest {
                     span.hasName("author")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(spanWithName("bookById"))
-                        .satisfies(
-                            spanData ->
-                                assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
-                                    .isNull())
+                        .satisfies(hasScopeSchemaUrl(null))
                         .hasAttributesSatisfyingExactly(
                             equalTo(stringKey("graphql.field.name"), "author"),
                             equalTo(stringKey("graphql.field.path"), "/bookById/author"))));

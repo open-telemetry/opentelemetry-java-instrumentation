@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0.SpringRabbitMetricsAssertions.assertProcessMetrics;
 import static io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0.SpringRabbitMetricsAssertions.assertRabbitProcessDuration;
@@ -291,12 +292,10 @@ class SpringRabbitMqTest {
                       .hasKind(SpanKind.CONSUMER)
                       .hasParent(producerSpan)
                       .satisfies(
-                          spanData ->
-                              assertThat(spanData.getInstrumentationScopeInfo().getName())
-                                  .isEqualTo(
-                                      consumerBatchEnabled
-                                          ? "io.opentelemetry.rabbitmq-2.7"
-                                          : "io.opentelemetry.spring-rabbit-1.0")));
+                          hasScopeName(
+                              consumerBatchEnabled
+                                  ? "io.opentelemetry.rabbitmq-2.7"
+                                  : "io.opentelemetry.spring-rabbit-1.0")));
         },
         trace -> trace.hasSpansSatisfyingExactly(SpringRabbitMqTest::verifyAckSpan));
     if (consumerBatchEnabled) {
@@ -358,10 +357,7 @@ class SpringRabbitMqTest {
                 span.hasName(emitStableMessagingSemconv() ? "process " + queue : queue + " process")
                     .hasKind(SpanKind.CONSUMER)
                     .hasParent(producerSpan)
-                    .satisfies(
-                        spanData ->
-                            assertThat(spanData.getInstrumentationScopeInfo().getName())
-                                .isEqualTo("io.opentelemetry.spring-rabbit-1.0"))
+                    .satisfies(hasScopeName("io.opentelemetry.spring-rabbit-1.0"))
                     .hasAttributesSatisfyingExactly(
                         getAssertions(
                             queue,

@@ -57,9 +57,19 @@ val bothSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite
   }
 }
 
+val exceptionSignalLogsSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
+  tasks.register<Test>("${suite.name}ExceptionSignalLogs") {
+    testClassesDirs = suite.sources.output.classesDirs
+    classpath = suite.sources.runtimeClasspath
+
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
+  }
+}
+
 tasks {
   check {
-    dependsOn(testing.suites, stableSemconvSuites, bothSemconvSuites)
+    dependsOn(testing.suites, stableSemconvSuites, bothSemconvSuites, exceptionSignalLogsSuites)
   }
 }
 
