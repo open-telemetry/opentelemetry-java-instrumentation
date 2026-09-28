@@ -4,6 +4,9 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- The experimental `java.common.messaging.headers/development` YAML selector no longer configures
+  header capture. Use `java.common.messaging.headers` instead. The older flat selector properties
+  continue to work outside v3-preview. ([#20260](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20260))
 - Add the required `isRequestStreaming(REQUEST)` method to `GenAiAttributesGetter`.
   ([#19879](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19879))
 - Elasticsearch REST javaagent and 7.x library instrumentation now capture sanitized search query
