@@ -20,6 +20,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CONSUMER_GROUP_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CLUSTER_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET;
@@ -295,7 +296,7 @@ public abstract class AbstractReactorKafkaTest {
         messagingAttributes(record.topic(), "publish", "send", "send", "producer");
     assertions.add(satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
     addOffsetAssertion(assertions);
-    assertions.add(satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
+    assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
     if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(
           equalTo(stringKey("messaging.kafka.bootstrap.servers"), kafka.getBootstrapServers()));
@@ -311,7 +312,7 @@ public abstract class AbstractReactorKafkaTest {
     List<AttributeAssertion> assertions =
         messagingAttributes(topic, "receive", "poll", "receive", "consumer");
     assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
-    assertions.add(satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
+    assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
     if (HAS_CONSUMER_GROUP) {
       addGroupAssertions(assertions);
     }
@@ -346,7 +347,7 @@ public abstract class AbstractReactorKafkaTest {
     if (HAS_CONSUMER_GROUP) {
       addGroupAssertions(assertions);
     }
-    assertions.add(satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
+    assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
     if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(
           satisfies(longKey("kafka.record.queue_time_ms"), AbstractLongAssert::isNotNegative));

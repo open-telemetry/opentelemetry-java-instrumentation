@@ -21,6 +21,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CONSUMER_GROUP_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CLUSTER_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET;
@@ -778,8 +779,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
     assertions.add(satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
     addOffsetAssertion(assertions);
     assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
-    assertions.add(
-        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
+    assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     assertions.add(
         equalTo(
             stringKey("messaging.kafka.bootstrap.servers"),
@@ -793,8 +793,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
         messagingAttributes(topic, "receive", "poll", "receive", "consumer");
     addGroupAssertions(assertions, group);
     assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, batchSize));
-    assertions.add(
-        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
+    assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     addCommonBatchRecordAttributes(assertions);
     return assertions;
   }
@@ -818,8 +817,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                 val.isNotNegative();
               }
             }));
-    assertions.add(
-        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
+    assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     return assertions;
   }
 
@@ -829,8 +827,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
         messagingAttributes(topic, "process", "process", "process", "consumer");
     addGroupAssertions(assertions, group);
     assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, batchSize));
-    assertions.add(
-        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
+    assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     addCommonBatchRecordAttributes(assertions);
     return assertions;
   }

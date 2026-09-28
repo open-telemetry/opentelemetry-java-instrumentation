@@ -20,6 +20,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CONSUMER_GROUP_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CLUSTER_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET;
@@ -123,7 +124,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                   List<AttributeAssertion> producerPendingAssertions =
                       new ArrayList<>(producerAttributes(STREAM_PENDING, true));
                   producerPendingAssertions.add(
-                      satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
+                      satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
                   span.hasName("send " + STREAM_PENDING)
                       .hasKind(SpanKind.PRODUCER)
                       .hasNoParent()
@@ -147,8 +148,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                   assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"));
                   assertions.add(equalTo(stringKey("asdf"), "testing"));
                   addOffsetAssertions(assertions, 0);
-                  assertions.add(
-                      satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
+                  assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
                   if (EXPERIMENTAL_ATTRIBUTES) {
                     assertions.add(
                         satisfies(
@@ -169,7 +169,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                   List<AttributeAssertion> producerProcessedAssertions =
                       new ArrayList<>(producerAttributes(STREAM_PROCESSED, false));
                   producerProcessedAssertions.add(
-                      satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
+                      satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
                   span.hasName("send " + STREAM_PROCESSED)
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(1))
@@ -195,8 +195,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                   assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"));
                   assertions.add(equalTo(longKey("testing"), 123));
                   addOffsetAssertions(assertions, 0);
-                  assertions.add(
-                      satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
+                  assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
                   if (EXPERIMENTAL_ATTRIBUTES) {
                     assertions.add(
                         satisfies(
@@ -221,8 +220,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                     messagingAttributes(
                         STREAM_PENDING, "receive", "poll", "receive", "consumer", false));
             assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
-            assertions.add(
-                satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
+            assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
             addStableBatchRecordAttributes(assertions);
             if (testLatestDeps()) {
               addGroupAssertions(assertions, "test-application");
@@ -242,8 +240,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                     messagingAttributes(
                         STREAM_PROCESSED, "receive", "poll", "receive", "consumer", true));
             assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
-            assertions.add(
-                satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
+            assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
             addStableBatchRecordAttributes(assertions);
             if (testLatestDeps()) {
               addGroupAssertions(assertions, "test");
@@ -287,7 +284,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
           List<AttributeAssertion> producerPendingAssertions =
               new ArrayList<>(producerAttributes(STREAM_PENDING, true));
           producerPendingAssertions.add(
-              satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
+              satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
           trace.hasSpansSatisfyingExactly(
               // kafka-clients PRODUCER
               span ->
@@ -306,8 +303,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                         messagingAttributes(
                             STREAM_PENDING, "receive", "poll", "receive", "consumer", false));
                 assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
-                assertions.add(
-                    satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
+                assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
                 if (testLatestDeps()) {
                   addGroupAssertions(assertions, "test-application");
                 }
@@ -331,8 +327,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                 assertions.add(equalTo(stringKey("asdf"), "testing"));
                 addOffsetAssertions(assertions, 0);
 
-                assertions.add(
-                    satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
+                assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
                 if (EXPERIMENTAL_ATTRIBUTES) {
                   assertions.add(
                       satisfies(
@@ -354,7 +349,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                 List<AttributeAssertion> producerProcessedAssertions =
                     new ArrayList<>(producerAttributes(STREAM_PROCESSED, false));
                 producerProcessedAssertions.add(
-                    satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
+                    satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
                 span.hasName(STREAM_PROCESSED + " publish")
                     .hasKind(SpanKind.PRODUCER)
                     .hasParent(trace.getSpan(1))
@@ -374,8 +369,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                           messagingAttributes(
                               STREAM_PROCESSED, "receive", "poll", "receive", "consumer", true));
                   assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
-                  assertions.add(
-                      satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
+                  assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
                   if (testLatestDeps()) {
                     addGroupAssertions(assertions, "test");
                   }
@@ -399,8 +393,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                   assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"));
                   assertions.add(equalTo(longKey("testing"), 123));
                   addOffsetAssertions(assertions, 0);
-                  assertions.add(
-                      satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
+                  assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
                   if (EXPERIMENTAL_ATTRIBUTES) {
                     assertions.add(
                         satisfies(

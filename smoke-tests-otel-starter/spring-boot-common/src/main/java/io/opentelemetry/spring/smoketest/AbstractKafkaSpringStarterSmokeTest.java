@@ -11,6 +11,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CLUSTER_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET;
@@ -82,7 +83,7 @@ abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarter
                                       AbstractLongAssert::isNotNegative),
                                   equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
                                   satisfies(
-                                      stringKey("messaging.kafka.cluster.id"),
+                                      MESSAGING_KAFKA_CLUSTER_ID,
                                       AbstractStringAssert::isNotEmpty)),
                       span ->
                           span.hasName("testTopic process")
