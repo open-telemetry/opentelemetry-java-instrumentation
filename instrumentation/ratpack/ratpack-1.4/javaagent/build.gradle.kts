@@ -38,31 +38,26 @@ dependencies {
   if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_11)) {
     testImplementation("com.sun.activation:jakarta.activation:1.2.2")
   }
-
-  latestDepTestLibrary("io.ratpack:ratpack-core:1.6.+") // see test suite below
-  latestDepTestLibrary("io.ratpack:ratpack-test:1.6.+") // see test suite below
 }
 
-// Requires old Guava. Can't use enforcedPlatform since predates BOM
+// The 1.4 tests require old Guava and Netty versions.
 if (!otelProps.testLatestDeps) {
   configurations.testRuntimeClasspath.get().resolutionStrategy.force("com.google.guava:guava:19.0")
-}
 
-// to allow all tests to pass we need to choose a specific netty version
-listOf("testCompileClasspath", "testRuntimeClasspath").forEach {
-  configurations.named(it) {
-    resolutionStrategy {
-      eachDependency {
-        // specifying a fixed version for all libraries with io.netty group
-        if (requested.group == "io.netty") {
-          useVersion("4.1.31.Final")
+  listOf("testCompileClasspath", "testRuntimeClasspath").forEach {
+    configurations.named(it) {
+      resolutionStrategy {
+        eachDependency {
+          if (requested.group == "io.netty") {
+            useVersion("4.1.31.Final")
+          }
         }
       }
     }
   }
 }
 
-val version17Test = testing.suites.register<JvmTestSuite>("version17Test") {
+val latestDepTest = testing.suites.register<JvmTestSuite>("latestDepTest") {
   dependencies {
     implementation(project(":instrumentation:ratpack:ratpack-1.4:testing"))
     implementation(project(":instrumentation:ratpack:ratpack-1.7:library"))
@@ -73,6 +68,12 @@ val version17Test = testing.suites.register<JvmTestSuite>("version17Test") {
 }
 
 tasks {
+  if (otelProps.testLatestDeps) {
+    named("compileTestJava") {
+      enabled = false
+    }
+  }
+
   processResources {
     // The newer API emits its own scope, which needs a version resource as well.
     from(named("generateInstrumentationVersionFile")) {
@@ -92,6 +93,7 @@ tasks {
 
   test {
     systemProperty("ratpack14Test", true) // used in AbstractRatpackHttpClientTest
+    enabled = !otelProps.testLatestDeps
   }
 
   val testStableSemconv = register<Test>("testStableSemconv") {
@@ -100,27 +102,34 @@ tasks {
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
     systemProperty("ratpack14Test", true) // used in AbstractRatpackHttpClientTest
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
+    enabled = !otelProps.testLatestDeps
   }
 
-  val version17TestStableSemconv = register<Test>("version17TestStableSemconv") {
-    testClassesDirs = version17Test.get().sources.output.classesDirs
-    classpath = version17Test.get().sources.runtimeClasspath
+  named<Test>("latestDepTest") {
+    enabled = otelProps.testLatestDeps
+  }
+
+  val latestDepTestStableSemconv = register<Test>("latestDepTestStableSemconv") {
+    testClassesDirs = latestDepTest.get().sources.output.classesDirs
+    classpath = latestDepTest.get().sources.runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
+    enabled = otelProps.testLatestDeps
   }
 
-  val version17TestV3Preview = register<Test>("version17TestV3Preview") {
-    testClassesDirs = version17Test.get().sources.output.classesDirs
-    classpath = version17Test.get().sources.runtimeClasspath
+  val latestDepTestV3Preview = register<Test>("latestDepTestV3Preview") {
+    testClassesDirs = latestDepTest.get().sources.output.classesDirs
+    classpath = latestDepTest.get().sources.runtimeClasspath
     filter {
       includeTestsMatching("*RatpackHttpClientTest.durationMetricHasProtocolVersion")
     }
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true,otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    enabled = otelProps.testLatestDeps
   }
 
   check {
-    dependsOn(testing.suites, testStableSemconv, version17TestStableSemconv, version17TestV3Preview)
+    dependsOn(testing.suites, testStableSemconv, latestDepTestStableSemconv, latestDepTestV3Preview)
   }
 
   if (otelProps.denyUnsafe) {
