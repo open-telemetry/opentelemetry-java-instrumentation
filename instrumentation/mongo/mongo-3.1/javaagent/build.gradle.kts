@@ -101,23 +101,7 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
   }
 
-  val version37TestLegacy31Disabled = register<Test>("version37TestLegacy31Disabled") {
-    testClassesDirs = sourceSets["version37Test"].output.classesDirs
-    classpath = sourceSets["version37Test"].runtimeClasspath
-    filter {
-      includeTestsMatching("*MongoClientTest.emitsInstrumentationScope")
-    }
-    jvmArgs("-Dotel.instrumentation.mongo-3.1.enabled=false")
-    systemProperty("metadataConfig", "otel.instrumentation.mongo-3.1.enabled=false")
-  }
-
   check {
-    dependsOn(
-      testing.suites,
-      stableSemconvSuites,
-      testV3Preview,
-      version37TestV3Preview,
-      version37TestLegacy31Disabled
-    )
+    dependsOn(testing.suites, stableSemconvSuites, testV3Preview, version37TestV3Preview)
   }
 }
