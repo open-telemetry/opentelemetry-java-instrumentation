@@ -57,25 +57,34 @@ dependencies {
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.1:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.2:javaagent"))
-
-  latestDepTestLibrary("org.springframework.data:spring-data-couchbase:2.+") // see test suite below
-  latestDepTestLibrary("com.couchbase.client:java-client:2.5.+") // see test suite below
 }
 
 testing {
   suites {
-    register<JvmTestSuite>("version26Test") {
+    register<JvmTestSuite>("latestDepTest") {
       dependencies {
         implementation(project(":instrumentation:couchbase:couchbase-common:testing"))
-        implementation("com.couchbase.client:java-client:" + if (otelProps.testLatestDeps) "2.+" else "2.6.0")
-        implementation("org.springframework.data:spring-data-couchbase:" + if (otelProps.testLatestDeps) "3.1.+" else "3.1.0.RELEASE")
-        implementation("com.couchbase.client:encryption:" + if (otelProps.testLatestDeps) "+" else "1.0.0")
+        implementation("com.couchbase.client:java-client:2.+")
+        implementation("org.springframework.data:spring-data-couchbase:3.1.+")
+        implementation("com.couchbase.client:encryption:+")
       }
     }
   }
 }
 
 tasks {
+  if (otelProps.testLatestDeps) {
+    named("test") {
+      enabled = false
+    }
+    named("compileTestJava") {
+      enabled = false
+    }
+  }
+  named("latestDepTest") {
+    enabled = otelProps.testLatestDeps
+  }
+
   withType<Test>().configureEach {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
@@ -87,6 +96,7 @@ tasks {
 
   val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
     register<Test>("${suite.name}StableSemconv") {
+      isEnabled = named<Test>(suite.name).get().enabled
       testClassesDirs = suite.sources.output.classesDirs
       classpath = suite.sources.runtimeClasspath
 
@@ -97,6 +107,7 @@ tasks {
 
   val experimentalSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
     register<Test>("${suite.name}Experimental") {
+      isEnabled = named<Test>(suite.name).get().enabled
       testClassesDirs = suite.sources.output.classesDirs
       classpath = suite.sources.runtimeClasspath
 
@@ -105,8 +116,9 @@ tasks {
     }
   }
 
-  val version26TestLegacyConfig = register<Test>("version26TestLegacyConfig") {
-    val suite = testing.suites.named<JvmTestSuite>("version26Test").get()
+  val latestDepTestLegacyConfig = register<Test>("latestDepTestLegacyConfig") {
+    val suite = testing.suites.named<JvmTestSuite>("latestDepTest").get()
+    isEnabled = named<Test>(suite.name).get().enabled
     testClassesDirs = suite.sources.output.classesDirs
     classpath = suite.sources.runtimeClasspath
 
@@ -115,7 +127,7 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, stableSemconvSuites, experimentalSuites, version26TestLegacyConfig)
+    dependsOn(testing.suites, stableSemconvSuites, experimentalSuites, latestDepTestLegacyConfig)
   }
 
   if (otelProps.denyUnsafe) {
