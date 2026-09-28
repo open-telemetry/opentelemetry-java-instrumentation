@@ -64,16 +64,20 @@ testing {
         implementation("io.projectreactor:reactor-test:$version")
       }
     }
-    register<JvmTestSuite>("version34Test") {
+    register<JvmTestSuite>("latestDepTest") {
       dependencies {
         implementation(project(":instrumentation:reactor:reactor-3.1:library"))
-        implementation("io.projectreactor:reactor-core:${baseVersion("3.4.0").orLatest()}")
+        implementation("io.projectreactor:reactor-core:latest.release")
       }
     }
   }
 }
 
 tasks {
+  named("latestDepTest") {
+    enabled = otelProps.testLatestDeps
+  }
+
   val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
