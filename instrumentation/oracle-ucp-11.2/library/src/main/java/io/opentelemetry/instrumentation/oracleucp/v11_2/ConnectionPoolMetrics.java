@@ -29,14 +29,27 @@ final class ConnectionPoolMetrics {
 
   static void registerMetrics(
       OpenTelemetry openTelemetry, UniversalConnectionPool connectionPool, String poolName) {
+    registerMetrics(openTelemetry, connectionPool, poolName, Attributes.empty());
+  }
+
+  static void registerMetrics(
+      OpenTelemetry openTelemetry,
+      UniversalConnectionPool connectionPool,
+      String poolName,
+      Attributes databaseAttributes) {
     connectionPoolMetrics.computeIfAbsent(
-        connectionPool, unused -> createMeters(openTelemetry, connectionPool, poolName));
+        connectionPool,
+        unused -> createMeters(openTelemetry, connectionPool, poolName, databaseAttributes));
   }
 
   private static BatchCallback createMeters(
-      OpenTelemetry openTelemetry, UniversalConnectionPool connectionPool, String poolName) {
+      OpenTelemetry openTelemetry,
+      UniversalConnectionPool connectionPool,
+      String poolName,
+      Attributes databaseAttributes) {
     DbConnectionPoolMetrics metrics =
-        DbConnectionPoolMetrics.create(openTelemetry, INSTRUMENTATION_NAME, poolName);
+        DbConnectionPoolMetrics.create(
+            openTelemetry, INSTRUMENTATION_NAME, poolName, databaseAttributes);
 
     ObservableLongMeasurement connections = metrics.connections();
     ObservableLongMeasurement maxConnections = metrics.maxConnections();

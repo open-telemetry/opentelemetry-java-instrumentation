@@ -18,9 +18,20 @@ import javax.annotation.Nullable;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.common.message.Message;
+import org.apache.rocketmq.common.message.MessageClientIDSetter;
 
 final class RocketMqProducerAttributeGetter
     implements MessagingAttributesGetter<SendMessageContext, Void> {
+
+  private final boolean messageCreation;
+
+  RocketMqProducerAttributeGetter() {
+    this(false);
+  }
+
+  RocketMqProducerAttributeGetter(boolean messageCreation) {
+    this.messageCreation = messageCreation;
+  }
 
   @Override
   public String getSystem(SendMessageContext request) {
@@ -78,6 +89,9 @@ final class RocketMqProducerAttributeGetter
   @Nullable
   @Override
   public String getMessageId(SendMessageContext request, @Nullable Void unused) {
+    if (messageCreation) {
+      return MessageClientIDSetter.getUniqID(request.getMessage());
+    }
     // the send result of a batch carries the concatenated ids of every message it contains, which
     // is not a per-message id, so it is not reported
     if (isBatch(request)) {
@@ -99,6 +113,9 @@ final class RocketMqProducerAttributeGetter
     if (!isBatch(request)) {
       return null;
     }
+    if (RocketMqBatchSendSpanLinksExtractor.isBatchRequest(request)) {
+      return RocketMqBatchSendSpanLinksExtractor.getBatchMessageCount(request);
+    }
     long batchSize = 0;
     for (Object ignored : (Iterable<?>) request.getMessage()) {
       batchSize++;
@@ -107,11 +124,16 @@ final class RocketMqProducerAttributeGetter
   }
 
   private static boolean isBatch(SendMessageContext request) {
-    return emitStableMessagingSemconv() && request.getMessage() instanceof Iterable<?>;
+    return emitStableMessagingSemconv()
+        && (RocketMqBatchSendSpanLinksExtractor.isBatchRequest(request)
+            || RocketMqMessageUtil.isBatch(request.getMessage()));
   }
 
   @Override
   public List<String> getMessageHeader(SendMessageContext request, String name) {
+    if (RocketMqBatchSendSpanLinksExtractor.isBatchRequest(request)) {
+      return emptyList();
+    }
     Message message = request.getMessage();
     if (message == null) {
       return emptyList();
@@ -125,6 +147,9 @@ final class RocketMqProducerAttributeGetter
 
   @Override
   public Collection<String> getMessageHeaderNames(SendMessageContext request) {
+    if (RocketMqBatchSendSpanLinksExtractor.isBatchRequest(request)) {
+      return emptyList();
+    }
     Message message = request.getMessage();
     if (message == null) {
       return emptyList();

@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0.SpringRabbitMetricsAssertions.assertProcessMetrics;
 import static io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0.SpringRabbitMetricsAssertions.assertRabbitProcessDuration;
@@ -38,6 +39,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -47,6 +50,7 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetAddress;
@@ -58,6 +62,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.BeforeAll;
@@ -287,12 +292,10 @@ class SpringRabbitMqTest {
                       .hasKind(SpanKind.CONSUMER)
                       .hasParent(producerSpan)
                       .satisfies(
-                          spanData ->
-                              assertThat(spanData.getInstrumentationScopeInfo().getName())
-                                  .isEqualTo(
-                                      consumerBatchEnabled
-                                          ? "io.opentelemetry.rabbitmq-2.7"
-                                          : "io.opentelemetry.spring-rabbit-1.0")));
+                          hasScopeName(
+                              consumerBatchEnabled
+                                  ? "io.opentelemetry.rabbitmq-2.7"
+                                  : "io.opentelemetry.spring-rabbit-1.0")));
         },
         trace -> trace.hasSpansSatisfyingExactly(SpringRabbitMqTest::verifyAckSpan));
     if (consumerBatchEnabled) {
@@ -354,10 +357,7 @@ class SpringRabbitMqTest {
                 span.hasName(emitStableMessagingSemconv() ? "process " + queue : queue + " process")
                     .hasKind(SpanKind.CONSUMER)
                     .hasParent(producerSpan)
-                    .satisfies(
-                        spanData ->
-                            assertThat(spanData.getInstrumentationScopeInfo().getName())
-                                .isEqualTo("io.opentelemetry.spring-rabbit-1.0"))
+                    .satisfies(hasScopeName("io.opentelemetry.spring-rabbit-1.0"))
                     .hasAttributesSatisfyingExactly(
                         getAssertions(
                             queue,
@@ -509,6 +509,56 @@ class SpringRabbitMqTest {
   }
 
   @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void testErrorHandlerContextPropagation(boolean directContainer) throws InterruptedException {
+    String queue = directContainer ? "directErrorHandlerQueue" : "simpleErrorHandlerQueue";
+    applicationContext.getBean(AmqpAdmin.class).declareQueue(new Queue(queue));
+    CountDownLatch errorHandled = new CountDownLatch(1);
+    AtomicReference<SpanContext> errorHandlerSpanContext = new AtomicReference<>();
+
+    AbstractMessageListenerContainer container =
+        directContainer
+            ? new DirectMessageListenerContainer()
+            : new SimpleMessageListenerContainer();
+    container.setConnectionFactory(
+        applicationContext.getBean(
+            org.springframework.amqp.rabbit.connection.ConnectionFactory.class));
+    container.setQueueNames(queue);
+    container.setDefaultRequeueRejected(false);
+    container.setMessageListener(
+        message -> {
+          throw new IllegalStateException("test");
+        });
+    container.setErrorHandler(
+        error -> {
+          errorHandlerSpanContext.set(Span.current().getSpanContext());
+          errorHandled.countDown();
+        });
+    cleanup.deferCleanup(container::stop);
+    container.start();
+    testing.waitForTraces(3);
+    testing.clearData();
+
+    applicationContext.getBean(AmqpTemplate.class).convertAndSend(queue, "test");
+
+    assertThat(errorHandled.await(10, SECONDS)).isTrue();
+    assertThat(errorHandlerSpanContext.get()).isNotNull();
+    assertThat(errorHandlerSpanContext.get().isValid()).isTrue();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactlyInAnyOrder(
+                span -> span.hasKind(SpanKind.PRODUCER),
+                span -> span.hasKind(SpanKind.CONSUMER).hasStatus(StatusData.error())),
+        trace -> trace.hasSpansSatisfyingExactly(SpringRabbitMqTest::verifyNackSpan));
+    assertProcessMetrics(
+        testing,
+        queue,
+        testLatestDeps()
+            ? "org.springframework.amqp.rabbit.support.ListenerExecutionFailedException"
+            : "org.springframework.amqp.rabbit.listener.exception.ListenerExecutionFailedException");
+  }
+
+  @ParameterizedTest
   @ValueSource(strings = {"anonymousQueue", "legacyAnonymousQueue", "anonymousGroupQueue"})
   void testAnonymousQueueSpanName(String queueBeanName) throws Exception {
     Connection connection = connectionFactory.newConnection();
@@ -544,8 +594,16 @@ class SpringRabbitMqTest {
         trace -> trace.hasSpansSatisfyingExactly(SpringRabbitMqTest::verifyAckSpan));
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   private static void verifyAckSpan(SpanDataAssert span) {
+    verifySettleSpan(span, "ack");
+  }
+
+  private static void verifyNackSpan(SpanDataAssert span) {
+    verifySettleSpan(span, "nack");
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  private static void verifySettleSpan(SpanDataAssert span, String operation) {
     boolean stable = emitStableMessagingSemconv();
     List<AttributeAssertion> assertions =
         new ArrayList<>(
@@ -557,7 +615,7 @@ class SpringRabbitMqTest {
     if (stable) {
       assertions.add(equalTo(SERVER_ADDRESS, ip));
       assertions.add(satisfies(SERVER_PORT, AbstractLongAssert::isNotNegative));
-      assertions.add(equalTo(MESSAGING_OPERATION_NAME, "ack"));
+      assertions.add(equalTo(MESSAGING_OPERATION_NAME, operation));
       assertions.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
       assertions.add(
           satisfies(MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG, AbstractLongAssert::isPositive));
@@ -565,7 +623,7 @@ class SpringRabbitMqTest {
         assertions.add(equalTo(MESSAGING_OPERATION, "settle"));
       }
     }
-    span.hasName(stable ? "ack" : "basic.ack")
+    span.hasName(stable ? operation : "basic." + operation)
         .hasKind(SpanKind.CLIENT)
         .hasAttributesSatisfyingExactly(assertions);
   }

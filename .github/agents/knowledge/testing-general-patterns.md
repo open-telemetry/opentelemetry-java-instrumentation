@@ -1,9 +1,8 @@
 # [Testing] General Test Patterns
 
-## Quick Reference
-
-- Use when: test files (`**/src/test/**`) are in scope
-- Review focus: assertion style, test class visibility, test method signatures and throws clauses, resource cleanup patterns, attribute assertion patterns
+Consult this article when changing test structure, assertions, resource
+cleanup, or mode-dependent expectations. It gives the setup and API details
+behind the shorter Java test instructions.
 
 ## Javaagent integration coverage versus unit coverage
 

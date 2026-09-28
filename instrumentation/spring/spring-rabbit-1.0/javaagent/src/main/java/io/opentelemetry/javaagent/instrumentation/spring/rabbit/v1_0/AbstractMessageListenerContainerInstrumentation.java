@@ -33,6 +33,14 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
+        named("executeListener")
+            .and(
+                takesArguments(2)
+                    .and(
+                        takesArgument(1, Object.class)
+                            .or(takesArgument(1, named("org.springframework.amqp.core.Message"))))),
+        getClass().getName() + "$ExecuteListenerAdvice");
+    transformer.applyAdviceToMethod(
         named("invokeListener")
             .and(
                 takesArguments(2)
@@ -43,7 +51,7 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
   }
 
   @SuppressWarnings("unused")
-  public static class InvokeListenerAdvice {
+  public static class ExecuteListenerAdvice {
 
     public static class AdviceScope {
       private final Context context;
@@ -58,7 +66,8 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
 
       public void end(@Nullable Throwable throwable) {
         scope.close();
-        instrumenter().end(context, request, null, throwable);
+        instrumenter()
+            .end(context, request, null, SpringRabbitErrorHolder.getOrDefault(context, throwable));
       }
     }
 
@@ -100,6 +109,17 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
         return;
       }
       adviceScope.end(throwable);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class InvokeListenerAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
+    public static void onExit(@Advice.Thrown @Nullable Throwable throwable) {
+      if (throwable != null) {
+        SpringRabbitErrorHolder.set(Java8BytecodeBridge.currentContext(), throwable);
+      }
     }
   }
 }

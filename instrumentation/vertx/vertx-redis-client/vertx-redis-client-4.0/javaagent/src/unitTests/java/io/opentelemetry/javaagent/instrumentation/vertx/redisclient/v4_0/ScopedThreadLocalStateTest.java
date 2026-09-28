@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0.VertxRedisClientSingletons.currentRedisUri;
-import static io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0.VertxRedisClientSingletons.currentServerTarget;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.withSettings;
@@ -29,22 +28,24 @@ class ScopedThreadLocalStateTest {
     RedisConnectionManagerUtil.setServerTarget(innerManager, innerTarget);
 
     RedisServerTarget beforeOuter =
-        currentServerTarget().set(RedisConnectionManagerUtil.getServerTarget(outerManager));
+        RedisConnectionManagerUtil.currentServerTarget()
+            .set(RedisConnectionManagerUtil.getServerTarget(outerManager));
     try {
       RedisServerTarget beforeInner =
-          currentServerTarget().set(RedisConnectionManagerUtil.getServerTarget(innerManager));
+          RedisConnectionManagerUtil.currentServerTarget()
+              .set(RedisConnectionManagerUtil.getServerTarget(innerManager));
       try {
-        assertThat(currentServerTarget().get()).isSameAs(innerTarget);
+        assertThat(RedisConnectionManagerUtil.currentServerTarget().get()).isSameAs(innerTarget);
       } finally {
-        currentServerTarget().restore(beforeInner);
+        RedisConnectionManagerUtil.currentServerTarget().restore(beforeInner);
       }
 
-      assertThat(currentServerTarget().get()).isSameAs(outerTarget);
+      assertThat(RedisConnectionManagerUtil.currentServerTarget().get()).isSameAs(outerTarget);
     } finally {
-      currentServerTarget().restore(beforeOuter);
+      RedisConnectionManagerUtil.currentServerTarget().restore(beforeOuter);
     }
 
-    assertThat(currentServerTarget().get()).isNull();
+    assertThat(RedisConnectionManagerUtil.currentServerTarget().get()).isNull();
   }
 
   @Test

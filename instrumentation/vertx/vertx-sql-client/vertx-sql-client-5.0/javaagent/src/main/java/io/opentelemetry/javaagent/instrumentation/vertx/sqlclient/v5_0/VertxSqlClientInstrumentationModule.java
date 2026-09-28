@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
@@ -15,7 +14,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModul
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
-import java.util.function.BiConsumer;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
@@ -33,41 +31,37 @@ public class VertxSqlClientInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public boolean isHelperClass(String className) {
-    return "io.vertx.sqlclient.impl.QueryExecutorUtil".equals(className);
-  }
-
-  @Override
-  public List<String> injectedClassNames() {
-    return singletonList("io.vertx.sqlclient.impl.QueryExecutorUtil");
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new ClientBuilderInstrumentation(),
         new CommandSchedulerInstrumentation(),
+        new ConnectionFactoryInstrumentation(),
+        new ConnectionPoolInstrumentation(),
         new DriverInstrumentation(),
         new PoolInstrumentation(),
         new CloseablePoolInstrumentation(),
+        new PoolWaiterInstrumentation(),
         new SqlClientBaseInstrumentation(),
         new SqlConnectionBaseInstrumentation(),
-        new PreparedStatementInstrumentation(),
-        new QueryBaseInstrumentation(),
+        new SqlConnectionPoolInstrumentation(),
         new QueryExecutorInstrumentation(),
         new QueryResultBuilderInstrumentation(),
         new TransactionImplInstrumentation());
   }
 
   @Override
-  public void registerVirtualFields(BiConsumer<String, String> virtualFieldRegistrar) {
+  public void registerVirtualFields(VirtualFieldRegistration virtualFieldRegistration) {
     // we add the virtual field to CommandBase manually because it is in different package in 5.0
     // and 5.1
     // used in 5.0
-    virtualFieldRegistrar.accept(
+    virtualFieldRegistration.register(
         "io.vertx.sqlclient.internal.command.CommandBase", Context.class.getName());
+    virtualFieldRegistration.register(
+        "io.vertx.sqlclient.internal.Connection", VertxSqlClientState.class.getName());
     // used in 5.1
-    virtualFieldRegistrar.accept(
+    virtualFieldRegistration.register(
         "io.vertx.sqlclient.spi.protocol.CommandBase", Context.class.getName());
+    virtualFieldRegistration.register(
+        "io.vertx.sqlclient.spi.connection.Connection", VertxSqlClientState.class.getName());
   }
 }

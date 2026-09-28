@@ -13,7 +13,8 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIn
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
-class LettuceBatchAttributesGetter implements DbClientAttributesGetter<LettuceBatchRequest, Void> {
+final class LettuceBatchAttributesGetter
+    implements DbClientAttributesGetter<LettuceBatchRequest, Void> {
 
   @Override
   public String getDbSystemName(LettuceBatchRequest request) {
@@ -72,5 +73,21 @@ class LettuceBatchAttributesGetter implements DbClientAttributesGetter<LettuceBa
     }
     InetSocketAddress serverAddress = request.getServerAddress();
     return serverAddress != null ? serverAddress.getPort() : null;
+  }
+
+  @Nullable
+  @Override
+  public String getNetworkPeerAddress(LettuceBatchRequest request, @Nullable Void unused) {
+    return emitStableDatabaseSemconv()
+        ? LettuceCommandPeer.getNetworkPeerAddress(request.getPeerAddress())
+        : null;
+  }
+
+  @Nullable
+  @Override
+  public Integer getNetworkPeerPort(LettuceBatchRequest request, @Nullable Void unused) {
+    return emitStableDatabaseSemconv()
+        ? LettuceCommandPeer.getNetworkPeerPort(request.getPeerAddress())
+        : null;
   }
 }

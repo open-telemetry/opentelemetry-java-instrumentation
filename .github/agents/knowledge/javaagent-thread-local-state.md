@@ -1,17 +1,8 @@
 # [Javaagent] Temporary ThreadLocal State
 
-## Quick Reference
-
-- Use when: designing, implementing, or reviewing temporary `ThreadLocal` state in javaagent advice
-  or helpers
-- Requirement: every value that holds operation-specific temporary state needs cleanup on every
-  exit, including exceptional exits
-- Default for temporary state installed on entry and cleaned up on exit: restore the previous value
-- Suppression: only the caller that acquires a `ScopedThreadSuppression` releases it
-- Advice lifecycle: keep each thread-local mutation and its cleanup visible in the paired entry and
-  exit advice
-- Naming: use `current*` for ambient state that belongs to the executing thread, except for
-  suppression holders and accessors
+Use this article when adding or changing temporary per-operation thread
+state in javaagent advice. It explains when to restore a previous value,
+release suppression, or leave a longer-lived holder alone.
 
 ## Match cleanup to the lifecycle
 
@@ -89,7 +80,7 @@ public static void onExit(@Advice.Enter boolean acquired) {
 Use `isActive()` when code only needs to check whether suppression is active. A nested caller that
 received `false` from `tryAcquire()` must not release suppression owned by an outer caller.
 
-The review invariant must be visible in each advice pair. The previous value or acquisition result
+The lifecycle invariant must be visible in each advice pair. The previous value or acquisition result
 flows from entry advice through `@Advice.Enter`, and exit advice uses
 `onThrowable = Throwable.class` to perform the matching `restore` or conditional `release`.
 

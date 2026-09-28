@@ -48,7 +48,9 @@ public class SpringRabbitSingletons {
             .addAttributesExtractor(NetworkAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(new SpringRabbitExtraAttributesExtractor())
             .addOperationMetrics(MessagingProcessMetrics.get())
-            .addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
+            .addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages())
+            .addContextCustomizer(
+                (context, request, startAttributes) -> SpringRabbitErrorHolder.init(context));
     if (emitStableMessagingSemconv()) {
       builder.addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter));
     }

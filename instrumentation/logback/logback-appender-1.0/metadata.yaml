@@ -60,6 +60,8 @@ configurations:
       do not match them. Captured key value pair attributes may contain sensitive information.
     type: list
     default: ''
+    deprecated: true
+    replaced_by: otel.instrumentation.common.logging.structured-attributes.included
     examples:
       - "custom-key"
       - "request-*,user-?"
@@ -77,6 +79,8 @@ configurations:
       do not match them. Captured key value pair attributes may contain sensitive information.
     type: list
     default: ''
+    deprecated: true
+    replaced_by: otel.instrumentation.common.logging.structured-attributes.excluded
     examples:
       - "*-secret"
       - "password,token"
@@ -89,6 +93,8 @@ configurations:
       excluded pattern is configured.
     type: boolean
     default: false
+    deprecated: true
+    replaced_by: otel.instrumentation.common.logging.structured-attributes.included
   - name: otel.instrumentation.logback-appender.experimental.logger-context-attributes.included
     declarative_name: java.logback_appender.logger_context_attributes/development.included
     description: >
@@ -132,6 +138,8 @@ configurations:
       instead.
     type: boolean
     default: false
+    deprecated: true
+    replaced_by: otel.instrumentation.logback-appender.experimental.logger-context-attributes.included
   - name: otel.instrumentation.logback-appender.experimental.capture-template
     declarative_name: java.logback_appender.capture_template/development
     description: >
@@ -160,6 +168,8 @@ configurations:
       information.
     type: list
     default: ''
+    deprecated: true
+    replaced_by: otel.instrumentation.common.logging.structured-attributes.included
     examples:
       - "custom-key"
       - "request-*,user-?"
@@ -178,6 +188,8 @@ configurations:
       information.
     type: list
     default: ''
+    deprecated: true
+    replaced_by: otel.instrumentation.common.logging.structured-attributes.excluded
     examples:
       - "*-secret"
       - "password,token"
@@ -191,6 +203,8 @@ configurations:
       pattern is configured.
     type: boolean
     default: false
+    deprecated: true
+    replaced_by: otel.instrumentation.common.logging.structured-attributes.included
   - name: otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included
     declarative_name: java.logback_appender.logstash_structured_argument_attributes/development.included
     description: >
@@ -207,6 +221,8 @@ configurations:
       may contain sensitive information.
     type: list
     default: ''
+    deprecated: true
+    replaced_by: otel.instrumentation.common.logging.structured-attributes.included
     examples:
       - "custom-key"
       - "request-*,user-?"
@@ -226,6 +242,8 @@ configurations:
       may contain sensitive information.
     type: list
     default: ''
+    deprecated: true
+    replaced_by: otel.instrumentation.common.logging.structured-attributes.excluded
     examples:
       - "*-secret"
       - "password,token"
@@ -238,6 +256,8 @@ configurations:
       excluded pattern is configured.
     type: boolean
     default: false
+    deprecated: true
+    replaced_by: otel.instrumentation.common.logging.structured-attributes.included
   - name: otel.instrumentation.logback-appender.experimental.mdc-attributes.included
     declarative_name: java.logback_appender.mdc_attributes/development.included
     description: >
@@ -280,6 +300,8 @@ configurations:
       otel.instrumentation.logback-appender.experimental.mdc-attributes.included instead.
     type: list
     default: ''
+    deprecated: true
+    replaced_by: otel.instrumentation.logback-appender.experimental.mdc-attributes.included
     examples:
       - "custom-mdc-key"
       - "key1,key2,key3"

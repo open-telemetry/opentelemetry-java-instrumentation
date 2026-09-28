@@ -10,11 +10,13 @@ dependencies {
   compileOnly("javax.servlet:javax.servlet-api:4.0.1")
 
   testLibrary("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
+  testLibrary("org.springframework.boot:spring-boot-starter-actuator:$springBootVersion")
   testLibrary("org.springframework.boot:spring-boot-starter-test:$springBootVersion") {
     exclude("org.junit.vintage", "junit-vintage-engine")
   }
 
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-web:2.+") // see spring-webmvc-6.0 module
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-actuator:2.+") // see spring-webmvc-6.0 module
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:2.+") // see spring-webmvc-6.0 module
 }
 
