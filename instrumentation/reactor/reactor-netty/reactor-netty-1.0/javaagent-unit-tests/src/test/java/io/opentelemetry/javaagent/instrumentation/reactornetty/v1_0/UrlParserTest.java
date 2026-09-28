@@ -154,4 +154,20 @@ class UrlParserTest {
     assertThat(UrlParser.getPort("#fragment")).isNull();
     assertThat(UrlParser.getPort("/#fragment")).isNull();
   }
+
+  @Test
+  void testGetHostAndPortWithIpv6() {
+    assertThat(UrlParser.getHost("https://[::1]")).isEqualTo("::1");
+    assertThat(UrlParser.getHost("https://[::1]/")).isEqualTo("::1");
+    assertThat(UrlParser.getHost("https://[::1]:8080/")).isEqualTo("::1");
+    assertThat(UrlParser.getHost("https://[2001:db8::1]:8080?query")).isEqualTo("2001:db8::1");
+    assertThat(UrlParser.getHost("https://[::1")).isNull();
+    assertThat(UrlParser.getHost("http://[::1/path]")).isNull();
+    assertThat(UrlParser.getHost("http://[x/p?token=abc]")).isNull();
+
+    assertThat(UrlParser.getPort("https://[::1]")).isNull();
+    assertThat(UrlParser.getPort("https://[::1]/")).isNull();
+    assertThat(UrlParser.getPort("https://[::1]:8080/")).isEqualTo(8080);
+    assertThat(UrlParser.getPort("https://[2001:db8::1]:8080?query")).isEqualTo(8080);
+  }
 }
