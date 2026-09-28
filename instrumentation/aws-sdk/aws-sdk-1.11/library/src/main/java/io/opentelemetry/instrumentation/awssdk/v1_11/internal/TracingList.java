@@ -14,7 +14,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
@@ -86,48 +85,6 @@ class TracingList extends SdkInternalList<Message> {
   @Override
   public void forEach(Consumer<? super Message> action) {
     iterator().forEachRemaining(action);
-  }
-
-  @Override
-  public boolean equals(Object object) {
-    if (object == this) {
-      return true;
-    }
-    if (!(object instanceof List)) {
-      return false;
-    }
-    List<?> list = (List<?>) object;
-    if (size() != list.size()) {
-      return false;
-    }
-    for (int i = 0; i < size(); i++) {
-      if (!Objects.equals(get(i), list.get(i))) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  @Override
-  public int hashCode() {
-    int hashCode = 1;
-    for (int i = 0; i < size(); i++) {
-      Message message = get(i);
-      hashCode = 31 * hashCode + (message == null ? 0 : message.hashCode());
-    }
-    return hashCode;
-  }
-
-  @Override
-  public String toString() {
-    StringBuilder string = new StringBuilder("[");
-    for (int i = 0; i < size(); i++) {
-      if (i > 0) {
-        string.append(", ");
-      }
-      string.append(get(i));
-    }
-    return string.append(']').toString();
   }
 
   private static boolean inAwsClient() {
