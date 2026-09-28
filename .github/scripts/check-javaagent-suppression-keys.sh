@@ -5,7 +5,9 @@ has_preview_constructor() {
     my $owner = quotemeta($ENV{EXPECTED_OWNER});
     my $version = quotemeta($ENV{EXPECTED_VERSION});
     my $preview = qr/AgentCommonConfig\.get\(\)\.isV3Preview\(\)/;
-    exit !/super\(\s*(?:"$owner"|$preview\s*\?\s*"$owner"\s*:\s*"[^"]+")\s*,\s*$preview\s*\?\s*new\s+String\[\]\s*\{\s*"$version"/;
+    my $first_arg = qr/(?:"$owner"|$preview\s*\?\s*"$owner"\s*:\s*"[^"]+")/;
+    my $preview_second_arg = qr/$preview\s*\?\s*new\s+String\[\]\s*\{\s*"$version"/;
+    exit !/super\(\s*$first_arg\s*,\s*$preview_second_arg/;
   ' "$file"
 }
 
