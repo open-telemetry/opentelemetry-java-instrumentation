@@ -26,14 +26,17 @@ dependencies {
 }
 
 plugins.withId("org.graalvm.buildtools.native") {
-  // Spring-generated AOT sources can contain raw types that must not fail compilation with -Werror.
   tasks.named<JavaCompile>("compileAotJava").configure {
     with(options) {
+      // Spring-generated AOT sources emit warnings that fail compilation with -Werror.
+      // Explicit exclusions are needed alongside none; none alone does not suppress them.
       compilerArgs.add("-Xlint:-deprecation,-unchecked,-rawtypes,none")
     }
   }
   tasks.named<JavaCompile>("compileAotTestJava").configure {
     with(options) {
+      // Spring-generated AOT sources emit warnings that fail compilation with -Werror.
+      // Explicit exclusions are needed alongside none; none alone does not suppress them.
       compilerArgs.add("-Xlint:-deprecation,-unchecked,-rawtypes,none")
     }
   }
