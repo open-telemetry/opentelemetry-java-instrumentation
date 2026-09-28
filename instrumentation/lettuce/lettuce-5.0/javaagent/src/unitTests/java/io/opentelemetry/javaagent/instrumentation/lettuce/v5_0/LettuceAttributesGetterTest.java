@@ -111,7 +111,8 @@ class LettuceAttributesGetterTest {
       assertThat(LettuceConnectionState.serverTarget(endpoint)).isNull();
       assertThat(wrappedAddressSource).isInstanceOf(Supplier.class);
       assertThat(((Supplier<?>) wrappedAddressSource).get()).isEqualTo(SELECTED_ADDRESS);
-      assertThat(LettuceConnectionState.serverAddress(endpoint)).isEqualTo(SELECTED_ADDRESS);
+      assertThat(LettuceConnectionState.serverAddress(endpoint))
+          .isEqualTo(emitStableDatabaseSemconv() ? SELECTED_ADDRESS : null);
     } finally {
       client.shutdown(0, 15, SECONDS);
     }

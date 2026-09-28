@@ -1,9 +1,8 @@
 # [Config] metadata.yaml Format and Declarative Name Conversion
 
-## Quick Reference
-
-- Use when: reviewing or creating `metadata.yaml` files, converting config names
-- Review focus: declarative_name format, examples guidelines, special mappings, config validation
+Consult this article when editing instrumentation `metadata.yaml` or
+investigating a non-obvious flat-property to declarative-key mapping. It
+documents the schema, conversion examples, and validation for metadata edits.
 
 ## General
 
@@ -21,7 +20,15 @@ Each configuration entry includes:
 - `declarative_name`: YAML key path (e.g., `java.grpc.emit_message_events`)
 - `type`: `boolean`, `string`, `list`, `int`, `map`. Describes the **flat** form.
 - `description`: Human-readable explanation
-- `default`: Default value
+- `default`: The value used when the setting is unset. **Omit it** when leaving the setting unset
+  means falling back to another setting (for example a per-module override of a common setting),
+  and say what applies instead in the description ("… when unset, that setting applies.").
+  `docs/declarative-configuration-example.yaml` leaves such entries out, because setting any value
+  there would override the fallback.
+- `deprecated` (optional): `true` for a deprecated setting. Required exactly when the description
+  starts with "Deprecated". Deprecated entries are left out of the generated example.
+- `replaced_by` (optional, deprecated entries only): the flat name of the replacing setting, or its
+  declarative name if it has no flat property. It must name a documented setting.
 - `examples` (optional): Only for module-specific configs with non-obvious format
 - `declarative_type` (optional): Overrides the declarative-form shape when it differs from the flat
   `type`. Either `structured_list` (see Structured Lists) or a scalar type — `string`, `boolean`,
@@ -31,7 +38,8 @@ Each configuration entry includes:
 
 When a module-specific configuration overrides a referenced common configuration, list the
 module-specific entry immediately before the common `ref`. This keeps the override and fallback
-together and makes their precedence clear.
+together and makes their precedence clear. The override has no `default`, and the module must `ref`
+the common setting it falls back to (`DeclarativeConfigValidationTest` checks this).
 
 ## Structured Lists
 
@@ -191,7 +199,7 @@ Add `examples` only for module-specific configs with non-obvious format (lists, 
     - "header1,header2,header3"
 ```
 
-## Validation Procedure
+## Checking an Edited Metadata File
 
 ### 1. Validate experimental markers match
 
@@ -213,11 +221,14 @@ If a module has a dependency on other modules (for example, a "-common" module, 
 
 ### 3. Verify type and default
 
-Match type and default value with actual code usage.
+Match type and default value with actual code usage. Check whether the reader distinguishes an
+absent value from a default one (`getBoolean(key)` returning `null`, `getPropertyKeys().contains`,
+a warning logged whenever the value is non-null): if it falls back to another setting when absent,
+the entry has no `default`.
 
-## Automated Test (MANDATORY)
+## Automated Validation After Editing Metadata
 
-**Run after any metadata.yaml changes:**
+Run after changing `metadata.yaml`:
 
 ```bash
 ./gradlew :instrumentation-docs:test --tests DeclarativeConfigValidationTest
@@ -242,12 +253,12 @@ FAIL in ../instrumentation/liberty/liberty-20.0/metadata.yaml:
 
 ## Validation Outcomes
 
-| Issue                        | Action                                  |
-| ---------------------------- | --------------------------------------- |
-| Config not used              | Flag for removal                        |
-| Default/type mismatch        | Update metadata.yaml to match code      |
-| Missing config (in code)     | Add to metadata.yaml                    |
-| Experimental marker mismatch | Fix flat and declarative names to agree |
+| Issue                        | Action                                    |
+| ---------------------------- | ----------------------------------------- |
+| Config not used              | Remove after confirming it has no readers |
+| Default/type mismatch        | Update metadata.yaml to match code        |
+| Missing config (in code)     | Add to metadata.yaml                      |
+| Experimental marker mismatch | Fix flat and declarative names to agree   |
 
 ## Output Format
 

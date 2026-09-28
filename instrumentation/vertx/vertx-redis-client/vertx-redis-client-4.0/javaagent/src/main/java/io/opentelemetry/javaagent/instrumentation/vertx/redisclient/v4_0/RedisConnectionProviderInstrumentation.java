@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0.VertxRedisClientSingletons.currentRedisUri;
-import static io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0.VertxRedisClientSingletons.currentServerTarget;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -94,7 +93,8 @@ class RedisConnectionProviderInstrumentation implements TypeInstrumentation {
   public static class ConstructorWithOptionsAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.FieldValue("redisURI") RedisURI redisUri) {
-      VertxRedisServerTargets.set(redisUri, currentServerTarget().get());
+      RedisConnectionManagerUtil.setRedisUriTarget(
+          redisUri, RedisConnectionManagerUtil.currentServerTarget().get());
     }
   }
 }

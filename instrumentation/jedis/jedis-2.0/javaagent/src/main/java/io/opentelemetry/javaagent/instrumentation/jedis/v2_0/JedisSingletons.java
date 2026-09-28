@@ -13,22 +13,30 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import javax.annotation.Nullable;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.Queable;
 import redis.clients.util.Pool;
 
 public class JedisSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jedis-2.0";
 
   private static final Instrumenter<JedisRequest, Void> instrumenter;
+
+  private static final ScopedThreadValue<JedisClusterCommandContext> currentCommandContext =
+      new ScopedThreadValue<>();
+  private static final ScopedThreadValue<Queable> currentBatch = new ScopedThreadValue<>();
+  private static final ScopedThreadValue<JedisPipelineContext.TransactionFraming>
+      currentTransactionFraming = new ScopedThreadValue<>();
 
   private static final VirtualField<Connection, RedisServerTarget> CONNECTION_TARGET =
       VirtualField.find(Connection.class, RedisServerTarget.class);
@@ -41,22 +49,12 @@ public class JedisSingletons {
 
   static {
     JedisDbAttributesGetter dbAttributesGetter = new JedisDbAttributesGetter();
-    // Redis semantic conventions don't follow the regular pattern of adding db.namespace to the
-    // span name.
-    JedisDbAttributesGetter spanNameAttributesGetter =
-        new JedisDbAttributesGetter() {
-          @Override
-          @Nullable
-          public String getDbNamespace(JedisRequest request) {
-            return null;
-          }
-        };
 
     InstrumenterBuilder<JedisRequest, Void> builder =
         Instrumenter.<JedisRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(spanNameAttributesGetter))
+                RedisSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(
                 ServicePeerAttributesExtractor.create(
@@ -67,8 +65,21 @@ public class JedisSingletons {
     instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
-  static Instrumenter<JedisRequest, Void> instrumenter() {
+  public static Instrumenter<JedisRequest, Void> instrumenter() {
     return instrumenter;
+  }
+
+  public static ScopedThreadValue<JedisClusterCommandContext> currentCommandContext() {
+    return currentCommandContext;
+  }
+
+  public static ScopedThreadValue<Queable> currentBatch() {
+    return currentBatch;
+  }
+
+  public static ScopedThreadValue<JedisPipelineContext.TransactionFraming>
+      currentTransactionFraming() {
+    return currentTransactionFraming;
   }
 
   public static void captureConnectionTarget(Connection connection) {

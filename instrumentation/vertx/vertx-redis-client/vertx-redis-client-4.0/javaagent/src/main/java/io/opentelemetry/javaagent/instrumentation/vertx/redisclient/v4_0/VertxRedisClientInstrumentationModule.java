@@ -16,20 +16,21 @@ import java.util.List;
 public class VertxRedisClientInstrumentationModule extends InstrumentationModule {
 
   public VertxRedisClientInstrumentationModule() {
-    super("vertx-redis-client", "vertx-redis-client-4.0", "vertx");
+    super("vertx-redis-client", "vertx-redis-client-4.0", "vertx-redis-client-4.0-core", "vertx");
   }
 
   @Override
   public boolean isHelperClass(String className) {
     return className.equals("io.vertx.redis.client.impl.RequestUtil")
-        || className.equals("io.vertx.redis.client.impl.RedisConnectionManagerUtil");
+        || className.startsWith("io.vertx.redis.client.impl.RedisConnectionManagerUtil");
   }
 
   @Override
   public List<String> injectedClassNames() {
     return asList(
         "io.vertx.redis.client.impl.RequestUtil",
-        "io.vertx.redis.client.impl.RedisConnectionManagerUtil");
+        "io.vertx.redis.client.impl.RedisConnectionManagerUtil",
+        "io.vertx.redis.client.impl.RedisConnectionManagerUtil$CapturedTarget");
   }
 
   @Override
