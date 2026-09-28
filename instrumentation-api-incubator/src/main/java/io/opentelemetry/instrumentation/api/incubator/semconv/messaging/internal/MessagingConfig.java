@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal;
 
-import static io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig.Stability.EXPERIMENTAL;
+import static io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig.Stability.STABLE;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -13,6 +13,7 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SystemProperty;
 import java.util.List;
 import java.util.Set;
@@ -56,20 +57,25 @@ public final class MessagingConfig {
       OpenTelemetry openTelemetry, boolean systemPropertyFallback) {
     DeclarativeConfigProperties messagingConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common").get("messaging");
-    DeclarativeConfigProperties headers = messagingConfig.get("headers/development");
+    DeclarativeConfigProperties headers = messagingConfig.get("headers");
+    boolean v3Preview = SemconvStability.v3Preview(openTelemetry);
     DeclarativeConfigProperties deprecatedHeaders =
-        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "messaging")
-            .get("headers/development");
+        v3Preview
+            ? null
+            : DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "messaging")
+                .get("headers/development");
+    List<String> stableIncluded = headers.getScalarList("included", String.class);
+    List<String> stableExcluded = headers.getScalarList("excluded", String.class);
     List<String> included =
-        getHeaderPatterns("included", headers, deprecatedHeaders, systemPropertyFallback);
+        getHeaderPatterns("included", stableIncluded, deprecatedHeaders, systemPropertyFallback);
     List<String> excluded =
-        getHeaderPatterns("excluded", headers, deprecatedHeaders, systemPropertyFallback);
+        getHeaderPatterns("excluded", stableExcluded, deprecatedHeaders, systemPropertyFallback);
     IncludeExclude selector =
         IncludeExclude.builder()
             .setIncluded(included == null ? emptyList() : included)
             .setExcluded(excluded == null ? emptyList() : excluded)
             .build();
-    if (!selector.isEmpty()) {
+    if (v3Preview || !selector.isEmpty() || stableIncluded != null || stableExcluded != null) {
       return selector;
     }
 
@@ -79,30 +85,40 @@ public final class MessagingConfig {
             "messaging",
             "headers",
             "common.messaging",
-            EXPERIMENTAL,
+            STABLE,
             systemPropertyFallback);
     return selector == null ? NONE : selector;
   }
 
-  /** Returns the replacement header patterns, or the matching deprecated patterns if absent. */
+  /** Returns the stable header patterns, or the matching deprecated patterns if absent. */
   @Nullable
   private static List<String> getHeaderPatterns(
       String name,
-      DeclarativeConfigProperties headers,
-      DeclarativeConfigProperties deprecatedHeaders,
+      @Nullable List<String> stablePatterns,
+      @Nullable DeclarativeConfigProperties deprecatedHeaders,
       boolean systemPropertyFallback) {
-    String replacementProperty = COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.headers." + name;
-    List<String> patterns = getList(headers, name, replacementProperty, systemPropertyFallback);
-    if (patterns != null && !patterns.isEmpty()) {
-      return patterns;
+    String replacementProperty = COMMON_MESSAGING_PROPERTY_PREFIX + ".headers." + name;
+    if (stablePatterns != null) {
+      return stablePatterns;
+    }
+    if (systemPropertyFallback) {
+      List<String> patterns = SystemProperty.getList(replacementProperty);
+      if (patterns != null && !patterns.isEmpty()) {
+        return patterns;
+      }
+    }
+    if (deprecatedHeaders == null) {
+      return null;
     }
 
     // TODO: remove the deprecated flat messaging names in a future minor release.
     String deprecatedProperty =
         DEPRECATED_MESSAGING_PROPERTY_PREFIX + ".experimental.headers." + name;
-    patterns = getList(deprecatedHeaders, name, deprecatedProperty, systemPropertyFallback);
+    List<String> patterns =
+        getList(deprecatedHeaders, name, deprecatedProperty, systemPropertyFallback);
     if (patterns != null && !patterns.isEmpty()) {
-      warnDeprecatedProperty(deprecatedProperty, replacementProperty);
+      warnDeprecatedProperty(
+          deprecatedProperty, replacementProperty, "may be removed in the next minor release");
     }
     return patterns;
   }
@@ -141,7 +157,8 @@ public final class MessagingConfig {
     if (enabled != null) {
       warnDeprecatedProperty(
           deprecatedProperty,
-          COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.receive-telemetry.enabled");
+          COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.receive-telemetry.enabled",
+          "may be removed in the next minor release");
       return enabled;
     }
     return false;
@@ -225,13 +242,15 @@ public final class MessagingConfig {
   }
 
   private static void warnDeprecatedProperty(
-      String deprecatedProperty, String replacementProperty) {
+      String deprecatedProperty, String replacementProperty, String removalSchedule) {
     if (warnedDeprecatedProperties.add(deprecatedProperty)) {
       logger.warning(
           "The "
               + deprecatedProperty
               + " setting and the equivalent declarative configuration property are deprecated"
-              + " and may be removed in the next minor release. Use "
+              + " and "
+              + removalSchedule
+              + ". Use "
               + replacementProperty
               + " or equivalent declarative configuration instead.");
     }

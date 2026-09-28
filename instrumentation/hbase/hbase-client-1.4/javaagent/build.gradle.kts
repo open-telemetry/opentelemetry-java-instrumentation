@@ -3,8 +3,9 @@ plugins {
 }
 
 otelJava {
-  // HBase 1.4.x test stack uses Subject.getSubject(), which is unsupported on JDK 24+.
-  maxJavaVersionForTests.set(JavaVersion.VERSION_23)
+  // HBase 2.0.x test stack uses Subject.getSubject(), which is unsupported on JDK 23+.
+  // Cap tests at latest LTS release before JDK 23
+  maxJavaVersionForTests.set(JavaVersion.VERSION_21)
 }
 
 muzzle {
@@ -59,9 +60,6 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     usesService(gradle.sharedServices.registrations["hbaseBuildService"].service)
     systemProperty("collectMetadata", otelProps.collectMetadata)
-    if (otelProps.testLatestDeps) {
-      jvmArgs("-Djava.security.manager=allow")
-    }
   }
 
   val stableSemconvSuites =
