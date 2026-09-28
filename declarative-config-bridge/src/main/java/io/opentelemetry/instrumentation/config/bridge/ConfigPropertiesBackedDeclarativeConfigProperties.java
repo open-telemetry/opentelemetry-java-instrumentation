@@ -72,12 +72,6 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
         "java.common.messaging.capture_headers/development",
         "otel.instrumentation.messaging.experimental.capture-headers");
     SPECIAL_MAPPINGS.put(
-        "java.common.messaging.headers/development.included",
-        "otel.instrumentation.messaging.experimental.headers.included");
-    SPECIAL_MAPPINGS.put(
-        "java.common.messaging.headers/development.excluded",
-        "otel.instrumentation.messaging.experimental.headers.excluded");
-    SPECIAL_MAPPINGS.put(
         "java.common.gen_ai.capture_message_content",
         "otel.instrumentation.genai.capture-message-content");
     // top-level common configs
