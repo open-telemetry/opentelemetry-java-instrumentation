@@ -7,24 +7,6 @@ applyTo: "instrumentation/**/javaagent/**/*.java,instrumentation/**/javaagent*/*
 Apply these checks to executable advice and the helpers it calls. Inspect registration and
 library lifecycle before deciding whether an exception applies.
 
-## Enablement selector names
-
-- For new instrumentation and intentional 3.0/v3-preview naming changes, use
-  `<family>`, `<family>-<base-version>`, and, when several modules share that
-  baseline, an exact `<family>-<base-version>-<component>` name for each module.
-  Use kebab-case and put any component version after its component. Omit a
-  redundant exact name when the base-version name identifies one module; JDK
-  instrumentation without a library version omits the version level.
-- Do not add subgroup selectors between those levels. These are escape hatches
-  for disabling buggy instrumentation, not a general selection-policy interface.
-  Preserve first-configured-name-wins precedence in family, base-version,
-  exact-module order.
-- Preserve normal 2.x names, ordering, selected modules, and warning behavior
-  when introducing a v3-preview hierarchy. Existing nonconforming names need a
-  deliberate migration; do not flag unchanged names or legacy aliases retained
-  only outside preview. Selector or Gradle changes do not authorize changing
-  emitted scope names or breaking their version-resource lookup.
-
 ## Advice and matching
 
 - A new `InstrumentationModule` needs SPI registration and a compatible `TypeInstrumentation`;

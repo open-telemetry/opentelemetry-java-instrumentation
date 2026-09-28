@@ -31,11 +31,9 @@ public class MyLibrary10InstrumentationModule extends InstrumentationModule {
 - Must have `@AutoService(InstrumentationModule.class)` — this registers it via SPI.
 - Class name follows `{Library}{Version}InstrumentationModule` (e.g.,
   `OkHttp3InstrumentationModule`, `JedisInstrumentationModule`).
-- Constructor `super()` arguments are user-facing enablement selectors. For new
-  instrumentation and the 3.0/v3-preview target, use family, base version, and an
-  exact component name when needed, in that order. See
-  [module-naming.md](module-naming.md#instrumentation-enablement-selectors) for naming,
-  compatibility, and the boundary against per-instrumentation selector tests.
+- Constructor `super()` arguments: the **first** (main) name must equal the Gradle module
+  directory name excluding version suffix. Names use **kebab-case**. See
+  [module-naming.md](module-naming.md) for the full naming convention.
 - `typeInstrumentations()` returns the list of `TypeInstrumentation` implementations — use
   `Arrays.asList(...)` for multiple items and `Collections.singletonList(...)` for a single
   item.
@@ -43,13 +41,11 @@ public class MyLibrary10InstrumentationModule extends InstrumentationModule {
 ### Multiple modules in one Gradle project
 
 When a javaagent Gradle project contains independently selected `InstrumentationModule` classes,
-give each one an exact instrumentation selector under the shared family and base version.
-Muzzle passes use a name available in their configuration mode with
+give each one a unique instrumentation name. Muzzle passes use that name with
 `excludeInstrumentationName(...)` to select only the module covered by each compatibility range or
 target artifact. Every name passed to the `InstrumentationModule` constructor is also a user-facing
-`otel.instrumentation.<name>.enabled` alias, checked in constructor argument order. Preserve
-normal 2.x names, ordering, and selection behavior when introducing a v3-preview hierarchy.
-Do not add per-module name-list assertions or enablement matrices for a consolidation.
+`otel.instrumentation.<name>.enabled` alias, checked in constructor argument order. When adding a
+unique name, preserve the existing first (main) name and the order of existing names.
 
 See [Compatibility range ownership](gradle-conventions.md#compatibility-range-ownership) for when
 modules should share a javaagent project and how to separate their Muzzle passes and dependencies.

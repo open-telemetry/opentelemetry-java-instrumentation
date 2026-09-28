@@ -7,7 +7,7 @@ enabled and disabled JVMs and verify its observable telemetry.
 This coverage checks which instrumentation runs by default, not the generic
 `otel.instrumentation.<name>.enabled` escape hatch. Do not use this pattern to
 add selector tests for ordinary modules, aliases, renames, or consolidations.
-See [the selector testing boundary](module-naming.md#testing-boundary).
+See [the selector testing boundary](testing-general-patterns.md#instrumentation-enablement-selectors).
 
 ## Test observable behavior
 
