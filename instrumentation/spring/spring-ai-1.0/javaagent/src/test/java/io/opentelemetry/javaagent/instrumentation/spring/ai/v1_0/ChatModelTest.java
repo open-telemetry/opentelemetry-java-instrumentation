@@ -398,13 +398,13 @@ class ChatModelTest {
                             equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 2L),
                             equalTo(
                                 stringKey("gen_ai.input.messages"),
-                                messageSpanAttribute(
+                                experimental(
                                     "[{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\""
                                         + PROMPT
                                         + "\"}]}]")),
                             equalTo(
                                 stringKey("gen_ai.output.messages"),
-                                messageSpanAttribute(
+                                experimental(
                                     "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\"A one\"}],\"finish_reason\":\"stop\"},"
                                         + "{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\"B two\"}],\"finish_reason\":\"length\"}]")))));
     assertMetrics();
@@ -458,7 +458,7 @@ class ChatModelTest {
                 .getAttributes()
                 .get(stringKey("gen_ai.output.messages")))
         .isEqualTo(
-            messageSpanAttribute(
+            experimental(
                 "[{\"role\":\"assistant\",\"parts\":["
                     + String.join(
                         ",",
@@ -499,7 +499,7 @@ class ChatModelTest {
                 .getAttributes()
                 .get(stringKey("gen_ai.output.messages")))
         .isEqualTo(
-            messageSpanAttribute(
+            experimental(
                 "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"tool_call\",\"id\":\""
                     + TOOL_CALL_ID
                     + "\",\"name\":\""
@@ -556,7 +556,7 @@ class ChatModelTest {
                 .getAttributes()
                 .get(stringKey("gen_ai.output.messages")))
         .isEqualTo(
-            messageSpanAttribute(
+            experimental(
                 "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"tool_call\",\"id\":\""
                     + TOOL_CALL_ID
                     + "\",\"name\":\""
@@ -597,13 +597,13 @@ class ChatModelTest {
                             equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
                             equalTo(
                                 stringKey("gen_ai.input.messages"),
-                                messageSpanAttribute(
+                                experimental(
                                     "[{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\""
                                         + PROMPT
                                         + "\"}]}]")),
                             equalTo(
                                 stringKey("gen_ai.output.messages"),
-                                messageSpanAttribute(
+                                experimental(
                                     "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\""
                                         + RESPONSE
                                         + "\"}],\"finish_reason\":\"stop\"}]")))));
@@ -669,7 +669,7 @@ class ChatModelTest {
                 .getAttributes()
                 .get(stringKey("gen_ai.input.messages")))
         .isEqualTo(
-            messageSpanAttribute(
+            experimental(
                 "[{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\""
                     + PROMPT
                     + "\"},{\"type\":\"uri\",\"mime_type\":\"image/png\",\"modality\":\"image\",\"uri\":\""
@@ -695,7 +695,7 @@ class ChatModelTest {
                 .getAttributes()
                 .get(stringKey("gen_ai.output.messages")))
         .isEqualTo(
-            messageSpanAttribute(
+            experimental(
                 "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\""
                     + RESPONSE
                     + "\"},{\"type\":\"tool_call\",\"id\":\""
@@ -864,7 +864,7 @@ class ChatModelTest {
                 .getAttributes()
                 .get(stringKey("gen_ai.input.messages")))
         .isEqualTo(
-            messageSpanAttribute(
+            experimental(
                 "[{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\""
                     + repeatedContent(8192)
                     + "\"}]}]"));
@@ -883,7 +883,7 @@ class ChatModelTest {
                 .getAttributes()
                 .get(stringKey("gen_ai.input.messages")))
         .isEqualTo(
-            messageSpanAttribute(
+            experimental(
                 "[{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\""
                     + repeatedContent(MESSAGE_CONTENT_SPAN_ATTRIBUTE_MAX_LENGTH)
                     + "\"}]}]"));
@@ -912,7 +912,7 @@ class ChatModelTest {
                 .getAttributes()
                 .get(stringKey("gen_ai.output.messages")))
         .isEqualTo(
-            messageSpanAttribute(
+            experimental(
                 "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\""
                     + repeatedContent(8191)
                     + "\"}],\"finish_reason\":\"stop\"}]"));
@@ -941,7 +941,7 @@ class ChatModelTest {
                 .getAttributes()
                 .get(stringKey("gen_ai.output.messages")))
         .isEqualTo(
-            messageSpanAttribute(
+            experimental(
                 "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\""
                     + repeatedContent(MESSAGE_CONTENT_SPAN_ATTRIBUTE_MAX_LENGTH)
                     + "\"}],\"finish_reason\":\"stop\"}]"));
@@ -991,7 +991,7 @@ class ChatModelTest {
                 .getAttributes()
                 .get(stringKey("gen_ai.output.messages")))
         .isEqualTo(
-            messageSpanAttribute(
+            experimental(
                 "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"tool_call\",\"id\":\""
                     + TOOL_CALL_ID
                     + "\",\"name\":\""
@@ -1013,7 +1013,7 @@ class ChatModelTest {
                 .getAttributes()
                 .get(stringKey("gen_ai.input.messages")))
         .isEqualTo(
-            messageSpanAttribute(
+            experimental(
                 "[{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\"line\\n\\\"quoted\\\"\"}]}]"));
   }
 
@@ -1085,14 +1085,14 @@ class ChatModelTest {
                             equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 2L),
                             equalTo(
                                 stringKey("gen_ai.input.messages"),
-                                messageSpanAttribute(
+                                experimental(
                                     "[{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\""
                                         + PROMPT
                                         + "\"}]}]")),
                             equalTo(
                                 stringKey("gen_ai.output.messages"),
                                 expectOutputMessages
-                                    ? messageSpanAttribute(
+                                    ? experimental(
                                         "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\""
                                             + RESPONSE
                                             + "\"}],\"finish_reason\":\"stop\"}]")
@@ -1130,7 +1130,7 @@ class ChatModelTest {
                             equalTo(ERROR_TYPE, IllegalStateException.class.getName()),
                             equalTo(
                                 stringKey("gen_ai.input.messages"),
-                                messageSpanAttribute(
+                                experimental(
                                     "[{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\""
                                         + PROMPT
                                         + "\"}]}]")))));
@@ -1483,7 +1483,7 @@ class ChatModelTest {
     assertThat(current.getSpanId()).isEqualTo(expected.getSpanId());
   }
 
-  private static <T> T messageSpanAttribute(T value) {
+  private static <T> T experimental(T value) {
     return EXPERIMENTAL_ATTRIBUTES ? value : null;
   }
 }

@@ -13,6 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
@@ -92,12 +93,17 @@ class ChatModelInstrumentation implements TypeInstrumentation {
         } catch (Throwable t) {
           logger.log(FINE, "Failed to emit Spring AI response events", t);
         }
-        instrumenter()
-            .end(
-                context,
-                request,
-                response == null ? null : new SpringAiResponse(response, null),
-                throwable);
+        try {
+          instrumenter()
+              .end(
+                  context,
+                  request,
+                  response == null ? null : new SpringAiResponse(response, null),
+                  throwable);
+        } catch (Throwable t) {
+          Span.fromContext(context).end();
+          logger.log(FINE, "Failed to end Spring AI call instrumentation", t);
+        }
       }
     }
 

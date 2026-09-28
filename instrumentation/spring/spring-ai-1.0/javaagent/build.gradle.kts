@@ -64,6 +64,10 @@ tasks {
         "-Dotel.instrumentation.spring-ai.experimental.message-content-span-attribute.max-length=10",
       )
       systemProperty("otel.instrumentation.genai.capture-message-content", false)
+      systemProperty(
+        "metadataConfig",
+        "otel.instrumentation.spring-ai.experimental.capture-message-content-as-span-attributes.enabled=true,otel.instrumentation.spring-ai.experimental.message-content-span-attribute.max-length=10",
+      )
     }
 
   val testContentDisabled = register<Test>("testContentDisabled") {

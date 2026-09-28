@@ -115,13 +115,13 @@ class OpenAiChatModelTest {
                             equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 2L),
                             equalTo(
                                 stringKey("gen_ai.input.messages"),
-                                messageSpanAttribute(
+                                experimental(
                                     "[{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\""
                                         + PROMPT
                                         + "\"}]}]")),
                             equalTo(
                                 stringKey("gen_ai.output.messages"),
-                                messageSpanAttribute(
+                                experimental(
                                     "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\""
                                         + RESPONSE
                                         + "\"}],\"finish_reason\":\""
@@ -222,7 +222,7 @@ class OpenAiChatModelTest {
         KeyValue.of("message", message));
   }
 
-  private static <T> T messageSpanAttribute(T value) {
+  private static <T> T experimental(T value) {
     return EXPERIMENTAL_ATTRIBUTES ? value : null;
   }
 }

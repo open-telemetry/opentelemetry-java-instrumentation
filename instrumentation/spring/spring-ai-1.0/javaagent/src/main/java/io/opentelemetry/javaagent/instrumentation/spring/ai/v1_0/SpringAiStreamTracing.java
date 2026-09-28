@@ -16,6 +16,8 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -119,8 +121,9 @@ public class SpringAiStreamTracing {
     }
     try {
       instrumenter.end(context, request, response, error);
-    } catch (Throwable ignored) {
-      // This callback is outside of Byte Buddy advice suppression.
+    } catch (Throwable t) {
+      Span.fromContext(context).end();
+      logger.log(FINE, "Failed to end Spring AI stream instrumentation", t);
     }
   }
 
@@ -466,39 +469,92 @@ public class SpringAiStreamTracing {
 
   private static AssistantMessage assistantMessage(
       AssistantMessage message, List<AssistantMessage.ToolCall> toolCalls, List<Media> media) {
-    try {
-      Object builder = AssistantMessage.class.getMethod("builder").invoke(null);
-      invokeBuilder(builder, "content", String.class, message.getText());
-      invokeBuilder(builder, "properties", Map.class, metadata(message));
-      invokeBuilder(builder, "toolCalls", List.class, toolCalls);
-      invokeBuilder(builder, "media", List.class, media);
-      return (AssistantMessage) builder.getClass().getMethod("build").invoke(builder);
-    } catch (NoSuchMethodException e) {
-      return assistantMessageWithConstructor(message, toolCalls, media, e);
-    } catch (ReflectiveOperationException e) {
-      return message;
-    }
+    AssistantMessage reconstructed = AssistantMessageAccessors.create(message, toolCalls, media);
+    return reconstructed == null ? message : reconstructed;
   }
 
-  private static AssistantMessage assistantMessageWithConstructor(
-      AssistantMessage message,
-      List<AssistantMessage.ToolCall> toolCalls,
-      List<Media> media,
-      NoSuchMethodException e) {
-    try {
-      return AssistantMessage.class
-          .getConstructor(String.class, Map.class, List.class, List.class)
-          .newInstance(message.getText(), metadata(message), toolCalls, media);
-    } catch (ReflectiveOperationException f) {
-      e.addSuppressed(f);
-      return message;
-    }
-  }
+  private static final class AssistantMessageAccessors {
+    @Nullable private static final BuilderAccessors builder;
+    @Nullable private static final Constructor<AssistantMessage> constructor;
 
-  private static void invokeBuilder(
-      Object builder, String methodName, Class<?> parameterType, Object value)
-      throws ReflectiveOperationException {
-    builder.getClass().getMethod(methodName, parameterType).invoke(builder, value);
+    static {
+      BuilderAccessors builderAccessors = null;
+      Constructor<AssistantMessage> messageConstructor = null;
+
+      try {
+        Method builderMethod = AssistantMessage.class.getMethod("builder");
+        Class<?> builderClass = builderMethod.getReturnType();
+        builderAccessors =
+            new BuilderAccessors(
+                builderMethod,
+                builderClass.getMethod("content", String.class),
+                builderClass.getMethod("properties", Map.class),
+                builderClass.getMethod("toolCalls", List.class),
+                builderClass.getMethod("media", List.class),
+                builderClass.getMethod("build"));
+      } catch (ReflectiveOperationException ignored) {
+        try {
+          messageConstructor =
+              AssistantMessage.class.getConstructor(
+                  String.class, Map.class, List.class, List.class);
+        } catch (ReflectiveOperationException ignoredConstructor) {
+          // No supported reconstruction API is available.
+        }
+      }
+
+      builder = builderAccessors;
+      constructor = messageConstructor;
+    }
+
+    @Nullable
+    private static AssistantMessage create(
+        AssistantMessage message, List<AssistantMessage.ToolCall> toolCalls, List<Media> media) {
+      if (builder != null) {
+        try {
+          Object builderInstance = builder.builderMethod.invoke(null);
+          builder.contentMethod.invoke(builderInstance, message.getText());
+          builder.propertiesMethod.invoke(builderInstance, metadata(message));
+          builder.toolCallsMethod.invoke(builderInstance, toolCalls);
+          builder.mediaMethod.invoke(builderInstance, media);
+          return (AssistantMessage) builder.buildMethod.invoke(builderInstance);
+        } catch (ReflectiveOperationException ignored) {
+          return null;
+        }
+      }
+
+      if (constructor != null) {
+        try {
+          return constructor.newInstance(message.getText(), metadata(message), toolCalls, media);
+        } catch (ReflectiveOperationException ignored) {
+          return null;
+        }
+      }
+      return null;
+    }
+
+    private static final class BuilderAccessors {
+      private final Method builderMethod;
+      private final Method contentMethod;
+      private final Method propertiesMethod;
+      private final Method toolCallsMethod;
+      private final Method mediaMethod;
+      private final Method buildMethod;
+
+      private BuilderAccessors(
+          Method builderMethod,
+          Method contentMethod,
+          Method propertiesMethod,
+          Method toolCallsMethod,
+          Method mediaMethod,
+          Method buildMethod) {
+        this.builderMethod = builderMethod;
+        this.contentMethod = contentMethod;
+        this.propertiesMethod = propertiesMethod;
+        this.toolCallsMethod = toolCallsMethod;
+        this.mediaMethod = mediaMethod;
+        this.buildMethod = buildMethod;
+      }
+    }
   }
 
   private static Map<String, Object> metadata(AssistantMessage message) {
