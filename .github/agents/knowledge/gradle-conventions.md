@@ -135,14 +135,14 @@ When both versions need real javaagent integration coverage:
 
 - Keep the baseline dependency in `library(...)` and leave baseline-compatible tests in `src/test`.
 - Move only tests that require the newer API or runtime behavior into a version-specific source
-  set, such as `src/library36Test`.
+  set, such as `src/version36Test`.
 - Register a `JvmTestSuite` for that source set and declare the newer library inside the suite.
 - Wire `testing.suites` into `check` so the additional suite cannot be skipped.
 
 ```kotlin
 testing {
   suites {
-    register<JvmTestSuite>("library36Test") {
+    register<JvmTestSuite>("version36Test") {
       dependencies {
         implementation("group:artifact:3.6.1")
       }
