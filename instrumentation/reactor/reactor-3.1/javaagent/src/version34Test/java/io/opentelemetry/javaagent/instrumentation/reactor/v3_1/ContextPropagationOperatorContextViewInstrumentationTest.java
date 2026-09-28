@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.reactor.v3_4;
+package io.opentelemetry.javaagent.instrumentation.reactor.v3_1;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -18,7 +18,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class ContextPropagationOperator34InstrumentationTest {
+class ContextPropagationOperatorContextViewInstrumentationTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -52,5 +52,24 @@ class ContextPropagationOperator34InstrumentationTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(stringKey("foo"), "bar"), equalTo(stringKey("foo2"), "bar2"))));
+  }
+
+  @Test
+  void getMissingContextWithNullFallback() {
+    Context context =
+        ContextPropagationOperator.getOpenTelemetryContextFromContextView(
+            reactor.util.context.Context.empty(), null);
+
+    assertThat(context).isNull();
+  }
+
+  @Test
+  void getMissingContextWithExplicitFallback() {
+    Context fallback = Context.root();
+    Context context =
+        ContextPropagationOperator.getOpenTelemetryContextFromContextView(
+            reactor.util.context.Context.empty(), fallback);
+
+    assertThat(context).isSameAs(fallback);
   }
 }

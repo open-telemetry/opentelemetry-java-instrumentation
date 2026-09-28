@@ -1,0 +1,10 @@
+file_format: "1.1"
+
+distribution:
+  javaagent:
+    instrumentation:
+      enabled:
+        - reactor_context_propagation_operator
+        - reactor_3.1_context_propagation_operator_context_view
+      disabled:
+        - reactor_3.4

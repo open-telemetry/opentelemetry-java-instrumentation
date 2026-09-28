@@ -1,15 +1,28 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {
   pass {
+    name.set("Reactor 3.1 instrumentation")
     group.set("io.projectreactor")
     module.set("reactor-core")
     versions.set("[3.1.0.RELEASE,)")
     assertInverse.set(true)
     extraDependency("io.opentelemetry:opentelemetry-api:1.0.0")
     excludeInstrumentationName("opentelemetry-api")
+    excludeInstrumentationName("reactor-3.4")
+  }
+  pass {
+    name.set("Reactor 3.4 ContextView instrumentation")
+    group.set("io.projectreactor")
+    module.set("reactor-core")
+    versions.set("[3.4.0,)")
+    assertInverse.set(true)
+    extraDependency("io.opentelemetry:opentelemetry-api:1.0.0")
+    excludeInstrumentationName("opentelemetry-api")
+    excludeInstrumentationName("reactor-3.1")
   }
 }
 
@@ -30,7 +43,6 @@ dependencies {
   compileOnly(project(":instrumentation-annotations-support"))
   compileOnly(project(":opentelemetry-api-shaded-for-instrumenting", configuration = "shadow"))
 
-  testInstrumentation(project(":instrumentation:reactor:reactor-3.4:javaagent"))
   testInstrumentation(project(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent"))
 
   testLibrary("io.projectreactor:reactor-core:3.1.0.RELEASE")
@@ -51,10 +63,108 @@ testing {
         implementation("io.projectreactor:reactor-test:$version")
       }
     }
+    register<JvmTestSuite>("version34Test") {
+      dependencies {
+        implementation(project(":instrumentation:reactor:reactor-3.1:library"))
+        implementation("io.projectreactor:reactor-core:${baseVersion("3.4.0").orLatest()}")
+      }
+    }
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":javaagent-extension-api"))
+        implementation(project(":muzzle"))
+      }
+    }
+    register<JvmTestSuite>("v3PreviewUnitTests") {
+      sources {
+        java {
+          setSrcDirs(listOf("src/unitTests/java"))
+        }
+      }
+      dependencies {
+        implementation(project())
+        implementation(project(":javaagent-extension-api"))
+        implementation(project(":muzzle"))
+      }
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+          }
+        }
+      }
+    }
   }
 }
 
 tasks {
+  val contextViewSelectors = listOf(
+    "testContextViewDefaultDisabled" to listOf(
+      "-Dotel.instrumentation.common.default-enabled=false",
+      "-Dotel.instrumentation.opentelemetry-api.enabled=true",
+      "-Dotel.instrumentation.reactor-3.1.enabled=true",
+      "-Dtest.reactor.context-view.enabled=false",
+    ),
+    "testContextViewLegacyEnablesDefaultDisabled" to listOf(
+      "-Dotel.instrumentation.common.default-enabled=false",
+      "-Dotel.instrumentation.opentelemetry-api.enabled=true",
+      "-Dotel.instrumentation.reactor-3.1.enabled=true",
+      "-Dotel.instrumentation.reactor-3.4.enabled=true",
+    ),
+    "testContextViewPreviewEnablesDefaultDisabled" to listOf(
+      "-Dotel.instrumentation.common.v3-preview=true",
+      "-Dotel.instrumentation.common.default-enabled=false",
+      "-Dotel.instrumentation.opentelemetry-api.enabled=true",
+      "-Dotel.instrumentation.reactor-3.1-context-propagation-operator.enabled=true",
+      "-Dotel.instrumentation.reactor-3.1-context-propagation-operator-context-view.enabled=true",
+    ),
+    "testContextViewLegacyDisabled" to listOf(
+      "-Dotel.instrumentation.reactor-3.4.enabled=false",
+      "-Dotel.instrumentation.reactor-3.1-context-propagation-operator-context-view.enabled=true",
+      "-Dtest.reactor.context-view.enabled=false",
+    ),
+    "testContextViewLegacyEnabled" to listOf(
+      "-Dotel.instrumentation.reactor-3.1.enabled=true",
+      "-Dotel.instrumentation.reactor-3.4.enabled=true",
+      "-Dotel.instrumentation.reactor-context-propagation-operator.enabled=false",
+    ),
+    "testContextViewNewNameIgnored" to listOf(
+      "-Dotel.instrumentation.reactor-3.1-context-propagation-operator-context-view.enabled=false",
+    ),
+    "testContextViewPreviewLegacyIgnored" to listOf(
+      "-Dotel.instrumentation.common.v3-preview=true",
+      "-Dotel.instrumentation.reactor-3.4.enabled=false",
+    ),
+    "testContextViewPreviewDedicatedDisabled" to listOf(
+      "-Dotel.instrumentation.common.v3-preview=true",
+      "-Dotel.instrumentation.reactor-3.4.enabled=true",
+      "-Dotel.instrumentation.reactor-3.1-context-propagation-operator-context-view.enabled=false",
+      "-Dtest.reactor.context-view.enabled=false",
+    ),
+    "testContextViewPreviewDedicatedEnabled" to listOf(
+      "-Dotel.instrumentation.common.v3-preview=true",
+      "-Dotel.instrumentation.reactor-3.4.enabled=false",
+      "-Dotel.instrumentation.reactor-3.1-context-propagation-operator-context-view.enabled=true",
+    ),
+    "testContextViewDeclarativeNormal" to listOf(
+      "-Dotel.config.file=$projectDir/src/version34Test/resources/context-view-normal.yaml",
+      "-Dtest.reactor.context-view.enabled=false",
+    ),
+    "testContextViewDeclarativePreview" to listOf(
+      "-Dotel.config.file=$projectDir/src/version34Test/resources/context-view-preview.yaml",
+      "-Dtest.reactor.context-view.enabled=false",
+    ),
+  ).map { (taskName, arguments) ->
+    register<Test>(taskName) {
+      testClassesDirs = sourceSets["version34Test"].output.classesDirs
+      classpath = sourceSets["version34Test"].runtimeClasspath
+      filter {
+        includeTestsMatching("*ContextViewSelectorTest")
+      }
+      jvmArgs(arguments)
+    }
+  }
 
   val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
@@ -69,6 +179,6 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, testStableSemconv, testBothSemconv)
+    dependsOn(testing.suites, testStableSemconv, testBothSemconv, contextViewSelectors)
   }
 }
