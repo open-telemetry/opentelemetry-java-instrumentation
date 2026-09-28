@@ -17,7 +17,7 @@ otelJava {
     otelProps.testLatestDeps ||
     otelProps.testJavaVersion?.isCompatibleWith(JavaVersion.VERSION_27) == true
   ) {
-    maxJavaVersionSupported.set(JavaVersion.VERSION_27)
+    maxJavaVersionForTests.set(JavaVersion.VERSION_27)
   }
 }
 
