@@ -177,6 +177,14 @@ jobs:
         if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
         run: .github/scripts/test-javaagent-suppression-keys.sh
 
+      - name: Check javaagent enablement selector names
+        if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
+        run: python3 .github/scripts/check_javaagent_selector_names.py
+
+      - name: Test javaagent enablement selector checker
+        if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
+        run: python3 -m unittest discover -s .github/scripts -p 'test_javaagent_selector_names.py'
+
       - name: Check latest dep test overrides
         if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
         run: .github/scripts/check-latest-dep-test-overrides.sh
