@@ -3,8 +3,8 @@ plugins {
 }
 
 otelJava {
-  // HBase 1.4.x test stack uses Subject.getSubject(), which is unsupported on JDK 24+.
-  maxJavaVersionForTests.set(JavaVersion.VERSION_23)
+  // HBase 1.4.x test stack uses Subject.getSubject(), which is unsupported on JDK 23+.
+  maxJavaVersionForTests.set(JavaVersion.VERSION_22)
 }
 
 muzzle {
