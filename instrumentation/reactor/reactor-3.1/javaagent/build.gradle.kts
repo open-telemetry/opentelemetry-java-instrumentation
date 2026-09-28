@@ -15,6 +15,7 @@ muzzle {
     excludeInstrumentationName("reactor-3.4")
   }
   pass {
+    // instrumentation-docs:ignore - verification only, the directive above is the range we document
     name.set("Reactor 3.4 ContextView instrumentation")
     group.set("io.projectreactor")
     module.set("reactor-core")
