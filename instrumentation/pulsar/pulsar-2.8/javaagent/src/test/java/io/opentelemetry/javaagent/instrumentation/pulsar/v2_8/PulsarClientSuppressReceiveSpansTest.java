@@ -375,6 +375,68 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
   }
 
   @Test
+  void nestedMultiTopicListenerDoesNotEmitReceiveSpan() throws Exception {
+    String topic = "persistent://public/default/nestedMultiTopicListener";
+    String idleTopic = "persistent://public/default/nestedMultiTopicListenerIdle";
+    CountDownLatch latch = new CountDownLatch(2);
+    admin.topics().createNonPartitionedTopic(topic);
+    admin.topics().createNonPartitionedTopic(idleTopic);
+    producer = client.newProducer(Schema.STRING).topic(topic).enableBatching(false).create();
+
+    MessageId msgId1 = testing.runWithSpan("parent1", () -> producer.send("test1"));
+    MessageId msgId2 = testing.runWithSpan("parent2", () -> producer.send("test2"));
+
+    consumer =
+        client
+            .newConsumer(Schema.STRING)
+            .topic(topic, idleTopic)
+            .subscriptionName("test_sub")
+            .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+            .messageListener(
+                (MessageListener<String>)
+                    (consumer, msg) -> {
+                      acknowledgeMessage(consumer, msg);
+                      latch.countDown();
+                    })
+            .subscribe();
+
+    assertThat(latch.await(1, MINUTES)).isTrue();
+
+    testing.waitAndAssertSortedTraces(
+        orderByRootSpanName("parent1", "parent2"),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent1").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(spanName("send", topic))
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            sendAttributes(topic, msgId1.toString(), false)),
+                span ->
+                    span.hasName(spanName("process", topic))
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            processAttributes(topic, msgId1.toString(), false))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent2").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(spanName("send", topic))
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            sendAttributes(topic, msgId2.toString(), false)),
+                span ->
+                    span.hasName(spanName("process", topic))
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            processAttributes(topic, msgId2.toString(), false))));
+  }
+
+  @Test
   void testConsumeMultiTopics() throws Exception {
     String topicNamePrefix = "persistent://public/default/testConsumeMulti_";
     String topic1 = topicNamePrefix + "1";
