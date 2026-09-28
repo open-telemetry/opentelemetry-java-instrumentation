@@ -26,6 +26,11 @@ dependencies {
 }
 
 plugins.withId("org.graalvm.buildtools.native") {
+  dependencies {
+    // Generated AOT test sources reference API Guardian annotations from JUnit.
+    add("aotTestCompileOnly", "org.apiguardian:apiguardian-api:1.1.2")
+  }
+
   tasks.named<JavaCompile>("compileAotJava").configure {
     with(options) {
       // Spring-generated AOT sources emit warnings that fail compilation with -Werror.
