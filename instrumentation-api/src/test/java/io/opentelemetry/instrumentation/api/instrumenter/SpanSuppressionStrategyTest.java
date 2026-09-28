@@ -213,7 +213,7 @@ class SpanSuppressionStrategyTest {
   }
 
   @Test
-  void semconv_shouldNotSuppressContextWithPartiallyDifferentSpanKeys() {
+  void semconv_shouldSuppressContextWithPartiallyOverlappingSpanKeys() {
     Set<SpanKey> spanKeys = new HashSet<>(asList(SpanKey.DB_CLIENT, SpanKey.RPC_CLIENT));
     SpanSuppressor suppressor = SpanSuppressionStrategy.SEMCONV.create(spanKeys);
 
@@ -221,7 +221,7 @@ class SpanSuppressionStrategyTest {
         SpanKey.HTTP_CLIENT.storeInContext(
             SpanKey.DB_CLIENT.storeInContext(Context.root(), span), span);
 
-    assertThat(suppressor.shouldSuppress(context, SpanKind.SERVER)).isFalse();
+    assertThat(suppressor.shouldSuppress(context, SpanKind.SERVER)).isTrue();
   }
 
   @Test

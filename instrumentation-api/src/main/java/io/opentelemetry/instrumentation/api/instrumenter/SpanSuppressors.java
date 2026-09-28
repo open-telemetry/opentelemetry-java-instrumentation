@@ -79,11 +79,11 @@ final class SpanSuppressors {
     @Override
     public boolean shouldSuppress(Context parentContext, SpanKind spanKind) {
       for (SpanKey spanKey : spanKeys) {
-        if (spanKey.fromContextOrNull(parentContext) == null) {
-          return false;
+        if (spanKey.fromContextOrNull(parentContext) != null) {
+          return true;
         }
       }
-      return true;
+      return false;
     }
   }
 
