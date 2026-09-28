@@ -10,12 +10,16 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Answers.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -163,22 +167,56 @@ class MessagingConfigTest {
   }
 
   @Test
-  void v3PreviewReadsOlderExperimentalAlias() {
+  void v3PreviewIgnoresDeprecatedSelectorsWithoutWarnings() throws Exception {
     ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
     when(openTelemetry.getInstrumentationConfig("common").getBoolean("v3_preview"))
         .thenReturn(true);
-    when(deprecatedMessagingConfig(openTelemetry)
-            .get("headers/development")
-            .getScalarList("included", String.class))
+    DeclarativeConfigProperties deprecatedConfig = deprecatedMessagingConfig(openTelemetry);
+    when(deprecatedConfig.get("headers/development").getScalarList("included", String.class))
         .thenReturn(singletonList("older-alias"));
+    when(deprecatedConfig.get("headers/development").getScalarList("excluded", String.class))
+        .thenReturn(singletonList("older-exclusion"));
+    DeclarativeConfigProperties messaging = messagingConfig(openTelemetry);
+    when(messaging.getScalarList("capture_headers/development", String.class))
+        .thenReturn(singletonList("older-capture"));
+    clearInvocations(deprecatedConfig, messaging);
+    TestHandler handler = new TestHandler();
+    Logger logger = Logger.getLogger(MessagingConfig.class.getName());
+    Logger selectorLogger = Logger.getLogger(SelectorConfig.class.getName());
+    clearDeprecatedWarnings();
+    logger.addHandler(handler);
+    selectorLogger.addHandler(handler);
+    try {
+      assertThat(MessagingConfig.getHeaders(openTelemetry).isEmpty()).isTrue();
+      verify(deprecatedConfig, never()).get("headers/development");
+      verify(messaging, never()).getScalarList("capture_headers/development", String.class);
+      assertThat(handler.records).isEmpty();
+    } finally {
+      selectorLogger.removeHandler(handler);
+      logger.removeHandler(handler);
+      clearDeprecatedWarnings();
+    }
+  }
+
+  @Test
+  void v3PreviewUsesStableSelectorWithoutDeprecatedExclusions() {
+    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
+    when(openTelemetry.getInstrumentationConfig("common").getBoolean("v3_preview"))
+        .thenReturn(true);
+    when(messagingConfig(openTelemetry).get("headers").getScalarList("included", String.class))
+        .thenReturn(singletonList("Test-*"));
+    when(messagingConfig(openTelemetry).get("headers").getScalarList("excluded", String.class))
+        .thenReturn(singletonList("Test-secret"));
     when(deprecatedMessagingConfig(openTelemetry)
             .get("headers/development")
             .getScalarList("excluded", String.class))
-        .thenReturn(singletonList("older-exclusion"));
+        .thenReturn(singletonList("Test-public"));
+
     IncludeExclude headers = MessagingConfig.getHeaders(openTelemetry);
 
-    assertThat(headers.getIncluded()).containsExactly("older-alias");
-    assertThat(headers.getExcluded()).containsExactly("older-exclusion");
+    assertThat(headers.matches("Test-public")).isTrue();
+    assertThat(headers.matches("test-public")).isFalse();
+    assertThat(headers.matches("Test-secret")).isFalse();
   }
 
   @Test
@@ -266,16 +304,11 @@ class MessagingConfigTest {
   }
 
   @Test
-  void readsDeprecatedHeadersSystemProperty() {
+  void readsDeprecatedHeadersSystemPropertyOutsidePreview() {
     ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
     String property = "otel.instrumentation.messaging.experimental.headers.included";
     System.setProperty(property, "from-deprecated-prop");
     try {
-      assertThat(MessagingConfig.getHeaders(openTelemetry, true).getIncluded())
-          .containsExactly("from-deprecated-prop");
-
-      when(openTelemetry.getInstrumentationConfig("common").getBoolean("v3_preview"))
-          .thenReturn(true);
       assertThat(MessagingConfig.getHeaders(openTelemetry, true).getIncluded())
           .containsExactly("from-deprecated-prop");
     } finally {
@@ -284,15 +317,52 @@ class MessagingConfigTest {
   }
 
   @Test
-  void v3PreviewStillReadsDeprecatedCaptureHeaders() {
+  void v3PreviewIgnoresDeprecatedFlatHeadersAndUsesStableFlatSelector() throws Exception {
+    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
+    String preview = "otel.instrumentation.common.v3-preview";
+    String stable = "otel.instrumentation.common.messaging.headers.included";
+    String deprecatedIncluded = "otel.instrumentation.messaging.experimental.headers.included";
+    String deprecatedExcluded = "otel.instrumentation.messaging.experimental.headers.excluded";
+    String deprecatedCapture = "otel.instrumentation.messaging.experimental.capture-headers";
+    System.setProperty(preview, "true");
+    System.setProperty(stable, "Test-*");
+    System.setProperty(deprecatedIncluded, "older-alias");
+    System.setProperty(deprecatedExcluded, "Test-public");
+    System.setProperty(deprecatedCapture, "older-capture");
+    TestHandler handler = new TestHandler();
+    Logger logger = Logger.getLogger(MessagingConfig.class.getName());
+    Logger selectorLogger = Logger.getLogger(SelectorConfig.class.getName());
+    clearDeprecatedWarnings();
+    logger.addHandler(handler);
+    selectorLogger.addHandler(handler);
+    try {
+      IncludeExclude headers = MessagingConfig.getHeaders(openTelemetry, true);
+      assertThat(headers.matches("Test-public")).isTrue();
+      assertThat(headers.matches("test-public")).isFalse();
+      System.clearProperty(stable);
+      assertThat(MessagingConfig.getHeaders(openTelemetry, true).isEmpty()).isTrue();
+      assertThat(handler.records).isEmpty();
+    } finally {
+      selectorLogger.removeHandler(handler);
+      logger.removeHandler(handler);
+      clearDeprecatedWarnings();
+      System.clearProperty(preview);
+      System.clearProperty(stable);
+      System.clearProperty(deprecatedIncluded);
+      System.clearProperty(deprecatedExcluded);
+      System.clearProperty(deprecatedCapture);
+    }
+  }
+
+  @Test
+  void v3PreviewIgnoresDeprecatedCaptureHeadersWithoutStableSelector() {
     ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
     when(messagingConfig(openTelemetry).getScalarList("capture_headers/development", String.class))
         .thenReturn(singletonList("deprecated"));
     when(openTelemetry.getInstrumentationConfig("common").getBoolean("v3_preview"))
         .thenReturn(true);
 
-    assertThat(MessagingConfig.getHeaders(openTelemetry).getIncluded())
-        .containsExactly("deprecated");
+    assertThat(MessagingConfig.getHeaders(openTelemetry).isEmpty()).isTrue();
   }
 
   @Test

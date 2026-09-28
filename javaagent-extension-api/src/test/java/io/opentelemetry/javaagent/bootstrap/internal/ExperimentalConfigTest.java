@@ -51,6 +51,24 @@ class ExperimentalConfigTest {
   }
 
   @Test
+  void v3PreviewUsesStableMessagingHeadersWithoutDeprecatedFallback() {
+    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
+    when(openTelemetry.getInstrumentationConfig("common").getBoolean("v3_preview"))
+        .thenReturn(true);
+    DeclarativeConfigProperties messaging =
+        openTelemetry.getInstrumentationConfig("common").get("messaging");
+    when(messaging.get("headers").getScalarList("included", String.class))
+        .thenReturn(singletonList("Test-*"));
+    when(messaging.getScalarList("capture_headers/development", String.class))
+        .thenReturn(singletonList("deprecated"));
+
+    IncludeExclude headers = new ExperimentalConfig(openTelemetry).getMessagingHeaders();
+
+    assertThat(headers.matches("Test-public")).isTrue();
+    assertThat(headers.matches("deprecated")).isFalse();
+  }
+
+  @Test
   void absentConfigCapturesNothing() {
     IncludeExclude headers = new ExperimentalConfig(mockOpenTelemetry()).getMessagingHeaders();
 

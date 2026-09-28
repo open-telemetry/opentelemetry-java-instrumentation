@@ -134,7 +134,7 @@ configurations:
   messaging.capture-headers:
     name: otel.instrumentation.messaging.experimental.capture-headers
     declarative_name: java.common.messaging.capture_headers/development
-    description: "Deprecated: use `otel.instrumentation.common.messaging.headers.included` instead. A comma-separated list of header names to capture as span attributes. It does not support glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other entry is matched as a literal header name."
+    description: "Deprecated: use `otel.instrumentation.common.messaging.headers.included` instead. Ignored without a warning under v3-preview; may be removed in a later minor release and will be removed no later than 3.0. A comma-separated list of header names to capture as span attributes. It does not support glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other entry is matched as a literal header name."
     type: list
     default: ""
     deprecated: true
@@ -144,7 +144,7 @@ configurations:
   # them under `java.common.messaging`, so they declare no declarative_name.
   messaging.deprecated-headers.included:
     name: otel.instrumentation.messaging.experimental.headers.included
-    description: "Deprecated: use `otel.instrumentation.common.messaging.headers.included` instead. It may be removed in the next minor release."
+    description: "Deprecated: use `otel.instrumentation.common.messaging.headers.included` instead. Ignored without a warning under v3-preview; may be removed in a later minor release and will be removed no later than 3.0."
     type: list
     default: ""
     deprecated: true
@@ -152,7 +152,7 @@ configurations:
 
   messaging.deprecated-headers.excluded:
     name: otel.instrumentation.messaging.experimental.headers.excluded
-    description: "Deprecated: use `otel.instrumentation.common.messaging.headers.excluded` instead. It may be removed in the next minor release."
+    description: "Deprecated: use `otel.instrumentation.common.messaging.headers.excluded` instead. Ignored without a warning under v3-preview; may be removed in a later minor release and will be removed no later than 3.0."
     type: list
     default: ""
     deprecated: true

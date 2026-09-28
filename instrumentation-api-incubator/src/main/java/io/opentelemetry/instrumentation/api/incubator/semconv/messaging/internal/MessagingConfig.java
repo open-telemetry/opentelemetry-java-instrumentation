@@ -13,6 +13,7 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SystemProperty;
 import java.util.List;
 import java.util.Set;
@@ -57,9 +58,12 @@ public final class MessagingConfig {
     DeclarativeConfigProperties messagingConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common").get("messaging");
     DeclarativeConfigProperties headers = messagingConfig.get("headers");
+    boolean v3Preview = SemconvStability.v3Preview(openTelemetry);
     DeclarativeConfigProperties deprecatedHeaders =
-        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "messaging")
-            .get("headers/development");
+        v3Preview
+            ? null
+            : DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "messaging")
+                .get("headers/development");
     List<String> stableIncluded = headers.getScalarList("included", String.class);
     List<String> stableExcluded = headers.getScalarList("excluded", String.class);
     List<String> included =
@@ -71,7 +75,7 @@ public final class MessagingConfig {
             .setIncluded(included == null ? emptyList() : included)
             .setExcluded(excluded == null ? emptyList() : excluded)
             .build();
-    if (!selector.isEmpty() || stableIncluded != null || stableExcluded != null) {
+    if (v3Preview || !selector.isEmpty() || stableIncluded != null || stableExcluded != null) {
       return selector;
     }
 
@@ -91,7 +95,7 @@ public final class MessagingConfig {
   private static List<String> getHeaderPatterns(
       String name,
       @Nullable List<String> stablePatterns,
-      DeclarativeConfigProperties deprecatedHeaders,
+      @Nullable DeclarativeConfigProperties deprecatedHeaders,
       boolean systemPropertyFallback) {
     String replacementProperty = COMMON_MESSAGING_PROPERTY_PREFIX + ".headers." + name;
     if (stablePatterns != null) {
@@ -102,6 +106,9 @@ public final class MessagingConfig {
       if (patterns != null && !patterns.isEmpty()) {
         return patterns;
       }
+    }
+    if (deprecatedHeaders == null) {
+      return null;
     }
 
     // TODO: remove the deprecated flat messaging names in a future minor release.

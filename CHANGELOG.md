@@ -21,8 +21,9 @@
   `otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled`. For headers,
   replace `otel.instrumentation.messaging.experimental.headers.included` and `.excluded` with the
   stable `otel.instrumentation.common.messaging.headers.included` and `.excluded`. Stable selectors
-  take precedence per leaf; the older messaging header aliases remain usable in v3-preview but may
-  be removed in a later minor release.
+  take precedence per leaf. V3-preview ignores the older header aliases and
+  `otel.instrumentation.messaging.experimental.capture-headers` without warnings. These deprecated
+  settings may be removed in a later minor release and will be removed no later than 3.0.
   ([#20060](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20060),
   [#20260](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20260))
 - Deprecate the Java agent and Spring Boot starter's bundled contrib samplers, including the
