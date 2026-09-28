@@ -420,8 +420,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
     String result = commonConfig.getString("span_suppression_strategy");
     if (result == null) {
-      result =
-          SystemProperty.getString("otel.instrumentation.common.span-suppression-strategy");
+      result = SystemProperty.getString("otel.instrumentation.common.span-suppression-strategy");
     }
     if (result == null) {
       // Deprecated declarative and flat names remain available until 3.0.
