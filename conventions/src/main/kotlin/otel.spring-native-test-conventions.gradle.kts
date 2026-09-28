@@ -27,7 +27,7 @@ dependencies {
 
 plugins.withId("org.graalvm.buildtools.native") {
   dependencies {
-    // Generated AOT test sources reference API Guardian annotations from JUnit.
+    // javac 25 warns when JUnit's API Guardian annotation type is missing from this classpath.
     add("aotTestCompileOnly", "org.apiguardian:apiguardian-api:1.1.2")
   }
 
