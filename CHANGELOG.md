@@ -20,6 +20,9 @@
 
 ### 🚫 Deprecations
 
+- Deprecate `SystemMetrics.registerObservers(Meter)` in the OSHI library instrumentation in favor of
+  `SystemMetrics.registerObservers(OpenTelemetry)`.
+  ([#20263](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20263))
 - Deprecate `otel.instrumentation.messaging.experimental.receive-telemetry.enabled` in favor of
   `otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled`. For headers,
   replace `otel.instrumentation.messaging.experimental.headers.included` and `.excluded` with the
