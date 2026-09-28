@@ -296,22 +296,6 @@ class SqsTracingListTest {
   }
 
   @Test
-  void rootEqualityHashCodeAndToStringDoNotTraceTraversal() {
-    TracingList tracingList = tracingMessages(1, new ArrayList<>());
-    TracingList sameMessages = tracingMessages(1, new ArrayList<>());
-    List<Message> ordinary = singletonList(tracingList.get(0));
-    assertThat(tracingList.equals(sameMessages)).isTrue();
-    assertThat(tracingList.equals(ordinary)).isTrue();
-    assertThat(tracingList.hashCode()).isEqualTo(ordinary.hashCode());
-    assertThat(tracingList.toString()).contains("message-0");
-    assertThat(testing.spans()).isEmpty();
-
-    tracingList.forEach(unused -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
-    testing.waitForTraces(1);
-    assertThat(testing.spans()).hasSize(1);
-  }
-
-  @Test
   void callbackProcessingIgnoresUnrelatedCurrentConsumerAndUsesCapturedParent() {
     Instrumenter<SqsProcessRequest, Response> instrumenter = newConsumerProcessInstrumenter();
     ExecutionAttributes request = new ExecutionAttributes();

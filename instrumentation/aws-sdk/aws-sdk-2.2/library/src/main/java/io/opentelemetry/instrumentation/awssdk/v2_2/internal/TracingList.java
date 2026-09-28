@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
@@ -80,61 +79,6 @@ public final class TracingList extends ArrayList<Message> {
     return firstIterator.getAndSet(false) && !processingOwnedOutsideSqsSdk
         ? TracingIterator.wrap(delegate, this)
         : delegate;
-  }
-
-  @Override
-  public boolean equals(Object object) {
-    if (!(object instanceof List)) {
-      return false;
-    }
-    return equalsWithoutTracing(this, (List<?>) object);
-  }
-
-  @Override
-  public int hashCode() {
-    return hashCodeWithoutTracing(this);
-  }
-
-  @Override
-  public String toString() {
-    return toStringWithoutTracing(this);
-  }
-
-  private static boolean equalsWithoutTracing(List<?> left, List<?> right) {
-    if (left == right) {
-      return true;
-    }
-    int size = left.size();
-    if (size != right.size()) {
-      return false;
-    }
-    for (int i = 0; i < size; i++) {
-      if (!Objects.equals(left.get(i), right.get(i))) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  private static int hashCodeWithoutTracing(List<?> list) {
-    int hashCode = 1;
-    for (int i = 0; i < list.size(); i++) {
-      Object element = list.get(i);
-      hashCode = 31 * hashCode + (element == null ? 0 : element.hashCode());
-    }
-    return hashCode;
-  }
-
-  private static String toStringWithoutTracing(List<?> list) {
-    StringBuilder result = new StringBuilder("[");
-    for (int i = 0; i < list.size(); i++) {
-      if (i != 0) {
-        result.append(", ");
-      }
-      Object element = list.get(i);
-      result.append(element == list ? "(this Collection)" : element);
-    }
-    return result.append(']').toString();
   }
 
   @Override
