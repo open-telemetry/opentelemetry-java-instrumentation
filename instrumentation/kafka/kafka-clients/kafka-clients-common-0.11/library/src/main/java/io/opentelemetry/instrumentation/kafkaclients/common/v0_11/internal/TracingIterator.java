@@ -84,7 +84,15 @@ public class TracingIterator<K, V> implements Iterator<ConsumerRecord<K, V>> {
         return next;
       }
       KafkaProcessRequest request = KafkaProcessRequest.create(consumerContext, next);
-      if (!instrumenter.shouldStart(parentContext, request)) {
+      // A javaagent-instrumented poll supplies both pieces of delivery state, while an
+      // uninstrumented poll supplies neither. Partial state must retain normal span suppression.
+      boolean hasPollContext = consumerContext.getContext() != null;
+      boolean hasPollOwnership = rawProcessingEligibility != null;
+      Context spanSuppressionContext =
+          hasPollContext == hasPollOwnership
+              ? KafkaConsumerContextUtil.spanSuppressionContext(parentContext)
+              : parentContext;
+      if (!instrumenter.shouldStart(spanSuppressionContext, request)) {
         return next;
       }
       currentRequest = request;
