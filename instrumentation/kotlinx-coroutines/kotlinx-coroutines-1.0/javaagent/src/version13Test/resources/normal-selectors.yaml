@@ -1,0 +1,9 @@
+file_format: "1.1"
+distribution:
+  javaagent:
+    instrumentation:
+      default_enabled: true
+      enabled:
+        - kotlinx_coroutines
+      disabled:
+        - kotlinx_coroutines_flow

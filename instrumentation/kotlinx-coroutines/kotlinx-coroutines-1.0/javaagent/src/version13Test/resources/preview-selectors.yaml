@@ -1,0 +1,14 @@
+file_format: "1.1"
+instrumentation/development:
+  java:
+    common:
+      v3_preview: true
+distribution:
+  javaagent:
+    instrumentation:
+      default_enabled: false
+      enabled:
+        - opentelemetry_instrumentation_annotations
+        - kotlinx_coroutines_1.0_flow
+      disabled:
+        - kotlinx_coroutines_1.0_core
