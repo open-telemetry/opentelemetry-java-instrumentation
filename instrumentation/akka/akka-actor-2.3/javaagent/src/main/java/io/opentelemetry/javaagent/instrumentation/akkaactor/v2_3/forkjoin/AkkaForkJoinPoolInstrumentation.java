@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.akka.actor.forkjoin.v2_5;
+package io.opentelemetry.javaagent.instrumentation.akkaactor.v2_3.forkjoin;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;

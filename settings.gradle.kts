@@ -195,7 +195,7 @@ include(":smoke-tests-otel-starter:spring-boot-reactive-common")
 
 include(":instrumentation:activej-http-6.0:javaagent")
 include(":instrumentation:akka:akka-actor-2.3:javaagent")
-include(":instrumentation:akka:akka-actor-forkjoin-2.5:javaagent")
+include(":instrumentation:akka:akka-actor-2.3:javaagent-unit-tests")
 include(":instrumentation:akka:akka-http-10.0:javaagent")
 include(":instrumentation:alibaba-druid-1.0:javaagent")
 include(":instrumentation:alibaba-druid-1.0:library")
