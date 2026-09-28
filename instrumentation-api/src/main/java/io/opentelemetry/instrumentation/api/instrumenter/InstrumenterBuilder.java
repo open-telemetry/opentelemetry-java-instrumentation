@@ -435,7 +435,10 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
         result =
             SystemProperty.getString("otel.instrumentation.experimental.span-suppression-strategy");
         if (result != null && spanSuppressionPropertyWarningLogged.compareAndSet(false, true)) {
-          logger.warning(SPAN_SUPPRESSION_CONFIG_DEPRECATION_WARNING);
+          logger.warning(
+              "The otel.instrumentation.experimental.span-suppression-strategy setting is"
+                  + " deprecated and will be removed in 3.0. Use the programmatic API or equivalent"
+                  + " declarative instrumentation configuration instead.");
         }
       }
     }

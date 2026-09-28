@@ -521,20 +521,31 @@ class SpanSuppressionStrategyTest {
       assertThat(records.get(0).getMessage()).isEqualTo(warningMessage);
 
       records.clear();
+      configWarningLogged.set(false);
       Map<String, String> deprecatedFlat = new HashMap<>();
       deprecatedFlat.put("otel.instrumentation.experimental.span-suppression-strategy", "none");
       Instrumenter.<String, String>builder(
               withFlatConfig(deprecatedFlat), "test", request -> "test")
           .buildSpanSuppressor();
-      assertThat(records).isEmpty();
+      Instrumenter.<String, String>builder(
+              withFlatConfig(deprecatedFlat), "test", request -> "test")
+          .buildSpanSuppressor();
+      assertThat(records).hasSize(1);
+      assertThat(records.get(0).getLevel()).isEqualTo(WARNING);
+      assertThat(records.get(0).getMessage()).isEqualTo(warningMessage);
 
+      records.clear();
       Instrumenter.<String, String>builder(OpenTelemetry.noop(), "test", request -> "test")
           .buildSpanSuppressor();
       Instrumenter.<String, String>builder(OpenTelemetry.noop(), "test", request -> "test")
           .buildSpanSuppressor();
       assertThat(records).hasSize(1);
       assertThat(records.get(0).getLevel()).isEqualTo(WARNING);
-      assertThat(records.get(0).getMessage()).isEqualTo(warningMessage);
+      assertThat(records.get(0).getMessage())
+          .isEqualTo(
+              "The otel.instrumentation.experimental.span-suppression-strategy setting is"
+                  + " deprecated and will be removed in 3.0. Use the programmatic API or equivalent"
+                  + " declarative instrumentation configuration instead.");
 
       Instrumenter.<String, String>builder(
               withCommonConfig(null, null, false), "test", request -> "test")
