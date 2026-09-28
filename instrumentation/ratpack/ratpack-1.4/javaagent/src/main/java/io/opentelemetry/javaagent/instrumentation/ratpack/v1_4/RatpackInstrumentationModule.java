@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.ratpack.v1_4;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -15,7 +16,11 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class RatpackInstrumentationModule extends InstrumentationModule {
   public RatpackInstrumentationModule() {
-    super("ratpack", "ratpack-1.4");
+    super(
+        "ratpack",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"ratpack-1.4", "ratpack-1.4-core"}
+            : new String[] {"ratpack-1.4"});
   }
 
   @Override
