@@ -36,6 +36,7 @@ dependencies {
 
   library("org.mongodb:mongo-java-driver:3.1.0")
   compileOnly("org.mongodb:mongo-java-driver:3.7.0")
+  latestDepTestLibrary("org.mongodb:mongo-java-driver:3.+") // see test suite below
 
   testImplementation(project(":instrumentation:mongo:mongo-3.1:testing"))
 
@@ -45,9 +46,9 @@ dependencies {
 
 testing {
   suites {
-    register<JvmTestSuite>("version37Test") {
+    register<JvmTestSuite>("latestDepTest") {
       dependencies {
-        implementation("org.mongodb:mongo-java-driver:${baseVersion("3.7.0").orLatest("3.+")}")
+        implementation("org.mongodb:mongo-java-driver:3.+")
         implementation(project(":instrumentation:mongo:mongo-3.1:testing"))
         implementation("com.github.jnr:jnr-unixsocket:0.18")
       }
@@ -72,23 +73,35 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
+  named<Test>("latestDepTest") {
+    enabled = otelProps.testLatestDeps
+  }
+
   val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
     register<Test>("${suite.name}StableSemconv") {
+      val sourceTask = named<Test>(suite.name).get()
+      setJvmArgs(sourceTask.jvmArgs)
+      setSystemProperties(sourceTask.systemProperties)
       testClassesDirs = suite.sources.output.classesDirs
       classpath = suite.sources.runtimeClasspath
       jvmArgs("-Dotel.semconv-stability.opt-in=database")
       systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+      isEnabled = sourceTask.enabled
     }
   }
 
-  val version37TestV3Preview = register<Test>("version37TestV3Preview") {
-    testClassesDirs = sourceSets["version37Test"].output.classesDirs
-    classpath = sourceSets["version37Test"].runtimeClasspath
+  val latestDepTestV3Preview = register<Test>("latestDepTestV3Preview") {
+    val sourceTask = named<Test>("latestDepTest").get()
+    setJvmArgs(sourceTask.jvmArgs)
+    setSystemProperties(sourceTask.systemProperties)
+    testClassesDirs = sourceSets["latestDepTest"].output.classesDirs
+    classpath = sourceSets["latestDepTest"].runtimeClasspath
     filter {
       includeTestsMatching("*MongoClientTest.emitsInstrumentationScope")
     }
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+    isEnabled = sourceTask.enabled
   }
 
   val testV3Preview = register<Test>("testV3Preview") {
@@ -102,6 +115,6 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, stableSemconvSuites, testV3Preview, version37TestV3Preview)
+    dependsOn(testing.suites, stableSemconvSuites, testV3Preview, latestDepTestV3Preview)
   }
 }
