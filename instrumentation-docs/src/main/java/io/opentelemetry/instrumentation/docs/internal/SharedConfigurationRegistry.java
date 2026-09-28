@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +41,7 @@ public final class SharedConfigurationRegistry {
       Map<String, ConfigurationOption> definitions,
       Map<String, ConfigurationOption> globalConfigurations) {
     this.definitions = definitions;
-    this.globalConfigurations = globalConfigurations;
+    this.globalConfigurations = Collections.unmodifiableMap(globalConfigurations);
   }
 
   public static SharedConfigurationRegistry getInstance() {
