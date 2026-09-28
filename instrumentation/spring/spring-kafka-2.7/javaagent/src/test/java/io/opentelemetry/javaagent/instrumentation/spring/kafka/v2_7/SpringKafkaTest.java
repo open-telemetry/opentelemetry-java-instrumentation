@@ -36,6 +36,7 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -210,6 +211,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
 
     callbackRegistrar.accept(
         () -> {
+          Span listenerSpan = Span.current();
           try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(consumerProperties)) {
             List<TopicPartition> partitions = singletonList(new TopicPartition(nestedTopic, 0));
             consumer.assign(partitions);
@@ -222,8 +224,12 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
             assertThat(records.count()).isEqualTo(1);
             Iterator<?> iterator = records.iterator();
             Object record = iterator.next();
+            assertThat(Span.current().getSpanContext().getSpanId())
+                .isNotEqualTo(listenerSpan.getSpanContext().getSpanId());
             testing.runWithSpan("nested processing", () -> assertThat(record).isNotNull());
             assertThat(iterator.hasNext()).isFalse();
+            assertThat(Span.current().getSpanContext().getSpanId())
+                .isEqualTo(listenerSpan.getSpanContext().getSpanId());
           }
         });
 

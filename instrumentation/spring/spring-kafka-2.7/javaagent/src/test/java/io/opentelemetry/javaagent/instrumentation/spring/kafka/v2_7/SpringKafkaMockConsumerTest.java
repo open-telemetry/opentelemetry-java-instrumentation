@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.kafka.v2_7;
 
-import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,7 +43,7 @@ class SpringKafkaMockConsumerTest {
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
   @SuppressWarnings("unchecked")
-  void selectsReturnedBatchButNotNestedPoll(boolean batchListener) throws InterruptedException {
+  void marksReturnedBatchIncludingEarlyIterator(boolean batchListener) throws InterruptedException {
     boolean springDisabled = Boolean.getBoolean("springDisabled");
     TopicPartition partition = new TopicPartition("orders", 0);
     AtomicReference<Iterator<ConsumerRecord<String, String>>> earlyIterator =
@@ -84,18 +83,6 @@ class SpringKafkaMockConsumerTest {
               assertThat(Span.current().getSpanContext().getSpanId())
                   .isEqualTo(listenerSpan.getSpanContext().getSpanId());
             }
-            try (MockConsumer<String, String> nested =
-                new MockConsumer<>(OffsetResetStrategy.EARLIEST)) {
-              nested.assign(singletonList(partition));
-              nested.updateBeginningOffsets(singletonMap(partition, 1L));
-              nested.seek(partition, 1L);
-              nested.addRecord(new ConsumerRecord<>("orders", 0, 1, "key", "nested"));
-              for (ConsumerRecord<String, String> nestedRecord : nested.poll(Duration.ZERO)) {
-                assertThat(nestedRecord.value()).isEqualTo("nested");
-                assertThat(Span.current().getSpanContext().getSpanId())
-                    .isNotEqualTo(listenerSpan.getSpanContext().getSpanId());
-              }
-            }
             assertThat(Span.current().getSpanContext().getSpanId())
                 .isEqualTo(listenerSpan.getSpanContext().getSpanId());
           } catch (Throwable t) {
@@ -118,7 +105,7 @@ class SpringKafkaMockConsumerTest {
     }
 
     assertThat(listenerFailure.get()).isNull();
-    assertThat(testing.spans()).filteredOn(span -> span.getKind() == SpanKind.CONSUMER).hasSize(2);
+    assertThat(testing.spans()).filteredOn(span -> span.getKind() == SpanKind.CONSUMER).hasSize(1);
     assertThat(testing.spans())
         .filteredOn(
             span ->
@@ -132,6 +119,6 @@ class SpringKafkaMockConsumerTest {
                 span.getInstrumentationScopeInfo()
                     .getName()
                     .equals("io.opentelemetry.kafka-clients-0.11"))
-        .hasSize(springDisabled ? 2 : 1);
+        .hasSize(springDisabled ? 1 : 0);
   }
 }
