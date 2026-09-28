@@ -52,6 +52,21 @@ public class YamlHelper {
 
   public static void generateInstrumentationYaml(
       List<InstrumentationModule> list, BufferedWriter writer) {
+    generateInstrumentationYaml(
+        list,
+        List.copyOf(SharedConfigurationRegistry.getInstance().globalConfigurations().values()),
+        writer);
+  }
+
+  /**
+   * Generates the instrumentation list, including global configurations: settings read by the agent
+   * or the instrumentation API itself rather than by a specific module. They are added to the
+   * definitions catalog and listed by id under the top-level {@code global_configuration_refs}.
+   */
+  public static void generateInstrumentationYaml(
+      List<InstrumentationModule> list,
+      List<ConfigurationOption> globalConfigurations,
+      BufferedWriter writer) {
     DumperOptions options = new DumperOptions();
     options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
 
@@ -59,13 +74,21 @@ public class YamlHelper {
 
     // Common metrics and configurations are collected once into a shared catalog; each module then
     // references them by id instead of inlining full copies (see DefinitionCatalog).
-    DefinitionCatalog catalog = buildDefinitionCatalog(list);
+    DefinitionCatalog catalog = buildDefinitionCatalog(list, globalConfigurations);
 
     Map<String, Object> definitions = catalog.toDefinitionsMap();
     if (!definitions.isEmpty()) {
       Map<String, Object> definitionsRoot = new LinkedHashMap<>();
       definitionsRoot.put("definitions", definitions);
       yaml.dump(definitionsRoot, writer);
+    }
+
+    if (!globalConfigurations.isEmpty()) {
+      Map<String, Object> globalRoot = new LinkedHashMap<>();
+      globalRoot.put(
+          "global_configuration_refs",
+          globalConfigurations.stream().map(catalog::configId).toList());
+      yaml.dump(globalRoot, writer);
     }
 
     Map<String, Object> libraries = getLibraryInstrumentations(list, catalog);
@@ -418,8 +441,17 @@ public class YamlHelper {
    * metric/configuration block is assigned a deterministic id and stored once; modules then
    * reference these ids.
    */
-  private static DefinitionCatalog buildDefinitionCatalog(List<InstrumentationModule> list) {
+  private static DefinitionCatalog buildDefinitionCatalog(
+      List<InstrumentationModule> list, List<ConfigurationOption> globalConfigurations) {
     DefinitionCatalog catalog = new DefinitionCatalog();
+
+    // Global configurations are registry-backed, so they are cataloged under their registry id.
+    for (ConfigurationOption configuration : globalConfigurations) {
+      Map<String, Object> def = configurationToMap(configuration);
+      String id = requireNonNull(configuration.id(), "global configuration must have an id");
+      catalog.configDefs.put(id, def);
+      catalog.configCanonicalToId.put(canonicalize(def), id);
+    }
 
     List<InstrumentationModule> emitted =
         list.stream()

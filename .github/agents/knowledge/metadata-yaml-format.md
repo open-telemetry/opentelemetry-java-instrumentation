@@ -41,6 +41,19 @@ module-specific entry immediately before the common `ref`. This keeps the overri
 together and makes their precedence clear. The override has no `default`, and the module must `ref`
 the common setting it falls back to (`DeclarativeConfigValidationTest` checks this).
 
+## Shared and Global Configurations
+
+`instrumentation-docs/src/main/resources/shared-config-definitions.yaml` has two sections:
+
+- `configurations`: settings that several modules expose identically. Each module that reads one,
+  including through a shared helper such as `DbConfig` or `CommonConfig`, declares `- ref: <id>`.
+- `global_configurations`: settings read on behalf of every instrumentation rather than any
+  particular one (v3 preview, semantic convention selection, span suppression). No module declares
+  or references them; the generator always includes them.
+
+If a setting is read on behalf of specific modules, it belongs in `configurations`, even when the
+reading code lives in the instrumentation API.
+
 ## Structured Lists
 
 Some declarative configs are **lists of objects** even though their flat form is a scalar/map. The
@@ -127,8 +140,9 @@ but `general.stability_opt_in_list` is a single string that the agent splits its
 ## Deprecated Declarative Names
 
 Some declarative names were published under an earlier spelling. The bridge keeps the old spelling
-in `SPECIAL_MAPPINGS` so existing configuration files keep working, but `metadata.yaml` MUST use the
-current name — `DeclarativeConfigValidationTest` fails on the deprecated one.
+in `SPECIAL_MAPPINGS` so existing configuration files keep working. A current setting MUST use the
+current name; the old spelling may only be documented by an entry marked `deprecated: true`
+(`DeclarativeConfigValidationTest` fails otherwise).
 
 | Deprecated                         | Use instead                     |
 | ---------------------------------- | ------------------------------- |
