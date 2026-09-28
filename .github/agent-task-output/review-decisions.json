@@ -1,0 +1,14 @@
+{
+  "schema": {
+    "id": "github.copilot.copilot-review-loop-decision-report",
+    "version": 3
+  },
+  "decisions": [
+    {
+      "finding_id": "finding-691b065818b50b05291f2c7c",
+      "disposition": "no_change",
+      "reason": "The finding concerns pull request metadata, which this candidate must not mutate; no repository file requires a change.",
+      "proposed_reply": "Agreed. Please update the PR description to state that both deprecated experimental names remain active and warn under v3-preview."
+    }
+  ]
+}
