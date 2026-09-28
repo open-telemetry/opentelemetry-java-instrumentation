@@ -13,6 +13,8 @@ muzzle {
     excludeInstrumentationName("couchbase-3.4.3-protostellar")
   }
   pass {
+    // instrumentation-docs:ignore - Couchbase Protostellar instrumentation only, the directive
+    // above is the range we document
     name.set("Couchbase Protostellar instrumentation")
     group.set("com.couchbase.client")
     module.set("java-client")
