@@ -559,9 +559,7 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
 
   @SuppressWarnings("unchecked")
   private static ConsumerBase<String> listenerDispatcher(
-      Queue<Message<String>> messages,
-      MessageListener<String> listener,
-      boolean instrumentListener)
+      Queue<Message<String>> messages, MessageListener<String> listener, boolean instrumentListener)
       throws ReflectiveOperationException {
     AtomicReference<MessageListener<String>> listenerReference = new AtomicReference<>();
     ConsumerBase<String> dispatcher =
@@ -594,45 +592,45 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
           }
         };
     directExecutor.shutdown();
-        MessageListener<String> wrappedListener =
-            instrumentListener ? conf.getMessageListener() : listener;
-        listenerReference.set(wrappedListener);
-        setField(dispatcher, "conf", conf);
-        setField(dispatcher, "listener", wrappedListener);
-        try {
-          setField(dispatcher, "pinnedExecutor", directExecutor);
-        } catch (NoSuchFieldException ignored) {
-          try {
-            setField(dispatcher, "internalPinnedExecutor", directExecutor);
-            Field messageListenerExecutor =
-                ConsumerBase.class.getDeclaredField("messageListenerExecutor");
-            Object executor =
-                Proxy.newProxyInstance(
-                    messageListenerExecutor.getType().getClassLoader(),
-                    new Class<?>[] {messageListenerExecutor.getType()},
-                    (proxy, method, arguments) -> {
-                      if (method.getName().equals("execute")) {
-                        ((Runnable) arguments[1]).run();
-                      }
-                      return null;
-                    });
-            messageListenerExecutor.setAccessible(true);
-            messageListenerExecutor.set(dispatcher, executor);
-          } catch (NoSuchFieldException ignoredAgain) {
-            Field listenerTaskScheduler = ConsumerBase.class.getDeclaredField("listenerTaskScheduler");
-            Object scheduler =
-                mock(
-                    listenerTaskScheduler.getType(),
-                    invocation -> {
-                      if (invocation.getMethod().getName().equals("trigger")) {
-                        wrappedListener.received(dispatcher, messages.poll());
-                      }
-                      return null;
-                    });
-            listenerTaskScheduler.setAccessible(true);
-            listenerTaskScheduler.set(dispatcher, scheduler);
-          }
-        }
+    MessageListener<String> wrappedListener =
+        instrumentListener ? conf.getMessageListener() : listener;
+    listenerReference.set(wrappedListener);
+    setField(dispatcher, "conf", conf);
+    setField(dispatcher, "listener", wrappedListener);
+    try {
+      setField(dispatcher, "pinnedExecutor", directExecutor);
+    } catch (NoSuchFieldException ignored) {
+      try {
+        setField(dispatcher, "internalPinnedExecutor", directExecutor);
+        Field messageListenerExecutor =
+            ConsumerBase.class.getDeclaredField("messageListenerExecutor");
+        Object executor =
+            Proxy.newProxyInstance(
+                messageListenerExecutor.getType().getClassLoader(),
+                new Class<?>[] {messageListenerExecutor.getType()},
+                (proxy, method, arguments) -> {
+                  if (method.getName().equals("execute")) {
+                    ((Runnable) arguments[1]).run();
+                  }
+                  return null;
+                });
+        messageListenerExecutor.setAccessible(true);
+        messageListenerExecutor.set(dispatcher, executor);
+      } catch (NoSuchFieldException ignoredAgain) {
+        Field listenerTaskScheduler = ConsumerBase.class.getDeclaredField("listenerTaskScheduler");
+        Object scheduler =
+            mock(
+                listenerTaskScheduler.getType(),
+                invocation -> {
+                  if (invocation.getMethod().getName().equals("trigger")) {
+                    wrappedListener.received(dispatcher, messages.poll());
+                  }
+                  return null;
+                });
+        listenerTaskScheduler.setAccessible(true);
+        listenerTaskScheduler.set(dispatcher, scheduler);
+      }
+    }
     setField(dispatcher, "subscription", "test_sub");
     return dispatcher;
   }
