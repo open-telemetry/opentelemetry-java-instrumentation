@@ -68,6 +68,9 @@ jobs:
     needs: analyze
     if: needs.analyze.outputs.has_candidate == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      copilot-requests: write
     environment: protected
     env:
       SELECTED_JSON: ${{ needs.analyze.outputs.selected_json }}
@@ -132,7 +135,7 @@ jobs:
 
       - name: Run Copilot fix
         env:
-          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MODEL: ${{ steps.model.outputs.model }}
         run: python .github/scripts/flaky-test-remediation/2-fix-flaky-test.py
 
