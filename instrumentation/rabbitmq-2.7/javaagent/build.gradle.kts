@@ -33,7 +33,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
 
-    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
+    systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
 
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
@@ -49,7 +49,7 @@ tasks {
   val testMessagingPreview = register<Test>("testMessagingPreview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "false")
+    systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "false")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }

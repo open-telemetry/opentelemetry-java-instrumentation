@@ -8,6 +8,6 @@ repositories {
 }
 
 dependencies {
-  implementation("com.diffplug.spotless:spotless-plugin-gradle:8.10.1")
+  implementation("com.diffplug.spotless:spotless-plugin-gradle:8.10.2")
   implementation("com.gradleup.shadow:shadow-gradle-plugin:9.6.1")
 }

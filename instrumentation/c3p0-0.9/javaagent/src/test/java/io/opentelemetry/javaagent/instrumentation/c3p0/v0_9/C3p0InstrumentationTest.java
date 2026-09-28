@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.c3p0.v0_9;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 import com.mchange.v2.c3p0.PooledDataSource;
 import io.opentelemetry.instrumentation.c3p0.AbstractC3p0InstrumentationTest;
@@ -35,14 +37,16 @@ class C3p0InstrumentationTest extends AbstractC3p0InstrumentationTest {
   void shouldUseJdbcUrlForDataSourceName() throws Exception {
     ComboPooledDataSource dataSource = createDataSource("jdbc:mock://db.example:5432/orders");
 
-    assertDataSourceName(dataSource, "db.example:5432/orders");
+    assertDataSourceName(
+        dataSource, emitStableDatabaseSemconv() ? "orders" : "db.example:5432/orders");
   }
 
   @Test
   void shouldUseIpv6JdbcUrlForDataSourceName() throws Exception {
     ComboPooledDataSource dataSource = createDataSource("jdbc:mock://[2001:db8::1]:5432/orders");
 
-    assertDataSourceName(dataSource, "[2001:db8::1]:5432/orders");
+    assertDataSourceName(
+        dataSource, emitStableDatabaseSemconv() ? "orders" : "[2001:db8::1]:5432/orders");
   }
 
   @Test
@@ -54,14 +58,16 @@ class C3p0InstrumentationTest extends AbstractC3p0InstrumentationTest {
     properties.setProperty("databaseName", "inventory");
     dataSource.setProperties(properties);
 
-    assertDataSourceName(dataSource, "properties.example:5433/inventory");
+    assertDataSourceName(
+        dataSource,
+        emitStableDatabaseSemconv() ? "inventory" : "properties.example:5433/inventory");
   }
 
   @Test
   void shouldUseFallbackDataSourceName() throws Exception {
     ComboPooledDataSource dataSource = createDataSource("jdbc:mock:testDatabase");
 
-    assertDataSourceName(dataSource, "c3p0");
+    assertDataSourceName(dataSource, emitStableDatabaseSemconv() ? "other_sql" : "c3p0");
   }
 
   private void assertDataSourceName(ComboPooledDataSource dataSource, String expectedName)

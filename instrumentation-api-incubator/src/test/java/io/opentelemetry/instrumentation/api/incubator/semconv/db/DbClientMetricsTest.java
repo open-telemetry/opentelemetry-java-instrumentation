@@ -17,7 +17,6 @@ import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -28,14 +27,18 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 class DbClientMetricsTest {
 
   static final double[] DURATION_BUCKETS =
       DbClientMetricsAdvice.DURATION_SECONDS_BUCKETS.stream().mapToDouble(d -> d).toArray();
+
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @Test
   void collectsMetrics() {
@@ -44,6 +47,7 @@ class DbClientMetricsTest {
     InMemoryMetricReader metricReader = InMemoryMetricReader.create();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
 
     OperationListener listener = DbClientMetrics.get().create(meterProvider.get("test"));
 
@@ -54,8 +58,7 @@ class DbClientMetricsTest {
             .put(DB_NAMESPACE, "potatoes")
             .put(DB_OPERATION_NAME, "SELECT")
             .put(DB_QUERY_SUMMARY, "SELECT table")
-            .put(SERVER_ADDRESS, "localhost")
-            .put(SERVER_PORT, 1234)
+            .put(SERVER_ADDRESS, "db1.example:5432,db2.example:5432")
             .build();
 
     Attributes responseAttributes =
@@ -100,8 +103,9 @@ class DbClientMetricsTest {
                                             equalTo(DB_OPERATION_NAME, "SELECT"),
                                             equalTo(DB_COLLECTION_NAME, "table"),
                                             equalTo(DB_QUERY_SUMMARY, "SELECT table"),
-                                            equalTo(SERVER_ADDRESS, "localhost"),
-                                            equalTo(SERVER_PORT, 1234),
+                                            equalTo(
+                                                SERVER_ADDRESS,
+                                                "db1.example:5432,db2.example:5432"),
                                             equalTo(ERROR_TYPE, "400"),
                                             equalTo(NETWORK_PEER_ADDRESS, "1.2.3.4"),
                                             equalTo(NETWORK_PEER_PORT, 8080))

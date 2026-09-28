@@ -6,12 +6,16 @@
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraEndPoints.isDefaultEndPoint;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
+import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.metadata.Node;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -50,6 +54,20 @@ final class CassandraSqlAttributesGetter
     return request.getBatchSize();
   }
 
+  @Override
+  @Nullable
+  public String getServerAddress(CassandraRequest request) {
+    DbServerTarget serverTarget = request.getServerTarget();
+    return serverTarget == null ? null : serverTarget.getAddress();
+  }
+
+  @Override
+  @Nullable
+  public Integer getServerPort(CassandraRequest request) {
+    DbServerTarget serverTarget = request.getServerTarget();
+    return serverTarget == null ? null : serverTarget.getPort();
+  }
+
   @Nullable
   @Override
   public InetSocketAddress getNetworkPeerInetSocketAddress(
@@ -57,14 +75,42 @@ final class CassandraSqlAttributesGetter
     if (executionInfo == null) {
       return null;
     }
+    if (!emitStableDatabaseSemconv()) {
+      return getLegacyNetworkPeer(executionInfo);
+    }
+    InetSocketAddress peer = CassandraResponsePeers.getExecutionInfoPeer(executionInfo);
+    if (peer != null) {
+      return peer;
+    }
+    return getStableNetworkPeerFallback(executionInfo);
+  }
+
+  @Nullable
+  private static InetSocketAddress getLegacyNetworkPeer(ExecutionInfo executionInfo) {
     Node coordinator = executionInfo.getCoordinator();
     if (coordinator == null) {
       return null;
     }
-    // resolve() returns an existing InetSocketAddress, it does not do a dns resolve,
-    // at least in the only current EndPoint implementation (DefaultEndPoint)
     SocketAddress address = coordinator.getEndPoint().resolve();
     return address instanceof InetSocketAddress ? (InetSocketAddress) address : null;
+  }
+
+  @Nullable
+  private static InetSocketAddress getStableNetworkPeerFallback(ExecutionInfo executionInfo) {
+    Node coordinator = executionInfo.getCoordinator();
+    if (coordinator == null) {
+      return null;
+    }
+    EndPoint endPoint = coordinator.getEndPoint();
+    if (!isDefaultEndPoint(endPoint)) {
+      return null;
+    }
+    SocketAddress address = endPoint.resolve();
+    if (!(address instanceof InetSocketAddress)) {
+      return null;
+    }
+    InetSocketAddress inetSocketAddress = (InetSocketAddress) address;
+    return inetSocketAddress.isUnresolved() ? null : inetSocketAddress;
   }
 
   @Override

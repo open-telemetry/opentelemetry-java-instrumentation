@@ -62,12 +62,25 @@ class ExperimentalConfigTest {
     DeclarativeConfigProperties commonConfig =
         mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
     when(openTelemetry.getInstrumentationConfig("common")).thenReturn(commonConfig);
+    DeclarativeConfigProperties deprecatedMessagingConfig =
+        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
+    when(openTelemetry.getInstrumentationConfig("messaging")).thenReturn(deprecatedMessagingConfig);
     DeclarativeConfigProperties messaging = commonConfig.get("messaging");
     when(messaging.get("headers/development").getScalarList("included", String.class))
         .thenReturn(null);
     when(messaging.get("headers/development").getScalarList("excluded", String.class))
         .thenReturn(null);
     when(messaging.getScalarList("capture_headers/development", String.class)).thenReturn(null);
+    when(deprecatedMessagingConfig
+            .get("headers/development")
+            .getScalarList("included", String.class))
+        .thenReturn(null);
+    when(deprecatedMessagingConfig
+            .get("headers/development")
+            .getScalarList("excluded", String.class))
+        .thenReturn(null);
+    when(deprecatedMessagingConfig.getScalarList("capture_headers/development", String.class))
+        .thenReturn(null);
     return openTelemetry;
   }
 }

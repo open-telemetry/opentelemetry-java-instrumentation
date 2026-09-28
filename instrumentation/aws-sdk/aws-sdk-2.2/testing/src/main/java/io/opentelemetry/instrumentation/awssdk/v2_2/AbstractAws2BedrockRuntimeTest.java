@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_BEDROCK_GUARDRAIL_ID;
 import static io.opentelemetry.semconv.incubating.EventIncubatingAttributes.EVENT_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME;
@@ -1422,6 +1423,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
         InvokeModelRequest.builder()
             .modelId(modelId)
             .body(SdkBytes.fromByteArray(generator.getBytes()))
+            .guardrailIdentifier("guardrail-id")
+            .guardrailVersion("1")
             .build();
 
     InvokeModelResponse response = client.invokeModel(request);
@@ -1443,6 +1446,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                                 equalTo(GEN_AI_OPERATION_NAME, TEXT_COMPLETION),
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                                equalTo(AWS_BEDROCK_GUARDRAIL_ID, "guardrail-id"),
                                 equalTo(GEN_AI_REQUEST_MAX_TOKENS, 10),
                                 satisfies(
                                     GEN_AI_REQUEST_TEMPERATURE,

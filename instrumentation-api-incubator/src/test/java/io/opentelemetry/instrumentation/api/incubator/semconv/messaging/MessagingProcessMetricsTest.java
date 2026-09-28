@@ -25,16 +25,20 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import java.util.Collection;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 class MessagingProcessMetricsTest {
 
   private static final double[] DURATION_BUCKETS =
       MessagingMetricsAdvice.DURATION_SECONDS_BUCKETS.stream().mapToDouble(d -> d).toArray();
+
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @Test
   @SuppressWarnings("deprecation") // using deprecated semconv
@@ -42,6 +46,7 @@ class MessagingProcessMetricsTest {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
     OperationListener listener = MessagingProcessMetrics.get().create(meterProvider.get("test"));
 
     Attributes attributes =
@@ -100,6 +105,7 @@ class MessagingProcessMetricsTest {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
     OperationListener outer = MessagingProcessMetrics.get().create(meterProvider.get("outer"));
     OperationListener inner = MessagingProcessMetrics.get().create(meterProvider.get("inner"));
     Attributes attributes =
@@ -130,6 +136,7 @@ class MessagingProcessMetricsTest {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
     OperationListener outer = MessagingProcessMetrics.get().create(meterProvider.get("outer"));
     OperationListener inner = MessagingProcessMetrics.get().create(meterProvider.get("inner"));
     Attributes attributes =

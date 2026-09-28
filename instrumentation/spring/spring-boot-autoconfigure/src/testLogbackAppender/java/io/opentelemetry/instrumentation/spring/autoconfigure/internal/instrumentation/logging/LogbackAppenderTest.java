@@ -403,6 +403,99 @@ class LogbackAppenderTest {
     assertThat(keyValuePairDeprecationWarnings(properties)).isEmpty();
   }
 
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  @SuppressWarnings("deprecation") // verifies the deprecated appender setting is replaced
+  void commonStructuredAttributeSelectorTakesPrecedence(boolean declarativeConfig) {
+    Map<String, Object> properties = new HashMap<>();
+    if (declarativeConfig) {
+      properties.put("otel.file_format", "1.1");
+      properties.put(
+          "otel.instrumentation/development.java.common.logging.structured_attributes.excluded",
+          "*");
+    } else {
+      properties.put("otel.instrumentation.common.logging.structured-attributes.excluded", "*");
+    }
+
+    assertThat(
+            deprecationWarnings(
+                properties,
+                appender -> appender.setCaptureKeyValuePairAttributes(true),
+                LogbackAppenderInstaller::initializeStructuredAttributesFromProperties,
+                "otel.instrumentation.logback-appender.experimental"
+                    + ".capture-key-value-pair-attributes"))
+        .isEmpty();
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void sourceSpecificStructuredAttributeSelectorWarns(boolean declarativeConfig) {
+    Map<String, Object> properties = new HashMap<>();
+    if (declarativeConfig) {
+      properties.put("otel.file_format", "1.1");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender"
+              + ".key_value_pair_attributes/development.included",
+          "key1");
+    } else {
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental"
+              + ".key-value-pair-attributes.included",
+          "key1");
+    }
+    String deprecatedProperty =
+        "otel.instrumentation.logback-appender.experimental"
+            + ".key-value-pair-attributes.included";
+
+    assertThat(structuredAttributeDeprecationWarnings(properties, deprecatedProperty))
+        .singleElement()
+        .satisfies(
+            event ->
+                assertThat(event.getFormattedMessage())
+                    .contains(
+                        "will be removed in 3.0",
+                        "otel.instrumentation.common.logging" + ".structured-attributes.included"));
+  }
+
+  private static List<ILoggingEvent> structuredAttributeDeprecationWarnings(
+      Map<String, Object> properties, String deprecatedProperty) {
+    ch.qos.logback.classic.Logger installerLogger =
+        (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(LogbackAppenderInstaller.class);
+    ListAppender<ILoggingEvent> warningAppender = new ListAppender<>();
+    warningAppender.start();
+    installerLogger.addAppender(warningAppender);
+    try {
+      StandardEnvironment environment = new StandardEnvironment();
+      environment.getPropertySources().addFirst(new MapPropertySource("test", properties));
+
+      LogbackAppenderInstaller.initializeStructuredAttributesFromProperties(
+          environment, new OpenTelemetryAppender());
+
+      return warningAppender.list.stream()
+          .filter(event -> event.getFormattedMessage().contains(deprecatedProperty))
+          .collect(toList());
+    } finally {
+      installerLogger.detachAppender(warningAppender);
+      warningAppender.stop();
+    }
+  }
+
+  @Test
+  @SuppressWarnings("deprecation") // verifies v3 preview ignores the deprecated appender setting
+  void v3PreviewDefaultsStructuredAttributeCaptureToAll() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("otel.instrumentation.common.v3-preview", true);
+
+    assertThat(
+            deprecationWarnings(
+                properties,
+                appender -> appender.setCaptureKeyValuePairAttributes(false),
+                LogbackAppenderInstaller::initializeStructuredAttributesFromProperties,
+                "otel.instrumentation.logback-appender.experimental"
+                    + ".capture-key-value-pair-attributes"))
+        .isEmpty();
+  }
+
   @Test
   void declarativeYamlSequenceKeyValuePairSelectorTakesPrecedenceOverDeprecatedProperty() {
     Map<String, Object> properties = new HashMap<>();
@@ -433,7 +526,17 @@ class LogbackAppenderTest {
           true);
     }
 
-    assertThat(keyValuePairDeprecationWarnings(properties)).hasSize(1);
+    String deprecatedProperty =
+        "otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes";
+    assertThat(structuredAttributeDeprecationWarnings(properties, deprecatedProperty))
+        .singleElement()
+        .satisfies(
+            event ->
+                assertThat(event.getFormattedMessage())
+                    .contains(
+                        "will be removed in 3.0",
+                        "otel.instrumentation.common.logging" + ".structured-attributes.included"));
+    assertThat(keyValuePairDeprecationWarnings(properties)).isEmpty();
   }
 
   @Test
@@ -704,7 +807,17 @@ class LogbackAppenderTest {
           true);
     }
 
-    assertThat(logstashMarkerDeprecationWarnings(properties)).hasSize(1);
+    String deprecatedProperty =
+        "otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes";
+    assertThat(structuredAttributeDeprecationWarnings(properties, deprecatedProperty))
+        .singleElement()
+        .satisfies(
+            event ->
+                assertThat(event.getFormattedMessage())
+                    .contains(
+                        "will be removed in 3.0",
+                        "otel.instrumentation.common.logging" + ".structured-attributes.included"));
+    assertThat(logstashMarkerDeprecationWarnings(properties)).isEmpty();
   }
 
   @Test
@@ -831,7 +944,18 @@ class LogbackAppenderTest {
           true);
     }
 
-    assertThat(logstashStructuredArgumentDeprecationWarnings(properties)).hasSize(1);
+    String deprecatedProperty =
+        "otel.instrumentation.logback-appender.experimental"
+            + ".capture-logstash-structured-arguments";
+    assertThat(structuredAttributeDeprecationWarnings(properties, deprecatedProperty))
+        .singleElement()
+        .satisfies(
+            event ->
+                assertThat(event.getFormattedMessage())
+                    .contains(
+                        "will be removed in 3.0",
+                        "otel.instrumentation.common.logging" + ".structured-attributes.included"));
+    assertThat(logstashStructuredArgumentDeprecationWarnings(properties)).isEmpty();
   }
 
   @Test

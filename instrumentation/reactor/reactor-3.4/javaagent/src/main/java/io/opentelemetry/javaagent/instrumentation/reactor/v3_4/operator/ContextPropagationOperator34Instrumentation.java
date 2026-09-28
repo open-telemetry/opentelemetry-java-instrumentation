@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.context.AgentContextStorage;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
@@ -50,9 +51,10 @@ class ContextPropagationOperator34Instrumentation implements TypeInstrumentation
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Nullable
     public static application.io.opentelemetry.context.Context methodExit(
         @Advice.Argument(0) ContextView reactorContext,
-        @Advice.Argument(1) application.io.opentelemetry.context.Context defaultContext) {
+        @Advice.Argument(1) @Nullable application.io.opentelemetry.context.Context defaultContext) {
 
       Context agentContext =
           ContextPropagationOperator.getOpenTelemetryContextFromContextView(reactorContext, null);

@@ -2,8 +2,11 @@ display_name: Vibur DBCP
 description: >
   This instrumentation enables database connection pool metrics for Vibur DBCP data sources. When
   no pool name is explicitly configured, the JDBC URL and connection properties are used to derive
-  `server.address[:server.port][/db.namespace]`. If no server address or database namespace is
-  available, `vibur-dbcp` is used.
+  the pool name. With legacy database semantic conventions, the derived format is
+  `server.address[:server.port][/db.namespace]`. With stable database semantic conventions, the
+  first available value among `db.namespace`, the configured endpoint
+  (`server.address[:server.port]`), and `db.system.name` is used. If none is available, `vibur-dbcp`
+  is used.
 library_link: https://www.vibur.org/
 semantic_conventions:
   - DATABASE_POOL_METRICS

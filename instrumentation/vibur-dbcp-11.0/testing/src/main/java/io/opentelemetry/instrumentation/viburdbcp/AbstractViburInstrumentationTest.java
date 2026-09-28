@@ -69,7 +69,9 @@ public abstract class AbstractViburInstrumentationTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            emitStableDatabaseSemconv() ? "db.client.connection.max" : "db.client.connections.max",
+            emitStableDatabaseSemconv()
+                ? "db.client.connection.limit"
+                : "db.client.connections.max",
             AbstractIterableAssert::isEmpty);
   }
 

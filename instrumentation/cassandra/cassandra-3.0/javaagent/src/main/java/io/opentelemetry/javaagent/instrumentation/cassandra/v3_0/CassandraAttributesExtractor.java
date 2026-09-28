@@ -39,8 +39,6 @@ class CassandraAttributesExtractor
   private static final Method GET_SPECULATIVE_EXECUTIONS =
       findMethod(ExecutionInfo.class, "getSpeculativeExecutions");
 
-  @Nullable private static final Method GET_HOST_ID = findMethod(Host.class, "getHostId");
-
   @Override
   public void onStart(AttributesBuilder attributes, Context context, CassandraRequest request) {
     if (emitStableDatabaseSemconv()) {
@@ -66,10 +64,12 @@ class CassandraAttributesExtractor
       return;
     }
 
-    InetSocketAddress coordinatorAddress = response.getCoordinatorAddress();
-    if (coordinatorAddress != null) {
-      attributes.put(SERVER_ADDRESS, coordinatorAddress.getHostString());
-      attributes.put(SERVER_PORT, coordinatorAddress.getPort());
+    if (!emitStableDatabaseSemconv()) {
+      InetSocketAddress coordinatorAddress = response.getPeerAddress();
+      if (coordinatorAddress != null) {
+        attributes.put(SERVER_ADDRESS, coordinatorAddress.getHostString());
+        attributes.put(SERVER_PORT, coordinatorAddress.getPort());
+      }
     }
 
     ExecutionInfo executionInfo = response.getExecutionInfo();
@@ -85,7 +85,7 @@ class CassandraAttributesExtractor
       if (emitOldDatabaseSemconv()) {
         attributes.put(DB_CASSANDRA_COORDINATOR_DC, coordinator.getDatacenter());
       }
-      String coordinatorId = getCoordinatorId(coordinator);
+      String coordinatorId = CassandraEndPoints.getHostId(coordinator);
       if (emitStableDatabaseSemconv()) {
         attributes.put(CASSANDRA_COORDINATOR_ID, coordinatorId);
       }
@@ -111,16 +111,6 @@ class CassandraAttributesExtractor
       return GET_SPECULATIVE_EXECUTIONS == null
           ? null
           : (Integer) GET_SPECULATIVE_EXECUTIONS.invoke(executionInfo);
-    } catch (ReflectiveOperationException ignored) {
-      return null;
-    }
-  }
-
-  @Nullable
-  private static String getCoordinatorId(Host coordinator) {
-    try {
-      Object hostId = GET_HOST_ID == null ? null : GET_HOST_ID.invoke(coordinator);
-      return hostId == null ? null : hostId.toString();
     } catch (ReflectiveOperationException ignored) {
       return null;
     }

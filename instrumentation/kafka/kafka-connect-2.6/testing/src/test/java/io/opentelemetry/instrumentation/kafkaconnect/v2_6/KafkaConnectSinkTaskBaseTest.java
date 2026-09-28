@@ -353,7 +353,7 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
     backend =
         new GenericContainer<>(
                 DockerImageName.parse(
-                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend:20250811.16876216352"))
+                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend:20260825.32803070924"))
             .withExposedPorts(BACKEND_PORT)
             .withNetwork(network)
             .withNetworkAliases(BACKEND_ALIAS)
@@ -530,7 +530,7 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
         new StringBuilder("-javaagent:/opentelemetry-javaagent.jar -Dotel.javaagent.debug=true");
     appendSystemProperty(options, "otel.semconv-stability.preview");
     appendSystemProperty(
-        options, "otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
+        options, "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled");
     return options.toString();
   }
 
@@ -546,7 +546,7 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
   // each delivery, and the Connect process operation must not count it again.
   protected static boolean isReceiveTelemetryEnabled() {
     return Boolean.getBoolean(
-        "otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled");
   }
 
   // asserts the messaging metrics for a single-message delivery through the given destination,

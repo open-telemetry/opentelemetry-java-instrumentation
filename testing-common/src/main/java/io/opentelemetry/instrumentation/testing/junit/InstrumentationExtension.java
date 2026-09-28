@@ -51,6 +51,11 @@ public abstract class InstrumentationExtension
 
   @Override
   public void afterEach(ExtensionContext context) throws Exception {
+    // Unlike spans and metrics, which are collected inside the assertion helpers, events are swept
+    // up here so that they are captured regardless of how the test asserted on them. Exported data
+    // is cleared in beforeEach, so everything emitted by this test is still available.
+    testRunner.collectEmittedEventsIfEnabled();
+
     ContextStorage storage = ContextStorage.get();
     ContextStorageCloser.close(storage);
   }

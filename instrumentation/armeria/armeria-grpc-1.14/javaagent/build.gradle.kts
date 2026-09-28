@@ -3,6 +3,7 @@ import com.google.protobuf.gradle.*
 plugins {
   id("otel.javaagent-instrumentation")
   id("com.google.protobuf")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {

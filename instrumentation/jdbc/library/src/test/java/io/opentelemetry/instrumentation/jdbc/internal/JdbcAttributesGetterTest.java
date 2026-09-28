@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.jdbc.internal;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MARIADB;
 import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MICROSOFT_SQL_SERVER;
 import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MYSQL;
 import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.POSTGRESQL;
@@ -19,9 +21,11 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.SQLException;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -86,5 +90,88 @@ class JdbcAttributesGetterTest {
         argumentSet("null SQLSTATE is unavailable", 0, null, null),
         argumentSet("empty SQLSTATE is unavailable", 0, "", null),
         argumentSet("successful completion SQLSTATE is unavailable", 0, "00000", null));
+  }
+
+  @Test
+  void groupTargetReplacesHostAndOmitsPortOnlyInStableSemconv() {
+    DbInfo dbInfo =
+        DbInfo.builder()
+            .dbSystemName(MARIADB)
+            .legacyServerAddress("h1")
+            .legacyServerPort(3306)
+            .configuredServerTarget(DbServerTarget.create("h1:15432,h2:15432", null))
+            .build();
+    DbRequest request = DbRequest.create(dbInfo, "SELECT 1", false);
+
+    if (emitStableDatabaseSemconv()) {
+      assertThat(attributesGetter.getServerAddress(request)).isEqualTo("h1:15432,h2:15432");
+      assertThat(attributesGetter.getServerPort(request)).isNull();
+    } else {
+      assertThat(attributesGetter.getServerAddress(request)).isEqualTo("h1");
+      assertThat(attributesGetter.getServerPort(request)).isEqualTo(3306);
+    }
+  }
+
+  @ParameterizedTest
+  @MethodSource("incompleteMultiTargets")
+  void incompleteMultiTargetOmitsHostAndPortOnlyInStableSemconv(
+      String url, String legacyHost, int legacyPort) {
+    DbInfo dbInfo = JdbcConnectionUrlParser.parse(url, null);
+    DbRequest request = DbRequest.create(dbInfo, "SELECT 1", false);
+
+    assertThat(dbInfo.getConfiguredServerTarget()).isNull();
+    if (emitStableDatabaseSemconv()) {
+      assertThat(attributesGetter.getServerAddress(request)).isNull();
+      assertThat(attributesGetter.getServerPort(request)).isNull();
+    } else {
+      assertThat(attributesGetter.getServerAddress(request)).isEqualTo(legacyHost);
+      assertThat(attributesGetter.getServerPort(request)).isEqualTo(legacyPort);
+    }
+  }
+
+  private static Stream<Arguments> incompleteMultiTargets() {
+    return Stream.of(
+        argumentSet(
+            "malformed PostgreSQL host list",
+            "jdbc:postgresql://h1:5432,unexpected=value/db",
+            "localhost",
+            5432),
+        argumentSet("unsupported H2 host list", "jdbc:h2:tcp://h1:8082,h2:8083/db", "h1", 8082),
+        argumentSet(
+            "SQL Server failover without primary",
+            "jdbc:sqlserver://;failoverPartner=h2",
+            "localhost",
+            1433),
+        argumentSet(
+            "malformed SQL Server failover target",
+            "jdbc:sqlserver://h1;failoverPartner=unexpected=value",
+            "h1",
+            1433),
+        argumentSet(
+            "malformed Oracle Easy Connect list",
+            "jdbc:oracle:thin:@//h1,unexpected=value/service",
+            "h1",
+            1521),
+        argumentSet(
+            "malformed Oracle address list",
+            "jdbc:oracle:thin:@(description=(address=(host=h1)(port=1521))"
+                + "(address=(host=h2)(port=1522)",
+            "h1",
+            1521));
+  }
+
+  @Test
+  void singularTargetKeepsHostAndPortInEveryMode() {
+    DbInfo dbInfo =
+        DbInfo.builder()
+            .dbSystemName(MARIADB)
+            .legacyServerAddress("h1")
+            .legacyServerPort(3306)
+            .configuredServerTarget(DbServerTarget.create("h1", 3306))
+            .build();
+    DbRequest request = DbRequest.create(dbInfo, "SELECT 1", false);
+
+    assertThat(attributesGetter.getServerAddress(request)).isEqualTo("h1");
+    assertThat(attributesGetter.getServerPort(request)).isEqualTo(3306);
   }
 }

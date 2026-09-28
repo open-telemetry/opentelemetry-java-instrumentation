@@ -26,7 +26,7 @@ permissions:
 
 jobs:
   common:
-    uses: ./.github/workflows/build-common.yml
+    uses: $/.github/workflows/build-common.yml
     with:
       skip-openj9-tests: ${{ inputs.skip-openj9-tests }}
       skip-windows-smoke-tests: ${{ inputs.skip-windows-smoke-tests }}
@@ -34,16 +34,16 @@ jobs:
       cache-read-only: true
 
   test-latest-deps:
-    uses: ./.github/workflows/reusable-test-latest-deps.yml
+    uses: $/.github/workflows/reusable-test-latest-deps.yml
     with:
       cache-read-only: true
 
   test-native:
     if: "!inputs.skip-native-tests"
-    uses: ./.github/workflows/reusable-native-tests.yml
+    uses: $/.github/workflows/reusable-native-tests.yml
 
   muzzle:
-    uses: ./.github/workflows/reusable-muzzle.yml
+    uses: $/.github/workflows/reusable-muzzle.yml
     with:
       cache-read-only: true
 
@@ -51,11 +51,11 @@ jobs:
     # release branches are excluded because the README.md javaagent download link has to be updated
     # on release branches before the release download has been published
     if: "!startsWith(github.ref_name, 'release/') && !startsWith(github.base_ref, 'release/')"
-    uses: ./.github/workflows/reusable-lint-check.yml
+    uses: $/.github/workflows/reusable-lint-check.yml
 
   build-servlet-images:
     if: "!inputs.skip-servlet-images"
-    uses: ./.github/workflows/reusable-build-servlet-images.yml
+    uses: $/.github/workflows/reusable-build-servlet-images.yml
 
   required-status-check:
     needs:

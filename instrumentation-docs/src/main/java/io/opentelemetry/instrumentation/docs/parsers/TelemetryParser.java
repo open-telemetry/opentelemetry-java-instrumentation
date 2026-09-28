@@ -9,10 +9,25 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static java.util.Map.entry;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 class TelemetryParser {
+
+  // Attributes that only exist because of how the tests are written, and should not be documented
+  // as telemetry the instrumentation emits.
+  private static final List<String> EXCLUDED_ATTRIBUTES =
+      List.of(
+          "asdf",
+          "x-test-",
+          "test-parameter",
+          "test-baggage-",
+          "test_message",
+          "Test_Message",
+          "Test-Message",
+          "some-client-key",
+          "some-server-key");
 
   // Key is the scope of the module being analyzed, value is a set of additional allowed scopes.
   private static final Map<String, Set<String>> scopeAllowList;
@@ -47,13 +62,13 @@ class TelemetryParser {
             entry(
                 "io.opentelemetry.jaxrs-3.0-resteasy-6.0",
                 singleton("io.opentelemetry.jaxrs-3.0-annotations")),
-            // couchbase-3.x instrumentations are auto-instrumentation shims
+            entry(
+                "io.opentelemetry.couchbase-3.0",
+                singleton("io.opentelemetry.javaagent.couchbase-3.0")),
             entry(
                 "io.opentelemetry.couchbase-3.1",
-                singleton("io.opentelemetry.javaagent.couchbase-3.1")),
-            entry("io.opentelemetry.couchbase-3.1.6", singleton("com.couchbase.client.jvm")),
+                Set.of("io.opentelemetry.javaagent.couchbase-3.1", "com.couchbase.client.jvm")),
             entry("io.opentelemetry.couchbase-3.2", singleton("com.couchbase.client.jvm")),
-            entry("io.opentelemetry.couchbase-3.4", singleton("com.couchbase.client.jvm")),
             // servlet-5.0 tests use jetty-12.0 instrumentation
             entry("io.opentelemetry.servlet-5.0", singleton("io.opentelemetry.jetty-12.0")),
             // runtime-telemetry library tests use a meter named "test"
@@ -75,6 +90,17 @@ class TelemetryParser {
   static boolean scopeIsValid(String telemetryScope, String moduleScope) {
     return telemetryScope.equals(moduleScope)
         || scopeAllowList.getOrDefault(moduleScope, emptySet()).contains(telemetryScope);
+  }
+
+  /**
+   * Checks whether the given attribute name is test scaffolding rather than real instrumentation
+   * telemetry, and should therefore be left out of the generated documentation.
+   *
+   * @param attributeName the name of the attribute
+   * @return true if the attribute should be excluded, false otherwise
+   */
+  static boolean isExcludedAttribute(String attributeName) {
+    return EXCLUDED_ATTRIBUTES.stream().anyMatch(attributeName::contains);
   }
 
   /**

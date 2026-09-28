@@ -40,6 +40,32 @@ to allow reusing them without instrumentation. When using instrumentation, the [
 instrumentation is used and recommended as it provides more metrics attributes that can't be captured
 through the YAML-based metric definitions.
 
+Metric filters apply to all loaded metric definitions, including predefined targets, custom YAML
+rules, and metric handlers:
+
+```properties
+otel.jmx.metrics.included=jvm.memory.*,jvm.thread.coun?
+otel.jmx.metrics.excluded=jvm.memory.limit
+```
+
+Matching is case-sensitive. `?` matches one character and `*` matches zero or more characters.
+Excluded patterns take precedence over included patterns. If included is not configured, all
+non-excluded metrics are collected. With neither property configured, all metrics are collected.
+
+The equivalent declarative configuration is:
+
+```yaml
+instrumentation/development:
+  java:
+    jmx:
+      metrics:
+        included:
+          - jvm.memory.*
+          - jvm.thread.coun?
+        excluded:
+          - jvm.memory.limit
+```
+
 ## Configuration Files
 
 To provide your own metric definitions, create one or more YAML configuration files, and specify their location using the `otel.jmx.config` property. Absolute or relative pathnames can be specified. For example

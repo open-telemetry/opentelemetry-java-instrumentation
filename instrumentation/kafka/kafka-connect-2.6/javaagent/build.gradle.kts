@@ -17,16 +17,28 @@ dependencies {
   library("org.apache.kafka:connect-api:2.6.0")
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
+        implementation("org.apache.kafka:connect-api:2.6.0")
+      }
+    }
+  }
+}
+
 tasks {
   val testMessagingPreview = register<Test>("testMessagingPreview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
 
   check {
-    dependsOn(testMessagingPreview)
+    dependsOn(testing.suites, testMessagingPreview)
   }
 }

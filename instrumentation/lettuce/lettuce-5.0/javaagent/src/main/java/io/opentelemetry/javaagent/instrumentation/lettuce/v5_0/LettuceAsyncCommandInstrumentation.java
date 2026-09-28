@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.COMMAND_CONTEXT_KEY;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
@@ -25,8 +28,13 @@ import net.bytebuddy.matcher.ElementMatcher;
 class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
 
   @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("io.lettuce.core.protocol.AsyncCommand");
+  }
+
+  @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("io.lettuce.core.protocol.AsyncCommand");
+    return extendsClass(named("io.lettuce.core.protocol.AsyncCommand"));
   }
 
   @Override
@@ -46,6 +54,9 @@ class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
       // get the context that submitted this command and attach it, it will be used to run callbacks
       context = context.get(COMMAND_CONTEXT_KEY);
       CONTEXT.set(asyncCommand, context);
+      if (emitStableDatabaseSemconv()) {
+        LettuceCommandPeer.initialize(asyncCommand);
+      }
     }
   }
 

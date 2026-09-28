@@ -35,7 +35,7 @@ public final class InformixSqliUrlParser implements JdbcUrlParser {
   public void parse(String jdbcUrl, ParseContext ctx) {
     ctx.system(IBM_INFORMIX);
     ctx.oldSemconvSystem(OLD_SYSTEM);
-    ctx.port(DEFAULT_PORT);
+    ctx.defaultPort(DEFAULT_PORT);
 
     ctx.applyDataSourceProperties();
 
