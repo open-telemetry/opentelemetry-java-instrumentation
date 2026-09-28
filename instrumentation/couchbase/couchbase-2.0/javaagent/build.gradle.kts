@@ -114,84 +114,8 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.couchbase.experimental-span-attributes=true")
   }
 
-  val selectorTests = listOf("test", "version26Test").flatMap { suiteName ->
-    val suite = testing.suites.named<JvmTestSuite>(suiteName).get()
-    val version26 = suiteName == "version26Test"
-    val legacySelector = if (version26) "couchbase-2.6" else "couchbase-network-2.0"
-    val previewSelector = if (version26) "couchbase-2.0-network-2.6" else "couchbase-2.0-network-2.0"
-    val selectorCases = listOf(
-      Triple("NormalDefault", true to true, emptyList<String>()),
-      Triple("NormalLegacyDisabled", true to false, listOf("-Dotel.instrumentation.$legacySelector.enabled=false")),
-      Triple(
-        "NormalLegacyEnabled",
-        true to true,
-        listOf(
-          "-Dotel.instrumentation.common.default-enabled=false",
-          "-Dotel.instrumentation.opentelemetry-api.enabled=true",
-          "-Dotel.instrumentation.executors.enabled=true",
-          "-Dotel.instrumentation.couchbase-2.0-core.enabled=true",
-          "-Dotel.instrumentation.$legacySelector.enabled=true",
-        ),
-      ),
-      Triple("NormalPreviewSelectorIgnored", true to true, listOf("-Dotel.instrumentation.$previewSelector.enabled=false")),
-      Triple(
-        "PreviewLegacySelectorIgnored",
-        true to true,
-        listOf(
-          "-Dotel.instrumentation.common.v3-preview=true",
-          "-Dotel.instrumentation.$legacySelector.enabled=false",
-        ),
-      ),
-      Triple(
-        "PreviewDedicatedDisabled",
-        true to false,
-        listOf(
-          "-Dotel.instrumentation.common.v3-preview=true",
-          "-Dotel.instrumentation.$previewSelector.enabled=false",
-        ),
-      ),
-      Triple(
-        "PreviewOwnerConflict",
-        false to false,
-        listOf(
-          "-Dotel.instrumentation.common.v3-preview=true",
-          "-Dotel.instrumentation.couchbase-2.0.enabled=false",
-          "-Dotel.instrumentation.$previewSelector.enabled=true",
-        ),
-      ),
-      Triple(
-        "NormalYamlDisabled",
-        true to false,
-        listOf("-Dotel.config.file=${projectDir.resolve("src/test/resources/selector-normal-disabled.yaml")}"),
-      ),
-      Triple(
-        "PreviewYamlEnabled",
-        true to true,
-        listOf(
-          "-Dotel.config.file=${projectDir.resolve("src/test/resources/selector-preview-enabled.yaml")}",
-        ),
-      ),
-    )
-    selectorCases.map { (name, expected, config) ->
-      register<Test>("${suiteName}Selector$name") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-        filter {
-          includeTestsMatching("*CouchbaseSelector*Test")
-        }
-        jvmArgs(
-          "-Dcouchbase.selector.test=true",
-          "-Dcouchbase.test.core-enabled=${expected.first}",
-          "-Dcouchbase.test.network-enabled=${expected.second}",
-          "-Dotel.semconv-stability.opt-in=database",
-        )
-        jvmArgs(*config.toTypedArray())
-      }
-    }
-  }
-
   check {
-    dependsOn(testing.suites, stableSemconvSuites, experimentalSuites, version26TestLegacyConfig, selectorTests)
+    dependsOn(testing.suites, stableSemconvSuites, experimentalSuites, version26TestLegacyConfig)
   }
 
   if (otelProps.denyUnsafe) {

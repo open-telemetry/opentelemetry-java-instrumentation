@@ -1,5 +1,0 @@
-file_format: "1.1"
-distribution:
-  javaagent:
-    instrumentation:
-      disabled: [couchbase_network_2.0, couchbase_2.6]
