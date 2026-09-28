@@ -140,11 +140,11 @@ configurations:
     deprecated: true
     replaced_by: otel.instrumentation.common.messaging.headers.included
 
-  # The deprecated names below are flat properties only: the declarative configuration schema keeps
-  # them under `java.common.messaging`, so they declare no declarative_name.
+  # The deprecated flat names below correspond to published declarative keys under `java.common.messaging`.
   messaging.deprecated-headers.included:
     name: otel.instrumentation.messaging.experimental.headers.included
-    description: "Deprecated: use `otel.instrumentation.common.messaging.headers.included` instead. Ignored without a warning under v3-preview; may be removed in a later minor release and will be removed no later than 3.0."
+    declarative_name: java.common.messaging.headers/development.included
+    description: "Deprecated: use `otel.instrumentation.common.messaging.headers.included` or `java.common.messaging.headers.included` instead. Ignored without a warning under v3-preview; may be removed in a later minor release and will be removed no later than 3.0."
     type: list
     default: ""
     deprecated: true
@@ -152,7 +152,8 @@ configurations:
 
   messaging.deprecated-headers.excluded:
     name: otel.instrumentation.messaging.experimental.headers.excluded
-    description: "Deprecated: use `otel.instrumentation.common.messaging.headers.excluded` instead. Ignored without a warning under v3-preview; may be removed in a later minor release and will be removed no later than 3.0."
+    declarative_name: java.common.messaging.headers/development.excluded
+    description: "Deprecated: use `otel.instrumentation.common.messaging.headers.excluded` or `java.common.messaging.headers.excluded` instead. Ignored without a warning under v3-preview; may be removed in a later minor release and will be removed no later than 3.0."
     type: list
     default: ""
     deprecated: true

@@ -67,9 +67,11 @@ public final class MessagingConfig {
     List<String> stableIncluded = headers.getScalarList("included", String.class);
     List<String> stableExcluded = headers.getScalarList("excluded", String.class);
     List<String> included =
-        getHeaderPatterns("included", stableIncluded, deprecatedHeaders, systemPropertyFallback);
+        getHeaderPatterns(
+            "included", stableIncluded, messagingConfig, deprecatedHeaders, systemPropertyFallback);
     List<String> excluded =
-        getHeaderPatterns("excluded", stableExcluded, deprecatedHeaders, systemPropertyFallback);
+        getHeaderPatterns(
+            "excluded", stableExcluded, messagingConfig, deprecatedHeaders, systemPropertyFallback);
     IncludeExclude selector =
         IncludeExclude.builder()
             .setIncluded(included == null ? emptyList() : included)
@@ -95,6 +97,7 @@ public final class MessagingConfig {
   private static List<String> getHeaderPatterns(
       String name,
       @Nullable List<String> stablePatterns,
+      DeclarativeConfigProperties messagingConfig,
       @Nullable DeclarativeConfigProperties deprecatedHeaders,
       boolean systemPropertyFallback) {
     String replacementProperty = COMMON_MESSAGING_PROPERTY_PREFIX + ".headers." + name;
@@ -111,9 +114,27 @@ public final class MessagingConfig {
       return null;
     }
 
-    // TODO: remove the deprecated flat messaging names in a future minor release.
     String deprecatedProperty =
         DEPRECATED_MESSAGING_PROPERTY_PREFIX + ".experimental.headers." + name;
+    List<String> commonPatterns =
+        messagingConfig.get("headers/development").getScalarList(name, String.class);
+    if (commonPatterns != null && !commonPatterns.isEmpty()) {
+      String deprecatedPath = "java.common.messaging.headers/development." + name;
+      if (warnedDeprecatedProperties.add(deprecatedPath)) {
+        logger.warning(
+            "The "
+                + deprecatedPath
+                + " declarative configuration or "
+                + deprecatedProperty
+                + " flat setting is deprecated and may be removed in a later minor release."
+                + " Use java.common.messaging.headers."
+                + name
+                + " instead.");
+      }
+      return commonPatterns;
+    }
+
+    // TODO: remove the deprecated flat messaging names in a future minor release.
     List<String> patterns =
         getList(deprecatedHeaders, name, deprecatedProperty, systemPropertyFallback);
     if (patterns != null && !patterns.isEmpty()) {

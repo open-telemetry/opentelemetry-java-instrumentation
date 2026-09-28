@@ -186,8 +186,15 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
 
   @Test
   void testDeprecatedMessagingHeadersSelectorMapping() {
+    Map<String, String> properties = new HashMap<>();
+    properties.put("otel.instrumentation.messaging.experimental.headers.included", "legacy");
+    properties.put("otel.instrumentation.messaging.experimental.headers.excluded", "secret");
+    properties.put("otel.instrumentation.common.messaging.experimental.headers.included", "wrong");
+    properties.put("otel.instrumentation.common.messaging.experimental.headers.excluded", "wrong");
     DeclarativeConfigProperties config =
-        createConfig("otel.instrumentation.messaging.experimental.headers.included", "legacy");
+        DeclarativeConfigBridge.createInstrumentationConfig(
+                DefaultConfigProperties.createFromMap(properties))
+            .getInstrumentationConfig();
 
     assertThat(
             config
@@ -199,11 +206,26 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
     assertThat(
             config
                 .getStructured("java")
+                .getStructured("messaging")
+                .getStructured("headers/development")
+                .getScalarList("excluded", String.class))
+        .containsExactly("secret");
+    assertThat(
+            config
+                .getStructured("java")
                 .getStructured("common")
                 .getStructured("messaging")
                 .getStructured("headers/development")
                 .getScalarList("included", String.class))
-        .isNull();
+        .containsExactly("legacy");
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("common")
+                .getStructured("messaging")
+                .getStructured("headers/development")
+                .getScalarList("excluded", String.class))
+        .containsExactly("secret");
   }
 
   @Test

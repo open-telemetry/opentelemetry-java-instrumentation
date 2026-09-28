@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,6 +21,9 @@ import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfiguration;
+import io.opentelemetry.sdk.internal.SdkConfigProvider;
+import java.io.ByteArrayInputStream;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -72,6 +76,132 @@ class MessagingConfigTest {
 
     assertThat(headers.matches("public")).isTrue();
     assertThat(headers.matches("Secret-token")).isFalse();
+  }
+
+  @Test
+  void publishedYamlSelectorWarnsOnceWhenApplied() throws Exception {
+    ExtendedOpenTelemetry openTelemetry =
+        yamlOpenTelemetry(
+            "file_format: 1.1\n"
+                + "instrumentation/development:\n"
+                + "  java:\n"
+                + "    common:\n"
+                + "      messaging:\n"
+                + "        headers/development:\n"
+                + "          included: [\"Trace-*\"]\n"
+                + "          excluded: [\"Trace-secret\"]\n");
+    TestHandler handler = new TestHandler();
+    Logger logger = Logger.getLogger(MessagingConfig.class.getName());
+    clearDeprecatedWarnings();
+    logger.addHandler(handler);
+    try {
+      IncludeExclude headers = MessagingConfig.getHeaders(openTelemetry);
+      MessagingConfig.getHeaders(openTelemetry);
+
+      assertThat(headers.matches("Trace-public")).isTrue();
+      assertThat(headers.matches("Trace-secret")).isFalse();
+      assertThat(headers.matches("trace-public")).isFalse();
+      assertThat(handler.records).hasSize(2);
+      assertThat(handler.records.get(0).getMessage())
+          .contains(
+              "java.common.messaging.headers/development.included",
+              "java.common.messaging.headers.included");
+      assertThat(handler.records.get(1).getMessage())
+          .contains(
+              "java.common.messaging.headers/development.excluded",
+              "java.common.messaging.headers.excluded");
+    } finally {
+      logger.removeHandler(handler);
+      clearDeprecatedWarnings();
+    }
+  }
+
+  @Test
+  void stableYamlLeavesOverridePublishedYamlPerLeaf() throws Exception {
+    ExtendedOpenTelemetry openTelemetry =
+        yamlOpenTelemetry(
+            "file_format: 1.1\n"
+                + "instrumentation/development:\n"
+                + "  java:\n"
+                + "    common:\n"
+                + "      messaging:\n"
+                + "        headers:\n"
+                + "          included: [\"Trace-*\"]\n"
+                + "        headers/development:\n"
+                + "          included: [\"legacy\"]\n"
+                + "          excluded: [\"Trace-secret\"]\n");
+    TestHandler handler = new TestHandler();
+    Logger logger = Logger.getLogger(MessagingConfig.class.getName());
+    clearDeprecatedWarnings();
+    logger.addHandler(handler);
+    try {
+      IncludeExclude headers = MessagingConfig.getHeaders(openTelemetry);
+
+      assertThat(headers.matches("Trace-public")).isTrue();
+      assertThat(headers.matches("Trace-secret")).isFalse();
+      assertThat(headers.matches("legacy")).isFalse();
+      assertThat(handler.records).hasSize(1);
+      assertThat(handler.records.get(0).getMessage())
+          .contains("java.common.messaging.headers/development.excluded");
+    } finally {
+      logger.removeHandler(handler);
+      clearDeprecatedWarnings();
+    }
+  }
+
+  @Test
+  void emptyStableYamlLeafBlocksDeprecatedFallback() throws Exception {
+    ExtendedOpenTelemetry openTelemetry =
+        yamlOpenTelemetry(
+            "file_format: 1.1\n"
+                + "instrumentation/development:\n"
+                + "  java:\n"
+                + "    common:\n"
+                + "      messaging:\n"
+                + "        headers:\n"
+                + "          included: []\n"
+                + "          excluded: []\n"
+                + "        headers/development:\n"
+                + "          included: [\"legacy\"]\n"
+                + "          excluded: [\"secret\"]\n"
+                + "        capture_headers/development: [\"capture\"]\n");
+    TestHandler handler = new TestHandler();
+    Logger logger = Logger.getLogger(MessagingConfig.class.getName());
+    clearDeprecatedWarnings();
+    logger.addHandler(handler);
+    try {
+      assertThat(MessagingConfig.getHeaders(openTelemetry).isEmpty()).isTrue();
+      assertThat(handler.records).isEmpty();
+    } finally {
+      logger.removeHandler(handler);
+      clearDeprecatedWarnings();
+    }
+  }
+
+  @Test
+  void previewYamlIgnoresPublishedSelectorWithoutWarning() throws Exception {
+    ExtendedOpenTelemetry openTelemetry =
+        yamlOpenTelemetry(
+            "file_format: 1.1\n"
+                + "instrumentation/development:\n"
+                + "  java:\n"
+                + "    common:\n"
+                + "      v3_preview: true\n"
+                + "      messaging:\n"
+                + "        headers/development:\n"
+                + "          included: [\"Trace-*\"]\n"
+                + "          excluded: [\"Trace-secret\"]\n");
+    TestHandler handler = new TestHandler();
+    Logger logger = Logger.getLogger(MessagingConfig.class.getName());
+    clearDeprecatedWarnings();
+    logger.addHandler(handler);
+    try {
+      assertThat(MessagingConfig.getHeaders(openTelemetry).isEmpty()).isTrue();
+      assertThat(handler.records).isEmpty();
+    } finally {
+      logger.removeHandler(handler);
+      clearDeprecatedWarnings();
+    }
   }
 
   @Test
@@ -152,6 +282,59 @@ class MessagingConfigTest {
   }
 
   @Test
+  void publishedYamlTakesPrecedenceOverOlderMessagingAlias() throws Exception {
+    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
+    when(messagingConfig(openTelemetry)
+            .get("headers/development")
+            .getScalarList("included", String.class))
+        .thenReturn(singletonList("published"));
+    when(deprecatedMessagingConfig(openTelemetry)
+            .get("headers/development")
+            .getScalarList("included", String.class))
+        .thenReturn(singletonList("older"));
+    TestHandler handler = new TestHandler();
+    Logger logger = Logger.getLogger(MessagingConfig.class.getName());
+    clearDeprecatedWarnings();
+    logger.addHandler(handler);
+    try {
+      assertThat(MessagingConfig.getHeaders(openTelemetry).getIncluded())
+          .containsExactly("published");
+      assertThat(handler.records).hasSize(1);
+      assertThat(handler.records.get(0).getMessage())
+          .contains("java.common.messaging.headers/development.included");
+    } finally {
+      logger.removeHandler(handler);
+      clearDeprecatedWarnings();
+    }
+  }
+
+  @Test
+  void emptyPublishedYamlLeafFallsBackToOlderMessagingAlias() throws Exception {
+    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
+    when(messagingConfig(openTelemetry)
+            .get("headers/development")
+            .getScalarList("included", String.class))
+        .thenReturn(emptyList());
+    when(deprecatedMessagingConfig(openTelemetry)
+            .get("headers/development")
+            .getScalarList("included", String.class))
+        .thenReturn(singletonList("older"));
+    TestHandler handler = new TestHandler();
+    Logger logger = Logger.getLogger(MessagingConfig.class.getName());
+    clearDeprecatedWarnings();
+    logger.addHandler(handler);
+    try {
+      assertThat(MessagingConfig.getHeaders(openTelemetry).getIncluded()).containsExactly("older");
+      assertThat(handler.records).hasSize(1);
+      assertThat(handler.records.get(0).getMessage())
+          .contains("otel.instrumentation.messaging.experimental.headers.included");
+    } finally {
+      logger.removeHandler(handler);
+      clearDeprecatedWarnings();
+    }
+  }
+
+  @Test
   void emptyStableSelectorOverridesDeprecatedSelectors() {
     ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
     when(messagingConfig(openTelemetry).get("headers").getScalarList("included", String.class))
@@ -177,6 +360,8 @@ class MessagingConfigTest {
     when(deprecatedConfig.get("headers/development").getScalarList("excluded", String.class))
         .thenReturn(singletonList("older-exclusion"));
     DeclarativeConfigProperties messaging = messagingConfig(openTelemetry);
+    when(messaging.get("headers/development").getScalarList("included", String.class))
+        .thenReturn(singletonList("published"));
     when(messaging.getScalarList("capture_headers/development", String.class))
         .thenReturn(singletonList("older-capture"));
     clearInvocations(deprecatedConfig, messaging);
@@ -189,6 +374,7 @@ class MessagingConfigTest {
     try {
       assertThat(MessagingConfig.getHeaders(openTelemetry).isEmpty()).isTrue();
       verify(deprecatedConfig, never()).get("headers/development");
+      verify(messaging, never()).get("headers/development");
       verify(messaging, never()).getScalarList("capture_headers/development", String.class);
       assertThat(handler.records).isEmpty();
     } finally {
@@ -220,16 +406,8 @@ class MessagingConfigTest {
   }
 
   @Test
-  void ignoresUnsupportedCommonSelector() {
+  void ignoresUnsupportedCommonFlatSelector() {
     ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
-    when(messagingConfig(openTelemetry)
-            .get("headers/development")
-            .getScalarList("included", String.class))
-        .thenReturn(singletonList("deprecated"));
-    when(messagingConfig(openTelemetry)
-            .get("headers/development")
-            .getScalarList("excluded", String.class))
-        .thenReturn(singletonList("secret"));
     String included = "otel.instrumentation.common.messaging.experimental.headers.included";
     String excluded = "otel.instrumentation.common.messaging.experimental.headers.excluded";
     System.setProperty(included, "deprecated");
@@ -549,6 +727,10 @@ class MessagingConfigTest {
     when(messageCreateSpansConfig(messagingConfig).getBoolean("enabled")).thenReturn(null);
     when(messagingConfig.get("headers").getScalarList("included", String.class)).thenReturn(null);
     when(messagingConfig.get("headers").getScalarList("excluded", String.class)).thenReturn(null);
+    when(messagingConfig.get("headers/development").getScalarList("included", String.class))
+        .thenReturn(null);
+    when(messagingConfig.get("headers/development").getScalarList("excluded", String.class))
+        .thenReturn(null);
     when(messagingConfig.getScalarList("capture_headers/development", String.class))
         .thenReturn(null);
     when(deprecatedMessagingConfig.get("receive_telemetry/development").getBoolean("enabled"))
@@ -561,6 +743,20 @@ class MessagingConfigTest {
             .get("headers/development")
             .getScalarList("excluded", String.class))
         .thenReturn(null);
+    return openTelemetry;
+  }
+
+  private static ExtendedOpenTelemetry yamlOpenTelemetry(String yaml) {
+    DeclarativeConfigProperties javaConfig =
+        SdkConfigProvider.create(
+                DeclarativeConfiguration.toConfigProperties(
+                    new ByteArrayInputStream(yaml.getBytes(UTF_8))))
+            .getInstrumentationConfig()
+            .get("java");
+    ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
+    when(openTelemetry.getInstrumentationConfig("common")).thenReturn(javaConfig.get("common"));
+    when(openTelemetry.getInstrumentationConfig("messaging"))
+        .thenReturn(javaConfig.get("messaging"));
     return openTelemetry;
   }
 
