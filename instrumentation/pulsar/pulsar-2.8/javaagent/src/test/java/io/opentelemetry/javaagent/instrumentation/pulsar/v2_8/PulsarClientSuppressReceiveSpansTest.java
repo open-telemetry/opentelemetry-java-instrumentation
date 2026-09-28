@@ -456,7 +456,13 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            sendAttributes(innerTopic, innerMessageId.toString(), false))),
+                            sendAttributes(innerTopic, innerMessageId.toString(), false)),
+                span ->
+                    span.hasName(spanName("process", innerTopic))
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            processAttributes(innerTopic, innerMessageId.toString(), false))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -581,9 +587,25 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
           }
         };
     directExecutor.shutdown();
-    setField(dispatcher, "conf", conf);
-    setField(dispatcher, "listener", conf.getMessageListener());
-    setField(dispatcher, "pinnedExecutor", directExecutor);
+        MessageListener<String> wrappedListener = conf.getMessageListener();
+        setField(dispatcher, "conf", conf);
+        setField(dispatcher, "listener", wrappedListener);
+        try {
+          setField(dispatcher, "pinnedExecutor", directExecutor);
+        } catch (NoSuchFieldException ignored) {
+          Field listenerTaskScheduler = ConsumerBase.class.getDeclaredField("listenerTaskScheduler");
+          Object scheduler =
+          mock(
+              listenerTaskScheduler.getType(),
+              invocation -> {
+                if (invocation.getMethod().getName().equals("trigger")) {
+                  wrappedListener.received(dispatcher, messages.poll());
+                }
+                return null;
+              });
+      listenerTaskScheduler.setAccessible(true);
+      listenerTaskScheduler.set(dispatcher, scheduler);
+    }
     setField(dispatcher, "subscription", "test_sub");
     return dispatcher;
   }
