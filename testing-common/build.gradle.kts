@@ -6,22 +6,17 @@ plugins {
 description = "OpenTelemetry Javaagent testing commons"
 group = "io.opentelemetry.javaagent"
 
-val shadedDepsDir = project(":testing:dependencies-shaded-for-testing").file("build/extracted/shadow")
-
 sourceSets {
   main {
+    val shadedDeps = project(":testing:dependencies-shaded-for-testing")
     output.dir(
-      shadedDepsDir,
+      shadedDeps.file("build/extracted/shadow"),
       "builtBy" to ":testing:dependencies-shaded-for-testing:extractShadowJar"
     )
   }
 }
 
 dependencies {
-  // IntelliJ doesn't see classes added via output.dir(...), so also expose them as a file
-  // dependency. File dependencies aren't included in the published POM or module metadata.
-  api(files(shadedDepsDir).builtBy(":testing:dependencies-shaded-for-testing:extractShadowJar"))
-
   api("org.junit.jupiter:junit-jupiter-api")
   api("org.junit.jupiter:junit-jupiter-params")
 
@@ -37,6 +32,7 @@ dependencies {
   api("org.slf4j:slf4j-api")
   api("com.google.code.findbugs:annotations")
 
+  compileOnly(project(":testing:dependencies-shaded-for-testing", configuration = "shadow"))
   compileOnly(project(":javaagent-bootstrap"))
 
   compileOnly("com.google.auto.value:auto-value-annotations")
