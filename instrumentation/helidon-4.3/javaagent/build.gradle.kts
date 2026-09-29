@@ -15,6 +15,7 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_21)
   if (otelProps.testLatestDeps) {
     javaToolchainVersion.set(JavaVersion.VERSION_27)
+    java.toolchain.vendor.set(JvmVendorSpec.AZUL)
   }
 }
 
