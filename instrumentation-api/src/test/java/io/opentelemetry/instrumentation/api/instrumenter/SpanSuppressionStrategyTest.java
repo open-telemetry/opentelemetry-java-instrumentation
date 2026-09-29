@@ -545,7 +545,8 @@ class SpanSuppressionStrategyTest {
           .isEqualTo(
               "The otel.instrumentation.experimental.span-suppression-strategy setting is"
                   + " deprecated and will be removed in 3.0. Use"
-                  + " otel.instrumentation.common.span-suppression-strategy instead.");
+                  + " the programmatic API or equivalent declarative instrumentation"
+                  + " configuration instead.");
 
       Instrumenter.<String, String>builder(
               withCommonConfig(null, null, false), "test", request -> "test")
