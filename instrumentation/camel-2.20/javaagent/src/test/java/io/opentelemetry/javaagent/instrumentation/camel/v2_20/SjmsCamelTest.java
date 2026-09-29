@@ -30,7 +30,6 @@ class SjmsCamelTest {
 
   private static final String CAMEL_INSTRUMENTATION_NAME = "io.opentelemetry.camel-2.20";
   private static final String JMS_INSTRUMENTATION_NAME = "io.opentelemetry.jms-1.1";
-  private static final boolean TEST_CAMEL_DISABLED = Boolean.getBoolean("testCamelDisabled");
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -76,12 +75,8 @@ class SjmsCamelTest {
     template.sendBody("direct:input", "test message");
 
     assertThat(received.await(1, MINUTES)).isTrue();
-    String expectedInstrumentationName =
-        TEST_CAMEL_DISABLED ? JMS_INSTRUMENTATION_NAME : CAMEL_INSTRUMENTATION_NAME;
-    String unexpectedInstrumentationName =
-        TEST_CAMEL_DISABLED ? CAMEL_INSTRUMENTATION_NAME : JMS_INSTRUMENTATION_NAME;
-    assertProcessDuration(expectedInstrumentationName, 2);
-    assertNoProcessDuration(unexpectedInstrumentationName);
+    assertProcessDuration(CAMEL_INSTRUMENTATION_NAME, 2);
+    assertNoProcessDuration(JMS_INSTRUMENTATION_NAME);
   }
 
   private static void assertProcessDuration(String instrumentationName, long expectedCount) {

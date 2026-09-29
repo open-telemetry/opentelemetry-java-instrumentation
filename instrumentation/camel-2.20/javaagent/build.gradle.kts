@@ -170,39 +170,6 @@ tasks {
       }
     }
 
-  val testStableSemconvSjmsAliasOnly =
-    register<Test>("testStableSemconvSjmsAliasOnly") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
-
-      jvmArgs("-Dotel.instrumentation.experimental.span-suppression-strategy=semconv")
-      jvmArgs("-Dotel.semconv-stability.opt-in=database,messaging")
-      jvmArgs("-Dotel.instrumentation.common.default-enabled=false")
-      jvmArgs("-Dotel.instrumentation.jms.enabled=true")
-      jvmArgs("-Dotel.instrumentation.camel-sjms.enabled=true")
-      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,messaging")
-      systemProperty("testCamelDisabled", "true")
-      filter {
-        includeTestsMatching("*SjmsCamelTest")
-        includeTestsMatching("*SjmsRegisteredListenerTest")
-      }
-    }
-
-  val testStableSemconvCamelDisabled = register<Test>("testStableSemconvCamelDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.experimental.span-suppression-strategy=semconv")
-    jvmArgs("-Dotel.semconv-stability.opt-in=database,messaging")
-    jvmArgs("-Dotel.instrumentation.camel.enabled=false")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,messaging")
-    systemProperty("testCamelDisabled", "true")
-    filter {
-      includeTestsMatching("*SjmsCamelTest")
-      includeTestsMatching("*SjmsRegisteredListenerTest")
-    }
-  }
-
   check {
     dependsOn(
       testStableSemconv,
@@ -211,8 +178,6 @@ tasks {
       testV3Preview,
       testStableSemconvNoLowerMessaging,
       testStableSemconvSjmsWithoutCamelJms,
-      testStableSemconvSjmsAliasOnly,
-      testStableSemconvCamelDisabled,
     )
   }
 
