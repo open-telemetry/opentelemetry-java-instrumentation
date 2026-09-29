@@ -15,8 +15,10 @@ import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testL
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -210,16 +212,17 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
     testing.runWithSpan(
         "parent",
         () -> {
-          Iterator<? extends ConsumerRecord<?, ?>> firstIterator =
-              poll(Duration.ofSeconds(5)).iterator();
+          ConsumerRecords<?, ?> firstRecords = poll(Duration.ofSeconds(5));
+          Iterator<? extends ConsumerRecord<?, ?>> firstIterator = firstRecords.iterator();
           assertThat(firstIterator.hasNext()).isTrue();
           firstIterator.next();
 
           try (Scope ignored = Context.root().makeCurrent()) {
             producer.send(new ProducerRecord<>(SHARED_TOPIC, "second")).get(5, SECONDS);
           }
-          Iterator<? extends ConsumerRecord<?, ?>> secondIterator =
-              poll(Duration.ofSeconds(5)).iterator();
+          ConsumerRecords<?, ?> secondRecords = poll(Duration.ofSeconds(5));
+          assertThat(secondRecords).isNotSameAs(firstRecords);
+          Iterator<? extends ConsumerRecord<?, ?>> secondIterator = secondRecords.iterator();
           assertThat(secondIterator.hasNext()).isTrue();
           secondIterator.next();
           assertThat(secondIterator.hasNext()).isFalse();
@@ -240,6 +243,39 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("send " + SHARED_TOPIC).hasNoParent()));
+  }
+
+  @Test
+  void testLegacyAbandonedIteratorRestoresReceiveAndProcessParent() throws Exception {
+    assumeFalse(emitStableMessagingSemconv());
+    producer.send(new ProducerRecord<>(SHARED_TOPIC, "first")).get(5, SECONDS);
+    awaitUntilConsumerIsReady();
+    ConsumerRecords<?, ?> firstRecords = poll(Duration.ofSeconds(5));
+    Iterator<? extends ConsumerRecord<?, ?>> first = firstRecords.iterator();
+    assertThat(first.next().value()).isEqualTo("first");
+    String firstProcessId = Span.current().getSpanContext().getSpanId();
+
+    try (Scope ignored = Context.root().makeCurrent()) {
+      producer.send(new ProducerRecord<>(SHARED_TOPIC, "second")).get(5, SECONDS);
+    }
+    ConsumerRecords<?, ?> secondRecords = poll(Duration.ofSeconds(5));
+    assertThat(secondRecords).isNotSameAs(firstRecords);
+    Iterator<? extends ConsumerRecord<?, ?>> second = secondRecords.iterator();
+    assertThat(second.next().value()).isEqualTo("second");
+    assertThat(Span.current().getSpanContext().getSpanId()).isNotEqualTo(firstProcessId);
+    assertThat(second.hasNext()).isFalse();
+    assertThat(Span.current().getSpanContext().getSpanId()).isEqualTo(firstProcessId);
+    assertThat(first.hasNext()).isFalse();
+    assertThat(Span.current().getSpanContext().isValid()).isFalse();
+
+    assertThat(testing.spans())
+        .filteredOn(span -> span.getName().equals(SHARED_TOPIC + " receive"))
+        .hasSize(2)
+        .allSatisfy(span -> assertThat(span.getParentSpanId()).isNotEqualTo(firstProcessId));
+    assertThat(testing.spans())
+        .filteredOn(span -> span.getName().equals(SHARED_TOPIC + " process"))
+        .hasSize(2)
+        .allSatisfy(span -> assertThat(span.getParentSpanId()).isNotEqualTo(firstProcessId));
   }
 
   @DisplayName("test pass through tombstone")
@@ -342,7 +378,6 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
         assertThat(record.key()).isNull();
       }
     }
-
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
     if (emitStableMessagingSemconv()) {
       testing.waitAndAssertSortedTraces(
