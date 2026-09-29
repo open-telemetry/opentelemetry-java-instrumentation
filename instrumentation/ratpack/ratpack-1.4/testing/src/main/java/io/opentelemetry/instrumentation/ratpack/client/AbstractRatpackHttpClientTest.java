@@ -174,7 +174,9 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
   private static Throwable nettyClientSpanErrorMapper(URI uri, Throwable exception) {
     if (uri.toString().equals("https://192.0.2.1/")) {
       return new ConnectTimeoutException(
-          "connection timed out" + (testLatestDeps() ? " after 2000 ms" : "") + ": /192.0.2.1:443");
+          "connection timed out"
+              + (!Boolean.getBoolean("ratpack14Test") && testLatestDeps() ? " after 2000 ms" : "")
+              + ": /192.0.2.1:443");
     } else if (OS.WINDOWS.isCurrentOs() && uri.toString().equals("http://localhost:61/")) {
       return new ConnectTimeoutException("connection timed out: localhost/127.0.0.1:61");
     } else if (uri.getPath().equals("/read-timeout")) {
