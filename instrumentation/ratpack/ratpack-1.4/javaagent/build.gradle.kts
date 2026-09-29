@@ -38,19 +38,21 @@ dependencies {
   if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_11)) {
     testImplementation("com.sun.activation:jakarta.activation:1.2.2")
   }
+
+  latestDepTestLibrary("io.ratpack:ratpack-core:1.6.+")
+  latestDepTestLibrary("io.ratpack:ratpack-test:1.6.+")
 }
 
-// The 1.4 tests require old Guava and Netty versions.
 if (!otelProps.testLatestDeps) {
   configurations.testRuntimeClasspath.get().resolutionStrategy.force("com.google.guava:guava:19.0")
+}
 
-  listOf("testCompileClasspath", "testRuntimeClasspath").forEach {
-    configurations.named(it) {
-      resolutionStrategy {
-        eachDependency {
-          if (requested.group == "io.netty") {
-            useVersion("4.1.31.Final")
-          }
+listOf("testCompileClasspath", "testRuntimeClasspath").forEach {
+  configurations.named(it) {
+    resolutionStrategy {
+      eachDependency {
+        if (requested.group == "io.netty") {
+          useVersion("4.1.31.Final")
         }
       }
     }
@@ -68,12 +70,6 @@ val version17Test = testing.suites.register<JvmTestSuite>("version17Test") {
 }
 
 tasks {
-  if (otelProps.testLatestDeps) {
-    named("compileTestJava") {
-      enabled = false
-    }
-  }
-
   processResources {
     // The newer API emits its own scope, which needs a version resource as well.
     from(named("generateInstrumentationVersionFile")) {
@@ -92,7 +88,7 @@ tasks {
   }
 
   test {
-    enabled = !otelProps.testLatestDeps
+    systemProperty("ratpack14Test", true)
   }
 
   val testStableSemconv = register<Test>("testStableSemconv") {
@@ -100,7 +96,7 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
-    enabled = !otelProps.testLatestDeps
+    systemProperty("ratpack14Test", true)
   }
 
   val version17TestStableSemconv = register<Test>("version17TestStableSemconv") {
