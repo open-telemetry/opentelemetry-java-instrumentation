@@ -267,8 +267,7 @@ class SqsTracingListTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span
-                        .hasName("process")
+                    span.hasName("process")
                         .hasException(emitExceptionAsSpanEvents() ? failure : null)));
   }
 
