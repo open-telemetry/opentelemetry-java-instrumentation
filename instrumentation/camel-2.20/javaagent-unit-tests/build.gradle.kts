@@ -37,7 +37,9 @@ dependencies {
   testImplementation("org.apache.camel:camel-aws:2.20.1")
   testImplementation("org.apache.camel:camel-http:2.20.1")
   testImplementation("javax.jms:jms-api:1.1-rev-1")
-  testImplementation("org.apache.camel:camel-rabbitmq:2.20.1")
+  testImplementation("org.apache.camel:camel-rabbitmq:2.25.1") {
+    exclude(group = "org.apache.camel", module = "camel-core")
+  }
   testImplementation("org.apache.kafka:kafka-clients:0.11.0.0")
 
   testImplementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
