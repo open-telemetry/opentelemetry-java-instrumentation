@@ -79,7 +79,7 @@ public class ModuleOpener {
           missingOpens,
           emptySet(),
           emptyMap());
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       logger.log(WARNING, "Failed to redefine module '" + targetModule.getActualName() + "'", e);
     }
   }

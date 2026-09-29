@@ -29,9 +29,14 @@ prompt tells you exactly where it lives. The bundle contains:
   PR modified or added. **Always read PR-changed files from here**, not from
   the working tree (the tree is detached at the PR's base commit and does not
   contain the PR's changes).
-- `knowledge/*.md` — review knowledge articles. Start with `README.md` to
-  decide which articles apply. Always apply the general rules, the style
-  guide, and the metadata.yaml guidance.
+- `knowledge/*.md` — optional detailed reference when the native
+  instructions leave a review question unresolved. Do not require
+  loading these articles to apply a rule.
+
+Read the repository's review rules from `.github/copilot-instructions.md`
+and the applicable `.github/instructions/*.instructions.md` files. Use
+staged post-change copies from `files/` if the PR changes these instructions;
+otherwise read them from the working tree.
 
 For files **not** changed by the PR (neighbouring helpers, sibling metadata,
 referenced classes), read directly from the working tree using the repo-

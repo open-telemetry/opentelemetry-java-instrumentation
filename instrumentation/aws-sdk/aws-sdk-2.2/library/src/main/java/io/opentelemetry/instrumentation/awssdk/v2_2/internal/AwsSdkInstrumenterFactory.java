@@ -29,6 +29,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
@@ -50,6 +51,8 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttri
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
+import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
@@ -79,6 +82,53 @@ public final class AwsSdkInstrumenterFactory {
   // copied from MessagingIncubatingAttributes
   private static final AttributeKey<String> MESSAGING_MESSAGE_ID =
       stringKey("messaging.message.id");
+  private static final ContextKey<Context> PROCESS_METRICS_CONTEXT =
+      ContextKey.named("opentelemetry-aws-sqs-process-metrics-context");
+  private static final ContextKey<Boolean> DELIVERY_CLAIMED =
+      ContextKey.named("opentelemetry-aws-sqs-delivery-claimed");
+  private static final OperationMetrics processMetrics =
+      meter -> processMetricsListener(MessagingProcessMetrics.get().create(meter));
+  private static final OperationMetrics consumedMessagesMetrics =
+      meter ->
+          deliveryAccountingListener(MessagingConsumerMetrics.getConsumedMessages().create(meter));
+
+  private static OperationListener processMetricsListener(OperationListener delegate) {
+    return new OperationListener() {
+      @Override
+      public Context onStart(Context context, Attributes startAttributes, long startNanos) {
+        Context metricsContext =
+            delegate.onStart(
+                Context.root().with(Span.fromContext(context)), startAttributes, startNanos);
+        return context.with(PROCESS_METRICS_CONTEXT, metricsContext);
+      }
+
+      @Override
+      public void onEnd(Context context, Attributes endAttributes, long endNanos) {
+        Context metricsContext = context.get(PROCESS_METRICS_CONTEXT);
+        if (metricsContext != null) {
+          delegate.onEnd(metricsContext, endAttributes, endNanos);
+        }
+      }
+    };
+  }
+
+  private static OperationListener deliveryAccountingListener(OperationListener delegate) {
+    return new OperationListener() {
+      @Override
+      public Context onStart(Context context, Attributes startAttributes, long startNanos) {
+        return Boolean.TRUE.equals(context.get(DELIVERY_CLAIMED))
+            ? delegate.onStart(context, startAttributes, startNanos)
+            : context;
+      }
+
+      @Override
+      public void onEnd(Context context, Attributes endAttributes, long endNanos) {
+        if (Boolean.TRUE.equals(context.get(DELIVERY_CLAIMED))) {
+          delegate.onEnd(context, endAttributes, endNanos);
+        }
+      }
+    };
+  }
 
   private static final AttributesExtractor<ExecutionAttributes, Response> rpcAttributesExtractor =
       RpcClientAttributesExtractor.create(new AwsSdkRpcAttributesGetter());
@@ -237,10 +287,13 @@ public final class AwsSdkInstrumenterFactory {
             .addAttributesExtractors(toSqsRequestExtractors(consumerAttributesExtractors()))
             .addAttributesExtractor(
                 messagingAttributesExtractor(getter, operationType, PROCESS_OPERATION_NAME))
-            .addOperationMetrics(MessagingProcessMetrics.get())
+            .addOperationMetrics(processMetrics)
             .setSchemaUrl(messagingSchemaUrl());
     if (!messagingReceiveInstrumentationEnabled && emitStableMessagingSemconv()) {
-      builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
+      builder.addContextCustomizer(
+          (context, request, startAttributes) ->
+              context.with(DELIVERY_CLAIMED, request.getMessage().claimDelivery()));
+      builder.addOperationMetrics(consumedMessagesMetrics);
     }
     setMessagingProcessExceptionEventExtractor(builder);
 

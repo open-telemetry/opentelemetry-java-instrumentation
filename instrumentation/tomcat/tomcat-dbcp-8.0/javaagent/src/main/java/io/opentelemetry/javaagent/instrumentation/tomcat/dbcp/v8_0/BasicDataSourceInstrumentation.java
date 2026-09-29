@@ -67,7 +67,6 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      TomcatDbcpDataSourceMetrics.unregisterMetrics(dataSource);
       TomcatDbcpSingletons.registerMetrics(dataSource, getDataSourceName(objectName));
     }
   }

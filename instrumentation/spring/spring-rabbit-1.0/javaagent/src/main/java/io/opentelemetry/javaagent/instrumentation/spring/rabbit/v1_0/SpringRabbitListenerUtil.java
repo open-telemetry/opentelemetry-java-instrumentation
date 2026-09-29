@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
+import com.rabbitmq.client.Consumer;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import org.springframework.amqp.rabbit.listener.AbstractMessageListenerContainer;
 import org.springframework.amqp.rabbit.listener.BlockingQueueConsumer;
@@ -12,17 +13,24 @@ import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 
 public class SpringRabbitListenerUtil {
 
-  private static final VirtualField<BlockingQueueConsumer, Boolean> SPRING_LISTENER_CONSUMER =
+  private static final VirtualField<BlockingQueueConsumer, Boolean> SPRING_RABBIT_OWNS_PROCESSING =
       VirtualField.find(BlockingQueueConsumer.class, Boolean.class);
+  // RabbitMQ reads this value when wrapping the consumer for each basicConsume registration.
+  private static final VirtualField<Consumer, Boolean> PROCESSING_OWNED_OUTSIDE_RABBIT_CLIENT =
+      VirtualField.find(Consumer.class, Boolean.class);
   private static final VirtualField<SimpleMessageListenerContainer, Boolean>
       CONSUMER_BATCH_ENABLED =
           VirtualField.find(SimpleMessageListenerContainer.class, Boolean.class);
 
-  public static boolean shouldTraceListenerProcess(AbstractMessageListenerContainer container) {
+  public static boolean canTraceListenerProcessing(AbstractMessageListenerContainer container) {
     return container.getMessageListener() != null
         && (!(container instanceof SimpleMessageListenerContainer)
             || !Boolean.TRUE.equals(
                 CONSUMER_BATCH_ENABLED.get((SimpleMessageListenerContainer) container)));
+  }
+
+  public static boolean springRabbitOwnsProcessing(BlockingQueueConsumer consumer) {
+    return Boolean.TRUE.equals(SPRING_RABBIT_OWNS_PROCESSING.get(consumer));
   }
 
   public static void setConsumerBatchEnabled(
@@ -30,12 +38,13 @@ public class SpringRabbitListenerUtil {
     CONSUMER_BATCH_ENABLED.set(container, enabled);
   }
 
-  public static void markSpringListenerConsumer(BlockingQueueConsumer consumer) {
-    SPRING_LISTENER_CONSUMER.set(consumer, Boolean.TRUE);
+  public static void markSpringRabbitAsProcessingOwner(BlockingQueueConsumer consumer) {
+    SPRING_RABBIT_OWNS_PROCESSING.set(consumer, Boolean.TRUE);
   }
 
-  public static boolean isSpringListenerConsumer(BlockingQueueConsumer consumer) {
-    return Boolean.TRUE.equals(SPRING_LISTENER_CONSUMER.get(consumer));
+  public static void setProcessingOwnedOutsideRabbitClient(
+      Consumer consumer, boolean processingOwnedOutsideRabbitClient) {
+    PROCESSING_OWNED_OUTSIDE_RABBIT_CLIENT.set(consumer, processingOwnedOutsideRabbitClient);
   }
 
   private SpringRabbitListenerUtil() {}
