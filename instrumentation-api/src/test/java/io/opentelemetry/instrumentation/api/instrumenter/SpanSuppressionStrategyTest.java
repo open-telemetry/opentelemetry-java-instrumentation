@@ -167,7 +167,7 @@ class SpanSuppressionStrategyTest {
   }
 
   @Test
-  void shouldIgnoreDeprecatedFlatPropertyFromBridgeUnderV3Preview() {
+  void shouldUseDeprecatedFlatPropertyFromBridgeUnderV3Preview() {
     Map<String, String> properties = new HashMap<>();
     properties.put("otel.instrumentation.experimental.span-suppression-strategy", "span-kind");
     properties.put("otel.instrumentation.common.v3-preview", "true");
@@ -182,8 +182,8 @@ class SpanSuppressionStrategyTest {
     SpanSuppressor suppressor = builder.buildSpanSuppressor();
     Context context = suppressor.storeInContext(Context.root(), SpanKind.CLIENT, span);
 
-    assertThat(SpanKey.DB_CLIENT.fromContextOrNull(context)).isSameAs(span);
-    assertThat(SpanKey.KIND_CLIENT.fromContextOrNull(context)).isNull();
+    assertThat(SpanKey.DB_CLIENT.fromContextOrNull(context)).isNull();
+    assertThat(SpanKey.KIND_CLIENT.fromContextOrNull(context)).isSameAs(span);
   }
 
   @Test
@@ -284,7 +284,7 @@ class SpanSuppressionStrategyTest {
   @SetSystemProperty(
       key = "otel.instrumentation.experimental.span-suppression-strategy",
       value = "none")
-  void shouldIgnoreDeprecatedYamlFromSdkConfigProviderUnderV3Preview() {
+  void shouldUseDeprecatedYamlFromSdkConfigProviderUnderV3Preview() {
     String yaml =
         "file_format: 1.1\n"
             + "instrumentation/development:\n"
@@ -311,8 +311,8 @@ class SpanSuppressionStrategyTest {
     SpanSuppressor suppressor = builder.buildSpanSuppressor();
     Context context = suppressor.storeInContext(Context.root(), SpanKind.CLIENT, span);
 
-    assertThat(SpanKey.DB_CLIENT.fromContextOrNull(context)).isSameAs(span);
-    assertThat(SpanKey.KIND_CLIENT.fromContextOrNull(context)).isNull();
+    assertThat(SpanKey.DB_CLIENT.fromContextOrNull(context)).isNull();
+    assertThat(SpanKey.KIND_CLIENT.fromContextOrNull(context)).isSameAs(span);
   }
 
   @Test
@@ -366,7 +366,7 @@ class SpanSuppressionStrategyTest {
   @SetSystemProperty(
       key = "otel.instrumentation.experimental.span-suppression-strategy",
       value = "span-kind")
-  void shouldIgnoreDeprecatedPropertyWhenConfiguredV3PreviewIsEnabled() {
+  void shouldUseDeprecatedPropertyWhenConfiguredV3PreviewIsEnabled() {
     ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
     ConfigProvider configProvider = mock(ConfigProvider.class);
     DeclarativeConfigProperties commonConfig = mock(DeclarativeConfigProperties.class);
@@ -386,16 +386,16 @@ class SpanSuppressionStrategyTest {
     SpanSuppressor suppressor = builder.buildSpanSuppressor();
 
     Context context = suppressor.storeInContext(Context.root(), SpanKind.CLIENT, span);
-    assertThat(SpanKey.DB_CLIENT.fromContextOrNull(context)).isSameAs(span);
-    assertThat(SpanKey.KIND_CLIENT.fromContextOrNull(context)).isNull();
-    verify(commonConfig, never()).getString("span_suppression_strategy/development");
+    assertThat(SpanKey.DB_CLIENT.fromContextOrNull(context)).isNull();
+    assertThat(SpanKey.KIND_CLIENT.fromContextOrNull(context)).isSameAs(span);
+    verify(commonConfig).getString("span_suppression_strategy/development");
   }
 
   @Test
   @SetSystemProperty(
       key = "otel.instrumentation.experimental.span-suppression-strategy",
       value = "span-kind")
-  void shouldIgnoreDeprecatedYamlAndFlatPropertyUnderV3Preview() {
+  void shouldUseDeprecatedYamlBeforeFlatPropertyUnderV3Preview() {
     ExtendedOpenTelemetry openTelemetry = withCommonConfig(null, "none", true);
     InstrumenterBuilder<String, String> builder =
         Instrumenter.<String, String>builder(openTelemetry, "test", request -> "test");
@@ -407,9 +407,8 @@ class SpanSuppressionStrategyTest {
 
     SpanSuppressor suppressor = builder.buildSpanSuppressor();
     Context context = suppressor.storeInContext(Context.root(), SpanKind.CLIENT, span);
-    assertThat(SpanKey.DB_CLIENT.fromContextOrNull(context)).isSameAs(span);
-    assertThat(SpanKey.KIND_CLIENT.fromContextOrNull(context)).isNull();
-    verify(openTelemetry.getInstrumentationConfig("common"), never())
+    assertThat(context).isSameAs(Context.root());
+    verify(openTelemetry.getInstrumentationConfig("common"))
         .getString("span_suppression_strategy/development");
   }
 
@@ -418,7 +417,7 @@ class SpanSuppressionStrategyTest {
   @SetSystemProperty(
       key = "otel.instrumentation.experimental.span-suppression-strategy",
       value = "span-kind")
-  void shouldIgnoreDeprecatedAliasesWhenFlatV3PreviewIsEnabled() {
+  void shouldUseDeprecatedAliasesWhenFlatV3PreviewIsEnabled() {
     ExtendedOpenTelemetry openTelemetry = withCommonConfig(null, "none", false);
     InstrumenterBuilder<String, String> builder =
         Instrumenter.<String, String>builder(openTelemetry, "test", request -> "test");
@@ -431,9 +430,8 @@ class SpanSuppressionStrategyTest {
     SpanSuppressor suppressor = builder.buildSpanSuppressor();
     Context context = suppressor.storeInContext(Context.root(), SpanKind.CLIENT, span);
 
-    assertThat(SpanKey.DB_CLIENT.fromContextOrNull(context)).isSameAs(span);
-    assertThat(SpanKey.KIND_CLIENT.fromContextOrNull(context)).isNull();
-    verify(openTelemetry.getInstrumentationConfig("common"), never())
+    assertThat(context).isSameAs(Context.root());
+    verify(openTelemetry.getInstrumentationConfig("common"))
         .getString("span_suppression_strategy/development");
   }
 
@@ -505,10 +503,12 @@ class SpanSuppressionStrategyTest {
           .buildSpanSuppressor();
       Instrumenter.<String, String>builder(preview, "test", request -> "test")
           .buildSpanSuppressor();
-      assertThat(records).isEmpty();
-      assertThat(configWarningLogged.get()).isFalse();
+      assertThat(records).hasSize(1);
+      assertThat(records.get(0).getLevel()).isEqualTo(WARNING);
+      assertThat(records.get(0).getMessage()).isEqualTo(warningMessage);
+      assertThat(configWarningLogged.get()).isTrue();
       assertThat(propertyWarningLogged.get()).isFalse();
-      verify(preview.getInstrumentationConfig("common"), never())
+      verify(preview.getInstrumentationConfig("common"))
           .getString("span_suppression_strategy/development");
 
       ExtendedOpenTelemetry deprecated = withCommonConfig(null, "span-kind", false);
