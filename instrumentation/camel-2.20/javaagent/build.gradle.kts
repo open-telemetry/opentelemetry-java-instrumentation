@@ -194,7 +194,7 @@ tasks {
     systemProperty("testCamelDisabled", "true")
     filter {
       includeTestsMatching("*SqsCamelTest.awsSdkSqsProducerToCamelSqsConsumer")
-      includeTestsMatching("*KafkaCamelPollInstrumentationTest")
+      includeTestsMatching("*KafkaCamelTest")
       includeTestsMatching("*SqsCamelOwnershipInstrumentationTest")
       includeTestsMatching("*RabbitCamelRegistrationInstrumentationTest")
     }
@@ -211,7 +211,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.camel-aws-sqs.enabled=false")
     systemProperty("testAdapterDisabled", "true")
     filter {
-      includeTestsMatching("*KafkaCamelPollInstrumentationTest")
+      includeTestsMatching("*KafkaCamelTest")
       includeTestsMatching("*SqsCamelOwnershipInstrumentationTest")
       includeTestsMatching("*RabbitCamelRegistrationInstrumentationTest")
     }
