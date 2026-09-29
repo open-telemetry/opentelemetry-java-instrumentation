@@ -23,8 +23,8 @@ public class ApacheCamelRabbitInstrumentationModule extends InstrumentationModul
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("org.apache.camel.component.rabbitmq.RabbitConsumer")
-        .and(hasClassesNamed("com.rabbitmq.client.Consumer"));
+    return hasClassesNamed(
+        "org.apache.camel.component.rabbitmq.RabbitConsumer", "com.rabbitmq.client.Consumer");
   }
 
   @Override

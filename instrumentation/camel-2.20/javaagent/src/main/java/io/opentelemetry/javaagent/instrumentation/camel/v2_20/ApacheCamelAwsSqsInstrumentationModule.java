@@ -23,8 +23,9 @@ public class ApacheCamelAwsSqsInstrumentationModule extends InstrumentationModul
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("org.apache.camel.component.aws.sqs.SqsConsumer")
-        .and(hasClassesNamed("com.amazonaws.services.sqs.model.Message"));
+    return hasClassesNamed(
+        "org.apache.camel.component.aws.sqs.SqsConsumer",
+        "com.amazonaws.services.sqs.model.Message");
   }
 
   @Override

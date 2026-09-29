@@ -34,8 +34,9 @@ public class ApacheCamelKafkaInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("org.apache.camel.component.kafka.KafkaConsumer")
-        .and(hasClassesNamed("org.apache.kafka.clients.consumer.KafkaConsumer"));
+    return hasClassesNamed(
+        "org.apache.camel.component.kafka.KafkaConsumer",
+        "org.apache.kafka.clients.consumer.KafkaConsumer");
   }
 
   @Override
