@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import com.linecorp.armeria.client.grpc.GrpcClientBuilder;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
+import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcTargetParser;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.Internal;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -41,7 +42,8 @@ class ArmeriaGrpcClientBuilderInstrumentation implements TypeInstrumentation {
         @Advice.This GrpcClientBuilder builder, @Advice.FieldValue("uri") @Nullable URI uri) {
       GrpcTelemetry telemetry = GrpcTelemetry.create(GlobalOpenTelemetry.get());
       builder.intercept(
-          Internal.createClientInterceptor(telemetry, ArmeriaGrpcTarget.fromUri(uri)));
+          Internal.createClientInterceptor(
+              telemetry, GrpcTargetParser.createDnsTargetFromUri(uri)));
     }
   }
 }

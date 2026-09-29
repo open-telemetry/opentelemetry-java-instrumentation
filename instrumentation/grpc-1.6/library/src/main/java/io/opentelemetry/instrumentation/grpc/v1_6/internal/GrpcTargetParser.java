@@ -54,6 +54,23 @@ public class GrpcTargetParser {
   }
 
   @Nullable
+  public static String createDnsTargetFromUri(@Nullable URI uri) {
+    if (uri == null) {
+      return null;
+    }
+    String authority = uri.getRawAuthority();
+    if (authority == null) {
+      return null;
+    }
+    int userInfoEnd = authority.lastIndexOf('@');
+    if (userInfoEnd >= 0) {
+      authority = authority.substring(userInfoEnd + 1);
+    }
+    authority = authority.replace("[", "%5B").replace("]", "%5D");
+    return "dns:///" + authority;
+  }
+
+  @Nullable
   private static ParsedTarget parseTarget(@Nullable String target, boolean computedTarget) {
     if (target == null || target.isEmpty()) {
       return null;

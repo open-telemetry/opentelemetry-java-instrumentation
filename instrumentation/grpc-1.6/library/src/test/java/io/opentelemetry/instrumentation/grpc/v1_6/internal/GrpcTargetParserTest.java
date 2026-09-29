@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.grpc.v1_6.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.net.URI;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -122,6 +123,14 @@ class GrpcTargetParserTest {
     assertThat(result).isNotNull();
     assertThat(result.getAddress()).isEqualTo("consul:1234");
     assertThat(result.getPort()).isNull();
+  }
+
+  @Test
+  void createsDnsTargetFromRawIpv6Authority() {
+    URI uri = URI.create("http://user@[fe80::1%25eth0]:8080");
+
+    assertThat(GrpcTargetParser.createDnsTargetFromUri(uri))
+        .isEqualTo("dns:///%5Bfe80::1%25eth0%5D:8080");
   }
 
   @ParameterizedTest
