@@ -1,0 +1,20 @@
+{
+  "schema": {
+    "id": "github.copilot.copilot-review-loop-decision-report",
+    "version": 3
+  },
+  "decisions": [
+    {
+      "finding_id": "finding-312b519abe729ee03ad2473e",
+      "disposition": "no_change",
+      "reason": "The generated workflow already sources COPILOT_GITHUB_TOKEN from github.token and omits the PAT from its manifest, OAuth check, and redaction list.",
+      "proposed_reply": "Already resolved in the current head: the agent uses github.token, and COPILOT_GITHUB_TOKEN is no longer required as a secret."
+    },
+    {
+      "finding_id": "finding-edb8df1a3734573b83542eca",
+      "disposition": "no_change",
+      "reason": "The generated workflow already sources COPILOT_GITHUB_TOKEN from github.token and omits the PAT from its manifest, OAuth check, and redaction list.",
+      "proposed_reply": "Already resolved in the current head: the agent uses github.token, and COPILOT_GITHUB_TOKEN is no longer required as a secret."
+    }
+  ]
+}
