@@ -91,7 +91,6 @@ tasks {
   }
 
   test {
-    systemProperty("ratpack14Test", true) // used in AbstractRatpackHttpClientTest
     enabled = !otelProps.testLatestDeps
   }
 
@@ -99,7 +98,6 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
-    systemProperty("ratpack14Test", true) // used in AbstractRatpackHttpClientTest
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
     enabled = !otelProps.testLatestDeps
   }
