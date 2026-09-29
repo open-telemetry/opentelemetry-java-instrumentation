@@ -10,6 +10,16 @@ file_format: '1.0'
 
 instrumentation/development:
   general:
+    code:
+      semconv:
+        # With `version: 1`, emits both the old and the stable code semantic conventions. Not
+        # supported under v3 preview.
+        dual_emit: false
+    db:
+      semconv:
+        # With `version: 1`, emits both the old and the stable database semantic conventions. Not
+        # supported under v3 preview.
+        dual_emit: false
     http:
       client:
         # List of HTTP request headers to capture in HTTP client telemetry.
@@ -23,6 +33,24 @@ instrumentation/development:
 
         # List of HTTP response headers to capture in HTTP server telemetry.
         response_captured_headers: []
+    messaging:
+      semconv:
+        # With `version: 1` and `experimental: true`, emits both the current and the preview
+        # messaging semantic conventions. Not supported under v3 preview.
+        dual_emit: false
+
+        # With `version: 1`, selects the preview messaging semantic conventions. Required, because
+        # version 1 of the messaging semantic conventions is not yet stable.
+        experimental: false
+    rpc:
+      semconv:
+        # With `version: 1` and `experimental: true`, emits both the current and the preview RPC
+        # semantic conventions.
+        dual_emit: false
+
+        # With `version: 1`, selects the preview RPC semantic conventions. Required, because version
+        # 1 of the RPC semantic conventions is not yet stable.
+        experimental: false
     sanitization:
       url:
         # List of URL query parameter names whose values are redacted in URL attributes. See
@@ -74,7 +102,7 @@ instrumentation/development:
       # `camel.kafka.key` and `camel.kafka.offset` span attributes.
       experimental_span_attributes/development: false
     common:
-      controller_telemetry/development:
+      controller_telemetry:
         # Enables the creation of experimental controller spans.
         enabled: false
       db:
@@ -208,6 +236,14 @@ instrumentation/development:
       #     - peer: host
       #       service_name: serviceName
       service_peer_mapping: []
+
+      # Strategy for suppressing nested instrumentation spans: `semconv` suppresses a span nested in
+      # a span of the same semantic convention type, `span-kind` suppresses a span nested in a span
+      # of the same span kind, and `none` disables suppression. In the Java agent the flat
+      # `otel.instrumentation.experimental.span-suppression-strategy` property sets this. Library
+      # instrumentation also reads that property as a system property, which is deprecated there and
+      # ignored under v3 preview.
+      span_suppression_strategy/development: semconv
       user:
         name:
           # Enables capturing the user.name attribute when v3 preview is enabled. This property and
@@ -217,7 +253,13 @@ instrumentation/development:
           # Enables capturing the user.roles attribute when v3 preview is enabled. This property and
           # the associated attribute are not supported when v3 preview is disabled.
           enabled: false
-      view_telemetry/development:
+
+      # Enables a preview of the behavior planned for version 3.0 of the agent, such as emitting the
+      # stable database and code semantic conventions and the new messaging semantic conventions by
+      # default, and ignoring deprecated settings. The set of changes it enables can grow in any
+      # release.
+      v3_preview: false
+      view_telemetry:
         # Enables the creation of experimental view spans.
         enabled: false
     couchbase:
