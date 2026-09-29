@@ -12,6 +12,7 @@ import static java.util.logging.Level.WARNING;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
@@ -507,7 +508,7 @@ class SpanSuppressionStrategyTest {
       assertThat(records.get(0).getMessage()).isEqualTo(warningMessage);
       assertThat(configWarningLogged.get()).isTrue();
       assertThat(propertyWarningLogged.get()).isFalse();
-      verify(preview.getInstrumentationConfig("common"))
+      verify(preview.getInstrumentationConfig("common"), times(2))
           .getString("span_suppression_strategy/development");
 
       ExtendedOpenTelemetry deprecated = withCommonConfig(null, "span-kind", false);
