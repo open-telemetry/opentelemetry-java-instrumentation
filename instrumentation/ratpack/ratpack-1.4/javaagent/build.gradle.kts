@@ -39,8 +39,8 @@ dependencies {
     testImplementation("com.sun.activation:jakarta.activation:1.2.2")
   }
 
-  latestDepTestLibrary("io.ratpack:ratpack-core:1.6.+")
-  latestDepTestLibrary("io.ratpack:ratpack-test:1.6.+")
+  latestDepTestLibrary("io.ratpack:ratpack-core:1.6.+") // see test suite below
+  latestDepTestLibrary("io.ratpack:ratpack-test:1.6.+") // see test suite below
 }
 
 if (!otelProps.testLatestDeps) {
