@@ -15,16 +15,7 @@ To control the time interval between MBean detection attempts, one can use the `
 JMX is a popular metrics technology used throughout the JVM (see [runtime metrics](../runtime-telemetry/library/README.md)), application servers, third-party libraries, and applications.
 JMX Metric Insight comes with a number of predefined configurations containing curated sets of JMX metrics for frequently used application servers or frameworks.
 
-Before 3.0, no targets are enabled by default. To enable collection of the predefined metrics, specify a list of targets as the value for the `otel.jmx.target.system` property. For example:
-
-```bash
-$ java -javaagent:path/to/opentelemetry-javaagent.jar \
-     -Dotel.jmx.target.system=jetty,kafka-broker \
-     ... \
-     -jar myapp.jar
-```
-
-Starting with 3.0 (or with the `otel.instrumentation.common.v3-preview=true` option), the stable pre-defined metrics are always enabled by default, the non-stable metrics are opt-in using the `otel.jmx.metrics.experimental.included` property. For example:
+Stable predefined metrics are enabled by default, except for the JMX-based `jvm` definitions, which overlap with `runtime-telemetry`. Unstable bundled metrics require opt-in by name using `otel.jmx.metrics.experimental.included`. For example:
 
 ```bash
 $ java -javaagent:path/to/opentelemetry-javaagent.jar \
@@ -34,6 +25,19 @@ $ java -javaagent:path/to/opentelemetry-javaagent.jar \
 ```
 
 This example will enable all stable metrics except the JMX-based `jvm` definitions (which are provided by `runtime-telemetry`) and all the non-stable metrics matching the `jetty.*` and `kafka.*` patterns.
+
+The deprecated `otel.jmx.target.system` setting remains a fallback when `otel.jmx.metrics.experimental.included` is empty. It collects both stable and unstable metrics for the selected targets. For example, `otel.jmx.target.system=jetty,kafka-broker` retains its existing behavior. This setting will be removed in 3.0.
+
+To migrate, replace the target selection with metric-name patterns:
+
+```diff
+-otel.jmx.target.system=tomcat
++otel.jmx.metrics.experimental.included=tomcat.*
+```
+
+A nonempty experimental inclusion takes precedence over the deprecated target setting without a deprecation warning. Normal metric include/exclude filters apply in both modes.
+
+Metrics from custom YAML files do not require experimental opt-in, even if their names match unstable bundled metrics. They are controlled by the normal metric include/exclude filters.
 
 The supported target systems are listed below.
 

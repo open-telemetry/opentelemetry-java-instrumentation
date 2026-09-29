@@ -61,42 +61,38 @@ public class JmxMetricInsightInstaller implements AgentListener {
                 Duration.ofMillis(
                     config.get("discovery").getLong("delay", Duration.ofMinutes(1).toMillis())));
 
+    configure(jmx, config, v3Preview);
+    jmx.build().start();
+  }
+
+  // visible for testing
+  static void configure(
+      JmxTelemetryBuilder jmx, DeclarativeConfigProperties config, boolean v3Preview) {
     config.getScalarList("config", String.class, emptyList()).stream()
         .map(Paths::get)
         .forEach(path -> addFileRules(path, jmx));
 
-    if (v3Preview) {
-      // include all stable metrics except for jvm metrics as they overlap runtime-telemetry
-      jmx.setInternalMetricsSystemFilter(IncludeExclude.builder().setExcluded("jvm").build());
+    List<String> unstableInclude =
+        config
+            .get("metrics")
+            .get("experimental")
+            .getScalarList("included", String.class, emptyList());
+    List<String> systemsConfig =
+        !v3Preview && unstableInclude.isEmpty()
+            ? config.get("target").getScalarList("system", String.class, emptyList())
+            : emptyList();
 
-      List<String> unstableInclude =
-          config
-              .get("metrics")
-              .get("experimental")
-              .getScalarList("included", String.class, emptyList());
-
-      if (!unstableInclude.isEmpty()) {
-        // only include explicitly opted-in, others will be excluded
-        jmx.setInternalMetricsUnstableMetricsFilter(
-            IncludeExclude.builder().setIncluded(unstableInclude).build());
-      }
-
-    } else {
-      // pre-v3 compatibility
+    if (!systemsConfig.isEmpty()) {
       InternalMetricsDefinitions metricsDefinitions =
           new InternalMetricsDefinitions(JmxMetricInsightInstaller.class.getClassLoader());
 
-      List<String> systemsConfig =
-          config.get("target").getScalarList("system", String.class, emptyList());
-      if (!systemsConfig.isEmpty()) {
-        logger.log(
-            WARNING,
-            "'otel.jmx.target.system' is deprecated and will be removed in 3.0."
-                + " Stable metrics are enabled automatically; use 'otel.jmx.metrics.experimental.included'"
-                + " to opt in to unstable metrics.");
-      }
+      logger.log(
+          WARNING,
+          "'otel.jmx.target.system' is deprecated and will be removed in 3.0."
+              + " Remove it to collect stable metrics automatically, except JVM metrics."
+              + " Use 'otel.jmx.metrics.experimental.included' to opt in to unstable metrics;"
+              + " a nonempty value takes precedence over 'otel.jmx.target.system'.");
 
-      // mapping of 'experimental-' deprecated prefix in target system
       systemsConfig =
           systemsConfig.stream()
               .map(
@@ -119,15 +115,17 @@ public class JmxMetricInsightInstaller implements AgentListener {
             }
           });
 
-      if (!systemsConfig.isEmpty()) {
-        // only opt-in on explicitly configured values
-        jmx.setInternalMetricsSystemFilter(
-            IncludeExclude.builder().setIncluded(systemsConfig).build());
-      }
-
-      // loaded internal metrics have been explicitly opted-in, so we disable filtering on unstable
-      // metrics.
+      jmx.setInternalMetricsSystemFilter(
+          IncludeExclude.builder().setIncluded(systemsConfig).build());
+      // Selecting a legacy target opts in to both its stable and unstable metrics.
       jmx.setInternalMetricsUnstableMetricsFilter(IncludeExclude.builder().build());
+    } else {
+      // JVM rules overlap with runtime-telemetry.
+      jmx.setInternalMetricsSystemFilter(IncludeExclude.builder().setExcluded("jvm").build());
+      jmx.setInternalMetricsUnstableMetricsFilter(
+          unstableInclude.isEmpty()
+              ? IncludeExclude.builder().setExcluded("*").build()
+              : IncludeExclude.builder().setIncluded(unstableInclude).build());
     }
 
     // include/exclude metrics by name
@@ -136,8 +134,6 @@ public class JmxMetricInsightInstaller implements AgentListener {
     if (metrics != null) {
       jmx.setMetrics(metrics);
     }
-
-    jmx.build().start();
   }
 
   private static void addFileRules(Path path, JmxTelemetryBuilder builder) {

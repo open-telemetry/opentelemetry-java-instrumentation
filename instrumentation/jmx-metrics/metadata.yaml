@@ -24,7 +24,12 @@ configurations:
     default: 60000
   - name: otel.jmx.target.system
     declarative_name: java.jmx.target.system
-    description: List of predefined JMX target systems to collect metrics for.
+    deprecated: true
+    description: >
+      Deprecated list of predefined JMX target systems to collect metrics for, including their
+      unstable metrics. Used when `otel.jmx.metrics.experimental.included` is empty. A nonempty
+      experimental inclusion takes precedence. Remove this setting to use automatic stable metric
+      collection and select unstable metrics by name. This setting will be removed in 3.0.
     type: list
     default: ""
   - name: otel.jmx.metrics.included
@@ -41,9 +46,10 @@ configurations:
   - name: otel.jmx.metrics.experimental.included
     declarative_name: java.jmx.metrics.experimental.included
     description: >
-      Comma-separated list of case-sensitive glob patterns for unstable (experimental) metric names
-      to opt in to. When not configured, no unstable metrics are collected. This option has no
-      effect before 3.0 unless `otel.instrumentation.common.v3-preview=true` is set.
+      Comma-separated list of case-sensitive glob patterns for unstable (experimental) bundled
+      metric names to opt in to. "*" matches any number of characters and "?" matches one character.
+      Normal metric include and exclude filters also apply. Custom metric definitions do not
+      require experimental opt-in.
     type: list
     default: ""
     examples:
