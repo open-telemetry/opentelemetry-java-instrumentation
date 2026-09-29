@@ -23,6 +23,15 @@ convention not caught by CI.
   can run in both modes through `testDisabled`. In the negative mode,
   wait for operation completion and assert exactly a manually created
   parent span; an immediate `spans().isEmpty()` can pass before export.
+- Instrumentation selectors such as `otel.instrumentation.<name>.enabled`
+  are escape hatches for buggy instrumentation, not general telemetry-tuning
+  settings. Do not add or request per-instrumentation selector tests for new
+  modules, aliases, renames, or consolidations. This includes module name-list
+  assertions, enable/disable matrices, precedence, legacy/v3-preview handling,
+  flat/YAML parity, warning checks, and dedicated JVM variants or test projects.
+  Test shared enablement or alias-helper changes centrally. Keep coverage for
+  actual default-enablement changes as described above, feature settings, and
+  instrumentation behavior; tests may use selectors to isolate that behavior.
 - For starter tests, check `smoke-tests-otel-starter/` for real Spring
   starter coverage; `smoke-tests/images/spring-boot` tests the javaagent
   instead. Declarative mode uses separate `testDeclarativeConfig` source
