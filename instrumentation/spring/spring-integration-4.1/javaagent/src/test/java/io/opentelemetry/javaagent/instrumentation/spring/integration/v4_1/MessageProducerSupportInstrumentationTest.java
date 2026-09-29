@@ -46,7 +46,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
+import org.springframework.amqp.rabbit.listener.AbstractMessageListenerContainer;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.integration.amqp.inbound.AmqpInboundChannelAdapter;
 import org.springframework.integration.channel.DirectChannel;
@@ -452,6 +452,7 @@ class MessageProducerSupportInstrumentationTest {
         configureRetry();
       }
       afterPropertiesSet();
+      container.start();
     }
 
     private void send(Message message) {
@@ -492,13 +493,16 @@ class MessageProducerSupportInstrumentationTest {
     }
   }
 
-  private static final class TestContainer extends SimpleMessageListenerContainer {
+  private static final class TestContainer extends AbstractMessageListenerContainer {
     private TestContainer() {
       setConnectionFactory(mock(ConnectionFactory.class));
     }
 
     @Override
     protected void doInitialize() {}
+
+    @Override
+    protected void doShutdown() {}
 
     private void invoke(Message message) {
       executeListener(newChannelMock(), message);
