@@ -5,7 +5,6 @@ import java.time.Duration
 
 plugins {
   `java-library`
-  groovy
   checkstyle
   idea
 
