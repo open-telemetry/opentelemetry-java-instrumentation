@@ -42,6 +42,12 @@ class ArmeriaGrpcClientBuilderInstrumentation implements TypeInstrumentation {
       String target = null;
       if (uri != null) {
         target = uri.getAuthority();
+        if (target != null) {
+          int userInfoEnd = target.lastIndexOf('@');
+          if (userInfoEnd >= 0) {
+            target = target.substring(userInfoEnd + 1);
+          }
+        }
       }
       GrpcTelemetry telemetry = GrpcTelemetry.create(GlobalOpenTelemetry.get());
       builder.intercept(Internal.createClientInterceptor(telemetry, target));

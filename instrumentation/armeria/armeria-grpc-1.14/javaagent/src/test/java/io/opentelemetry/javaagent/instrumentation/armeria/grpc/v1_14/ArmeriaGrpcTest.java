@@ -30,6 +30,7 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import java.net.URI;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -65,8 +66,10 @@ class ArmeriaGrpcTest {
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void grpcInstrumentation() {
+    URI uri =
+        URI.create(server.httpUri().toString().replace("://", "://user:password@"));
     GreeterGrpc.GreeterBlockingStub client =
-        GrpcClients.builder(server.httpUri()).build(GreeterGrpc.GreeterBlockingStub.class);
+        GrpcClients.builder(uri).build(GreeterGrpc.GreeterBlockingStub.class);
 
     Helloworld.Request request = Helloworld.Request.newBuilder().setName("test").build();
     Helloworld.Response response = testing.runWithSpan("parent", () -> client.sayHello(request));
