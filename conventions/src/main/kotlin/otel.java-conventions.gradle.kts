@@ -102,6 +102,17 @@ tasks.withType<JavaCompile>().configureEach {
   }
 }
 
+// Compile against project jars rather than class directories. Several projects add shaded classes
+// to their main output via sourceSets.main.output.dir(...), which is packaged into the jar but is
+// not part of the "classes" variant that java-library would otherwise select.
+sourceSets.configureEach {
+  configurations.named(compileClasspathConfigurationName) {
+    attributes {
+      attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR))
+    }
+  }
+}
+
 // Groovy and Scala compilers don't actually understand --release option
 afterEvaluate {
   tasks.withType<GroovyCompile>().configureEach {
