@@ -47,6 +47,7 @@ class ArmeriaGrpcClientBuilderInstrumentation implements TypeInstrumentation {
           if (userInfoEnd >= 0) {
             target = target.substring(userInfoEnd + 1);
           }
+          target = "dns:///" + target;
         }
       }
       GrpcTelemetry telemetry = GrpcTelemetry.create(GlobalOpenTelemetry.get());

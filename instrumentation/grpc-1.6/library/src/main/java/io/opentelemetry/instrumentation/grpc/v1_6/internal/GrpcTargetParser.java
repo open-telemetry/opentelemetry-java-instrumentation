@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6.internal;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Locale;
@@ -19,6 +21,27 @@ import javax.annotation.Nullable;
  * at any time.
  */
 public class GrpcTargetParser {
+
+  @Nullable private static final Method getDefaultRegistryMethod;
+  @Nullable private static final Method getDefaultSchemeMethod;
+  @Nullable private static final Method getProviderForSchemeMethod;
+
+  static {
+    Method defaultRegistryMethod = null;
+    Method defaultSchemeMethod = null;
+    Method providerForSchemeMethod = null;
+    try {
+      Class<?> registryClass = Class.forName("io.grpc.NameResolverRegistry");
+      defaultRegistryMethod = registryClass.getMethod("getDefaultRegistry");
+      defaultSchemeMethod = registryClass.getMethod("getDefaultScheme");
+      providerForSchemeMethod = registryClass.getMethod("getProviderForScheme", String.class);
+    } catch (ClassNotFoundException | NoSuchMethodException ignored) {
+      // NameResolverRegistry is available since gRPC 1.21
+    }
+    getDefaultRegistryMethod = defaultRegistryMethod;
+    getDefaultSchemeMethod = defaultSchemeMethod;
+    getProviderForSchemeMethod = providerForSchemeMethod;
+  }
 
   @Nullable
   public static ParsedTarget parse(@Nullable String target) {
@@ -46,7 +69,13 @@ public class GrpcTargetParser {
       }
 
       if (isValidScheme(originalScheme)) {
-        return new ParsedTarget(target, null);
+        ResolverSelection resolverSelection = getResolverSelection(scheme);
+        if (resolverSelection.hasProvider) {
+          return new ParsedTarget(target, null);
+        }
+        if (!"dns".equals(resolverSelection.defaultScheme)) {
+          return new ParsedTarget(target, null);
+        }
       }
 
       return parseHostPort(target);
@@ -215,5 +244,31 @@ public class GrpcTargetParser {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
   }
 
+  private static ResolverSelection getResolverSelection(String scheme) {
+    if (getDefaultRegistryMethod == null
+        || getDefaultSchemeMethod == null
+        || getProviderForSchemeMethod == null) {
+      return new ResolverSelection(false, "dns");
+    }
+    try {
+      Object registry = getDefaultRegistryMethod.invoke(null);
+      boolean hasProvider = getProviderForSchemeMethod.invoke(registry, scheme) != null;
+      String defaultScheme = (String) getDefaultSchemeMethod.invoke(registry);
+      return new ResolverSelection(hasProvider, defaultScheme.toLowerCase(Locale.ROOT));
+    } catch (IllegalAccessException | InvocationTargetException ignored) {
+      return new ResolverSelection(false, "dns");
+    }
+  }
+
   private GrpcTargetParser() {}
+
+  private static final class ResolverSelection {
+    private final boolean hasProvider;
+    private final String defaultScheme;
+
+    private ResolverSelection(boolean hasProvider, String defaultScheme) {
+      this.hasProvider = hasProvider;
+      this.defaultScheme = defaultScheme;
+    }
+  }
 }

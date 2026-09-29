@@ -42,8 +42,10 @@ class GrpcTargetParserTest {
         Arguments.of("dns:/myhost:8080", "myhost", 8080),
         Arguments.of("dns:///%5B2001:db8::1%5D:443", "2001:db8::1", 443),
 
-        // bare host (no scheme)
+        // bare host or host:port (no registered scheme)
         Arguments.of("myhost", "myhost", null),
+        Arguments.of("myhost:8080", "myhost", 8080),
+        Arguments.of("localhost:443", "localhost", 443),
 
         // unix schemes
         Arguments.of("unix:///var/run/grpc.sock", "/var/run/grpc.sock", null),
@@ -74,12 +76,11 @@ class GrpcTargetParserTest {
         Arguments.of("XDS:///myservice", "XDS:///myservice", null),
         Arguments.of("xds:/myservice", "xds:/myservice", null),
 
-        // unknown schemes are preserved
-        Arguments.of("consul:orders", "consul:orders", null),
-        Arguments.of("consul:1234", "consul:1234", null),
-        Arguments.of("myhost:8080", "myhost:8080", null),
-        Arguments.of("myhost:", "myhost:", null),
-        Arguments.of("myhost:abc", "myhost:abc", null),
+        // inputs without a registered resolver scheme use the default DNS resolver
+        Arguments.of("consul:orders", "consul", null),
+        Arguments.of("consul:1234", "consul", 1234),
+        Arguments.of("myhost:", "myhost", null),
+        Arguments.of("myhost:abc", "myhost", null),
 
         // known schemes with missing/invalid ports preserve the parsed host
         Arguments.of("dns:myhost:abc", "myhost", null),

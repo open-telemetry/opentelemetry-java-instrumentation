@@ -66,7 +66,7 @@ class ArmeriaGrpcTest {
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void grpcInstrumentation() {
-    URI uri = URI.create(server.httpUri().toString().replace("://", "://user:password@"));
+    URI uri = URI.create("http://user@localhost:" + server.httpPort());
     GreeterGrpc.GreeterBlockingStub client =
         GrpcClients.builder(uri).build(GreeterGrpc.GreeterBlockingStub.class);
 
@@ -96,7 +96,7 @@ class ArmeriaGrpcTest {
                             equalTo(
                                 RPC_RESPONSE_STATUS_CODE,
                                 emitStableRpcSemconv() ? Status.Code.OK.name() : null),
-                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                            equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, server.httpPort()))
                         .hasEventsSatisfyingExactly(
                             event ->
