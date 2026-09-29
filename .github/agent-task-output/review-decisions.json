@@ -1,0 +1,14 @@
+{
+  "schema": {
+    "id": "github.copilot.copilot-review-loop-decision-report",
+    "version": 3
+  },
+  "decisions": [
+    {
+      "finding_id": "finding-0b79f8e471155a08cbacb2f3",
+      "disposition": "no_change",
+      "reason": "The inconsistency is confined to pull request metadata, which this worker is prohibited from mutating.",
+      "proposed_reply": "Please update the final sentence to say that under v3-preview both deprecated names remain supported until 3.0 and warn when applied."
+    }
+  ]
+}
