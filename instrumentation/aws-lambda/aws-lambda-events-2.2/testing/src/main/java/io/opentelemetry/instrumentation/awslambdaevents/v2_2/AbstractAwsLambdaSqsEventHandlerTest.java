@@ -64,6 +64,10 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
     when(context.getAwsRequestId()).thenReturn("1-22-333");
   }
 
+  protected Context context() {
+    return context;
+  }
+
   @AfterEach
   void tearDown() {
     assertThat(testing().forceFlushCalled()).isTrue();
