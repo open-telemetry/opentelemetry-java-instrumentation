@@ -57,8 +57,7 @@ class SourceNodeRecordDeserializerInstrumentation implements TypeInstrumentation
         result.headers().add(header);
       }
 
-      // copy the receive CONSUMER span association
-      KafkaConsumerContextUtil.set(result, KafkaConsumerContextUtil.get(incoming));
+      KafkaConsumerContextUtil.copy(incoming, result);
       return result;
     }
   }
