@@ -26,6 +26,8 @@ final class JmsProcessMetrics {
     return new OperationListener() {
       @Override
       public Context onStart(Context context, Attributes startAttributes, long startNanos) {
+        // A nested Process operation needs its own duration even if the parent context already
+        // marks process duration as recorded. Keep the span for exemplars.
         Context durationContext = Span.fromContext(context).storeInContext(Context.root());
         return context.with(
             DURATION_CONTEXT, duration.onStart(durationContext, startAttributes, startNanos));
