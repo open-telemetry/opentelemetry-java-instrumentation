@@ -42,10 +42,8 @@ class GrpcTargetParserTest {
         Arguments.of("dns:/myhost:8080", "myhost", 8080),
         Arguments.of("dns:///%5B2001:db8::1%5D:443", "2001:db8::1", 443),
 
-        // bare host:port (no scheme)
+        // bare host (no scheme)
         Arguments.of("myhost", "myhost", null),
-        Arguments.of("myhost:8080", "myhost", 8080),
-        Arguments.of("localhost:443", "localhost", 443),
 
         // unix schemes
         Arguments.of("unix:///var/run/grpc.sock", "/var/run/grpc.sock", null),
@@ -78,12 +76,31 @@ class GrpcTargetParserTest {
 
         // unknown schemes are preserved
         Arguments.of("consul:orders", "consul:orders", null),
+        Arguments.of("consul:1234", "consul:1234", null),
+        Arguments.of("myhost:8080", "myhost:8080", null),
         Arguments.of("myhost:", "myhost:", null),
         Arguments.of("myhost:abc", "myhost:abc", null),
 
         // known schemes with missing/invalid ports preserve the parsed host
         Arguments.of("dns:myhost:abc", "myhost", null),
         Arguments.of("dns:///myhost:", "myhost", null));
+  }
+
+  @ParameterizedTest
+  @MethodSource("authorityProvider")
+  void parseAuthority(String authority, String expectedAddress, Integer expectedPort) {
+    ParsedTarget result = GrpcTargetParser.parseAuthority(authority);
+
+    assertThat(result).isNotNull();
+    assertThat(result.getAddress()).isEqualTo(expectedAddress);
+    assertThat(result.getPort()).isEqualTo(expectedPort);
+  }
+
+  static Stream<Arguments> authorityProvider() {
+    return Stream.of(
+        Arguments.of("myhost", "myhost", null),
+        Arguments.of("myhost:8080", "myhost", 8080),
+        Arguments.of("localhost:443", "localhost", 443));
   }
 
   @ParameterizedTest

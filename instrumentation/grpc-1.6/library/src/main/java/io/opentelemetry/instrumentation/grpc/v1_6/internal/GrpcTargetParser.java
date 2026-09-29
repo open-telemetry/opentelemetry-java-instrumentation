@@ -45,10 +45,6 @@ public class GrpcTargetParser {
         return parseSingleColonScheme(scheme, target);
       }
 
-      Integer port = parsePort(target.substring(colonIndex + 1));
-      if (!originalScheme.isEmpty() && port != null) {
-        return new ParsedTarget(originalScheme, port);
-      }
       if (isValidScheme(originalScheme)) {
         return new ParsedTarget(target, null);
       }
