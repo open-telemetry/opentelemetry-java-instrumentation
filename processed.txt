@@ -628,3 +628,4 @@ lettuce-4.0:javaagent-unit-tests
 jedis-4.0:javaagent-unit-tests
 jedis-3.0:javaagent-unit-tests
 vertx-redis-client-4.0:javaagent-unit-tests
+kafka-clients-0.11:javaagent-unit-tests
