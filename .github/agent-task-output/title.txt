@@ -1,0 +1,1 @@
+Avoid per-instrumentation enablement selector tests

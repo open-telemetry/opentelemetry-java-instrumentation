@@ -1,0 +1,1 @@
+Treat `otel.instrumentation.<name>.enabled` selectors as escape hatches for disabling faulty instrumentation, not as recommended telemetry configuration. The testing guidance now discourages per-module selector matrices and name-list assertions while keeping centralized resolver tests and coverage for actual instrumentation behavior and default-enablement changes.
