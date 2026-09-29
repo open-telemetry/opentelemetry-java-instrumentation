@@ -45,16 +45,16 @@ public class GrpcTargetParser {
 
   @Nullable
   public static ParsedTarget parse(@Nullable String target) {
-    return parse(target, false);
+    return parseTarget(target, false);
   }
 
   @Nullable
   public static ParsedTarget parseComputedTarget(@Nullable String target) {
-    return parse(target, true);
+    return parseTarget(target, true);
   }
 
   @Nullable
-  private static ParsedTarget parse(@Nullable String target, boolean computedTarget) {
+  private static ParsedTarget parseTarget(@Nullable String target, boolean computedTarget) {
     if (target == null || target.isEmpty()) {
       return null;
     }
