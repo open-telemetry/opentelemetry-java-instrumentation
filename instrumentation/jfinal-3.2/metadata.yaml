@@ -8,3 +8,4 @@ features:
 library_link: https://github.com/jfinal/jfinal
 configurations:
   - ref: common.controller-telemetry.enabled
+  - ref: common.deprecated-controller-telemetry.enabled

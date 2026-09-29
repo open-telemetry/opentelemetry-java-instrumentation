@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
 
@@ -38,17 +39,33 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
         .isFalse();
   }
 
-  @Test
-  void testTranslateName_withDevelopmentSuffix_noExperimental() {
+  @ParameterizedTest
+  @ValueSource(strings = {"controller", "view"})
+  void testTranslateName_stableTelemetry(String telemetry) {
     DeclarativeConfigProperties config =
-        createConfig(
-            "otel.instrumentation.common.experimental.controller-telemetry.enabled", "true");
+        createConfig("otel.instrumentation.common." + telemetry + "-telemetry.enabled", "true");
 
     assertThat(
             config
                 .getStructured("java")
                 .getStructured("common")
-                .getStructured("controller_telemetry/development")
+                .getStructured(telemetry + "_telemetry")
+                .getBoolean("enabled"))
+        .isTrue();
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"controller", "view"})
+  void testTranslateName_withDevelopmentSuffix_noExperimental(String telemetry) {
+    DeclarativeConfigProperties config =
+        createConfig(
+            "otel.instrumentation.common.experimental." + telemetry + "-telemetry.enabled", "true");
+
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("common")
+                .getStructured(telemetry + "_telemetry/development")
                 .getBoolean("enabled"))
         .isNotNull()
         .isTrue();
