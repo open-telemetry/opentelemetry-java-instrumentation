@@ -45,6 +45,16 @@ public class GrpcTargetParser {
 
   @Nullable
   public static ParsedTarget parse(@Nullable String target) {
+    return parse(target, false);
+  }
+
+  @Nullable
+  public static ParsedTarget parseComputedTarget(@Nullable String target) {
+    return parse(target, true);
+  }
+
+  @Nullable
+  private static ParsedTarget parse(@Nullable String target, boolean computedTarget) {
     if (target == null || target.isEmpty()) {
       return null;
     }
@@ -69,6 +79,9 @@ public class GrpcTargetParser {
       }
 
       if (isValidScheme(originalScheme)) {
+        if (computedTarget) {
+          return new ParsedTarget(target, null);
+        }
         ResolverSelection resolverSelection = getResolverSelection(scheme);
         if (resolverSelection.hasProvider) {
           return new ParsedTarget(target, null);

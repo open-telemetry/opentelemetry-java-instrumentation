@@ -39,19 +39,26 @@ class ArmeriaGrpcClientBuilderInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
         @Advice.This GrpcClientBuilder builder, @Advice.FieldValue("uri") @Nullable URI uri) {
-      String target = null;
-      if (uri != null) {
-        target = uri.getAuthority();
-        if (target != null) {
-          int userInfoEnd = target.lastIndexOf('@');
-          if (userInfoEnd >= 0) {
-            target = target.substring(userInfoEnd + 1);
-          }
-          target = "dns:///" + target;
-        }
-      }
       GrpcTelemetry telemetry = GrpcTelemetry.create(GlobalOpenTelemetry.get());
-      builder.intercept(Internal.createClientInterceptor(telemetry, target));
+      builder.intercept(Internal.createClientInterceptor(telemetry, toGrpcTarget(uri)));
+    }
+
+    // visible for testing
+    @Nullable
+    static String toGrpcTarget(@Nullable URI uri) {
+      if (uri == null) {
+        return null;
+      }
+      String authority = uri.getRawAuthority();
+      if (authority == null) {
+        return null;
+      }
+      int userInfoEnd = authority.lastIndexOf('@');
+      if (userInfoEnd >= 0) {
+        authority = authority.substring(userInfoEnd + 1);
+      }
+      authority = authority.replace("[", "%5B").replace("]", "%5D");
+      return "dns:///" + authority;
     }
   }
 }

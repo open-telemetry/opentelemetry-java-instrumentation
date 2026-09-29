@@ -115,6 +115,15 @@ class GrpcTargetParserTest {
     assertThat(GrpcTargetParser.parse("directaddress:///localhost/127.0.0.1:443")).isNull();
   }
 
+  @Test
+  void parseComputedTargetPreservesCustomResolverScheme() {
+    ParsedTarget result = GrpcTargetParser.parseComputedTarget("consul:1234");
+
+    assertThat(result).isNotNull();
+    assertThat(result.getAddress()).isEqualTo("consul:1234");
+    assertThat(result.getPort()).isNull();
+  }
+
   @ParameterizedTest
   @ValueSource(
       strings = {

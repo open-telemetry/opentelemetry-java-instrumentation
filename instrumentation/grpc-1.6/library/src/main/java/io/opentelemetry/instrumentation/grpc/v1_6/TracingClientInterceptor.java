@@ -59,12 +59,16 @@ final class TracingClientInterceptor implements ClientInterceptor {
       ContextPropagators propagators,
       boolean captureExperimentalSpanAttributes,
       boolean emitMessageEvents,
-      @Nullable String target) {
+      @Nullable String target,
+      boolean computedTarget) {
     this.instrumenter = instrumenter;
     this.propagators = propagators;
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.emitMessageEvents = emitMessageEvents;
-    this.parsedTarget = GrpcTargetParser.parse(target);
+    this.parsedTarget =
+        computedTarget
+            ? GrpcTargetParser.parseComputedTarget(target)
+            : GrpcTargetParser.parse(target);
   }
 
   @Override

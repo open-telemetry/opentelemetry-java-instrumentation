@@ -121,7 +121,7 @@ public final class GrpcTelemetry {
         new Class<?>[] {interceptorFactoryClass},
         (proxy, method, args) -> {
           if ("newInterceptor".equals(method.getName())) {
-            return newTracingClientInterceptor((String) args[0]);
+            return newTracingClientInterceptor((String) args[0], true);
           }
           switch (method.getName()) {
             case "equals":
@@ -157,11 +157,17 @@ public final class GrpcTelemetry {
   }
 
   private TracingClientInterceptor newTracingClientInterceptor(@Nullable String target) {
+    return newTracingClientInterceptor(target, false);
+  }
+
+  private TracingClientInterceptor newTracingClientInterceptor(
+      @Nullable String target, boolean computedTarget) {
     return new TracingClientInterceptor(
         clientInstrumenter,
         propagators,
         captureExperimentalSpanAttributes,
         emitMessageEvents,
-        target);
+        target,
+        computedTarget);
   }
 }
