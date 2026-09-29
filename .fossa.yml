@@ -342,9 +342,6 @@ targets:
       target: ':instrumentation:akka:akka-actor-2.3:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:akka:akka-actor-forkjoin-2.5:javaagent'
-    - type: gradle
-      path: ./
       target: ':instrumentation:akka:akka-http-10.0:javaagent'
     - type: gradle
       path: ./
