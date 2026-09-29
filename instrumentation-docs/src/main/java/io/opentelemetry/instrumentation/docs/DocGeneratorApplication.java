@@ -46,6 +46,9 @@ public class DocGeneratorApplication {
       writer.write(
           "# each module references them by id via `metric_refs` and `configuration_refs`.\n");
       writer.write(
+          "# `global_configuration_refs` lists the configurations read by the agent itself rather\n");
+      writer.write("# than by a specific instrumentation.\n");
+      writer.write(
           "# A configuration without a `default` falls back to another setting when unset, and a\n");
       writer.write(
           "# deprecated one is marked `deprecated: true`, with `replaced_by` naming its replacement.\n");
