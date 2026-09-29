@@ -75,6 +75,10 @@ readonly INSTRUMENTATIONS=(
   "couchbase:couchbase-2.0:javaagent:test"
   "couchbase:couchbase-2.0:javaagent:testExperimental"
   "couchbase:couchbase-2.0:javaagent:testStableSemconv"
+  "couchbase:couchbase-2.0:javaagent:version26Test"
+  "couchbase:couchbase-2.0:javaagent:version26TestExperimental"
+  "couchbase:couchbase-2.0:javaagent:version26TestLegacyConfig"
+  "couchbase:couchbase-2.0:javaagent:version26TestStableSemconv"
   "couchbase:couchbase-3.0:javaagent:test"
   "couchbase:couchbase-3.0:javaagent:testStableSemconv"
   "couchbase:couchbase-3.1:javaagent:test"
@@ -415,10 +419,6 @@ readonly COLIMA_INSTRUMENTATIONS=(
 # Some instrumentation test suites need to run with -PtestLatestDeps=true to collect
 # metrics telemetry or test against latest library versions.
 readonly TEST_LATEST_DEPS_INSTRUMENTATIONS=(
-  "couchbase:couchbase-2.0:javaagent:latestDepTest"
-  "couchbase:couchbase-2.0:javaagent:latestDepTestExperimental"
-  "couchbase:couchbase-2.0:javaagent:latestDepTestLegacyConfig"
-  "couchbase:couchbase-2.0:javaagent:latestDepTestStableSemconv"
   "kafka:kafka-clients:kafka-clients-0.11:javaagent:test"
   "kafka:kafka-clients:kafka-clients-0.11:javaagent:testExperimental"
   "kafka:kafka-clients:kafka-clients-0.11:javaagent:testMessagingPreview"
