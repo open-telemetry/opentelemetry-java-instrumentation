@@ -51,7 +51,6 @@ muzzle {
 dependencies {
   compileOnly("io.opentelemetry:opentelemetry-extension-kotlin")
   compileOnly("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-  compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.0.0")
   compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.0")
   compileOnly(project(":instrumentation-annotations-support"))
   compileOnly(project(":opentelemetry-instrumentation-annotations-shaded-for-instrumenting", configuration = "shadow"))
