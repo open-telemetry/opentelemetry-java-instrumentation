@@ -161,9 +161,10 @@ class JmxTelemetryTest {
 
   @Test
   void includeAllStableMetrics() {
-    JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop())
-        // enable stable metrics for every system
-        .setInternalMetricsSystemFilter(IncludeExclude.builder().build());
+    JmxTelemetryBuilder builder =
+        JmxTelemetry.builder(OpenTelemetry.noop())
+            // enable stable metrics for every system
+            .setInternalMetricsSystemFilter(IncludeExclude.builder().build());
     JmxTelemetry telemetry = builder.build(testDefinitions());
 
     assertThat(builder.getRegisteredMetrics())
@@ -216,8 +217,7 @@ class JmxTelemetryTest {
 
   @Test
   void includeNothingByDefault() {
-    JmxTelemetryBuilder builder =
-        JmxTelemetry.builder(OpenTelemetry.noop());
+    JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
     builder.build(testDefinitions());
     assertThat(builder.getRegisteredMetrics()).isEmpty();
   }

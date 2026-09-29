@@ -46,7 +46,8 @@ public final class JmxTelemetryBuilder {
   private IncludeExclude metrics = IncludeExclude.builder().build();
 
   // exclude all systems by default
-  private IncludeExclude internalMetricsSystemFilter = IncludeExclude.builder().setExcluded("*").build();
+  private IncludeExclude internalMetricsSystemFilter =
+      IncludeExclude.builder().setExcluded("*").build();
   // exclude all unstable metrics by default
   private IncludeExclude internalMetricsUnstableMetricsFilter =
       IncludeExclude.builder().setExcluded("*").build();
