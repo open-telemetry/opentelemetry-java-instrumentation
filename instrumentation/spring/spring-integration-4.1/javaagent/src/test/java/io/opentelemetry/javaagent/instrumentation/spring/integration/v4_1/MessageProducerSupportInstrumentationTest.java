@@ -501,7 +501,7 @@ class MessageProducerSupportInstrumentationTest {
     protected void doInitialize() {}
 
     private void invoke(Message message) {
-      invokeListener(newChannelMock(), message);
+      executeListener(newChannelMock(), message);
     }
   }
 
