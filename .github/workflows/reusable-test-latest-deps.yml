@@ -63,10 +63,6 @@ jobs:
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
 
-      - name: Verify Java 27 provisioning
-        if: matrix.test-partition == 3
-        run: ./gradlew :instrumentation:helidon-4.3:library:compileJava -PtestLatestDeps=true --rerun --no-build-cache
-
       - name: List tests
         env:
           DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
