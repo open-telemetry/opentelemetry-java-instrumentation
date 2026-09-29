@@ -85,7 +85,6 @@ testing {
   suites {
     register<JvmTestSuite>("version13Test") {
       dependencies {
-        implementation(project())
         implementation("io.opentelemetry:opentelemetry-extension-kotlin")
         implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
         implementation(
