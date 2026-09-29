@@ -90,7 +90,7 @@ kotlin {
 
 testing {
   suites {
-    register<JvmTestSuite>("latestDepTest") {
+    register<JvmTestSuite>("version13Test") {
       dependencies {
         implementation(project())
         implementation("io.opentelemetry:opentelemetry-extension-kotlin")
@@ -111,13 +111,6 @@ testing {
 tasks {
   named("byteBuddyKotlin") {
     enabled = false
-  }
-
-  named("latestDepTest") {
-    enabled = otelProps.testLatestDeps
-  }
-  named("compileLatestDepTestKotlin") {
-    enabled = otelProps.testLatestDeps
   }
 
   val testV3Preview = register<Test>("testV3Preview") {
