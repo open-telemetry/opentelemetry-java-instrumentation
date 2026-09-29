@@ -119,10 +119,7 @@ public class JmxMetricInsightInstaller implements AgentListener {
             }
           });
 
-      if (systemsConfig.isEmpty()) {
-        // exclude everything by default
-        jmx.setInternalMetricsSystemFilter(IncludeExclude.builder().setExcluded("*").build());
-      } else {
+      if (!systemsConfig.isEmpty()) {
         // only opt-in on explicitly configured values
         jmx.setInternalMetricsSystemFilter(
             IncludeExclude.builder().setIncluded(systemsConfig).build());

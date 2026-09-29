@@ -60,8 +60,6 @@ class JmxTelemetryTest {
   @Test
   void knownValidYaml() {
     JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
-    // disable automatic metrics loading to only use provided rules from classpath
-    builder.setInternalMetricsSystemFilter(IncludeExclude.builder().setExcluded("*").build());
     builder.addRules(classpathRules("jmx/rules/jvm-test.yaml"));
     builder.addRules(classpathRules("jmx/rules/jvm-test_unstable.yaml"));
     JmxTelemetry telemetry = builder.build(testDefinitions());
@@ -163,7 +161,9 @@ class JmxTelemetryTest {
 
   @Test
   void includeAllStableMetrics() {
-    JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
+    JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop())
+        // enable stable metrics for every system
+        .setInternalMetricsSystemFilter(IncludeExclude.builder().build());
     JmxTelemetry telemetry = builder.build(testDefinitions());
 
     assertThat(builder.getRegisteredMetrics())
@@ -192,6 +192,8 @@ class JmxTelemetryTest {
   void includeEveryMetric() {
     JmxTelemetryBuilder builder =
         JmxTelemetry.builder(OpenTelemetry.noop())
+            // enable stable metrics for every system
+            .setInternalMetricsSystemFilter(IncludeExclude.builder().build())
             // every system included by default, we just enable all unstable metrics
             .setInternalMetricsUnstableMetricsFilter(IncludeExclude.builder().build());
 
@@ -213,10 +215,9 @@ class JmxTelemetryTest {
   }
 
   @Test
-  void includeNothing() {
+  void includeNothingByDefault() {
     JmxTelemetryBuilder builder =
-        JmxTelemetry.builder(OpenTelemetry.noop())
-            .setInternalMetricsSystemFilter(IncludeExclude.builder().setExcluded("*").build());
+        JmxTelemetry.builder(OpenTelemetry.noop());
     builder.build(testDefinitions());
     assertThat(builder.getRegisteredMetrics()).isEmpty();
   }
