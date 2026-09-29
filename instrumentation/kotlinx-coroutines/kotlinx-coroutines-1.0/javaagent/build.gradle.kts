@@ -70,8 +70,10 @@ dependencies {
   testImplementation(project(":instrumentation-annotations"))
 
   testLibrary("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.0.0") {
-    version {
-      strictly("1.0.0")
+    if (!otelProps.testLatestDeps) {
+      version {
+        strictly("1.0.0")
+      }
     }
   }
   testLibrary("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.0.0")
@@ -88,7 +90,7 @@ kotlin {
 
 testing {
   suites {
-    register<JvmTestSuite>("version13Test") {
+    register<JvmTestSuite>("latestDepTest") {
       dependencies {
         implementation(project())
         implementation("io.opentelemetry:opentelemetry-extension-kotlin")
@@ -109,6 +111,13 @@ testing {
 tasks {
   named("byteBuddyKotlin") {
     enabled = false
+  }
+
+  named("latestDepTest") {
+    enabled = otelProps.testLatestDeps
+  }
+  named("compileLatestDepTestKotlin") {
+    enabled = otelProps.testLatestDeps
   }
 
   val testV3Preview = register<Test>("testV3Preview") {

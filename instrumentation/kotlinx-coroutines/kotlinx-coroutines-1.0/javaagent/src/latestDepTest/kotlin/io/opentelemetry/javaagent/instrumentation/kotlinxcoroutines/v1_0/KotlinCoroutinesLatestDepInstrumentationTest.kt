@@ -37,7 +37,7 @@ import java.util.stream.Stream
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExperimentalCoroutinesApi
-class KotlinCoroutines13InstrumentationTest {
+class KotlinCoroutinesLatestDepInstrumentationTest {
 
   companion object {
     val threadPool = Executors.newFixedThreadPool(2)
