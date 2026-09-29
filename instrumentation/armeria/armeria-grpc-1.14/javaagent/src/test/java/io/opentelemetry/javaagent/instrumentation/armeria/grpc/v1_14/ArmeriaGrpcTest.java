@@ -127,7 +127,7 @@ class ArmeriaGrpcTest {
                             equalTo(
                                 RPC_RESPONSE_STATUS_CODE,
                                 emitStableRpcSemconv() ? Status.Code.OK.name() : null),
-                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                            equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, server.httpPort()))
                         .hasEventsSatisfyingExactly(
                             event ->
