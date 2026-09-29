@@ -8,11 +8,14 @@ package io.opentelemetry.javaagent.instrumentation.grpc.v1_6;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.grpc.v1_6.GrpcSingletons.MANAGED_CHANNEL_BUILDER_INSTRUMENTED;
+import static net.bytebuddy.matcher.ElementMatchers.declaresField;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
+import io.grpc.ClientInterceptor;
 import io.grpc.ManagedChannelBuilder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.List;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -25,7 +28,8 @@ class GrpcClientBuilderBuildInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return extendsClass(named("io.grpc.ManagedChannelBuilder"));
+    return extendsClass(named("io.grpc.ManagedChannelBuilder"))
+        .and(declaresField(named("interceptors")));
   }
 
   @Override
@@ -37,9 +41,15 @@ class GrpcClientBuilderBuildInstrumentation implements TypeInstrumentation {
   public static class AddInterceptorAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void addInterceptor(@Advice.This ManagedChannelBuilder<?> builder) {
+    public static void addInterceptor(
+        @Advice.This ManagedChannelBuilder<?> builder,
+        @Advice.FieldValue("interceptors") List<ClientInterceptor> interceptors) {
       if (!Boolean.TRUE.equals(MANAGED_CHANNEL_BUILDER_INSTRUMENTED.get(builder))) {
+        int existingInterceptors = interceptors.size();
         GrpcSingletons.addClientInterceptor(builder);
+        if (interceptors.size() > existingInterceptors) {
+          interceptors.add(0, interceptors.remove(existingInterceptors));
+        }
         MANAGED_CHANNEL_BUILDER_INSTRUMENTED.set(builder, true);
       }
     }

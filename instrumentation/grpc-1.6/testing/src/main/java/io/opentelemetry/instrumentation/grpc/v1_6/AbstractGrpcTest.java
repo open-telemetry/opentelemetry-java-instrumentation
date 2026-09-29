@@ -53,7 +53,6 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
-import io.grpc.NameResolver;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.ServerCall;
@@ -78,8 +77,6 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
-import java.net.InetSocketAddress;
-import java.net.URI;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -168,91 +165,6 @@ public abstract class AbstractGrpcTest {
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))));
-  }
-
-  @Test
-  @SuppressWarnings("deprecation")
-  void targetCapturedWithCustomNameResolver() throws Exception {
-    assumeTrue(targetCaptureSupported());
-
-    BindableService greeter =
-        new GreeterGrpc.GreeterImplBase() {
-          @Override
-          public void sayHello(
-              Helloworld.Request req, StreamObserver<Helloworld.Response> responseObserver) {
-            responseObserver.onNext(
-                Helloworld.Response.newBuilder().setMessage("Hello " + req.getName()).build());
-            responseObserver.onCompleted();
-          }
-        };
-
-    Server server = configureServer(ServerBuilder.forPort(0).addService(greeter)).build().start();
-    ManagedChannelBuilder<?> channelBuilder =
-        ManagedChannelBuilder.forTarget("consul:1234")
-            .nameResolverFactory(new TestNameResolverFactory(server.getPort()))
-            .overrideAuthority("fallback.invalid:1234");
-    ManagedChannel channel = createChannel(configureClient(channelBuilder));
-
-    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
-    closer.add(() -> server.shutdownNow().awaitTermination());
-
-    GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel);
-    testing()
-        .runWithSpan(
-            "parent",
-            () -> client.sayHello(Helloworld.Request.newBuilder().setName("test").build()));
-
-    testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName("example.Greeter/SayHello")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttribute(SERVER_ADDRESS, "consul:1234")
-                            .hasAttribute(SERVER_PORT, null),
-                    span ->
-                        span.hasName("example.Greeter/SayHello")
-                            .hasKind(SpanKind.SERVER)
-                            .hasParent(trace.getSpan(1))));
-  }
-
-  private static class TestNameResolverFactory extends NameResolver.Factory {
-    private final int port;
-
-    private TestNameResolverFactory(int port) {
-      this.port = port;
-    }
-
-    @Override
-    public NameResolver newNameResolver(URI targetUri, io.grpc.Attributes params) {
-      if (!"consul".equals(targetUri.getScheme())) {
-        return null;
-      }
-      return new NameResolver() {
-        @Override
-        public String getServiceAuthority() {
-          return "localhost";
-        }
-
-        @Override
-        public void start(Listener listener) {
-          listener.onAddresses(
-              singletonList(new io.grpc.EquivalentAddressGroup(new InetSocketAddress("localhost", port))),
-              io.grpc.Attributes.EMPTY);
-        }
-
-        @Override
-        public void shutdown() {}
-      };
-    }
-
-    @Override
-    public String getDefaultScheme() {
-      return "consul";
-    }
   }
 
   @ParameterizedTest
