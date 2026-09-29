@@ -63,6 +63,12 @@ instrumentation/development:
           - X-Amz-Security-Token
           - sig
           - X-Goog-Signature
+    semconv_exception:
+      signal:
+        # Preview of emitting exceptions as log records instead of span events. `logs` emits log
+        # records only and `logs/dup` emits both log records and span events. When unset, exceptions
+        # are recorded as span events.
+        preview: ''
 
     # Opt-in to emit stable semantic conventions instead of the old experimental semantic
     # conventions. Accepts a comma-separated list of semantic convention groups (e.g., `database`,

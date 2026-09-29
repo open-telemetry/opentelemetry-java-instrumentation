@@ -71,7 +71,8 @@ public class DeclarativeConfigYamlGenerator {
    * @param writer the writer to output the YAML to
    * @throws IOException if an I/O error occurs
    */
-  public static void generateConfigurationYaml(
+  // Visible for testing
+  static void generateConfigurationYaml(
       List<InstrumentationModule> modules,
       List<ConfigurationOption> globalConfigurations,
       BufferedWriter writer)

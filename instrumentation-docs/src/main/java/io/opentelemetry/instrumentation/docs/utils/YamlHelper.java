@@ -63,7 +63,8 @@ public class YamlHelper {
    * or the instrumentation API itself rather than by a specific module. They are added to the
    * definitions catalog and listed by id under the top-level {@code global_configuration_refs}.
    */
-  public static void generateInstrumentationYaml(
+  // Visible for testing
+  static void generateInstrumentationYaml(
       List<InstrumentationModule> list,
       List<ConfigurationOption> globalConfigurations,
       BufferedWriter writer) {

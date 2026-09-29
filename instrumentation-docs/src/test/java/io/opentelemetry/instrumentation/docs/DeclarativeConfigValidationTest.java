@@ -145,14 +145,7 @@ class DeclarativeConfigValidationTest {
             .sorted()
             .toList();
 
-    assertThat(undocumented)
-        .describedAs(
-            "Declarative names mapped in ConfigPropertiesBackedDeclarativeConfigProperties but not"
-                + " documented in any metadata.yaml or in "
-                + SHARED_DEFINITIONS
-                + ". Document them in the owning module's metadata.yaml, or in"
-                + " global_configurations if the agent or instrumentation API reads them.")
-        .isEmpty();
+    assertThat(undocumented).isEmpty();
   }
 
   /**

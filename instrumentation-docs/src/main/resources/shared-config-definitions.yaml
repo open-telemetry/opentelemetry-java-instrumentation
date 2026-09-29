@@ -274,6 +274,7 @@ global_configurations:
     declarative_name: general.semconv_exception.signal.preview
     description: "Preview of emitting exceptions as log records instead of span events. `logs` emits log records only and `logs/dup` emits both log records and span events. When unset, exceptions are recorded as span events."
     type: string
+    default: ""
 
   span-suppression-strategy:
     name: otel.instrumentation.experimental.span-suppression-strategy
