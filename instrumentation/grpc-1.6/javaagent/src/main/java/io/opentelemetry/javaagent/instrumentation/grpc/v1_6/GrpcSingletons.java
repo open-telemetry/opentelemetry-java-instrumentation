@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.grpc.v1_6;
 
-import io.grpc.ClientInterceptor;
 import io.grpc.Context;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.ServerBuilder;
@@ -20,7 +19,6 @@ import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetryBuilder;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.ContextStorageBridge;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcConfig;
-import io.opentelemetry.instrumentation.grpc.v1_6.internal.Internal;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 
@@ -77,8 +75,8 @@ public class GrpcSingletons {
     return storageReference.get();
   }
 
-  public static ClientInterceptor createClientInterceptor(@Nullable String target) {
-    return Internal.createClientInterceptor(telemetry, target);
+  public static void addClientInterceptor(ManagedChannelBuilder<?> builder) {
+    telemetry.addClientInterceptor(builder);
   }
 
   public static Context.Storage setStorage(Context.Storage storage) {
