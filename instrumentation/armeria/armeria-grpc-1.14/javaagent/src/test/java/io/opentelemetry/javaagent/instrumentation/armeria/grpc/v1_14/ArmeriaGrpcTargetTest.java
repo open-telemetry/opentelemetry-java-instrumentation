@@ -10,13 +10,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.net.URI;
 import org.junit.jupiter.api.Test;
 
-class ArmeriaGrpcClientBuilderInstrumentationTest {
+class ArmeriaGrpcTargetTest {
 
   @Test
   void createsTargetFromRawIpv6Authority() {
     URI uri = URI.create("http://user@[fe80::1%25eth0]:8080");
 
-    assertThat(ArmeriaGrpcClientBuilderInstrumentation.BuildAdvice.toGrpcTarget(uri))
+    assertThat(ArmeriaGrpcTarget.fromUri(uri))
         .isEqualTo("dns:///%5Bfe80::1%25eth0%5D:8080");
   }
 }
