@@ -37,21 +37,29 @@ class MetricRegistrar implements AutoCloseable {
   private static final Logger logger = Logger.getLogger(MetricRegistrar.class.getName());
 
   private final Meter meter;
+  private final Meter unstableMeter;
   private final Collection<AutoCloseable> instruments = ConcurrentHashMap.newKeySet();
   private final IncludeExclude metrics;
+  private final IncludeExclude unstableMetrics;
 
   MetricRegistrar(
       OpenTelemetry openTelemetry,
       String instrumentationScope,
       String versionLookupName,
-      IncludeExclude metrics) {
+      IncludeExclude metrics,
+      IncludeExclude unstableMetrics) {
     this.metrics = metrics;
+    this.unstableMetrics = unstableMetrics;
     MeterBuilder meterBuilder = openTelemetry.getMeterProvider().meterBuilder(instrumentationScope);
     String version = EmbeddedInstrumentationProperties.findVersion(versionLookupName);
     if (version != null) {
       meterBuilder.setInstrumentationVersion(version);
     }
-    meter = new FilteringMeter(meterBuilder.build(), metrics);
+    Meter delegate = meterBuilder.build();
+    meter = new FilteringMeter(delegate, metrics);
+    unstableMeter =
+        new FilteringMeter(
+            delegate, name -> metrics.matches(name) && unstableMetrics.matches(name));
   }
 
   /**
@@ -67,7 +75,8 @@ class MetricRegistrar implements AutoCloseable {
       MBeanServerConnection connection,
       Collection<ObjectName> objectNames,
       MetricExtractor extractor,
-      AttributeInfo attributeInfo) {
+      AttributeInfo attributeInfo,
+      boolean unstable) {
     // For the first enrollment of the extractor we have to build the corresponding Instrument
     DetectionStatus status = new DetectionStatus(connection, objectNames);
     boolean firstEnrollment = extractor.setStatus(status);
@@ -79,7 +88,7 @@ class MetricRegistrar implements AutoCloseable {
     MetricInfo metricInfo = extractor.getInfo();
     String metricName = metricInfo.getMetricName();
 
-    if (!metrics.matches(metricName)) {
+    if (!metrics.matches(metricName) || (unstable && !unstableMetrics.matches(metricName))) {
       // shortcut: when metric is excluded, we don't even need to attempt building it nor let the
       // meter filter the metrics.
       logger.log(FINE, "Metric {0} is excluded by configuration", metricName);
@@ -100,12 +109,13 @@ class MetricRegistrar implements AutoCloseable {
       recordDoubleValue = true;
     }
 
+    Meter selectedMeter = unstable ? unstableMeter : meter;
     switch (instrumentType) {
       // CHECKSTYLE:OFF
       case COUNTER:
         {
           // CHECKSTYLE:ON
-          LongCounterBuilder builder = meter.counterBuilder(metricName);
+          LongCounterBuilder builder = selectedMeter.counterBuilder(metricName);
           Optional.ofNullable(description).ifPresent(builder::setDescription);
           builder.setUnit(unit);
 
@@ -125,7 +135,7 @@ class MetricRegistrar implements AutoCloseable {
       case UPDOWNCOUNTER:
         {
           // CHECKSTYLE:ON
-          LongUpDownCounterBuilder builder = meter.upDownCounterBuilder(metricName);
+          LongUpDownCounterBuilder builder = selectedMeter.upDownCounterBuilder(metricName);
           Optional.ofNullable(description).ifPresent(builder::setDescription);
           builder.setUnit(unit);
 
@@ -145,7 +155,7 @@ class MetricRegistrar implements AutoCloseable {
       case GAUGE:
         {
           // CHECKSTYLE:ON
-          DoubleGaugeBuilder builder = meter.gaugeBuilder(metricName);
+          DoubleGaugeBuilder builder = selectedMeter.gaugeBuilder(metricName);
           Optional.ofNullable(description).ifPresent(builder::setDescription);
           builder.setUnit(unit);
 
@@ -233,7 +243,8 @@ class MetricRegistrar implements AutoCloseable {
   void enrollHandler(
       MBeanServerConnection connection,
       Collection<ObjectName> objectNames,
-      MetricHandlerHolder holder) {
+      MetricHandlerHolder holder,
+      boolean unstable) {
     ExperimentalJmxMetricHandler handler = holder.getHandler();
     // we print a warning for missing handlers in the constructor of BeanFinder
     if (handler == null) {
@@ -249,7 +260,7 @@ class MetricRegistrar implements AutoCloseable {
 
     register(
         handler.create(
-            meter,
+            unstable ? unstableMeter : meter,
             () -> {
               DetectionStatus detectionStatus = holder.getStatus();
               return new ExperimentalJmxMetricHandler.Detector() {

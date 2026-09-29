@@ -21,6 +21,7 @@ public final class JmxTelemetry {
   private final MetricConfiguration metricConfiguration;
   private final HandlerRegistry handlerRegistry;
   private final IncludeExclude metrics;
+  private final IncludeExclude unstableMetrics;
 
   /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static JmxTelemetry create(OpenTelemetry openTelemetry) {
@@ -37,11 +38,13 @@ public final class JmxTelemetry {
       long discoveryDelayMs,
       MetricConfiguration metricConfiguration,
       HandlerRegistry handlerRegistry,
-      IncludeExclude metrics) {
+      IncludeExclude metrics,
+      IncludeExclude unstableMetrics) {
     this.service = JmxMetricInsight.createService(openTelemetry, discoveryDelayMs);
     this.metricConfiguration = metricConfiguration;
     this.handlerRegistry = handlerRegistry;
     this.metrics = metrics;
+    this.unstableMetrics = unstableMetrics;
   }
 
   /**
@@ -60,7 +63,8 @@ public final class JmxTelemetry {
    * @return a {@link AutoCloseable} that can be used to stop the collection of metrics
    */
   public AutoCloseable start(Supplier<List<? extends MBeanServerConnection>> connections) {
-    return service.start(metricConfiguration, connections, handlerRegistry, metrics);
+    return service.start(
+        metricConfiguration, connections, handlerRegistry, metrics, unstableMetrics);
   }
 
   // package-private for testing

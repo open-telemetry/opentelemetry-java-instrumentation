@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jmx;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singleton;
@@ -17,6 +18,7 @@ import io.opentelemetry.instrumentation.jmx.internal.InternalMetricsDefinitions;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -27,6 +29,8 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class JmxTelemetryTest {
 
@@ -178,15 +182,7 @@ class JmxTelemetryTest {
             "jvm.file_descriptor.count",
             "jvm.file_descriptor.limit");
 
-    // non-stable metrics should be filtered
-    assertThat(getFilteredMetrics(telemetry.getMetrics(), builder.getRegisteredMetrics()))
-        .containsExactlyInAnyOrder(
-            "jvm.memory.committed",
-            "jvm.memory.used",
-            "jvm.memory.limit",
-            "jvm.thread.count",
-            "jvm.memory.used_after_last_gc")
-        .doesNotContain("jvm.file_descriptor.count", "jvm.file_descriptor.limit");
+    assertThat(telemetry.getMetrics()).isEqualTo(IncludeExclude.builder().build());
   }
 
   @Test
@@ -220,6 +216,57 @@ class JmxTelemetryTest {
     JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
     builder.build(testDefinitions());
     assertThat(builder.getRegisteredMetrics()).isEmpty();
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void customRuleSharingEmbeddedUnstableName(boolean includeUnstable) {
+    String customRules =
+        "rules:\n"
+            + "  - bean: java.lang:type=Threading\n"
+            + "    metricAttribute:\n"
+            + "      test.source: const(custom)\n"
+            + "    mapping:\n"
+            + "      ThreadCount:\n"
+            + "        metric: test.collision.count\n"
+            + "        type: gauge\n"
+            + "        unit: '{thread}'\n"
+            + "        desc: Current number of threads.\n";
+    JmxTelemetryBuilder builder =
+        JmxTelemetry.builder(testing.getOpenTelemetry())
+            .addRules(new ByteArrayInputStream(customRules.getBytes(UTF_8)))
+            .setInternalMetricsSystemFilter(
+                IncludeExclude.builder().setIncluded("test-collision").build());
+    if (includeUnstable) {
+      builder.setInternalMetricsUnstableMetricsFilter(
+          IncludeExclude.builder().setIncluded("test.collision.count").build());
+    }
+
+    cleanup.deferCleanup(builder.build(collisionDefinitions()).start());
+
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jmx", metric -> metric.hasName("test.collision.count"));
+    Collection<String> sources =
+        testing.metrics().stream()
+            .filter(metric -> metric.getName().equals("test.collision.count"))
+            .flatMap(metric -> metric.getLongGaugeData().getPoints().stream())
+            .map(point -> point.getAttributes().get(stringKey("test.source")))
+            .collect(toSet());
+    assertThat(sources).contains("custom");
+    if (includeUnstable) {
+      assertThat(sources).contains("embedded");
+    } else {
+      assertThat(sources).doesNotContain("embedded");
+    }
+  }
+
+  private static InternalMetricsDefinitions collisionDefinitions() {
+    return new InternalMetricsDefinitions(JmxTelemetryTest.class.getClassLoader()) {
+      @Override
+      public Set<String> getSupportedSystems() {
+        return singleton("test-collision");
+      }
+    };
   }
 
   private static InternalMetricsDefinitions testDefinitions() {

@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.logging.Logger;
 
 class FilteringMeter implements Meter {
@@ -34,15 +35,19 @@ class FilteringMeter implements Meter {
       NOOP_METER.counterBuilder("").ofDoubles().buildObserver();
 
   private final Meter delegate;
-  private final IncludeExclude metrics;
+  private final Predicate<String> metrics;
 
   FilteringMeter(Meter delegate, IncludeExclude metrics) {
+    this(delegate, metrics::matches);
+  }
+
+  FilteringMeter(Meter delegate, Predicate<String> metrics) {
     this.delegate = delegate;
     this.metrics = metrics;
   }
 
   private Meter getMeterAndLog(String metricName) {
-    if (metrics.matches(metricName)) {
+    if (metrics.test(metricName)) {
       return delegate;
     }
     logger.log(FINE, "Metric is filtered out by configuration: {0}", metricName);

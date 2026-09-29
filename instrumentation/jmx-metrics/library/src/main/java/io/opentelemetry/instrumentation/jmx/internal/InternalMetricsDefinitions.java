@@ -105,14 +105,17 @@ public class InternalMetricsDefinitions {
   }
 
   /**
-   * Get all internal metrics definitions.
+   * Get internal metrics definitions for a given stability.
    *
-   * @return list of all internal metrics definitions, may be empty.
+   * @param stable true to get stable metrics, false to get unstable metrics
+   * @return list of metric definitions, may be empty
    */
-  public List<MetricDef> getAllMetricDefs() {
+  public List<MetricDef> getMetricDefs(boolean stable) {
     List<MetricDef> result = new ArrayList<>();
     for (RuleSet ruleSet : loadedRules) {
-      result.addAll(ruleSet.metricDefs);
+      if (ruleSet.stable == stable) {
+        result.addAll(ruleSet.metricDefs);
+      }
     }
     return result;
   }

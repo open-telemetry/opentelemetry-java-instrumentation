@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.logging.Logger;
 
 /** Builder for {@link JmxTelemetry} */
@@ -179,14 +180,14 @@ public final class JmxTelemetryBuilder {
             registeredMetrics.addAll(handler.getMetricNames());
           }
         });
+    Set<String> userMetrics = new HashSet<>(registeredMetrics);
 
     MetricConfiguration metricConfiguration = new MetricConfiguration();
     userMetricDefs.forEach(metricConfiguration::addMetricDef);
 
-    // filter on system name let the caller control which systems are supported.
     metricsDefinitions.loadInternalRules(internalMetricsSystemFilter, handlerRegistry);
-    // all metric defs are loaded and configured, even if metrics may be filtered-out later
-    metricsDefinitions.getAllMetricDefs().forEach(metricConfiguration::addMetricDef);
+    metricsDefinitions.getMetricDefs(true).forEach(metricConfiguration::addMetricDef);
+    metricsDefinitions.getMetricDefs(false).forEach(metricConfiguration::addUnstableMetricDef);
 
     Set<String> stableMetrics = metricsDefinitions.getMetricNames(true);
     Set<String> unstableMetrics = metricsDefinitions.getMetricNames(false);
@@ -195,28 +196,14 @@ public final class JmxTelemetryBuilder {
     registeredMetrics.addAll(stableMetrics);
     registeredMetrics.addAll(unstableMetrics);
 
-    // make the metric filter ignore the non-stable metrics not explicitly in the opt-in filter
-    Set<String> excludePatterns = new HashSet<>(metrics.getExcluded());
-    unstableMetrics.stream()
-        .filter(m -> !internalMetricsUnstableMetricsFilter.matches(m))
-        .filter(m -> metrics.matches(m)) // no need to exclude it if already excluded
-        .forEach(excludePatterns::add);
-
-    IncludeExclude effectiveMetricsFilter =
-        IncludeExclude.builder()
-            .setIncluded(metrics.getIncluded())
-            .setExcluded(excludePatterns)
-            .build();
-
     if (logger.isLoggable(FINE)) {
-      // making it easier to debug include/exclude patterns
-      for (String metric : registeredMetrics.stream().sorted().collect(toList())) {
-        String msg =
-            String.format(
-                "JMX metric '%s' %s by configuration",
-                metric, effectiveMetricsFilter.matches(metric) ? "included" : "excluded");
-        logger.log(FINE, msg);
-      }
+      logMetricSelection(userMetrics, "custom", metrics::matches);
+      logMetricSelection(stableMetrics, "embedded stable", metrics::matches);
+      logMetricSelection(
+          unstableMetrics,
+          "embedded unstable",
+          metric ->
+              metrics.matches(metric) && internalMetricsUnstableMetricsFilter.matches(metric));
     }
 
     return new JmxTelemetry(
@@ -224,11 +211,22 @@ public final class JmxTelemetryBuilder {
         discoveryDelayMs,
         metricConfiguration,
         handlerRegistry,
-        effectiveMetricsFilter);
+        metrics,
+        internalMetricsUnstableMetricsFilter);
   }
 
   public JmxTelemetry build() {
     return build(new InternalMetricsDefinitions(JmxTelemetryBuilder.class.getClassLoader()));
+  }
+
+  private static void logMetricSelection(
+      Set<String> metricNames, String source, Predicate<String> included) {
+    for (String metric : metricNames.stream().sorted().collect(toList())) {
+      logger.log(
+          FINE,
+          "JMX {0} metric '{1}' {2} by configuration",
+          new Object[] {source, metric, included.test(metric) ? "included" : "excluded"});
+    }
   }
 
   // package-private for testing
