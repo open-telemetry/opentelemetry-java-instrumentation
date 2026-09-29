@@ -244,15 +244,18 @@ Configurations that many modules share are defined once in
 
 ```yaml
 configurations:
-  - name: otel.instrumentation.mongo.query-sanitization.enabled
-    declarative_name: java.mongo.query_sanitization.enabled
+  - name: otel.instrumentation.jedis.query-sanitization.enabled
+    declarative_name: java.jedis.query_sanitization.enabled
     description: >
-      Enables query sanitization for MongoDB queries. Overrides
+      Enables query sanitization for Jedis queries. Overrides
       `otel.instrumentation.common.db.query-sanitization.enabled` for this instrumentation; when
       unset, that setting applies.
     type: boolean
   - ref: common.db.query-sanitization.enabled
 ```
+
+The same file's `global_configurations` section documents settings read on behalf of every
+instrumentation, such as `otel.instrumentation.common.v3-preview`. Modules don't reference those.
 
 The generated `docs/declarative-configuration-example.yaml` sets each configuration to its default,
 so any entry can be copied on its own. It leaves out deprecated configurations and configurations

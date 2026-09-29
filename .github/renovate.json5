@@ -1,7 +1,7 @@
 {
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   extends: [
-    "github>grafana/flint#v0.22.12",
+    "github>grafana/flint#v0.22.14",
     'config:best-practices',
     'workarounds:javaLTSVersions',
     'helpers:pinGitHubActionDigestsToSemver',
