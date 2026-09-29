@@ -30,9 +30,10 @@ import net.bytebuddy.matcher.ElementMatcher;
 /**
  * Instruments the simplified API's {@code JMSConsumer}, introduced in JMS 2.0.
  *
- * <p>Only the {@code Message}-returning receive methods are instrumented. {@code receiveBody}
- * unwraps the body inside the provider and never exposes the {@code Message}, so there is nothing
- * to extract trace context from at this boundary.
+ * <p>Only the {@code Message}-returning receive methods are instrumented. {@code receiveBody} could
+ * be rewritten as {@code receive()} followed by {@code getBody}, but that breaks AUTO_ACKNOWLEDGE
+ * and DUPS_OK_ACKNOWLEDGE: there a failed conversion must leave the message to be delivered again,
+ * and once {@code receive()} has returned it is already acknowledged.
  *
  * <p>Durable and shared subscription names are not recorded for the simplified API: {@code
  * JmsSubscriptionNames} keys on {@code MessageConsumer}, and a {@code JMSConsumer} is not one.
