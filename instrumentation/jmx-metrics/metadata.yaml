@@ -38,6 +38,16 @@ configurations:
     default: ""
     examples:
       - "jvm.memory.*,jvm.thread.count"
+  - name: otel.jmx.metrics.experimental.included
+    declarative_name: java.jmx.metrics.experimental.included
+    description: >
+      Comma-separated list of case-sensitive glob patterns for unstable (experimental) metric names
+      to opt in to. When not configured, no unstable metrics are collected. This option has no
+      effect before 3.0 unless `otel.instrumentation.common.v3-preview=true` is set.
+    type: list
+    default: ""
+    examples:
+      - "jetty.*,kafka.*"
   - name: otel.jmx.metrics.excluded
     declarative_name: java.jmx.metrics.excluded
     description: >
