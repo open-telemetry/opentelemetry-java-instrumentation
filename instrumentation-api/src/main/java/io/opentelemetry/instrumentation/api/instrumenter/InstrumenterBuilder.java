@@ -437,7 +437,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
           logger.warning(
               "The otel.instrumentation.experimental.span-suppression-strategy setting is"
                   + " deprecated and will be removed in 3.0. Use"
-                  + " otel.instrumentation.common.span-suppression-strategy instead.");
+                  + " deprecated and will be removed in 3.0. Use the programmatic API or equivalent"
+                  + " declarative instrumentation configuration instead.");
         }
       }
     }
