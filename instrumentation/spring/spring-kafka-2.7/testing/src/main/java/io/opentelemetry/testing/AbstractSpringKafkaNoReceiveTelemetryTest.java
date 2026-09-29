@@ -301,8 +301,6 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                     span -> span.hasName("consumer").hasParent(trace.getSpan(0))),
             trace -> {
               if (isLibraryInstrumentationTest() && testLatestDeps()) {
-                // in latest dep tests process spans are not created for retries because spring does
-                // not call the success/failure methods on the BatchInterceptor for retries
                 trace.hasSpansSatisfyingExactly(span -> span.hasName("consumer").hasNoParent());
               } else {
                 trace.hasSpansSatisfyingExactly(
