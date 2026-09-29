@@ -17,6 +17,7 @@ import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.sun.net.httpserver.HttpServer;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.net.InetSocketAddress;
@@ -47,10 +48,13 @@ class SqsCamelOwnershipInstrumentationTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   @Test
   void selectsCamelTraversalWithoutSuppressingOtherResponses() throws Exception {
     HttpServer server =
         HttpServer.create(new InetSocketAddress("localhost", PortUtils.findOpenPort()), 0);
+    cleanup.deferCleanup(() -> server.stop(0));
     server.createContext(
         "/",
         httpExchange -> {
@@ -71,44 +75,40 @@ class SqsCamelOwnershipInstrumentationTest {
                     new AwsClientBuilder.EndpointConfiguration(
                         "http://localhost:" + server.getAddress().getPort(), "us-east-1"))
                 .build();
-    try {
-      DefaultCamelContext camelContext = new DefaultCamelContext();
-      SqsComponent component = new SqsComponent();
-      component.setCamelContext(camelContext);
-      SqsEndpoint endpoint = new SqsEndpoint("aws-sqs://test", component, new SqsConfiguration());
-      TestSqsConsumer consumer = new TestSqsConsumer(endpoint);
-      String queueUrl = "http://localhost:" + server.getAddress().getPort() + "/000000000000/test";
-      testing.runWithSpan(
-          "parent",
-          () -> {
-            ReceiveMessageResult result = client.receiveMessage(queueUrl);
-            assertThat(consumer.exchanges(result.getMessages())).hasSize(1);
-            for (Message message : client.receiveMessage(queueUrl).getMessages()) {
-              testing.runWithSpan("nested", () -> assertThat(message.getBody()).isEqualTo("body"));
-            }
-          });
-      testing.waitForTraces(1);
-      assertThat(testing.spans())
-          .filteredOn(
-              span ->
-                  span.getName().equals("process test") || span.getName().equals("test process"))
-          .hasSize(emitStableMessagingSemconv() && !CAMEL_DISABLED && !ADAPTER_DISABLED ? 1 : 2);
-      assertThat(testing.spans())
-          .filteredOn(span -> span.getName().equals("nested"))
-          .singleElement()
-          .satisfies(
-              nested ->
-                  assertThat(testing.spans())
-                      .filteredOn(span -> span.getSpanId().equals(nested.getParentSpanId()))
-                      .singleElement()
-                      .satisfies(
-                          process ->
-                              assertThat(process.getInstrumentationScopeInfo().getName())
-                                  .isEqualTo("io.opentelemetry.aws-sdk-1.11")));
-    } finally {
-      client.shutdown();
-      server.stop(0);
-    }
+    cleanup.deferCleanup(client::shutdown);
+
+    DefaultCamelContext camelContext = new DefaultCamelContext();
+    SqsComponent component = new SqsComponent();
+    component.setCamelContext(camelContext);
+    SqsEndpoint endpoint = new SqsEndpoint("aws-sqs://test", component, new SqsConfiguration());
+    TestSqsConsumer consumer = new TestSqsConsumer(endpoint);
+    String queueUrl = "http://localhost:" + server.getAddress().getPort() + "/000000000000/test";
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          ReceiveMessageResult result = client.receiveMessage(queueUrl);
+          assertThat(consumer.exchanges(result.getMessages())).hasSize(1);
+          for (Message message : client.receiveMessage(queueUrl).getMessages()) {
+            testing.runWithSpan("nested", () -> assertThat(message.getBody()).isEqualTo("body"));
+          }
+        });
+    testing.waitForTraces(1);
+    assertThat(testing.spans())
+        .filteredOn(
+            span -> span.getName().equals("process test") || span.getName().equals("test process"))
+        .hasSize(emitStableMessagingSemconv() && !CAMEL_DISABLED && !ADAPTER_DISABLED ? 1 : 2);
+    assertThat(testing.spans())
+        .filteredOn(span -> span.getName().equals("nested"))
+        .singleElement()
+        .satisfies(
+            nested ->
+                assertThat(testing.spans())
+                    .filteredOn(span -> span.getSpanId().equals(nested.getParentSpanId()))
+                    .singleElement()
+                    .satisfies(
+                        process ->
+                            assertThat(process.getInstrumentationScopeInfo().getName())
+                                .isEqualTo("io.opentelemetry.aws-sdk-1.11")));
   }
 
   private static class TestSqsConsumer extends SqsConsumer {
