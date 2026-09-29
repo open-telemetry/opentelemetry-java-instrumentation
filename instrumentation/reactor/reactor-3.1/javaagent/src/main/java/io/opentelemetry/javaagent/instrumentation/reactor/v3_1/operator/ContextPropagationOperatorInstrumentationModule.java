@@ -22,11 +22,7 @@ public class ContextPropagationOperatorInstrumentationModule extends Instrumenta
     super(
         "reactor",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {
-              "reactor-3.1",
-              "reactor-context-propagation-operator",
-              "reactor-3.1-context-propagation-operator"
-            }
+            ? new String[] {"reactor-3.1", "reactor-3.1-context-propagation-operator"}
             : new String[] {"reactor-3.1", "reactor-context-propagation-operator"});
   }
 
