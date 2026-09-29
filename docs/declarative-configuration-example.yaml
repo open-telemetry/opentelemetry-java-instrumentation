@@ -239,11 +239,8 @@ instrumentation/development:
 
       # Strategy for suppressing nested instrumentation spans: `semconv` suppresses a span nested in
       # a span of the same semantic convention type, `span-kind` suppresses a span nested in a span
-      # of the same span kind, and `none` disables suppression. In the Java agent the flat
-      # `otel.instrumentation.experimental.span-suppression-strategy` property sets this. Library
-      # instrumentation also reads that property as a system property, which is deprecated there and
-      # ignored under v3 preview.
-      span_suppression_strategy/development: semconv
+      # of the same span kind, and `none` disables suppression.
+      span_suppression_strategy: semconv
       user:
         name:
           # Enables capturing the user.name attribute when v3 preview is enabled. This property and
