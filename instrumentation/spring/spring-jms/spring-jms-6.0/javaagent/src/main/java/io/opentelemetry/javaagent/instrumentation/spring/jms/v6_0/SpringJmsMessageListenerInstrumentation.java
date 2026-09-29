@@ -85,7 +85,12 @@ class SpringJmsMessageListenerInstrumentation implements TypeInstrumentation {
 
         try {
           if (!firstProcessingObserver) {
-            return new AdviceScope(listenerInstrumenter(), request, messageAdapter, null, null);
+            return new AdviceScope(
+                listenerInstrumenter(messageAdapter.wereConsumedMessagesRecorded()),
+                request,
+                messageAdapter,
+                null,
+                null);
           }
 
           Context currentContext = Context.current();
@@ -96,7 +101,8 @@ class SpringJmsMessageListenerInstrumentation implements TypeInstrumentation {
               parentContext = receiveContext.context();
             }
           }
-          Instrumenter<MessageWithDestination, Void> instrumenter = listenerInstrumenter();
+          Instrumenter<MessageWithDestination, Void> instrumenter =
+              listenerInstrumenter(messageAdapter.wereConsumedMessagesRecorded());
           if (!instrumenter.shouldStart(parentContext, request)) {
             return new AdviceScope(instrumenter, request, messageAdapter, null, null);
           }

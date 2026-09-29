@@ -42,6 +42,7 @@ testing {
     register<JvmTestSuite>("unitTests") {
       dependencies {
         implementation(project())
+        implementation(project(":javaagent-bootstrap"))
         implementation(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
         implementation(project(":instrumentation:jms:jms-3.0:javaagent"))
         implementation(project(":instrumentation:jms:jms-common-1.1:javaagent"))

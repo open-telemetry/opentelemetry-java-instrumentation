@@ -5,9 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms.v1_1;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
+
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.jms.JmsMessageProcessingState;
 import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveContext;
+import io.opentelemetry.javaagent.bootstrap.messaging.MessagingTelemetryCarrier;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.DestinationAdapter;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageAdapter;
 import java.util.Collections;
@@ -19,6 +24,9 @@ import javax.jms.Message;
 
 public class JavaxMessageAdapter implements MessageAdapter {
 
+  private static final MessagingTelemetryCarrier<Message> messageTelemetry =
+      MessagingTelemetryCarrier.create(
+          VirtualField.find(Message.class, MessagingTelemetrySignals.class));
   private static final VirtualField<Message, JmsReceiveContext> RECEIVE_CONTEXT =
       VirtualField.find(Message.class, JmsReceiveContext.class);
   private static final VirtualField<Message, JmsMessageProcessingState> PROCESSING_STATE =
@@ -83,6 +91,7 @@ public class JavaxMessageAdapter implements MessageAdapter {
 
   @Override
   public JmsMessageProcessingState prepareForReceive() {
+    messageTelemetry.clear(message);
     RECEIVE_CONTEXT.set(message, null);
     processingState = new JmsMessageProcessingState();
     PROCESSING_STATE.set(message, processingState);
@@ -103,6 +112,16 @@ public class JavaxMessageAdapter implements MessageAdapter {
     return receiveContext != null && receiveContext.processingState() == processingState
         ? receiveContext
         : null;
+  }
+
+  @Override
+  public boolean wereConsumedMessagesRecorded() {
+    return messageTelemetry.contains(message, RECEIVE, CONSUMED_MESSAGES);
+  }
+
+  @Override
+  public void markConsumedMessagesRecorded() {
+    messageTelemetry.add(message, RECEIVE, CONSUMED_MESSAGES);
   }
 
   @Override

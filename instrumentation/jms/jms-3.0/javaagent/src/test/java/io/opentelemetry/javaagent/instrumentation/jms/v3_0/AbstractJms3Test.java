@@ -328,6 +328,12 @@ abstract class AbstractJms3Test {
         INSTRUMENTATION_NAME,
         "messaging.process.duration",
         messagingMetricAttributes("process", "metricsReceiveAndDispatchQueue"));
+    assertCounter(
+        testing,
+        INSTRUMENTATION_NAME,
+        "messaging.client.consumed.messages",
+        1,
+        messagingMetricAttributes("receive", "metricsReceiveAndDispatchQueue"));
   }
 
   @Test

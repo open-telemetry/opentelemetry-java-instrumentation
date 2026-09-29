@@ -49,7 +49,7 @@ class JmsInstrumenterFactoryTest {
             .build()) {
       Instrumenter<MessageWithDestination, Void> instrumenter =
           new JmsInstrumenterFactory(openTelemetry, INSTRUMENTATION_NAME)
-              .createConsumerProcessInstrumenter(false);
+              .createConsumerProcessInstrumenter(false, true);
       MessageWithDestination request = MessageWithDestination.create(messageAdapter(), null);
       Span parent = openTelemetry.getTracer("test").spanBuilder("parent").startSpan();
       Context parentContext =
@@ -76,6 +76,41 @@ class JmsInstrumenterFactoryTest {
                       .isEqualTo(parent.getSpanContext().getSpanId()));
       Collection<MetricData> metrics = metricReader.collectAllMetrics();
       assertDurationCount(metrics, 1);
+    }
+  }
+
+  @Test
+  void recordsConsumedMessagesOnlyWhenProcessOwnsTheCount() {
+    assertThat(emitStableMessagingSemconv()).isTrue();
+
+    InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
+    SdkMeterProvider meterProvider =
+        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    try (OpenTelemetrySdk openTelemetry =
+        OpenTelemetrySdk.builder().setMeterProvider(meterProvider).build()) {
+      JmsInstrumenterFactory factory =
+          new JmsInstrumenterFactory(openTelemetry, INSTRUMENTATION_NAME);
+      Instrumenter<MessageWithDestination, Void> withoutCount =
+          factory.createConsumerProcessInstrumenter(false, false);
+      Instrumenter<MessageWithDestination, Void> withCount =
+          factory.createConsumerProcessInstrumenter(false, true);
+      MessageWithDestination request = MessageWithDestination.create(messageAdapter(), null);
+
+      Context context = withoutCount.start(Context.root(), request);
+      withoutCount.end(context, request, null, null);
+      assertThat(metricReader.collectAllMetrics())
+          .noneMatch(metric -> metric.getName().equals("messaging.client.consumed.messages"));
+
+      context = withCount.start(Context.root(), request);
+      withCount.end(context, request, null, null);
+      assertThat(metricReader.collectAllMetrics())
+          .filteredOn(metric -> metric.getName().equals("messaging.client.consumed.messages"))
+          .singleElement()
+          .satisfies(
+              metric ->
+                  assertThat(metric.getLongSumData().getPoints())
+                      .singleElement()
+                      .satisfies(point -> assertThat(point.getValue()).isEqualTo(1)));
     }
   }
 

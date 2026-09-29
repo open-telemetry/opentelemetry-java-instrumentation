@@ -41,6 +41,12 @@ public interface MessageAdapter {
   @Nullable
   JmsReceiveContext getReceiveContext();
 
+  /** Tells whether the consumed messages metric was already recorded for this message. */
+  boolean wereConsumedMessagesRecorded();
+
+  /** Remembers that the receive operation recorded the consumed messages metric. */
+  void markConsumedMessagesRecorded();
+
   /** Starts processing and returns whether this is the first observer for this delivery. */
   boolean beginProcessing();
 

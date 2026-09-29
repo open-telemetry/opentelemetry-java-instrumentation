@@ -86,7 +86,7 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
         try {
           if (!firstProcessingObserver) {
             return new AdviceScope(
-                consumerProcessInstrumenter(),
+                consumerProcessInstrumenter(messageAdapter.wereConsumedMessagesRecorded()),
                 messageWithDestination,
                 messageAdapter,
                 null,
@@ -102,7 +102,8 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
               parentContext = receiveContext.context();
             }
           }
-          Instrumenter<MessageWithDestination, Void> instrumenter = consumerProcessInstrumenter();
+          Instrumenter<MessageWithDestination, Void> instrumenter =
+              consumerProcessInstrumenter(messageAdapter.wereConsumedMessagesRecorded());
           if (!instrumenter.shouldStart(parentContext, messageWithDestination)) {
             // an advice scope is still needed, to clear the listener's subscription name on exit
             return new AdviceScope(

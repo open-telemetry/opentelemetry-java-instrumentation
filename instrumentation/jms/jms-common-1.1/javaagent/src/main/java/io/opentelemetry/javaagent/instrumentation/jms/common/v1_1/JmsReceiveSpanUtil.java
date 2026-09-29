@@ -50,6 +50,9 @@ public class JmsReceiveSpanUtil {
               timer.startTime(),
               timer.now());
       request.message().setReceiveContext(new JmsReceiveContext(receiveContext, processingState));
+      if (emitStableMessagingSemconv() && throwable == null) {
+        request.message().markConsumedMessagesRecorded();
+      }
     }
   }
 
