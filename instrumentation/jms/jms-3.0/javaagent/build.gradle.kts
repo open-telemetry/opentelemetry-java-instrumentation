@@ -29,6 +29,7 @@ dependencies {
   testImplementation("org.apache.activemq:artemis-jakarta-client:2.27.1")
 
   testInstrumentation(project(":instrumentation:jms:jms-1.1:javaagent"))
+  testInstrumentation(project(":instrumentation:jms:jms-2.0:javaagent"))
 }
 
 otelJava {
