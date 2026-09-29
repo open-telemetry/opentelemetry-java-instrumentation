@@ -68,13 +68,7 @@ dependencies {
   testImplementation(project(":instrumentation:reactor:reactor-3.1:library"))
   testImplementation(project(":instrumentation-annotations"))
 
-  testLibrary("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.0.0") {
-    if (!otelProps.testLatestDeps) {
-      version {
-        strictly("1.0.0")
-      }
-    }
-  }
+  testLibrary("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.0.0")
   testLibrary("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.0.0")
   testLibrary("io.vertx:vertx-lang-kotlin-coroutines:3.6.0")
 }
