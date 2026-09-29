@@ -33,6 +33,30 @@ tasks.test {
   systemProperty("testLatestDeps", otelProps.testLatestDeps)
 }
 
+tasks {
+  val testMessagingPreview = register<Test>("testMessagingPreview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("SpringKafkaInterceptorTest")
+    }
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+  }
+
+  val testBothSemconv = register<Test>("testBothSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("SpringKafkaInterceptorTest")
+    }
+    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
+  }
+
+  check {
+    dependsOn(testMessagingPreview, testBothSemconv)
+  }
+}
+
 // spring 6 (which spring-kafka 3.+ uses) requires java 17
 if (otelProps.testLatestDeps) {
   otelJava {
