@@ -36,7 +36,7 @@ dependencies {
 
   library("org.mongodb:mongo-java-driver:3.1.0")
   compileOnly("org.mongodb:mongo-java-driver:3.7.0")
-  latestDepTestLibrary("org.mongodb:mongo-java-driver:3.+") // see test suite below
+  latestDepTestLibrary("org.mongodb:mongo-java-driver:3.+") // see mongo-4.0 module
 
   testImplementation(project(":instrumentation:mongo:mongo-3.1:testing"))
 
@@ -46,9 +46,9 @@ dependencies {
 
 testing {
   suites {
-    register<JvmTestSuite>("latestDepTest") {
+    register<JvmTestSuite>("version37Test") {
       dependencies {
-        implementation("org.mongodb:mongo-java-driver:3.+")
+        implementation("org.mongodb:mongo-java-driver:${baseVersion("3.7.0").orLatest("3.+")}")
         implementation(project(":instrumentation:mongo:mongo-3.1:testing"))
         implementation("com.github.jnr:jnr-unixsocket:0.18")
       }
@@ -73,10 +73,6 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  named<Test>("latestDepTest") {
-    enabled = otelProps.testLatestDeps
-  }
-
   val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
     register<Test>("${suite.name}StableSemconv") {
       val sourceTask = named<Test>(suite.name).get()
@@ -90,12 +86,12 @@ tasks {
     }
   }
 
-  val latestDepTestV3Preview = register<Test>("latestDepTestV3Preview") {
-    val sourceTask = named<Test>("latestDepTest").get()
+  val version37TestV3Preview = register<Test>("version37TestV3Preview") {
+    val sourceTask = named<Test>("version37Test").get()
     setJvmArgs(sourceTask.jvmArgs)
     setSystemProperties(sourceTask.systemProperties)
-    testClassesDirs = sourceSets["latestDepTest"].output.classesDirs
-    classpath = sourceSets["latestDepTest"].runtimeClasspath
+    testClassesDirs = sourceSets["version37Test"].output.classesDirs
+    classpath = sourceSets["version37Test"].runtimeClasspath
     filter {
       includeTestsMatching("*MongoClientTest.emitsInstrumentationScope")
     }
@@ -115,6 +111,6 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, stableSemconvSuites, testV3Preview, latestDepTestV3Preview)
+    dependsOn(testing.suites, stableSemconvSuites, testV3Preview, version37TestV3Preview)
   }
 }
