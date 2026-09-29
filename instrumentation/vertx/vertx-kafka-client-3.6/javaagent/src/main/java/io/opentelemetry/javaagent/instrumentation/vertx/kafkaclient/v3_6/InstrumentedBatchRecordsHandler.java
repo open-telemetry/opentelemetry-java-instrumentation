@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.kafkaclient.v3_6;
 
-import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanSuppression;
 import static io.opentelemetry.javaagent.instrumentation.vertx.kafkaclient.v3_6.VertxKafkaSingletons.batchProcessInstrumenter;
 
 import io.opentelemetry.context.Context;
@@ -38,22 +37,14 @@ public class InstrumentedBatchRecordsHandler<K, V> implements Handler<ConsumerRe
       return;
     }
 
-    // the instrumenter iterates over records when adding links, we need to suppress that
-    boolean suppressionAcquired = processSpanSuppression().tryAcquire();
-    try {
-      Context context = batchProcessInstrumenter().start(parentContext, request);
-      try (Scope ignored = context.makeCurrent()) {
-        callDelegateHandler(records);
-      } catch (Throwable t) {
-        batchProcessInstrumenter().end(context, request, null, t);
-        throw t;
-      }
-      batchProcessInstrumenter().end(context, request, null, null);
-    } finally {
-      if (suppressionAcquired) {
-        processSpanSuppression().release();
-      }
+    Context context = batchProcessInstrumenter().start(parentContext, request);
+    try (Scope ignored = context.makeCurrent()) {
+      callDelegateHandler(records);
+    } catch (Throwable t) {
+      batchProcessInstrumenter().end(context, request, null, t);
+      throw t;
     }
+    batchProcessInstrumenter().end(context, request, null, null);
   }
 
   private void callDelegateHandler(ConsumerRecords<K, V> records) {
