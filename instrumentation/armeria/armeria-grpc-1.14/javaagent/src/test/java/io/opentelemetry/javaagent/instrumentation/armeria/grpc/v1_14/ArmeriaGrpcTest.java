@@ -66,8 +66,7 @@ class ArmeriaGrpcTest {
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void grpcInstrumentation() {
-    URI uri =
-        URI.create(server.httpUri().toString().replace("://", "://user:password@"));
+    URI uri = URI.create(server.httpUri().toString().replace("://", "://user:password@"));
     GreeterGrpc.GreeterBlockingStub client =
         GrpcClients.builder(uri).build(GreeterGrpc.GreeterBlockingStub.class);
 
