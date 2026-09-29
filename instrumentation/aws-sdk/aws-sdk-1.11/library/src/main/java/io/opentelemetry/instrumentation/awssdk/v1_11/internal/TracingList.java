@@ -24,6 +24,7 @@ class TracingList extends SdkInternalList<Message> {
   private final transient Request<?> request;
   private final transient Response<?> response;
   @Nullable private final transient Context processParentContext;
+  private final transient ProcessingOwnership processingOwnership = new ProcessingOwnership();
   private boolean firstIterator = true;
 
   static SdkInternalList<Message> wrap(
@@ -50,18 +51,12 @@ class TracingList extends SdkInternalList<Message> {
 
   @Override
   public Iterator<Message> iterator() {
-    Iterator<Message> it;
-    // We should only return one iterator with tracing.
-    // However, this is not thread-safe, but usually the first (hopefully only) traversal of
-    // List is performed in the same thread that called receiveMessage()
+    Iterator<Message> iterator = super.iterator();
     if (firstIterator && !inAwsClient()) {
-      it = TracingIterator.wrap(super.iterator(), this);
       firstIterator = false;
-    } else {
-      it = super.iterator();
+      return TracingIterator.wrap(iterator, this, processingOwnership);
     }
-
-    return it;
+    return iterator;
   }
 
   Instrumenter<SqsProcessRequest, Response<?>> getInstrumenter() {
@@ -81,11 +76,15 @@ class TracingList extends SdkInternalList<Message> {
     return processParentContext;
   }
 
+  static void markProcessingOwnedOutsideSqsSdk(List<?> messages) {
+    if (messages instanceof TracingList) {
+      ((TracingList) messages).processingOwnership.ownedOutsideSqsSdk = true;
+    }
+  }
+
   @Override
   public void forEach(Consumer<? super Message> action) {
-    for (Message message : this) {
-      action.accept(message);
-    }
+    iterator().forEachRemaining(action);
   }
 
   private static boolean inAwsClient() {
@@ -100,6 +99,14 @@ class TracingList extends SdkInternalList<Message> {
   private Object writeReplace() {
     // serialize this object to SdkInternalList
     return new SdkInternalList<>(this);
+  }
+
+  static final class ProcessingOwnership {
+    private volatile boolean ownedOutsideSqsSdk;
+
+    boolean isOwnedOutsideSqsSdk() {
+      return ownedOutsideSqsSdk;
+    }
   }
 
   private static class CallerClass extends SecurityManager {

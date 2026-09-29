@@ -10,11 +10,16 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.BooleanSupplier;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.common.TopicPartition;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -23,8 +28,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 public final class KafkaConsumerContextUtil {
   private static final ContextKey<Span> PROCESS_SPAN_KEY =
       ContextKey.named("opentelemetry-kafka-process-span");
-  private static final ContextKey<Span> PROCESS_PARENT_SPAN_KEY =
-      ContextKey.named("opentelemetry-kafka-process-parent-span");
+  private static final ContextKey<Context> PROCESS_PARENT_CONTEXT_KEY =
+      ContextKey.named("opentelemetry-kafka-process-parent-context");
   private static final ContextKey<Boolean> RECEIVE_OPERATION_KEY =
       ContextKey.named("opentelemetry-kafka-receive-operation");
   // these fields can be used for multiple instrumentations because of that we don't use a helper
@@ -39,12 +44,15 @@ public final class KafkaConsumerContextUtil {
       VirtualField.find(ConsumerRecords.class, String[].class);
   private static final VirtualField<ConsumerRecord<?, ?>, Boolean> RECORD_COUNTED =
       VirtualField.find(ConsumerRecord.class, Boolean.class);
+  private static final VirtualField<ConsumerRecord<?, ?>, BooleanSupplier>
+      RAW_PROCESSING_ELIGIBILITY = VirtualField.find(ConsumerRecord.class, BooleanSupplier.class);
+
+  /** Checks a distinct Kafka operation without treating an ambient consumer as its owner. */
+  public static Context spanSuppressionContext(Context context) {
+    return Context.root().with(Span.fromContext(context));
+  }
 
   public static Context withoutLeakedProcessSpan(Context context) {
-    if (!emitStableMessagingSemconv()) {
-      return context;
-    }
-
     Span processSpan = context.get(PROCESS_SPAN_KEY);
     if (processSpan == null) {
       return context;
@@ -55,15 +63,24 @@ public final class KafkaConsumerContextUtil {
       return context;
     }
 
-    Span parentSpan = context.get(PROCESS_PARENT_SPAN_KEY);
-    Context restored = context.with(parentSpan != null ? parentSpan : Span.getInvalid());
+    Context parentContext = context.get(PROCESS_PARENT_CONTEXT_KEY);
+    Context restored = parentContext != null ? parentContext : context.with(Span.getInvalid());
     return restored.with(RECEIVE_OPERATION_KEY, false);
+  }
+
+  /** Keeps legacy upstream extraction from seeing an abandoned raw Process scope. */
+  @Nullable
+  public static Scope withoutLeakedProcessSpanDuringExtraction() {
+    Context current = Context.current();
+    return !emitStableMessagingSemconv() && withoutLeakedProcessSpan(current) != current
+        ? Context.root().makeCurrent()
+        : null;
   }
 
   public static Context withProcessParentSpan(Context context, Context parentContext) {
     return context
         .with(PROCESS_SPAN_KEY, Span.fromContext(context))
-        .with(PROCESS_PARENT_SPAN_KEY, Span.fromContext(parentContext));
+        .with(PROCESS_PARENT_CONTEXT_KEY, parentContext);
   }
 
   public static Context withReceiveOperation(Context context, boolean receiveOperation) {
@@ -84,6 +101,26 @@ public final class KafkaConsumerContextUtil {
     }
     RECORD_COUNTED.set(record, true);
     return true;
+  }
+
+  public static void setRawProcessingEligibility(
+      ConsumerRecord<?, ?> record, BooleanSupplier rawProcessingEligibility) {
+    RAW_PROCESSING_ELIGIBILITY.set(record, rawProcessingEligibility);
+  }
+
+  @Nullable
+  public static BooleanSupplier getRawProcessingEligibility(ConsumerRecord<?, ?> record) {
+    return RAW_PROCESSING_ELIGIBILITY.get(record);
+  }
+
+  /** Reads batch membership without invoking tracing iterators. */
+  public static List<ConsumerRecord<?, ?>> getRecords(ConsumerRecords<?, ?> records) {
+    List<ConsumerRecord<?, ?>> result = new ArrayList<>(records.count());
+    for (TopicPartition partition : records.partitions()) {
+      List<? extends ConsumerRecord<?, ?>> partitionRecords = records.records(partition);
+      result.addAll(partitionRecords);
+    }
+    return result;
   }
 
   public static KafkaConsumerContext get(ConsumerRecord<?, ?> records) {
@@ -156,6 +193,8 @@ public final class KafkaConsumerContextUtil {
   public static void copy(ConsumerRecord<?, ?> from, ConsumerRecord<?, ?> to) {
     RECORD_CONTEXT.set(to, RECORD_CONTEXT.get(from));
     RECORD_CONSUMER_INFO.set(to, RECORD_CONSUMER_INFO.get(from));
+    RECORD_COUNTED.set(to, RECORD_COUNTED.get(from));
+    RAW_PROCESSING_ELIGIBILITY.set(to, RAW_PROCESSING_ELIGIBILITY.get(from));
   }
 
   private KafkaConsumerContextUtil() {}
