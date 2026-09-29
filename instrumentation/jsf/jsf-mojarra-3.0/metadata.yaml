@@ -7,3 +7,4 @@ features:
 library_link: https://github.com/eclipse-ee4j/mojarra
 configurations:
   - ref: common.controller-telemetry.enabled
+  - ref: common.deprecated-controller-telemetry.enabled

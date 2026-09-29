@@ -90,7 +90,7 @@ class JfrExtension implements BeforeEachCallback, AfterEachCallback {
       String path = new File("").getAbsolutePath();
 
       MetaDataCollector.writeTelemetryToFiles(
-          path, metricsByScope, emptyMap(), instrumentationScopes);
+          path, metricsByScope, emptyMap(), emptyMap(), instrumentationScopes);
     }
   }
 

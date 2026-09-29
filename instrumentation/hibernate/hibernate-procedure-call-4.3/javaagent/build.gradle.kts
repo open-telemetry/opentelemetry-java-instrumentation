@@ -45,6 +45,17 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
   }
 
+  val testDisabled = register<Test>("testDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*DefaultEnablementTest")
+    }
+
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    jvmArgs("-Dotel.instrumentation.jdbc.enabled=false")
+  }
+
   val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -54,6 +65,6 @@ tasks {
   }
 
   check {
-    dependsOn(testStableSemconv, testExperimental)
+    dependsOn(testDisabled, testStableSemconv, testExperimental)
   }
 }

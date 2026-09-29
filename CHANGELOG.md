@@ -4,6 +4,9 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- The experimental `java.common.messaging.headers/development` YAML selector no longer configures
+  header capture. Use `java.common.messaging.headers` instead.
+  ([#20260](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20260))
 - Add the required `isRequestStreaming(REQUEST)` method to `GenAiAttributesGetter`.
   ([#19879](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19879))
 - Elasticsearch REST javaagent and 7.x library instrumentation now capture sanitized search query
@@ -17,6 +20,38 @@
 
 ### 🚫 Deprecations
 
+- Deprecate `otel.instrumentation.common.experimental.controller-telemetry.enabled` and
+  `otel.instrumentation.common.experimental.view-telemetry.enabled` in favor of
+  `otel.instrumentation.common.controller-telemetry.enabled` and
+  `otel.instrumentation.common.view-telemetry.enabled`, respectively. The deprecated names remain
+  fallbacks until 3.0 and warn when applied.
+- Deprecate `SystemMetrics.registerObservers(Meter)` in the OSHI library instrumentation in favor of
+  `SystemMetrics.registerObservers(OpenTelemetry)`.
+  ([#20263](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20263))
+- Deprecate `otel.instrumentation.messaging.experimental.receive-telemetry.enabled` in favor of
+  `otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled`. For headers,
+  replace `otel.instrumentation.messaging.experimental.headers.included` and `.excluded` with the
+  stable `otel.instrumentation.common.messaging.headers.included` and `.excluded`. Stable selectors
+  take precedence per leaf. V3-preview ignores the older header aliases and
+  `otel.instrumentation.messaging.experimental.capture-headers` without warnings. These deprecated
+  settings may be removed in a later minor release and will be removed no later than 3.0.
+  ([#20060](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20060),
+  [#20260](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20260))
+- Deprecate the Java agent and Spring Boot starter's bundled contrib samplers, including the
+  `rule_based_routing` declarative sampler and `linksbased_parentbased_always_on` flat sampler.
+  Outside v3-preview, both names continue to work but log a warning when selected. When
+  `otel.instrumentation.common.v3-preview=true`, selecting either sampler fails SDK initialization
+  with a configuration error. For rule-based routing, consider the SDK incubator
+  `composite/development` `rule_based` sampler; there is no links-based replacement.
+  ([#20239](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20239))
+- Deprecate the source-specific experimental selectors for Log4j `MapMessage` entries, Logback
+  key-value pairs, Logstash markers, and Logstash structured arguments in favor of the common
+  structured logging attribute selector. The source-specific properties are ignored under
+  v3-preview.
+- Deprecate `otel.instrumentation.couchbase.experimental-span-attributes` in favor of
+  `otel.instrumentation.couchbase.emit-experimental-telemetry`. It will be removed in the next minor
+  release.
+  ([#20117](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20117))
 - Deprecate the Elasticsearch REST library artifacts and their public entrypoints. Elasticsearch
   Java API Client users should use its [native OpenTelemetry
   support](https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/8.10/opentelemetry.html),
@@ -1948,7 +1983,7 @@ for more details.
 ### 🌟 New javaagent instrumentation
 
 - AWS Bedrock instrumentation, following
-  [Gen AI semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/README.md#semantic-conventions-for-generative-ai-systems)
+  [Gen AI semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/gen-ai/README.md#semantic-conventions-for-generative-ai-systems)
   ([#13355](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13355),
   [#13408](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13408),
   [#13473](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13473),
@@ -1961,7 +1996,7 @@ for more details.
 ### 🌟 New library instrumentation
 
 - AWS Bedrock instrumentation, following
-  [Gen AI semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/README.md#semantic-conventions-for-generative-ai-systems)
+  [Gen AI semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/gen-ai/README.md#semantic-conventions-for-generative-ai-systems)
   ([#13355](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13355),
   [#13408](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13408),
   [#13473](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13473),

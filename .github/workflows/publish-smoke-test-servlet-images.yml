@@ -15,6 +15,7 @@ permissions:
 jobs:
   prepare:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     outputs:
       tag: ${{ steps.set-tag.outputs.TAG }}
     steps:
@@ -28,6 +29,7 @@ jobs:
       packages: write
     needs: prepare
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 75
     defaults:
       run:
         shell: bash # this is needed for TAG construction below on Windows
@@ -77,8 +79,7 @@ jobs:
       - name: Set up Gradle cache
         uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
         with:
-          # only push cache for one matrix option per OS since github action cache space is limited
-          cache-read-only: ${{ matrix.smoke-test-suite != 'tomcat' }}
+          cache-read-only: true
 
       - name: Build Linux docker images
         if: matrix.os != 'windows-latest'
@@ -101,7 +102,7 @@ jobs:
     needs:
       - publish
     if: always()
-    uses: ./.github/workflows/reusable-workflow-notification.yml
+    uses: $/.github/workflows/reusable-workflow-notification.yml
     with:
       success: ${{ needs.publish.result == 'success' }}
       failure-notification-after-attempts: 2

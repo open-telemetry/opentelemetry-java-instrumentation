@@ -19,19 +19,19 @@
 > - **Embedded license files**: [jackson-annotations-2.22.jar/META-INF/LICENSE](jackson-annotations-2.22.jar/META-INF/LICENSE)
     - [jackson-annotations-2.22.jar/META-INF/NOTICE](jackson-annotations-2.22.jar/META-INF/NOTICE)
 
-**4** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-core` **Version:** `2.22.2`
+**4** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-core` **Version:** `2.22.3`
 > - **Project URL**: [https://github.com/FasterXML/jackson-core](https://github.com/FasterXML/jackson-core)
 > - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-core-2.22.2.jar/META-INF/LICENSE](jackson-core-2.22.2.jar/META-INF/LICENSE)
-    - [jackson-core-2.22.2.jar/META-INF/NOTICE](jackson-core-2.22.2.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-core-2.22.3.jar/META-INF/LICENSE](jackson-core-2.22.3.jar/META-INF/LICENSE)
+    - [jackson-core-2.22.3.jar/META-INF/NOTICE](jackson-core-2.22.3.jar/META-INF/NOTICE)
 
-**5** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-databind` **Version:** `2.22.2`
+**5** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-databind` **Version:** `2.22.3`
 > - **Project URL**: [https://github.com/FasterXML/jackson](https://github.com/FasterXML/jackson)
 > - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-databind-2.22.2.jar/META-INF/LICENSE](jackson-databind-2.22.2.jar/META-INF/LICENSE)
-    - [jackson-databind-2.22.2.jar/META-INF/NOTICE](jackson-databind-2.22.2.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-databind-2.22.3.jar/META-INF/LICENSE](jackson-databind-2.22.3.jar/META-INF/LICENSE)
+    - [jackson-databind-2.22.3.jar/META-INF/NOTICE](jackson-databind-2.22.3.jar/META-INF/NOTICE)
 
 **6** **Group:** `com.googlecode.concurrentlinkedhashmap` **Name:** `concurrentlinkedhashmap-lru` **Version:** `1.4.2`
 > - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
@@ -230,10 +230,10 @@
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **Embedded license files**: [zipkin-2.27.1.jar/META-INF/LICENSE](zipkin-2.27.1.jar/META-INF/LICENSE)
 
-**53** **Group:** `net.bytebuddy` **Name:** `byte-buddy-dep` **Version:** `1.18.13`
+**53** **Group:** `net.bytebuddy` **Name:** `byte-buddy-dep` **Version:** `1.18.14`
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [byte-buddy-dep-1.18.13.jar/META-INF/LICENSE](byte-buddy-dep-1.18.13.jar/META-INF/LICENSE)
-    - [byte-buddy-dep-1.18.13.jar/META-INF/NOTICE](byte-buddy-dep-1.18.13.jar/META-INF/NOTICE)
+> - **Embedded license files**: [byte-buddy-dep-1.18.14.jar/META-INF/LICENSE](byte-buddy-dep-1.18.14.jar/META-INF/LICENSE)
+    - [byte-buddy-dep-1.18.14.jar/META-INF/NOTICE](byte-buddy-dep-1.18.14.jar/META-INF/NOTICE)
 
 **54** **Group:** `org.jetbrains` **Name:** `annotations` **Version:** `13.0`
 > - **POM Project URL**: [http://www.jetbrains.org](http://www.jetbrains.org)
@@ -285,15 +285,15 @@
 
 ## MIT License
 
-**62** **Group:** `org.slf4j` **Name:** `slf4j-api` **Version:** `2.0.19`
+**62** **Group:** `org.slf4j` **Name:** `slf4j-api` **Version:** `2.0.20`
 > - **Project URL**: [http://www.slf4j.org](http://www.slf4j.org)
 > - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
-> - **Embedded license files**: [slf4j-api-2.0.19.jar/META-INF/LICENSE.txt](slf4j-api-2.0.19.jar/META-INF/LICENSE.txt)
+> - **Embedded license files**: [slf4j-api-2.0.20.jar/META-INF/LICENSE.txt](slf4j-api-2.0.20.jar/META-INF/LICENSE.txt)
 
-**63** **Group:** `org.slf4j` **Name:** `slf4j-simple` **Version:** `2.0.19`
+**63** **Group:** `org.slf4j` **Name:** `slf4j-simple` **Version:** `2.0.20`
 > - **Project URL**: [http://www.slf4j.org](http://www.slf4j.org)
 > - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
-> - **Embedded license files**: [slf4j-simple-2.0.19.jar/META-INF/LICENSE.txt](slf4j-simple-2.0.19.jar/META-INF/LICENSE.txt)
+> - **Embedded license files**: [slf4j-simple-2.0.20.jar/META-INF/LICENSE.txt](slf4j-simple-2.0.20.jar/META-INF/LICENSE.txt)
 
 ## The 3-Clause BSD License
 

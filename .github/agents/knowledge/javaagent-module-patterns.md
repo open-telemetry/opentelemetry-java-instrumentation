@@ -1,9 +1,8 @@
 # [Javaagent] Module Structure Patterns
 
-## Quick Reference
-
-- Use when: reviewing `InstrumentationModule`, `TypeInstrumentation`, or `CallDepth` code
-- Review focus: registration and naming, matcher performance, safe advice wiring
+Consult this article when adding or changing an instrumentation module,
+classloader boundary, method matcher, or `CallDepth` pair. It gives registration
+examples and version-boundary mechanics.
 
 ## InstrumentationModule
 
@@ -38,6 +37,18 @@ public class MyLibrary10InstrumentationModule extends InstrumentationModule {
 - `typeInstrumentations()` returns the list of `TypeInstrumentation` implementations — use
   `Arrays.asList(...)` for multiple items and `Collections.singletonList(...)` for a single
   item.
+
+### Multiple modules in one Gradle project
+
+When a javaagent Gradle project contains independently selected `InstrumentationModule` classes,
+give each one a unique instrumentation name. Muzzle passes use that name with
+`excludeInstrumentationName(...)` to select only the module covered by each compatibility range or
+target artifact. Every name passed to the `InstrumentationModule` constructor is also a user-facing
+`otel.instrumentation.<name>.enabled` alias, checked in constructor argument order. When adding a
+unique name, preserve the existing first (main) name and the order of existing names.
+
+See [Compatibility range ownership](gradle-conventions.md#compatibility-range-ownership) for when
+modules should share a javaagent project and how to separate their Muzzle passes and dependencies.
 
 ### `classLoaderMatcher()` — Version-Boundary Detection
 
@@ -365,9 +376,9 @@ full coordinate.
   optimization belongs on `TypeInstrumentation.classLoaderOptimization()`, not here.
   `classLoaderMatcher()` is only for **version-boundary detection**. Most modules do not need
   it.
-- **Do NOT flag modules that omit `classLoaderMatcher()`.** The default (`any()`) is correct
-  when muzzle can detect the version boundary on its own. Only flag a missing override when
-  the module truly depends on an added or removed landmark class that muzzle does not inspect.
+- **Omit `classLoaderMatcher()` when Muzzle detects the version boundary.** The default
+  (`any()`) is correct. Add an override only when the module truly depends on an
+  added or removed landmark class that Muzzle does not inspect.
 - **Version comments are required on landmark classes.** For multi-class checks, or whenever
   the landmark version differs from the module's base version, every `hasClassesNamed()` call
   needs a role comment. When the entire return expression is a single `hasClassesNamed(...)`
@@ -503,7 +514,7 @@ prevent `ClassCastException`.
 
 ### Rules
 
-- Do not flag or change the visibility of advice classes.
+- Do not change the visibility of advice classes solely for style.
 - `typeMatcher()` should match only the types the instrumentation genuinely needs. Prefer
   `named("fully.qualified.ClassName")` or `namedOneOf(...)` for single classes.
   `extendsClass(...)` and `implementsInterface(...)` are appropriate when the instrumentation
@@ -535,12 +546,10 @@ prevent `ClassCastException`.
 - Reference the advice class using `getClass().getName() + "$InnerClassName"` — not
   `this.getClass().getName() + "$InnerClassName"`, `InnerClassName.class.getName()`,
   `OuterClass.class.getName()`, or a string literal.
-  Any `.class.getName()` reference — whether to the inner advice class or the outer
-  instrumentation class — causes class loading in the agent's class loader, where library
-  types used by the advice are unavailable (causing `NoClassDefFoundError`).
-  `getClass().getName()` avoids this because it is a virtual call on the already-loaded
-  instance, not a class literal. Omit the redundant `this.` qualifier and use the shorter
-  repository convention.
+  Do not use `.class.getName()` to construct an advice class name in `transform()`. Resolving the
+  class literal loads the advice class in the agent class loader, where library types referenced
+  by the advice may be unavailable (causing `NoClassDefFoundError`). Omit the redundant `this.`
+  qualifier and use the shorter repository convention.
 
 ## CallDepth (Preventing Recursive Instrumentation)
 

@@ -16,6 +16,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationOption;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationType;
 import io.opentelemetry.instrumentation.docs.internal.DeclarativeSchema;
+import io.opentelemetry.instrumentation.docs.internal.EmittedEvents;
 import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
 import io.opentelemetry.instrumentation.docs.internal.EmittedScope;
 import io.opentelemetry.instrumentation.docs.internal.EmittedSpans;
@@ -166,6 +167,7 @@ public class YamlHelper {
     // Get telemetry grouping lists
     Set<String> telemetryGroups = new TreeSet<>(module.getMetrics().keySet());
     telemetryGroups.addAll(module.getSpans().keySet());
+    telemetryGroups.addAll(module.getEvents().keySet());
 
     if (!telemetryGroups.isEmpty()) {
       List<Map<String, Object>> telemetryList = new ArrayList<>();
@@ -195,7 +197,15 @@ public class YamlHelper {
           telemetryEntry.put("spans", spanList);
         }
 
-        if (!spanList.isEmpty() || !metricRefs.isEmpty()) {
+        Set<String> eventRefs = new TreeSet<>();
+        for (EmittedEvents.Event event : module.getEvents().getOrDefault(group, emptyList())) {
+          eventRefs.add(catalog.eventId(event));
+        }
+        if (!eventRefs.isEmpty()) {
+          telemetryEntry.put("event_refs", new ArrayList<>(eventRefs));
+        }
+
+        if (!spanList.isEmpty() || !metricRefs.isEmpty() || !eventRefs.isEmpty()) {
           telemetryList.add(telemetryEntry);
         }
       }
@@ -278,12 +288,22 @@ public class YamlHelper {
     }
     conf.put("description", configuration.description());
     conf.put("type", configuration.type().toString());
-    if (configuration.type().equals(ConfigurationType.BOOLEAN)) {
-      conf.put("default", Boolean.parseBoolean(configuration.defaultValue()));
-    } else if (configuration.type().equals(ConfigurationType.INT)) {
-      conf.put("default", Integer.parseInt(configuration.defaultValue()));
-    } else {
-      conf.put("default", configuration.defaultValue());
+    // no default means that leaving the option unset falls back to another setting
+    String defaultValue = configuration.defaultValue();
+    if (defaultValue != null) {
+      if (configuration.type().equals(ConfigurationType.BOOLEAN)) {
+        conf.put("default", Boolean.parseBoolean(defaultValue));
+      } else if (configuration.type().equals(ConfigurationType.INT)) {
+        conf.put("default", Integer.parseInt(defaultValue));
+      } else {
+        conf.put("default", defaultValue);
+      }
+    }
+    if (configuration.isDeprecated()) {
+      conf.put("deprecated", true);
+      if (configuration.replacedBy() != null) {
+        conf.put("replaced_by", configuration.replacedBy());
+      }
     }
     if (configuration.examples() != null && !configuration.examples().isEmpty()) {
       conf.put("examples", configuration.examples());
@@ -350,6 +370,16 @@ public class YamlHelper {
     return innerMetricMap;
   }
 
+  private static Map<String, Object> getEventMap(EmittedEvents.Event event) {
+    Map<String, Object> innerEventMap = new LinkedHashMap<>();
+    innerEventMap.put("name", event.getName());
+    if (event.getSeverity() != null) {
+      innerEventMap.put("severity", event.getSeverity());
+    }
+    innerEventMap.put("attributes", getSortedAttributeMaps(event.getAttributes()));
+    return innerEventMap;
+  }
+
   private static Map<String, Object> getSpanMap(EmittedSpans.Span span) {
     Map<String, Object> innerMetricMap = new LinkedHashMap<>();
     innerMetricMap.put("span_kind", span.getSpanKind());
@@ -377,6 +407,10 @@ public class YamlHelper {
 
   public static EmittedSpans emittedSpansParser(String input) throws JsonProcessingException {
     return mapper.readValue(input, EmittedSpans.class);
+  }
+
+  public static EmittedEvents emittedEventsParser(String input) throws JsonProcessingException {
+    return mapper.readValue(input, EmittedEvents.class);
   }
 
   /**
@@ -407,6 +441,18 @@ public class YamlHelper {
             String id = metric.getName() + "-" + shortHash(canonical);
             catalog.metricCanonicalToId.put(canonical, id);
             catalog.metricDefs.put(id, def);
+          }
+        }
+      }
+
+      for (List<EmittedEvents.Event> events : module.getEvents().values()) {
+        for (EmittedEvents.Event event : events) {
+          Map<String, Object> def = getEventMap(event);
+          String canonical = canonicalize(def);
+          if (!catalog.eventCanonicalToId.containsKey(canonical)) {
+            String id = event.getName() + "-" + shortHash(canonical);
+            catalog.eventCanonicalToId.put(canonical, id);
+            catalog.eventDefs.put(id, def);
           }
         }
       }
@@ -508,20 +554,28 @@ public class YamlHelper {
   }
 
   /**
-   * Holds the shared metric and configuration definitions and the lookups needed to resolve a
-   * module's metric/config back to its catalog id. This class is internal and is hence not for
-   * public use.
+   * Holds the shared metric, event and configuration definitions and the lookups needed to resolve
+   * a module's metric/event/config back to its catalog id. This class is internal and is hence not
+   * for public use.
    */
   private static final class DefinitionCatalog {
     final Map<String, Map<String, Object>> metricDefs = new TreeMap<>();
+    final Map<String, Map<String, Object>> eventDefs = new TreeMap<>();
     final Map<String, Map<String, Object>> configDefs = new TreeMap<>();
     final Map<String, String> metricCanonicalToId = new HashMap<>();
+    final Map<String, String> eventCanonicalToId = new HashMap<>();
     final Map<String, String> configCanonicalToId = new HashMap<>();
 
     String metricId(EmittedMetrics.Metric metric) {
       return requireNonNull(
           metricCanonicalToId.get(canonicalize(getMetricsMap(metric))),
           "metric not present in definitions catalog");
+    }
+
+    String eventId(EmittedEvents.Event event) {
+      return requireNonNull(
+          eventCanonicalToId.get(canonicalize(getEventMap(event))),
+          "event not present in definitions catalog");
     }
 
     String configId(ConfigurationOption configuration) {
@@ -541,6 +595,9 @@ public class YamlHelper {
       }
       if (!metricDefs.isEmpty()) {
         definitions.put("metrics", metricDefs);
+      }
+      if (!eventDefs.isEmpty()) {
+        definitions.put("events", eventDefs);
       }
       return definitions;
     }

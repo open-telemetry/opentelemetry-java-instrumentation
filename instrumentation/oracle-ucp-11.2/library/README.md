@@ -61,8 +61,10 @@ Javaagent instrumentation derives the metric pool name from the `PoolDataSource`
 properties and the JDBC URL, when present. Without a JDBC URL, it also uses the standard
 `serverName`, `portNumber`, and `databaseName` values exposed directly by the `PoolDataSource`.
 This applies only when the `PoolDataSource` does
-not have an explicitly configured connection pool name. The derived format is
-`host[:port][/database-or-service]`, or just `database-or-service` when no host is known. When the
-connection information is unavailable, the fallback name is `oracle-ucp`. Pools connected to the
-same database intentionally share the derived name, so
-their asynchronous metric observations are aggregated under the same pool name.
+not have an explicitly configured connection pool name. With legacy database semantic conventions,
+the derived format is `host[:port][/database-or-service]`, or just `database-or-service` when no
+host is known. With stable database semantic conventions, the first available value among
+`db.namespace`, the configured endpoint (`server.address[:server.port]`), and `db.system.name` is
+used. When none is available, the fallback name is `oracle-ucp`. Pools connected to the same
+database intentionally share the derived name, so their asynchronous metric observations are
+aggregated under the same pool name.

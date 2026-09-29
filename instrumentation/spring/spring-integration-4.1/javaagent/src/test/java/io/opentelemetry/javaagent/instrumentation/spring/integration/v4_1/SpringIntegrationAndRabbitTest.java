@@ -108,8 +108,7 @@ class SpringIntegrationAndRabbitTest {
                             satisfies(
                                 MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
                                 val -> val.isInstanceOf(String.class))),
-                // the rabbitmq CONSUMER span is suppressed for Spring listener containers (see
-                // RabbitMqConsumerProcessTracing), so spring-rabbit creates the single process span
+                // Listener registration marks Spring Rabbit as this consumer's Process owner.
                 span ->
                     span.satisfies(
                             spanData ->
@@ -130,7 +129,9 @@ class SpringIntegrationAndRabbitTest {
                             serverPort(),
                             equalTo(MESSAGING_SYSTEM, "rabbitmq"),
                             consumerDestinationName(),
-                            anonymousDestination(),
+                            equalTo(
+                                MESSAGING_DESTINATION_ANONYMOUS,
+                                emitStableMessagingSemconv() ? true : null),
                             equalTo(
                                 MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
                             equalTo(
@@ -241,9 +242,5 @@ class SpringIntegrationAndRabbitTest {
             val.isEqualTo("testTopic");
           }
         });
-  }
-
-  private static AttributeAssertion anonymousDestination() {
-    return equalTo(MESSAGING_DESTINATION_ANONYMOUS, emitStableMessagingSemconv() ? true : null);
   }
 }

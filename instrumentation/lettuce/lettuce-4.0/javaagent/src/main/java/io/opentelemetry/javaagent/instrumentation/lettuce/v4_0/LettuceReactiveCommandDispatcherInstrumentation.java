@@ -67,10 +67,16 @@ class LettuceReactiveCommandDispatcherInstrumentation implements TypeInstrumenta
 
       public void end(@Nullable Throwable throwable) {
         scope.close();
-        if (throwable != null) {
-          instrumenter().end(context, command, null, throwable);
-        } else if (!InstrumentationPoints.expectsResponse(command)) {
-          instrumenter().end(context, command, null, null);
+        try {
+          if (throwable != null) {
+            LettuceSingletons.finishCommandPeer(command);
+            instrumenter().end(context, command, null, throwable);
+          } else if (!InstrumentationPoints.expectsResponse(command)) {
+            LettuceSingletons.finishCommandPeer(command);
+            instrumenter().end(context, command, null, null);
+          }
+        } finally {
+          LettuceSingletons.clearCommandPeer(command);
         }
       }
     }
@@ -97,6 +103,7 @@ class LettuceReactiveCommandDispatcherInstrumentation implements TypeInstrumenta
       // remember the context that called dispatch, it is used in
       // LettuceObservableCommandInstrumentation
       context = context.with(COMMAND_CONTEXT_KEY, parentContext);
+      context = LettuceSingletons.initializeCommandPeer(context, otelCommand);
       return new AdviceScope(otelCommand, context);
     }
 

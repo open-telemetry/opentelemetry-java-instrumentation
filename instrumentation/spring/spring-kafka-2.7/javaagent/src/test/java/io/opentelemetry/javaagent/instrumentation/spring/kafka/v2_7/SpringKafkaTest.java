@@ -32,7 +32,11 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -43,12 +47,19 @@ import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.AbstractSpringKafkaTest;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.Test;
@@ -94,13 +105,19 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("producer"),
                 span ->
-                    span.hasName(spanName("testSingleTopic", "publish", "send"))
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "send testSingleTopic"
+                                : "testSingleTopic publish")
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             producerAttributes("testSingleTopic", "10")),
                 span ->
-                    span.hasName(spanName("testSingleTopic", "process", "process"))
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "process testSingleTopic"
+                                : "testSingleTopic process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
                         .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
@@ -112,7 +129,10 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
-                      span.hasName(spanName("testSingleTopic", "receive", "poll"))
+                      span.hasName(
+                              emitStableMessagingSemconv()
+                                  ? "poll testSingleTopic"
+                                  : "testSingleTopic receive")
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasLinks(recordLink(producer.get()))
@@ -123,12 +143,16 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
     }
 
     testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(SpanKind.INTERNAL, receiveKind()),
+        orderByRootSpanKind(
+            SpanKind.INTERNAL, emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER),
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("producer"),
               span ->
-                  span.hasName(spanName("testSingleTopic", "publish", "send"))
+                  span.hasName(
+                          emitStableMessagingSemconv()
+                              ? "send testSingleTopic"
+                              : "testSingleTopic publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(producerAttributes("testSingleTopic", "10")));
@@ -138,13 +162,19 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(spanName("testSingleTopic", "receive", "poll"))
-                        .hasKind(receiveKind())
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "poll testSingleTopic"
+                                : "testSingleTopic receive")
+                        .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             receiveAttributes("testSingleTopic", "testSingleListener", 1)),
                 span ->
-                    span.hasName(spanName("testSingleTopic", "process", "process"))
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "process testSingleTopic"
+                                : "testSingleTopic process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(producer.get().getSpanContext()))
@@ -152,6 +182,102 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             singleProcessAttributes("testSingleTopic", "testSingleListener", "10")),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
     assertSingleMetrics();
+  }
+
+  @Test
+  void shouldTraceRawConsumerInsideListener() {
+    assertRawConsumerInsideListener(
+        "testNestedTopic", "nested", this::runOnNextNestedRecord, "testSingleTopic");
+  }
+
+  @Test
+  void shouldTraceRawConsumerInsideBatchListener() {
+    assertRawConsumerInsideListener(
+        "testNestedBatchTopic", "nested-batch", this::runOnNextNestedBatch, "testBatchTopic");
+  }
+
+  private void assertRawConsumerInsideListener(
+      String nestedTopic,
+      String groupId,
+      Consumer<Runnable> callbackRegistrar,
+      String listenerTopic) {
+    Map<String, Object> consumerProperties = new HashMap<>();
+    consumerProperties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers());
+    consumerProperties.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+    consumerProperties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+    consumerProperties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+    consumerProperties.put(
+        ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+
+    callbackRegistrar.accept(
+        () -> {
+          Span listenerSpan = Span.current();
+          try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(consumerProperties)) {
+            List<TopicPartition> partitions = singletonList(new TopicPartition(nestedTopic, 0));
+            consumer.assign(partitions);
+            consumer.seekToBeginning(partitions);
+            ConsumerRecords<String, String> records;
+            long deadline = System.nanoTime() + Duration.ofSeconds(20).toNanos();
+            do {
+              records = consumer.poll(Duration.ofSeconds(1));
+            } while (records.isEmpty() && System.nanoTime() < deadline);
+            assertThat(records.count()).isEqualTo(1);
+            Iterator<?> iterator = records.iterator();
+            Object record = iterator.next();
+            assertThat(Span.current().getSpanContext().getSpanId())
+                .isNotEqualTo(listenerSpan.getSpanContext().getSpanId());
+            testing.runWithSpan("nested processing", () -> assertThat(record).isNotNull());
+            assertThat(iterator.hasNext()).isFalse();
+            assertThat(Span.current().getSpanContext().getSpanId())
+                .isEqualTo(listenerSpan.getSpanContext().getSpanId());
+          }
+        });
+
+    kafkaTemplate.executeInTransaction(
+        operations -> {
+          send(nestedTopic, "nested-key", "nested-value");
+          return null;
+        });
+    kafkaTemplate.executeInTransaction(
+        operations -> {
+          send(listenerTopic, "10", "nested");
+          return null;
+        });
+
+    String nestedProcessName =
+        emitStableMessagingSemconv() ? "process " + nestedTopic : nestedTopic + " process";
+    String nestedReceiveName =
+        emitStableMessagingSemconv() ? "poll " + nestedTopic : nestedTopic + " receive";
+    await()
+        .atMost(Duration.ofSeconds(30))
+        .untilAsserted(
+            () -> {
+              assertThat(testing.spans())
+                  .filteredOn(span -> span.getName().equals(nestedReceiveName))
+                  .hasSize(1);
+              assertThat(testing.spans())
+                  .filteredOn(span -> span.getName().equals(nestedProcessName))
+                  .hasSize(1);
+              assertThat(testing.spans())
+                  .filteredOn(span -> span.getName().equals("nested processing"))
+                  .singleElement()
+                  .satisfies(
+                      span ->
+                          assertThat(span.getParentSpanId())
+                              .isEqualTo(
+                                  testing.spans().stream()
+                                      .filter(
+                                          candidate ->
+                                              candidate.getName().equals(nestedProcessName))
+                                      .findFirst()
+                                      .orElseThrow(AssertionError::new)
+                                      .getSpanId()));
+            });
+
+    assertReceiveMetrics(
+        testing, "io.opentelemetry.kafka-clients-0.11", nestedTopic, groupId, "0", 1, 1, null);
+    assertProcessMetrics(
+        testing, "io.opentelemetry.kafka-clients-0.11", nestedTopic, groupId, "0", 1, null);
   }
 
   @Test
@@ -168,8 +294,11 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
 
     Consumer<SpanDataAssert> receiveSpanAssert =
         span ->
-            span.hasName(spanName("testSingleTopic", "receive", "poll"))
-                .hasKind(receiveKind())
+            span.hasName(
+                    emitStableMessagingSemconv()
+                        ? "poll testSingleTopic"
+                        : "testSingleTopic receive")
+                .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
                 .hasNoParent()
                 .hasAttributesSatisfyingExactly(
                     receiveAttributes("testSingleTopic", "testSingleListener", 1));
@@ -185,7 +314,10 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
             spanAssertions.add(span -> span.hasName("producer"));
             spanAssertions.add(
                 span ->
-                    span.hasName(spanName("testSingleTopic", "publish", "send"))
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "send testSingleTopic"
+                                : "testSingleTopic publish")
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -219,12 +351,17 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
     // dep tests
     if (testLatestDeps()) {
       testing.waitAndAssertSortedTraces(
-          orderByRootSpanKind(SpanKind.INTERNAL, receiveKind()),
+          orderByRootSpanKind(
+              SpanKind.INTERNAL,
+              emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER),
           trace -> {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("producer"),
                 span ->
-                    span.hasName(spanName("testSingleTopic", "publish", "send"))
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "send testSingleTopic"
+                                : "testSingleTopic publish")
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -236,7 +373,10 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
               trace.hasSpansSatisfyingExactly(
                   receiveSpanAssert,
                   span ->
-                      span.hasName(spanName("testSingleTopic", "process", "process"))
+                      span.hasName(
+                              emitStableMessagingSemconv()
+                                  ? "process testSingleTopic"
+                                  : "testSingleTopic process")
                           .hasKind(SpanKind.CONSUMER)
                           .hasParent(trace.getSpan(0))
                           .hasLinks(LinkData.create(producer.get().getSpanContext()))
@@ -246,7 +386,10 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                   span -> span.hasName("consumer").hasParent(trace.getSpan(1)),
                   span -> span.hasName("handle exception").hasParent(trace.getSpan(1)),
                   span ->
-                      span.hasName(spanName("testSingleTopic", "process", "process"))
+                      span.hasName(
+                              emitStableMessagingSemconv()
+                                  ? "process testSingleTopic"
+                                  : "testSingleTopic process")
                           .hasKind(SpanKind.CONSUMER)
                           .hasParent(trace.getSpan(0))
                           .hasLinks(LinkData.create(producer.get().getSpanContext()))
@@ -256,7 +399,10 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                   span -> span.hasName("consumer").hasParent(trace.getSpan(4)),
                   span -> span.hasName("handle exception").hasParent(trace.getSpan(4)),
                   span ->
-                      span.hasName(spanName("testSingleTopic", "process", "process"))
+                      span.hasName(
+                              emitStableMessagingSemconv()
+                                  ? "process testSingleTopic"
+                                  : "testSingleTopic process")
                           .hasKind(SpanKind.CONSUMER)
                           .hasParent(trace.getSpan(0))
                           .hasLinks(LinkData.create(producer.get().getSpanContext()))
@@ -265,12 +411,17 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
 
     } else {
       testing.waitAndAssertSortedTraces(
-          orderByRootSpanKind(SpanKind.INTERNAL, receiveKind()),
+          orderByRootSpanKind(
+              SpanKind.INTERNAL,
+              emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER),
           trace -> {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("producer"),
                 span ->
-                    span.hasName(spanName("testSingleTopic", "publish", "send"))
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "send testSingleTopic"
+                                : "testSingleTopic publish")
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -282,7 +433,10 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
               trace.hasSpansSatisfyingExactly(
                   receiveSpanAssert,
                   span ->
-                      span.hasName(spanName("testSingleTopic", "process", "process"))
+                      span.hasName(
+                              emitStableMessagingSemconv()
+                                  ? "process testSingleTopic"
+                                  : "testSingleTopic process")
                           .hasKind(SpanKind.CONSUMER)
                           .hasParent(trace.getSpan(0))
                           .hasLinks(LinkData.create(producer.get().getSpanContext()))
@@ -294,7 +448,10 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
               trace.hasSpansSatisfyingExactly(
                   receiveSpanAssert,
                   span ->
-                      span.hasName(spanName("testSingleTopic", "process", "process"))
+                      span.hasName(
+                              emitStableMessagingSemconv()
+                                  ? "process testSingleTopic"
+                                  : "testSingleTopic process")
                           .hasKind(SpanKind.CONSUMER)
                           .hasParent(trace.getSpan(0))
                           .hasLinks(LinkData.create(producer.get().getSpanContext()))
@@ -306,7 +463,10 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
               trace.hasSpansSatisfyingExactly(
                   receiveSpanAssert,
                   span ->
-                      span.hasName(spanName("testSingleTopic", "process", "process"))
+                      span.hasName(
+                              emitStableMessagingSemconv()
+                                  ? "process testSingleTopic"
+                                  : "testSingleTopic process")
                           .hasKind(SpanKind.CONSUMER)
                           .hasParent(trace.getSpan(0))
                           .hasLinks(LinkData.create(producer.get().getSpanContext()))
@@ -333,12 +493,18 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
             trace.hasSpansSatisfyingExactlyInAnyOrder(
                 span -> span.hasName("producer"),
                 span ->
-                    span.hasName(spanName("testBatchTopic", "publish", "send"))
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "send testBatchTopic"
+                                : "testBatchTopic publish")
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(producerAttributes("testBatchTopic", "10")),
                 span ->
-                    span.hasName(spanName("testBatchTopic", "publish", "send"))
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "send testBatchTopic"
+                                : "testBatchTopic publish")
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -349,7 +515,10 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
-                      span.hasName(spanName("testBatchTopic", "process", "process"))
+                      span.hasName(
+                              emitStableMessagingSemconv()
+                                  ? "process testBatchTopic"
+                                  : "testBatchTopic process")
                           .hasKind(SpanKind.CONSUMER)
                           .hasNoParent()
                           .hasLinks(recordLink(producer1.get()), recordLink(producer2.get()))
@@ -359,7 +528,10 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
-                      span.hasName(spanName("testBatchTopic", "receive", "poll"))
+                      span.hasName(
+                              emitStableMessagingSemconv()
+                                  ? "poll testBatchTopic"
+                                  : "testBatchTopic receive")
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasLinks(recordLink(producer1.get()), recordLink(producer2.get()))
@@ -370,17 +542,24 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
     }
 
     testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(SpanKind.INTERNAL, receiveKind()),
+        orderByRootSpanKind(
+            SpanKind.INTERNAL, emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER),
         trace -> {
           trace.hasSpansSatisfyingExactlyInAnyOrder(
               span -> span.hasName("producer"),
               span ->
-                  span.hasName(spanName("testBatchTopic", "publish", "send"))
+                  span.hasName(
+                          emitStableMessagingSemconv()
+                              ? "send testBatchTopic"
+                              : "testBatchTopic publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(producerAttributes("testBatchTopic", "10")),
               span ->
-                  span.hasName(spanName("testBatchTopic", "publish", "send"))
+                  span.hasName(
+                          emitStableMessagingSemconv()
+                              ? "send testBatchTopic"
+                              : "testBatchTopic publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(producerAttributes("testBatchTopic", "20")));
@@ -391,13 +570,19 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(spanName("testBatchTopic", "receive", "poll"))
-                        .hasKind(receiveKind())
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "poll testBatchTopic"
+                                : "testBatchTopic receive")
+                        .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             receiveAttributes("testBatchTopic", "testBatchListener", 2)),
                 span ->
-                    span.hasName(spanName("testBatchTopic", "process", "process"))
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "process testBatchTopic"
+                                : "testBatchTopic process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(0))
                         .hasLinks(
@@ -470,7 +655,10 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("producer"),
                 span ->
-                    span.hasName(spanName("testBatchTopic", "publish", "send"))
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "send testBatchTopic"
+                                : "testBatchTopic publish")
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -502,7 +690,10 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("producer"),
               span ->
-                  span.hasName(spanName("testBatchTopic", "publish", "send"))
+                  span.hasName(
+                          emitStableMessagingSemconv()
+                              ? "send testBatchTopic"
+                              : "testBatchTopic publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(producerAttributes("testBatchTopic", "10")));
@@ -543,7 +734,9 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
     }
 
     testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(SpanKind.INTERNAL, receiveKind()), assertions);
+        orderByRootSpanKind(
+            SpanKind.INTERNAL, emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER),
+        assertions);
     assertBatchFailureMetrics();
   }
 
@@ -606,8 +799,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
   }
 
   private static void assertReceiveSpan(SpanDataAssert span) {
-    span.hasName(spanName("testBatchTopic", "receive", "poll"))
-        .hasKind(receiveKind())
+    span.hasName(emitStableMessagingSemconv() ? "poll testBatchTopic" : "testBatchTopic receive")
+        .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
         .hasNoParent()
         .hasAttributesSatisfyingExactly(
             receiveAttributes("testBatchTopic", "testBatchListener", 1));
@@ -623,7 +816,10 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
         singleProcessAttributes("testSingleTopic", "testSingleListener", "10");
     assertions.add(
         span -> {
-          span.hasName(spanName("testSingleTopic", "process", "process"))
+          span.hasName(
+                  emitStableMessagingSemconv()
+                      ? "process testSingleTopic"
+                      : "testSingleTopic process")
               .hasKind(SpanKind.CONSUMER)
               .hasParent(trace.getSpan(1))
               .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
@@ -643,7 +839,10 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
       TraceAssert trace, SpanData producer, boolean failed) {
     trace.hasSpansSatisfyingExactly(
         span -> {
-          span.hasName(spanName("testBatchTopic", "process", "process"))
+          span.hasName(
+                  emitStableMessagingSemconv()
+                      ? "process testBatchTopic"
+                      : "testBatchTopic process")
               .hasKind(SpanKind.CONSUMER)
               .hasNoParent()
               .hasLinks(recordLink(producer))
@@ -659,7 +858,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
 
   private static void assertStableReceiveSpan(
       SpanDataAssert span, SpanData producer, String topic, String group) {
-    span.hasName(spanName(topic, "receive", "poll"))
+    span.hasName(emitStableMessagingSemconv() ? "poll " + topic : topic + " receive")
         .hasKind(SpanKind.CLIENT)
         .hasNoParent()
         .hasLinks(recordLink(producer))
@@ -668,7 +867,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
 
   private static void assertProcessSpan(
       SpanDataAssert span, TraceAssert trace, SpanData producer, boolean failed) {
-    span.hasName(spanName("testBatchTopic", "process", "process"))
+    span.hasName(emitStableMessagingSemconv() ? "process testBatchTopic" : "testBatchTopic process")
         .hasKind(SpanKind.CONSUMER)
         .hasParent(trace.getSpan(0))
         .hasLinks(recordLink(producer))
@@ -794,13 +993,5 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
       result.add(equalTo(ERROR_TYPE, IllegalArgumentException.class.getName()));
     }
     return result;
-  }
-
-  private static String spanName(String topic, String oldOperation, String operationName) {
-    return emitStableMessagingSemconv() ? operationName + " " + topic : topic + " " + oldOperation;
-  }
-
-  private static SpanKind receiveKind() {
-    return emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER;
   }
 }

@@ -5,10 +5,16 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractAuthority;
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractHostPort;
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.indexOfAny;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parsePort;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.HostPort;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 
 /**
  * Parser for Oracle JDBC URLs.
@@ -40,6 +46,11 @@ public final class OracleUrlParser implements JdbcUrlParser {
   // LIMITATION: Simple regex matching across entire DESCRIPTION may extract values from
   // non-primary ADDRESS blocks when the first block has incomplete specifications.
   private static final Pattern DESCRIPTION_PATTERN = Pattern.compile("@\\s*\\(\\s*description");
+  private static final Pattern DESCRIPTION_LIST_PATTERN =
+      Pattern.compile("\\(\\s*description_list\\s*=");
+  private static final Pattern ADDRESS_PATTERN = Pattern.compile("\\(\\s*address\\s*=");
+  private static final Pattern SOURCE_ROUTE_PATTERN =
+      Pattern.compile("\\(\\s*source_route\\s*=\\s*(?:on|yes|true)\\s*\\)");
   private static final Pattern HOST_PATTERN =
       Pattern.compile("\\(\\s*host\\s*=\\s*([^ )]+)\\s*\\)");
   private static final Pattern PORT_PATTERN =
@@ -55,7 +66,7 @@ public final class OracleUrlParser implements JdbcUrlParser {
   public void parse(String jdbcUrl, ParseContext ctx) {
     ctx.system(ORACLE_DB);
     ctx.oldSemconvSystem(ORACLE);
-    ctx.port(DEFAULT_PORT);
+    ctx.defaultPort(DEFAULT_PORT);
 
     ctx.applyDataSourceProperties();
 
@@ -65,14 +76,13 @@ public final class OracleUrlParser implements JdbcUrlParser {
     int typeEndIndex = jdbcUrl.indexOf(":", subtypeStart);
     String subtype = jdbcUrl.substring(subtypeStart, typeEndIndex);
     String remainder = jdbcUrl.substring(typeEndIndex + 1);
+    ctx.subtype(subtype);
 
     if (remainder.contains("@")) {
       parseAtFormat(remainder, ctx);
     } else {
       parseConnectInfo(remainder, ctx);
     }
-
-    ctx.subtype(subtype);
   }
 
   private static void parseAtFormat(String jdbcUrl, ParseContext ctx) {
@@ -90,16 +100,131 @@ public final class OracleUrlParser implements JdbcUrlParser {
     }
 
     String connectInfo = atSplit[1];
+    if (connectInfo.startsWith("ldap://")) {
+      parseLdapConnectInfo(connectInfo, "ldap", ctx);
+      return;
+    }
+    if (connectInfo.startsWith("ldaps://")) {
+      parseLdapConnectInfo(connectInfo, "ldaps", ctx);
+      return;
+    }
+
     int hostStart;
     if (connectInfo.startsWith("//")) {
       hostStart = "//".length();
-    } else if (connectInfo.startsWith("ldap://")) {
-      hostStart = "ldap://".length();
+    } else if (connectInfo.startsWith("tcp://")) {
+      hostStart = "tcp://".length();
+    } else if (connectInfo.startsWith("tcps://")) {
+      hostStart = "tcps://".length();
     } else {
       hostStart = 0;
     }
 
-    parseConnectInfo(connectInfo.substring(hostStart), ctx);
+    String directConnectInfo = connectInfo.substring(hostStart);
+    String authority = applyEasyConnectGroup(directConnectInfo, ctx);
+    if (authority == null) {
+      parseConnectInfo(directConnectInfo, ctx);
+    } else {
+      parseEasyConnectList(directConnectInfo, authority, ctx);
+    }
+  }
+
+  private static void parseLdapConnectInfo(String connectInfo, String scheme, ParseContext ctx) {
+    ctx.resolveConfiguredServerTarget(parseLdapTarget(connectInfo, scheme));
+    parseConnectInfo(connectInfo.substring(scheme.length() + "://".length()), ctx);
+  }
+
+  @Nullable
+  private static DbServerTarget parseLdapTarget(String connectInfo, String scheme) {
+    String authority = extractAuthority(connectInfo);
+    if (authority == null || authority.indexOf(',') >= 0 || authority.indexOf('@') >= 0) {
+      return null;
+    }
+
+    HostPort hostPort = extractHostPort(authority);
+    DbServerTarget discoveryEndpoint =
+        DbServerTarget.builder()
+            .setPortAlwaysInline(true)
+            .addEndpoint(hostPort.host(), hostPort.port() == null ? -1 : hostPort.port())
+            .build();
+    if (discoveryEndpoint == null) {
+      return null;
+    }
+
+    int lookupStart = scheme.length() + "://".length() + authority.length();
+    if (lookupStart >= connectInfo.length() || connectInfo.charAt(lookupStart) != '/') {
+      return null;
+    }
+    lookupStart++;
+    int lookupEnd = indexOfAny(connectInfo, '?', '#');
+    lookupEnd = lookupEnd < 0 ? connectInfo.length() : lookupEnd;
+    if (lookupStart >= lookupEnd) {
+      return null;
+    }
+    String lookup = connectInfo.substring(lookupStart, lookupEnd);
+    if (!isSafeLdapLookup(lookup)) {
+      return null;
+    }
+    return DbServerTarget.create(
+        scheme + "://" + discoveryEndpoint.getAddress() + "/" + lookup, null);
+  }
+
+  private static boolean isSafeLdapLookup(String lookup) {
+    for (int i = 0; i < lookup.length(); i++) {
+      char c = lookup.charAt(i);
+      if (c == '/'
+          || c == '\\'
+          || c == '%'
+          || c == '@'
+          || Character.isWhitespace(c)
+          || Character.isSpaceChar(c)
+          || Character.isISOControl(c)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  @Nullable
+  private static String applyEasyConnectGroup(String connectInfo, ParseContext ctx) {
+    String authority = extractAuthority("oracle://" + connectInfo);
+    if (authority == null || authority.indexOf(',') < 0) {
+      return null;
+    }
+    ctx.resolveConfiguredServerTarget(
+        isSourceRouteEnabled(connectInfo)
+            ? null
+            : UrlParsingUtils.parseServerTargetGroup(authority, DEFAULT_PORT));
+    return authority;
+  }
+
+  private static boolean isSourceRouteEnabled(String connectInfo) {
+    String value = UrlParsingUtils.extractQueryParams(connectInfo, "&").get("source_route");
+    return "on".equals(value) || "yes".equals(value) || "true".equals(value);
+  }
+
+  private static void parseEasyConnectList(String connectInfo, String authority, ParseContext ctx) {
+    String firstEndpoint = authority.substring(0, authority.indexOf(',')).trim();
+    HostPort hostPort = extractHostPort(firstEndpoint);
+    if (!hostPort.host().isEmpty()
+        && firstEndpoint.indexOf('=') < 0
+        && firstEndpoint.indexOf('@') < 0) {
+      ctx.host(hostPort.host());
+      if (hostPort.port() != null) {
+        ctx.port(hostPort.port());
+      }
+    }
+
+    int serviceStart = authority.length();
+    if (serviceStart >= connectInfo.length() || connectInfo.charAt(serviceStart) != '/') {
+      return;
+    }
+    int serviceEnd = indexOfAny(connectInfo, '?', '#');
+    serviceEnd = serviceEnd < 0 ? connectInfo.length() : serviceEnd;
+    String service = connectInfo.substring(serviceStart + 1, serviceEnd);
+    if (!service.isEmpty()) {
+      ctx.databaseName(service);
+    }
   }
 
   /**
@@ -133,6 +258,66 @@ public final class OracleUrlParser implements JdbcUrlParser {
     if (instanceMatcher.find()) {
       ctx.databaseName(instanceMatcher.group(1));
     }
+
+    applyAddressListGroup(atSplit[1], ctx);
+  }
+
+  private static void applyAddressListGroup(String description, ParseContext ctx) {
+    if (!hasMultipleAddresses(description)) {
+      return;
+    }
+    ctx.disableSingleServerFallback();
+
+    // SOURCE_ROUTE addresses are successive hops, not alternative database endpoints.
+    if (SOURCE_ROUTE_PATTERN.matcher(description).find()) {
+      return;
+    }
+
+    // Each DESCRIPTION may have its own CONNECT_DATA and options, which a flat list cannot retain.
+    if (DESCRIPTION_LIST_PATTERN.matcher(description).find()) {
+      return;
+    }
+
+    StringBuilder addresses = new StringBuilder();
+    Matcher addressMatcher = ADDRESS_PATTERN.matcher(description);
+    int searchFrom = 0;
+    while (addressMatcher.find(searchFrom)) {
+      int end = findClosingParen(description, addressMatcher.start());
+      if (end < 0) {
+        return;
+      }
+      if (addresses.length() > 0) {
+        addresses.append(',');
+      }
+      addresses.append(description, addressMatcher.start() + 1, end);
+      searchFrom = end + 1;
+    }
+    ctx.resolveConfiguredServerTarget(
+        UrlParsingUtils.parseServerTargetGroup(addresses.toString(), DEFAULT_PORT));
+  }
+
+  private static boolean hasMultipleAddresses(String description) {
+    Matcher addressMatcher = ADDRESS_PATTERN.matcher(description);
+    if (!addressMatcher.find()) {
+      return false;
+    }
+    return addressMatcher.find();
+  }
+
+  private static int findClosingParen(String text, int openParen) {
+    int depth = 0;
+    for (int i = openParen; i < text.length(); i++) {
+      char c = text.charAt(i);
+      if (c == '(') {
+        depth++;
+      } else if (c == ')') {
+        depth--;
+        if (depth == 0) {
+          return i;
+        }
+      }
+    }
+    return -1;
   }
 
   private static void parseConnectInfo(String jdbcUrl, ParseContext ctx) {

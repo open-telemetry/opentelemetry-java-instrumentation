@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.redissonmetrics.common.v2_3;
 
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.BatchCallback;
@@ -61,7 +64,8 @@ public class RedissonConnectionPoolMetrics {
         DbConnectionPoolMetrics.create(
             GlobalOpenTelemetry.get(),
             instrumentationName,
-            poolName(source.poolKind, redisClient.getAddr()));
+            poolName(source.poolKind, redisClient.getAddr()),
+            Attributes.of(DB_SYSTEM_NAME, REDIS));
     ObservableLongMeasurement connections = metrics.connections();
     ObservableLongMeasurement minIdle = metrics.minIdleConnections();
     ObservableLongMeasurement max = metrics.maxConnections();

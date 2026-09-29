@@ -81,9 +81,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: steps.check-patch.outputs.exists == 'true'
         with:
-          token: ${{ steps.otelbot-token.outputs.token }}
-          # zizmor: ignore[artipacked] App credentials are required by the push below.
-          persist-credentials: true
+          persist-credentials: false
 
       - name: Use CLA approved bot
         if: steps.check-patch.outputs.exists == 'true'
@@ -91,7 +89,10 @@ jobs:
 
       - name: Apply patch and push
         if: steps.check-patch.outputs.exists == 'true'
+        env:
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
+          gh auth setup-git
           git apply "${{ runner.temp }}/patch"
           git add licenses
           git commit -m "Update license report"

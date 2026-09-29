@@ -24,6 +24,8 @@ jobs:
 
       - name: Set up gradle
         uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        with:
+          cache-read-only: true
 
       - name: Run instrumentation analyzer (identify any module changes)
         run: ./gradlew :instrumentation-docs:runAnalysis
@@ -54,7 +56,7 @@ jobs:
     needs:
       - crawl
     if: ${{ needs.crawl.result == 'success' }}
-    uses: ./.github/workflows/reusable-workflow-notification.yml
+    uses: $/.github/workflows/reusable-workflow-notification.yml
     with:
       success: ${{ needs.crawl.outputs.success == 'true' }}
       title: "Documentation sync needed: opentelemetry.io site out of sync"
@@ -66,6 +68,6 @@ jobs:
     needs:
       - crawl
     if: always()
-    uses: ./.github/workflows/reusable-workflow-notification.yml
+    uses: $/.github/workflows/reusable-workflow-notification.yml
     with:
       success: ${{ needs.crawl.result == 'success' }}

@@ -69,8 +69,6 @@ jobs:
     if: needs.analyze.outputs.has_candidate == 'true'
     runs-on: ubuntu-latest
     environment: protected
-    permissions:
-      contents: write
     env:
       SELECTED_JSON: ${{ needs.analyze.outputs.selected_json }}
       TEST_CLASS: ${{ needs.analyze.outputs.class }}
@@ -81,8 +79,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0  # Copilot inspects recent commits while diagnosing the flake
-          # zizmor: ignore[artipacked] Credentials are required by the branch push below.
-          persist-credentials: true
+          persist-credentials: false
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -161,19 +158,23 @@ jobs:
             ${{ env.OUT_DIR }}/**
           if-no-files-found: ignore
 
-      - name: Push branch
-        if: steps.changes.outputs.committed == 'true'
-        env:
-          STEPS_BRANCH_OUTPUTS_NAME: ${{ steps.branch.outputs.name }}
-        run: git push -f origin "${STEPS_BRANCH_OUTPUTS_NAME}"
-
       - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         id: otelbot-token
         if: steps.changes.outputs.committed == 'true'
         with:
-          client-id: ${{ vars.OTELBOT_CLIENT_ID }}
-          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+          client-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_CLIENT_ID }}
+          private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
+          permission-contents: write
           permission-pull-requests: write
+
+      - name: Push branch
+        if: steps.changes.outputs.committed == 'true'
+        env:
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+          STEPS_BRANCH_OUTPUTS_NAME: ${{ steps.branch.outputs.name }}
+        run: |
+          gh auth setup-git
+          git push -f origin "${STEPS_BRANCH_OUTPUTS_NAME}"
 
       - name: Create PR
         if: steps.changes.outputs.committed == 'true'
@@ -191,8 +192,7 @@ jobs:
         with:
           ref: otelbot/flaky-test-remediation-progress
           path: progress
-          # zizmor: ignore[artipacked] Credentials are required by the progress branch push below.
-          persist-credentials: true
+          persist-credentials: false
 
       - name: Use CLA approved bot
         if: steps.changes.outputs.committed == 'true'
@@ -203,7 +203,10 @@ jobs:
       - name: Record attempt
         if: steps.changes.outputs.committed == 'true'
         working-directory: progress
+        env:
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
+          gh auth setup-git
           if grep -Fxq "$TEST_CLASS" attempted.txt; then
             echo "$TEST_CLASS already recorded"
           else

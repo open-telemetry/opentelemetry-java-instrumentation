@@ -5,12 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
-class LettuceBatchAttributesGetter implements DbClientAttributesGetter<LettuceBatchRequest, Void> {
+final class LettuceBatchAttributesGetter
+    implements DbClientAttributesGetter<LettuceBatchRequest, Void> {
 
   @Override
   public String getDbSystemName(LettuceBatchRequest request) {
@@ -52,6 +56,10 @@ class LettuceBatchAttributesGetter implements DbClientAttributesGetter<LettuceBa
   @Nullable
   @Override
   public String getServerAddress(LettuceBatchRequest request) {
+    if (emitStableDatabaseSemconv()) {
+      RedisServerTarget serverTarget = request.getServerTarget();
+      return serverTarget != null ? serverTarget.getAddress() : null;
+    }
     InetSocketAddress serverAddress = request.getServerAddress();
     return serverAddress != null ? serverAddress.getHostString() : null;
   }
@@ -59,7 +67,27 @@ class LettuceBatchAttributesGetter implements DbClientAttributesGetter<LettuceBa
   @Nullable
   @Override
   public Integer getServerPort(LettuceBatchRequest request) {
+    if (emitStableDatabaseSemconv()) {
+      RedisServerTarget serverTarget = request.getServerTarget();
+      return serverTarget != null ? serverTarget.getPort() : null;
+    }
     InetSocketAddress serverAddress = request.getServerAddress();
     return serverAddress != null ? serverAddress.getPort() : null;
+  }
+
+  @Nullable
+  @Override
+  public String getNetworkPeerAddress(LettuceBatchRequest request, @Nullable Void unused) {
+    return emitStableDatabaseSemconv()
+        ? LettuceCommandPeer.getNetworkPeerAddress(request.getPeerAddress())
+        : null;
+  }
+
+  @Nullable
+  @Override
+  public Integer getNetworkPeerPort(LettuceBatchRequest request, @Nullable Void unused) {
+    return emitStableDatabaseSemconv()
+        ? LettuceCommandPeer.getNetworkPeerPort(request.getPeerAddress())
+        : null;
   }
 }
