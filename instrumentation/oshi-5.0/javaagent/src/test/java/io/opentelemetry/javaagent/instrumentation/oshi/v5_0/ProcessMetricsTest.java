@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.oshi.v5_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
+
 import io.opentelemetry.instrumentation.oshi.v5_0.AbstractProcessMetricsTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -26,6 +28,6 @@ class ProcessMetricsTest extends AbstractProcessMetricsTest {
   @Override
   @SuppressWarnings("deprecation") // overriding a deprecated abstract method
   protected String scopeName() {
-    return "io.opentelemetry.oshi";
+    return v3Preview() ? "io.opentelemetry.oshi-5.0" : "io.opentelemetry.oshi";
   }
 }

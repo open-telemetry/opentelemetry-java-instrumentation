@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.oshi.v5_0;
 
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -48,5 +49,11 @@ class ProcessMetricsTest extends AbstractProcessMetricsTest {
   @Test
   void verifyObservablesAreNotEmpty() {
     assertThat(observables).isNotEmpty();
+  }
+
+  @Test
+  void libraryProcessMetricsHaveNoSchema() {
+    testing.waitAndAssertMetrics(
+        scopeName(), "runtime.java.memory", metrics -> metrics.anySatisfy(hasScopeSchemaUrl(null)));
   }
 }

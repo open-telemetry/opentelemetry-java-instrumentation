@@ -6,45 +6,50 @@
 package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.messaging.Message;
 
-class MessagingMessageListenerAdapterInstrumentation implements TypeInstrumentation {
+class MessageListenerExecutionStageInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("io.awspring.cloud.sqs.listener.adapter.MessagingMessageListenerAdapter");
+    return named("io.awspring.cloud.sqs.listener.pipeline.MessageListenerExecutionStage");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("onMessage").and(takesArgument(0, named("org.springframework.messaging.Message"))),
-        getClass().getName() + "$OnMessageAdvice");
-    // TODO: onMessage(Collection<Message<T>> messages) not instrumented
+        named("process")
+            .and(takesArgument(0, named("org.springframework.messaging.Message")))
+            .and(returns(CompletableFuture.class)),
+        getClass().getName() + "$ProcessAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class OnMessageAdvice {
+  public static class ProcessAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
-    public static SpringAwsUtil.MessageScope methodEnter(@Advice.Argument(0) Message<?> message) {
+    public static SpringAwsUtil.ProcessingInvocation methodEnter(
+        @Advice.Argument(0) Message<?> message) {
       return SpringAwsUtil.handleMessage(message);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
-        @Advice.Enter @Nullable SpringAwsUtil.MessageScope scope,
+        @Advice.Enter @Nullable SpringAwsUtil.ProcessingInvocation invocation,
+        @Advice.Return @Nullable CompletableFuture<?> future,
         @Advice.Thrown @Nullable Throwable throwable) {
-      if (scope != null) {
-        scope.close(throwable);
+      if (invocation != null) {
+        invocation.endWhenComplete(future, throwable);
       }
     }
   }
