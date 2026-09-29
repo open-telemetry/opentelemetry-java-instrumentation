@@ -57,6 +57,9 @@ dependencies {
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.1:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.2:javaagent"))
+
+  latestDepTestLibrary("org.springframework.data:spring-data-couchbase:2.+") // see version26Test
+  latestDepTestLibrary("com.couchbase.client:java-client:2.5.+") // see version26Test
 }
 
 testing {
@@ -64,9 +67,7 @@ testing {
     register<JvmTestSuite>("version26Test") {
       dependencies {
         implementation(project(":instrumentation:couchbase:couchbase-common:testing"))
-        implementation("com.couchbase.client:java-client") {
-          version { strictly(baseVersion("2.6.0").orLatest("2.+")) }
-        }
+        implementation("com.couchbase.client:java-client:${baseVersion("2.6.0").orLatest("2.+")}")
         implementation(
           "org.springframework.data:spring-data-couchbase:${baseVersion("3.1.0.RELEASE").orLatest("3.1.+")}"
         )
@@ -77,14 +78,6 @@ testing {
 }
 
 tasks {
-  if (otelProps.testLatestDeps) {
-    named("test") {
-      enabled = false
-    }
-    named("compileTestJava") {
-      enabled = false
-    }
-  }
   withType<Test>().configureEach {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
