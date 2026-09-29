@@ -78,6 +78,20 @@ class CouchbaseServerTargetsTest {
   }
 
   @Test
+  void existingCoreTargetTakesPrecedenceOverDirectSeeds() {
+    CouchbaseServerTarget existingTarget =
+        CouchbaseConnectionStrings.target("couchbase://node.example:18099");
+    assertThat(existingTarget).isNotNull();
+    Core core = mock(Core.class);
+    CouchbaseServerTargets.register(core, existingTarget, null);
+
+    CouchbaseServerTargets.registerFromSeedNodes(
+        core, singleton(SeedNode.create("node.example", Optional.empty(), Optional.empty())), null);
+
+    assertThat(CouchbaseServerTargets.get(core)).isSameAs(existingTarget);
+  }
+
+  @Test
   void dnsSrvTargetBecomesDirectWhenDnsSrvIsDisabled() {
     CouchbaseServerTarget connectionStringTarget =
         CouchbaseConnectionStrings.target("couchbases://cluster.example");

@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
@@ -22,6 +23,7 @@ public final class SqsMessageImpl implements SqsMessage {
 
   private final Message message;
   @Nullable private final TracingExecutionInterceptor config;
+  private final AtomicBoolean deliveryClaimed = new AtomicBoolean();
 
   private SqsMessageImpl(Message message) {
     this.message = message;
@@ -52,6 +54,11 @@ public final class SqsMessageImpl implements SqsMessage {
   @Override
   public Context getCreationContext() {
     return config != null ? SqsParentContext.ofMessage(this, config) : Context.root();
+  }
+
+  @Override
+  public boolean claimDelivery() {
+    return deliveryClaimed.compareAndSet(false, true);
   }
 
   @Override

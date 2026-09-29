@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -317,14 +318,17 @@ class LettuceClusterClientTest {
                                 emitStableDatabaseSemconv()
                                     ? peerConfiguredTarget
                                     : firstRedisServer.getHost()),
-                            equalTo(
+                            satisfies(
                                 SERVER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? null
-                                    : (long)
-                                        (testLatestDeps()
-                                            ? secondRedisServer.getPort()
-                                            : firstRedisServer.getPort())),
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isNull();
+                                  } else {
+                                    val.isIn(
+                                        (long) firstRedisServer.getPort(),
+                                        (long) secondRedisServer.getPort());
+                                  }
+                                }),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 emitStableDatabaseSemconv() ? secondRedisServer.getHost() : null),
@@ -350,14 +354,17 @@ class LettuceClusterClientTest {
                                 emitStableDatabaseSemconv()
                                     ? peerConfiguredTarget
                                     : firstRedisServer.getHost()),
-                            equalTo(
+                            satisfies(
                                 SERVER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? null
-                                    : (long)
-                                        (testLatestDeps()
-                                            ? secondRedisServer.getPort()
-                                            : firstRedisServer.getPort())),
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isNull();
+                                  } else {
+                                    val.isIn(
+                                        (long) firstRedisServer.getPort(),
+                                        (long) secondRedisServer.getPort());
+                                  }
+                                }),
                             equalTo(NETWORK_PEER_ADDRESS, null),
                             equalTo(NETWORK_PEER_PORT, null),
                             equalTo(

@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static java.util.Collections.emptyMap;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
@@ -88,21 +89,23 @@ public class KafkaConsumerTelemetry {
     Context receiveContext = null;
     boolean receiveOperationStarted = false;
     if (consumerReceiveInstrumenter.shouldStart(parentContext, request)) {
-      if (timer == null) {
-        // The interceptor runs after poll, so let the SDK time an immediate span, not poll
-        // duration.
-        receiveContext = consumerReceiveInstrumenter.start(parentContext, request);
-        consumerReceiveInstrumenter.end(receiveContext, request, null, null);
-      } else {
-        receiveContext =
-            InstrumenterUtil.startAndEnd(
-                consumerReceiveInstrumenter,
-                parentContext,
-                request,
-                null,
-                null,
-                timer.startTime(),
-                timer.now());
+      try (Scope ignored = KafkaConsumerContextUtil.withoutLeakedProcessSpanDuringExtraction()) {
+        if (timer == null) {
+          // The interceptor runs after poll, so let the SDK time an immediate span, not poll
+          // duration.
+          receiveContext = consumerReceiveInstrumenter.start(parentContext, request);
+          consumerReceiveInstrumenter.end(receiveContext, request, null, null);
+        } else {
+          receiveContext =
+              InstrumenterUtil.startAndEnd(
+                  consumerReceiveInstrumenter,
+                  parentContext,
+                  request,
+                  null,
+                  null,
+                  timer.startTime(),
+                  timer.now());
+        }
       }
       receiveOperationStarted = true;
     }
@@ -121,14 +124,16 @@ public class KafkaConsumerTelemetry {
         KafkaReceiveRequest.create(
             records, KafkaUtil.getConsumerGroup(consumer), KafkaUtil.getClientId(consumer));
     if (consumerReceiveInstrumenter.shouldStart(parentContext, request)) {
-      InstrumenterUtil.startAndEnd(
-          consumerReceiveInstrumenter,
-          parentContext,
-          request,
-          null,
-          error,
-          timer.startTime(),
-          timer.now());
+      try (Scope ignored = KafkaConsumerContextUtil.withoutLeakedProcessSpanDuringExtraction()) {
+        InstrumenterUtil.startAndEnd(
+            consumerReceiveInstrumenter,
+            parentContext,
+            request,
+            null,
+            error,
+            timer.startTime(),
+            timer.now());
+      }
     }
   }
 }

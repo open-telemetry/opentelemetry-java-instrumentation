@@ -88,7 +88,7 @@ final class KafkaReceiveAttributesGetter
 
   @Override
   public List<String> getMessageHeader(KafkaReceiveRequest request, String name) {
-    return StreamSupport.stream(request.getRecords().spliterator(), false)
+    return request.getRecordList().stream()
         .flatMap(
             consumerRecord ->
                 StreamSupport.stream(consumerRecord.headers().headers(name).spliterator(), false))
@@ -99,7 +99,7 @@ final class KafkaReceiveAttributesGetter
 
   @Override
   public Collection<String> getMessageHeaderNames(KafkaReceiveRequest request) {
-    return StreamSupport.stream(request.getRecords().spliterator(), false)
+    return request.getRecordList().stream()
         .flatMap(
             consumerRecord -> StreamSupport.stream(consumerRecord.headers().spliterator(), false))
         .map(Header::key)

@@ -92,7 +92,6 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      telemetry().unregisterMetrics(dataSource);
       ApacheDbcpSingletons.registerMetrics(dataSource, getDataSourceName(objectName));
     }
   }

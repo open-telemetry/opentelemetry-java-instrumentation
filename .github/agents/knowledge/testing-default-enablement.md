@@ -1,12 +1,13 @@
 # [Testing] Default instrumentation enablement
 
-## Quick reference
+Use this article when testing instrumentation that is disabled by default
+or becomes disabled in v3-preview. The examples run one operation in
+enabled and disabled JVMs and verify its observable telemetry.
 
-- Use when: adding or reviewing coverage for instrumentation that is disabled by default, or that
-  becomes disabled by default under `otel.instrumentation.common.v3-preview`
-- Review focus: run one representative operation in enabled and disabled modes, prove that the
-  operation emits telemetry when enabled, and prove that it emits no instrumentation telemetry
-  when disabled
+This coverage checks which instrumentation runs by default, not the generic
+`otel.instrumentation.<name>.enabled` escape hatch. Do not use this pattern to
+add selector tests for ordinary modules, aliases, renames, or consolidations.
+See [the selector testing boundary](testing-general-patterns.md#instrumentation-enablement-selectors).
 
 ## Test observable behavior
 
