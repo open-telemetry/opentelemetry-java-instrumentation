@@ -27,6 +27,7 @@
     "com.clickhouse:client-v2#+": "0.10.0",
     "com.couchbase.client:couchbase-client#+": "1.4.13",
     "com.couchbase.client:encryption#+": "2.0.1",
+    "com.couchbase.client:encryption#1.+": "1.0.0",
     "com.couchbase.client:java-client#+": "3.12.3",
     "com.couchbase.client:java-client#2.+": "2.7.23",
     "com.couchbase.client:java-client#2.5.+": "2.5.9",

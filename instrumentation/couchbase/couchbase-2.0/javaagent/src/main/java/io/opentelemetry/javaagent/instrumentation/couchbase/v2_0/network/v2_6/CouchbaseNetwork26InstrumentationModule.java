@@ -3,22 +3,27 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.couchbase.v2_6;
+package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.v2_6;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class CouchbaseInstrumentationModule extends InstrumentationModule {
+public class CouchbaseNetwork26InstrumentationModule extends InstrumentationModule {
 
-  public CouchbaseInstrumentationModule() {
-    super("couchbase", "couchbase-2.6");
+  public CouchbaseNetwork26InstrumentationModule() {
+    super(
+        "couchbase",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"couchbase-2.0", "couchbase-2.0-network-2.6"}
+            : new String[] {"couchbase-2.6"});
   }
 
   @Override

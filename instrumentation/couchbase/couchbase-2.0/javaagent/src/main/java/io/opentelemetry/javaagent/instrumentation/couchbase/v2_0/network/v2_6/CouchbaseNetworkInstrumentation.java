@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.couchbase.v2_6;
+package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.v2_6;
 
-import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_6.VirtualFieldHelper.COUCHBASE_REQUEST_INFO;
+import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.v2_6.VirtualFieldHelper.COUCHBASE_REQUEST_INFO;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
