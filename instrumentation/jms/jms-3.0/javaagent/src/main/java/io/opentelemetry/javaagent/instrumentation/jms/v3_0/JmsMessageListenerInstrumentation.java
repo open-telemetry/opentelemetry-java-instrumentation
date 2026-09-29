@@ -160,6 +160,7 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
             instrumenter.end(context, messageWithDestination, null, throwable);
           }
         } finally {
+          // Clear the temporary subscription name even if ending processing fails.
           try {
             messageAdapter.endProcessing();
           } finally {
