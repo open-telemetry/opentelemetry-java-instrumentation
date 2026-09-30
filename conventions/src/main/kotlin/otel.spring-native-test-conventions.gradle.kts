@@ -9,7 +9,6 @@
 
 import org.graalvm.buildtools.gradle.dsl.GraalVMExtension
 import org.graalvm.buildtools.gradle.dsl.GraalVMReachabilityMetadataRepositoryExtension
-import org.graalvm.buildtools.gradle.dsl.GraalVMExtension
 
 // Keep this in sync with the org.graalvm.buildtools.native plugin version in settings.gradle.kts.
 val graalvmReachabilityMetadataVersion = "1.1.14"
