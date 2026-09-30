@@ -20,6 +20,9 @@
 
 ### 🚫 Deprecations
 
+- Deprecate `otel.jmx.target.system` in favor of selecting unstable bundled metrics by name with
+  `otel.jmx.metrics.experimental.included`.
+  ([#19783](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19783))
 - Deprecate `otel.instrumentation.common.experimental.controller-telemetry.enabled` and
   `otel.instrumentation.common.experimental.view-telemetry.enabled` in favor of
   `otel.instrumentation.common.controller-telemetry.enabled` and
