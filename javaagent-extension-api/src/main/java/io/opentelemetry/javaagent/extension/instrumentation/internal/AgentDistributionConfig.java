@@ -131,7 +131,7 @@ public class AgentDistributionConfig {
    */
   public boolean isInstrumentationEnabled(Iterable<String> names, boolean defaultEnabled) {
     for (String name : names) {
-    String normalizedName = name.replace('-', '_').replace('.', '_');
+      String normalizedName = name.replace('-', '_').replace('.', '_');
       if (instrumentation.getDisabled().contains(normalizedName)) {
         return false;
       }

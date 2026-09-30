@@ -148,7 +148,8 @@ public final class JavaagentDistributionAccessCustomizerProvider
         : mapper.convertValue(selectors, new TypeReference<List<String>>() {});
   }
 
-  private static void addCanonicalSelectors(Set<String> canonicalSelectors, List<String> selectors) {
+  private static void addCanonicalSelectors(
+      Set<String> canonicalSelectors, List<String> selectors) {
     for (String selector : selectors) {
       if (!selector.contains(".")) {
         canonicalSelectors.add(selector);
@@ -157,10 +158,7 @@ public final class JavaagentDistributionAccessCustomizerProvider
   }
 
   private static List<String> migrateSelectorList(
-      List<String> selectors,
-      Set<String> canonicalSelectors,
-      boolean v3Preview,
-      String path) {
+      List<String> selectors, Set<String> canonicalSelectors, boolean v3Preview, String path) {
     List<String> result = new ArrayList<>();
     Set<String> warnedSelectors = new HashSet<>();
     for (String selector : selectors) {

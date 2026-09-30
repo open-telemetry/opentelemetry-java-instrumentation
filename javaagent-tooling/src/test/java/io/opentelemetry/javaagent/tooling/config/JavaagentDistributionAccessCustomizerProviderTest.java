@@ -9,6 +9,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.logging.Level.WARNING;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
@@ -25,7 +26,6 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.logging.Handler;
-import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -59,8 +59,7 @@ class JavaagentDistributionAccessCustomizerProviderTest {
       boolean expected) {
     applyConfig(enabled, disabled, v3Preview);
 
-    assertThat(
-            AgentDistributionConfig.get().isInstrumentationEnabled(names, defaultEnabled))
+    assertThat(AgentDistributionConfig.get().isInstrumentationEnabled(names, defaultEnabled))
         .isEqualTo(expected);
   }
 
@@ -182,13 +181,11 @@ class JavaagentDistributionAccessCustomizerProviderTest {
           asList("reactor_3.1", "reactor_3.1"),
           false);
 
-      assertThat(handler.records).hasSize(3).allMatch(record -> record.getLevel() == Level.WARNING);
+      assertThat(handler.records).hasSize(3).allMatch(record -> record.getLevel() == WARNING);
       assertThat(handler.records)
           .filteredOn(
               record ->
-                  record
-                      .getMessage()
-                      .contains("distribution.javaagent.instrumentation.enabled"))
+                  record.getMessage().contains("distribution.javaagent.instrumentation.enabled"))
           .extracting(LogRecord::getMessage)
           .containsExactlyInAnyOrder(
               "Declarative configuration entry 'reactor_3.1' in"
@@ -200,9 +197,7 @@ class JavaagentDistributionAccessCustomizerProviderTest {
       assertThat(handler.records)
           .filteredOn(
               record ->
-                  record
-                      .getMessage()
-                      .contains("distribution.javaagent.instrumentation.disabled"))
+                  record.getMessage().contains("distribution.javaagent.instrumentation.disabled"))
           .extracting(LogRecord::getMessage)
           .containsExactly(
               "Declarative configuration entry 'reactor_3.1' in"
@@ -223,8 +218,7 @@ class JavaagentDistributionAccessCustomizerProviderTest {
     TestHandler handler = new TestHandler();
     logger.addHandler(handler);
     try {
-      applyConfig(
-          singletonList("reactor_3.1"), singletonList("other_1.2"), true);
+      applyConfig(singletonList("reactor_3.1"), singletonList("other_1.2"), true);
 
       assertThat(handler.records).isEmpty();
     } finally {
@@ -232,8 +226,7 @@ class JavaagentDistributionAccessCustomizerProviderTest {
     }
   }
 
-  private static void applyConfig(
-      List<String> enabled, List<String> disabled, boolean v3Preview) {
+  private static void applyConfig(List<String> enabled, List<String> disabled, boolean v3Preview) {
     StringBuilder yaml = new StringBuilder("file_format: \"1.1\"\n");
     if (v3Preview) {
       yaml.append(
@@ -243,10 +236,7 @@ class JavaagentDistributionAccessCustomizerProviderTest {
               + "      v3_preview: true\n");
     }
     yaml.append(
-        "distribution:\n"
-            + "  javaagent:\n"
-            + "    instrumentation:\n"
-            + "      enabled:\n");
+        "distribution:\n" + "  javaagent:\n" + "    instrumentation:\n" + "      enabled:\n");
     for (String selector : enabled) {
       yaml.append("        - ").append(selector).append('\n');
     }
@@ -256,8 +246,7 @@ class JavaagentDistributionAccessCustomizerProviderTest {
     }
 
     OpenTelemetryConfigurationModel model =
-        DeclarativeConfiguration.parse(
-            new ByteArrayInputStream(yaml.toString().getBytes(UTF_8)));
+        DeclarativeConfiguration.parse(new ByteArrayInputStream(yaml.toString().getBytes(UTF_8)));
     List<Function<OpenTelemetryConfigurationModel, OpenTelemetryConfigurationModel>> customizers =
         new ArrayList<>();
     new JavaagentDistributionAccessCustomizerProvider()
