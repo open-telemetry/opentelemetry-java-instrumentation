@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.HelperResourceBuilder;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -19,7 +20,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class SpringWebInstrumentationModule extends InstrumentationModule {
 
   public SpringWebInstrumentationModule() {
-    super("spring-webmvc", "spring-webmvc-6.0", "spring-webmvc-6.0-spring-web");
+    super(
+        "spring-webmvc",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"spring-webmvc-6.0", "spring-webmvc-6.0-spring-web"}
+            : new String[] {"spring-webmvc-6.0"});
   }
 
   @Override
