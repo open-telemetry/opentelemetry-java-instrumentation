@@ -105,7 +105,7 @@ class SpringKafkaInterceptorTest {
                 .setMessagingReceiveTelemetryEnabled(true)
                 .createConsumerProcessInstrumenter(),
             () -> true,
-            KafkaConsumerContextUtil.create(null, null, null));
+            KafkaConsumerContextUtil.create(null, null, null, null));
     iterator.next();
     assertThat(iterator.hasNext()).isFalse();
     interceptor.success(records, null);
@@ -186,7 +186,8 @@ class SpringKafkaInterceptorTest {
     ConsumerRecord<String, String> outer = new ConsumerRecord<>("orders", 0, 1, "outer", "value");
     ConsumerRecord<String, String> inner = new ConsumerRecord<>("orders", 0, 2, "inner", "value");
     Context parentContext = Context.current();
-    KafkaConsumerContextUtil.set(inner, KafkaConsumerContextUtil.create(parentContext, null, null));
+    KafkaConsumerContextUtil.set(
+        inner, KafkaConsumerContextUtil.create(parentContext, null, null, null));
     RecordInterceptor<String, String> decorated = mock();
     when(decorated.intercept(any(), isNull())).thenAnswer(invocation -> invocation.getArgument(0));
     RecordInterceptor<String, String> interceptor = telemetry.createRecordInterceptor(decorated);
@@ -295,7 +296,8 @@ class SpringKafkaInterceptorTest {
     ConsumerRecords<String, String> inner =
         records(new ConsumerRecord<>("orders", 0, 2, "inner", "value"));
     Context parentContext = Context.current();
-    KafkaConsumerContextUtil.set(inner, KafkaConsumerContextUtil.create(parentContext, null, null));
+    KafkaConsumerContextUtil.set(
+        inner, KafkaConsumerContextUtil.create(parentContext, null, null, null));
     BatchInterceptor<String, String> decorated = mock();
     when(decorated.intercept(any(), isNull())).thenAnswer(invocation -> invocation.getArgument(0));
     BatchInterceptor<String, String> interceptor = telemetry.createBatchInterceptor(decorated);
