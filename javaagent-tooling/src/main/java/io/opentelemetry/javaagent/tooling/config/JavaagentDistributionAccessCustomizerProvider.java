@@ -171,6 +171,9 @@ public final class JavaagentDistributionAccessCustomizerProvider
       if (v3Preview) {
         continue;
       }
+      if (canonicalSelectors.contains(replacement)) {
+        continue;
+      }
       if (warnedSelectors.add(selector)) {
         logger.warning(
             "Declarative configuration entry '"
@@ -181,9 +184,7 @@ public final class JavaagentDistributionAccessCustomizerProvider
                 + replacement
                 + "' instead. The deprecated entry will be removed in 3.0.");
       }
-      if (!canonicalSelectors.contains(replacement)) {
-        result.add(replacement);
-      }
+      result.add(replacement);
     }
     return result;
   }

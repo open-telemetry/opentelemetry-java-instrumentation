@@ -195,7 +195,7 @@ class JavaagentDistributionAccessCustomizerProviderTest {
     logger.addHandler(handler);
     try {
       applyConfig(
-          asList("reactor_3.1", "reactor_3.1", "other_1.2", "reactor_3_1"),
+          asList("reactor_3.1", "reactor_3.1", "other_1.2"),
           asList("reactor_3.1", "reactor_3.1"),
           false);
 
@@ -223,9 +223,22 @@ class JavaagentDistributionAccessCustomizerProviderTest {
                   + " 'reactor_3_1' instead. The deprecated entry will be removed in 3.0.");
 
       AgentDistributionConfig config = AgentDistributionConfig.get();
-      assertThat(config.isInstrumentationEnabled("reactor-3.1", false)).isTrue();
-      assertThat(config.isInstrumentationEnabled("reactor-3.1", false)).isTrue();
+      assertThat(config.isInstrumentationEnabled("reactor-3.1", false)).isFalse();
+      assertThat(config.isInstrumentationEnabled("reactor-3.1", false)).isFalse();
       assertThat(handler.records).hasSize(3);
+    } finally {
+      logger.removeHandler(handler);
+    }
+  }
+
+  @Test
+  void doesNotWarnForDeprecatedEntryIgnoredInFavorOfCanonicalEntry() {
+    TestHandler handler = new TestHandler();
+    logger.addHandler(handler);
+    try {
+      applyConfig(singletonList("reactor_3_1"), singletonList("reactor_3.1"), false);
+
+      assertThat(handler.records).isEmpty();
     } finally {
       logger.removeHandler(handler);
     }
