@@ -71,6 +71,7 @@ class TelemetryParser {
             entry("io.opentelemetry.couchbase-3.2", singleton("com.couchbase.client.jvm")),
             // ratpack-1.7 is consolidated into the ratpack-1.4 javaagent project.
             entry("io.opentelemetry.ratpack-1.4", singleton("io.opentelemetry.ratpack-1.7")),
+            entry("io.opentelemetry.mongo-3.1", singleton("io.opentelemetry.mongo-3.7")),
             // servlet-5.0 tests use jetty-12.0 instrumentation
             entry("io.opentelemetry.servlet-5.0", singleton("io.opentelemetry.jetty-12.0")),
             // runtime-telemetry library tests use a meter named "test"

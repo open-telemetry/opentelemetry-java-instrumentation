@@ -24,6 +24,19 @@ class TelemetryParserTest {
         .isEqualTo(expected);
   }
 
+  @ParameterizedTest
+  @CsvSource({
+    "io.opentelemetry.mongo-3.1, true",
+    "io.opentelemetry.mongo-3.7, true",
+    "io.opentelemetry.mongo-4.0, false",
+    "io.opentelemetry.mongo-async-3.3, false",
+    "io.opentelemetry.jdbc, false"
+  })
+  void mongoScopes(String telemetryScope, boolean expected) {
+    assertThat(TelemetryParser.scopeIsValid(telemetryScope, "io.opentelemetry.mongo-3.1"))
+        .isEqualTo(expected);
+  }
+
   @Test
   void normalizeWhenConditionStripsQuotes() {
     String content =
