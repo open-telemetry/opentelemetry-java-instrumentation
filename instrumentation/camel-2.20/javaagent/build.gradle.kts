@@ -3,6 +3,7 @@ plugins {
 }
 
 val camelversion = "2.20.1" // first version that the tests pass on
+val camelRabbitmqVersion = "2.25.1"
 
 muzzle {
   pass {
@@ -25,10 +26,9 @@ description = "camel-2-20"
 dependencies {
   compileOnly("org.apache.camel:camel-core:$camelversion")
   compileOnly("org.apache.camel:camel-aws:$camelversion")
-  compileOnly("org.apache.camel:camel-rabbitmq:$camelversion")
+  compileOnly("org.apache.camel:camel-rabbitmq:$camelRabbitmqVersion")
   compileOnly("javax.jms:jms-api:1.1-rev-1")
   compileOnly("org.apache.kafka:kafka-clients:0.11.0.0")
-  compileOnly("javax.jms:jms-api:1.1-rev-1")
   implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
   implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:library"))
   implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent"))
@@ -66,7 +66,7 @@ dependencies {
   testImplementation("org.apache.camel:camel-cassandraql:$camelversion")
   testImplementation("org.apache.camel:camel-jms:$camelversion")
   testImplementation("org.apache.camel:camel-kafka:$camelversion")
-  testImplementation("org.apache.camel:camel-rabbitmq:$camelversion")
+  testImplementation("org.apache.camel:camel-rabbitmq:$camelRabbitmqVersion")
   testImplementation("org.apache.camel:camel-sjms:$camelversion")
   testImplementation("org.apache.activemq:activemq-broker:5.16.5")
 
