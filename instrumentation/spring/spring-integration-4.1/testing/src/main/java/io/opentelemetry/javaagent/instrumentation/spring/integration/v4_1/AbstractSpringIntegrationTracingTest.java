@@ -38,6 +38,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -405,14 +406,16 @@ abstract class AbstractSpringIntegrationTracingTest {
     channel.unsubscribe(messageHandler);
   }
 
-  @Test
-  void shouldSuppressNestedDispatchOfSameMessageWithDuplicateInterceptors() {
+  @ParameterizedTest
+  @ValueSource(ints = {1, 2, 3})
+  void shouldSuppressNestedDispatchOfSameMessage(int interceptorCount) {
     ExecutorSubscribableChannel channel = new ExecutorSubscribableChannel(Runnable::run);
     channel.setBeanName("duplicateExecutorChannel");
     ChannelInterceptor interceptor =
         applicationContext.getBean(GlobalChannelInterceptorWrapper.class).getChannelInterceptor();
-    channel.addInterceptor(interceptor);
-    channel.addInterceptor(interceptor);
+    for (int i = 0; i < interceptorCount; i++) {
+      channel.addInterceptor(interceptor);
+    }
 
     AtomicBoolean nested = new AtomicBoolean();
     MessageHandler messageHandler =
@@ -453,14 +456,16 @@ abstract class AbstractSpringIntegrationTracingTest {
     channel.unsubscribe(messageHandler);
   }
 
-  @Test
-  void shouldSuppressNestedDirectDispatchOfSameMessageWithDuplicateInterceptors() {
+  @ParameterizedTest
+  @ValueSource(ints = {1, 2, 3})
+  void shouldSuppressNestedDirectDispatchOfSameMessage(int interceptorCount) {
     DirectChannel channel = new DirectChannel();
     channel.setBeanName("duplicateDirectChannel");
     ChannelInterceptor interceptor =
         applicationContext.getBean(GlobalChannelInterceptorWrapper.class).getChannelInterceptor();
-    channel.addInterceptor(interceptor);
-    channel.addInterceptor(interceptor);
+    for (int i = 0; i < interceptorCount; i++) {
+      channel.addInterceptor(interceptor);
+    }
 
     AtomicBoolean nested = new AtomicBoolean();
     MessageHandler messageHandler =

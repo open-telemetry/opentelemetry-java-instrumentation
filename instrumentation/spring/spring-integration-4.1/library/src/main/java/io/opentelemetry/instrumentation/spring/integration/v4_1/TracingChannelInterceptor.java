@@ -199,14 +199,7 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
 
     if (instrumenter != null || processingInvocation) {
       MessageInvocation.start(
-          message,
-          outputMessage,
-          messageChannel,
-          null,
-          messageWithChannel,
-          context,
-          telemetryContext,
-          instrumenter);
+          outputMessage, null, messageWithChannel, context, telemetryContext, instrumenter);
     } else {
       MessageInvocation.startNoopSend(messageChannel);
     }
@@ -279,14 +272,7 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
         .inject(context, messageHeaderAccessor, MessageHeadersSetter.INSTANCE);
     Message<?> outputMessage = createMessageWithHeaders(message, messageHeaderAccessor);
     MessageInvocation.start(
-        message,
-        outputMessage,
-        channel,
-        handler,
-        messageWithChannel,
-        context,
-        telemetryContext,
-        instrumenter);
+        outputMessage, handler, messageWithChannel, context, telemetryContext, instrumenter);
     return outputMessage;
   }
 
