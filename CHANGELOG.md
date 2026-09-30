@@ -20,6 +20,9 @@
 
 ### 🚫 Deprecations
 
+- Deprecate `otel.jmx.target.system` in favor of selecting unstable bundled metrics by name with
+  `otel.jmx.metrics.experimental.included`.
+  ([#19783](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19783))
 - Deprecate `otel.instrumentation.experimental.span-suppression-strategy` in favor of
   `otel.instrumentation.common.span-suppression-strategy` for Java agent users. Library
   instrumentation users without declarative configuration should instead call

@@ -246,6 +246,7 @@ class MetricAggregationTest {
         metricConfiguration,
         () -> MBeanServerFactory.findMBeanServer(null),
         new HandlerRegistry(),
+        IncludeExclude.builder().build(),
         IncludeExclude.builder().build());
   }
 }
