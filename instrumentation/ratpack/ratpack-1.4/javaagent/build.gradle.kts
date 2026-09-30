@@ -71,7 +71,8 @@ val version17Test = testing.suites.register<JvmTestSuite>("version17Test") {
 
 tasks {
   processResources {
-    // The newer API emits its own scope, which needs a version resource as well.
+    // Preserve the legacy HTTP client scope version outside v3-preview.
+    // TODO: Remove in 3.0 when the HTTP client always uses the ratpack-1.4 scope.
     from(named("generateInstrumentationVersionFile")) {
       include("io.opentelemetry.ratpack-1.4.properties")
       rename { "io.opentelemetry.ratpack-1.7.properties" }
