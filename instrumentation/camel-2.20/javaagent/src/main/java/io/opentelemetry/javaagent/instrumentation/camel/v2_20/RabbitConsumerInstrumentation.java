@@ -8,36 +8,36 @@ package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import com.rabbitmq.client.Consumer;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
 
-class KafkaFetchRecordsInstrumentation implements TypeInstrumentation {
+class RabbitConsumerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("org.apache.camel.component.kafka.KafkaConsumer$KafkaFetchRecords");
+    return named("org.apache.camel.component.rabbitmq.RabbitConsumer");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        namedOneOf("doRun", "run"), getClass().getName() + "$MarkConsumerAdvice");
+        namedOneOf("start", "doStart").and(takesArguments(0)),
+        getClass().getName() + "$StartAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class MarkConsumerAdvice {
+  public static class StartAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(
-        @Advice.FieldValue("consumer") @Nullable KafkaConsumer<?, ?> consumer) {
-      if (emitStableMessagingSemconv() && consumer != null) {
-        CamelKafkaProcessingOwnership.markConsumer(consumer);
+    public static void onEnter(@Advice.This Consumer consumer) {
+      if (emitStableMessagingSemconv()) {
+        CamelRabbitProcessingOwnership.markCamelAsProcessingOwner(consumer);
       }
     }
   }
