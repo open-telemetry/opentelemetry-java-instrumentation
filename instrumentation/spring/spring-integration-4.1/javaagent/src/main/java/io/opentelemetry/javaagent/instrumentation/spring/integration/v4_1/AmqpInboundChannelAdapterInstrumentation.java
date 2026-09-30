@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -31,10 +32,9 @@ class AmqpInboundChannelAdapterInstrumentation implements TypeInstrumentation {
     return nameStartsWith(ADAPTER + "$")
         .and(
             hasSuperType(
-                named("org.springframework.amqp.rabbit.core.ChannelAwareMessageListener")
-                    .or(
-                        named(
-                            "org.springframework.amqp.rabbit.listener.api.ChannelAwareMessageListener"))));
+                namedOneOf(
+                    "org.springframework.amqp.rabbit.core.ChannelAwareMessageListener",
+                    "org.springframework.amqp.rabbit.listener.api.ChannelAwareMessageListener")));
   }
 
   @Override
