@@ -30,6 +30,7 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import java.net.URI;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -65,8 +66,9 @@ class ArmeriaGrpcTest {
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void grpcInstrumentation() {
+    URI uri = URI.create("http://user@localhost:" + server.httpPort());
     GreeterGrpc.GreeterBlockingStub client =
-        GrpcClients.builder(server.httpUri()).build(GreeterGrpc.GreeterBlockingStub.class);
+        GrpcClients.builder(uri).build(GreeterGrpc.GreeterBlockingStub.class);
 
     Helloworld.Request request = Helloworld.Request.newBuilder().setName("test").build();
     Helloworld.Response response = testing.runWithSpan("parent", () -> client.sayHello(request));
@@ -94,7 +96,7 @@ class ArmeriaGrpcTest {
                             equalTo(
                                 RPC_RESPONSE_STATUS_CODE,
                                 emitStableRpcSemconv() ? Status.Code.OK.name() : null),
-                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                            equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, server.httpPort()))
                         .hasEventsSatisfyingExactly(
                             event ->
@@ -125,7 +127,7 @@ class ArmeriaGrpcTest {
                             equalTo(
                                 RPC_RESPONSE_STATUS_CODE,
                                 emitStableRpcSemconv() ? Status.Code.OK.name() : null),
-                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                            equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, server.httpPort()))
                         .hasEventsSatisfyingExactly(
                             event ->

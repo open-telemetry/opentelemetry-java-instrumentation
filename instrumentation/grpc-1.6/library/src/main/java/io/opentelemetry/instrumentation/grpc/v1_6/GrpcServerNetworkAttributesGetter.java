@@ -18,14 +18,13 @@ final class GrpcServerNetworkAttributesGetter
   @Nullable
   @Override
   public String getServerAddress(GrpcRequest grpcRequest) {
-    return grpcRequest.getLogicalHost();
+    return grpcRequest.getServerAddress();
   }
 
   @Override
   @Nullable
   public Integer getServerPort(GrpcRequest grpcRequest) {
-    int port = grpcRequest.getLogicalPort();
-    return port == -1 ? null : port;
+    return grpcRequest.getServerPort();
   }
 
   @Nullable
