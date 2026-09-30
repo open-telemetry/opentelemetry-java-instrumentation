@@ -22,7 +22,7 @@ public class RatpackHttpClientInstrumentationModule extends InstrumentationModul
     super(
         "ratpack",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"ratpack-1.4", "ratpack-1.4-http-client"}
+            ? new String[] {"ratpack-1.4", "ratpack-1.7"}
             : new String[] {"ratpack-1.7"});
   }
 

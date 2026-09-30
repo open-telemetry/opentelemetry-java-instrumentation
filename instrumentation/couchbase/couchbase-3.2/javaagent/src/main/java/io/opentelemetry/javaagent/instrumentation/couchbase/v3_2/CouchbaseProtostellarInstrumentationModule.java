@@ -23,7 +23,7 @@ public class CouchbaseProtostellarInstrumentationModule extends InstrumentationM
     super(
         "couchbase",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"couchbase-3.2", "couchbase-3.2-protostellar-3.4.3"}
+            ? new String[] {"couchbase-3.2", "couchbase-3.2-protostellar"}
             : expandDeprecatedNames(
                 "couchbase-3.2|deprecated:couchbase-3.4",
                 "couchbase",

@@ -11,8 +11,8 @@ muzzle {
     versions.set("[3.1.0.RELEASE,)")
     assertInverse.set(true)
     extraDependency("io.opentelemetry:opentelemetry-api:1.0.0")
-    excludeInstrumentationName("opentelemetry-api")
-    excludeInstrumentationName("reactor-3.4")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.OpenTelemetryApiInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.reactor.v3_1.operator.ContextPropagationOperatorContextViewInstrumentationModule")
   }
   pass {
     // instrumentation-docs:ignore - verification only, the directive above is the range we document
@@ -22,8 +22,9 @@ muzzle {
     versions.set("[3.4.0,)")
     assertInverse.set(true)
     extraDependency("io.opentelemetry:opentelemetry-api:1.0.0")
-    excludeInstrumentationName("opentelemetry-api")
-    excludeInstrumentationName("reactor-3.1")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.OpenTelemetryApiInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.reactor.v3_1.ReactorInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.reactor.v3_1.operator.ContextPropagationOperatorInstrumentationModule")
   }
 }
 

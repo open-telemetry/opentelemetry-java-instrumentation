@@ -40,12 +40,17 @@ public class MyLibrary10InstrumentationModule extends InstrumentationModule {
 
 ### Multiple modules in one Gradle project
 
-When a javaagent Gradle project contains independently selected `InstrumentationModule` classes,
-give each one a unique instrumentation name. Muzzle passes use that name with
-`excludeInstrumentationName(...)` to select only the module covered by each compatibility range or
-target artifact. Every name passed to the `InstrumentationModule` constructor is also a user-facing
-`otel.instrumentation.<name>.enabled` alias, checked in constructor argument order. When adding a
-unique name, preserve the existing first (main) name and the order of existing names.
+Every name passed to the `InstrumentationModule` constructor is a user-facing
+`otel.instrumentation.<name>.enabled` alias, checked in constructor argument order. Multiple
+classes may share all their public names. Add an optional feature selector only for independently
+selectable behavior, not to distinguish compatibility implementations. Preserve existing
+independent feature controls; modules belonging to one client/server role share that role's
+selectors.
+
+Muzzle passes use `excludeInstrumentationModule(...)` with the fully qualified module class name
+to select the classes covered by each compatibility range or target artifact. Public enablement
+names do not need to identify individual classes. Outside v3 preview, preserve the existing first
+name and the order of existing names.
 
 See [Compatibility range ownership](gradle-conventions.md#compatibility-range-ownership) for when
 modules should share a javaagent project and how to separate their Muzzle passes and dependencies.

@@ -30,7 +30,7 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         self.module("http-client-5.0", "ClientModule.java", '"http-client", "http-client-5.0"')
         self.assertEqual(check(self.root), [])
 
-    def test_shared_project_requires_exact_component_selectors(self):
+    def test_shared_project_can_register_independent_features(self):
         self.module(
             "http-client-5.0",
             "ClientModule.java",
@@ -42,15 +42,20 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         )
         self.assertEqual(check(self.root), [])
 
-    def test_shared_baseline_missing_exact_selector_fails(self):
+    def test_shared_baseline_does_not_require_exact_selectors(self):
         self.module("http-client-5.0", "CoreModule.java", '"http-client", "http-client-5.0"')
         self.module(
             "http-client-5.0", "ClientModule.java",
             '"http-client", "http-client-5.0", "http-client-5.0-client"',
         )
-        self.assertIn("need a unique exact component selector", check(self.root)[0])
+        self.assertEqual(check(self.root), [])
 
-    def test_duplicate_exact_selectors_fail_for_both_modules(self):
+    def test_compatibility_implementations_can_share_only_family_and_baseline(self):
+        for filename in ("CoreModule.java", "TransportModule.java"):
+            self.module("http-client-5.0", filename, '"http-client", "http-client-5.0"')
+        self.assertEqual(check(self.root), [])
+
+    def test_multiple_classes_can_share_every_public_selector(self):
         self.module(
             "http-client-5.0", "ClientModule.java",
             '"http-client", "http-client-5.0", "http-client-5.0-client"',
@@ -59,9 +64,7 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
             "http-client-5.0", "OtherClientModule.java",
             '"http-client", "http-client-5.0", "http-client-5.0-client"',
         )
-        errors = check(self.root)
-        self.assertEqual(len(errors), 2)
-        self.assertTrue(all("is not unique" in error for error in errors))
+        self.assertEqual(check(self.root), [])
 
     def test_nested_projects_share_the_owning_baseline(self):
         self.module(
@@ -72,7 +75,7 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
             "jaxrs/jaxrs-2.0/jaxrs-2.0-jersey-2.0", "JerseyModule.java",
             '"jaxrs", "jaxrs-2.0"',
         )
-        self.assertIn("need a unique exact component selector", check(self.root)[0])
+        self.assertEqual(check(self.root), [])
 
     def test_identical_components_in_different_baselines_are_independent(self):
         self.module(
@@ -93,12 +96,12 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         )
         self.assertEqual(check(self.root), [])
 
-    def test_standalone_module_rejects_component_selector(self):
+    def test_standalone_module_can_register_a_feature_selector(self):
         self.module(
             "http-client-5.0", "ClientModule.java",
             '"http-client", "http-client-5.0", "http-client-5.0-client"',
         )
-        self.assertIn("standalone modules must not register", check(self.root)[0])
+        self.assertEqual(check(self.root), [])
 
     def test_component_can_have_own_version_after_owning_base(self):
         self.module(
@@ -112,21 +115,21 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         )
         self.assertEqual(check(self.root), [])
 
-    def test_subgroup_and_umbrella_aliases_fail(self):
+    def test_feature_selector_can_be_versionless(self):
         self.module(
             "spring/spring-webflux-5.0",
             "WebfluxModule.java",
             '"spring-webflux", "spring-webflux-5.0", "spring-webflux-controller"',
         )
-        self.assertIn("expected exact selector", check(self.root)[0])
+        self.assertEqual(check(self.root), [])
 
-    def test_extra_alias_fails_even_after_exact_component(self):
+    def test_role_aliases_cannot_follow_a_feature_selector(self):
         self.module(
             "akka/akka-http-10.0",
             "ServerModule.java",
             '"akka-http", "akka-http-10.0", "akka-http-10.0-server", "akka-http-server"',
         )
-        self.assertIn("at most one", check(self.root)[0])
+        self.assertIn("expected role selectors", check(self.root)[0])
 
     def test_role_selectors_group_components_without_losing_exact_selectors(self):
         self.module(
@@ -159,31 +162,26 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
             )
         self.assertEqual(check(self.root), [])
 
-    def test_role_selectors_do_not_replace_unique_exact_components(self):
+    def test_role_selectors_can_be_shared_without_exact_components(self):
         for filename in ("ServerModule.java", "RouteModule.java"):
             self.module(
                 "http-5.0", filename,
                 '"http", "http-5.0", "http-server", "http-5.0-server"',
             )
-        errors = check(self.root)
-        self.assertEqual(len(errors), 2)
-        self.assertTrue(all("is not unique" in error for error in errors))
+        self.assertEqual(check(self.root), [])
 
-    def test_duplicate_exact_components_after_role_selectors_fail(self):
+    def test_feature_selectors_after_roles_can_be_shared(self):
         for filename in ("RouteModule.java", "OtherRouteModule.java"):
             self.module(
                 "http-5.0", filename,
                 '"http", "http-5.0", "http-server", "http-5.0-server", "http-5.0-route"',
             )
-        errors = check(self.root)
-        self.assertEqual(len(errors), 2)
-        self.assertTrue(all("is not unique" in error for error in errors))
+        self.assertEqual(check(self.root), [])
 
     def test_versionless_role_requires_matching_versioned_role(self):
         for selectors in (
             '"http-server"',
             '"http-server", "http-6.0-server"',
-            '"http-server", "http-5.0-client"',
             '"http-server", "http-5.0-route", "http-5.0-server"',
         ):
             with self.subTest(selectors=selectors):
@@ -200,19 +198,20 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         )
         self.assertIn("expected first selectors", check(self.root)[0])
 
-    def test_role_selectors_do_not_allow_other_subgroups(self):
+    def test_role_selectors_can_precede_independent_features(self):
         self.module(
             "http-5.0", "RouteModule.java",
             '"http", "http-5.0", "http-server", "http-5.0-server", '
             '"http-5.0-routes", "http-5.0-route"',
         )
-        self.assertIn("at most one", check(self.root)[0])
+        self.assertEqual(check(self.root), [])
 
     def test_module_cannot_register_both_role_groups(self):
         for selectors in (
             '"http-client", "http-5.0-client", "http-server", "http-5.0-server"',
             '"http-client", "http-5.0-client", "http-5.0-server"',
             '"http-server", "http-5.0-server", "http-5.0-client"',
+            '"http-server", "http-5.0-client"',
         ):
             with self.subTest(selectors=selectors):
                 self.module(
@@ -221,12 +220,12 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
                 )
                 self.assertIn("must not be combined", check(self.root)[0])
 
-    def test_standalone_module_rejects_role_selectors(self):
+    def test_standalone_module_can_register_role_selectors(self):
         self.module(
             "http-5.0", "ClientModule.java",
             '"http", "http-5.0", "http-client", "http-5.0-client"',
         )
-        self.assertIn("standalone modules must not register", check(self.root)[0])
+        self.assertEqual(check(self.root), [])
 
     def test_jdk_role_selectors_group_components(self):
         self.module("rmi", "ClientModule.java", '"rmi", "rmi-client"')
@@ -297,10 +296,10 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         self.module("jdbc", "DataSourceModule.java", '"jdbc", "jdbc-datasource"')
         self.assertEqual(check(self.root), [])
 
-    def test_jdk_shared_family_requires_exact_component_selectors(self):
+    def test_jdk_core_does_not_need_a_unique_selector(self):
         self.module("jdbc", "JdbcModule.java", '"jdbc"')
         self.module("jdbc", "DataSourceModule.java", '"jdbc", "jdbc-datasource"')
-        self.assertIn("need a unique exact component selector", check(self.root)[0])
+        self.assertEqual(check(self.root), [])
 
     def test_main_reports_checked_module_count(self):
         self.module("http-client-5.0", "ClientModule.java", '"http-client", "http-client-5.0"')
@@ -374,15 +373,63 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
             "RedisModule.java",
             '"vertx-redis-client", "vertx-redis-client-4.0", "vertx-redis-client-4.4.5"',
         )
-        self.assertIn("expected exact selector", check(self.root)[0])
+        self.assertIn("expected a feature selector", check(self.root)[0])
 
-    def test_component_of_family_without_base_is_rejected(self):
+    def test_independent_opt_in_can_use_a_versionless_feature_selector(self):
         self.module(
             "kafka/kafka-clients/kafka-clients-0.11",
             "MetricsModule.java",
             '"kafka-clients", "kafka-clients-0.11", "kafka-clients-metrics"',
         )
-        self.assertIn("expected exact selector", check(self.root)[0])
+        self.assertEqual(check(self.root), [])
+
+    def test_unrelated_umbrella_selector_is_rejected(self):
+        self.module(
+            "http-client-5.0", "ClientModule.java",
+            '"http-client", "http-client-5.0", "http"',
+        )
+        self.assertIn("expected a feature selector", check(self.root)[0])
+
+    def test_framework_controls_can_be_shared_between_api_families(self):
+        for family in ("jaxrs", "jaxws"):
+            self.module(
+                f"{family}/{family}-2.0", "FrameworkModule.java",
+                f'"{family}", "{family}-2.0", "cxf", "cxf-3.2"',
+            )
+        self.assertEqual(check(self.root), [])
+
+    def test_shared_framework_names_are_not_a_general_exemption(self):
+        self.module(
+            "http-client-5.0", "ClientModule.java",
+            '"http-client", "http-client-5.0", "cxf"',
+        )
+        self.assertIn("expected a feature selector", check(self.root)[0])
+
+    def test_annotation_opt_in_can_be_shared_with_coroutines(self):
+        self.module(
+            "kotlinx-coroutines/kotlinx-coroutines-1.0", "AnnotationsModule.java",
+            '"kotlinx-coroutines", "kotlinx-coroutines-1.0", '
+            '"opentelemetry-instrumentation-annotations"',
+        )
+        self.assertEqual(check(self.root), [])
+
+    def test_existing_version_shaped_feature_controls(self):
+        for family, base, feature in (
+            ("couchbase", "2.0", "2.6"),
+            ("ratpack", "1.4", "1.7"),
+        ):
+            self.module(
+                f"{family}/{family}-{base}", "FeatureModule.java",
+                f'"{family}", "{family}-{base}", "{family}-{feature}"',
+            )
+        self.assertEqual(check(self.root), [])
+
+    def test_version_shaped_features_cannot_cross_families(self):
+        self.module(
+            "http-client-5.0", "ClientModule.java",
+            '"http-client", "http-client-5.0", "ratpack-1.7"',
+        )
+        self.assertIn("expected a feature selector", check(self.root)[0])
 
     def test_preview_fallback_superclass_is_supported(self):
         owner = "opentelemetry-api/opentelemetry-api-1.31"

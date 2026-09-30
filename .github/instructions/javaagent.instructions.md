@@ -10,8 +10,9 @@ library lifecycle before deciding whether an exception applies.
 ## Advice and matching
 
 - A new `InstrumentationModule` needs SPI registration and a compatible `TypeInstrumentation`;
-  in a project with multiple independently selected modules, each needs a distinct name and
-  the correct Muzzle selection. `CallDepth` suppresses recursively instrumented calls only
+  public names distinguish independently selectable behavior, not implementation classes.
+  Multiple classes may share all public names; Muzzle selects individual classes with
+  `excludeInstrumentationModule(...)`. `CallDepth` suppresses recursively instrumented calls only
   when entry increments and exit decrements on every applicable path.
 - Executable `@Advice.OnMethodEnter` and `@Advice.OnMethodExit` methods with fallible bodies
   need `suppress = Throwable.class`; inspect helper calls too. Exclude test code, intentional

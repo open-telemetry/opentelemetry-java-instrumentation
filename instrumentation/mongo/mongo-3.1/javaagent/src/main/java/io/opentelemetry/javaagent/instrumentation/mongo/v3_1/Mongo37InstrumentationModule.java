@@ -22,7 +22,7 @@ public class Mongo37InstrumentationModule extends InstrumentationModule {
     super(
         "mongo",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"mongo-3.1", "mongo-3.1-client-settings"}
+            ? new String[] {"mongo-3.1"}
             : new String[] {"mongo-3.7"});
   }
 

@@ -11,7 +11,6 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.HelperResourceBuilder;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -23,11 +22,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class AzureSdkInstrumentationModule extends InstrumentationModule {
   public AzureSdkInstrumentationModule() {
-    super(
-        "azure-core",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"azure-core-1.36", "azure-core-1.36-sdk"}
-            : new String[] {"azure-core-1.36"});
+    super("azure-core", "azure-core-1.36");
   }
 
   @Override

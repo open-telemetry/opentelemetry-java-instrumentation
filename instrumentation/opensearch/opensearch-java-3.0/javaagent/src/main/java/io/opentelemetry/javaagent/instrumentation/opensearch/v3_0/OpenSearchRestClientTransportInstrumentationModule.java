@@ -21,7 +21,7 @@ public class OpenSearchRestClientTransportInstrumentationModule extends Instrume
     super(
         "opensearch-java",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"opensearch-java-3.0", "opensearch-java-3.0-rest-client-transport"}
+            ? new String[] {"opensearch-java-3.0"}
             : new String[] {"opensearch-java-3.0", "opensearch"});
   }
 

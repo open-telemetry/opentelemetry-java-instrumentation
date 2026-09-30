@@ -11,14 +11,14 @@ muzzle {
     module.set("ktor-client-core")
     versions.set("[2.0.0,3.0.0)")
     assertInverse.set(true)
-    excludeInstrumentationName("ktor-server")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.ktor.v2_0.KtorServerInstrumentationModule")
   }
   pass {
     group.set("io.ktor")
     module.set("ktor-server-core")
     versions.set("[2.0.0,3.0.0)")
     assertInverse.set(true)
-    excludeInstrumentationName("ktor-client")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.ktor.v2_0.KtorClientInstrumentationModule")
   }
 }
 

@@ -21,7 +21,7 @@ public class OpenSearchApacheHttpClient5InstrumentationModule extends Instrument
     super(
         "opensearch-java",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"opensearch-java-3.0", "opensearch-java-3.0-apache-http-client-5"}
+            ? new String[] {"opensearch-java-3.0"}
             : new String[] {"opensearch-java-3.0", "opensearch"});
   }
 

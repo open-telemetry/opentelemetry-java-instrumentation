@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -19,11 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class JaxrsAnnotationsInstrumentationModule extends InstrumentationModule {
   public JaxrsAnnotationsInstrumentationModule() {
-    super(
-        "jaxrs",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"jaxrs-3.0", "jaxrs-3.0-annotations"}
-            : new String[] {"jaxrs-3.0", "jaxrs-annotations", "jaxrs-3.0-annotations"});
+    super("jaxrs", "jaxrs-3.0", "jaxrs-annotations", "jaxrs-3.0-annotations");
   }
 
   // require jax-rs 3

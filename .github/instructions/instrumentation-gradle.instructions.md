@@ -26,7 +26,9 @@ or test failure that CI will report.
 - Muzzle `pass` blocks need the target group, artifact, version range and inverse assertion
   where an inverse exists. A pass covering all versions has no meaningful inverse. If
   multiple `InstrumentationModule`s share a project, separate their ranges and exclude
-  unrelated instrumentation names in each pass. Muzzle checks referenced symbols, not whether
+  unrelated module classes with `excludeInstrumentationModule(...)` and fully qualified class
+  names in each pass. Public enablement names need not distinguish compatibility implementations.
+  Muzzle checks referenced symbols, not whether
   a Byte Buddy method matcher will ever match.
 - Versioned javaagent modules for the same component must load their sibling `:javaagent`
   modules via `testInstrumentation` so tests exercise Muzzle selection together. Match the

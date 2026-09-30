@@ -10,7 +10,6 @@ import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.HelperResourceBuilder;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -20,11 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class SpringWebInstrumentationModule extends InstrumentationModule {
   public SpringWebInstrumentationModule() {
-    super(
-        "spring-webmvc",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"spring-webmvc-3.1", "spring-webmvc-3.1-spring-web"}
-            : new String[] {"spring-webmvc-3.1"});
+    super("spring-webmvc", "spring-webmvc-3.1");
   }
 
   @Override

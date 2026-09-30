@@ -23,12 +23,7 @@ public class AkkaHttpServerRouteInstrumentationModule extends InstrumentationMod
     super(
         "akka-http",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {
-              "akka-http-10.0",
-              "akka-http-server",
-              "akka-http-10.0-server",
-              "akka-http-10.0-server-route"
-            }
+            ? new String[] {"akka-http-10.0", "akka-http-server", "akka-http-10.0-server"}
             : new String[] {"akka-http-10.0", "akka-http-server", "akka-http-server-route"});
   }
 

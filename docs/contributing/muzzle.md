@@ -130,7 +130,24 @@ muzzle {
   that are not included in the specified `versions` range;
 - `extraDependency` allows putting additional libs on the classpath just for the compile-time check;
   this is usually used for jars that are not bundled with the instrumented lib but always present
-  in the runtime anyway.
+  in the runtime anyway;
+- `excludeInstrumentationModule` excludes one `InstrumentationModule` by its fully qualified class
+  name, independently of its public enablement names. It also applies to inverse checks. An unknown
+  class name fails the check.
+
+When a project contains multiple instrumentation modules with different compatibility ranges or
+target artifacts, exclude the unrelated classes in each directive:
+
+```kotlin
+excludeInstrumentationModule(
+  "io.opentelemetry.javaagent.instrumentation.example.v1_0.OtherInstrumentationModule"
+)
+```
+
+Module classes can share all their public enablement names. Register additional names only for
+independently selectable behavior, such as client/server roles or an existing metrics opt-in, not
+for Muzzle selection. The name-based `excludeInstrumentationName` API remains available for
+builds that intentionally exclude every module carrying an enablement name.
 
 The source code of the gradle plugin is located in the `buildSrc` directory.
 

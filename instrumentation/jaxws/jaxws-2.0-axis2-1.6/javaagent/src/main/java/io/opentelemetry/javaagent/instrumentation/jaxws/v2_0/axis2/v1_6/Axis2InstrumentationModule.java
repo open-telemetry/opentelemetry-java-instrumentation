@@ -21,7 +21,7 @@ public class Axis2InstrumentationModule extends InstrumentationModule {
     super(
         AgentCommonConfig.get().isV3Preview() ? "jaxws" : "axis2",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"jaxws-2.0", "jaxws-2.0-axis2-1.6"}
+            ? new String[] {"jaxws-2.0", "axis2", "axis2-1.6"}
             : new String[] {"axis2-1.6", "jaxws"});
   }
 

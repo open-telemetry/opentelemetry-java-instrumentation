@@ -22,16 +22,9 @@ public class AnnotationInstrumentationModule extends InstrumentationModule {
   public AnnotationInstrumentationModule() {
     super(
         "kotlinx-coroutines",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {
-              "kotlinx-coroutines-1.0",
-              "kotlinx-coroutines-1.0-opentelemetry-instrumentation-annotations"
-            }
-            : new String[] {
-              "kotlinx-coroutines-1.0",
-              "kotlinx-coroutines-opentelemetry-instrumentation-annotations",
-              "opentelemetry-instrumentation-annotations"
-            });
+        "kotlinx-coroutines-1.0",
+        "kotlinx-coroutines-opentelemetry-instrumentation-annotations",
+        "opentelemetry-instrumentation-annotations");
   }
 
   @Override

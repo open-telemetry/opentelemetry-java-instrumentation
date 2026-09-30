@@ -10,7 +10,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -20,11 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class SpringWebMvcInstrumentationModule extends InstrumentationModule {
 
   public SpringWebMvcInstrumentationModule() {
-    super(
-        "spring-webmvc",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"spring-webmvc-3.1", "spring-webmvc-3.1-core"}
-            : new String[] {"spring-webmvc-3.1"});
+    super("spring-webmvc", "spring-webmvc-3.1");
   }
 
   @Override

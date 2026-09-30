@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -22,11 +21,7 @@ import java.util.List;
 public class ApacheCamelJmsInstrumentationModule extends InstrumentationModule {
 
   public ApacheCamelJmsInstrumentationModule() {
-    super(
-        "camel",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"camel-2.20", "camel-2.20-jms"}
-            : new String[] {"camel-2.20", "camel-jms", "camel-sjms"});
+    super("camel", "camel-2.20", "camel-jms", "camel-sjms");
   }
 
   @Override

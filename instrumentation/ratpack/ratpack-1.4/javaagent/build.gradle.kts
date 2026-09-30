@@ -7,7 +7,7 @@ muzzle {
     group.set("io.ratpack")
     module.set("ratpack-core")
     versions.set("[1.4.0,)")
-    excludeInstrumentationName("ratpack-1.7")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.httpclient.RatpackHttpClientInstrumentationModule")
   }
   pass {
     // instrumentation-docs:ignore - verification only, the directive above is the range we document
@@ -16,8 +16,8 @@ muzzle {
     module.set("ratpack-core")
     versions.set("[1.7.0,)")
     assertInverse.set(true)
-    excludeInstrumentationName("ratpack-1.4")
-    excludeInstrumentationName("netty-4.1")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.RatpackInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyInstrumentationModule")
   }
 }
 

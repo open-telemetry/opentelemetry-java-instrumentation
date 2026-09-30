@@ -21,10 +21,7 @@ public class ReactorNettyInstrumentationModule extends InstrumentationModule {
         "spring-webflux",
         AgentCommonConfig.get().isV3Preview()
             ? new String[] {
-              "spring-webflux-5.0",
-              "spring-webflux-server",
-              "spring-webflux-5.0-server",
-              "spring-webflux-5.0-reactor-netty"
+              "spring-webflux-5.0", "spring-webflux-server", "spring-webflux-5.0-server"
             }
             : new String[] {"spring-webflux-5.0", "reactor-netty", "reactor-netty-server"});
   }

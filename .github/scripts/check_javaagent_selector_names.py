@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Check javaagent enablement selectors in v3-preview mode.
 
-This checks selector structure, not whether a component describes the right library.
+This checks selector structure, not whether an independent feature needs a control.
 Unversioned modules are limited to the JDK instrumentations listed below. A Java
 expression the checker cannot evaluate is an error, not an implicit exemption.
-Modules sharing a family and baseline must each register a unique exact selector.
-Client/server role selectors may precede the exact selector, unversioned first,
-then versioned. The final role selector may also identify the exact component.
+Module classes may share all public names. Optional feature selectors preserve
+independent controls; Muzzle identifies individual modules by fully qualified class.
+Client/server role selectors follow the baseline, unversioned first, then versioned.
 """
 
 import argparse
@@ -26,6 +26,14 @@ JDK_MODULES = {
 }
 # Agent infrastructure is not an instrumentation of an external library.
 INTERNAL_MODULES = {"external-annotations", "methods"}
+# These public feature controls are shared with other instrumentations.
+SHARED_FEATURE_FAMILIES = {
+    "jaxrs": {"cxf", "jersey", "resteasy"},
+    "jaxws": {"axis2", "cxf", "metro"},
+    "kotlinx-coroutines": {"opentelemetry-instrumentation-annotations"},
+}
+# Existing independent controls whose names identify a compatibility baseline.
+FEATURE_VERSION_SELECTORS = {"couchbase-2.6", "ratpack-1.7"}
 MODULE_SUPERCLASSES = ("InstrumentationModule", "V3PreviewFallbackEnabledInstrumentationModule")
 VERSIONED = re.compile(r"^([a-z][a-z0-9-]*)-([0-9]+(?:\.[0-9]+)+)(?:-|$)")
 KEBAB = re.compile(r"[a-z][a-z0-9]*(?:-[a-z0-9]+(?:\.[0-9]+)*)*")
@@ -192,38 +200,38 @@ def selectors(path, source):
     ]
 
 
-def exact_component_selector(family, base, extras):
+def validate_feature_selectors(family, base, extras):
+    client_names = {f"{family}-client", f"{base or family}-client"}
+    server_names = {f"{family}-server", f"{base or family}-server"}
+    if client_names.intersection(extras) and server_names.intersection(extras):
+        raise ValueError("client and server role selectors must not be combined")
     for role in ("client", "server"):
         role_names = [f"{family}-{role}"] + ([f"{base}-{role}"] if base else [])
-        if extras and extras[0] == role_names[0]:
-            if extras[: len(role_names)] != role_names:
+        if role_names[0] in extras:
+            if extras[:len(role_names)] != role_names:
                 raise ValueError(f"expected role selectors {role_names}, found {extras}")
             extras = extras[len(role_names) :]
-            opposite_role = "server" if role == "client" else "client"
-            if (
-                f"{family}-{opposite_role}" in extras
-                or f"{base or family}-{opposite_role}" in extras
-            ):
-                raise ValueError("client and server role selectors must not be combined")
-            if not extras:
-                return role_names[-1]
             break
-    if len(extras) > 1:
-        raise ValueError(f"expected at most one exact component selector, found {extras}")
-    if not extras:
-        return None
-    prefix = (base or family) + "-"
-    component = extras[0].removeprefix(prefix)
-    if not extras[0].startswith(prefix) or not KEBAB.fullmatch(component):
-        raise ValueError(f"expected exact selector {prefix}<component>, found {extras[0]!r}")
-    return extras[0]
+    for name in extras:
+        if name in FEATURE_VERSION_SELECTORS and name.startswith(family + "-"):
+            continue
+        versioned = VERSIONED.match(name)
+        if versioned and versioned.group(1) == family:
+            prefix = f"{family}-{versioned.group(2)}-"
+        else:
+            prefix = family + "-"
+        if name.startswith(prefix) and KEBAB.fullmatch(name[len(prefix):]):
+            continue
+        shared_family = versioned.group(1) if versioned else name
+        if shared_family in SHARED_FEATURE_FAMILIES.get(family, set()):
+            continue
+        raise ValueError(f"expected a feature selector of {family!r}, found {name!r}")
 
 
 def check(root, modules=None):
     errors = []
     if modules is None:
         modules = list(module_files(root))
-    groups = {}
 
     def report(path, source, error):
         match = re.search(r"\bsuper\s*\(", without_comments(source))
@@ -241,30 +249,10 @@ def check(root, modules=None):
                 raise ValueError(f"expected first selectors {required}, found {names}")
             if any(not KEBAB.fullmatch(name) for name in names):
                 raise ValueError(f"selectors must use kebab-case: {names}")
-            exact = exact_component_selector(family, base, names[len(required) :])
-            groups.setdefault((family, base), []).append((path, source, exact))
+            validate_feature_selectors(family, base, names[len(required) :])
         except ValueError as error:
             report(path, source, error)
 
-    for (family, base), group in groups.items():
-        if len(group) < 2:
-            path, source, exact = group[0]
-            if exact is not None:
-                report(path, source, "standalone modules must not register a component selector")
-            continue
-        exact_selectors = {}
-        for path, source, exact in group:
-            if exact is None:
-                report(
-                    path, source,
-                    f"modules sharing {(base or family)!r} need a unique exact component selector",
-                )
-            else:
-                exact_selectors.setdefault(exact, []).append((path, source))
-        for selector, owners in exact_selectors.items():
-            if len(owners) > 1:
-                for path, source in owners:
-                    report(path, source, f"exact component selector {selector!r} is not unique")
     return errors
 
 

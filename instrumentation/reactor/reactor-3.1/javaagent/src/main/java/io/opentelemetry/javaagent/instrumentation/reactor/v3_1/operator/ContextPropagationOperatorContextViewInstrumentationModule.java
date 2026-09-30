@@ -23,7 +23,7 @@ public class ContextPropagationOperatorContextViewInstrumentationModule
     super(
         "reactor",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"reactor-3.1", "reactor-3.1-context-propagation-operator-context-view"}
+            ? new String[] {"reactor-3.1", "reactor-context-propagation-operator"}
             : new String[] {"reactor-3.4", "reactor-context-propagation-operator"});
   }
 

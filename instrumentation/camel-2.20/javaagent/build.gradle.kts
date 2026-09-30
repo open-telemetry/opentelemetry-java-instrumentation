@@ -16,8 +16,8 @@ muzzle {
     extraDependency("org.apache.camel:camel-aws")
     extraDependency("org.apache.camel:camel-kafka")
     extraDependency("org.apache.camel:camel-rabbitmq")
-    excludeInstrumentationName("kafka-clients")
-    excludeInstrumentationName("kafka-clients-metrics")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaClientsInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.metrics.KafkaMetricsInstrumentationModule")
   }
 }
 

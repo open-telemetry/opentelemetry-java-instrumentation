@@ -19,12 +19,7 @@ public class TapirPekkoHttpServerRouteInstrumentationModule extends Instrumentat
     super(
         "pekko-http",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {
-              "pekko-http-1.0",
-              "pekko-http-server",
-              "pekko-http-1.0-server",
-              "pekko-http-1.0-tapir-server-route"
-            }
+            ? new String[] {"pekko-http-1.0", "pekko-http-server", "pekko-http-1.0-server"}
             : new String[] {
               "pekko-http-1.0",
               "pekko-http-server",

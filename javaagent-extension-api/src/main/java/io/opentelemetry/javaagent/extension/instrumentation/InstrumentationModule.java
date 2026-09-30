@@ -56,16 +56,17 @@ public abstract class InstrumentationModule implements Ordered {
    *       instrumented-library-1.0-server}. JDK instrumentations omit the versioned role selector.
    *       Role-specific modules, including route enrichment, share its selectors. Support needed by
    *       both roles is selected separately.
-   *   <li>Only when several modules share a baseline, one unique exact component name per module,
-   *       e.g. {@code instrumented-library-1.0-client}. Component-specific versions follow the
-   *       component, e.g. {@code instrumented-library-1.0-client-2.0}. A role selector can also be
-   *       the exact component name.
+   *   <li>Optional feature names for existing independently selectable behavior, e.g. {@code
+   *       kafka-clients-metrics} or {@code reactor-context-propagation-operator}. Several module
+   *       classes can share the same feature name. Existing framework controls such as {@code cxf}
+   *       may be shared across API families.
    * </ul>
    *
    * <p>Names use kebab-case and identify the instrumented library rather than an umbrella
-   * directory. A shared prefix does not create a selector; subgroup names other than client/server
-   * roles are not registered. Outside preview, compatibility aliases retain their configuration
-   * precedence.
+   * directory. A shared prefix does not create a selector. Module classes may share all their
+   * public names; separate compatibility ranges do not require separate public controls. Muzzle
+   * selects individual modules by fully qualified class name. Outside preview, compatibility
+   * aliases retain their configuration precedence.
    *
    * <p>These names apply to flat {@code otel.instrumentation.<name>.enabled} properties and
    * declarative enabled/disabled lists. They are troubleshooting escape hatches, not telemetry

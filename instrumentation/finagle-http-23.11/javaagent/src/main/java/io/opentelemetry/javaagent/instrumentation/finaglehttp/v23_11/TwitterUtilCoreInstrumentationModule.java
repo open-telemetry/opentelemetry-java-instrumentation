@@ -20,7 +20,7 @@ public class TwitterUtilCoreInstrumentationModule extends InstrumentationModule 
     super(
         "finagle-http",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"finagle-http-23.11", "finagle-http-23.11-twitter-util-core"}
+            ? new String[] {"finagle-http-23.11"}
             : new String[] {"finagle-http-23.11", "twitter-util-core"});
   }
 
