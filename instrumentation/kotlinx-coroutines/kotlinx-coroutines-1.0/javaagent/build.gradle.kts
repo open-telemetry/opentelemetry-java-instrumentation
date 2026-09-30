@@ -88,10 +88,10 @@ testing {
         implementation("io.opentelemetry:opentelemetry-extension-kotlin")
         implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
         implementation(
-          "org.jetbrains.kotlinx:kotlinx-coroutines-core:${baseVersion("1.3.0").orLatest("+")}",
+          "org.jetbrains.kotlinx:kotlinx-coroutines-core:${baseVersion("1.3.0").orLatest()}",
         )
         implementation(
-          "org.jetbrains.kotlinx:kotlinx-coroutines-reactor:${baseVersion("1.3.0").orLatest("+")}",
+          "org.jetbrains.kotlinx:kotlinx-coroutines-reactor:${baseVersion("1.3.0").orLatest()}",
         )
         implementation(project(":instrumentation:reactor:reactor-3.1:library"))
         implementation(project(":instrumentation-annotations"))
