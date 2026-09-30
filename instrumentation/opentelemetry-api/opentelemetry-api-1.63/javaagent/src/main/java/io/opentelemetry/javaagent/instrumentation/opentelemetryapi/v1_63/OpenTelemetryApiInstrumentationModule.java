@@ -20,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class OpenTelemetryApiInstrumentationModule
     extends V3PreviewFallbackEnabledInstrumentationModule {
   public OpenTelemetryApiInstrumentationModule() {
-    super("opentelemetry-api", "opentelemetry-api-1.63");
+    super("opentelemetry-api", "opentelemetry-api-1.63", "opentelemetry-api-1.63-core");
   }
 
   @Override

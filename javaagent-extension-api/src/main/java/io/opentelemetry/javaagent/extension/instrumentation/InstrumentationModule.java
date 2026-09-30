@@ -43,20 +43,25 @@ public abstract class InstrumentationModule implements Ordered {
    * corresponds to the main instrumentation name is considered first, after that additional
    * instrumentation names are considered in the order they are listed here.
    *
-   * <p>The instrumentation names should follow several rules:
+   * <p>Names registered under {@code otel.instrumentation.common.v3-preview=true} follow this
+   * ordered hierarchy:
    *
    * <ul>
-   *   <li>Instrumentation names should consist of hyphen-separated words, e.g. {@code
-   *       instrumented-library};
-   *   <li>In general, instrumentation names should be the as close as possible to the gradle module
-   *       name - which in turn should be as close as possible to the instrumented library name;
-   *   <li>The main instrumentation name should be the same as the gradle module name, minus the
-   *       version if it's a part of the module name. When several versions of a library are
-   *       instrumented they should all share the same main instrumentation name so that it's easy
-   *       to enable/disable the instrumentation regardless of the runtime library version;
-   *   <li>If the gradle module has a version as a part of its name, an additional instrumentation
-   *       name containing the version should be passed, e.g. {@code instrumented-library-1.0}.
+   *   <li>The library family, e.g. {@code instrumented-library}, shared across its versions.
+   *   <li>The family with its owning instrumentation baseline, e.g. {@code
+   *       instrumented-library-1.0}. JDK instrumentations omit this version level.
+   *   <li>Only when several modules share a baseline, one unique exact component name per module,
+   *       e.g. {@code instrumented-library-1.0-client}. Component-specific versions follow the
+   *       component, e.g. {@code instrumented-library-1.0-client-2.0}.
    * </ul>
+   *
+   * <p>Names use kebab-case and identify the instrumented library rather than an umbrella
+   * directory. A shared prefix does not create a selector; additional subgroup names are not
+   * registered. Outside preview, compatibility aliases retain their configuration precedence.
+   *
+   * <p>These names apply to flat {@code otel.instrumentation.<name>.enabled} properties and
+   * declarative enabled/disabled lists. They are troubleshooting escape hatches, not telemetry
+   * tuning controls, and are independent of emitted instrumentation scope names.
    */
   protected InstrumentationModule(
       String mainInstrumentationName, String... additionalInstrumentationNames) {

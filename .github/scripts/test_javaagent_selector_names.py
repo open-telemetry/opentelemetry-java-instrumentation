@@ -30,16 +30,81 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         self.module("http-client-5.0", "ClientModule.java", '"http-client", "http-client-5.0"')
         self.assertEqual(check(self.root), [])
 
-    def test_shared_project_can_select_modules_together(self):
+    def test_shared_project_requires_exact_component_selectors(self):
         self.module(
             "http-client-5.0",
             "ClientModule.java",
             '"http-client", "http-client-5.0", "http-client-5.0-client"',
         )
-        self.module("http-client-5.0", "ServerModule.java", '"http-client", "http-client-5.0"')
+        self.module(
+            "http-client-5.0", "ServerModule.java",
+            '"http-client", "http-client-5.0", "http-client-5.0-server"',
+        )
         self.assertEqual(check(self.root), [])
 
+    def test_shared_baseline_missing_exact_selector_fails(self):
+        self.module("http-client-5.0", "CoreModule.java", '"http-client", "http-client-5.0"')
+        self.module(
+            "http-client-5.0", "ClientModule.java",
+            '"http-client", "http-client-5.0", "http-client-5.0-client"',
+        )
+        self.assertIn("need a unique exact component selector", check(self.root)[0])
+
+    def test_duplicate_exact_selectors_fail_for_both_modules(self):
+        self.module(
+            "http-client-5.0", "ClientModule.java",
+            '"http-client", "http-client-5.0", "http-client-5.0-client"',
+        )
+        self.module(
+            "http-client-5.0", "OtherClientModule.java",
+            '"http-client", "http-client-5.0", "http-client-5.0-client"',
+        )
+        errors = check(self.root)
+        self.assertEqual(len(errors), 2)
+        self.assertTrue(all("is not unique" in error for error in errors))
+
+    def test_nested_projects_share_the_owning_baseline(self):
+        self.module(
+            "jaxrs/jaxrs-2.0/jaxrs-2.0-cxf-3.2", "CxfModule.java",
+            '"jaxrs", "jaxrs-2.0", "jaxrs-2.0-cxf-3.2"',
+        )
+        self.module(
+            "jaxrs/jaxrs-2.0/jaxrs-2.0-jersey-2.0", "JerseyModule.java",
+            '"jaxrs", "jaxrs-2.0"',
+        )
+        self.assertIn("need a unique exact component selector", check(self.root)[0])
+
+    def test_identical_components_in_different_baselines_are_independent(self):
+        self.module(
+            "http-client-5.0", "CoreModule.java",
+            '"http-client", "http-client-5.0", "http-client-5.0-core"',
+        )
+        self.module(
+            "http-client-6.0", "CoreModule.java",
+            '"http-client", "http-client-6.0", "http-client-6.0-core"',
+        )
+        self.module(
+            "http-client-5.0", "ClientModule.java",
+            '"http-client", "http-client-5.0", "http-client-5.0-client"',
+        )
+        self.module(
+            "http-client-6.0", "ClientModule.java",
+            '"http-client", "http-client-6.0", "http-client-6.0-client"',
+        )
+        self.assertEqual(check(self.root), [])
+
+    def test_standalone_module_rejects_component_selector(self):
+        self.module(
+            "http-client-5.0", "ClientModule.java",
+            '"http-client", "http-client-5.0", "http-client-5.0-client"',
+        )
+        self.assertIn("standalone modules must not register", check(self.root)[0])
+
     def test_component_can_have_own_version_after_owning_base(self):
+        self.module(
+            "jaxrs/jaxrs-2.0/jaxrs-2.0-annotations", "AnnotationsModule.java",
+            '"jaxrs", "jaxrs-2.0", "jaxrs-2.0-annotations"',
+        )
         self.module(
             "jaxrs/jaxrs-2.0/jaxrs-2.0-jersey-3.0",
             "JerseyModule.java",
@@ -74,6 +139,10 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         self.assertEqual(check(self.root), [])
 
     def test_explicit_deprecated_alias_dropped_in_preview(self):
+        self.module(
+            "http-client-5.0", "CoreModule.java",
+            '"http-client", "http-client-5.0", "http-client-5.0-core"',
+        )
         self.module(
             "http-client-5.0",
             "ClientModule.java",
@@ -115,11 +184,24 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         self.assertEqual(check(self.root), [])
 
     def test_jdk_versionless_modules_and_components(self):
-        self.module("jdbc", "JdbcModule.java", '"jdbc"')
+        self.module("jdbc", "JdbcModule.java", '"jdbc", "jdbc-core"')
         self.module("jdbc", "DataSourceModule.java", '"jdbc", "jdbc-datasource"')
         self.assertEqual(check(self.root), [])
 
+    def test_jdk_shared_family_requires_exact_component_selectors(self):
+        self.module("jdbc", "JdbcModule.java", '"jdbc"')
+        self.module("jdbc", "DataSourceModule.java", '"jdbc", "jdbc-datasource"')
+        self.assertIn("need a unique exact component selector", check(self.root)[0])
+
+    def test_main_reports_checked_module_count(self):
+        self.module("http-client-5.0", "ClientModule.java", '"http-client", "http-client-5.0"')
+        with patch.object(sys, "argv", ["checker", str(self.root)]):
+            with contextlib.redirect_stdout(io.StringIO()) as stdout:
+                self.assertEqual(main(), 0)
+        self.assertIn("Checked 1 javaagent modules", stdout.getvalue())
+
     def test_empty_varargs_array_adds_no_selectors(self):
+        self.module("jdbc", "JdbcModule.java", '"jdbc", "jdbc-core"')
         self.module(
             "jdbc",
             "DataSourceModule.java",
@@ -139,6 +221,9 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         self.assertIn("expected first selectors", check(self.root)[0])
 
     def test_preview_branches_on_both_main_name_and_varargs(self):
+        self.module(
+            "jaxws/jaxws-2.0", "CoreModule.java", '"jaxws", "jaxws-2.0", "jaxws-2.0-core"',
+        )
         self.module(
             "jaxws/jaxws-2.0-cxf-3.0",
             "CxfModule.java",
@@ -162,6 +247,10 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         self.assertEqual(check(self.root), [])
 
     def test_component_may_carry_its_own_patch_version(self):
+        self.module(
+            "vertx/vertx-redis-client/vertx-redis-client-4.0", "CoreModule.java",
+            '"vertx-redis-client", "vertx-redis-client-4.0", "vertx-redis-client-4.0-core"',
+        )
         self.module(
             "vertx/vertx-redis-client/vertx-redis-client-4.0",
             "RedisModule.java",
@@ -188,6 +277,10 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
 
     def test_preview_fallback_superclass_is_supported(self):
         owner = "opentelemetry-api/opentelemetry-api-1.31"
+        self.module(
+            owner, "CoreModule.java",
+            '"opentelemetry-api", "opentelemetry-api-1.31", "opentelemetry-api-1.31-core"',
+        )
         path = self.root / owner / "javaagent" / "src" / "main" / "java" / "ApiModule.java"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(
@@ -204,6 +297,10 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
 
     def test_abstract_preview_fallback_base_is_supported(self):
         owner = "http-client-5.0"
+        self.module(
+            owner, "CoreModule.java",
+            '"http-client", "http-client-5.0", "http-client-5.0-core"',
+        )
         concrete = self.root / owner / "javaagent" / "src" / "main" / "java" / "ClientModule.java"
         concrete.parent.mkdir(parents=True, exist_ok=True)
         concrete.write_text(
@@ -268,6 +365,10 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
 
     def test_abstract_module_passes_selector_from_concrete_subclass(self):
         owner = "http-client-5.0"
+        self.module(
+            owner, "CoreModule.java",
+            '"http-client", "http-client-5.0", "http-client-5.0-core"',
+        )
         self.module(owner, "ClientModule.java", '"http-client-5.0-client"')
         concrete = self.root / owner / "javaagent" / "src" / "main" / "java" / "ClientModule.java"
         concrete.write_text(

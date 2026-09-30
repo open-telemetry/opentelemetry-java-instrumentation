@@ -21,7 +21,7 @@ public class OpenSearchInstrumentationModule extends InstrumentationModule {
     super(
         "opensearch-java",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"opensearch-java-3.0"}
+            ? new String[] {"opensearch-java-3.0", "opensearch-java-3.0-core"}
             : new String[] {"opensearch-java-3.0", "opensearch"});
   }
 

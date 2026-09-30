@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class SpringWebMvcInstrumentationModule extends InstrumentationModule {
 
   public SpringWebMvcInstrumentationModule() {
-    super("spring-webmvc", "spring-webmvc-3.1");
+    super("spring-webmvc", "spring-webmvc-3.1", "spring-webmvc-3.1-core");
   }
 
   @Override

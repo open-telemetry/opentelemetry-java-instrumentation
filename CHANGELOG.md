@@ -6,8 +6,9 @@
 
 - Javaagent enablement selectors now follow the naming convention under
   `otel.instrumentation.common.v3-preview=true`: every module registers its library family, the
-  family with its base version and, where an individual module needs to be selected on its own, one
-  exact `<family>-<base-version>-<component>` selector. Umbrella aliases such as
+  family with its base version and, when modules share a baseline, one unique
+  exact `<family>-<base-version>-<component>` selector per module. JDK instrumentation omits the
+  version level. Umbrella aliases such as
   `otel.instrumentation.vertx.enabled`, version-less component aliases such as
   `otel.instrumentation.ktor-client.enabled` and aliases that put the component before the version
   such as `otel.instrumentation.opentelemetry-api-incubator-1.50.enabled` no longer select an

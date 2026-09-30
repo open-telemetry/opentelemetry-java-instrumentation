@@ -19,7 +19,7 @@ public class KafkaClientsInstrumentationModule extends InstrumentationModule {
     super(
         "kafka-clients",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"kafka-clients-0.11"}
+            ? new String[] {"kafka-clients-0.11", "kafka-clients-0.11-core"}
             : new String[] {"kafka-clients-0.11", "kafka"});
   }
 

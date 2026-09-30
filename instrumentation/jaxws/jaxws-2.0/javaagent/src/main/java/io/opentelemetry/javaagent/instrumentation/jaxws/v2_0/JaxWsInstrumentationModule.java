@@ -16,7 +16,7 @@ import java.util.List;
 public class JaxWsInstrumentationModule extends InstrumentationModule {
 
   public JaxWsInstrumentationModule() {
-    super("jaxws", "jaxws-2.0");
+    super("jaxws", "jaxws-2.0", "jaxws-2.0-core");
   }
 
   @Override

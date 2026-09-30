@@ -21,7 +21,7 @@ public class OpenSearchAwsSdk2InstrumentationModule extends InstrumentationModul
     super(
         "opensearch-java",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"opensearch-java-3.0"}
+            ? new String[] {"opensearch-java-3.0", "opensearch-java-3.0-aws-sdk-2"}
             : new String[] {"opensearch-java-3.0", "opensearch"});
   }
 

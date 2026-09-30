@@ -16,7 +16,7 @@ import java.util.List;
 public class FinagleHttpInstrumentationModule extends InstrumentationModule {
 
   public FinagleHttpInstrumentationModule() {
-    super("finagle-http", "finagle-http-23.11");
+    super("finagle-http", "finagle-http-23.11", "finagle-http-23.11-core");
   }
 
   @Override

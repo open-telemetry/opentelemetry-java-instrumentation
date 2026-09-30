@@ -4,8 +4,7 @@
 This checks selector structure, not whether a component describes the right library.
 Unversioned modules are limited to the JDK instrumentations listed below. A Java
 expression the checker cannot evaluate is an error, not an implicit exemption.
-Modules sharing just the family and base selectors are selected together; the
-source alone cannot establish whether they need independent selection.
+Modules sharing a family and baseline must each register a unique exact selector.
 """
 
 import argparse
@@ -191,9 +190,16 @@ def selectors(path, source):
     ]
 
 
-def check(root):
+def check(root, modules=None):
     errors = []
-    modules = list(module_files(root))
+    if modules is None:
+        modules = list(module_files(root))
+    groups = {}
+
+    def report(path, source, error):
+        match = re.search(r"\bsuper\s*\(", without_comments(source))
+        line = source[: match.start()].count("\n") + 1 if match else 1
+        errors.append(f"{path.relative_to(root)}:{line}: {error}")
 
     for path, source in modules:
         relative = path.relative_to(root)
@@ -202,6 +208,7 @@ def check(root):
             # InstrumentationModule stores the names in a LinkedHashSet.
             names = list(dict.fromkeys(selectors(path, source)))
             required = [family] + ([base] if base else [])
+            groups.setdefault((family, base), []).append((path, source, names, required))
             if names[: len(required)] != required:
                 raise ValueError(f"expected first selectors {required}, found {names}")
             if any(not KEBAB.fullmatch(name) for name in names):
@@ -217,9 +224,30 @@ def check(root):
                         f"expected exact selector {prefix}<component>, found {extras[0]!r}"
                     )
         except ValueError as error:
-            match = re.search(r"\bsuper\s*\(", source)
-            line = source[: match.start()].count("\n") + 1 if match else 1
-            errors.append(f"{relative}:{line}: {error}")
+            report(path, source, error)
+
+    for group in groups.values():
+        if len(group) < 2:
+            path, source, names, required = group[0]
+            if names[: len(required)] == required and len(names) > len(required):
+                report(path, source, "standalone modules must not register a component selector")
+            continue
+        exact_selectors = {}
+        for path, source, names, required in group:
+            if names[: len(required)] != required:
+                continue
+            extras = names[len(required) :]
+            if not extras:
+                report(
+                    path, source,
+                    f"modules sharing {required[-1]!r} need a unique exact component selector",
+                )
+            elif len(extras) == 1:
+                exact_selectors.setdefault(extras[0], []).append((path, source))
+        for selector, owners in exact_selectors.items():
+            if len(owners) > 1:
+                for path, source in owners:
+                    report(path, source, f"exact component selector {selector!r} is not unique")
     return errors
 
 
@@ -229,16 +257,17 @@ def main():
         "root", type=Path, nargs="?", default=Path("instrumentation"), help="instrumentation root"
     )
     args = parser.parse_args()
-    if not args.root.is_dir() or not any(module_files(args.root)):
+    modules = list(module_files(args.root)) if args.root.is_dir() else []
+    if not modules:
         print(f"No javaagent InstrumentationModule sources found in {args.root}", file=sys.stderr)
         return 1
-    errors = check(args.root)
+    errors = check(args.root, modules)
     for error in errors:
         print(error)
     if errors:
         print(f"{len(errors)} javaagent selector violation(s)", file=sys.stderr)
         return 1
-    print("Javaagent enablement selectors follow the naming convention")
+    print(f"Checked {len(modules)} javaagent modules: enablement selectors follow the naming convention")
     return 0
 
 

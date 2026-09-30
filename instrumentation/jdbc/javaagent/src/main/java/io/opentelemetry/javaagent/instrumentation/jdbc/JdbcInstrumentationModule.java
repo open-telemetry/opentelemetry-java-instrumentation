@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class JdbcInstrumentationModule extends InstrumentationModule {
   public JdbcInstrumentationModule() {
-    super("jdbc");
+    super("jdbc", "jdbc-core");
   }
 
   @Override
