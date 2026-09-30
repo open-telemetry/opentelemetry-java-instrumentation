@@ -15,6 +15,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
+/** HTTP client instrumentation for Ratpack 1.7 and later. */
 @AutoService(InstrumentationModule.class)
 public class RatpackHttpClientInstrumentationModule extends InstrumentationModule {
   public RatpackHttpClientInstrumentationModule() {
