@@ -7,6 +7,7 @@
 //    point the extension at the extracted directory.
 //  * `collectReachabilityMetadata` triggers the same isolation issue and is disabled.
 
+import org.graalvm.buildtools.gradle.dsl.GraalVMExtension
 import org.graalvm.buildtools.gradle.dsl.GraalVMReachabilityMetadataRepositoryExtension
 import org.graalvm.buildtools.gradle.dsl.GraalVMExtension
 
