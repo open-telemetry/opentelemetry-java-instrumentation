@@ -25,6 +25,7 @@ JDK_MODULES = {
 }
 # Agent infrastructure is not an instrumentation of an external library.
 INTERNAL_MODULES = {"external-annotations", "methods"}
+MODULE_SUPERCLASSES = ("InstrumentationModule", "V3PreviewFallbackEnabledInstrumentationModule")
 VERSIONED = re.compile(r"^([a-z][a-z0-9-]*)-([0-9]+(?:\.[0-9]+)+)(?:-|$)")
 KEBAB = re.compile(r"[a-z][a-z0-9]*(?:-[a-z0-9]+(?:\.[0-9]+)*)*")
 STRING = re.compile(r'"([^"\\]*)"')
@@ -96,6 +97,9 @@ def evaluate(expression):
     literal = STRING.fullmatch(expression)
     if literal:
         return [literal.group(1)]
+    # A module with no additional selectors still has to pass an empty varargs array.
+    if re.fullmatch(r"new\s+String\[\s*0\s*\]", expression):
+        return []
     branches = split_top_level(expression, "?")
     if len(branches) == 2:
         condition, alternatives = branches
@@ -111,6 +115,8 @@ def evaluate(expression):
         else:
             match = re.fullmatch(r"new\s+String\[\]\s*\{(.*)\}", expression, re.DOTALL)
         if match:
+            if not match.group(1).strip():
+                return []
             values = [
                 value
                 for part in split_top_level(match.group(1), ",")
@@ -163,13 +169,16 @@ def selectors(path, source):
         raise ValueError("cannot determine InstrumentationModule superclass")
     parent = declaration.group(1)
     args = super_arguments(source)
-    if parent in {"InstrumentationModule", "V3PreviewFallbackEnabledInstrumentationModule"}:
+    if parent in MODULE_SUPERCLASSES:
         return [name for arg in args for name in evaluate(arg)]
     base_path = path.with_name(parent + ".java")
     if not base_path.is_file():
         raise ValueError(f"unsupported InstrumentationModule superclass {parent}")
     base_source = base_path.read_text(encoding="utf-8")
-    if not re.search(rf"\babstract\s+class\s+{parent}\s+extends\s+InstrumentationModule\b", without_comments(base_source)):
+    inherited = "|".join(MODULE_SUPERCLASSES)
+    if not re.search(
+        rf"\babstract\s+class\s+{parent}\s+extends\s+(?:{inherited})\b", without_comments(base_source)
+    ):
         raise ValueError(f"unsupported InstrumentationModule superclass {parent}")
     parameter = re.search(rf"\b{parent}\s*\(\s*String\s+(\w+)\s*\)", without_comments(base_source))
     if parameter is None or len(args) != 1:

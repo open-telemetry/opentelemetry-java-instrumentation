@@ -10,6 +10,7 @@ import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -23,7 +24,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class CouchbaseNetworkInstrumentationModule extends InstrumentationModule {
 
   public CouchbaseNetworkInstrumentationModule() {
-    super("couchbase", "couchbase-2.0", "couchbase-network-2.0", "couchbase-2.0-network");
+    super(
+        "couchbase",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"couchbase-2.0", "couchbase-2.0-network"}
+            : new String[] {"couchbase-2.0", "couchbase-network-2.0", "couchbase-2.0-network"});
   }
 
   @Override

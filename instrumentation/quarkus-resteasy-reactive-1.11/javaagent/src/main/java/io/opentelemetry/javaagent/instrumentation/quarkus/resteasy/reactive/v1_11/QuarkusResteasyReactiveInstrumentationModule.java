@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.instrumentation.internal.Depr
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -18,11 +19,13 @@ public class QuarkusResteasyReactiveInstrumentationModule extends Instrumentatio
 
   public QuarkusResteasyReactiveInstrumentationModule() {
     super(
-        "quarkus",
-        expandDeprecatedNames(
-            "jaxrs",
-            "quarkus-resteasy-reactive",
-            "quarkus-resteasy-reactive-1.11|deprecated:quarkus-resteasy-reactive-3.0"));
+        AgentCommonConfig.get().isV3Preview() ? "quarkus-resteasy-reactive" : "quarkus",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"quarkus-resteasy-reactive-1.11"}
+            : expandDeprecatedNames(
+                "jaxrs",
+                "quarkus-resteasy-reactive",
+                "quarkus-resteasy-reactive-1.11|deprecated:quarkus-resteasy-reactive-3.0"));
   }
 
   @Override

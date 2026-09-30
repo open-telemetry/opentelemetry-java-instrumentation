@@ -21,9 +21,13 @@ public class SpringSecurityConfigServletInstrumentationModule extends Instrument
   public SpringSecurityConfigServletInstrumentationModule() {
     super(
         "spring-security-config",
-        "spring-security-config-6.0",
-        "spring-security-config-servlet",
-        "spring-security-config-servlet-6.0");
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"spring-security-config-6.0", "spring-security-config-6.0-servlet"}
+            : new String[] {
+              "spring-security-config-6.0",
+              "spring-security-config-servlet",
+              "spring-security-config-servlet-6.0"
+            });
   }
 
   @Override

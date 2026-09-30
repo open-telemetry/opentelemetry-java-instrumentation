@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.reactive.v1_0.mutin
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -16,7 +17,11 @@ import java.util.List;
 public class HibernateReactiveMutinyInstrumentationModule extends InstrumentationModule {
 
   public HibernateReactiveMutinyInstrumentationModule() {
-    super("hibernate-reactive", "hibernate-reactive-1.0", "hibernate-reactive-mutiny");
+    super(
+        "hibernate-reactive",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"hibernate-reactive-1.0", "hibernate-reactive-1.0-mutiny"}
+            : new String[] {"hibernate-reactive-1.0", "hibernate-reactive-mutiny"});
   }
 
   @Override

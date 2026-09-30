@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.V3PreviewFallbackEnabledInstrumentationModule;
@@ -22,8 +23,9 @@ public class AnnotationInstrumentationModule extends V3PreviewFallbackEnabledIns
   public AnnotationInstrumentationModule() {
     super(
         "opentelemetry-instrumentation-annotations",
-        "opentelemetry-instrumentation-annotations-1.16",
-        "annotations");
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"opentelemetry-instrumentation-annotations-1.16"}
+            : new String[] {"opentelemetry-instrumentation-annotations-1.16", "annotations"});
   }
 
   @Override

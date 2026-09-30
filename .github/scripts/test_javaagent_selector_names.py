@@ -119,6 +119,149 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         self.module("jdbc", "DataSourceModule.java", '"jdbc", "jdbc-datasource"')
         self.assertEqual(check(self.root), [])
 
+    def test_empty_varargs_array_adds_no_selectors(self):
+        self.module(
+            "jdbc",
+            "DataSourceModule.java",
+            'AgentCommonConfig.get().isV3Preview() ? "jdbc" : "jdbc-datasource", '
+            'AgentCommonConfig.get().isV3Preview() '
+            '? new String[] {"jdbc-datasource"} : new String[0]',
+        )
+        self.assertEqual(check(self.root), [])
+
+    def test_empty_preview_array_misses_required_selectors(self):
+        self.module(
+            "http-client-5.0",
+            "ClientModule.java",
+            '"http-client", AgentCommonConfig.get().isV3Preview() '
+            '? new String[] {} : new String[] {"http-client-5.0"}',
+        )
+        self.assertIn("expected first selectors", check(self.root)[0])
+
+    def test_preview_branches_on_both_main_name_and_varargs(self):
+        self.module(
+            "jaxws/jaxws-2.0-cxf-3.0",
+            "CxfModule.java",
+            'AgentCommonConfig.get().isV3Preview() ? "jaxws" : "cxf", '
+            'AgentCommonConfig.get().isV3Preview() '
+            '? new String[] {"jaxws-2.0", "jaxws-2.0-cxf-3.0"} '
+            ': expandDeprecatedNames("jaxws-2.0-cxf-3.0|deprecated:jaxws-cxf-3.0", "jaxws")',
+        )
+        self.assertEqual(check(self.root), [])
+
+    def test_preview_branch_keeps_deprecated_names_of_legacy_branch_out(self):
+        self.module(
+            "akka/akka-actor-forkjoin-2.5",
+            "ForkJoinModule.java",
+            '"akka-actor-forkjoin", AgentCommonConfig.get().isV3Preview() '
+            '? new String[] {"akka-actor-forkjoin-2.5"} '
+            ': expandDeprecatedNames('
+            '"akka-actor-forkjoin|deprecated:akka-actor-fork-join", '
+            '"akka-actor-forkjoin-2.5|deprecated:akka-actor-fork-join-2.5", "akka-actor")',
+        )
+        self.assertEqual(check(self.root), [])
+
+    def test_component_may_carry_its_own_patch_version(self):
+        self.module(
+            "vertx/vertx-redis-client/vertx-redis-client-4.0",
+            "RedisModule.java",
+            '"vertx-redis-client", "vertx-redis-client-4.0", '
+            '"vertx-redis-client-4.0-core-4.4.5"',
+        )
+        self.assertEqual(check(self.root), [])
+
+    def test_bare_version_is_not_a_component(self):
+        self.module(
+            "vertx/vertx-redis-client/vertx-redis-client-4.0",
+            "RedisModule.java",
+            '"vertx-redis-client", "vertx-redis-client-4.0", "vertx-redis-client-4.4.5"',
+        )
+        self.assertIn("expected exact selector", check(self.root)[0])
+
+    def test_component_of_family_without_base_is_rejected(self):
+        self.module(
+            "kafka/kafka-clients/kafka-clients-0.11",
+            "MetricsModule.java",
+            '"kafka-clients", "kafka-clients-0.11", "kafka-clients-metrics"',
+        )
+        self.assertIn("expected exact selector", check(self.root)[0])
+
+    def test_preview_fallback_superclass_is_supported(self):
+        owner = "opentelemetry-api/opentelemetry-api-1.31"
+        path = self.root / owner / "javaagent" / "src" / "main" / "java" / "ApiModule.java"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            "@AutoService(InstrumentationModule.class)\n"
+            "class ApiModule extends V3PreviewFallbackEnabledInstrumentationModule {\n"
+            '  ApiModule() { super("opentelemetry-api", AgentCommonConfig.get().isV3Preview()\n'
+            '      ? new String[] {"opentelemetry-api-1.31", "opentelemetry-api-1.31-incubator"}\n'
+            '      : new String[] {"opentelemetry-api-1.31", '
+            '"opentelemetry-api-incubator-1.31"}); }\n'
+            "}\n",
+            encoding="utf-8",
+        )
+        self.assertEqual(check(self.root), [])
+
+    def test_abstract_preview_fallback_base_is_supported(self):
+        owner = "http-client-5.0"
+        concrete = self.root / owner / "javaagent" / "src" / "main" / "java" / "ClientModule.java"
+        concrete.parent.mkdir(parents=True, exist_ok=True)
+        concrete.write_text(
+            "@AutoService(InstrumentationModule.class)\n"
+            "class ClientModule extends AbstractClientModule {\n"
+            '  ClientModule() { super("http-client-5.0-client"); }\n'
+            "}\n",
+            encoding="utf-8",
+        )
+        concrete.with_name("AbstractClientModule.java").write_text(
+            "abstract class AbstractClientModule\n"
+            "    extends V3PreviewFallbackEnabledInstrumentationModule {\n"
+            "  AbstractClientModule(String component) {\n"
+            '    super("http-client", "http-client-5.0", component);\n'
+            "  }\n"
+            "}\n",
+            encoding="utf-8",
+        )
+        self.assertEqual(check(self.root), [])
+
+    def test_comment_between_selectors_is_ignored(self):
+        path = (
+            self.root
+            / "spring/spring-boot-actuator-autoconfigure-2.0"
+            / "javaagent"
+            / "src"
+            / "main"
+            / "java"
+            / "ActuatorModule.java"
+        )
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            "@AutoService(InstrumentationModule.class)\n"
+            "class ActuatorModule extends InstrumentationModule {\n"
+            "  ActuatorModule() {\n"
+            '    super("spring-boot-actuator-autoconfigure",\n'
+            "        AgentCommonConfig.get().isV3Preview()\n"
+            '            ? new String[] {"spring-boot-actuator-autoconfigure-2.0"}\n'
+            "            : new String[] {\n"
+            '              "spring-boot-actuator-autoconfigure-2.0",\n'
+            "              // shared with MicrometerInstrumentationModule\n"
+            '              "micrometer"\n'
+            "            });\n"
+            "  }\n"
+            "}\n",
+            encoding="utf-8",
+        )
+        self.assertEqual(check(self.root), [])
+
+    def test_unsupported_preview_condition_is_an_error(self):
+        self.module(
+            "http-client-5.0",
+            "ClientModule.java",
+            '"http-client", isV3Preview() '
+            '? new String[] {"http-client-5.0"} : new String[] {"http-client-5.0"}',
+        )
+        self.assertIn("unsupported selector condition", check(self.root)[0])
+
     def test_unknown_versionless_library_fails(self):
         self.module("library", "LibraryModule.java", '"library"')
         self.assertIn("not a JDK instrumentation", check(self.root)[0])

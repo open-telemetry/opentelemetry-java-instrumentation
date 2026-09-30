@@ -10,6 +10,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -19,7 +20,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class ClickHouseClientV1InstrumentationModule extends InstrumentationModule {
 
   public ClickHouseClientV1InstrumentationModule() {
-    super("clickhouse-client-v1", "clickhouse-client-v1-0.5", "clickhouse", "clickhouse-client");
+    super(
+        "clickhouse-client-v1",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"clickhouse-client-v1-0.5"}
+            : new String[] {"clickhouse-client-v1-0.5", "clickhouse", "clickhouse-client"});
   }
 
   @Override

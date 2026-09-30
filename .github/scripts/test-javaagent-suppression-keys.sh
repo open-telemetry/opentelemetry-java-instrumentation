@@ -36,6 +36,15 @@ check
 cat >"$module" <<'EOF'
 class FooModule extends InstrumentationModule {
   FooModule() {
+    super(AgentCommonConfig.get().isV3Preview() ? "foo" : "foo-legacy", "foo-1.0");
+  }
+}
+EOF
+check
+
+cat >"$module" <<'EOF'
+class FooModule extends InstrumentationModule {
+  FooModule() {
     super("foo", AgentCommonConfig.get().isV3Preview()
         ? new String[] {"foo-other"}
         : new String[] {"foo-1.0"});

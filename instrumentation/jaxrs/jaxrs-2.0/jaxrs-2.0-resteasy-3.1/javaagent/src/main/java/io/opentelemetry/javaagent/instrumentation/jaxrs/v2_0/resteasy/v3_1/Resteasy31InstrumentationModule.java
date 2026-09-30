@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.resteasy.common.v3_0.ResteasyResourceLocatorInvokerInstrumentation;
@@ -21,7 +22,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class Resteasy31InstrumentationModule extends InstrumentationModule {
   public Resteasy31InstrumentationModule() {
-    super("jaxrs", "jaxrs-2.0", "resteasy", "resteasy-3.1");
+    super(
+        "jaxrs",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"jaxrs-2.0", "jaxrs-2.0-resteasy-3.1"}
+            : new String[] {"jaxrs-2.0", "resteasy", "resteasy-3.1"});
   }
 
   @Override

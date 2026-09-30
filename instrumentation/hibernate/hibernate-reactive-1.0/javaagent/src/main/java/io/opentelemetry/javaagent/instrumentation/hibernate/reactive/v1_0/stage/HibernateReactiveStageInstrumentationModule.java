@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.reactive.v1_0.stage
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -16,7 +17,11 @@ import java.util.List;
 public class HibernateReactiveStageInstrumentationModule extends InstrumentationModule {
 
   public HibernateReactiveStageInstrumentationModule() {
-    super("hibernate-reactive", "hibernate-reactive-1.0", "hibernate-reactive-stage");
+    super(
+        "hibernate-reactive",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"hibernate-reactive-1.0", "hibernate-reactive-1.0-stage"}
+            : new String[] {"hibernate-reactive-1.0", "hibernate-reactive-stage"});
   }
 
   @Override

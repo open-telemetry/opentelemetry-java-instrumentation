@@ -6,7 +6,8 @@ has_preview_constructor() {
     my $version = quotemeta($ENV{EXPECTED_VERSION});
     my $preview = qr/AgentCommonConfig\.get\(\)\.isV3Preview\(\)/;
     my $first_arg = qr/(?:"$owner"|$preview\s*\?\s*"$owner"\s*:\s*"[^"]+")/;
-    my $preview_second_arg = qr/$preview\s*\?\s*new\s+String\[\]\s*\{\s*"$version"/;
+    # The base version selector is unchanged by v3-preview unless the owner selector changes.
+    my $preview_second_arg = qr/(?:$preview\s*\?\s*new\s+String\[\]\s*\{\s*)?"$version"/;
     exit !/super\(\s*$first_arg\s*,\s*$preview_second_arg/;
   ' "$file"
 }
@@ -34,19 +35,8 @@ for file in $(find "${1:-instrumentation}" -name "*Module.java"); do
   fi
   if [[ "$simple_module_name" == jdbc ]]; then
     # TODO split jdbc-datasource out into separate instrumentation?
+    # the directory name carries no version, so the expected selectors cannot be derived here
     continue
-  fi
-  if [[ "$simple_module_name" == kafka-clients ]]; then
-    # TODO split kafka client metrics out into separate instrumentation?
-    continue
-  fi
-  if [[ "$simple_module_name" == quarkus-resteasy-reactive ]]; then
-    # TODO module is missing a base version
-    continue
-  fi
-  if [[ "$simple_module_name" == spring-cloud-gateway-webmvc ]]; then
-    # webmvc variant uses spring-cloud-gateway as base name
-    simple_module_name="spring-cloud-gateway"
   fi
 
   if [ "$module_name" == "$simple_module_name" ]; then

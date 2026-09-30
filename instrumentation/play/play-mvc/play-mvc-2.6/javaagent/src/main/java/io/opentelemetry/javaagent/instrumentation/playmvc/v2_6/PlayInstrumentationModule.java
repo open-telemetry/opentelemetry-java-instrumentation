@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.playmvc.v2_6;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -16,7 +17,11 @@ import java.util.List;
 public class PlayInstrumentationModule extends InstrumentationModule {
 
   public PlayInstrumentationModule() {
-    super("play-mvc", "play-mvc-2.6", "play");
+    super(
+        "play-mvc",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"play-mvc-2.6"}
+            : new String[] {"play-mvc-2.6", "play"});
   }
 
   @Override

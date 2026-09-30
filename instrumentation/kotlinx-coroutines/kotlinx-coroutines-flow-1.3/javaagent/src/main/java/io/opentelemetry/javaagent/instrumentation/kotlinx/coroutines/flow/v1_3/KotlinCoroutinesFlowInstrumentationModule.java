@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.kotlinx.coroutines.flow.v1_3;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -16,7 +17,11 @@ import java.util.List;
 public class KotlinCoroutinesFlowInstrumentationModule extends InstrumentationModule {
 
   public KotlinCoroutinesFlowInstrumentationModule() {
-    super("kotlinx-coroutines-flow", "kotlinx-coroutines-flow-1.3", "kotlinx-coroutines");
+    super(
+        "kotlinx-coroutines-flow",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"kotlinx-coroutines-flow-1.3"}
+            : new String[] {"kotlinx-coroutines-flow-1.3", "kotlinx-coroutines"});
   }
 
   @Override

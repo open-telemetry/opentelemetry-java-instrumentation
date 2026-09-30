@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -17,7 +18,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class AwsLambdaInstrumentationModule extends InstrumentationModule {
   public AwsLambdaInstrumentationModule() {
-    super("aws-lambda-events", "aws-lambda-events-2.2", "aws-lambda");
+    super(
+        "aws-lambda-events",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"aws-lambda-events-2.2"}
+            : new String[] {"aws-lambda-events-2.2", "aws-lambda"});
   }
 
   @Override

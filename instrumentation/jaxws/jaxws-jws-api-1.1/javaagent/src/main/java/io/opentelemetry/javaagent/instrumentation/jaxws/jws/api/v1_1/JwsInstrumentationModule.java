@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jaxws.jws.api.v1_1;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -17,7 +18,11 @@ import java.util.List;
 public class JwsInstrumentationModule extends InstrumentationModule {
 
   public JwsInstrumentationModule() {
-    super("jaxws-jws-api", "jaxws-jws-api-1.1", "jaxws");
+    super(
+        "jaxws-jws-api",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"jaxws-jws-api-1.1"}
+            : new String[] {"jaxws-jws-api-1.1", "jaxws"});
   }
 
   @Override

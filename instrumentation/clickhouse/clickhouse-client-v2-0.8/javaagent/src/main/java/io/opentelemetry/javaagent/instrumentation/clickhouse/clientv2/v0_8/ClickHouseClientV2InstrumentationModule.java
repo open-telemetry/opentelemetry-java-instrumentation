@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -16,7 +17,11 @@ import java.util.List;
 public class ClickHouseClientV2InstrumentationModule extends InstrumentationModule {
 
   public ClickHouseClientV2InstrumentationModule() {
-    super("clickhouse-client-v2", "clickhouse-client-v2-0.8", "clickhouse", "clickhouse-client");
+    super(
+        "clickhouse-client-v2",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"clickhouse-client-v2-0.8"}
+            : new String[] {"clickhouse-client-v2-0.8", "clickhouse", "clickhouse-client"});
   }
 
   @Override

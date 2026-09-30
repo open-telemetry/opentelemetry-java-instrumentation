@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.instrumentation.internal.Depr
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -18,10 +19,12 @@ public class AkkaActorForkJoinInstrumentationModule extends InstrumentationModul
   public AkkaActorForkJoinInstrumentationModule() {
     super(
         "akka-actor-forkjoin",
-        expandDeprecatedNames(
-            "akka-actor-forkjoin|deprecated:akka-actor-fork-join",
-            "akka-actor-forkjoin-2.5|deprecated:akka-actor-fork-join-2.5",
-            "akka-actor"));
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"akka-actor-forkjoin-2.5"}
+            : expandDeprecatedNames(
+                "akka-actor-forkjoin|deprecated:akka-actor-fork-join",
+                "akka-actor-forkjoin-2.5|deprecated:akka-actor-fork-join-2.5",
+                "akka-actor"));
   }
 
   @Override

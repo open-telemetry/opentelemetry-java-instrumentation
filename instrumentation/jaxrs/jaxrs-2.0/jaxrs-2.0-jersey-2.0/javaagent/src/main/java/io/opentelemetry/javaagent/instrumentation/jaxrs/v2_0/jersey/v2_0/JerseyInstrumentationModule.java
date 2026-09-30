@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -17,7 +18,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class JerseyInstrumentationModule extends InstrumentationModule {
   public JerseyInstrumentationModule() {
-    super("jaxrs", "jaxrs-2.0", "jersey", "jersey-2.0");
+    super(
+        "jaxrs",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"jaxrs-2.0", "jaxrs-2.0-jersey-2.0"}
+            : new String[] {"jaxrs-2.0", "jersey", "jersey-2.0"});
   }
 
   @Override

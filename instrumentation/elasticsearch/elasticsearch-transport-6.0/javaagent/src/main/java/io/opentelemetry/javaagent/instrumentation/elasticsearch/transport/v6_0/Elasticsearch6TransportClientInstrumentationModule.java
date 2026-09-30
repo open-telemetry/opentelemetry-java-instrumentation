@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.FilterClientInstrumentation;
@@ -22,7 +23,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class Elasticsearch6TransportClientInstrumentationModule extends InstrumentationModule {
   public Elasticsearch6TransportClientInstrumentationModule() {
-    super("elasticsearch-transport", "elasticsearch-transport-6.0", "elasticsearch");
+    super(
+        "elasticsearch-transport",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"elasticsearch-transport-6.0"}
+            : new String[] {"elasticsearch-transport-6.0", "elasticsearch"});
   }
 
   @Override

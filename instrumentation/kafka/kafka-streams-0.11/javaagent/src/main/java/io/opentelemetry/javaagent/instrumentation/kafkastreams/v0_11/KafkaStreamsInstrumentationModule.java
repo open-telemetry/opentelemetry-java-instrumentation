@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -15,7 +16,11 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class KafkaStreamsInstrumentationModule extends InstrumentationModule {
   public KafkaStreamsInstrumentationModule() {
-    super("kafka-streams", "kafka-streams-0.11", "kafka");
+    super(
+        "kafka-streams",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"kafka-streams-0.11"}
+            : new String[] {"kafka-streams-0.11", "kafka"});
   }
 
   @Override

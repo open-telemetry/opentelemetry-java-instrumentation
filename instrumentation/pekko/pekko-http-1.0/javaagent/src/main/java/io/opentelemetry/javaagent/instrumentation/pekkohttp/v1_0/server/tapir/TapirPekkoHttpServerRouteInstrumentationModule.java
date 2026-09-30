@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.tapir;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -17,11 +18,15 @@ public class TapirPekkoHttpServerRouteInstrumentationModule extends Instrumentat
   public TapirPekkoHttpServerRouteInstrumentationModule() {
     super(
         "pekko-http",
-        "pekko-http-1.0",
-        "pekko-http-server",
-        "pekko-http-server-route",
-        "tapir-pekko-http-server",
-        "tapir-pekko-http-server-route");
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"pekko-http-1.0", "pekko-http-1.0-tapir-server-route"}
+            : new String[] {
+              "pekko-http-1.0",
+              "pekko-http-server",
+              "pekko-http-server-route",
+              "tapir-pekko-http-server",
+              "tapir-pekko-http-server-route"
+            });
   }
 
   @Override

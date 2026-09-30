@@ -10,6 +10,7 @@ import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -18,7 +19,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class ElasticsearchApiClientInstrumentationModule extends InstrumentationModule {
   public ElasticsearchApiClientInstrumentationModule() {
-    super("elasticsearch-api-client", "elasticsearch-api-client-7.16", "elasticsearch");
+    super(
+        "elasticsearch-api-client",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"elasticsearch-api-client-7.16"}
+            : new String[] {"elasticsearch-api-client-7.16", "elasticsearch"});
   }
 
   @Override
