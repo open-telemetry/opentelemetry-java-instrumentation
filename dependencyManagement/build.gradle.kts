@@ -43,7 +43,7 @@ val byteBuddyVersion = "1.18.14"
 val asmVersion = "9.10.1"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
-val slf4jVersion = "2.0.19"
+val slf4jVersion = "2.0.20"
 val semConvVersion = "1.44.0"
 val semConvAlphaVersion =  semConvVersion.replaceFirst("(-rc.*)?$".toRegex(), "-alpha$1")
 
@@ -86,7 +86,7 @@ val DEPENDENCIES = listOf(
   "io.r2dbc:r2dbc-proxy:1.1.6.RELEASE",
   "ch.qos.logback:logback-classic:1.3.16", // 1.4+ requires Java 11+
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
-  "com.uber.nullaway:nullaway:0.14.1",
+  "com.uber.nullaway:nullaway:0.14.2",
   "commons-beanutils:commons-beanutils:1.11.0",
   "commons-cli:commons-cli:1.11.0",
   "commons-codec:commons-codec:1.22.1",
@@ -105,7 +105,7 @@ val DEPENDENCIES = listOf(
   "io.opentelemetry.contrib:opentelemetry-cloudfoundry-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-baggage-processor:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-samplers:${otelContribVersion}",
-  "io.opentelemetry.proto:opentelemetry-proto:1.11.0-alpha",
+  "io.opentelemetry.proto:opentelemetry-proto:1.11.1-alpha",
   "io.opentelemetry:opentelemetry-exporter-zipkin:${otelZipkinVersion}",
   "io.opentelemetry:opentelemetry-extension-annotations:1.18.0", // deprecated, no longer part of bom
   "org.assertj:assertj-core:3.27.7",

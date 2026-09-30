@@ -6,12 +6,17 @@ on:
       - "smoke-tests/images/early-jdk8/**"
       - ".github/workflows/pr-smoke-test-early-jdk8-images.yml"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

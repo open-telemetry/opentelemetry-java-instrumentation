@@ -53,6 +53,14 @@ final class SpringIntegrationTestHelper {
 
   static void assertProcessMetrics(
       InstrumentationExtension testing, String destinationName, boolean failed) {
+    assertProcessMetrics(testing, destinationName, failed, 1);
+  }
+
+  static void assertProcessMetrics(
+      InstrumentationExtension testing,
+      String destinationName,
+      boolean failed,
+      long expectedCount) {
     AttributeAssertion errorType =
         failed
             ? satisfies(ERROR_TYPE, AbstractStringAssert::isNotEmpty)
@@ -72,7 +80,7 @@ final class SpringIntegrationTestHelper {
                                 histogram.hasPointsSatisfying(
                                     point ->
                                         point
-                                            .hasCount(1)
+                                            .hasCount(expectedCount)
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_OPERATION_NAME, "process"),
                                                 equalTo(MESSAGING_SYSTEM, "spring_integration"),
@@ -94,7 +102,7 @@ final class SpringIntegrationTestHelper {
                                 sum.hasPointsSatisfying(
                                     point ->
                                         point
-                                            .hasValue(1)
+                                            .hasValue(expectedCount)
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_OPERATION_NAME, "process"),
                                                 equalTo(MESSAGING_SYSTEM, "spring_integration"),

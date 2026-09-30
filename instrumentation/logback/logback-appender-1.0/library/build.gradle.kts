@@ -62,6 +62,9 @@ dependencies {
 }
 
 graalvmNative {
+  binaries.named("test") {
+    quickBuild.set(true)
+  }
 
   binaries.all {
     resources.autodetect()

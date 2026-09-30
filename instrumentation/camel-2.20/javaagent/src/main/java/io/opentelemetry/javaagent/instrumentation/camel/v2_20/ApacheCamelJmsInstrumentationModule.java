@@ -21,7 +21,7 @@ import java.util.List;
 public class ApacheCamelJmsInstrumentationModule extends InstrumentationModule {
 
   public ApacheCamelJmsInstrumentationModule() {
-    super("camel", "camel-2.20", "camel-jms");
+    super("camel", "camel-2.20", "camel-jms", "camel-sjms");
   }
 
   @Override
@@ -31,6 +31,10 @@ public class ApacheCamelJmsInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new CamelMuzzleInstrumentation(), new JmsMessageInstrumentation());
+    return asList(
+        new CamelMuzzleInstrumentation(),
+        new JmsMessageInstrumentation(),
+        new SjmsConsumerInstrumentation(),
+        new SjmsMessageHandlerInstrumentation());
   }
 }

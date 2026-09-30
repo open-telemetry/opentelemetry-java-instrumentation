@@ -20,7 +20,6 @@
 
 package io.opentelemetry.instrumentation.reactor.v3_1;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -56,7 +55,7 @@ public class TracingSubscriber<T> implements CoreSubscriber<T> {
     this.context = ctx;
     this.traceContext = ContextPropagationOperator.getOpenTelemetryContext(ctx, contextToPropagate);
     this.hasContextToPropagate =
-        traceContext != null && Span.fromContext(traceContext).getSpanContext().isValid();
+        traceContext != null && traceContext != io.opentelemetry.context.Context.root();
   }
 
   @Override

@@ -29,6 +29,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
@@ -393,6 +394,44 @@ abstract class AbstractPulsarClientTest {
                                                 equalTo(MESSAGING_OPERATION, "receive"),
                                                 equalTo(SERVER_PORT, brokerPort),
                                                 equalTo(SERVER_ADDRESS, brokerHost))))));
+  }
+
+  @Test
+  void failedReceivePreservesParent() throws Exception {
+    String topic = "persistent://public/default/failedReceivePreservesParent";
+    admin.topics().createNonPartitionedTopic(topic);
+    consumer =
+        client.newConsumer(Schema.STRING).subscriptionName("test_sub").topic(topic).subscribe();
+
+    CompletableFuture<Message<String>> receive =
+        testing.runWithSpan("receive-parent", consumer::receiveAsync);
+    consumer.close();
+
+    assertThatThrownBy(() -> receive.get(1, MINUTES))
+        .hasCauseInstanceOf(PulsarClientException.class);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("receive-parent").hasKind(SpanKind.INTERNAL).hasNoParent()));
+  }
+
+  @Test
+  void failedBatchReceivePreservesParent() throws Exception {
+    String topic = "persistent://public/default/failedBatchReceivePreservesParent";
+    admin.topics().createNonPartitionedTopic(topic);
+    consumer =
+        client.newConsumer(Schema.STRING).subscriptionName("test_sub").topic(topic).subscribe();
+
+    consumer.close();
+    CompletableFuture<Messages<String>> receive =
+        testing.runWithSpan("receive-parent", consumer::batchReceiveAsync);
+
+    assertThatThrownBy(() -> receive.get(1, MINUTES))
+        .hasCauseInstanceOf(PulsarClientException.class);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("receive-parent").hasKind(SpanKind.INTERNAL).hasNoParent()));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
