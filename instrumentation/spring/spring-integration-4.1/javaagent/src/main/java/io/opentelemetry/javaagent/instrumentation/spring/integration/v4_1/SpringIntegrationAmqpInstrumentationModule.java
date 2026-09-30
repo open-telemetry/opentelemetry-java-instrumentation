@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -18,7 +19,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class SpringIntegrationAmqpInstrumentationModule extends InstrumentationModule {
 
   public SpringIntegrationAmqpInstrumentationModule() {
-    super("spring-integration", "spring-integration-4.1", "spring-integration-amqp-4.1");
+    super(
+        "spring-integration",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"spring-integration-4.1", "spring-integration-4.1-amqp"}
+            : new String[] {"spring-integration-4.1", "spring-integration-amqp-4.1"});
   }
 
   @Override
