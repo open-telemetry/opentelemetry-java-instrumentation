@@ -22,7 +22,9 @@
 
 - Deprecate the OSHI `ProcessMetrics` library API and
   `otel.instrumentation.oshi.experimental-metrics.enabled` configuration. They will be removed in
-  3.0.
+  3.0. Under v3 preview, this setting is ignored and automatic process-metric registration is
+  suppressed. Outside v3 preview, the setting continues to opt in to these metrics, and explicit
+  library registration remains unchanged.
   Use the standard JVM metrics `jvm.memory.used` and `jvm.cpu.time` instead. These are not exact
   replacements: `jvm.memory.used` measures JVM memory pools rather than process RSS or virtual
   memory, and `jvm.cpu.time` does not separate user and system CPU time.
