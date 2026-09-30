@@ -62,6 +62,11 @@ dependencies {
 }
 
 graalvmNative {
+  binaries.named("test") {
+    quickBuild.set(
+      providers.gradleProperty("nativeTestQuickBuild").map(String::toBoolean).orElse(false)
+    )
+  }
 
   binaries.all {
     resources.autodetect()

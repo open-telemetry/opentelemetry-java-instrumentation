@@ -8,9 +8,12 @@
 //  * `collectReachabilityMetadata` triggers the same isolation issue and is disabled.
 
 import org.graalvm.buildtools.gradle.dsl.GraalVMReachabilityMetadataRepositoryExtension
+import org.graalvm.buildtools.gradle.dsl.GraalVMExtension
 
 // Keep this in sync with the org.graalvm.buildtools.native plugin version in settings.gradle.kts.
 val graalvmReachabilityMetadataVersion = "1.1.14"
+val nativeTestQuickBuild =
+  providers.gradleProperty("nativeTestQuickBuild").map(String::toBoolean).orElse(false)
 
 if (gradle.startParameter.taskNames.any { it.contains("nativeTest") }) {
   apply(plugin = "org.graalvm.buildtools.native")
@@ -26,6 +29,12 @@ dependencies {
 }
 
 plugins.withId("org.graalvm.buildtools.native") {
+  extensions.configure<GraalVMExtension>("graalvmNative") {
+    binaries.named("test") {
+      quickBuild.set(nativeTestQuickBuild)
+    }
+  }
+
   dependencies {
     // javac 25 warns when JUnit's API Guardian annotation type is missing from this classpath.
     add("aotTestCompileOnly", "org.apiguardian:apiguardian-api:1.1.2")

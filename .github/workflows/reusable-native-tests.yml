@@ -6,6 +6,14 @@ on:
       test-latest-deps:
         type: boolean
         required: false
+      quick-build:
+        type: boolean
+        required: false
+        default: false
+      cache-read-only:
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
@@ -31,6 +39,13 @@ jobs:
         with:
           version: "latest"
           java-version: ${{ matrix.test-java-version }}
+      - name: Increase gradle daemon heap size
+        run: |
+          sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx4g /" gradle.properties
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        with:
+          cache-read-only: ${{ inputs.cache-read-only }}
       - name: Running test
         env:
           DOCKER_COMPOSE_TEST: "true"
@@ -43,5 +58,5 @@ jobs:
           # therefore we're starting a Kafka container manually for the tests
           docker compose -f .github/graal-native-docker-compose.yaml up -d
           # don't wait for startup - gradle compile takes long enough
-          ./gradlew ${{ inputs.test-latest-deps && '-PtestLatestDeps=true' || '' }} nativeTest --no-configuration-cache
+          ./gradlew ${{ inputs.test-latest-deps && '-PtestLatestDeps=true' || '' }} ${{ inputs.quick-build && '-PnativeTestQuickBuild=true' || '' }} nativeTest --no-configuration-cache
           docker compose -f .github/graal-native-docker-compose.yaml down # is this needed?
