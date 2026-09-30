@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.mongo.v3_1.core.v3_7;
+package io.opentelemetry.javaagent.instrumentation.mongo.v3_1;
 
 import com.mongodb.connection.ConnectionDescription;
 import io.opentelemetry.instrumentation.api.util.VirtualField;

@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.mongo.v3_1;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.mongo.v3_1.MongoInstrumentationSingletons.tracingListener;
+import static io.opentelemetry.javaagent.instrumentation.mongo.v3_1.Mongo31Singletons.tracingListener;
 import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -26,10 +26,10 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class MongoClientInstrumentationModule extends InstrumentationModule {
+public class Mongo31InstrumentationModule extends InstrumentationModule {
 
-  public MongoClientInstrumentationModule() {
-    super("mongo", "mongo-3.1", "mongo-3.1-core");
+  public Mongo31InstrumentationModule() {
+    super("mongo", "mongo-3.1", "mongo-3.1-client-options");
   }
 
   @Override
@@ -42,9 +42,9 @@ public class MongoClientInstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new MongoClientOptionsBuilderInstrumentation(),
-        new ClusterSettingsBuilderInstrumentation(),
+        new Mongo31ClusterSettingsBuilderInstrumentation(),
         new MongoClientUriInstrumentation(),
-        new ClusterInstrumentation());
+        new Mongo31ClusterInstrumentation());
   }
 
   public static final class MongoClientOptionsBuilderInstrumentation
@@ -76,7 +76,7 @@ public class MongoClientInstrumentationModule extends InstrumentationModule {
           @Advice.This MongoClientOptions.Builder builder,
           @Advice.FieldValue("commandListeners") List<CommandListener> commandListeners) {
         for (CommandListener commandListener : commandListeners) {
-          if (MongoInstrumentationSingletons.isTracingListener(commandListener)) {
+          if (Mongo31Singletons.isTracingListener(commandListener)) {
             return;
           }
         }

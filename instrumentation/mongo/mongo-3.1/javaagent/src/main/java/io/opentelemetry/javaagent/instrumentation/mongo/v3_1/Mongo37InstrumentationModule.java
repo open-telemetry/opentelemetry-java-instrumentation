@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.mongo.v3_1.core.v3_7;
+package io.opentelemetry.javaagent.instrumentation.mongo.v3_1;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
@@ -16,13 +16,13 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class MongoClientInstrumentationModule extends InstrumentationModule {
+public class Mongo37InstrumentationModule extends InstrumentationModule {
 
-  public MongoClientInstrumentationModule() {
+  public Mongo37InstrumentationModule() {
     super(
         "mongo",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"mongo-3.1", "mongo-3.1-core-3.7"}
+            ? new String[] {"mongo-3.1", "mongo-3.1-client-settings"}
             : new String[] {"mongo-3.7"});
   }
 
@@ -39,10 +39,10 @@ public class MongoClientInstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new MongoClientSettingsBuilderInstrumentation(),
-        new ClusterSettingsBuilderInstrumentation(),
+        new Mongo37ClusterSettingsBuilderInstrumentation(),
         new SocketStreamInstrumentation(),
         new InternalStreamConnectionInstrumentation(),
         new BaseClusterInstrumentation(),
-        new ClusterInstrumentation());
+        new Mongo37ClusterInstrumentation());
   }
 }

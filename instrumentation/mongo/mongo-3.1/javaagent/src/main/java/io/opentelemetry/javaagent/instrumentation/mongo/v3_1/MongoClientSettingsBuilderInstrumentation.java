@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.mongo.v3_1.core.v3_7;
+package io.opentelemetry.javaagent.instrumentation.mongo.v3_1;
 
-import static io.opentelemetry.javaagent.instrumentation.mongo.v3_1.core.v3_7.MongoInstrumentationSingletons.tracingListener;
+import static io.opentelemetry.javaagent.instrumentation.mongo.v3_1.Mongo37Singletons.tracingListener;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -49,7 +49,7 @@ final class MongoClientSettingsBuilderInstrumentation implements TypeInstrumenta
         @Advice.This MongoClientSettings.Builder builder,
         @Advice.FieldValue("commandListeners") List<CommandListener> commandListeners) {
       for (CommandListener commandListener : commandListeners) {
-        if (MongoInstrumentationSingletons.isTracingListener(commandListener)) {
+        if (Mongo37Singletons.isTracingListener(commandListener)) {
           return;
         }
       }

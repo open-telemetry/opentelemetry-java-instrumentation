@@ -22,7 +22,7 @@ muzzle {
     excludeInstrumentationName("mongo-3.1")
   }
   pass {
-    name.set("mongo-3.1-core-3.7")
+    name.set("mongo-3.1-client-settings")
     group.set("org.mongodb")
     module.set("mongodb-driver-core")
     versions.set("[3.7,4.0)")
