@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.integration.v4_1;
 
+import static java.util.logging.Level.FINE;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -14,8 +16,10 @@ import io.opentelemetry.instrumentation.spring.integration.v4_1.internal.SpringI
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.springframework.aop.framework.Advised;
 import org.springframework.aop.support.AopUtils;
@@ -32,13 +36,18 @@ import org.springframework.util.LinkedMultiValueMap;
 
 final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
 
+  private static final Logger logger = Logger.getLogger(TracingChannelInterceptor.class.getName());
+
   @Nullable
   private static final Class<?> DIRECT_WITH_ATTRIBUTES_CHANNEL_CLASS =
       getDirectWithAttributesChannelClass();
 
   @Nullable
-  private static final Class<?> EXECUTOR_CHANNEL_INTERCEPTOR_AWARE_CLASS =
-      getExecutorChannelInterceptorAwareClass();
+  private static final Class<?> ABSTRACT_EXECUTOR_CHANNEL_CLASS = getAbstractExecutorChannelClass();
+
+  @Nullable
+  private static final Field INTEGRATION_CHANNEL_EXECUTOR_FIELD =
+      getIntegrationChannelExecutorField(ABSTRACT_EXECUTOR_CHANNEL_CLASS);
 
   @Nullable
   private static final MethodHandle CHANNEL_GET_ATTRIBUTE_MH =
@@ -59,11 +68,28 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
   }
 
   @Nullable
-  private static Class<?> getExecutorChannelInterceptorAwareClass() {
+  private static Class<?> getAbstractExecutorChannelClass() {
     try {
       return Class.forName(
-          "org.springframework.integration.channel.ExecutorChannelInterceptorAware");
+          "org.springframework.integration.channel.AbstractExecutorChannel",
+          false,
+          TracingChannelInterceptor.class.getClassLoader());
     } catch (ClassNotFoundException ignored) {
+      return null;
+    }
+  }
+
+  @Nullable
+  private static Field getIntegrationChannelExecutorField(@Nullable Class<?> channelClass) {
+    if (channelClass == null) {
+      return null;
+    }
+    try {
+      Field field = channelClass.getDeclaredField("executor");
+      field.setAccessible(true);
+      return field;
+    } catch (ReflectiveOperationException | RuntimeException e) {
+      logger.log(FINE, "Unable to access the Spring Integration channel executor", e);
       return null;
     }
   }
@@ -324,9 +350,20 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
 
   private static boolean supportsHandlerInterception(MessageChannel messageChannel) {
     messageChannel = unwrapProxy(messageChannel);
-    return messageChannel instanceof ExecutorSubscribableChannel
-        || (EXECUTOR_CHANNEL_INTERCEPTOR_AWARE_CLASS != null
-            && EXECUTOR_CHANNEL_INTERCEPTOR_AWARE_CLASS.isInstance(messageChannel));
+    if (messageChannel instanceof ExecutorSubscribableChannel) {
+      return true;
+    }
+    if (ABSTRACT_EXECUTOR_CHANNEL_CLASS == null
+        || INTEGRATION_CHANNEL_EXECUTOR_FIELD == null
+        || !ABSTRACT_EXECUTOR_CHANNEL_CLASS.isInstance(messageChannel)) {
+      return false;
+    }
+    try {
+      return INTEGRATION_CHANNEL_EXECUTOR_FIELD.get(messageChannel) != null;
+    } catch (IllegalAccessException e) {
+      logger.log(FINE, "Unable to read the Spring Integration channel executor", e);
+      return false;
+    }
   }
 
   private int interceptorCount(MessageChannel messageChannel) {

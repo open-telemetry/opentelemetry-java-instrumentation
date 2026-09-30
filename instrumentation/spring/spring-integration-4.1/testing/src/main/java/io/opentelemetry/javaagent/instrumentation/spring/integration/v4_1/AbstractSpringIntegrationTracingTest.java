@@ -44,6 +44,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.event.EventListener;
 import org.springframework.integration.channel.DirectChannel;
+import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.integration.channel.interceptor.GlobalChannelInterceptorWrapper;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHandler;
@@ -120,6 +121,88 @@ abstract class AbstractSpringIntegrationTracingTest {
     }
 
     channel.unsubscribe(messageHandler);
+  }
+
+  @Test
+  void shouldTraceSynchronousPublishSubscribeDispatch() {
+    PublishSubscribeChannel channel = new PublishSubscribeChannel();
+    channel.setBeanName("publishSubscribeChannel");
+    channel.addInterceptor(
+        applicationContext.getBean(GlobalChannelInterceptorWrapper.class).getChannelInterceptor());
+    channel.subscribe(message -> runWithSpan("firstHandler", () -> {}));
+    channel.subscribe(message -> runWithSpan("secondHandler", () -> {}));
+
+    Context before = Context.current();
+    channel.send(MessageBuilder.withPayload("test").build());
+    assertThat(Context.current()).isSameAs(before);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "process publishSubscribeChannel"
+                                : "publishSubscribeChannel process")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasAttributesSatisfyingExactly(
+                            messagingAttributes("process", "publishSubscribeChannel")),
+                span -> span.hasName("firstHandler").hasParent(trace.getSpan(0)),
+                span -> span.hasName("secondHandler").hasParent(trace.getSpan(0))));
+
+    if (emitStableMessagingSemconv()) {
+      assertProcessMetrics(testing, "publishSubscribeChannel", false);
+    } else {
+      assertNoMetrics(testing);
+    }
+  }
+
+  @Test
+  void shouldTraceEachPublishSubscribeExecutorHandler() {
+    assumeTrue(testLatestDeps());
+    PublishSubscribeChannel channel = new PublishSubscribeChannel(Runnable::run);
+    channel.setBeanName("publishSubscribeChannel");
+    channel.setBeanFactory(applicationContext.getBeanFactory());
+    channel.addInterceptor(
+        applicationContext.getBean(GlobalChannelInterceptorWrapper.class).getChannelInterceptor());
+    channel.afterPropertiesSet();
+    channel.subscribe(message -> runWithSpan("firstHandler", () -> {}));
+    channel.subscribe(message -> runWithSpan("secondHandler", () -> {}));
+
+    Context before = Context.current();
+    testing.runWithSpan("parent", () -> channel.send(MessageBuilder.withPayload("test").build()));
+    assertThat(Context.current()).isSameAs(before);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent"),
+                span ->
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "process publishSubscribeChannel"
+                                : "publishSubscribeChannel process")
+                        .hasParent(trace.getSpan(0))
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasAttributesSatisfyingExactly(
+                            messagingAttributes("process", "publishSubscribeChannel")),
+                span -> span.hasName("firstHandler").hasParent(trace.getSpan(1)),
+                span ->
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "process publishSubscribeChannel"
+                                : "publishSubscribeChannel process")
+                        .hasParent(trace.getSpan(0))
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasAttributesSatisfyingExactly(
+                            messagingAttributes("process", "publishSubscribeChannel")),
+                span -> span.hasName("secondHandler").hasParent(trace.getSpan(3))));
+
+    if (emitStableMessagingSemconv()) {
+      assertProcessMetrics(testing, "publishSubscribeChannel", false, 2);
+    } else {
+      assertNoMetrics(testing);
+    }
   }
 
   @Test
