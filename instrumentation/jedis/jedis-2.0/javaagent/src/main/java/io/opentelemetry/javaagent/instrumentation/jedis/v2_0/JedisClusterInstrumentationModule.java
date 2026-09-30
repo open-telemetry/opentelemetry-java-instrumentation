@@ -27,7 +27,7 @@ public class JedisClusterInstrumentationModule extends InstrumentationModule {
     super(
         "jedis",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"jedis-2.0", "jedis-2.0-cluster"}
+            ? new String[] {"jedis-2.0", "jedis-2.0-cluster-2.3"}
             : new String[] {"jedis-2.0", "jedis-2.3-cluster"});
   }
 
