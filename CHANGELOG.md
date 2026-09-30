@@ -20,6 +20,22 @@
 
 ### 🚫 Deprecations
 
+- Deprecate periods in the declarative `distribution.javaagent.instrumentation.enabled` and
+  `disabled` selectors. Replace both hyphens and periods in instrumentation module names with
+  underscores, for example `reactor_3_1` instead of `reactor_3.1`. Dotted selectors will be removed
+  in 3.0.
+- Deprecate the OSHI `ProcessMetrics` library API and
+  `otel.instrumentation.oshi.experimental-metrics.enabled` configuration. They will be removed in
+  3.0. Under v3 preview, this setting is ignored and automatic process-metric registration is
+  suppressed. Outside v3 preview, the setting continues to opt in to these metrics, and explicit
+  library registration remains unchanged.
+  Use the standard JVM metrics `jvm.memory.used` and `jvm.cpu.time` instead. These are not exact
+  replacements: `jvm.memory.used` measures JVM memory pools rather than process RSS or virtual
+  memory, and `jvm.cpu.time` does not separate user and system CPU time.
+  ([#20277](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20277))
+- Deprecate `otel.jmx.target.system` in favor of selecting unstable bundled metrics by name with
+  `otel.jmx.metrics.experimental.included`.
+  ([#19783](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19783))
 - Deprecate `otel.instrumentation.experimental.span-suppression-strategy` in favor of
   `otel.instrumentation.common.span-suppression-strategy` for Java agent users. Library
   instrumentation users without declarative configuration should instead call

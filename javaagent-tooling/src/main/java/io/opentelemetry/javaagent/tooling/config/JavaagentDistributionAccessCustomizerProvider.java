@@ -21,8 +21,12 @@ import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigura
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.DistributionModel;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -92,7 +96,10 @@ public final class JavaagentDistributionAccessCustomizerProvider
       Object javaagent = distribution.getExtensionProperties().get("javaagent");
       if (javaagent != null) {
         try {
-          return mapper.convertValue(javaagent, AgentDistributionConfig.class);
+          Map<String, Object> javaagentProperties =
+              mapper.convertValue(javaagent, new TypeReference<Map<String, Object>>() {});
+          migrateInstrumentationSelectors(javaagentProperties, v3Preview);
+          return mapper.convertValue(javaagentProperties, AgentDistributionConfig.class);
         } catch (IllegalArgumentException e) {
           logger.log(WARNING, "Failed to parse distribution.javaagent configuration", e);
         }
@@ -100,5 +107,85 @@ public final class JavaagentDistributionAccessCustomizerProvider
     }
 
     return AgentDistributionConfig.create();
+  }
+
+  private static void migrateInstrumentationSelectors(
+      Map<String, Object> javaagentProperties, boolean v3Preview) {
+    Object instrumentation = javaagentProperties.get("instrumentation");
+    if (instrumentation == null) {
+      return;
+    }
+
+    Map<String, Object> instrumentationProperties =
+        mapper.convertValue(instrumentation, new TypeReference<Map<String, Object>>() {});
+    List<String> enabled = getSelectorList(instrumentationProperties, "enabled");
+    List<String> disabled = getSelectorList(instrumentationProperties, "disabled");
+    Set<String> canonicalSelectors = new HashSet<>();
+    addCanonicalSelectors(canonicalSelectors, enabled);
+    addCanonicalSelectors(canonicalSelectors, disabled);
+    instrumentationProperties.put(
+        "enabled",
+        migrateSelectorList(
+            enabled,
+            canonicalSelectors,
+            v3Preview,
+            "distribution.javaagent.instrumentation.enabled"));
+    instrumentationProperties.put(
+        "disabled",
+        migrateSelectorList(
+            disabled,
+            canonicalSelectors,
+            v3Preview,
+            "distribution.javaagent.instrumentation.disabled"));
+    javaagentProperties.put("instrumentation", instrumentationProperties);
+  }
+
+  private static List<String> getSelectorList(
+      Map<String, Object> instrumentationProperties, String name) {
+    Object selectors = instrumentationProperties.get(name);
+    return selectors == null
+        ? new ArrayList<>()
+        : mapper.convertValue(selectors, new TypeReference<List<String>>() {});
+  }
+
+  private static void addCanonicalSelectors(
+      Set<String> canonicalSelectors, List<String> selectors) {
+    for (String selector : selectors) {
+      if (!selector.contains(".")) {
+        canonicalSelectors.add(selector);
+      }
+    }
+  }
+
+  private static List<String> migrateSelectorList(
+      List<String> selectors, Set<String> canonicalSelectors, boolean v3Preview, String path) {
+    List<String> result = new ArrayList<>();
+    Set<String> warnedSelectors = new HashSet<>();
+    for (String selector : selectors) {
+      if (!selector.contains(".") || selector.contains("-")) {
+        result.add(selector);
+        continue;
+      }
+
+      String replacement = selector.replace('.', '_');
+      if (v3Preview) {
+        continue;
+      }
+      if (canonicalSelectors.contains(replacement)) {
+        continue;
+      }
+      if (warnedSelectors.add(selector)) {
+        logger.warning(
+            "Declarative configuration entry '"
+                + selector
+                + "' in '"
+                + path
+                + "' is deprecated; use '"
+                + replacement
+                + "' instead. The deprecated entry will be removed in 3.0.");
+      }
+      result.add(replacement);
+    }
+    return result;
   }
 }

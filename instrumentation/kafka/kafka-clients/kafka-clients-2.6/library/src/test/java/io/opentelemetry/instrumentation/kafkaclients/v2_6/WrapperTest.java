@@ -24,6 +24,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CONSUMER_GROUP_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CLUSTER_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
@@ -185,6 +186,7 @@ class WrapperTest extends AbstractWrapperTest {
           equalTo(
               MessageHeaderUtil.headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
+    assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     if (testExperimental) {
       assertions.add(
           satisfies(
@@ -213,6 +215,7 @@ class WrapperTest extends AbstractWrapperTest {
                     MESSAGING_CONSUMER_GROUP_NAME, emitStableMessagingSemconv() ? "test" : null)));
     addClientIdAssertions(assertions, "consumer");
     addOffsetAssertions(assertions);
+    assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     if (testHeaders) {
       assertions.add(
           equalTo(
@@ -239,6 +242,7 @@ class WrapperTest extends AbstractWrapperTest {
                     MESSAGING_CONSUMER_GROUP_NAME, emitStableMessagingSemconv() ? "test" : null),
                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
     addClientIdAssertions(assertions, "consumer");
+    assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     if (emitStableMessagingSemconv()) {
       assertions.add(
           satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));

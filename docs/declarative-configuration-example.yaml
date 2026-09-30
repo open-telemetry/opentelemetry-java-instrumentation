@@ -571,10 +571,6 @@ instrumentation/development:
     opentelemetry_instrumentation_annotations:
       # All methods to be excluded from auto-instrumentation by annotation-based advices.
       exclude_methods: ''
-    oshi:
-      experimental_metrics/development:
-        # Enable the experimental `runtime.java.memory` and `runtime.java.cpu_time` metrics.
-        enabled: false
     powerjob:
       # Enables experimental span attributes `job.system`, `scheduling.powerjob.job.id`,
       # `scheduling.powerjob.job.param`, `scheduling.powerjob.job.instance.param`, and
