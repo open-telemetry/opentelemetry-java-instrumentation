@@ -13,6 +13,8 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerInterceptor;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.common.ClusterResource;
+import org.apache.kafka.common.ClusterResourceListener;
 
 /**
  * A ProducerInterceptor that adds OpenTelemetry instrumentation.
@@ -20,7 +22,8 @@ import org.apache.kafka.clients.producer.RecordMetadata;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-public class OpenTelemetryProducerInterceptor<K, V> implements ProducerInterceptor<K, V> {
+public class OpenTelemetryProducerInterceptor<K, V>
+    implements ProducerInterceptor<K, V>, ClusterResourceListener {
 
   public static final String CONFIG_KEY_KAFKA_PRODUCER_TELEMETRY_SUPPLIER =
       "opentelemetry.kafka-producer-telemetry.supplier";
@@ -28,18 +31,31 @@ public class OpenTelemetryProducerInterceptor<K, V> implements ProducerIntercept
   @Nullable private KafkaProducerTelemetry producerTelemetry;
   @Nullable private String clientId;
   @Nullable private String bootstrapServers;
+  // Populated by Kafka via ClusterResourceListener once the cluster metadata is first resolved.
+  @Nullable private volatile String clusterId;
 
   @Override
   @CanIgnoreReturnValue
   public ProducerRecord<K, V> onSend(ProducerRecord<K, V> producerRecord) {
     if (producerTelemetry != null) {
-      return producerTelemetry.buildAndInjectSpan(producerRecord, clientId, bootstrapServers);
+      return producerTelemetry.buildAndInjectSpan(
+          producerRecord, clientId, bootstrapServers, clusterId);
     }
     return producerRecord;
   }
 
   @Override
   public void onAcknowledgement(RecordMetadata recordMetadata, Exception e) {}
+
+  @Override
+  public void onUpdate(ClusterResource clusterResource) {
+    if (clusterResource != null) {
+      String id = clusterResource.clusterId();
+      if (id != null && !id.isEmpty()) {
+        clusterId = id;
+      }
+    }
+  }
 
   @Override
   public void close() {}

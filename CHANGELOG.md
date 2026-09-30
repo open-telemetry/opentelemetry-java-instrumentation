@@ -20,6 +20,10 @@
 
 ### 🚫 Deprecations
 
+- Deprecate periods in the declarative `distribution.javaagent.instrumentation.enabled` and
+  `disabled` selectors. Replace both hyphens and periods in instrumentation module names with
+  underscores, for example `reactor_3_1` instead of `reactor_3.1`. Dotted selectors will be removed
+  in 3.0.
 - Deprecate the OSHI `ProcessMetrics` library API and
   `otel.instrumentation.oshi.experimental-metrics.enabled` configuration. They will be removed in
   3.0. Under v3 preview, this setting is ignored and automatic process-metric registration is
