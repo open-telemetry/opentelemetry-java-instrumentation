@@ -96,7 +96,8 @@ class KafkaConsumerBatchSelectionTest {
     Iterator<ConsumerRecord<String, String>> earlyIterator = iterator(frameworkRecords);
     KafkaProcessingOwnershipUtil.markProcessingOwnedOutsideKafkaClient(frameworkRecords);
     Instrumenter<KafkaReceiveRequest, Void> framework = factory.createBatchProcessInstrumenter();
-    KafkaReceiveRequest request = KafkaReceiveRequest.create(frameworkRecords, "group", "client");
+    KafkaReceiveRequest request =
+        KafkaReceiveRequest.create(frameworkRecords, "group", "client", null);
     Context context = framework.start(Context.current(), request);
     try (Scope ignored = context.makeCurrent()) {
       ConsumerRecords<String, String> nestedRecords = records(record(1));
@@ -149,7 +150,8 @@ class KafkaConsumerBatchSelectionTest {
   void nestedProcessWithSameParentIsSuppressed() {
     Instrumenter<KafkaProcessRequest, Void> instrumenter =
         factory.createConsumerProcessInstrumenter();
-    KafkaProcessRequest outerRequest = KafkaProcessRequest.create(record(0), "group", "client");
+    KafkaProcessRequest outerRequest =
+        KafkaProcessRequest.create(record(0), "group", "client", null);
     Context outerContext = instrumenter.start(Context.current(), outerRequest);
     try (Scope ignored = outerContext.makeCurrent()) {
       Iterator<ConsumerRecord<String, String>> nested =
@@ -157,7 +159,7 @@ class KafkaConsumerBatchSelectionTest {
               records(record(1)).iterator(),
               instrumenter,
               () -> true,
-              KafkaConsumerContextUtil.create(outerContext, "group", "client"));
+              KafkaConsumerContextUtil.create(outerContext, "group", "client", null));
       assertThat(nested.next().offset()).isEqualTo(1);
       assertThat(nested.hasNext()).isFalse();
       assertThat(Span.current()).isSameAs(Span.fromContext(outerContext));
@@ -182,7 +184,7 @@ class KafkaConsumerBatchSelectionTest {
             secondRecords.iterator(),
             factory.createConsumerProcessInstrumenter(),
             KafkaProcessingOwnershipUtil.rawProcessingEligibility(secondRecords, () -> true),
-            KafkaConsumerContextUtil.create(Context.root(), "group", "client"));
+            KafkaConsumerContextUtil.create(Context.root(), "group", "client", null));
     assertThat(second.next().offset()).isEqualTo(1);
     assertThat(second.hasNext()).isFalse();
     assertThat(Span.current()).isSameAs(firstSpan);
@@ -477,7 +479,7 @@ class KafkaConsumerBatchSelectionTest {
         records.records(new TopicPartition("orders", 0)),
         factory.createConsumerProcessInstrumenter(),
         KafkaProcessingOwnershipUtil.rawProcessingEligibility(records, () -> true),
-        KafkaConsumerContextUtil.create(null, "group", "client"));
+        KafkaConsumerContextUtil.create(null, "group", "client", null));
   }
 
   private Iterable<ConsumerRecord<String, String>> iterable(
@@ -486,7 +488,7 @@ class KafkaConsumerBatchSelectionTest {
         records.records("orders"),
         factory.createConsumerProcessInstrumenter(),
         KafkaProcessingOwnershipUtil.rawProcessingEligibility(records, () -> true),
-        KafkaConsumerContextUtil.create(null, "group", "client"));
+        KafkaConsumerContextUtil.create(null, "group", "client", null));
   }
 
   private Iterator<ConsumerRecord<String, String>> iterator(
@@ -497,7 +499,7 @@ class KafkaConsumerBatchSelectionTest {
         records.iterator(),
         instrumenter,
         KafkaProcessingOwnershipUtil.rawProcessingEligibility(records, () -> true),
-        KafkaConsumerContextUtil.create(null, "group", "client"));
+        KafkaConsumerContextUtil.create(null, "group", "client", null));
   }
 
   private static void assertProcessSpans(int count) {
