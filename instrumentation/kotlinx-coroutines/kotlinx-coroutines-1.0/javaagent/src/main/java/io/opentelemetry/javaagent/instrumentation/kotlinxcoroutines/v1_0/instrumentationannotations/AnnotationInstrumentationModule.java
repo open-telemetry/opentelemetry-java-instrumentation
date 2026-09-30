@@ -25,7 +25,7 @@ public class AnnotationInstrumentationModule extends InstrumentationModule {
         AgentCommonConfig.get().isV3Preview()
             ? new String[] {
               "kotlinx-coroutines-1.0",
-              "kotlinx-coroutines-1.0-opentelemetry-instrumentation-annotations"
+              "kotlinx-coroutines-1.0-opentelemetry-instrumentation-annotations-1.16"
             }
             : new String[] {
               "kotlinx-coroutines-1.0",

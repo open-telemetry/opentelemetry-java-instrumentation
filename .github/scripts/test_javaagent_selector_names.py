@@ -15,11 +15,18 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
 
-    def module(self, owner, filename, arguments, source_set="main"):
+    def module(
+        self,
+        owner,
+        filename,
+        arguments,
+        source_set="main",
+        annotation="@AutoService(InstrumentationModule.class)",
+    ):
         path = self.root / owner / "javaagent" / "src" / source_set / "java" / filename
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(
-            "@AutoService(InstrumentationModule.class)\n"
+            f"{annotation}\n"
             f"class {filename[:-5]} extends InstrumentationModule {{\n"
             f"  {filename[:-5]}() {{ super({arguments}); }}\n"
             "}\n",
@@ -187,6 +194,15 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         self.module("jdbc", "JdbcModule.java", '"jdbc", "jdbc-core"')
         self.module("jdbc", "DataSourceModule.java", '"jdbc", "jdbc-datasource"')
         self.assertEqual(check(self.root), [])
+
+    def test_multi_service_registration_is_checked(self):
+        self.module(
+            "executors",
+            "ExecutorsModule.java",
+            '"incorrect"',
+            annotation="@AutoService({InstrumentationModule.class, EarlyInstrumentationModule.class})",
+        )
+        self.assertIn("expected first selectors", check(self.root)[0])
 
     def test_jdk_shared_family_requires_exact_component_selectors(self):
         self.module("jdbc", "JdbcModule.java", '"jdbc"')

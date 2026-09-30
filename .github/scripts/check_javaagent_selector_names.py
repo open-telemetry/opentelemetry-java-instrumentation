@@ -156,7 +156,10 @@ def module_files(root):
         if parts[index : index + 4] != ("javaagent", "src", "main", "java"):
             continue
         source = path.read_text(encoding="utf-8")
-        if re.search(r"@AutoService\s*\(\s*InstrumentationModule\.class\s*\)", without_comments(source)):
+        if re.search(
+            r"@AutoService\s*\([^)]*\bInstrumentationModule\.class\b[^)]*\)",
+            without_comments(source),
+        ):
             yield path, source
 
 
