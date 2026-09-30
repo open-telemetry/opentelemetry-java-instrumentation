@@ -55,9 +55,7 @@ tasks {
       }
       include("**/MessageProducerSupportInstrumentationTest.*")
       jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
-      jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=true")
       systemProperty("springIntegrationRabbitHandoffTest", "true")
-      systemProperty("metadataConfig", "otel.instrumentation.spring-rabbit.enabled=true")
     }
 
   val testAmqpHandoffWithRabbitInstrumentationMessagingPreview =
@@ -69,13 +67,9 @@ tasks {
       }
       include("**/MessageProducerSupportInstrumentationTest.*")
       jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
-      jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=true")
       jvmArgs("-Dotel.semconv-stability.preview=messaging")
       systemProperty("springIntegrationRabbitHandoffTest", "true")
-      systemProperty(
-        "metadataConfig",
-        "otel.instrumentation.spring-rabbit.enabled=true,otel.semconv-stability.preview=messaging",
-      )
+      systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
     }
 
   val testAmqpHandoffWithRabbitInstrumentationBothSemconv =
@@ -87,13 +81,9 @@ tasks {
       }
       include("**/MessageProducerSupportInstrumentationTest.*")
       jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
-      jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=true")
       jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
       systemProperty("springIntegrationRabbitHandoffTest", "true")
-      systemProperty(
-        "metadataConfig",
-        "otel.instrumentation.spring-rabbit.enabled=true,otel.semconv-stability.preview=messaging/dup",
-      )
+      systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
     }
 
   val testWithRabbitInstrumentation = register<Test>("testWithRabbitInstrumentation") {
