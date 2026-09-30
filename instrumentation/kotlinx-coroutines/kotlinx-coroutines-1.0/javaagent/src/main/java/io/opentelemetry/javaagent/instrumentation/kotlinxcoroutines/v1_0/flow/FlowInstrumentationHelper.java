@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.kotlinx.coroutines.flow.v1_3;
+package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.flow;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
