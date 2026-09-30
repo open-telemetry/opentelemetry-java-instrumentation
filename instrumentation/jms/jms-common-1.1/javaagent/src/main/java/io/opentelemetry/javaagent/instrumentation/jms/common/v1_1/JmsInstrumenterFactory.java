@@ -107,12 +107,16 @@ public class JmsInstrumenterFactory {
                 instrumentationName,
                 MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME))
             .addAttributesExtractor(
-                createMessagingAttributesExtractor(operationType, PROCESS_OPERATION_NAME))
-            .addOperationMetrics(MessagingProcessMetrics.get());
+                createMessagingAttributesExtractor(operationType, PROCESS_OPERATION_NAME));
     boolean receiveOperationExists =
         canHaveReceiveInstrumentation && messagingReceiveInstrumentationEnabled;
     if (recordConsumedMessages && emitStableMessagingSemconv()) {
       builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
+    }
+    if (emitStableMessagingSemconv()) {
+      builder.addOperationMetrics(JmsProcessMetrics.create());
+    } else {
+      builder.addOperationMetrics(MessagingProcessMetrics.get());
     }
     setMessagingProcessExceptionEventExtractor(builder);
     return MessagingProcessInstrumenterFactory.create(

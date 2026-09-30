@@ -23,6 +23,13 @@
 - Deprecate `GrpcRequest.getLogicalHost()` and `getLogicalPort()` in favor of
   `getServerAddress()` and `getServerPort()`.
   ([#16161](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16161))
+- Deprecate `otel.instrumentation.experimental.span-suppression-strategy` in favor of
+  `otel.instrumentation.common.span-suppression-strategy` for Java agent users. Library
+  instrumentation users without declarative configuration should instead call
+  `Experimental.setSpanSuppressionStrategy(...)`. Also deprecate
+  `java.common.span_suppression_strategy/development` in favor of
+  `java.common.span_suppression_strategy`. The old settings remain fallbacks until 3.0 and warn
+  when applied.
 - Deprecate `otel.instrumentation.common.experimental.controller-telemetry.enabled` and
   `otel.instrumentation.common.experimental.view-telemetry.enabled` in favor of
   `otel.instrumentation.common.controller-telemetry.enabled` and

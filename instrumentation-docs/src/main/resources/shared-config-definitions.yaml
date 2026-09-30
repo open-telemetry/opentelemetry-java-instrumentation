@@ -285,11 +285,19 @@ global_configurations:
     type: string
 
   span-suppression-strategy:
-    name: otel.instrumentation.experimental.span-suppression-strategy
-    declarative_name: java.common.span_suppression_strategy/development
-    description: "Strategy for suppressing nested instrumentation spans: `semconv` suppresses a span nested in a span of the same semantic convention type, `span-kind` suppresses a span nested in a span of the same span kind, and `none` disables suppression. In the Java agent the flat `otel.instrumentation.experimental.span-suppression-strategy` property sets this. Library instrumentation also reads that property as a system property, which is deprecated there and ignored under v3 preview."
+    name: otel.instrumentation.common.span-suppression-strategy
+    declarative_name: java.common.span_suppression_strategy
+    description: "Strategy for suppressing nested instrumentation spans: `semconv` suppresses a span nested in a span of the same semantic convention type, `span-kind` suppresses a span nested in a span of the same span kind, and `none` disables suppression."
     type: string
     default: semconv
+
+  span-suppression-strategy.deprecated:
+    name: otel.instrumentation.experimental.span-suppression-strategy
+    declarative_name: java.common.span_suppression_strategy/development
+    description: "Deprecated: use `otel.instrumentation.common.span-suppression-strategy` or `java.common.span_suppression_strategy` instead. This setting will be removed in 3.0."
+    type: string
+    deprecated: true
+    replaced_by: otel.instrumentation.common.span-suppression-strategy
 
   db.semconv.version:
     declarative_name: general.db.semconv.version
