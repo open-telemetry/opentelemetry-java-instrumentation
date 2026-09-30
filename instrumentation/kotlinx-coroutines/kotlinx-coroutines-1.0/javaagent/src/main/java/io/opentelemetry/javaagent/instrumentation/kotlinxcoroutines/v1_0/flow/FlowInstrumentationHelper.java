@@ -9,7 +9,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategy;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.instrumentation.kotlinx.coroutines.flow.v1_3.FlowUtilKt;
 import kotlinx.coroutines.flow.Flow;
 
 public class FlowInstrumentationHelper {
