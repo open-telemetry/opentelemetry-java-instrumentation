@@ -22,7 +22,10 @@ import oshi.software.os.OperatingSystem;
 /**
  * Java Runtime Metrics Utility.
  *
- * @deprecated There is no drop-in replacement. Will be removed in 3.0.
+ * @deprecated Use the standard JVM metrics {@code jvm.memory.used} and {@code jvm.cpu.time}
+ *     instead. These are not exact replacements: {@code jvm.memory.used} measures JVM memory pools
+ *     rather than process RSS or virtual memory, and {@code jvm.cpu.time} does not separate user
+ *     and system CPU time. Will be removed in 3.0.
  */
 @Deprecated // to be removed in 3.0
 public final class ProcessMetrics {
@@ -50,7 +53,10 @@ public final class ProcessMetrics {
   /**
    * Register observers for java runtime metrics.
    *
-   * @deprecated There is no drop-in replacement. Will be removed in 3.0.
+   * @deprecated Use the standard JVM metrics {@code jvm.memory.used} and {@code jvm.cpu.time}
+   *     instead. These are not exact replacements: {@code jvm.memory.used} measures JVM memory
+   *     pools rather than process RSS or virtual memory, and {@code jvm.cpu.time} does not separate
+   *     user and system CPU time. Will be removed in 3.0.
    */
   @Deprecated // to be removed in 3.0
   public static List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry) {
@@ -60,7 +66,10 @@ public final class ProcessMetrics {
   /**
    * Register observers for java runtime metrics using a pre-built {@link Meter}.
    *
-   * @deprecated There is no drop-in replacement. Will be removed in 3.0.
+   * @deprecated Use the standard JVM metrics {@code jvm.memory.used} and {@code jvm.cpu.time}
+   *     instead. These are not exact replacements: {@code jvm.memory.used} measures JVM memory
+   *     pools rather than process RSS or virtual memory, and {@code jvm.cpu.time} does not separate
+   *     user and system CPU time. Will be removed in 3.0.
    */
   @Deprecated // to be removed in 3.0
   public static List<AutoCloseable> registerObservers(Meter meter) {

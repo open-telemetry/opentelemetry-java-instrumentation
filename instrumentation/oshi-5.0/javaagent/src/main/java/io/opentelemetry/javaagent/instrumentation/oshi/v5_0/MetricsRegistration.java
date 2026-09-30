@@ -48,7 +48,10 @@ public class MetricsRegistration {
         logger.warning(
             "The otel.instrumentation.oshi.experimental-metrics.enabled setting and equivalent"
                 + " declarative path java.oshi.experimental_metrics/development.enabled are"
-                + " deprecated and will be removed in 3.0. There is no built-in replacement.");
+                + " deprecated and will be removed in 3.0. Use the standard JVM metrics"
+                + " jvm.memory.used and jvm.cpu.time instead. These are not exact replacements:"
+                + " jvm.memory.used measures JVM memory pools rather than process RSS or virtual"
+                + " memory, and jvm.cpu.time does not separate user and system CPU time.");
         // ProcessMetrics don't follow the spec
         observables.addAll(ProcessMetrics.registerObservers(buildMeter(null)));
       }

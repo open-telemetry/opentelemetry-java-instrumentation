@@ -50,21 +50,3 @@ observables.forEach(observable -> {
     }
 });
 ```
-
-`ProcessMetrics` and both of its `registerObservers` overloads are deprecated and will be removed in
-3.0 with no drop-in replacement. Explicit library calls continue to register
-`runtime.java.memory` and `runtime.java.cpu_time`, including when
-`otel.instrumentation.common.v3-preview=true`; preview only changes automatic Java agent
-registration.
-
-Java agent users can enable preview with `otel.instrumentation.common.v3-preview=true`. In preview,
-`otel.instrumentation.oshi.experimental-metrics.enabled` and its equivalent declarative YAML path
-`java.oshi.experimental_metrics/development.enabled` are ignored. All OSHI system metrics remain
-enabled.
-
-A separately configured OpenTelemetry Collector
-[hostmetrics process scraper](https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/receiver/hostmetricsreceiver/internal/scraper/processscraper/documentation.md)
-can provide `process.memory.usage`, `process.memory.virtual`, and `process.cpu.time`. This is not an
-automatic or drop-in replacement: CPU time is a cumulative counter in seconds instead of a
-millisecond gauge, and metric names, breakdown attributes, resource and process selection, and
-backend queries must be migrated.
