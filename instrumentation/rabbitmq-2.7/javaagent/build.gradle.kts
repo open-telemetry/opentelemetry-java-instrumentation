@@ -42,6 +42,11 @@ tasks {
     systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
 
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+
+    // add byte buddy agent for mockito
+    configurations.testRuntimeClasspath.get().find { it.name.contains("byte-buddy-agent") }?.apply {
+      jvmArgs("-javaagent:${absolutePath}")
+    }
   }
 
   val testExperimental = register<Test>("testExperimental") {
