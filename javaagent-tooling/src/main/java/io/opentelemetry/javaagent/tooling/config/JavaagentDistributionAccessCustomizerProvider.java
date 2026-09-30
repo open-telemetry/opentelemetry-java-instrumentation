@@ -167,7 +167,7 @@ public final class JavaagentDistributionAccessCustomizerProvider
         continue;
       }
 
-      String replacement = selector.replace('.', '_');
+      String replacement = selector.replace('-', '_').replace('.', '_');
       if (v3Preview) {
         continue;
       }
