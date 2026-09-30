@@ -24,6 +24,9 @@
   `disabled` selectors. Replace both hyphens and periods in instrumentation module names with
   underscores, for example `reactor_3_1` instead of `reactor_3.1`. Dotted selectors will be removed
   in 3.0.
+- Deprecate `otel.jmx.target.system` in favor of selecting unstable bundled metrics by name with
+  `otel.jmx.metrics.experimental.included`.
+  ([#19783](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19783))
 - Deprecate `otel.instrumentation.experimental.span-suppression-strategy` in favor of
   `otel.instrumentation.common.span-suppression-strategy` for Java agent users. Library
   instrumentation users without declarative configuration should instead call
