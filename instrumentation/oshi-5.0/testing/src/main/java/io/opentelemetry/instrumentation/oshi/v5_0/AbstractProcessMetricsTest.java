@@ -12,7 +12,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 @SuppressWarnings("deprecation") // uses the deprecated scopeName() bridge
 public abstract class AbstractProcessMetricsTest {
@@ -29,7 +28,6 @@ public abstract class AbstractProcessMetricsTest {
   protected abstract String scopeName();
 
   @Test
-  @EnabledIfSystemProperty(named = "testExperimental", matches = "true")
   void test() {
     // when
     registerMetrics();
@@ -82,7 +80,6 @@ public abstract class AbstractProcessMetricsTest {
   }
 
   @Test
-  @EnabledIfSystemProperty(named = "testExperimental", matches = "true")
   void processMetricsHaveNoSchema() {
     testing()
         .waitAndAssertMetrics(
