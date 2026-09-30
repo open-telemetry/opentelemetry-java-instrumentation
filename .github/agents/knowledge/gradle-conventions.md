@@ -57,9 +57,10 @@ share the build.
 
 Narrow exceptions include incompatible toolchains or plugins and version-specific generated or
 shaded compile classpaths. The `opentelemetry-api-*` family is one example: each layer compiles
-against a distinct shaded API configuration. Kotlin Flow has a different boundary. Its
-`javaagent-kotlin` helper must remain separate because Muzzle generation does not correctly handle
-that Kotlin source, but its `InstrumentationModule` can still share the baseline javaagent owner.
+against a distinct shaded API configuration. Kotlin helpers such as Kotlin Flow can share a
+javaagent project with Java `InstrumentationModule` classes when `byteBuddyKotlin` is disabled.
+Muzzle generation runs through `byteBuddyJava`, whose classpath includes the Kotlin compiler output,
+and recursively inspects the referenced Kotlin helpers.
 
 Muzzle verifies generated symbol references, not whether every Byte Buddy method matcher matches.
 A pass lower bound may therefore start when the referenced types exist even when a more precise

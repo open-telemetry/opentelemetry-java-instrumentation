@@ -57,7 +57,6 @@ dependencies {
 
   implementation("org.ow2.asm:asm-tree")
   implementation("org.ow2.asm:asm-util")
-  implementation(project(":instrumentation:kotlinx-coroutines:kotlinx-coroutines-1.0:javaagent-kotlin"))
   implementation(project(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent"))
 
   testInstrumentation(project(":instrumentation:opentelemetry-extension-kotlin-1.0:javaagent"))
