@@ -17,20 +17,60 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import jakarta.jms.Destination;
 import jakarta.jms.JMSException;
 import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageListener;
 import jakarta.jms.MessageProducer;
 import jakarta.jms.TextMessage;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.activemq.artemis.jms.client.ActiveMQDestination;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class Jms3SuppressReceiveSpansTest extends AbstractJms3Test {
+
+  @Test
+  void receivedMessageKeepsLegacyProcessParent() throws JMSException {
+    assumeFalse(emitStableMessagingSemconv());
+    Destination destination = session.createQueue("legacyProcessParentQueue");
+    MessageProducer producer = session.createProducer(destination);
+    cleanup.deferCleanup(producer);
+    MessageConsumer consumer = session.createConsumer(destination);
+    cleanup.deferCleanup(consumer);
+
+    producer.send(session.createTextMessage("a message"));
+    TextMessage receivedMessage = (TextMessage) consumer.receive();
+    MessageListener listener = message -> {};
+    listener.onMessage(receivedMessage);
+
+    testing.waitForTraces(1);
+    assertThat(testing.spans()).hasSize(3);
+    SpanData producerSpan =
+        testing.spans().stream()
+            .filter(span -> span.getName().equals("legacyProcessParentQueue publish"))
+            .findFirst()
+            .orElseThrow(IllegalStateException::new);
+    SpanData receiveSpan =
+        testing.spans().stream()
+            .filter(span -> span.getName().equals("legacyProcessParentQueue receive"))
+            .findFirst()
+            .orElseThrow(IllegalStateException::new);
+    assertThat(receiveSpan.getParentSpanId()).isEqualTo(producerSpan.getSpanId());
+    assertThat(testing.spans())
+        .filteredOn(span -> span.getName().equals("legacyProcessParentQueue process"))
+        .singleElement()
+        .satisfies(
+            span -> {
+              assertThat(span.getParentSpanId()).isEqualTo(producerSpan.getSpanId());
+              assertThat(span.getParentSpanId()).isNotEqualTo(receiveSpan.getSpanId());
+            });
+  }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest

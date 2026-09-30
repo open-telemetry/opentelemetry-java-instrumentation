@@ -22,7 +22,7 @@ plugins {
   // ./gradlew :smoke-tests:images:servlet:pushLinuxImages -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:pushWindowsImages -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "10.0.0" apply false
-  id("com.gradle.develocity") version "4.5.1"
+  id("com.gradle.develocity") version "4.6.0"
 }
 
 dependencyResolutionManagement {
@@ -195,7 +195,6 @@ include(":smoke-tests-otel-starter:spring-boot-reactive-common")
 
 include(":instrumentation:activej-http-6.0:javaagent")
 include(":instrumentation:akka:akka-actor-2.3:javaagent")
-include(":instrumentation:akka:akka-actor-forkjoin-2.5:javaagent")
 include(":instrumentation:akka:akka-http-10.0:javaagent")
 include(":instrumentation:alibaba-druid-1.0:javaagent")
 include(":instrumentation:alibaba-druid-1.0:library")
@@ -270,7 +269,6 @@ include(":instrumentation:clickhouse:clickhouse-client-common-0.5:javaagent")
 include(":instrumentation:clickhouse:clickhouse-client-v1-0.5:javaagent")
 include(":instrumentation:clickhouse:clickhouse-client-v2-0.8:javaagent")
 include(":instrumentation:couchbase:couchbase-2.0:javaagent")
-include(":instrumentation:couchbase:couchbase-2.6:javaagent")
 include(":instrumentation:couchbase:couchbase-common-2.0:javaagent")
 include(":instrumentation:couchbase:couchbase-common-2.0:javaagent-unit-tests")
 include(":instrumentation:couchbase:couchbase-common-3.0:javaagent")
@@ -459,6 +457,7 @@ include(":instrumentation:jsf:jsf-myfaces-3.0:javaagent")
 include(":instrumentation:jsp-2.3:javaagent")
 include(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap")
 include(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent")
+include(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent-unit-tests")
 include(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:testing")
 include(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library")
 include(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library")
@@ -606,7 +605,6 @@ include(":instrumentation:r2dbc-1.0:javaagent")
 include(":instrumentation:r2dbc-1.0:library")
 include(":instrumentation:r2dbc-1.0:library-instrumentation-shaded")
 include(":instrumentation:r2dbc-1.0:testing")
-include(":instrumentation:rabbitmq-2.7:bootstrap")
 include(":instrumentation:rabbitmq-2.7:javaagent")
 include(":instrumentation:ratpack:ratpack-1.4:javaagent")
 include(":instrumentation:ratpack:ratpack-1.4:testing")
@@ -615,7 +613,6 @@ include(":instrumentation:ratpack:ratpack-1.7:library")
 include(":instrumentation:reactor:reactor-3.1:javaagent")
 include(":instrumentation:reactor:reactor-3.1:library")
 include(":instrumentation:reactor:reactor-3.1:testing")
-include(":instrumentation:reactor:reactor-3.4:javaagent")
 include(":instrumentation:reactor:reactor-kafka-1.0:javaagent")
 include(":instrumentation:reactor:reactor-kafka-1.0:testing")
 include(":instrumentation:reactor:reactor-netty:reactor-netty-0.9:javaagent")

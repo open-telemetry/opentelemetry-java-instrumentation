@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0.SpringRabbitMetricsAssertions.assertProcessMetrics;
 import static io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0.SpringRabbitMetricsAssertions.assertRabbitProcessDuration;
@@ -35,9 +36,12 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.DefaultConsumer;
+import com.rabbitmq.client.Envelope;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
@@ -50,6 +54,7 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetAddress;
@@ -236,6 +241,86 @@ class SpringRabbitMqTest {
     sendAndAssertContextPropagation(ConsumerConfig.DIRECT_QUEUE, false);
   }
 
+  @Test
+  void testNestedRabbitConsumerRemainsInstrumented() throws Exception {
+    String outerQueue = "nestedOuterQueue";
+    String nestedQueue = "nestedRabbitQueue";
+    AmqpAdmin admin = applicationContext.getBean(AmqpAdmin.class);
+    admin.declareQueue(new Queue(outerQueue));
+    admin.declareQueue(new Queue(nestedQueue));
+
+    Connection connection = connectionFactory.newConnection();
+    cleanup.deferCleanup(connection);
+    Channel channel = connection.createChannel();
+    cleanup.deferCleanup(channel);
+
+    CountDownLatch nestedMessageConsumed = new CountDownLatch(1);
+    SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
+    container.setConnectionFactory(
+        applicationContext.getBean(
+            org.springframework.amqp.rabbit.connection.ConnectionFactory.class));
+    container.setQueueNames(outerQueue);
+    container.setMessageListener(
+        (MessageListener)
+            message -> {
+              try {
+                channel.basicConsume(
+                    nestedQueue,
+                    true,
+                    new DefaultConsumer(channel) {
+                      @Override
+                      public void handleDelivery(
+                          String consumerTag,
+                          Envelope envelope,
+                          AMQP.BasicProperties properties,
+                          byte[] body) {
+                        nestedMessageConsumed.countDown();
+                      }
+                    });
+                channel.basicPublish("", nestedQueue, null, "nested".getBytes(UTF_8));
+              } catch (IOException e) {
+                throw new IllegalStateException(e);
+              }
+            });
+    cleanup.deferCleanup(container::stop);
+    container.start();
+    testing.waitForTraces(4);
+    testing.clearData();
+
+    testing.runWithSpan(
+        "parent",
+        () -> applicationContext.getBean(AmqpTemplate.class).convertAndSend(outerQueue, "test"));
+
+    assertThat(nestedMessageConsumed.await(10, SECONDS)).isTrue();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactlyInAnyOrder(
+                span -> span.hasName("parent"),
+                span -> span.hasKind(SpanKind.PRODUCER),
+                span ->
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "process " + outerQueue
+                                : outerQueue + " process")
+                        .satisfies(
+                            spanData ->
+                                assertThat(spanData.getInstrumentationScopeInfo().getName())
+                                    .isEqualTo("io.opentelemetry.spring-rabbit-1.0")),
+                span -> span.hasName("basic.consume"),
+                span -> span.hasKind(SpanKind.PRODUCER),
+                span ->
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "process " + nestedQueue
+                                : nestedQueue + " process")
+                        .satisfies(
+                            spanData ->
+                                assertThat(spanData.getInstrumentationScopeInfo().getName())
+                                    .isEqualTo("io.opentelemetry.rabbitmq-2.7"))),
+        trace -> trace.hasSpansSatisfyingExactly(SpringRabbitMqTest::verifyAckSpan));
+    assertRabbitProcessDuration(testing, nestedQueue);
+  }
+
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
   void testBatchListenerProcessTelemetryOwnership(boolean consumerBatchEnabled) throws Exception {
@@ -291,12 +376,10 @@ class SpringRabbitMqTest {
                       .hasKind(SpanKind.CONSUMER)
                       .hasParent(producerSpan)
                       .satisfies(
-                          spanData ->
-                              assertThat(spanData.getInstrumentationScopeInfo().getName())
-                                  .isEqualTo(
-                                      consumerBatchEnabled
-                                          ? "io.opentelemetry.rabbitmq-2.7"
-                                          : "io.opentelemetry.spring-rabbit-1.0")));
+                          hasScopeName(
+                              consumerBatchEnabled
+                                  ? "io.opentelemetry.rabbitmq-2.7"
+                                  : "io.opentelemetry.spring-rabbit-1.0")));
         },
         trace -> trace.hasSpansSatisfyingExactly(SpringRabbitMqTest::verifyAckSpan));
     if (consumerBatchEnabled) {
@@ -358,10 +441,7 @@ class SpringRabbitMqTest {
                 span.hasName(emitStableMessagingSemconv() ? "process " + queue : queue + " process")
                     .hasKind(SpanKind.CONSUMER)
                     .hasParent(producerSpan)
-                    .satisfies(
-                        spanData ->
-                            assertThat(spanData.getInstrumentationScopeInfo().getName())
-                                .isEqualTo("io.opentelemetry.spring-rabbit-1.0"))
+                    .satisfies(hasScopeName("io.opentelemetry.spring-rabbit-1.0"))
                     .hasAttributesSatisfyingExactly(
                         getAssertions(
                             queue,
@@ -373,7 +453,13 @@ class SpringRabbitMqTest {
                             false,
                             null,
                             2L));
-                verifyLink(span, emitStableMessagingSemconv() ? producerSpan : null);
+                if (emitStableMessagingSemconv()) {
+                  span.hasLinks(
+                      LinkData.create(producerSpan.getSpanContext()),
+                      LinkData.create(producerSpan.getSpanContext()));
+                } else {
+                  span.hasTotalRecordedLinks(0);
+                }
               });
         },
         trace -> trace.hasSpansSatisfyingExactly(SpringRabbitMqTest::verifyAckSpan));

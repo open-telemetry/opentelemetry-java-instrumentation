@@ -6,6 +6,7 @@ on:
       cache-read-only:
         type: boolean
         required: false
+        default: true
       no-build-cache:
         type: boolean
         required: false
@@ -28,6 +29,7 @@ permissions:
 jobs:
   spotless:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -56,6 +58,7 @@ jobs:
 
   license-check:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -99,6 +102,7 @@ jobs:
 
   fossa-configuration-check:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -136,16 +140,18 @@ jobs:
             exit 1
           fi
 
-  # this is needed because we don't auto-update dependencies in instrumentation/**
-  # and so we want to enforce that all "real" dependencies are dependency managed
-  extra-dependency-management-enforcement:
-    runs-on: ubuntu-latest
+  # shell-only checks; every check runs even if an earlier one fails so all failures are visible
+  repo-checks:
+    runs-on: ubuntu-slim
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - id: checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - name: Dependency check
+      # this is needed because we don't auto-update dependencies in instrumentation/**
+      # and so we want to enforce that all "real" dependencies are dependency managed
+      - name: Extra dependency management enforcement
         run: |
           set +e
           grep '^  implementation(".*:.*:[0-9].*")\|^  api(".*:.*:[0-9].*")' \
@@ -163,33 +169,24 @@ jobs:
             exit 1
           fi
 
-  check-javaagent-suppression-keys:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
+      - name: Check javaagent suppression keys
+        if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
+        run: .github/scripts/check-javaagent-suppression-keys.sh
 
-      - run: .github/scripts/check-javaagent-suppression-keys.sh
+      - name: Test javaagent suppression key checker
+        if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
+        run: .github/scripts/test-javaagent-suppression-keys.sh
 
-  check-latest-dep-test-overrides:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
+      - name: Check latest dep test overrides
+        if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
+        run: .github/scripts/check-latest-dep-test-overrides.sh
 
-      - run: .github/scripts/check-latest-dep-test-overrides.sh
+      - name: Check package names
+        if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
+        run: .github/scripts/check-package-names.sh
 
-  check-package-names:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - run: .github/scripts/check-package-names.sh
-
+  # kept on ubuntu-latest: `gh aw validate` checks container images with `docker pull` and silently
+  # skips that when no Docker daemon is available, as on ubuntu-slim
   check-gh-aw-lockfiles:
     runs-on: ubuntu-latest
     steps:
@@ -210,6 +207,7 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -277,6 +275,7 @@ jobs:
   test:
     name: test${{ matrix.test-partition }} (${{ matrix.test-java-version }}, ${{ matrix.vm }}, indy ${{ matrix.test-indy }})
     runs-on: ubuntu-latest
+    timeout-minutes: 135
     strategy:
       matrix:
         test-java-version:
@@ -404,6 +403,7 @@ jobs:
 
   smoke-test:
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 135
     strategy:
       matrix:
         os:
@@ -504,6 +504,7 @@ jobs:
 
   gradle-plugins:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -529,6 +530,7 @@ jobs:
 
   examples:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

@@ -26,18 +26,23 @@ dependencies {
 }
 
 plugins.withId("org.graalvm.buildtools.native") {
+  dependencies {
+    // javac 25 warns when JUnit's API Guardian annotation type is missing from this classpath.
+    add("aotTestCompileOnly", "org.apiguardian:apiguardian-api:1.1.2")
+  }
+
   tasks.named<JavaCompile>("compileAotJava").configure {
     with(options) {
-      compilerArgs.add("-Xlint:-deprecation,-unchecked,none")
-      // To disable warnings/failure coming from the Java compiler during the Spring AOT processing
-      // -deprecation,-unchecked and none are required (none is not enough)
+      // Spring-generated AOT sources emit warnings that fail compilation with -Werror.
+      // Explicit exclusions are needed alongside none; none alone does not suppress them.
+      compilerArgs.add("-Xlint:-deprecation,-unchecked,-rawtypes,none")
     }
   }
   tasks.named<JavaCompile>("compileAotTestJava").configure {
     with(options) {
-      compilerArgs.add("-Xlint:-deprecation,-unchecked,none")
-      // To disable warnings/failure coming from the Java compiler during the Spring AOT processing
-      // -deprecation,-unchecked and none are required (none is not enough)
+      // Spring-generated AOT sources emit warnings that fail compilation with -Werror.
+      // Explicit exclusions are needed alongside none; none alone does not suppress them.
+      compilerArgs.add("-Xlint:-deprecation,-unchecked,-rawtypes,none")
     }
   }
   tasks.named("checkstyleAot").configure {

@@ -267,9 +267,6 @@ targets:
       target: ':instrumentation:r2dbc-1.0:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:rabbitmq-2.7:bootstrap'
-    - type: gradle
-      path: ./
       target: ':instrumentation:rabbitmq-2.7:javaagent'
     - type: gradle
       path: ./
@@ -343,9 +340,6 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:akka:akka-actor-2.3:javaagent'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:akka:akka-actor-forkjoin-2.5:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:akka:akka-http-10.0:javaagent'
@@ -454,9 +448,6 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:couchbase:couchbase-2.0:javaagent'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:couchbase:couchbase-2.6:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:couchbase:couchbase-3.0:javaagent'
@@ -925,9 +916,6 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:reactor:reactor-3.1:library'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:reactor:reactor-3.4:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:reactor:reactor-kafka-1.0:javaagent'

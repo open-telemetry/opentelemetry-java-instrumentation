@@ -11,6 +11,7 @@ import static io.opentelemetry.javaagent.tooling.field.GeneratedVirtualFieldName
 
 import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldAccessorMarker;
 import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappings;
+import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappings.Mapping;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.ByteBuddy;
@@ -31,8 +32,10 @@ final class FieldAccessorInterfacesGenerator {
       VirtualFieldMappings virtualFieldMappings) {
     Map<String, DynamicType.Unloaded<?>> fieldAccessorInterfaces =
         new HashMap<>(virtualFieldMappings.size());
-    for (Map.Entry<String, String> entry : virtualFieldMappings.entrySet()) {
-      DynamicType.Unloaded<?> type = makeFieldAccessorInterface(entry.getKey(), entry.getValue());
+    for (Mapping mapping : virtualFieldMappings.getMappings()) {
+      DynamicType.Unloaded<?> type =
+          makeFieldAccessorInterface(
+              mapping.getTypeName(), mapping.getFieldTypeName(), mapping.getFieldName());
       fieldAccessorInterfaces.put(type.getTypeDescription().getName(), type);
     }
     return new FieldAccessorInterfaces(fieldAccessorInterfaces);
@@ -44,26 +47,27 @@ final class FieldAccessorInterfacesGenerator {
    *
    * @param typeName key class name
    * @param fieldTypeName context class name
+   * @param fieldName field name
    * @return unloaded dynamic type containing generated interface
    */
   private DynamicType.Unloaded<?> makeFieldAccessorInterface(
-      String typeName, String fieldTypeName) {
+      String typeName, String fieldTypeName, String fieldName) {
     // We are using Object class name instead of fieldTypeName here because this gets injected
     // onto the bootstrap class loader where context class may be unavailable
     TypeDescription fieldTypeDesc = TypeDescription.ForLoadedType.of(Object.class);
     return byteBuddy
         .makeInterface()
         .merge(SyntheticState.SYNTHETIC)
-        .name(getFieldAccessorInterfaceName(typeName, fieldTypeName))
+        .name(getFieldAccessorInterfaceName(typeName, fieldTypeName, fieldName))
         .implement(VirtualFieldAccessorMarker.class)
         .defineMethod(
-            getRealGetterName(typeName, fieldTypeName),
+            getRealGetterName(typeName, fieldTypeName, fieldName),
             fieldTypeDesc,
             Visibility.PUBLIC,
             SyntheticState.SYNTHETIC)
         .withoutCode()
         .defineMethod(
-            getRealSetterName(typeName, fieldTypeName),
+            getRealSetterName(typeName, fieldTypeName, fieldName),
             TypeDescription.ForLoadedType.of(void.class),
             Visibility.PUBLIC,
             SyntheticState.SYNTHETIC)

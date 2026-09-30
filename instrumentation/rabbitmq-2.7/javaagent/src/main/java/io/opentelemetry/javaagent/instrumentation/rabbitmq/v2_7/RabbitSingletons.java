@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static java.util.Collections.emptyMap;
 
 import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.GetResponse;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.ContextKey;
@@ -43,6 +44,10 @@ import java.util.List;
 import java.util.Map;
 
 public class RabbitSingletons {
+
+  // Shared with framework instrumentations through the application Consumer type.
+  public static final VirtualField<Consumer, Boolean> PROCESSING_OWNED_OUTSIDE_RABBIT_CLIENT =
+      VirtualField.find(Consumer.class, Boolean.class);
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.rabbitmq-2.7";
 
