@@ -7,7 +7,11 @@ semantic_conventions:
 configurations:
   - name: otel.instrumentation.oshi.experimental-metrics.enabled
     declarative_name: java.oshi.experimental_metrics/development.enabled
-    description: Enable the experimental `runtime.java.memory` and `runtime.java.cpu_time` metrics.
+    description: >
+      Deprecated. Enables the experimental `runtime.java.memory` and `runtime.java.cpu_time` metrics
+      outside v3 preview. Ignored under v3 preview. Will be removed in 3.0 with no built-in
+      replacement.
     type: boolean
     default: false
+    deprecated: true
 library_link: https://github.com/oshi/oshi/

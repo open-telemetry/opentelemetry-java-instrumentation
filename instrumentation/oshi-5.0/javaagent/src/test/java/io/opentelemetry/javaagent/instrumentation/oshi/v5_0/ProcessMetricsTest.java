@@ -10,8 +10,12 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3P
 import io.opentelemetry.instrumentation.oshi.v5_0.AbstractProcessMetricsTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@EnabledIfSystemProperty(named = "testExperimental", matches = "true")
+@DisabledIfSystemProperty(named = "otel.instrumentation.common.v3-preview", matches = "true")
 class ProcessMetricsTest extends AbstractProcessMetricsTest {
 
   @RegisterExtension

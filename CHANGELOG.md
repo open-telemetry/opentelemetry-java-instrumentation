@@ -20,6 +20,12 @@
 
 ### 🚫 Deprecations
 
+- Deprecate the OSHI `ProcessMetrics` library API and
+  `otel.instrumentation.oshi.experimental-metrics.enabled` configuration, with no built-in
+  replacement. Under v3 preview, the Java agent ignores the setting and does not register the
+  `runtime.java.memory` or `runtime.java.cpu_time` process metrics; explicit library registration
+  remains available.
+  ([#20277](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20277))
 - Deprecate `otel.instrumentation.experimental.span-suppression-strategy` in favor of
   `otel.instrumentation.common.span-suppression-strategy` for Java agent users. Library
   instrumentation users without declarative configuration should instead call

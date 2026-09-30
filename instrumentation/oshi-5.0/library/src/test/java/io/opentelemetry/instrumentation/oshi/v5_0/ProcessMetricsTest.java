@@ -27,6 +27,7 @@ class ProcessMetricsTest extends AbstractProcessMetricsTest {
   private static List<AutoCloseable> observables;
 
   @BeforeAll
+  @SuppressWarnings("deprecation") // testing the deprecated registration API
   static void setUp() {
     observables = ProcessMetrics.registerObservers(GlobalOpenTelemetry.get());
     observables.forEach(cleanup::deferAfterAll);

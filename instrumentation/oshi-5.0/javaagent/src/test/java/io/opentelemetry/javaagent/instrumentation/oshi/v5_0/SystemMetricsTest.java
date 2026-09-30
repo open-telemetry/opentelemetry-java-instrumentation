@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.oshi.v5_0.AbstractSystemMetricsTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
+import org.junit.jupiter.api.condition.EnabledIf;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class SystemMetricsTest extends AbstractSystemMetricsTest {
@@ -35,7 +35,7 @@ class SystemMetricsTest extends AbstractSystemMetricsTest {
   }
 
   @Test
-  @DisabledIfSystemProperty(named = "testExperimental", matches = "true")
+  @EnabledIf("processMetricsDisabled")
   @SuppressWarnings("deprecation") // using the legacy scopeName() bridge
   void noProcessMetricsWhenDisabled() {
     testing.waitAndAssertMetrics(
@@ -44,5 +44,9 @@ class SystemMetricsTest extends AbstractSystemMetricsTest {
     assertThat(testing.metrics())
         .noneMatch(metric -> metric.getName().equals("runtime.java.memory"))
         .noneMatch(metric -> metric.getName().equals("runtime.java.cpu_time"));
+  }
+
+  static boolean processMetricsDisabled() {
+    return v3Preview() || !Boolean.getBoolean("testExperimental");
   }
 }

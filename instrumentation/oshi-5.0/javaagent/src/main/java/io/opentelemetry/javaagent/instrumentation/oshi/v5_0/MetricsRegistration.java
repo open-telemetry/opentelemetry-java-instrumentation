@@ -19,9 +19,12 @@ import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 public class MetricsRegistration {
+
+  private static final Logger logger = Logger.getLogger(MetricsRegistration.class.getName());
 
   private static final String VERSION_LOOKUP_NAME = "io.opentelemetry.oshi-5.0";
   private static final String INSTRUMENTATION_NAME =
@@ -29,7 +32,7 @@ public class MetricsRegistration {
 
   private static final AtomicBoolean registered = new AtomicBoolean();
 
-  @SuppressWarnings("deprecation") // ProcessMetrics keeps its caller-owned meter
+  @SuppressWarnings("deprecation") // registering deprecated process metrics
   public static void register() {
     if (registered.compareAndSet(false, true)) {
       boolean preview = AgentCommonConfig.get().isV3Preview();
@@ -38,10 +41,15 @@ public class MetricsRegistration {
           SystemMetricsInternal.registerObservers(
               buildMeter(preview ? V1_44_0 : V1_19_0), preview));
 
-      // ProcessMetrics don't follow the spec
-      if (DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "oshi")
-          .get("experimental_metrics/development")
-          .getBoolean("enabled", false)) {
+      if (!preview
+          && DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "oshi")
+              .get("experimental_metrics/development")
+              .getBoolean("enabled", false)) {
+        logger.warning(
+            "The otel.instrumentation.oshi.experimental-metrics.enabled setting and equivalent"
+                + " declarative path java.oshi.experimental_metrics/development.enabled are"
+                + " deprecated and will be removed in 3.0. There is no built-in replacement.");
+        // ProcessMetrics don't follow the spec
         observables.addAll(ProcessMetrics.registerObservers(buildMeter(null)));
       }
       Thread cleanupTelemetry = new Thread(() -> MetricsRegistration.closeObservables(observables));
