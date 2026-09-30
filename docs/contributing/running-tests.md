@@ -88,9 +88,8 @@ To execute all the instrumentation tests runnable as GraalVM native executables:
 ./gradlew nativeTest
 ```
 
-Native image generation is slow, so pull request CI builds the test binaries with GraalVM's quick
-build mode (`-Ob`) by passing `-PnativeTestQuickBuild=true`. The daily workflow and local runs keep
-the default fully optimized build.
+Native test binaries use GraalVM's quick build mode (`-Ob`) to reduce native image generation time
+in CI and local runs. Main application binaries keep the default optimization level.
 
 [A Github workflow](../../.github/workflows/native-tests-daily.yml) executes the native tests every day.
 

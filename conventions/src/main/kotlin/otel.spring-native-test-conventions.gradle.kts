@@ -12,8 +12,6 @@ import org.graalvm.buildtools.gradle.dsl.GraalVMReachabilityMetadataRepositoryEx
 
 // Keep this in sync with the org.graalvm.buildtools.native plugin version in settings.gradle.kts.
 val graalvmReachabilityMetadataVersion = "1.1.14"
-val nativeTestQuickBuild =
-  providers.gradleProperty("nativeTestQuickBuild").map(String::toBoolean).orElse(false)
 
 if (gradle.startParameter.taskNames.any { it.contains("nativeTest") }) {
   apply(plugin = "org.graalvm.buildtools.native")
@@ -31,7 +29,7 @@ dependencies {
 plugins.withId("org.graalvm.buildtools.native") {
   extensions.configure<GraalVMExtension>("graalvmNative") {
     binaries.named("test") {
-      quickBuild.set(nativeTestQuickBuild)
+      quickBuild.set(true)
     }
   }
 

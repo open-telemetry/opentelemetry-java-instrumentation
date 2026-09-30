@@ -42,7 +42,6 @@ jobs:
     if: "!inputs.skip-native-tests"
     uses: $/.github/workflows/reusable-native-tests.yml
     with:
-      quick-build: true
       cache-read-only: true
 
   muzzle:

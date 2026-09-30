@@ -63,9 +63,7 @@ dependencies {
 
 graalvmNative {
   binaries.named("test") {
-    quickBuild.set(
-      providers.gradleProperty("nativeTestQuickBuild").map(String::toBoolean).orElse(false)
-    )
+    quickBuild.set(true)
   }
 
   binaries.all {
