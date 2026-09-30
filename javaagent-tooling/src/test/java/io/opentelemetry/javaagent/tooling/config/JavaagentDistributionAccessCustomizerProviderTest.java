@@ -48,10 +48,9 @@ class JavaagentDistributionAccessCustomizerProviderTest {
     AgentDistributionConfig.resetForTest();
   }
 
-  @ParameterizedTest(name = "{0}")
+  @ParameterizedTest
   @MethodSource("selectorResolutionArguments")
   void resolvesSelectors(
-      @SuppressWarnings("unused") String description,
       List<String> enabled,
       List<String> disabled,
       boolean v3Preview,
@@ -66,7 +65,7 @@ class JavaagentDistributionAccessCustomizerProviderTest {
 
   private static Stream<Arguments> selectorResolutionArguments() {
     return Stream.of(
-        Arguments.of(
+        Arguments.argumentSet(
             "canonical enabled",
             singletonList("reactor_3_1"),
             emptyList(),
@@ -74,7 +73,7 @@ class JavaagentDistributionAccessCustomizerProviderTest {
             singletonList("reactor-3.1"),
             false,
             true),
-        Arguments.of(
+        Arguments.argumentSet(
             "canonical disabled",
             emptyList(),
             singletonList("reactor_3_1"),
@@ -82,7 +81,7 @@ class JavaagentDistributionAccessCustomizerProviderTest {
             singletonList("reactor-3.1"),
             true,
             false),
-        Arguments.of(
+        Arguments.argumentSet(
             "dotted enabled fallback",
             singletonList("reactor_3.1"),
             emptyList(),
@@ -90,7 +89,7 @@ class JavaagentDistributionAccessCustomizerProviderTest {
             singletonList("reactor-3.1"),
             false,
             true),
-        Arguments.of(
+        Arguments.argumentSet(
             "v3 preview ignores dotted enabled selector",
             singletonList("reactor_3.1"),
             emptyList(),
@@ -98,7 +97,7 @@ class JavaagentDistributionAccessCustomizerProviderTest {
             singletonList("reactor-3.1"),
             false,
             false),
-        Arguments.of(
+        Arguments.argumentSet(
             "v3 preview ignores dotted disabled selector",
             emptyList(),
             singletonList("reactor_3.1"),
@@ -106,7 +105,7 @@ class JavaagentDistributionAccessCustomizerProviderTest {
             singletonList("reactor-3.1"),
             true,
             true),
-        Arguments.of(
+        Arguments.argumentSet(
             "canonical enabled takes precedence over dotted disabled",
             singletonList("reactor_3_1"),
             singletonList("reactor_3.1"),
@@ -114,7 +113,7 @@ class JavaagentDistributionAccessCustomizerProviderTest {
             singletonList("reactor-3.1"),
             false,
             true),
-        Arguments.of(
+        Arguments.argumentSet(
             "canonical disabled takes precedence over dotted enabled",
             singletonList("reactor_3.1"),
             singletonList("reactor_3_1"),
@@ -122,7 +121,7 @@ class JavaagentDistributionAccessCustomizerProviderTest {
             singletonList("reactor-3.1"),
             true,
             false),
-        Arguments.of(
+        Arguments.argumentSet(
             "disabled takes precedence for canonical spelling",
             singletonList("reactor_3_1"),
             singletonList("reactor_3_1"),
@@ -130,7 +129,7 @@ class JavaagentDistributionAccessCustomizerProviderTest {
             singletonList("reactor-3.1"),
             true,
             false),
-        Arguments.of(
+        Arguments.argumentSet(
             "disabled takes precedence for dotted spelling",
             singletonList("reactor_3.1"),
             singletonList("reactor_3.1"),
@@ -138,7 +137,7 @@ class JavaagentDistributionAccessCustomizerProviderTest {
             singletonList("reactor-3.1"),
             true,
             false),
-        Arguments.of(
+        Arguments.argumentSet(
             "first module alias wins when disabled",
             singletonList("reactor_3_1"),
             singletonList("reactor"),
@@ -146,7 +145,7 @@ class JavaagentDistributionAccessCustomizerProviderTest {
             asList("reactor", "reactor-3.1"),
             true,
             false),
-        Arguments.of(
+        Arguments.argumentSet(
             "first module alias wins when enabled",
             singletonList("reactor_3_1"),
             singletonList("reactor"),
@@ -154,7 +153,7 @@ class JavaagentDistributionAccessCustomizerProviderTest {
             asList("reactor-3.1", "reactor"),
             false,
             true),
-        Arguments.of(
+        Arguments.argumentSet(
             "configured hyphens are not normalized",
             singletonList("reactor-3_1"),
             emptyList(),
@@ -162,7 +161,7 @@ class JavaagentDistributionAccessCustomizerProviderTest {
             singletonList("reactor-3.1"),
             false,
             false),
-        Arguments.of(
+        Arguments.argumentSet(
             "default applies without matching selector",
             singletonList("other"),
             emptyList(),
