@@ -4,19 +4,6 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
-- Javaagent enablement selectors now follow the naming convention under
-  `otel.instrumentation.common.v3-preview=true`: every module registers its library family, the
-  family with its base version and, when modules share a baseline, one unique
-  exact `<family>-<base-version>-<component>` selector per module. JDK instrumentation omits the
-  version level. Umbrella aliases such as
-  `otel.instrumentation.vertx.enabled`, version-less component aliases such as
-  `otel.instrumentation.ktor-client.enabled` and aliases that put the component before the version
-  such as `otel.instrumentation.opentelemetry-api-incubator-1.50.enabled` no longer select an
-  instrumentation under v3-preview; use `otel.instrumentation.vertx-http-client-3.0.enabled`,
-  `otel.instrumentation.ktor-2.0-client.enabled` and
-  `otel.instrumentation.opentelemetry-api-1.50-incubator.enabled` instead. Outside v3-preview all
-  existing selectors keep working exactly as before.
-  ([#20303](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20303))
 - The experimental `java.common.messaging.headers/development` YAML selector no longer configures
   header capture. Use `java.common.messaging.headers` instead.
   ([#20260](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20260))

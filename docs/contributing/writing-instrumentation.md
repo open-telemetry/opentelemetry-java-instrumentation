@@ -401,49 +401,6 @@ compileOnly(project(":instrumentation:yarpc-1.0:compile-stub"))
 
 Now you can use your stub classes inside the javaagent instrumentation.
 
-### Javaagent enablement selectors
-
-Under `otel.instrumentation.common.v3-preview=true`, `InstrumentationModule` constructor names use
-an ordered hierarchy:
-
-- The instrumented library family, such as `ktor`, shared across its versions.
-- The family with the owning instrumentation baseline, such as `ktor-2.0`.
-- Only when several modules share that baseline, one unique exact component selector per module,
-  such as `ktor-2.0-client` and `ktor-2.0-server`.
-
-Names use kebab-case. The family identifies the instrumented library, not an umbrella directory.
-JDK instrumentations omit the library-version level, for example `jdbc`, `jdbc-core`, and
-`jdbc-datasource`. In consolidated projects, component-specific versions follow the component,
-for example `couchbase-2.0-network-2.6`; they do not replace the owning baseline.
-
-Do not register intermediate subgroup selectors, including selectors spanning versions or projects.
-A shared prefix does not create a selector. The first explicitly configured constructor name wins,
-so the family takes precedence over the baseline and exact component selector.
-
-These names apply to both flat properties and declarative enabled/disabled lists. For example,
-`otel.instrumentation.ktor-2.0-client.enabled=false` disables the same module as:
-
-```yaml
-distribution:
-  javaagent:
-    instrumentation:
-      disabled: [ktor-2.0-client]
-```
-
-Enablement selectors are escape hatches for disabling faulty instrumentation, not recommended
-telemetry-tuning controls.
-
-When adopting this hierarchy, preserve non-preview names and their relative order. Use explicit
-`AgentCommonConfig.get().isV3Preview()` constructor branches when preview needs different names.
-Keep existing deprecated-name expansion and warnings in the non-preview branch. Changing enablement
-selectors does not require changing emitted `otel.scope.name` or its instrumentation-version lookup.
-
-The repository-wide CI checker validates the effective preview names, including inherited
-constructors, and requires unique exact selectors for shared baselines. Run it with
-`python3 .github/scripts/check_javaagent_selector_names.py`. Its unit tests belong in
-`.github/scripts/test_javaagent_selector_names.py`; do not add per-module selector matrices or Java
-name-list assertions.
-
 ### Coordinating different `InstrumentationModule`s
 
 When you need to share some classes between different `InstrumentationModule`s and communicate
