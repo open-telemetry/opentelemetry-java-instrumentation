@@ -18,8 +18,9 @@ import org.springframework.messaging.Message;
  */
 public final class SpringIntegrationHandoff {
 
-  private static final String AMQP_INBOUND_CHANNEL_ADAPTER =
-      "org.springframework.integration.amqp.inbound.AmqpInboundChannelAdapter";
+  @Nullable
+  private static final Class<?> AMQP_INBOUND_CHANNEL_ADAPTER_CLASS =
+      getAmqpInboundChannelAdapterClass();
 
   private static final ScopedThreadValue<Context> currentLowerProcessing =
       new ScopedThreadValue<>();
@@ -66,13 +67,20 @@ public final class SpringIntegrationHandoff {
   }
 
   private static boolean isAmqpInboundChannelAdapter(Class<?> type) {
-    do {
-      if (type.getName().equals(AMQP_INBOUND_CHANNEL_ADAPTER)) {
-        return true;
-      }
-      type = type.getSuperclass();
-    } while (type != null);
-    return false;
+    return AMQP_INBOUND_CHANNEL_ADAPTER_CLASS != null
+        && AMQP_INBOUND_CHANNEL_ADAPTER_CLASS.isAssignableFrom(type);
+  }
+
+  @Nullable
+  private static Class<?> getAmqpInboundChannelAdapterClass() {
+    try {
+      return Class.forName(
+          "org.springframework.integration.amqp.inbound.AmqpInboundChannelAdapter",
+          false,
+          SpringIntegrationHandoff.class.getClassLoader());
+    } catch (ClassNotFoundException ignored) {
+      return null;
+    }
   }
 
   private SpringIntegrationHandoff() {}
