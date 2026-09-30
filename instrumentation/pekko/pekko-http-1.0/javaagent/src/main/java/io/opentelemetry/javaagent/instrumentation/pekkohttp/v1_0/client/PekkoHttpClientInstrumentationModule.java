@@ -19,7 +19,7 @@ public class PekkoHttpClientInstrumentationModule extends InstrumentationModule 
     super(
         "pekko-http",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"pekko-http-1.0", "pekko-http-1.0-client"}
+            ? new String[] {"pekko-http-1.0", "pekko-http-client", "pekko-http-1.0-client"}
             : new String[] {"pekko-http-1.0", "pekko-http-client"});
   }
 

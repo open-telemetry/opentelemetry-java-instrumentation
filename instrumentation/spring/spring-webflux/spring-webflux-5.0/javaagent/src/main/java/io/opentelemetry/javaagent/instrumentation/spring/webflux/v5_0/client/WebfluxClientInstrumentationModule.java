@@ -20,7 +20,9 @@ public class WebfluxClientInstrumentationModule extends InstrumentationModule {
     super(
         "spring-webflux",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"spring-webflux-5.0", "spring-webflux-5.0-client"}
+            ? new String[] {
+              "spring-webflux-5.0", "spring-webflux-client", "spring-webflux-5.0-client"
+            }
             : new String[] {"spring-webflux-5.0", "spring-webflux-client"});
   }
 

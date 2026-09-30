@@ -116,7 +116,7 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         self.module(
             "spring/spring-webflux-5.0",
             "WebfluxModule.java",
-            '"spring-webflux", "spring-webflux-5.0", "spring-webflux-server"',
+            '"spring-webflux", "spring-webflux-5.0", "spring-webflux-controller"',
         )
         self.assertIn("expected exact selector", check(self.root)[0])
 
@@ -127,6 +127,115 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
             '"akka-http", "akka-http-10.0", "akka-http-10.0-server", "akka-http-server"',
         )
         self.assertIn("at most one", check(self.root)[0])
+
+    def test_role_selectors_group_components_without_losing_exact_selectors(self):
+        self.module(
+            "http-5.0", "ClientModule.java",
+            '"http", "http-5.0", "http-client", "http-5.0-client"',
+        )
+        self.module(
+            "http-5.0", "ServerModule.java",
+            '"http", "http-5.0", "http-server", "http-5.0-server"',
+        )
+        self.module(
+            "http-5.0", "RouteModule.java",
+            '"http", "http-5.0", "http-server", "http-5.0-server", "http-5.0-server-route"',
+        )
+        self.module(
+            "http-5.0", "AdapterModule.java",
+            '"http", "http-5.0", "http-server", "http-5.0-server", "http-5.0-adapter"',
+        )
+        self.assertEqual(check(self.root), [])
+
+    def test_versionless_role_selectors_can_be_shared_across_baselines(self):
+        for version in ("5.0", "6.0"):
+            self.module(
+                f"http-{version}", "ClientModule.java",
+                f'"http", "http-{version}", "http-client", "http-{version}-client"',
+            )
+            self.module(
+                f"http-{version}", "ServerModule.java",
+                f'"http", "http-{version}", "http-server", "http-{version}-server"',
+            )
+        self.assertEqual(check(self.root), [])
+
+    def test_role_selectors_do_not_replace_unique_exact_components(self):
+        for filename in ("ServerModule.java", "RouteModule.java"):
+            self.module(
+                "http-5.0", filename,
+                '"http", "http-5.0", "http-server", "http-5.0-server"',
+            )
+        errors = check(self.root)
+        self.assertEqual(len(errors), 2)
+        self.assertTrue(all("is not unique" in error for error in errors))
+
+    def test_duplicate_exact_components_after_role_selectors_fail(self):
+        for filename in ("RouteModule.java", "OtherRouteModule.java"):
+            self.module(
+                "http-5.0", filename,
+                '"http", "http-5.0", "http-server", "http-5.0-server", "http-5.0-route"',
+            )
+        errors = check(self.root)
+        self.assertEqual(len(errors), 2)
+        self.assertTrue(all("is not unique" in error for error in errors))
+
+    def test_versionless_role_requires_matching_versioned_role(self):
+        for selectors in (
+            '"http-server"',
+            '"http-server", "http-6.0-server"',
+            '"http-server", "http-5.0-client"',
+            '"http-server", "http-5.0-route", "http-5.0-server"',
+        ):
+            with self.subTest(selectors=selectors):
+                self.module(
+                    "http-5.0", "ServerModule.java",
+                    f'"http", "http-5.0", {selectors}',
+                )
+                self.assertIn("expected role selectors", check(self.root)[0])
+
+    def test_role_selectors_follow_family_and_baseline(self):
+        self.module(
+            "http-5.0", "ServerModule.java",
+            '"http", "http-server", "http-5.0", "http-5.0-server"',
+        )
+        self.assertIn("expected first selectors", check(self.root)[0])
+
+    def test_role_selectors_do_not_allow_other_subgroups(self):
+        self.module(
+            "http-5.0", "RouteModule.java",
+            '"http", "http-5.0", "http-server", "http-5.0-server", '
+            '"http-5.0-routes", "http-5.0-route"',
+        )
+        self.assertIn("at most one", check(self.root)[0])
+
+    def test_module_cannot_register_both_role_groups(self):
+        for selectors in (
+            '"http-client", "http-5.0-client", "http-server", "http-5.0-server"',
+            '"http-client", "http-5.0-client", "http-5.0-server"',
+            '"http-server", "http-5.0-server", "http-5.0-client"',
+        ):
+            with self.subTest(selectors=selectors):
+                self.module(
+                    "http-5.0", "MixedModule.java",
+                    f'"http", "http-5.0", {selectors}',
+                )
+                self.assertIn("must not be combined", check(self.root)[0])
+
+    def test_standalone_module_rejects_role_selectors(self):
+        self.module(
+            "http-5.0", "ClientModule.java",
+            '"http", "http-5.0", "http-client", "http-5.0-client"',
+        )
+        self.assertIn("standalone modules must not register", check(self.root)[0])
+
+    def test_jdk_role_selectors_group_components(self):
+        self.module("rmi", "ClientModule.java", '"rmi", "rmi-client"')
+        self.module("rmi", "ServerModule.java", '"rmi", "rmi-server"')
+        self.module(
+            "rmi", "ServerHelperModule.java", '"rmi", "rmi-server", "rmi-server-helper"',
+        )
+        self.module("rmi", "ContextModule.java", '"rmi", "rmi-context-propagation"')
+        self.assertEqual(check(self.root), [])
 
     def test_preview_only_names_ignore_legacy_branch(self):
         self.module(

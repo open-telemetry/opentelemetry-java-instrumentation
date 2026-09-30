@@ -50,14 +50,22 @@ public abstract class InstrumentationModule implements Ordered {
    *   <li>The library family, e.g. {@code instrumented-library}, shared across its versions.
    *   <li>The family with its owning instrumentation baseline, e.g. {@code
    *       instrumented-library-1.0}. JDK instrumentations omit this version level.
+   *   <li>When client and server instrumentation are independently selectable, optional role
+   *       selectors: {@code instrumented-library-client} or {@code instrumented-library-server},
+   *       followed by the same role with the owning baseline, e.g. {@code
+   *       instrumented-library-1.0-server}. JDK instrumentations omit the versioned role selector.
+   *       Role-specific modules, including route enrichment, share its selectors. Support needed by
+   *       both roles is selected separately.
    *   <li>Only when several modules share a baseline, one unique exact component name per module,
    *       e.g. {@code instrumented-library-1.0-client}. Component-specific versions follow the
-   *       component, e.g. {@code instrumented-library-1.0-client-2.0}.
+   *       component, e.g. {@code instrumented-library-1.0-client-2.0}. A role selector can also be
+   *       the exact component name.
    * </ul>
    *
    * <p>Names use kebab-case and identify the instrumented library rather than an umbrella
-   * directory. A shared prefix does not create a selector; additional subgroup names are not
-   * registered. Outside preview, compatibility aliases retain their configuration precedence.
+   * directory. A shared prefix does not create a selector; subgroup names other than client/server
+   * roles are not registered. Outside preview, compatibility aliases retain their configuration
+   * precedence.
    *
    * <p>These names apply to flat {@code otel.instrumentation.<name>.enabled} properties and
    * declarative enabled/disabled lists. They are troubleshooting escape hatches, not telemetry

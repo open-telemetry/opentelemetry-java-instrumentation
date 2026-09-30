@@ -20,7 +20,7 @@ public class KtorServerInstrumentationModule extends InstrumentationModule {
     super(
         "ktor",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"ktor-3.0", "ktor-3.0-server"}
+            ? new String[] {"ktor-3.0", "ktor-server", "ktor-3.0-server"}
             : new String[] {"ktor-3.0", "ktor-server", "ktor-server-3.0"});
   }
 

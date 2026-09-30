@@ -19,7 +19,7 @@ public class AkkaHttpClientInstrumentationModule extends InstrumentationModule {
     super(
         "akka-http",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"akka-http-10.0", "akka-http-10.0-client"}
+            ? new String[] {"akka-http-10.0", "akka-http-client", "akka-http-10.0-client"}
             : new String[] {"akka-http-10.0", "akka-http-client"});
   }
 

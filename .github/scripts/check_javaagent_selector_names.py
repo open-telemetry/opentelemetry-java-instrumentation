@@ -5,6 +5,8 @@ This checks selector structure, not whether a component describes the right libr
 Unversioned modules are limited to the JDK instrumentations listed below. A Java
 expression the checker cannot evaluate is an error, not an implicit exemption.
 Modules sharing a family and baseline must each register a unique exact selector.
+Client/server role selectors may precede the exact selector, unversioned first,
+then versioned. The final role selector may also identify the exact component.
 """
 
 import argparse
@@ -190,6 +192,33 @@ def selectors(path, source):
     ]
 
 
+def exact_component_selector(family, base, extras):
+    for role in ("client", "server"):
+        role_names = [f"{family}-{role}"] + ([f"{base}-{role}"] if base else [])
+        if extras and extras[0] == role_names[0]:
+            if extras[: len(role_names)] != role_names:
+                raise ValueError(f"expected role selectors {role_names}, found {extras}")
+            extras = extras[len(role_names) :]
+            opposite_role = "server" if role == "client" else "client"
+            if (
+                f"{family}-{opposite_role}" in extras
+                or f"{base or family}-{opposite_role}" in extras
+            ):
+                raise ValueError("client and server role selectors must not be combined")
+            if not extras:
+                return role_names[-1]
+            break
+    if len(extras) > 1:
+        raise ValueError(f"expected at most one exact component selector, found {extras}")
+    if not extras:
+        return None
+    prefix = (base or family) + "-"
+    component = extras[0].removeprefix(prefix)
+    if not extras[0].startswith(prefix) or not KEBAB.fullmatch(component):
+        raise ValueError(f"expected exact selector {prefix}<component>, found {extras[0]!r}")
+    return extras[0]
+
+
 def check(root, modules=None):
     errors = []
     if modules is None:
@@ -208,42 +237,30 @@ def check(root, modules=None):
             # InstrumentationModule stores the names in a LinkedHashSet.
             names = list(dict.fromkeys(selectors(path, source)))
             required = [family] + ([base] if base else [])
-            groups.setdefault((family, base), []).append((path, source, names, required))
             if names[: len(required)] != required:
                 raise ValueError(f"expected first selectors {required}, found {names}")
             if any(not KEBAB.fullmatch(name) for name in names):
                 raise ValueError(f"selectors must use kebab-case: {names}")
-            extras = names[len(required) :]
-            if len(extras) > 1:
-                raise ValueError(f"expected at most one exact component selector, found {extras}")
-            if extras:
-                prefix = (base or family) + "-"
-                component = extras[0].removeprefix(prefix)
-                if not extras[0].startswith(prefix) or not KEBAB.fullmatch(component):
-                    raise ValueError(
-                        f"expected exact selector {prefix}<component>, found {extras[0]!r}"
-                    )
+            exact = exact_component_selector(family, base, names[len(required) :])
+            groups.setdefault((family, base), []).append((path, source, exact))
         except ValueError as error:
             report(path, source, error)
 
-    for group in groups.values():
+    for (family, base), group in groups.items():
         if len(group) < 2:
-            path, source, names, required = group[0]
-            if names[: len(required)] == required and len(names) > len(required):
+            path, source, exact = group[0]
+            if exact is not None:
                 report(path, source, "standalone modules must not register a component selector")
             continue
         exact_selectors = {}
-        for path, source, names, required in group:
-            if names[: len(required)] != required:
-                continue
-            extras = names[len(required) :]
-            if not extras:
+        for path, source, exact in group:
+            if exact is None:
                 report(
                     path, source,
-                    f"modules sharing {required[-1]!r} need a unique exact component selector",
+                    f"modules sharing {(base or family)!r} need a unique exact component selector",
                 )
-            elif len(extras) == 1:
-                exact_selectors.setdefault(extras[0], []).append((path, source))
+            else:
+                exact_selectors.setdefault(exact, []).append((path, source))
         for selector, owners in exact_selectors.items():
             if len(owners) > 1:
                 for path, source in owners:
