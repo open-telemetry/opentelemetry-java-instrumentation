@@ -113,7 +113,7 @@ tasks {
       includeTestsMatching("*RatpackHttpClientTest.durationMetricHasProtocolVersion")
     }
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true,otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true,otel.instrumentation.common.controller-telemetry.enabled=true")
   }
 
   check {
