@@ -36,8 +36,6 @@ import net.bytebuddy.pool.TypePool;
 import net.bytebuddy.utility.JavaModule;
 
 /**
- *
- *
  * <ul>
  *   There two core parts to the cache...
  *   <li>a cache of ClassLoader to WeakReference&lt;ClassLoader&gt;

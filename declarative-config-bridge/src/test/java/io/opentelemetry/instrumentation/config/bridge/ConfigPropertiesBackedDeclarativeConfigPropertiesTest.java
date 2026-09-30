@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
 
@@ -38,17 +39,33 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
         .isFalse();
   }
 
-  @Test
-  void testTranslateName_withDevelopmentSuffix_noExperimental() {
+  @ParameterizedTest
+  @ValueSource(strings = {"controller", "view"})
+  void testTranslateName_stableTelemetry(String telemetry) {
     DeclarativeConfigProperties config =
-        createConfig(
-            "otel.instrumentation.common.experimental.controller-telemetry.enabled", "true");
+        createConfig("otel.instrumentation.common." + telemetry + "-telemetry.enabled", "true");
 
     assertThat(
             config
                 .getStructured("java")
                 .getStructured("common")
-                .getStructured("controller_telemetry/development")
+                .getStructured(telemetry + "_telemetry")
+                .getBoolean("enabled"))
+        .isTrue();
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"controller", "view"})
+  void testTranslateName_withDevelopmentSuffix_noExperimental(String telemetry) {
+    DeclarativeConfigProperties config =
+        createConfig(
+            "otel.instrumentation.common.experimental." + telemetry + "-telemetry.enabled", "true");
+
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("common")
+                .getStructured(telemetry + "_telemetry/development")
                 .getBoolean("enabled"))
         .isNotNull()
         .isTrue();
@@ -258,6 +275,44 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
                 .getStructured("query_sanitization")
                 .getBoolean("enabled"))
         .isFalse();
+  }
+
+  @Test
+  void testStableSpanSuppressionStrategyMapping() {
+    DeclarativeConfigProperties common =
+        createConfig("otel.instrumentation.common.span-suppression-strategy", "none")
+            .getStructured("java")
+            .getStructured("common");
+
+    assertThat(common.getString("span_suppression_strategy")).isEqualTo("none");
+    assertThat(common.getString("span_suppression_strategy/development")).isNull();
+  }
+
+  @Test
+  void testDeprecatedSpanSuppressionStrategyMapping() {
+    DeclarativeConfigProperties common =
+        createConfig("otel.instrumentation.experimental.span-suppression-strategy", "span-kind")
+            .getStructured("java")
+            .getStructured("common");
+
+    assertThat(common.getString("span_suppression_strategy")).isNull();
+    assertThat(common.getString("span_suppression_strategy/development")).isEqualTo("span-kind");
+  }
+
+  @Test
+  void testSpanSuppressionStrategyMappingsDoNotConflict() {
+    Map<String, String> properties = new HashMap<>();
+    properties.put("otel.instrumentation.common.span-suppression-strategy", "none");
+    properties.put("otel.instrumentation.experimental.span-suppression-strategy", "span-kind");
+
+    DeclarativeConfigProperties common =
+        ConfigPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig(
+                DefaultConfigProperties.createFromMap(properties))
+            .getStructured("java")
+            .getStructured("common");
+
+    assertThat(common.getString("span_suppression_strategy")).isEqualTo("none");
+    assertThat(common.getString("span_suppression_strategy/development")).isEqualTo("span-kind");
   }
 
   @Test

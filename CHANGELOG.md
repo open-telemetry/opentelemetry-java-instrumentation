@@ -20,6 +20,21 @@
 
 ### 🚫 Deprecations
 
+- Deprecate `otel.instrumentation.experimental.span-suppression-strategy` in favor of
+  `otel.instrumentation.common.span-suppression-strategy` for Java agent users. Library
+  instrumentation users without declarative configuration should instead call
+  `Experimental.setSpanSuppressionStrategy(...)`. Also deprecate
+  `java.common.span_suppression_strategy/development` in favor of
+  `java.common.span_suppression_strategy`. The old settings remain fallbacks until 3.0 and warn
+  when applied.
+- Deprecate `otel.instrumentation.common.experimental.controller-telemetry.enabled` and
+  `otel.instrumentation.common.experimental.view-telemetry.enabled` in favor of
+  `otel.instrumentation.common.controller-telemetry.enabled` and
+  `otel.instrumentation.common.view-telemetry.enabled`, respectively. The deprecated names remain
+  fallbacks until 3.0 and warn when applied.
+- Deprecate `SystemMetrics.registerObservers(Meter)` in the OSHI library instrumentation in favor of
+  `SystemMetrics.registerObservers(OpenTelemetry)`.
+  ([#20263](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20263))
 - Deprecate `otel.instrumentation.messaging.experimental.receive-telemetry.enabled` in favor of
   `otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled`. For headers,
   replace `otel.instrumentation.messaging.experimental.headers.included` and `.excluded` with the

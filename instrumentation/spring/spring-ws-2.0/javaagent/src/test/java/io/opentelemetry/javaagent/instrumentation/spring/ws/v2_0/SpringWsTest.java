@@ -50,7 +50,7 @@ class SpringWsTest extends AbstractHttpServerUsingTest<ConfigurableApplicationCo
   private static final Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
 
   private static final boolean CONTROLLER_TELEMETRY =
-      Boolean.getBoolean("otel.instrumentation.common.experimental.controller-telemetry.enabled");
+      Boolean.getBoolean("otel.instrumentation.common.controller-telemetry.enabled");
 
   @BeforeAll
   void setup() {
