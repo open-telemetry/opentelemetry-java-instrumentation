@@ -185,8 +185,7 @@ class JavaagentDistributionAccessCustomizerProviderTest {
     logger.addHandler(handler);
     try {
       applyConfig(
-          asList(
-              "reactor_3.1", "reactor_3.1", "other_1.2", "netty-4.1", "reactor_3_1"),
+          asList("reactor_3.1", "reactor_3.1", "other_1.2", "netty-4.1", "reactor_3_1"),
           asList("reactor_3.1", "reactor_3.1"),
           false);
 
