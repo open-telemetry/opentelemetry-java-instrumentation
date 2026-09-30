@@ -17,8 +17,7 @@ import java.util.List;
 public class JdbcInstrumentationModule extends InstrumentationModule {
   public JdbcInstrumentationModule() {
     super(
-        "jdbc",
-        AgentCommonConfig.get().isV3Preview() ? new String[] {"jdbc-core"} : new String[0]);
+        "jdbc", AgentCommonConfig.get().isV3Preview() ? new String[] {"jdbc-core"} : new String[0]);
   }
 
   @Override
