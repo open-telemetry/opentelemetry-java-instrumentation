@@ -20,6 +20,10 @@
 
 ### 🚫 Deprecations
 
+- Deprecate periods in the declarative `distribution.javaagent.instrumentation.enabled` and
+  `disabled` selectors. Replace both hyphens and periods in instrumentation module names with
+  underscores, for example `reactor_3_1` instead of `reactor_3.1`. Dotted selectors remain
+  supported outside v3-preview with a warning until 3.0; v3-preview silently ignores them.
 - Deprecate `otel.instrumentation.experimental.span-suppression-strategy` in favor of
   `otel.instrumentation.common.span-suppression-strategy` for Java agent users. Library
   instrumentation users without declarative configuration should instead call

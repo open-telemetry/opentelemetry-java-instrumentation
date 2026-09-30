@@ -121,8 +121,9 @@ public class AgentDistributionConfig {
    * Returns whether any of the given instrumentations is enabled, falling back to {@code
    * defaultEnabled} if none of the names are explicitly configured.
    *
-   * <p>Names are checked in order; the first name found in either the disabled or enabled list
-   * wins. For any given name, disabled takes priority over enabled.
+   * <p>Hyphens and periods in names are converted to underscores. Names are checked in order; the
+   * first name found in either the disabled or enabled list wins. For any given name, disabled
+   * takes priority over enabled.
    *
    * @param names the instrumentation names to check
    * @param defaultEnabled the default to use if no name is explicitly configured
@@ -130,7 +131,7 @@ public class AgentDistributionConfig {
    */
   public boolean isInstrumentationEnabled(Iterable<String> names, boolean defaultEnabled) {
     for (String name : names) {
-      String normalizedName = name.replace('-', '_');
+    String normalizedName = name.replace('-', '_').replace('.', '_');
       if (instrumentation.getDisabled().contains(normalizedName)) {
         return false;
       }
