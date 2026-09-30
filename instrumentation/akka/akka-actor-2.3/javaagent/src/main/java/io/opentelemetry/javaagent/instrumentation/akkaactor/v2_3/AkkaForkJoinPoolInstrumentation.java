@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.akkaactor.v2_3;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import akka.dispatch.Envelope;
+import akka.dispatch.forkjoin.ForkJoinTask;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
@@ -20,43 +20,53 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-class AkkaDispatcherInstrumentation implements TypeInstrumentation {
+class AkkaForkJoinPoolInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("akka.dispatch.Dispatcher");
+    return named("akka.dispatch.forkjoin.ForkJoinPool");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("dispatch")
-            .and(takesArgument(0, named("akka.actor.ActorCell")))
-            .and(takesArgument(1, named("akka.dispatch.Envelope"))),
-        getClass().getName() + "$DispatchEnvelopeAdvice");
+        named("execute")
+            .and(takesArgument(0, named(AkkaForkJoinTaskInstrumentation.TASK_CLASS_NAME))),
+        getClass().getName() + "$SetAkkaForkJoinStateAdvice");
+    transformer.applyAdviceToMethod(
+        named("submit")
+            .and(takesArgument(0, named(AkkaForkJoinTaskInstrumentation.TASK_CLASS_NAME))),
+        getClass().getName() + "$SetAkkaForkJoinStateAdvice");
+    transformer.applyAdviceToMethod(
+        named("invoke")
+            .and(takesArgument(0, named(AkkaForkJoinTaskInstrumentation.TASK_CLASS_NAME))),
+        getClass().getName() + "$SetAkkaForkJoinStateAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class DispatchEnvelopeAdvice {
+  public static class SetAkkaForkJoinStateAdvice {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static PropagatedContext enterDispatch(@Advice.Argument(1) Envelope envelope) {
+    public static PropagatedContext enterJobSubmit(@Advice.Argument(0) ForkJoinTask<?> task) {
       Context context = Java8BytecodeBridge.currentContext();
-      if (ExecutorAdviceHelper.shouldPropagateContext(context, envelope.message())) {
+      if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
         return ExecutorAdviceHelper.attachContextToTask(
-            context, Akka23VirtualFields.ENVELOPE_PROPAGATED_CONTEXT, envelope);
+            context, Akka25VirtualFields.FORK_JOIN_TASK_PROPAGATED_CONTEXT, task);
       }
       return null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void exitDispatch(
-        @Advice.Argument(1) Envelope envelope,
+    public static void exitJobSubmit(
+        @Advice.Argument(0) ForkJoinTask<?> task,
         @Advice.Enter @Nullable PropagatedContext propagatedContext,
         @Advice.Thrown @Nullable Throwable throwable) {
       ExecutorAdviceHelper.cleanUpAfterSubmit(
-          propagatedContext, throwable, Akka23VirtualFields.ENVELOPE_PROPAGATED_CONTEXT, envelope);
+          propagatedContext,
+          throwable,
+          Akka25VirtualFields.FORK_JOIN_TASK_PROPAGATED_CONTEXT,
+          task);
     }
   }
 }
