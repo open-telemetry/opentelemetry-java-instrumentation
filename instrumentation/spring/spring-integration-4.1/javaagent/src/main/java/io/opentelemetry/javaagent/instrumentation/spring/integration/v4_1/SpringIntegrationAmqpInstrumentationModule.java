@@ -23,12 +23,11 @@ public class SpringIntegrationAmqpInstrumentationModule extends InstrumentationM
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("org.springframework.messaging.support.ExecutorChannelInterceptor")
-        .and(
-            hasClassesNamed(
-                "org.springframework.integration.amqp.inbound.AmqpInboundChannelAdapter"))
-        .and(hasClassesNamed("org.springframework.amqp.core.Message"))
-        .and(hasClassesNamed("com.rabbitmq.client.Channel"));
+    return hasClassesNamed(
+        "org.springframework.messaging.support.ExecutorChannelInterceptor",
+        "org.springframework.integration.amqp.inbound.AmqpInboundChannelAdapter",
+        "org.springframework.amqp.core.Message",
+        "com.rabbitmq.client.Channel");
   }
 
   @Override
