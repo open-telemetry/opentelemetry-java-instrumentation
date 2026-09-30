@@ -90,6 +90,14 @@ class JavaagentDistributionAccessCustomizerProviderTest {
             false,
             true),
         Arguments.of(
+            "dotted enabled fallback with hyphen",
+            singletonList("reactor-3.1"),
+            emptyList(),
+            false,
+            singletonList("reactor-3.1"),
+            false,
+            true),
+        Arguments.of(
             "v3 preview ignores dotted enabled selector",
             singletonList("reactor_3.1"),
             emptyList(),
@@ -177,11 +185,12 @@ class JavaagentDistributionAccessCustomizerProviderTest {
     logger.addHandler(handler);
     try {
       applyConfig(
-          asList("reactor_3.1", "reactor_3.1", "other_1.2", "reactor_3_1"),
+          asList(
+              "reactor_3.1", "reactor_3.1", "other_1.2", "netty-4.1", "reactor_3_1"),
           asList("reactor_3.1", "reactor_3.1"),
           false);
 
-      assertThat(handler.records).hasSize(3).allMatch(record -> record.getLevel() == WARNING);
+      assertThat(handler.records).hasSize(4).allMatch(record -> record.getLevel() == WARNING);
       assertThat(handler.records)
           .filteredOn(
               record ->
@@ -193,7 +202,10 @@ class JavaagentDistributionAccessCustomizerProviderTest {
                   + " 'reactor_3_1' instead. The deprecated entry will be removed in 3.0.",
               "Declarative configuration entry 'other_1.2' in"
                   + " 'distribution.javaagent.instrumentation.enabled' is deprecated; use"
-                  + " 'other_1_2' instead. The deprecated entry will be removed in 3.0.");
+                  + " 'other_1_2' instead. The deprecated entry will be removed in 3.0.",
+              "Declarative configuration entry 'netty-4.1' in"
+                  + " 'distribution.javaagent.instrumentation.enabled' is deprecated; use"
+                  + " 'netty_4_1' instead. The deprecated entry will be removed in 3.0.");
       assertThat(handler.records)
           .filteredOn(
               record ->
@@ -207,7 +219,7 @@ class JavaagentDistributionAccessCustomizerProviderTest {
       AgentDistributionConfig config = AgentDistributionConfig.get();
       assertThat(config.isInstrumentationEnabled("reactor-3.1", false)).isTrue();
       assertThat(config.isInstrumentationEnabled("reactor-3.1", false)).isTrue();
-      assertThat(handler.records).hasSize(3);
+      assertThat(handler.records).hasSize(4);
     } finally {
       logger.removeHandler(handler);
     }
