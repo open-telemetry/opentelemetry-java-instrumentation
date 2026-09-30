@@ -26,7 +26,9 @@ description = "camel-2-20"
 dependencies {
   compileOnly("org.apache.camel:camel-core:$camelversion")
   compileOnly("org.apache.camel:camel-aws:$camelversion")
-  compileOnly("org.apache.camel:camel-rabbitmq:$camelRabbitmqVersion")
+  compileOnly("org.apache.camel:camel-rabbitmq:$camelRabbitmqVersion") {
+    exclude(group = "org.apache.camel", module = "camel-core")
+  }
   compileOnly("javax.jms:jms-api:1.1-rev-1")
   compileOnly("org.apache.kafka:kafka-clients:0.11.0.0")
   implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
@@ -66,7 +68,9 @@ dependencies {
   testImplementation("org.apache.camel:camel-cassandraql:$camelversion")
   testImplementation("org.apache.camel:camel-jms:$camelversion")
   testImplementation("org.apache.camel:camel-kafka:$camelversion")
-  testImplementation("org.apache.camel:camel-rabbitmq:$camelRabbitmqVersion")
+  testImplementation("org.apache.camel:camel-rabbitmq:$camelRabbitmqVersion") {
+    exclude(group = "org.apache.camel", module = "camel-core")
+  }
   testImplementation("org.apache.camel:camel-sjms:$camelversion")
   testImplementation("org.apache.activemq:activemq-broker:5.16.5")
 
