@@ -39,10 +39,8 @@ distribution:
         - reactor_3_1
 ```
 
-Outside v3-preview, the older dotted spelling (`reactor_3.1`) remains supported with a warning until
-3.0. It is silently ignored under v3-preview. If both spellings configure the same module, the
-canonical underscore spelling takes precedence. Flat properties are unchanged; continue to use, for
-example, `otel.instrumentation.reactor-3.1.enabled`.
+Flat-property selectors retain hyphens and periods, for example
+`otel.instrumentation.reactor-3.1.enabled`.
 
 ## Running application with security manager
 
