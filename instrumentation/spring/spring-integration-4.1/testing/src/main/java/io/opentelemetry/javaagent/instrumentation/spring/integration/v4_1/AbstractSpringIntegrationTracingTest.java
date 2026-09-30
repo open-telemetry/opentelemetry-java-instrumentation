@@ -27,10 +27,12 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -52,6 +54,9 @@ import org.springframework.messaging.SubscribableChannel;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.ExecutorSubscribableChannel;
 import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.messaging.support.MessageHeaderAccessor;
+import org.springframework.messaging.support.NativeMessageHeaderAccessor;
+import org.springframework.util.LinkedMultiValueMap;
 
 abstract class AbstractSpringIntegrationTracingTest {
 
@@ -636,6 +641,90 @@ abstract class AbstractSpringIntegrationTracingTest {
                 span -> span.hasName("handler").hasParent(trace.getSpan(0))));
 
     channel.unsubscribe(messageHandler);
+  }
+
+  @ParameterizedTest
+  @CsvSource({"false,false", "false,true", "true,false", "true,true"})
+  void shouldIsolateNativeHeadersForEachExecutorHandler(
+      boolean mutableHeaders, boolean mutableNativeHeaders) {
+    ExecutorSubscribableChannel channel = new ExecutorSubscribableChannel(Runnable::run);
+    channel.setBeanName("nativeHeadersChannel");
+    channel.addInterceptor(
+        applicationContext.getBean(GlobalChannelInterceptorWrapper.class).getChannelInterceptor());
+    AtomicReference<Message<?>> firstMessage = new AtomicReference<>();
+    AtomicReference<Message<?>> secondMessage = new AtomicReference<>();
+    channel.subscribe(
+        message -> {
+          firstMessage.set(message);
+          runWithSpan("firstHandler", () -> {});
+        });
+    channel.subscribe(
+        message -> {
+          secondMessage.set(message);
+          runWithSpan("secondHandler", () -> {});
+        });
+
+    Map<String, List<String>> nativeHeaders =
+        mutableNativeHeaders
+            ? new LinkedMultiValueMap<>(singletonMap("custom", singletonList("value")))
+            : singletonMap("custom", singletonList("value"));
+    MessageHeaderAccessor accessor = new MessageHeaderAccessor();
+    accessor.setHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS, nativeHeaders);
+    accessor.setLeaveMutable(mutableHeaders);
+    Message<String> message = MessageBuilder.createMessage("test", accessor.getMessageHeaders());
+
+    Context before = Context.current();
+    testing.runWithSpan("parent", () -> channel.send(message));
+    assertThat(Context.current()).isSameAs(before);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent"),
+                span -> {
+                  span.hasName(
+                          emitStableMessagingSemconv()
+                              ? "process nativeHeadersChannel"
+                              : "nativeHeadersChannel process")
+                      .hasParent(trace.getSpan(0))
+                      .hasKind(SpanKind.CONSUMER)
+                      .hasAttributesSatisfyingExactly(
+                          messagingAttributes("process", "nativeHeadersChannel"));
+                  verifyCorrectSpanWasPropagated(firstMessage.get(), trace.getSpan(1));
+                },
+                span -> span.hasName("firstHandler").hasParent(trace.getSpan(1)),
+                span -> {
+                  span.hasName(
+                          emitStableMessagingSemconv()
+                              ? "process nativeHeadersChannel"
+                              : "nativeHeadersChannel process")
+                      .hasParent(trace.getSpan(0))
+                      .hasKind(SpanKind.CONSUMER)
+                      .hasAttributesSatisfyingExactly(
+                          messagingAttributes("process", "nativeHeadersChannel"));
+                  verifyCorrectSpanWasPropagated(secondMessage.get(), trace.getSpan(3));
+                },
+                span -> span.hasName("secondHandler").hasParent(trace.getSpan(3))));
+
+    assertThat(message.getHeaders()).doesNotContainKey("traceparent");
+    assertThat(nativeHeaders)
+        .containsExactlyEntriesOf(singletonMap("custom", singletonList("value")));
+    Map<?, ?> firstNativeHeaders =
+        firstMessage.get().getHeaders().get(NativeMessageHeaderAccessor.NATIVE_HEADERS, Map.class);
+    Map<?, ?> secondNativeHeaders =
+        secondMessage.get().getHeaders().get(NativeMessageHeaderAccessor.NATIVE_HEADERS, Map.class);
+    assertThat(firstNativeHeaders).isNotSameAs(nativeHeaders).isNotSameAs(secondNativeHeaders);
+    assertThat(secondNativeHeaders).isNotSameAs(nativeHeaders);
+    assertThat(firstNativeHeaders.get("traceparent"))
+        .isEqualTo(singletonList(firstMessage.get().getHeaders().get("traceparent")));
+    assertThat(secondNativeHeaders.get("traceparent"))
+        .isEqualTo(singletonList(secondMessage.get().getHeaders().get("traceparent")));
+
+    if (emitStableMessagingSemconv()) {
+      assertProcessMetrics(testing, "nativeHeadersChannel", false, 2);
+    } else {
+      assertNoMetrics(testing);
+    }
   }
 
   static void verifyCorrectSpanWasPropagated(Message<?> capturedMessage, SpanData parentSpan) {
