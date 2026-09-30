@@ -14,21 +14,17 @@ import java.util.List;
 
 @AutoService(InstrumentationModule.class)
 public class ApacheCamelInstrumentationModule extends InstrumentationModule {
-
   public ApacheCamelInstrumentationModule() {
     super("camel", "camel-2.20");
   }
 
   @Override
-  public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(
-        new CamelContextInstrumentation(),
-        new KafkaFetchRecordsInstrumentation(),
-        new SendProcessorInstrumentation());
+  public boolean isHelperClass(String className) {
+    return className.startsWith("io.opentelemetry.contrib.awsxray.");
   }
 
   @Override
-  public boolean isHelperClass(String className) {
-    return className.startsWith("io.opentelemetry.contrib.awsxray.");
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return asList(new CamelContextInstrumentation(), new SendProcessorInstrumentation());
   }
 }

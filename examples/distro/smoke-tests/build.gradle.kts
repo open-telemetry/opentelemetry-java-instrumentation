@@ -7,7 +7,7 @@ dependencies {
   testImplementation("com.fasterxml.jackson.core:jackson-databind:2.22.3")
   testImplementation("com.google.protobuf:protobuf-java-util:4.36.2")
   testImplementation("com.squareup.okhttp3:okhttp:5.5.0")
-  testImplementation("io.opentelemetry.proto:opentelemetry-proto:1.11.0-alpha")
+  testImplementation("io.opentelemetry.proto:opentelemetry-proto:1.11.1-alpha")
   testImplementation("io.opentelemetry:opentelemetry-api")
   testImplementation("org.assertj:assertj-core:3.27.7")
 
