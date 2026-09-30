@@ -15,7 +15,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.Iterator;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
@@ -212,33 +211,43 @@ public class Resilience4jCircuitBreakerSpans {
     }
   }
 
-  static void attachPendingSpan(PendingSpan pendingSpan) {
+  static AttachedPendingSpan attachPendingSpan(PendingSpan pendingSpan) {
     Deque<AttachedPendingSpan> spans = attachedPendingSpans.get();
     if (spans == null) {
       spans = new ArrayDeque<>();
       attachedPendingSpans.set(spans);
     }
-    spans.push(new AttachedPendingSpan(pendingSpan, pendingSpan.makeCurrent()));
+    AttachedPendingSpan attachment =
+        new AttachedPendingSpan(pendingSpan, pendingSpan.makeCurrent());
+    spans.push(attachment);
+    return attachment;
   }
 
-  static void detachPendingSpan(PendingSpan pendingSpan) {
-    removeAttachedPendingSpan(pendingSpan);
+  static void detachPendingSpan(AttachedPendingSpan attachment) {
+    // Only close the scope if this attachment is still on top of the stack; otherwise it was
+    // already detached when the pending span ended. Scopes must be closed in LIFO order to keep
+    // the thread's current context consistent.
+    detachTop(attachment);
   }
 
-  private static void removeAttachedPendingSpan(PendingSpan pendingSpan) {
+  private static void detachPendingSpanOnEnd(PendingSpan pendingSpan) {
     Deque<AttachedPendingSpan> spans = attachedPendingSpans.get();
-    if (spans == null) {
+    AttachedPendingSpan top = spans == null ? null : spans.peek();
+    if (top == null || top.pendingSpan != pendingSpan) {
+      // A non-top attachment must remain for its owning frame's cleanup; closing its scope here,
+      // while a newer nested scope is current, would corrupt the thread's current context.
       return;
     }
-    Iterator<AttachedPendingSpan> iterator = spans.iterator();
-    while (iterator.hasNext()) {
-      AttachedPendingSpan attachedPendingSpan = iterator.next();
-      if (attachedPendingSpan.pendingSpan == pendingSpan) {
-        iterator.remove();
-        attachedPendingSpan.scope.close();
-        break;
-      }
+    detachTop(top);
+  }
+
+  private static void detachTop(AttachedPendingSpan attachment) {
+    Deque<AttachedPendingSpan> spans = attachedPendingSpans.get();
+    if (spans == null || spans.peek() != attachment) {
+      return;
     }
+    spans.poll();
+    attachment.scope.close();
     if (spans.isEmpty()) {
       attachedPendingSpans.remove();
     }
@@ -298,7 +307,7 @@ public class Resilience4jCircuitBreakerSpans {
     }
   }
 
-  private static class AttachedPendingSpan {
+  static class AttachedPendingSpan {
     private final PendingSpan pendingSpan;
     private final Scope scope;
 
@@ -360,7 +369,7 @@ public class Resilience4jCircuitBreakerSpans {
           outcome = "failure";
         }
       }
-      detachPendingSpan(this);
+      detachPendingSpanOnEnd(this);
       closeOperationScope();
       instrumenter().end(context, request, outcome, throwable);
     }

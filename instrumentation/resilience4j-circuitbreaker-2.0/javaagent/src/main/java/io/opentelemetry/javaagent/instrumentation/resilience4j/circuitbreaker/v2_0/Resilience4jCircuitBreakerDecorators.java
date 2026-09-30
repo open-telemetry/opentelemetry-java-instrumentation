@@ -478,7 +478,8 @@ public class Resilience4jCircuitBreakerDecorators {
 
     @Override
     public T get() throws InterruptedException, ExecutionException {
-      Resilience4jCircuitBreakerSpans.attachPendingSpan(pendingSpan);
+      Resilience4jCircuitBreakerSpans.AttachedPendingSpan attachment =
+          Resilience4jCircuitBreakerSpans.attachPendingSpan(pendingSpan);
       try {
         T result = delegate.get();
         pendingSpan.end("success", null);
@@ -493,14 +494,15 @@ public class Resilience4jCircuitBreakerDecorators {
         pendingSpan.end("failure", e);
         throw e;
       } finally {
-        Resilience4jCircuitBreakerSpans.detachPendingSpan(pendingSpan);
+        Resilience4jCircuitBreakerSpans.detachPendingSpan(attachment);
       }
     }
 
     @Override
     public T get(long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException {
-      Resilience4jCircuitBreakerSpans.attachPendingSpan(pendingSpan);
+      Resilience4jCircuitBreakerSpans.AttachedPendingSpan attachment =
+          Resilience4jCircuitBreakerSpans.attachPendingSpan(pendingSpan);
       try {
         T result = delegate.get(timeout, unit);
         pendingSpan.end("success", null);
@@ -518,7 +520,7 @@ public class Resilience4jCircuitBreakerDecorators {
         pendingSpan.end("failure", e);
         throw e;
       } finally {
-        Resilience4jCircuitBreakerSpans.detachPendingSpan(pendingSpan);
+        Resilience4jCircuitBreakerSpans.detachPendingSpan(attachment);
       }
     }
   }
@@ -766,7 +768,8 @@ public class Resilience4jCircuitBreakerDecorators {
           invokeWhenComplete(callback, result, throwable);
           return;
         }
-        Resilience4jCircuitBreakerSpans.attachPendingSpan(pendingSpan);
+        Resilience4jCircuitBreakerSpans.AttachedPendingSpan attachment =
+            Resilience4jCircuitBreakerSpans.attachPendingSpan(pendingSpan);
         try {
           invokeWhenComplete(callback, result, throwable);
           pendingSpan.end(throwable == null ? "success" : "failure", unwrapped);
@@ -774,7 +777,7 @@ public class Resilience4jCircuitBreakerDecorators {
           pendingSpan.end("failure", t);
           throw t;
         } finally {
-          Resilience4jCircuitBreakerSpans.detachPendingSpan(pendingSpan);
+          Resilience4jCircuitBreakerSpans.detachPendingSpan(attachment);
         }
       };
     }

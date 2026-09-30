@@ -17,6 +17,9 @@ import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.TransitionCheckResult;
+import io.github.resilience4j.core.functions.CheckedConsumer;
+import io.github.resilience4j.core.functions.CheckedFunction;
+import io.github.resilience4j.core.functions.CheckedRunnable;
 import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -34,6 +37,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -158,6 +163,211 @@ class Resilience4jCircuitBreakerTest {
 
     assertThat(thrown).isSameAs(error);
     assertCircuitBreakerSpan("closed", "failure", error);
+  }
+
+  @Test
+  void createsCircuitBreakerSpanWhenDecoratedRunnableSucceeds() {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    AtomicReference<String> value = new AtomicReference<>();
+    Runnable runnable = CircuitBreaker.decorateRunnable(circuitBreaker, () -> value.set("ok"));
+
+    testing.runWithSpan("parent", runnable::run);
+
+    assertThat(value.get()).isEqualTo("ok");
+    assertCircuitBreakerSpan("closed", "success");
+  }
+
+  @Test
+  void createsFailureSpanWhenDecoratedRunnableThrows() {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    IllegalStateException exception = new IllegalStateException("boom");
+    Runnable runnable =
+        CircuitBreaker.decorateRunnable(
+            circuitBreaker,
+            () -> {
+              throw exception;
+            });
+
+    Throwable thrown = catchThrowable(() -> testing.runWithSpan("parent", runnable::run));
+
+    assertThat(thrown).isSameAs(exception);
+    assertCircuitBreakerSpan("closed", "failure", exception);
+  }
+
+  @Test
+  void createsCircuitBreakerSpanWhenDecoratedFunctionSucceeds() {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    Function<String, String> function =
+        CircuitBreaker.decorateFunction(circuitBreaker, value -> value + "-ok");
+
+    String result = testing.runWithSpan("parent", () -> function.apply("in"));
+
+    assertThat(result).isEqualTo("in-ok");
+    assertCircuitBreakerSpan("closed", "success");
+  }
+
+  @Test
+  void createsFailureSpanWhenDecoratedFunctionThrows() {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    IllegalStateException exception = new IllegalStateException("boom");
+    Function<String, String> function =
+        CircuitBreaker.decorateFunction(
+            circuitBreaker,
+            value -> {
+              throw exception;
+            });
+
+    Throwable thrown =
+        catchThrowable(() -> testing.runWithSpan("parent", () -> function.apply("in")));
+
+    assertThat(thrown).isSameAs(exception);
+    assertCircuitBreakerSpan("closed", "failure", exception);
+  }
+
+  @Test
+  void createsCircuitBreakerSpanWhenDecoratedConsumerSucceeds() {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    AtomicReference<String> value = new AtomicReference<>();
+    Consumer<String> consumer = CircuitBreaker.decorateConsumer(circuitBreaker, value::set);
+
+    testing.runWithSpan("parent", () -> consumer.accept("ok"));
+
+    assertThat(value.get()).isEqualTo("ok");
+    assertCircuitBreakerSpan("closed", "success");
+  }
+
+  @Test
+  void createsFailureSpanWhenDecoratedConsumerThrows() {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    IllegalStateException exception = new IllegalStateException("boom");
+    Consumer<String> consumer =
+        CircuitBreaker.decorateConsumer(
+            circuitBreaker,
+            value -> {
+              throw exception;
+            });
+
+    Throwable thrown =
+        catchThrowable(() -> testing.runWithSpan("parent", () -> consumer.accept("in")));
+
+    assertThat(thrown).isSameAs(exception);
+    assertCircuitBreakerSpan("closed", "failure", exception);
+  }
+
+  @Test
+  void createsCircuitBreakerSpanWhenDecoratedCheckedRunnableSucceeds() throws Throwable {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    AtomicReference<String> value = new AtomicReference<>();
+    CheckedRunnable runnable =
+        CircuitBreaker.decorateCheckedRunnable(circuitBreaker, () -> value.set("ok"));
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          runnable.run();
+          return null;
+        });
+
+    assertThat(value.get()).isEqualTo("ok");
+    assertCircuitBreakerSpan("closed", "success");
+  }
+
+  @Test
+  void createsFailureSpanWhenDecoratedCheckedRunnableThrowsCheckedException() {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    Exception exception = new Exception("boom");
+    CheckedRunnable runnable =
+        CircuitBreaker.decorateCheckedRunnable(
+            circuitBreaker,
+            () -> {
+              throw exception;
+            });
+
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                testing.runWithSpan(
+                    "parent",
+                    () -> {
+                      runnable.run();
+                      return null;
+                    }));
+
+    assertThat(thrown).isSameAs(exception);
+    assertCircuitBreakerSpan("closed", "failure", exception);
+  }
+
+  @Test
+  void createsCircuitBreakerSpanWhenDecoratedCheckedFunctionSucceeds() throws Throwable {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    CheckedFunction<String, String> function =
+        CircuitBreaker.decorateCheckedFunction(circuitBreaker, value -> value + "-ok");
+
+    String result = testing.runWithSpan("parent", () -> function.apply("in"));
+
+    assertThat(result).isEqualTo("in-ok");
+    assertCircuitBreakerSpan("closed", "success");
+  }
+
+  @Test
+  void createsFailureSpanWhenDecoratedCheckedFunctionThrowsCheckedException() {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    Exception exception = new Exception("boom");
+    CheckedFunction<String, String> function =
+        CircuitBreaker.decorateCheckedFunction(
+            circuitBreaker,
+            value -> {
+              throw exception;
+            });
+
+    Throwable thrown =
+        catchThrowable(() -> testing.runWithSpan("parent", () -> function.apply("in")));
+
+    assertThat(thrown).isSameAs(exception);
+    assertCircuitBreakerSpan("closed", "failure", exception);
+  }
+
+  @Test
+  void createsCircuitBreakerSpanWhenDecoratedCheckedConsumerSucceeds() throws Throwable {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    AtomicReference<String> value = new AtomicReference<>();
+    CheckedConsumer<String> consumer =
+        CircuitBreaker.decorateCheckedConsumer(circuitBreaker, value::set);
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          consumer.accept("ok");
+          return null;
+        });
+
+    assertThat(value.get()).isEqualTo("ok");
+    assertCircuitBreakerSpan("closed", "success");
+  }
+
+  @Test
+  void createsFailureSpanWhenDecoratedCheckedConsumerThrowsCheckedException() {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    Exception exception = new Exception("boom");
+    CheckedConsumer<String> consumer =
+        CircuitBreaker.decorateCheckedConsumer(
+            circuitBreaker,
+            value -> {
+              throw exception;
+            });
+
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                testing.runWithSpan(
+                    "parent",
+                    () -> {
+                      consumer.accept("in");
+                      return null;
+                    }));
+
+    assertThat(thrown).isSameAs(exception);
+    assertCircuitBreakerSpan("closed", "failure", exception);
   }
 
   @Test
