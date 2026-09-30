@@ -91,6 +91,7 @@ To execute all the instrumentation tests runnable as GraalVM native executables:
 Native test binaries use GraalVM's quick build mode (`-Ob`) to reduce native image generation time
 in CI and local runs. Main application binaries keep the default optimization level.
 
+CI runs native tests only on Oracle GraalVM 25.0 LTS, using the latest available patch release.
 [A Github workflow](../../.github/workflows/native-tests-daily.yml) executes the native tests every day.
 
 ## Docker disk space
