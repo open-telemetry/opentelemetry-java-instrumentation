@@ -51,6 +51,8 @@ public final class SpringIntegrationTelemetry {
    * traces synchronous channel dispatches or, when the channel supports executor interception,
    * individual handler invocations.
    *
+   * <p>Process spans respect the configured span suppression strategy.
+   *
    * @see org.springframework.integration.channel.ChannelInterceptorAware
    * @see org.springframework.messaging.support.InterceptableChannel
    * @see org.springframework.integration.config.GlobalChannelInterceptor

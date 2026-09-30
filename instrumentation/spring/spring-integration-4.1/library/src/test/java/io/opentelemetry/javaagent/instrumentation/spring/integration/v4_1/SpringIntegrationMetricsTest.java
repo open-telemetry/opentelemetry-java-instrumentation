@@ -175,7 +175,7 @@ class SpringIntegrationMetricsTest {
   }
 
   @Test
-  void lowerMessagingProcessDoesNotOwnDistinctInputChannelMessage() {
+  void keyedLowerMessagingProcessSuppressesInputChannelTelemetry() {
     DirectWithAttributesChannel channel = new DirectWithAttributesChannel();
     channel.setBeanName("input");
     channel.setAttribute("type", "input");
@@ -193,26 +193,19 @@ class SpringIntegrationMetricsTest {
     context = SpanKey.CONSUMER_PROCESS.storeInContext(context, Span.fromContext(context));
     try (Scope ignored = context.makeCurrent()) {
       channel.send(message);
+      assertThat(Context.current()).isSameAs(context);
     }
     lowerClientInstrumenter.end(context, message, null, null);
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("process").hasKind(SpanKind.CONSUMER),
-                span ->
-                    span.hasName(emitStableMessagingSemconv() ? "process input" : "input process")
-                        .hasParent(trace.getSpan(0))
-                        .hasKind(SpanKind.CONSUMER)));
-    if (emitStableMessagingSemconv()) {
-      assertProcessMetrics(testing, "input", false);
-    } else {
-      assertNoMetrics(testing);
-    }
+                span -> span.hasName("process").hasKind(SpanKind.CONSUMER)));
+    assertNoMetrics(testing);
   }
 
   @Test
-  void trackedLowerMessagingProcessDoesNotSuppressDistinctInputChannelMetrics() {
+  void trackedKeyedLowerMessagingProcessSuppressesInputChannelMetrics() {
     DirectWithAttributesChannel channel = new DirectWithAttributesChannel();
     channel.setBeanName("input");
     channel.setAttribute("type", "input");
@@ -231,21 +224,14 @@ class SpringIntegrationMetricsTest {
     context = add(enable(context), PROCESS, PROCESS_DURATION);
     try (Scope ignored = context.makeCurrent()) {
       channel.send(message);
+      assertThat(Context.current()).isSameAs(context);
     }
     lowerClientInstrumenter.end(context, message, null, null);
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("process").hasKind(SpanKind.CONSUMER),
-                span ->
-                    span.hasName(emitStableMessagingSemconv() ? "process input" : "input process")
-                        .hasParent(trace.getSpan(0))
-                        .hasKind(SpanKind.CONSUMER)));
-    if (emitStableMessagingSemconv()) {
-      assertProcessMetrics(testing, "input", false);
-    } else {
-      assertNoMetrics(testing);
-    }
+                span -> span.hasName("process").hasKind(SpanKind.CONSUMER)));
+    assertNoMetrics(testing);
   }
 }

@@ -100,7 +100,7 @@ class MessageProducerSupportInstrumentationTest {
   }
 
   @Test
-  void endpointHandoffDoesNotSuppressDistinctNestedMessage() {
+  void endpointHandoffRespectsProcessSuppressionForDistinctNestedMessage() {
     assumeRabbitInstrumentationEnabled();
     DirectChannel nestedChannel = newChannel("nested");
     DirectChannel inputChannel =
@@ -114,20 +114,12 @@ class MessageProducerSupportInstrumentationTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName(lowerProcessSpanName()).hasKind(SpanKind.CONSUMER),
-                span ->
-                    span.hasName(emitStableMessagingSemconv() ? "process nested" : "nested process")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(0))));
-    if (emitStableMessagingSemconv()) {
-      assertProcessMetrics(testing, "nested", false);
-    } else {
-      assertNoMetrics(testing);
-    }
+                span -> span.hasName(lowerProcessSpanName()).hasKind(SpanKind.CONSUMER)));
+    assertNoMetrics(testing);
   }
 
   @Test
-  void nestedEndpointHandoffKeepsItsOwnLowerProcessingOwner() {
+  void nestedEndpointHandoffRespectsOuterProcessSuppression() {
     assumeRabbitInstrumentationEnabled();
     DirectChannel innerChannel = newChannel("inner");
     TestMessageProducer innerProducer = new TestMessageProducer(innerChannel);
@@ -141,11 +133,7 @@ class MessageProducerSupportInstrumentationTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName(emitStableMessagingSemconv() ? "process outer" : "outer process")
-                        .hasKind(SpanKind.CONSUMER),
-                span ->
-                    span.hasName(lowerProcessSpanName())
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(0))));
+                        .hasKind(SpanKind.CONSUMER)));
     if (emitStableMessagingSemconv()) {
       assertProcessMetrics(testing, "outer", false);
     } else {
@@ -154,7 +142,7 @@ class MessageProducerSupportInstrumentationTest {
   }
 
   @Test
-  void unownedNestedEndpointHandoffMasksOuterOwner() {
+  void unownedNestedEndpointHandoffRespectsOuterProcessSuppression() {
     assumeRabbitInstrumentationEnabled();
     DirectChannel innerChannel = newChannel("inner");
     TestMessageProducer innerProducer = new TestMessageProducer(innerChannel);
@@ -168,48 +156,30 @@ class MessageProducerSupportInstrumentationTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName(lowerProcessSpanName()).hasKind(SpanKind.CONSUMER),
-                span ->
-                    span.hasName(emitStableMessagingSemconv() ? "process inner" : "inner process")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(0))));
-    if (emitStableMessagingSemconv()) {
-      assertProcessMetrics(testing, "inner", false);
-    } else {
-      assertNoMetrics(testing);
-    }
+                span -> span.hasName(lowerProcessSpanName()).hasKind(SpanKind.CONSUMER)));
+    assertNoMetrics(testing);
   }
 
   @Test
-  void endpointHandoffTracesEachExecutorHandler() {
+  void endpointHandoffRespectsProcessSuppressionForEachExecutorHandler() {
     assumeRabbitInstrumentationEnabled();
     ExecutorSubscribableChannel inputChannel = new ExecutorSubscribableChannel(Runnable::run);
     inputChannel.setBeanName("input");
     inputChannel.addInterceptor(interceptor);
-    inputChannel.subscribe(message -> {});
-    inputChannel.subscribe(message -> {});
+    AtomicInteger handled = new AtomicInteger();
+    inputChannel.subscribe(message -> handled.incrementAndGet());
+    inputChannel.subscribe(message -> handled.incrementAndGet());
     TestMessageProducer producer = new TestMessageProducer(inputChannel);
     Message message = newRawMessage();
 
     producer.send(message);
 
+    assertThat(handled).hasValue(2);
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName(lowerProcessSpanName()).hasKind(SpanKind.CONSUMER),
-                span ->
-                    span.hasName(emitStableMessagingSemconv() ? "process input" : "input process")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName(emitStableMessagingSemconv() ? "process input" : "input process")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(0))));
-    if (emitStableMessagingSemconv()) {
-      assertProcessMetrics(testing, "input", false, 2);
-    } else {
-      assertNoMetrics(testing);
-    }
+                span -> span.hasName(lowerProcessSpanName()).hasKind(SpanKind.CONSUMER)));
+    assertNoMetrics(testing);
   }
 
   @Test
@@ -261,7 +231,7 @@ class MessageProducerSupportInstrumentationTest {
   }
 
   @Test
-  void endpointHandoffUsesSpringIntegrationFallbackUnderUnrelatedConsumerProcess() {
+  void endpointHandoffRespectsUnrelatedProcessSuppression() {
     assumeRabbitInstrumentationDisabled();
     DirectChannel channel = newChannel();
     TestMessageProducer producer = new TestMessageProducer(channel);
@@ -272,27 +242,23 @@ class MessageProducerSupportInstrumentationTest {
     context = SpanKey.CONSUMER_PROCESS.storeInContext(context, Span.fromContext(context));
     try (Scope ignored = context.makeCurrent()) {
       producer.send(message);
+      assertThat(Span.current().getSpanContext())
+          .isEqualTo(Span.fromContext(context).getSpanContext());
     }
     unrelatedProcessInstrumenter.end(context, message, null, null);
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("lower process").hasKind(SpanKind.CONSUMER),
-                span ->
-                    span.hasName(emitStableMessagingSemconv() ? "process input" : "input process")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(0))));
+                span -> span.hasName("lower process").hasKind(SpanKind.CONSUMER)));
     if (emitStableMessagingSemconv()) {
       assertUnrelatedProcessMetrics();
-      assertProcessMetrics(testing, "input", false);
-    } else {
-      assertNoMetrics(testing);
     }
+    assertNoMetrics(testing);
   }
 
   @Test
-  void endpointHandoffDoesNotTransferOwnershipToErrorMessage() {
+  void endpointHandoffRespectsProcessSuppressionForErrorMessage() {
     assumeRabbitInstrumentationEnabled();
     DirectChannel errorChannel = newChannel("error");
     DirectChannel inputChannel =
@@ -310,16 +276,8 @@ class MessageProducerSupportInstrumentationTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName(lowerProcessSpanName()).hasKind(SpanKind.CONSUMER),
-                span ->
-                    span.hasName(emitStableMessagingSemconv() ? "process error" : "error process")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(0))));
-    if (emitStableMessagingSemconv()) {
-      assertProcessMetrics(testing, "error", false);
-    } else {
-      assertNoMetrics(testing);
-    }
+                span -> span.hasName(lowerProcessSpanName()).hasKind(SpanKind.CONSUMER)));
+    assertNoMetrics(testing);
   }
 
   @Test

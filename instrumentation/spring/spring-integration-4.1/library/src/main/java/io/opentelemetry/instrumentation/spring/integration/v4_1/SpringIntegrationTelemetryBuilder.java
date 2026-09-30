@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.spring.integration.v4_1;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
-import static io.opentelemetry.instrumentation.api.internal.Experimental.setSpanSuppressionStrategy;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
@@ -129,7 +128,6 @@ public final class SpringIntegrationTelemetryBuilder {
                     headers))
             .addOperationMetrics(SpringIntegrationConsumerMetrics::new);
     setMessagingProcessExceptionEventExtractor(consumerBuilder);
-    setSpanSuppressionStrategy(consumerBuilder, "none");
     Instrumenter<MessageWithChannel, Void> consumerInstrumenter =
         MessagingProcessInstrumenterFactory.create(
             consumerBuilder,
