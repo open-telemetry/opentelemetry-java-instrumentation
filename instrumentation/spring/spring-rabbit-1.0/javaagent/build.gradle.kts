@@ -83,6 +83,11 @@ tasks {
       systemProperty("collectMetadata", otelProps.collectMetadata)
     }
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
+
+    // add byte buddy agent for mockito
+    configurations.testRuntimeClasspath.get().find { it.name.contains("byte-buddy-agent") }?.apply {
+      jvmArgs("-javaagent:$absolutePath")
+    }
   }
 
   named<Test>("unitTests") {
