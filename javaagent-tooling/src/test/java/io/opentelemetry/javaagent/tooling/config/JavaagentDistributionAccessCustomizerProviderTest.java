@@ -34,6 +34,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class JavaagentDistributionAccessCustomizerProviderTest {
@@ -169,6 +170,23 @@ class JavaagentDistributionAccessCustomizerProviderTest {
             singletonList("reactor-3.1"),
             true,
             true));
+  }
+
+  @ParameterizedTest
+  @CsvSource({"reactor-3.1, false", "reactor-3.1, true", "reactor-3_1, false", "reactor-3_1, true"})
+  void hyphenatedSelectorsDoNotMatchOrWarn(String selector, boolean v3Preview) {
+    TestHandler handler = new TestHandler();
+    logger.addHandler(handler);
+    try {
+      applyConfig(singletonList(selector), singletonList(selector), v3Preview);
+
+      AgentDistributionConfig config = AgentDistributionConfig.get();
+      assertThat(config.isInstrumentationEnabled("reactor-3.1", false)).isFalse();
+      assertThat(config.isInstrumentationEnabled("reactor-3.1", true)).isTrue();
+      assertThat(handler.records).isEmpty();
+    } finally {
+      logger.removeHandler(handler);
+    }
   }
 
   @Test

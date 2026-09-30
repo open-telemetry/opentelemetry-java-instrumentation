@@ -162,7 +162,7 @@ public final class JavaagentDistributionAccessCustomizerProvider
     List<String> result = new ArrayList<>();
     Set<String> warnedSelectors = new HashSet<>();
     for (String selector : selectors) {
-      if (!selector.contains(".")) {
+      if (!selector.contains(".") || selector.contains("-")) {
         result.add(selector);
         continue;
       }
