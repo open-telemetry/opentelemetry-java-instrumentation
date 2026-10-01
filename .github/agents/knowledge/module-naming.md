@@ -55,8 +55,9 @@ instrumentation. For example, JDBC's default-off DataSource instrumentation uses
 `jdbc-datasource`, not the shared `jdbc` selector. Product umbrellas such as `vertx` come after
 the component's own selectors and must not mix default-on and default-off instrumentation.
 
-The generic Reactor Netty server registration housed in `spring-webflux-5.0` is an exception.
-Its preview names are `reactor-netty` and `reactor-netty-server`, without a baseline selector.
+The generic Reactor Netty server registration housed in `spring-webflux-5.0` uses
+`spring-webflux`, `spring-webflux-5.0`, `reactor-netty`, and `reactor-netty-server` in both modes,
+in that order. This cross-family selector exception applies only to that registration.
 Outside v3 preview, preserve existing names and their order.
 
 ## Common modules (shared code across multiple versions)

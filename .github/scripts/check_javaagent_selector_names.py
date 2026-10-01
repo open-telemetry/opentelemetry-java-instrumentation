@@ -2,9 +2,8 @@
 """Check javaagent enablement selectors in v3-preview mode.
 
 This checks selector structure, not whether an independent feature needs a control.
-Modules omit a baseline selector only for the JDK instrumentations listed below
-and the Reactor Netty server registration housed in the WebFlux project. A Java
-expression the checker cannot evaluate is an error, not an implicit exemption.
+Component families include their owning baseline except for the JDK instrumentations
+listed below. Unsupported Java selector expressions are errors, not implicit exemptions.
 Module classes may share all public names. Optional feature selectors preserve
 independent controls; Muzzle identifies individual modules by fully qualified class.
 Client/server role selectors are versionless and follow the baseline.
@@ -331,13 +330,14 @@ def check(root, modules=None):
             # InstrumentationModule stores the names in a LinkedHashSet.
             names = list(dict.fromkeys(selectors(path, source)))
             enabled = default_enabled(path, source)
+            family, base = owning_names(relative)
             if relative == REACTOR_NETTY_SERVER_MODULE:
-                required = ["reactor-netty", "reactor-netty-server"]
+                required = [
+                    "spring-webflux", "spring-webflux-5.0", "reactor-netty", "reactor-netty-server"
+                ]
                 if names != required:
                     raise ValueError(f"expected selectors {required}, found {names}")
-                base = None
             else:
-                family, base = owning_names(relative)
                 required = [family] + ([base] if base else [])
                 if not enabled and names and names[0] != family:
                     # Independent default-off features use only their feature namespace.

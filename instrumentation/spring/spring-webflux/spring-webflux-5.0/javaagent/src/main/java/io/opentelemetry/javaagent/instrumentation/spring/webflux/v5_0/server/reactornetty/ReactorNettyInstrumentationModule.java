@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server.re
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -17,11 +16,7 @@ import java.util.List;
 public class ReactorNettyInstrumentationModule extends InstrumentationModule {
 
   public ReactorNettyInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "reactor-netty" : "spring-webflux",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"reactor-netty-server"}
-            : new String[] {"spring-webflux-5.0", "reactor-netty", "reactor-netty-server"});
+    super("spring-webflux", "spring-webflux-5.0", "reactor-netty", "reactor-netty-server");
   }
 
   @Override

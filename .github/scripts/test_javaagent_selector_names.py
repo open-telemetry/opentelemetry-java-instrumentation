@@ -247,21 +247,31 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         self.module("rmi", "ContextModule.java", '"rmi", "rmi-context-propagation"')
         self.assertEqual(check(self.root), [])
 
-    def test_reactor_netty_server_registration_uses_its_actual_library(self):
+    def test_reactor_netty_server_registration_keeps_webflux_and_reactor_netty_controls(self):
         self.module_at(
             self.root / REACTOR_NETTY_SERVER_MODULE,
-            '"reactor-netty", "reactor-netty-server"',
+            '"spring-webflux", "spring-webflux-5.0", "reactor-netty", "reactor-netty-server"',
         )
         self.assertEqual(check(self.root), [])
 
     def test_reactor_netty_server_registration_exception_requires_exact_names(self):
         for arguments in (
             '"reactor-netty"',
+            '"reactor-netty", "reactor-netty-server"',
             '"reactor-netty-server", "reactor-netty"',
-            '"reactor-netty", "reactor-netty-server", "spring-webflux"',
-            '"reactor-netty", "reactor-netty-0.7", "reactor-netty-server"',
-            '"reactor-netty", "reactor-netty-server", "reactor-netty-0.7-server"',
+            '"spring-webflux", "reactor-netty", "reactor-netty-server"',
+            '"spring-webflux", "spring-webflux-5.0", "reactor-netty-server"',
+            '"spring-webflux", "spring-webflux-5.0", "reactor-netty"',
+            '"spring-webflux-5.0", "spring-webflux", "reactor-netty", "reactor-netty-server"',
+            '"spring-webflux", "spring-webflux-5.0", "reactor-netty-server", "reactor-netty"',
+            '"spring-webflux", "spring-webflux-6.0", "reactor-netty", "reactor-netty-server"',
             '"spring-webflux", "spring-webflux-5.0", "spring-webflux-server"',
+            '"spring-webflux", "spring-webflux-5.0", "reactor-netty", "reactor-netty-server", '
+            '"spring-webflux-server"',
+            '"spring-webflux", "spring-webflux-5.0", "reactor-netty", "reactor-netty-0.7", '
+            '"reactor-netty-server"',
+            '"spring-webflux", "spring-webflux-5.0", "reactor-netty", "reactor-netty-server", '
+            '"reactor-netty-0.7-server"',
         ):
             with self.subTest(arguments=arguments):
                 self.module_at(self.root / REACTOR_NETTY_SERVER_MODULE, arguments)
@@ -270,17 +280,17 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
     def test_reactor_netty_server_exception_does_not_apply_to_other_classes(self):
         self.module_at(
             (self.root / REACTOR_NETTY_SERVER_MODULE).with_name("OtherInstrumentationModule.java"),
-            '"reactor-netty", "reactor-netty-server"',
+            '"spring-webflux", "spring-webflux-5.0", "reactor-netty", "reactor-netty-server"',
         )
-        self.assertIn("expected first selectors", check(self.root)[0])
+        self.assertIn("expected a feature selector", check(self.root)[0])
 
     def test_reactor_netty_server_exception_does_not_apply_to_other_locations(self):
         self.module(
             "spring/spring-webflux/spring-webflux-5.0",
             "ReactorNettyInstrumentationModule.java",
-            '"reactor-netty", "reactor-netty-server"',
+            '"spring-webflux", "spring-webflux-5.0", "reactor-netty", "reactor-netty-server"',
         )
-        self.assertIn("expected first selectors", check(self.root)[0])
+        self.assertIn("expected a feature selector", check(self.root)[0])
 
     def test_preview_only_names_ignore_legacy_branch(self):
         self.module(
