@@ -9,7 +9,7 @@ muzzle {
     module.set("spring-pulsar")
     versions.set("[1.0.0,)")
     assertInverse.set(true)
-    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.PulsarInstrumentationModule")
+    excludeInstrumentationName("pulsar-2.8")
   }
 }
 

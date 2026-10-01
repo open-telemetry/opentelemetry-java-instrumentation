@@ -8,14 +8,14 @@ muzzle {
     module.set("reactor-netty")
     versions.set("[0.8.2.RELEASE,1.0.0)")
     assertInverse.set(true)
-    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyInstrumentationModule")
+    excludeInstrumentationName("netty")
   }
   fail {
     group.set("io.projectreactor.netty")
     module.set("reactor-netty-http")
     versions.set("[1.0.0,)")
     assertInverse.set(true)
-    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyInstrumentationModule")
+    excludeInstrumentationName("netty")
   }
 }
 

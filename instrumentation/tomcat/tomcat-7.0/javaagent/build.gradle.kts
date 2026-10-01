@@ -10,7 +10,7 @@ muzzle {
     // 7.0.4 added Request.isAsync, which is needed
     versions.set("[7.0.4, 10)")
     assertInverse.set(true)
-    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3InstrumentationModule")
+    excludeInstrumentationName("servlet-3.0")
   }
 }
 

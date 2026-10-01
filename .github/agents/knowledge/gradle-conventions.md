@@ -44,11 +44,12 @@ When behavior is additive, optional, or starts in a higher subrange while the ba
 compatible, keep the independently selected `InstrumentationModule` classes in the existing
 javaagent project. Public enablement names describe the library and independently selectable
 features, not compatibility implementations. Multiple classes may share all their public names.
-Configure one Muzzle `pass` per range and target artifact. Each pass must use
-`excludeInstrumentationModule(...)` with fully qualified class names to exclude every unrelated
-module in the project. Exclusions also apply to inverse checks, and unknown class names fail the
-check. Keep the baseline library dependency and add newer or optional referenced types with
-`compileOnly` when appropriate.
+Configure one Muzzle `pass` per range and target artifact, excluding unrelated modules in each pass.
+Prefer `excludeInstrumentationName(...)` when the public name selects the intended classes both
+outside v3 preview and in preview. Use `excludeInstrumentationModule(...)` with a fully qualified
+class name when public names cannot distinguish the required implementations. Both forms apply
+to inverse checks, and unknown class exclusions fail the check. Keep the baseline library dependency
+and add newer or optional referenced types with `compileOnly` when appropriate.
 
 Multiple Scala or artifact-name variants, a separate enablement name, a different test matrix, or
 dependencies on separate library, testing, helper, generated-code, or language-specific projects do

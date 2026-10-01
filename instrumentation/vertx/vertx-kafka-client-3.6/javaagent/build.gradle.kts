@@ -8,8 +8,8 @@ muzzle {
     module.set("vertx-kafka-client")
     versions.set("[3.5.1,)")
     assertInverse.set(true)
-    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaClientsInstrumentationModule")
-    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.metrics.KafkaMetricsInstrumentationModule")
+    excludeInstrumentationName("kafka-clients")
+    excludeInstrumentationName("kafka-clients-metrics")
   }
 }
 

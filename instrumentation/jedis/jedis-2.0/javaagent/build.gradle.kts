@@ -19,7 +19,7 @@ muzzle {
     versions.set("[2.3.0,3.0.0)")
     assertInverse.set(true)
 
-    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisInstrumentationModule")
+    excludeInstrumentationName("jedis-2.0-core")
   }
 }
 

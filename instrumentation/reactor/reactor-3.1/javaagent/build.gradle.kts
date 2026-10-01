@@ -11,7 +11,7 @@ muzzle {
     versions.set("[3.1.0.RELEASE,)")
     assertInverse.set(true)
     extraDependency("io.opentelemetry:opentelemetry-api:1.0.0")
-    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.OpenTelemetryApiInstrumentationModule")
+    excludeInstrumentationName("opentelemetry-api")
     excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.reactor.v3_1.operator.ContextPropagationOperatorContextViewInstrumentationModule")
   }
   pass {
@@ -22,7 +22,7 @@ muzzle {
     versions.set("[3.4.0,)")
     assertInverse.set(true)
     extraDependency("io.opentelemetry:opentelemetry-api:1.0.0")
-    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.OpenTelemetryApiInstrumentationModule")
+    excludeInstrumentationName("opentelemetry-api")
     excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.reactor.v3_1.ReactorInstrumentationModule")
     excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.reactor.v3_1.operator.ContextPropagationOperatorInstrumentationModule")
   }

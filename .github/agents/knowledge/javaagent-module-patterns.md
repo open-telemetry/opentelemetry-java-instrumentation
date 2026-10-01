@@ -47,10 +47,11 @@ selectable behavior, not to distinguish compatibility implementations. Preserve 
 independent feature controls; modules belonging to one client/server role share that role's
 selectors.
 
-Muzzle passes use `excludeInstrumentationModule(...)` with the fully qualified module class name
-to select the classes covered by each compatibility range or target artifact. Public enablement
-names do not need to identify individual classes. Outside v3 preview, preserve the existing first
-name and the order of existing names.
+Muzzle passes prefer `excludeInstrumentationName(...)` when the public name selects the intended
+classes both outside v3 preview and in preview. Use `excludeInstrumentationModule(...)` with the
+fully qualified module class name when shared public names cannot distinguish the required
+implementations. Public enablement names do not need to identify individual classes. Outside v3
+preview, preserve the existing first name and the order of existing names.
 
 See [Compatibility range ownership](gradle-conventions.md#compatibility-range-ownership) for when
 modules should share a javaagent project and how to separate their Muzzle passes and dependencies.

@@ -9,7 +9,7 @@ muzzle {
     module.set("spring-jms")
     versions.set("[6.0.0,)")
     extraDependency("jakarta.jms:jakarta.jms-api:3.0.0")
-    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.jms.v3_0.JmsInstrumentationModule")
+    excludeInstrumentationName("jms")
     assertInverse.set(true)
   }
 }

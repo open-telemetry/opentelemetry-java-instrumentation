@@ -131,12 +131,15 @@ muzzle {
 - `extraDependency` allows putting additional libs on the classpath just for the compile-time check;
   this is usually used for jars that are not bundled with the instrumented lib but always present
   in the runtime anyway;
+- `excludeInstrumentationName` excludes every module carrying a public enablement name. Prefer
+  this short form when it selects the intended classes both outside v3 preview and in preview;
 - `excludeInstrumentationModule` excludes one `InstrumentationModule` by its fully qualified class
   name, independently of its public enablement names. It also applies to inverse checks. An unknown
   class name fails the check.
 
 When a project contains multiple instrumentation modules with different compatibility ranges or
-target artifacts, exclude the unrelated classes in each directive:
+target artifacts, exclude unrelated modules in each directive. Use class-based selection when
+public names cannot distinguish the required implementations:
 
 ```kotlin
 excludeInstrumentationModule(
@@ -146,8 +149,7 @@ excludeInstrumentationModule(
 
 Module classes can share all their public enablement names. Register additional names only for
 independently selectable behavior, such as client/server roles or an existing metrics opt-in, not
-for Muzzle selection. The name-based `excludeInstrumentationName` API remains available for
-builds that intentionally exclude every module carrying an enablement name.
+for Muzzle selection. Both exclusion forms also apply to inverse checks.
 
 The source code of the gradle plugin is located in the `buildSrc` directory.
 

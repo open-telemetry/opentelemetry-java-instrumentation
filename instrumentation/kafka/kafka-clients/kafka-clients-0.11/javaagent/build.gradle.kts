@@ -8,7 +8,7 @@ muzzle {
     module.set("kafka-clients")
     versions.set("[0.11.0.0,)")
     assertInverse.set(true)
-    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.metrics.KafkaMetricsInstrumentationModule")
+    excludeInstrumentationName("kafka-clients-metrics")
   }
 }
 

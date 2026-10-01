@@ -10,7 +10,7 @@ muzzle {
     group.set("org.jetbrains.kotlinx")
     module.set("kotlinx-coroutines-core")
     versions.set("[1.0.0,1.3.8)")
-    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.flow.KotlinCoroutinesFlowInstrumentationModule")
+    excludeInstrumentationName("kotlinx-coroutines-flow")
     extraDependency(project(":instrumentation-annotations"))
     extraDependency("io.opentelemetry:opentelemetry-api:1.27.0")
   }
@@ -20,7 +20,7 @@ muzzle {
     module.set("kotlinx-coroutines-core-jvm")
     versions.set("[1.3.9,)")
     assertInverse.set(true)
-    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.flow.KotlinCoroutinesFlowInstrumentationModule")
+    excludeInstrumentationName("kotlinx-coroutines-flow")
     extraDependency(project(":instrumentation-annotations"))
     extraDependency("io.opentelemetry:opentelemetry-api:1.27.0")
   }
@@ -31,8 +31,8 @@ muzzle {
     module.set("kotlinx-coroutines-core")
     versions.set("[1.3.0,1.3.8)")
     excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.KotlinCoroutinesInstrumentationModule")
-    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.instrumentationannotations.AnnotationInstrumentationModule")
-    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v1_16.AnnotationInstrumentationModule")
+    excludeInstrumentationName("kotlinx-coroutines-opentelemetry-instrumentation-annotations")
+    excludeInstrumentationName("opentelemetry-instrumentation-annotations-1.16")
   }
   // 1.3.9 (and beyond?) have changed how artifact names are resolved due to multiplatform variants
   pass {
@@ -43,8 +43,8 @@ muzzle {
     versions.set("[1.3.9,)")
     assertInverse.set(true)
     excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.KotlinCoroutinesInstrumentationModule")
-    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.instrumentationannotations.AnnotationInstrumentationModule")
-    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v1_16.AnnotationInstrumentationModule")
+    excludeInstrumentationName("kotlinx-coroutines-opentelemetry-instrumentation-annotations")
+    excludeInstrumentationName("opentelemetry-instrumentation-annotations-1.16")
   }
 }
 
