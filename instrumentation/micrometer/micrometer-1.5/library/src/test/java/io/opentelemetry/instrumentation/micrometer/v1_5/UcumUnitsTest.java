@@ -37,9 +37,8 @@ class UcumUnitsTest {
   }
 
   @Test
-  void mapsPercentWithoutImplyingScaling() {
-    // Micrometer percent values are 0..100, while the UCUM unity "1" denotes a 0..1 fraction
-    assertThat(UcumUnits.normalize("percent")).isEqualTo("%").isNotEqualTo("1");
+  void preservesAmbiguousPercentUnit() {
+    assertThat(UcumUnits.normalize("percent")).isEqualTo("percent");
   }
 
   @ParameterizedTest

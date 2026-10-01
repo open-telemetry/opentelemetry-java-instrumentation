@@ -22,10 +22,31 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 public abstract class AbstractGaugeTest {
 
   protected abstract InstrumentationExtension testing();
+
+  @ParameterizedTest
+  @ValueSource(doubles = {0.5, 50})
+  void preservesPercentUnitAndValue(double value) {
+    // JvmHeapPressureMetrics uses "percent" for 0..1 fractions, while custom meters may use 0..100.
+    Gauge.builder("testPercentGauge", () -> value)
+        .baseUnit("percent")
+        .register(Metrics.globalRegistry);
+
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            metric ->
+                metric
+                    .hasName("testPercentGauge")
+                    .hasUnit("percent")
+                    .hasDoubleGaugeSatisfying(
+                        gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(value))));
+  }
 
   @Test
   void testGauge() {

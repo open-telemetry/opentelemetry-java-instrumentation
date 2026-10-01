@@ -12,14 +12,14 @@ final class UcumUnits {
 
   // Micrometer base units are free-form English words, while OpenTelemetry uses UCUM.
   // Curly-brace entries are UCUM annotations, which semantic conventions require to be
-  // grammatically singular. Only the unit string is rewritten, never the value, so "percent" maps
-  // to "%" and not to "1" (a 0..1 fraction). Units not in this table are passed through unchanged.
+  // grammatically singular.
+  // Only the unit string is rewritten. "percent" is ambiguous: some Micrometer binders use it for
+  // 0..1 fractions, so it is passed through unchanged, as are units not in this table.
   private static final Map<String, String> UNITS = new HashMap<>();
 
   static {
     UNITS.put("bytes", "By");
     UNITS.put("seconds", "s");
-    UNITS.put("percent", "%");
     UNITS.put("buffers", "{buffer}");
     UNITS.put("classes", "{class}");
     UNITS.put("connections", "{connection}");

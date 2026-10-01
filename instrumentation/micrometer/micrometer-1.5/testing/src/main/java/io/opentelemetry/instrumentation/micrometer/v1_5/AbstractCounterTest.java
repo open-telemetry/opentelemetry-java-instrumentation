@@ -77,8 +77,8 @@ public abstract class AbstractCounterTest {
     // known Micrometer units are normalized to UCUM under the v3 preview
     "bytes, By",
     "threads, {thread}",
-    // the unit string is rewritten, the value is not scaled
-    "percent, %",
+    // percent has an ambiguous scale and is passed through unchanged
+    "percent, percent",
     // unknown units are passed through unchanged
     "widgets, widgets",
     // already valid UCUM

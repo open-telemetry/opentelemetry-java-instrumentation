@@ -75,10 +75,11 @@ changed with `OpenTelemetryMeterRegistryBuilder.setBaseTimeUnit(TimeUnit)`.
 
 When `otel.instrumentation.common.v3-preview` is enabled, base units used by Micrometer's binders
 are normalized to UCUM, for example `bytes` becomes `By`, `seconds` becomes `s`, `threads` becomes
-`{thread}`, and `percent` becomes `%`. Only the unit is changed: values are not scaled, and in
+`{thread}`. Only the unit is changed: values are not scaled, and in
 [Prometheus mode](#prometheus-mode) the raw base unit is still appended to the metric name. Base
-units that are not recognized are passed through unchanged. The v3 preview also changes the
-`LongTaskTimer` `<name>.active` unit from `{tasks}` to `{task}`.
+units that are not recognized are passed through unchanged. The ambiguous unit `percent` is also
+preserved because some Micrometer binders use it for values in the range 0–1. The v3 preview also
+changes the `LongTaskTimer` `<name>.active` unit from `{tasks}` to `{task}`.
 
 ### Descriptions
 
