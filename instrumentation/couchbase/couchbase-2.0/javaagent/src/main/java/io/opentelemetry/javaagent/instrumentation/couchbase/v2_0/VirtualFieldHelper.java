@@ -9,9 +9,9 @@ import com.couchbase.client.core.ClusterFacade;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 
-public class Couchbase20VirtualFieldHelper {
+public class VirtualFieldHelper {
   public static final VirtualField<ClusterFacade, DbServerTarget> COUCHBASE_SERVER_TARGET =
       VirtualField.find(ClusterFacade.class, DbServerTarget.class);
 
-  private Couchbase20VirtualFieldHelper() {}
+  private VirtualFieldHelper() {}
 }
