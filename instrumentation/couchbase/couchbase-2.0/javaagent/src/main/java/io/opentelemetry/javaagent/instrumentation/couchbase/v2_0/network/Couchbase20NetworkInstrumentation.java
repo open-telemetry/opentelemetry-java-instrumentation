@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
+package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network;
 
-import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.Couchbase26VirtualFieldHelper.COUCHBASE_REQUEST_INFO;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.CouchbaseNetworkVirtualFields.COUCHBASE_REQUEST_INFO;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import com.couchbase.client.core.endpoint.AbstractEndpoint;
 import com.couchbase.client.core.message.CouchbaseRequest;
 import com.couchbase.client.deps.io.netty.channel.ChannelHandlerContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -21,7 +21,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-class Couchbase26NetworkInstrumentation implements TypeInstrumentation {
+class Couchbase20NetworkInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -30,7 +30,6 @@ class Couchbase26NetworkInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    // encode(ChannelHandlerContext ctx, REQUEST msg, List<Object> out)
     transformer.applyAdviceToMethod(
         named("encode")
             .and(takesArguments(3))
@@ -46,18 +45,20 @@ class Couchbase26NetworkInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void addNetworkTagsToSpan(
-        @Advice.FieldValue("endpoint") AbstractEndpoint endpoint,
-        @Advice.FieldValue("localSocket") String localSocket,
         @Advice.Argument(0) ChannelHandlerContext channelHandlerContext,
         @Advice.Argument(1) CouchbaseRequest request) {
 
+      // The core-io versions before 1.6.0 have no reliable, version-stable way to read the node
+      // string the driver considers itself connected to, so this only records the actual peer
+      // connection. The old semantic conventions describe these spans with that node string, so
+      // they are left as they are.
+      if (!emitStableDatabaseSemconv()) {
+        return;
+      }
+
       CouchbaseRequestInfo requestInfo = COUCHBASE_REQUEST_INFO.get(request);
       if (requestInfo != null) {
-        // The socket and the address the driver opened this endpoint to describe the same node, and
-        // only stay consistent with each other when they are recorded together
-        requestInfo.setNode(
-            channelHandlerContext.channel().remoteAddress(), endpoint.remoteAddress());
-        requestInfo.setLocalAddress(localSocket);
+        requestInfo.setNode(channelHandlerContext.channel().remoteAddress(), null);
       }
     }
   }

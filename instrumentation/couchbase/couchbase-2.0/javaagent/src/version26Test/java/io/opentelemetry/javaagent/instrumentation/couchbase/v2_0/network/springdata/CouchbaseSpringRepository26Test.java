@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.springdata;
+package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.springdata;
 
 import com.couchbase.client.java.cluster.BucketSettings;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import io.opentelemetry.instrumentation.couchbase.springdata.AbstractCouchbaseSpringRepositoryTest;
 import io.opentelemetry.instrumentation.couchbase.springdata.TestDocument;
 import io.opentelemetry.instrumentation.couchbase.springdata.TestRepository;
-import io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.Couchbase26Util;
+import io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.Couchbase26Util;
 
 class CouchbaseSpringRepository26Test extends AbstractCouchbaseSpringRepositoryTest {
 
