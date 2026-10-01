@@ -66,7 +66,8 @@ All unlisted names remain bridged, including these complementary observations:
   `jvm.gc.max.data.size`, `jvm.gc.overhead`, `jvm.gc.cpu.time`.
 - `jvm.threads.peak`, `jvm.threads.started`, `jvm.threads.deadlocked`,
   `jvm.threads.deadlocked.monitor`, `jvm.threads.virtual.pinned`,
-  `jvm.threads.virtual.submit.failed`.
+  `jvm.threads.virtual.submit.failed`, `jvm.threads.virtual.parallelism`,
+  `jvm.threads.virtual.pool.size`, `jvm.threads.virtual.live`.
 - `jvm.compilation.time`, `jvm.info`, `process.uptime`, `process.start.time`.
 
 The policy does not use `jvm.*`, `process.*`, or `system.*` wildcard suppression. This experimental
