@@ -27,8 +27,8 @@ public class JmxRuntimeMetricsFactory {
 
   /**
    * Like {@link #buildObservables(boolean, boolean, Predicate, Meter)}, and passes the name of each
-   * metric whose observer registered successfully to {@code registeredObserver}. Currently only
-   * class-loading metrics are reported.
+   * reviewed metric whose observer or GC listener registered successfully to {@code
+   * registeredObserver}.
    */
   public static List<AutoCloseable> buildObservables(
       boolean emitExperimentalTelemetry,
@@ -38,24 +38,31 @@ public class JmxRuntimeMetricsFactory {
       Consumer<String> registeredObserver) {
     List<AutoCloseable> observables = new ArrayList<>();
     observables.addAll(Classes.registerObservers(meter, metricNamePredicate, registeredObserver));
-    observables.addAll(Cpu.registerObservers(meter, metricNamePredicate));
+    observables.addAll(Cpu.registerObservers(meter, metricNamePredicate, registeredObserver));
     if (metricNamePredicate.test("jvm.cpu.count")) {
       observables.addAll(CpuCount.registerObservers(meter));
+      registeredObserver.accept("jvm.cpu.count");
     }
     if (metricNamePredicate.test("jvm.gc.duration")) {
-      observables.addAll(GarbageCollector.registerObservers(meter, captureGcCause));
+      observables.addAll(
+          GarbageCollector.registerObservers(meter, captureGcCause, registeredObserver));
     }
-    observables.addAll(MemoryPools.registerObservers(meter, metricNamePredicate));
+    observables.addAll(
+        MemoryPools.registerObservers(meter, metricNamePredicate, registeredObserver));
     if (metricNamePredicate.test("jvm.thread.count")) {
       observables.addAll(Threads.registerObservers(meter));
+      registeredObserver.accept("jvm.thread.count");
     }
     if (emitExperimentalTelemetry) {
-      observables.addAll(BufferPools.registerObservers(meter, metricNamePredicate));
-      observables.addAll(SystemCpu.registerObservers(meter, metricNamePredicate));
+      observables.addAll(
+          BufferPools.registerObservers(meter, metricNamePredicate, registeredObserver));
+      observables.addAll(
+          SystemCpu.registerObservers(meter, metricNamePredicate, registeredObserver));
       if (metricNamePredicate.test("jvm.memory.init")) {
         observables.addAll(MemoryInit.registerObservers(meter));
       }
-      observables.addAll(FileDescriptor.registerObservers(meter, metricNamePredicate));
+      observables.addAll(
+          FileDescriptor.registerObservers(meter, metricNamePredicate, registeredObserver));
     }
     return observables;
   }

@@ -31,10 +31,20 @@ class RuntimeTelemetryObservationTest {
         RuntimeTelemetry telemetry = Internal.configure(sdk, true)) {
       Set<String> names = Internal.getRegisteredJmxObservers(telemetry);
       assertThat(names)
-          .containsExactlyInAnyOrder("jvm.class.count", "jvm.class.loaded", "jvm.class.unloaded");
+          .contains(
+              "jvm.class.count",
+              "jvm.class.loaded",
+              "jvm.class.unloaded",
+              "jvm.memory.used",
+              "jvm.memory.committed",
+              "jvm.memory.limit",
+              "jvm.thread.count",
+              "jvm.cpu.count")
+          .doesNotContain(
+              "jvm.buffer.count", "jvm.file_descriptor.count", "jvm.system.cpu.utilization");
       assertThat(reader.collectAllMetrics())
           .extracting(metric -> metric.getName())
-          .containsAll(names);
+          .contains("jvm.class.count", "jvm.memory.used", "jvm.thread.count", "jvm.cpu.count");
       assertThatThrownBy(() -> names.clear()).isInstanceOf(UnsupportedOperationException.class);
     }
   }

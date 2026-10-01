@@ -9,13 +9,17 @@ configurations:
   - name: otel.instrumentation.micrometer.experimental.jvm-metrics-ownership.enabled
     declarative_name: java.micrometer.jvm_metrics_ownership/development.enabled
     description: >
-      Explicitly assigns standard JVM class-loading observations to agent runtime telemetry.
-      The reviewed Micrometer names are jvm.classes.loaded, jvm.classes.loaded.count,
-      jvm.classes.unloaded and their jvm.class.count, jvm.class.loaded, jvm.class.unloaded aliases.
-      A matching gauge or counter is suppressed only when its corresponding JMX observer was
-      registered at bridge initialization. This chooses the process-wide agent representation;
-      it does not preserve identical attributes. Custom meters reusing these names can also be
-      suppressed; use kept to retain them. All other meters remain bridged. Disabled by default.
+      Assigns reviewed standard JVM observations to agent runtime telemetry: class loading,
+      memory pool sizes, buffer pools, live/state/daemon thread counts, CPU count/time/utilization,
+      file descriptors and GC pause/concurrent-phase durations. Includes the corresponding
+      process.cpu.*, process.files.*, system.cpu.* and system.load.average.1m names.
+      Exact reviewed names and types are suppressed only when their JMX replacement registered
+      at bridge initialization; experimental and platform-specific replacements must be available.
+      Complementary metrics (including heap utilization after GC, allocation/promotion, peak/started/
+      deadlocked/virtual threads, JVM info, compilation, uptime and start time) remain bridged.
+      This selects native units and attributes; custom meters reusing reviewed names may also be
+      suppressed. Use kept to retain them. JFR-only replacements do not authorize suppression.
+      Disabled by default; this is not a namespace-wide filter.
     type: boolean
     default: false
   - name: otel.instrumentation.micrometer.experimental.jvm-metrics-ownership.kept

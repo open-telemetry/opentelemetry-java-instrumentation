@@ -59,7 +59,9 @@ class InternalJfrConfigTest {
     RuntimeTelemetry telemetry = config.configure();
     cleanup.deferCleanup(telemetry);
     assertThat(telemetry.getJfrTelemetry()).isNotNull();
-    assertThat(Internal.getRegisteredJmxObservers(telemetry)).isEmpty();
+    assertThat(Internal.getRegisteredJmxObservers(telemetry))
+        .doesNotContain("jvm.class.count", "jvm.class.loaded", "jvm.class.unloaded")
+        .contains("jvm.memory.used", "jvm.thread.count");
   }
 
   // an empty selector is equivalent to no selector at all

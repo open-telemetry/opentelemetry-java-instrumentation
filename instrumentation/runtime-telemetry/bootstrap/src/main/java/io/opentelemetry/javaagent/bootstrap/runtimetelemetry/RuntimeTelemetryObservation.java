@@ -24,7 +24,8 @@ public final class RuntimeTelemetryObservation {
    * runtime telemetry is installed. Registration does not guarantee that a metric is exported, for
    * example when an SDK view drops it.
    *
-   * <p>Only class-loading metrics ({@code jvm.class.*}) are currently reported.
+   * <p>Reports reviewed class-loading, memory, buffer, CPU, thread and GC metrics. JFR-only
+   * replacements are not included.
    */
   public static Set<String> registeredJmxObservers() {
     return registeredJmxObservers;

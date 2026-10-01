@@ -19,7 +19,7 @@ dependencies {
 
   testImplementation(project(":instrumentation:micrometer:micrometer-1.5:testing"))
 
-  // provides the JMX class-loading metrics that jvm-metrics-ownership defers to
+  // provides the JMX metrics that jvm-metrics-ownership defers to
   testInstrumentation(project(":instrumentation:runtime-telemetry:javaagent"))
 }
 

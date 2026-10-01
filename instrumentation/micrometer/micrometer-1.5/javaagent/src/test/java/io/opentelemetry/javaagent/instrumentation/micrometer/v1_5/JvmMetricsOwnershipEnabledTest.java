@@ -9,6 +9,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.binder.jvm.ClassLoaderMetrics;
+import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics;
+import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics;
+import io.micrometer.core.instrument.binder.system.ProcessorMetrics;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
@@ -39,5 +42,39 @@ class JvmMetricsOwnershipEnabledTest {
             metric -> metric.getInstrumentationScopeInfo().getName().equals(MICROMETER_SCOPE))
         .extracting(MetricData::getName)
         .doesNotContain("jvm.classes.loaded", "jvm.classes.loaded.count");
+  }
+
+  @Test
+  void memoryThreadsAndCpuUseNativeObservationsWhileExtrasRemain() {
+    new JvmMemoryMetrics().bindTo(Metrics.globalRegistry);
+    new JvmThreadMetrics().bindTo(Metrics.globalRegistry);
+    new ProcessorMetrics().bindTo(Metrics.globalRegistry);
+    for (String name :
+        new String[] {
+          "jvm.memory.used",
+          "jvm.memory.committed",
+          "jvm.memory.limit",
+          "jvm.thread.count",
+          "jvm.cpu.count"
+        }) {
+      testing.waitAndAssertMetrics(
+          RUNTIME_TELEMETRY_SCOPE, name, AbstractIterableAssert::isNotEmpty);
+    }
+    // Buffers are retained because experimental JMX telemetry is disabled in this task.
+    for (String name : new String[] {"jvm.buffer.count", "jvm.threads.peak"}) {
+      testing.waitAndAssertMetrics(MICROMETER_SCOPE, name, AbstractIterableAssert::isNotEmpty);
+    }
+    assertThat(testing.metrics())
+        .filteredOn(
+            metric -> metric.getInstrumentationScopeInfo().getName().equals(MICROMETER_SCOPE))
+        .extracting(MetricData::getName)
+        .doesNotContain(
+            "jvm.memory.used",
+            "jvm.memory.committed",
+            "jvm.memory.max",
+            "jvm.threads.live",
+            "jvm.threads.daemon",
+            "jvm.threads.states",
+            "system.cpu.count");
   }
 }

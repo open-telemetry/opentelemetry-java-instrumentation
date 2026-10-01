@@ -5,12 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.runtimetelemetry;
 
-import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.util.HashSet;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -27,9 +26,20 @@ class JmxRuntimeMetricsTest {
             "io.opentelemetry.javaagent.bootstrap.runtimetelemetry.RuntimeTelemetryObservation",
             true,
             null);
-    assertThat(holder.getMethod("registeredJmxObservers").invoke(null))
-        .isEqualTo(
-            new HashSet<>(asList("jvm.class.count", "jvm.class.loaded", "jvm.class.unloaded")));
+    @SuppressWarnings("unchecked")
+    Set<String> observers = (Set<String>) holder.getMethod("registeredJmxObservers").invoke(null);
+    assertThat(observers)
+        .contains(
+            "jvm.class.count",
+            "jvm.class.loaded",
+            "jvm.class.unloaded",
+            "jvm.memory.used",
+            "jvm.memory.committed",
+            "jvm.memory.limit",
+            "jvm.thread.count",
+            "jvm.cpu.count")
+        .doesNotContain(
+            "jvm.buffer.count", "jvm.system.cpu.utilization", "jvm.file_descriptor.count");
   }
 
   @Test
