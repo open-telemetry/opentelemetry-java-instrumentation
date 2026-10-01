@@ -64,11 +64,11 @@ class AkkaForkJoinTaskInstrumentation implements TypeInstrumentation {
     public static Scope enter(@Advice.This ForkJoinTask<?> thiz) {
       Scope scope =
           TaskAdviceHelper.makePropagatedContextCurrent(
-              Akka25VirtualFields.FORK_JOIN_TASK_PROPAGATED_CONTEXT, thiz);
+              AkkaForkJoinVirtualFields.FORK_JOIN_TASK_PROPAGATED_CONTEXT, thiz);
       if (thiz instanceof Runnable) {
         Scope newScope =
             TaskAdviceHelper.makePropagatedContextCurrent(
-                Akka25VirtualFields.RUNNABLE_PROPAGATED_CONTEXT, (Runnable) thiz);
+                AkkaForkJoinVirtualFields.RUNNABLE_PROPAGATED_CONTEXT, (Runnable) thiz);
         if (newScope != null) {
           if (scope != null) {
             newScope.close();
@@ -80,7 +80,7 @@ class AkkaForkJoinTaskInstrumentation implements TypeInstrumentation {
       if (thiz instanceof Callable) {
         Scope newScope =
             TaskAdviceHelper.makePropagatedContextCurrent(
-                Akka25VirtualFields.CALLABLE_PROPAGATED_CONTEXT, (Callable<?>) thiz);
+                AkkaForkJoinVirtualFields.CALLABLE_PROPAGATED_CONTEXT, (Callable<?>) thiz);
         if (newScope != null) {
           if (scope != null) {
             newScope.close();

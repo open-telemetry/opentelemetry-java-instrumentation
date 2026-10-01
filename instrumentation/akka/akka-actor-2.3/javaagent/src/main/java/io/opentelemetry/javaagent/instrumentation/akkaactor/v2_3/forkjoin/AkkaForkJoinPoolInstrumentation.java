@@ -52,7 +52,7 @@ class AkkaForkJoinPoolInstrumentation implements TypeInstrumentation {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
         return ExecutorAdviceHelper.attachContextToTask(
-            context, Akka25VirtualFields.FORK_JOIN_TASK_PROPAGATED_CONTEXT, task);
+            context, AkkaForkJoinVirtualFields.FORK_JOIN_TASK_PROPAGATED_CONTEXT, task);
       }
       return null;
     }
@@ -65,7 +65,7 @@ class AkkaForkJoinPoolInstrumentation implements TypeInstrumentation {
       ExecutorAdviceHelper.cleanUpAfterSubmit(
           propagatedContext,
           throwable,
-          Akka25VirtualFields.FORK_JOIN_TASK_PROPAGATED_CONTEXT,
+          AkkaForkJoinVirtualFields.FORK_JOIN_TASK_PROPAGATED_CONTEXT,
           task);
     }
   }
