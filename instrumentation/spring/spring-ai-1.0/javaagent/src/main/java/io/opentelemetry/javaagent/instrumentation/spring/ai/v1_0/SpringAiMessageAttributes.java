@@ -83,7 +83,7 @@ class SpringAiMessageAttributes implements AttributesExtractor<SpringAiRequest, 
         result.append(',');
       }
       Message message = messages.get(index);
-      appendMessage(result, message, null, null, maxContentLength);
+      appendMessage(result, message, null, maxContentLength);
     }
     return result.append(']').toString();
   }
@@ -101,13 +101,7 @@ class SpringAiMessageAttributes implements AttributesExtractor<SpringAiRequest, 
           streamedContents != null && index < streamedContents.size()
               ? streamedContents.get(index)
               : generation.getOutput().getText();
-      String finishReason = finishReason(generation);
-      appendMessage(
-          result,
-          generation.getOutput(),
-          content,
-          finishReason == null ? "unknown" : finishReason,
-          maxContentLength);
+      appendMessage(result, generation.getOutput(), content, maxContentLength);
     }
     return result.append(']').toString();
   }
@@ -116,17 +110,12 @@ class SpringAiMessageAttributes implements AttributesExtractor<SpringAiRequest, 
       StringBuilder result,
       Message message,
       @Nullable String contentOverride,
-      @Nullable String finishReason,
       int maxContentLength) {
     result.append("{\"role\":");
     appendJsonString(result, message.getMessageType().name().toLowerCase(Locale.ROOT));
     result.append(",\"parts\":[");
     appendParts(result, message, contentOverride, maxContentLength);
     result.append(']');
-    if (finishReason != null) {
-      result.append(",\"finish_reason\":");
-      appendJsonString(result, finishReason);
-    }
     result.append('}');
   }
 
@@ -312,11 +301,6 @@ class SpringAiMessageAttributes implements AttributesExtractor<SpringAiRequest, 
     result.append(name);
     result.append("\":");
     appendJsonString(result, value);
-  }
-
-  @Nullable
-  private static String finishReason(Generation generation) {
-    return generation.getMetadata() == null ? null : generation.getMetadata().getFinishReason();
   }
 
   private static void appendJsonString(StringBuilder result, @Nullable String value) {

@@ -405,8 +405,8 @@ class ChatModelTest {
                             equalTo(
                                 stringKey("gen_ai.output.messages"),
                                 experimental(
-                                    "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\"A one\"}],\"finish_reason\":\"stop\"},"
-                                        + "{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\"B two\"}],\"finish_reason\":\"length\"}]")))));
+                                    "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\"A one\"}]},"
+                                        + "{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\"B two\"}]}]")))));
     assertMetrics();
     assertMultiChoiceEvents(spanContext);
   }
@@ -465,7 +465,7 @@ class ChatModelTest {
                         nCopies(
                             expectedCount,
                             "{\"type\":\"media\",\"mime_type\":\"image/png\",\"modality\":\"image\",\"name\":\"image\"}"))
-                    + "],\"finish_reason\":\"stop\"}]"));
+                    + "]}]"));
   }
 
   @Test
@@ -504,7 +504,7 @@ class ChatModelTest {
                     + TOOL_CALL_ID
                     + "\",\"name\":\""
                     + TOOL_NAME
-                    + "\",\"arguments\":\"{\\\"location\\\":\\\"Paris\\\"}\"}],\"finish_reason\":\"tool_calls\"}]"));
+                    + "\",\"arguments\":\"{\\\"location\\\":\\\"Paris\\\"}\"}]}]"));
     testing.waitAndAssertLogRecords(
         log ->
             log.hasAttributesSatisfyingExactly(
@@ -562,7 +562,7 @@ class ChatModelTest {
                     + "\",\"name\":\""
                     + TOOL_NAME
                     + "\",\"arguments\":\"{\\\"location\\\":\\\"Paris\\\"}\"},"
-                    + "{\"type\":\"tool_call\",\"id\":\"call_time\",\"name\":\"get_time\",\"arguments\":\"{\\\"timezone\\\":\\\"UTC\\\"}\"}],\"finish_reason\":\"tool_calls\"}]"));
+                    + "{\"type\":\"tool_call\",\"id\":\"call_time\",\"name\":\"get_time\",\"arguments\":\"{\\\"timezone\\\":\\\"UTC\\\"}\"}]}]"));
   }
 
   @Test
@@ -606,7 +606,7 @@ class ChatModelTest {
                                 experimental(
                                     "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\""
                                         + RESPONSE
-                                        + "\"}],\"finish_reason\":\"stop\"}]")))));
+                                        + "\"}]}]")))));
     assertMetricsWithoutTokenUsage();
   }
 
@@ -702,7 +702,7 @@ class ChatModelTest {
                     + TOOL_CALL_ID
                     + "\",\"name\":\""
                     + TOOL_NAME
-                    + "\",\"arguments\":\"{\\\"location\\\":\\\"Paris\\\"}\"}],\"finish_reason\":\"tool_calls\"}]"));
+                    + "\",\"arguments\":\"{\\\"location\\\":\\\"Paris\\\"}\"}]}]"));
   }
 
   @Test
@@ -915,7 +915,7 @@ class ChatModelTest {
             experimental(
                 "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\""
                     + repeatedContent(8191)
-                    + "\"}],\"finish_reason\":\"stop\"}]"));
+                    + "\"}]}]"));
   }
 
   @Test
@@ -944,7 +944,7 @@ class ChatModelTest {
             experimental(
                 "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\""
                     + repeatedContent(MESSAGE_CONTENT_SPAN_ATTRIBUTE_MAX_LENGTH)
-                    + "\"}],\"finish_reason\":\"stop\"}]"));
+                    + "\"}]}]"));
   }
 
   @Test
@@ -998,7 +998,7 @@ class ChatModelTest {
                     + TOOL_NAME
                     + "\",\"arguments\":\""
                     + repeatedContent(MESSAGE_CONTENT_SPAN_ATTRIBUTE_MAX_LENGTH)
-                    + "\"}],\"finish_reason\":\"tool_calls\"}]"));
+                    + "\"}]}]"));
   }
 
   @Test
@@ -1095,7 +1095,7 @@ class ChatModelTest {
                                     ? experimental(
                                         "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\""
                                             + RESPONSE
-                                            + "\"}],\"finish_reason\":\"stop\"}]")
+                                            + "\"}]}]")
                                     : null))));
   }
 

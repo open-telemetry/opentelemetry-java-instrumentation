@@ -124,9 +124,7 @@ class OpenAiChatModelTest {
                                 experimental(
                                     "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\""
                                         + RESPONSE
-                                        + "\"}],\"finish_reason\":\""
-                                        + FINISH_REASON
-                                        + "\"}]")))));
+                                        + "\"}]}]")))));
     assertMetrics();
     assertMessageEvents(spanContext);
   }
