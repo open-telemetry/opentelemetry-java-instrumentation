@@ -42,7 +42,7 @@ class AkkaActorCellInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope enter(@Advice.Argument(0) Envelope envelope) {
       return TaskAdviceHelper.makePropagatedContextCurrent(
-          Akka23VirtualFields.ENVELOPE_PROPAGATED_CONTEXT, envelope);
+          VirtualFields.ENVELOPE_PROPAGATED_CONTEXT, envelope);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -59,7 +59,7 @@ class AkkaActorCellInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope enter(@Advice.Argument(0) SystemMessage systemMessage) {
       return TaskAdviceHelper.makePropagatedContextCurrent(
-          Akka23VirtualFields.SYSTEM_MESSAGE_PROPAGATED_CONTEXT, systemMessage);
+          VirtualFields.SYSTEM_MESSAGE_PROPAGATED_CONTEXT, systemMessage);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

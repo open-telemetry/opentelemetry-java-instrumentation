@@ -45,7 +45,7 @@ class AkkaDispatcherInstrumentation implements TypeInstrumentation {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, envelope.message())) {
         return ExecutorAdviceHelper.attachContextToTask(
-            context, Akka23VirtualFields.ENVELOPE_PROPAGATED_CONTEXT, envelope);
+            context, VirtualFields.ENVELOPE_PROPAGATED_CONTEXT, envelope);
       }
       return null;
     }
@@ -56,7 +56,7 @@ class AkkaDispatcherInstrumentation implements TypeInstrumentation {
         @Advice.Enter @Nullable PropagatedContext propagatedContext,
         @Advice.Thrown @Nullable Throwable throwable) {
       ExecutorAdviceHelper.cleanUpAfterSubmit(
-          propagatedContext, throwable, Akka23VirtualFields.ENVELOPE_PROPAGATED_CONTEXT, envelope);
+          propagatedContext, throwable, VirtualFields.ENVELOPE_PROPAGATED_CONTEXT, envelope);
     }
   }
 }
