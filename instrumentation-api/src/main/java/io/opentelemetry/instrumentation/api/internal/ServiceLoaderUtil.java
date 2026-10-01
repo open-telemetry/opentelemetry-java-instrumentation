@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
+import static java.util.Collections.emptyList;
+
 import java.util.ServiceLoader;
 import java.util.function.Function;
 
@@ -14,7 +16,7 @@ import java.util.function.Function;
  */
 public final class ServiceLoaderUtil {
 
-  private static volatile Function<Class<?>, Iterable<?>> loadFunction = ServiceLoader::load;
+  private static volatile Function<Class<?>, Iterable<?>> loadFunction = defaultLoadFunction();
 
   private ServiceLoaderUtil() {}
 
@@ -26,5 +28,16 @@ public final class ServiceLoaderUtil {
 
   public static void setLoadFunction(Function<Class<?>, Iterable<?>> customLoadFunction) {
     loadFunction = customLoadFunction;
+  }
+
+  private static Function<Class<?>, Iterable<?>> defaultLoadFunction() {
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/19954
+    // With Android StrictMode enabled using ServiceLoader on main thread causes a
+    // DiskReadViolation. We disable ServiceLoader usage by default to avoid slowing down
+    // application startup.
+    if ("Dalvik".equals(System.getProperty("java.vm.name"))) {
+      return (unused) -> emptyList();
+    }
+    return ServiceLoader::load;
   }
 }
