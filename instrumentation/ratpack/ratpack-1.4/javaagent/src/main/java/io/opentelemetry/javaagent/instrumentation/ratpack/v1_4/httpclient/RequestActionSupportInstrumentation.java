@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.ratpack.v1_4;
+package io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.httpclient;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
@@ -65,7 +65,7 @@ class RequestActionSupportInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
         @Advice.FieldValue("execution") Execution execution, @Advice.Argument(1) Channel channel) {
-      Ratpack17Singletons.propagateContextToChannel(execution, channel);
+      RatpackSingletons.propagateContextToChannel(execution, channel);
     }
   }
 
@@ -76,7 +76,7 @@ class RequestActionSupportInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.FieldValue("execution") Execution execution,
         @Advice.Argument(0) ChannelPipeline pipeline) {
-      Ratpack17Singletons.captureProtocolVersion(execution, pipeline.channel());
+      RatpackSingletons.captureProtocolVersion(execution, pipeline.channel());
     }
   }
 

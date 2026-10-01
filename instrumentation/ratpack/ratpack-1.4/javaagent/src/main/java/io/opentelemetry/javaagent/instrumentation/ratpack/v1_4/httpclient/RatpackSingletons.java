@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.ratpack.v1_4;
+package io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.httpclient;
 
 import io.netty.channel.Channel;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -17,7 +17,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import ratpack.exec.Execution;
 import ratpack.http.client.RequestSpec;
 
-public class Ratpack17Singletons {
+public class RatpackSingletons {
 
   private static final OpenTelemetryHttpClient httpClient;
 
@@ -55,5 +55,5 @@ public class Ratpack17Singletons {
     }
   }
 
-  private Ratpack17Singletons() {}
+  private RatpackSingletons() {}
 }

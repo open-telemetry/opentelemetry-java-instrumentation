@@ -3,16 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.server;
+package io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.httpclient.server;
 
-import io.opentelemetry.instrumentation.ratpack.server.AbstractRatpackHttpServerTest;
+import io.opentelemetry.instrumentation.ratpack.server.AbstractRatpackForkedHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import ratpack.server.RatpackServerSpec;
 
-class RatpackHttpServerTest extends AbstractRatpackHttpServerTest {
+class RatpackForkedHttpServerTest extends AbstractRatpackForkedHttpServerTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
@@ -25,5 +25,6 @@ class RatpackHttpServerTest extends AbstractRatpackHttpServerTest {
     super.configure(options);
 
     options.setHasResponseCustomizer(endpoint -> true);
+    options.setTestHttpPipelining(false);
   }
 }

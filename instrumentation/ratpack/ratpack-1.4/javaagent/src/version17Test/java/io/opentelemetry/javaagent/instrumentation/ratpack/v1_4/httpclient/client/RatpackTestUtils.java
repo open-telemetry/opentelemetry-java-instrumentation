@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.client;
+package io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.httpclient.client;
 
 import io.netty.channel.ConnectTimeoutException;
 import java.net.URI;

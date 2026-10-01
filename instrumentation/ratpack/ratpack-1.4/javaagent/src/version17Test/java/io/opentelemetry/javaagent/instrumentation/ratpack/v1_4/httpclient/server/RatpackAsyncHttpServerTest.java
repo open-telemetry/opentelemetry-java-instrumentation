@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.server;
+package io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.httpclient.server;
 
 import io.opentelemetry.instrumentation.ratpack.server.AbstractRatpackAsyncHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;

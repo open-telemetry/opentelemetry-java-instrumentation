@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.ratpack.v1_4;
+package io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.httpclient;
 
-import static io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.Ratpack17Singletons.httpClient;
+import static io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.httpclient.RatpackSingletons.httpClient;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
