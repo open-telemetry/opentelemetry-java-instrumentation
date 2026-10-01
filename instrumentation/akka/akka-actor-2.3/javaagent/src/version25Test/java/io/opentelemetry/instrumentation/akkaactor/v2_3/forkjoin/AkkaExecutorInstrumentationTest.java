@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.akkaactor.v2_3;
+package io.opentelemetry.instrumentation.akkaactor.v2_3.forkjoin;
 
 import akka.dispatch.forkjoin.ForkJoinPool;
 import akka.dispatch.forkjoin.ForkJoinTask;

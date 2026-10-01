@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.akkaactor.v2_3;
+package io.opentelemetry.javaagent.instrumentation.akkaactor.v2_3.forkjoin;
 
 import static io.opentelemetry.javaagent.extension.instrumentation.internal.DeprecatedInstrumentationNames.expandDeprecatedNames;
 import static java.util.Arrays.asList;
