@@ -2,11 +2,12 @@
 """Check javaagent enablement selectors in v3-preview mode.
 
 This checks selector structure, not whether an independent feature needs a control.
-Unversioned modules are limited to the JDK instrumentations listed below. A Java
+Modules omit a baseline selector only for the JDK instrumentations listed below
+and the Reactor Netty server registration housed in the WebFlux project. A Java
 expression the checker cannot evaluate is an error, not an implicit exemption.
 Module classes may share all public names. Optional feature selectors preserve
 independent controls; Muzzle identifies individual modules by fully qualified class.
-Client/server role selectors follow the baseline, unversioned first, then versioned.
+Client/server role selectors are versionless and follow the baseline.
 """
 
 import argparse
@@ -34,6 +35,12 @@ SHARED_FEATURE_FAMILIES = {
 }
 # Existing independent controls whose names identify a compatibility baseline.
 FEATURE_VERSION_SELECTORS = {"ratpack-1.7"}
+# This generic Reactor Netty server support lives with the WebFlux tests that exercise it.
+REACTOR_NETTY_SERVER_MODULE = Path(
+    "spring", "spring-webflux", "spring-webflux-5.0", "javaagent", "src", "main", "java",
+    "io", "opentelemetry", "javaagent", "instrumentation", "spring", "webflux", "v5_0",
+    "server", "reactornetty", "ReactorNettyInstrumentationModule.java",
+)
 MODULE_SUPERCLASSES = ("InstrumentationModule", "V3PreviewFallbackEnabledInstrumentationModule")
 VERSIONED = re.compile(r"^([a-z][a-z0-9-]*)-([0-9]+(?:\.[0-9]+)+)(?:-|$)")
 KEBAB = re.compile(r"[a-z][a-z0-9]*(?:-[a-z0-9]+(?:\.[0-9]+)*)*")
@@ -200,13 +207,19 @@ def selectors(path, source):
     ]
 
 
-def validate_feature_selectors(family, base, extras):
-    client_names = {f"{family}-client", f"{base or family}-client"}
-    server_names = {f"{family}-server", f"{base or family}-server"}
-    if client_names.intersection(extras) and server_names.intersection(extras):
+def validate_feature_selectors(family, extras):
+    for name in extras:
+        versioned = VERSIONED.match(name)
+        if (
+            versioned
+            and versioned.group(1) == family
+            and name[versioned.end():] in {"client", "server"}
+        ):
+            raise ValueError(f"versioned role selectors are not supported: {name!r}")
+    if f"{family}-client" in extras and f"{family}-server" in extras:
         raise ValueError("client and server role selectors must not be combined")
     for role in ("client", "server"):
-        role_names = [f"{family}-{role}"] + ([f"{base}-{role}"] if base else [])
+        role_names = [f"{family}-{role}"]
         if role_names[0] in extras:
             if extras[:len(role_names)] != role_names:
                 raise ValueError(f"expected role selectors {role_names}, found {extras}")
@@ -241,15 +254,20 @@ def check(root, modules=None):
     for path, source in modules:
         relative = path.relative_to(root)
         try:
-            family, base = owning_names(relative)
             # InstrumentationModule stores the names in a LinkedHashSet.
             names = list(dict.fromkeys(selectors(path, source)))
+            if relative == REACTOR_NETTY_SERVER_MODULE:
+                required = ["reactor-netty", "reactor-netty-server"]
+                if names != required:
+                    raise ValueError(f"expected selectors {required}, found {names}")
+                continue
+            family, base = owning_names(relative)
             required = [family] + ([base] if base else [])
             if names[: len(required)] != required:
                 raise ValueError(f"expected first selectors {required}, found {names}")
             if any(not KEBAB.fullmatch(name) for name in names):
                 raise ValueError(f"selectors must use kebab-case: {names}")
-            validate_feature_selectors(family, base, names[len(required) :])
+            validate_feature_selectors(family, names[len(required) :])
         except ValueError as error:
             report(path, source, error)
 

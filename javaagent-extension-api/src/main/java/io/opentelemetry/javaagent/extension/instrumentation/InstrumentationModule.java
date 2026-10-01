@@ -50,12 +50,10 @@ public abstract class InstrumentationModule implements Ordered {
    *   <li>The library family, e.g. {@code instrumented-library}, shared across its versions.
    *   <li>The family with its owning instrumentation baseline, e.g. {@code
    *       instrumented-library-1.0}. JDK instrumentations omit this version level.
-   *   <li>When client and server instrumentation are independently selectable, optional role
-   *       selectors: {@code instrumented-library-client} or {@code instrumented-library-server},
-   *       followed by the same role with the owning baseline, e.g. {@code
-   *       instrumented-library-1.0-server}. JDK instrumentations omit the versioned role selector.
-   *       Role-specific modules, including route enrichment, share its selectors. Support needed by
-   *       both roles is selected separately.
+   *   <li>When client and server instrumentation are independently selectable, optional versionless
+   *       role selectors: {@code instrumented-library-client} or {@code
+   *       instrumented-library-server}. Role-specific modules, including route enrichment, share
+   *       its selectors. Support needed by both roles is selected separately.
    *   <li>Optional feature names for independently useful behavior, e.g. {@code
    *       kafka-clients-metrics} or {@code reactor-context-propagation-operator}. Several module
    *       classes can share the same feature name. Existing framework controls such as {@code cxf}

@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.client;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -16,11 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class PekkoHttpClientInstrumentationModule extends InstrumentationModule {
   public PekkoHttpClientInstrumentationModule() {
-    super(
-        "pekko-http",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"pekko-http-1.0", "pekko-http-client", "pekko-http-1.0-client"}
-            : new String[] {"pekko-http-1.0", "pekko-http-client"});
+    super("pekko-http", "pekko-http-1.0", "pekko-http-client");
   }
 
   @Override

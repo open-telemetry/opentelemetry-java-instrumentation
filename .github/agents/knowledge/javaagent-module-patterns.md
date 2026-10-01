@@ -34,6 +34,8 @@ public class MyLibrary10InstrumentationModule extends InstrumentationModule {
 - Constructor `super()` arguments: the **first** (main) name must equal the Gradle module
   directory name excluding version suffix. Names use **kebab-case**. See
   [module-naming.md](module-naming.md) for the full naming convention.
+  The Reactor Netty server registration housed in `spring-webflux-5.0` is an exception: its
+  preview names are `reactor-netty` and `reactor-netty-server`, without a baseline selector.
 - `typeInstrumentations()` returns the list of `TypeInstrumentation` implementations — use
   `Arrays.asList(...)` for multiple items and `Collections.singletonList(...)` for a single
   item.
@@ -48,6 +50,10 @@ independently useful features; an existing class-specific alias alone does not j
 selector. Network enrichment, transport compatibility, and asynchronous span-completion helpers can
 share their parent's selectors. Modules belonging to one client/server role share that role's
 selectors.
+
+Preview selectors follow `family`, owning `baseline`, then an optional versionless client/server
+role. Do not add versioned role selectors. For example, WebFlux server modules use
+`spring-webflux`, `spring-webflux-5.0`, `spring-webflux-server`.
 
 Muzzle passes prefer `excludeInstrumentationName(...)` when the public name selects the intended
 classes both outside v3 preview and in preview. Use `excludeInstrumentationModule(...)` with the

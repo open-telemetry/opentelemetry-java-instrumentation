@@ -39,7 +39,7 @@ Special leaves: `bootstrap` (classes needed in the bootstrap class loader).
 
 ## `InstrumentationModule` name
 
-The first (main) name passed to `super()` must equal the Gradle module directory name,
+In v3 preview, the first (main) name passed to `super()` normally equals the Gradle module directory name,
 excluding any version suffix that comes after the library name:
 
 ```java
@@ -49,6 +49,10 @@ public MyLibraryInstrumentationModule() {
 ```
 
 Module names use `kebab-case`.
+
+The generic Reactor Netty server registration housed in `spring-webflux-5.0` is an exception.
+Its preview names are `reactor-netty` and `reactor-netty-server`, without a baseline selector.
+Outside v3 preview, preserve existing names and their order.
 
 ## Common modules (shared code across multiple versions)
 

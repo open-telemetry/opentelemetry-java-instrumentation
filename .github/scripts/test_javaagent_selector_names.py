@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from check_javaagent_selector_names import check, main
+from check_javaagent_selector_names import REACTOR_NETTY_SERVER_MODULE, check, main
 
 
 class JavaagentSelectorNamesTest(unittest.TestCase):
@@ -17,11 +17,14 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
 
     def module(self, owner, filename, arguments, source_set="main"):
         path = self.root / owner / "javaagent" / "src" / source_set / "java" / filename
+        self.module_at(path, arguments)
+
+    def module_at(self, path, arguments):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(
             "@AutoService(InstrumentationModule.class)\n"
-            f"class {filename[:-5]} extends InstrumentationModule {{\n"
-            f"  {filename[:-5]}() {{ super({arguments}); }}\n"
+            f"class {path.stem} extends InstrumentationModule {{\n"
+            f"  {path.stem}() {{ super({arguments}); }}\n"
             "}\n",
             encoding="utf-8",
         )
@@ -34,11 +37,11 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         self.module(
             "http-client-5.0",
             "ClientModule.java",
-            '"http-client", "http-client-5.0", "http-client-5.0-client"',
+            '"http-client", "http-client-5.0", "http-client-client"',
         )
         self.module(
             "http-client-5.0", "ServerModule.java",
-            '"http-client", "http-client-5.0", "http-client-5.0-server"',
+            '"http-client", "http-client-5.0", "http-client-server"',
         )
         self.assertEqual(check(self.root), [])
 
@@ -46,7 +49,7 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         self.module("http-client-5.0", "CoreModule.java", '"http-client", "http-client-5.0"')
         self.module(
             "http-client-5.0", "ClientModule.java",
-            '"http-client", "http-client-5.0", "http-client-5.0-client"',
+            '"http-client", "http-client-5.0", "http-client-client"',
         )
         self.assertEqual(check(self.root), [])
 
@@ -58,11 +61,11 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
     def test_multiple_classes_can_share_every_public_selector(self):
         self.module(
             "http-client-5.0", "ClientModule.java",
-            '"http-client", "http-client-5.0", "http-client-5.0-client"',
+            '"http-client", "http-client-5.0", "http-client-client"',
         )
         self.module(
             "http-client-5.0", "OtherClientModule.java",
-            '"http-client", "http-client-5.0", "http-client-5.0-client"',
+            '"http-client", "http-client-5.0", "http-client-client"',
         )
         self.assertEqual(check(self.root), [])
 
@@ -88,18 +91,18 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         )
         self.module(
             "http-client-5.0", "ClientModule.java",
-            '"http-client", "http-client-5.0", "http-client-5.0-client"',
+            '"http-client", "http-client-5.0", "http-client-client"',
         )
         self.module(
             "http-client-6.0", "ClientModule.java",
-            '"http-client", "http-client-6.0", "http-client-6.0-client"',
+            '"http-client", "http-client-6.0", "http-client-client"',
         )
         self.assertEqual(check(self.root), [])
 
     def test_standalone_module_can_register_a_feature_selector(self):
         self.module(
             "http-client-5.0", "ClientModule.java",
-            '"http-client", "http-client-5.0", "http-client-5.0-client"',
+            '"http-client", "http-client-5.0", "http-client-client"',
         )
         self.assertEqual(check(self.root), [])
 
@@ -127,26 +130,26 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         self.module(
             "akka/akka-http-10.0",
             "ServerModule.java",
-            '"akka-http", "akka-http-10.0", "akka-http-10.0-server", "akka-http-server"',
+            '"akka-http", "akka-http-10.0", "akka-http-10.0-metrics", "akka-http-server"',
         )
         self.assertIn("expected role selectors", check(self.root)[0])
 
-    def test_role_selectors_group_components_without_losing_exact_selectors(self):
+    def test_role_selectors_group_components_without_losing_feature_selectors(self):
         self.module(
             "http-5.0", "ClientModule.java",
-            '"http", "http-5.0", "http-client", "http-5.0-client"',
+            '"http", "http-5.0", "http-client"',
         )
         self.module(
             "http-5.0", "ServerModule.java",
-            '"http", "http-5.0", "http-server", "http-5.0-server"',
+            '"http", "http-5.0", "http-server"',
         )
         self.module(
             "http-5.0", "RouteModule.java",
-            '"http", "http-5.0", "http-server", "http-5.0-server", "http-5.0-server-route"',
+            '"http", "http-5.0", "http-server", "http-5.0-server-route"',
         )
         self.module(
             "http-5.0", "AdapterModule.java",
-            '"http", "http-5.0", "http-server", "http-5.0-server", "http-5.0-adapter"',
+            '"http", "http-5.0", "http-server", "http-5.0-adapter"',
         )
         self.assertEqual(check(self.root), [])
 
@@ -154,11 +157,11 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         for version in ("5.0", "6.0"):
             self.module(
                 f"http-{version}", "ClientModule.java",
-                f'"http", "http-{version}", "http-client", "http-{version}-client"',
+                f'"http", "http-{version}", "http-client"',
             )
             self.module(
                 f"http-{version}", "ServerModule.java",
-                f'"http", "http-{version}", "http-server", "http-{version}-server"',
+                f'"http", "http-{version}", "http-server"',
             )
         self.assertEqual(check(self.root), [])
 
@@ -166,7 +169,7 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         for filename in ("ServerModule.java", "RouteModule.java"):
             self.module(
                 "http-5.0", filename,
-                '"http", "http-5.0", "http-server", "http-5.0-server"',
+                '"http", "http-5.0", "http-server"',
             )
         self.assertEqual(check(self.root), [])
 
@@ -174,14 +177,19 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         for filename in ("RouteModule.java", "OtherRouteModule.java"):
             self.module(
                 "http-5.0", filename,
-                '"http", "http-5.0", "http-server", "http-5.0-server", "http-5.0-route"',
+                '"http", "http-5.0", "http-server", "http-5.0-route"',
             )
         self.assertEqual(check(self.root), [])
 
-    def test_versionless_role_requires_matching_versioned_role(self):
+    def test_versioned_roles_are_rejected(self):
         for selectors in (
-            '"http-server"',
+            '"http-5.0-client"',
+            '"http-5.0-server"',
+            '"http-client", "http-5.0-client"',
+            '"http-server", "http-5.0-server"',
+            '"http-client", "http-6.0-client"',
             '"http-server", "http-6.0-server"',
+            '"http-5.0-server", "http-server"',
             '"http-server", "http-5.0-route", "http-5.0-server"',
         ):
             with self.subTest(selectors=selectors):
@@ -189,29 +197,29 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
                     "http-5.0", "ServerModule.java",
                     f'"http", "http-5.0", {selectors}',
                 )
-                self.assertIn("expected role selectors", check(self.root)[0])
+                self.assertIn("versioned role selectors are not supported", check(self.root)[0])
 
     def test_role_selectors_follow_family_and_baseline(self):
         self.module(
             "http-5.0", "ServerModule.java",
-            '"http", "http-server", "http-5.0", "http-5.0-server"',
+            '"http", "http-server", "http-5.0"',
         )
         self.assertIn("expected first selectors", check(self.root)[0])
 
     def test_role_selectors_can_precede_independent_features(self):
         self.module(
             "http-5.0", "RouteModule.java",
-            '"http", "http-5.0", "http-server", "http-5.0-server", '
+            '"http", "http-5.0", "http-server", '
             '"http-5.0-routes", "http-5.0-route"',
         )
         self.assertEqual(check(self.root), [])
 
     def test_module_cannot_register_both_role_groups(self):
         for selectors in (
-            '"http-client", "http-5.0-client", "http-server", "http-5.0-server"',
-            '"http-client", "http-5.0-client", "http-5.0-server"',
-            '"http-server", "http-5.0-server", "http-5.0-client"',
-            '"http-server", "http-5.0-client"',
+            '"http-client", "http-server"',
+            '"http-server", "http-client"',
+            '"http-client", "http-5.0-route", "http-server"',
+            '"http-server", "http-5.0-route", "http-client"',
         ):
             with self.subTest(selectors=selectors):
                 self.module(
@@ -223,7 +231,7 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
     def test_standalone_module_can_register_role_selectors(self):
         self.module(
             "http-5.0", "ClientModule.java",
-            '"http", "http-5.0", "http-client", "http-5.0-client"',
+            '"http", "http-5.0", "http-client"',
         )
         self.assertEqual(check(self.root), [])
 
@@ -235,6 +243,41 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         )
         self.module("rmi", "ContextModule.java", '"rmi", "rmi-context-propagation"')
         self.assertEqual(check(self.root), [])
+
+    def test_reactor_netty_server_registration_uses_its_actual_library(self):
+        self.module_at(
+            self.root / REACTOR_NETTY_SERVER_MODULE,
+            '"reactor-netty", "reactor-netty-server"',
+        )
+        self.assertEqual(check(self.root), [])
+
+    def test_reactor_netty_server_registration_exception_requires_exact_names(self):
+        for arguments in (
+            '"reactor-netty"',
+            '"reactor-netty-server", "reactor-netty"',
+            '"reactor-netty", "reactor-netty-server", "spring-webflux"',
+            '"reactor-netty", "reactor-netty-0.7", "reactor-netty-server"',
+            '"reactor-netty", "reactor-netty-server", "reactor-netty-0.7-server"',
+            '"spring-webflux", "spring-webflux-5.0", "spring-webflux-server"',
+        ):
+            with self.subTest(arguments=arguments):
+                self.module_at(self.root / REACTOR_NETTY_SERVER_MODULE, arguments)
+                self.assertIn("expected selectors", check(self.root)[0])
+
+    def test_reactor_netty_server_exception_does_not_apply_to_other_classes(self):
+        self.module_at(
+            (self.root / REACTOR_NETTY_SERVER_MODULE).with_name("OtherInstrumentationModule.java"),
+            '"reactor-netty", "reactor-netty-server"',
+        )
+        self.assertIn("expected first selectors", check(self.root)[0])
+
+    def test_reactor_netty_server_exception_does_not_apply_to_other_locations(self):
+        self.module(
+            "spring/spring-webflux/spring-webflux-5.0",
+            "ReactorNettyInstrumentationModule.java",
+            '"reactor-netty", "reactor-netty-server"',
+        )
+        self.assertIn("expected first selectors", check(self.root)[0])
 
     def test_preview_only_names_ignore_legacy_branch(self):
         self.module(
@@ -255,7 +298,7 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
             "http-client-5.0",
             "ClientModule.java",
             '"http-client", expandDeprecatedNames('
-            '"http-client-5.0|deprecated:http-client-old", "http-client-5.0-client")',
+            '"http-client-5.0|deprecated:http-client-old", "http-client-client")',
         )
         self.assertEqual(check(self.root), [])
 
@@ -465,7 +508,7 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         concrete.write_text(
             "@AutoService(InstrumentationModule.class)\n"
             "class ClientModule extends AbstractClientModule {\n"
-            '  ClientModule() { super("http-client-5.0-client"); }\n'
+            '  ClientModule() { super("http-client-client"); }\n'
             "}\n",
             encoding="utf-8",
         )
@@ -528,12 +571,12 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
             owner, "CoreModule.java",
             '"http-client", "http-client-5.0", "http-client-5.0-core"',
         )
-        self.module(owner, "ClientModule.java", '"http-client-5.0-client"')
+        self.module(owner, "ClientModule.java", '"http-client-client"')
         concrete = self.root / owner / "javaagent" / "src" / "main" / "java" / "ClientModule.java"
         concrete.write_text(
             "@AutoService(InstrumentationModule.class)\n"
             "class ClientModule extends AbstractClientModule {\n"
-            '  ClientModule() { super("http-client-5.0-client"); }\n'
+            '  ClientModule() { super("http-client-client"); }\n'
             "}\n",
             encoding="utf-8",
         )

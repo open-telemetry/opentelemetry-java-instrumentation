@@ -23,7 +23,7 @@ public class PekkoHttpServerRouteInstrumentationModule extends InstrumentationMo
     super(
         "pekko-http",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"pekko-http-1.0", "pekko-http-server", "pekko-http-1.0-server"}
+            ? new String[] {"pekko-http-1.0", "pekko-http-server"}
             : new String[] {"pekko-http-1.0", "pekko-http-server", "pekko-http-server-route"});
   }
 
