@@ -39,7 +39,8 @@
       matchManagers: [
         'github-actions',
         'dockerfile',
-        'custom.regex',
+        // commented out to see whether weekly update passes without this line
+        // 'custom.regex',
       ],
       schedule: [
         '* 0-7 * * 2', // weekly, before 8am on Tuesday
