@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.MaxGaugeAssertions.assertMaxGauge;
-import static io.opentelemetry.instrumentation.micrometer.v1_5.UnitAssertions.expectedUnit;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.singletonList;
@@ -221,7 +220,7 @@ public abstract class AbstractPrometheusModeTest {
                 metric
                     .hasName("testPrometheusLongTaskTimer.seconds.active")
                     .hasDescription("This is a test long task timer")
-                    .hasUnit(expectedUnit("{tasks}", "{task}"))
+                    .hasUnit(SemconvStability.v3Preview() ? "{task}" : "{tasks}")
                     .hasLongSumSatisfying(
                         sum ->
                             sum.isNotMonotonic()
@@ -313,7 +312,7 @@ public abstract class AbstractPrometheusModeTest {
                     // convention, even when the unit itself is normalized to UCUM
                     .hasName(expectedName)
                     .hasDescription("This is a test meter")
-                    .hasUnit(expectedUnit("bytes", "By"))
+                    .hasUnit(SemconvStability.v3Preview() ? "By" : "bytes")
                     .hasDoubleSumSatisfying(
                         sum ->
                             sum.isMonotonic()

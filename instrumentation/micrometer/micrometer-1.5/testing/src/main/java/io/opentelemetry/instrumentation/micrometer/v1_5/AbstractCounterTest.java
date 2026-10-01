@@ -6,11 +6,11 @@
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.micrometer.v1_5.UnitAssertions.expectedUnit;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Metrics;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.BeforeEach;
@@ -96,7 +96,7 @@ public abstract class AbstractCounterTest {
             metric ->
                 metric
                     .hasName("testCounterBaseUnit")
-                    .hasUnit(expectedUnit(baseUnit, v3PreviewUnit)));
+                    .hasUnit(SemconvStability.v3Preview() ? v3PreviewUnit : baseUnit));
   }
 
   @Test

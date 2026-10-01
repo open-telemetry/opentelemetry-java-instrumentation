@@ -7,13 +7,13 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
-import static io.opentelemetry.instrumentation.micrometer.v1_5.UnitAssertions.expectedUnit;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.micrometer.core.instrument.LongTaskTimer;
 import io.micrometer.core.instrument.Metrics;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
@@ -42,7 +42,7 @@ public abstract class AbstractLongTaskTimerTest {
                 metric
                     .hasName("testLongTaskTimer.active")
                     .hasDescription("This is a test long task timer")
-                    .hasUnit(expectedUnit("{tasks}", "{task}"))
+                    .hasUnit(SemconvStability.v3Preview() ? "{task}" : "{tasks}")
                     .hasLongSumSatisfying(
                         sum ->
                             sum.isNotMonotonic()
