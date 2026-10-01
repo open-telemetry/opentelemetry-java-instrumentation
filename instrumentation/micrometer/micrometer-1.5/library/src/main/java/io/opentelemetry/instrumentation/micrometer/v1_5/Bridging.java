@@ -57,9 +57,18 @@ final class Bridging {
         });
   }
 
-  static String baseUnit(Meter.Id id) {
+  // Only the unit is normalized: name() passes the raw base unit to the naming convention, which
+  // may append it to the metric name (see PrometheusModeNamingConvention).
+  String baseUnit(Meter.Id id) {
     String baseUnit = id.getBaseUnit();
-    return baseUnit == null ? "" : baseUnit;
+    if (baseUnit == null) {
+      return "";
+    }
+    return v3Preview ? UcumUnits.normalize(baseUnit) : baseUnit;
+  }
+
+  String longTaskTimerActiveUnit() {
+    return v3Preview ? "{task}" : "{tasks}";
   }
 
   String statisticInstrumentName(

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
+import static io.opentelemetry.instrumentation.micrometer.v1_5.UnitAssertions.expectedUnit;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
@@ -51,7 +52,7 @@ public abstract class AbstractLongTaskTimerHistogramTest {
                 metric
                     .hasName("testLongTaskTimerHistogram.active")
                     .hasDescription("This is a test timer")
-                    .hasUnit("{tasks}")
+                    .hasUnit(expectedUnit("{tasks}", "{task}"))
                     .hasLongSumSatisfying(
                         sum ->
                             sum.isNotMonotonic()
@@ -110,7 +111,7 @@ public abstract class AbstractLongTaskTimerHistogramTest {
                 metric
                     .hasName("testLongTaskTimerHistogram.active")
                     .hasDescription("This is a test timer")
-                    .hasUnit("{tasks}")
+                    .hasUnit(expectedUnit("{tasks}", "{task}"))
                     .hasLongSumSatisfying(
                         sum ->
                             sum.isNotMonotonic()

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
-import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.baseUnit;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.name;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.tagsAsAttributes;
 import static java.util.Collections.emptyList;
@@ -39,7 +38,7 @@ final class OpenTelemetryGauge<T> extends AbstractMeter
         otelMeter
             .gaugeBuilder(name)
             .setDescription(bridging.description(name, id))
-            .setUnit(baseUnit(id))
+            .setUnit(bridging.baseUnit(id))
             .buildWithCallback(
                 new DoubleMeasurementRecorder<>(
                     obj, objMetric, tagsAsAttributes(id, namingConvention)));

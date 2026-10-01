@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
-import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.baseUnit;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.name;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.tagsAsAttributes;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.HistogramAdviceUtil.setExplicitBucketsIfConfigured;
@@ -68,7 +67,7 @@ final class OpenTelemetryDistributionSummary extends AbstractDistributionSummary
         otelMeter
             .histogramBuilder(name)
             .setDescription(bridging.description(name, id))
-            .setUnit(baseUnit(id));
+            .setUnit(bridging.baseUnit(id));
     setExplicitBucketsIfConfigured(otelHistogramBuilder, distributionStatisticConfig);
     this.otelHistogram = otelHistogramBuilder.build();
     this.observableMax =
@@ -76,7 +75,7 @@ final class OpenTelemetryDistributionSummary extends AbstractDistributionSummary
             ? otelMeter
                 .gaugeBuilder(name + ".max")
                 .setDescription(bridging.description(name + ".max", id))
-                .setUnit(baseUnit(id))
+                .setUnit(bridging.baseUnit(id))
                 .buildWithCallback(
                     new DoubleMeasurementRecorder<>(max, TimeWindowMax::poll, attributes))
             : null;

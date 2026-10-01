@@ -73,6 +73,13 @@ Base units are used verbatim rather than translated to [UCUM](https://ucum.org/)
 `bytes` stays `bytes` rather than becoming `By`. The base time unit defaults to seconds and can be
 changed with `OpenTelemetryMeterRegistryBuilder.setBaseTimeUnit(TimeUnit)`.
 
+When `otel.instrumentation.common.v3-preview` is enabled, base units used by Micrometer's binders
+are normalized to UCUM, for example `bytes` becomes `By`, `seconds` becomes `s`, `threads` becomes
+`{thread}`, and `percent` becomes `%`. Only the unit is changed: values are not scaled, and in
+[Prometheus mode](#prometheus-mode) the raw base unit is still appended to the metric name. Base
+units that are not recognized are passed through unchanged. The v3 preview also changes the
+`LongTaskTimer` `<name>.active` unit from `{tasks}` to `{task}`.
+
 ### Descriptions
 
 Descriptions are deduplicated by instrument name within each registry, because in OpenTelemetry the

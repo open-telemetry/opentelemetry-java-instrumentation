@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.micrometer.v1_5.UnitAssertions.expectedUnit;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.micrometer.core.instrument.Counter;
@@ -14,6 +15,8 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 public abstract class AbstractCounterTest {
 
@@ -67,5 +70,45 @@ public abstract class AbstractCounterTest {
     // then
     testing()
         .waitAndAssertMetrics(INSTRUMENTATION_NAME, "testCounter", AbstractIterableAssert::isEmpty);
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    // known Micrometer units are normalized to UCUM under the v3 preview
+    "bytes, By",
+    "threads, {thread}",
+    // the unit string is rewritten, the value is not scaled
+    "percent, %",
+    // unknown units are passed through unchanged
+    "widgets, widgets",
+    // already valid UCUM
+    "ms, ms",
+  })
+  void testCounterBaseUnit(String baseUnit, String v3PreviewUnit) {
+    Counter counter =
+        Counter.builder("testCounterBaseUnit").baseUnit(baseUnit).register(Metrics.globalRegistry);
+
+    counter.increment();
+
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            metric ->
+                metric
+                    .hasName("testCounterBaseUnit")
+                    .hasUnit(expectedUnit(baseUnit, v3PreviewUnit)));
+  }
+
+  @Test
+  void testCounterWithoutBaseUnit() {
+    Counter counter =
+        Counter.builder("testCounterWithoutBaseUnit").register(Metrics.globalRegistry);
+
+    counter.increment();
+
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            metric -> metric.hasName("testCounterWithoutBaseUnit").hasUnit(""));
   }
 }
