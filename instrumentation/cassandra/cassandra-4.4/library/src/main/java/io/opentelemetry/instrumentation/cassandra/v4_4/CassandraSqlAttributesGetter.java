@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.cassandra.v4_4;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
@@ -14,6 +15,8 @@ import com.datastax.oss.driver.api.core.metadata.Node;
 import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.cassandra.v4_4.internal.CassandraNetworkPeer;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import javax.annotation.Nullable;
@@ -52,12 +55,32 @@ final class CassandraSqlAttributesGetter
     return request.getBatchSize();
   }
 
+  @Override
+  @Nullable
+  public String getServerAddress(CassandraRequest request) {
+    DbServerTarget serverTarget = request.getServerTarget();
+    return serverTarget == null ? null : serverTarget.getAddress();
+  }
+
+  @Override
+  @Nullable
+  public Integer getServerPort(CassandraRequest request) {
+    DbServerTarget serverTarget = request.getServerTarget();
+    return serverTarget == null ? null : serverTarget.getPort();
+  }
+
   @Nullable
   @Override
   public InetSocketAddress getNetworkPeerInetSocketAddress(
       CassandraRequest request, @Nullable ExecutionInfo executionInfo) {
     if (executionInfo == null) {
       return null;
+    }
+    if (emitStableDatabaseSemconv()) {
+      InetSocketAddress peer = CassandraNetworkPeer.getExecutionInfoPeer(executionInfo);
+      if (peer != null) {
+        return peer;
+      }
     }
     Node coordinator = executionInfo.getCoordinator();
     if (coordinator == null) {
@@ -66,7 +89,11 @@ final class CassandraSqlAttributesGetter
     EndPoint endPoint = coordinator.getEndPoint();
     if (endPoint instanceof DefaultEndPoint) {
       // resolve() returns an existing InetSocketAddress, it does not do a dns resolve,
-      return (InetSocketAddress) endPoint.resolve();
+      InetSocketAddress coordinatorAddress = (InetSocketAddress) endPoint.resolve();
+      if (emitStableDatabaseSemconv() && coordinatorAddress.isUnresolved()) {
+        return null;
+      }
+      return coordinatorAddress;
     }
     return null;
   }

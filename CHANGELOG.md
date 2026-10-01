@@ -4,8 +4,89 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- The experimental `java.common.messaging.headers/development` YAML selector no longer configures
+  header capture. Use `java.common.messaging.headers` instead.
+  ([#20260](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20260))
+- Add the required `isRequestStreaming(REQUEST)` method to `GenAiAttributesGetter`.
+  ([#19879](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19879))
+- Elasticsearch REST javaagent and 7.x library instrumentation now capture sanitized search query
+  bodies by default under v3-preview; outside v3-preview, capture defaults remain unchanged. The
+  javaagent also sanitizes explicitly enabled capture by default, replacing literal values with `?`
+  while preserving the query structure. Javaagent sanitization can be disabled with
+  `otel.instrumentation.elasticsearch.query-sanitization.enabled=false`.
+  ([#19675](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19675))
 - Remove the deprecated `HostIdResource.REGISTRY_QUERY` in favor of the absolute-path `reg.exe` lookup used by
   `HostIdResource`. ([#19778](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19778))
+
+### 🚫 Deprecations
+
+- Deprecate periods in the declarative `distribution.javaagent.instrumentation.enabled` and
+  `disabled` selectors. Replace both hyphens and periods in instrumentation module names with
+  underscores, for example `reactor_3_1` instead of `reactor_3.1`. Dotted selectors will be removed
+  in 3.0.
+- Deprecate the OSHI `ProcessMetrics` library API and
+  `otel.instrumentation.oshi.experimental-metrics.enabled` configuration. They will be removed in
+  3.0. Under v3 preview, this setting is ignored and automatic process-metric registration is
+  suppressed. Outside v3 preview, the setting continues to opt in to these metrics, and explicit
+  library registration remains unchanged.
+  Use the standard JVM metrics `jvm.memory.used` and `jvm.cpu.time` instead. These are not exact
+  replacements: `jvm.memory.used` measures JVM memory pools rather than process RSS or virtual
+  memory, and `jvm.cpu.time` does not separate user and system CPU time.
+  ([#20277](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20277))
+- Deprecate `otel.jmx.target.system` in favor of selecting unstable bundled metrics by name with
+  `otel.jmx.metrics.experimental.included`.
+  ([#19783](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19783))
+- Deprecate `otel.instrumentation.experimental.span-suppression-strategy` in favor of
+  `otel.instrumentation.common.span-suppression-strategy` for Java agent users. Library
+  instrumentation users without declarative configuration should instead call
+  `Experimental.setSpanSuppressionStrategy(...)`. Also deprecate
+  `java.common.span_suppression_strategy/development` in favor of
+  `java.common.span_suppression_strategy`. The old settings remain fallbacks until 3.0 and warn
+  when applied.
+- Deprecate `otel.instrumentation.common.experimental.controller-telemetry.enabled` and
+  `otel.instrumentation.common.experimental.view-telemetry.enabled` in favor of
+  `otel.instrumentation.common.controller-telemetry.enabled` and
+  `otel.instrumentation.common.view-telemetry.enabled`, respectively. The deprecated names remain
+  fallbacks until 3.0 and warn when applied.
+- Deprecate `SystemMetrics.registerObservers(Meter)` in the OSHI library instrumentation in favor of
+  `SystemMetrics.registerObservers(OpenTelemetry)`.
+  ([#20263](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20263))
+- Deprecate `otel.instrumentation.messaging.experimental.receive-telemetry.enabled` in favor of
+  `otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled`. For headers,
+  replace `otel.instrumentation.messaging.experimental.headers.included` and `.excluded` with the
+  stable `otel.instrumentation.common.messaging.headers.included` and `.excluded`. Stable selectors
+  take precedence per leaf. V3-preview ignores the older header aliases and
+  `otel.instrumentation.messaging.experimental.capture-headers` without warnings. These deprecated
+  settings may be removed in a later minor release and will be removed no later than 3.0.
+  ([#20060](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20060),
+  [#20260](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20260))
+- Deprecate the Java agent and Spring Boot starter's bundled contrib samplers, including the
+  `rule_based_routing` declarative sampler and `linksbased_parentbased_always_on` flat sampler.
+  Outside v3-preview, both names continue to work but log a warning when selected. When
+  `otel.instrumentation.common.v3-preview=true`, selecting either sampler fails SDK initialization
+  with a configuration error. For rule-based routing, consider the SDK incubator
+  `composite/development` `rule_based` sampler; there is no links-based replacement.
+  ([#20239](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20239))
+- Deprecate the source-specific experimental selectors for Log4j `MapMessage` entries, Logback
+  key-value pairs, Logstash markers, and Logstash structured arguments in favor of the common
+  structured logging attribute selector. The source-specific properties are ignored under
+  v3-preview.
+- Deprecate `otel.instrumentation.couchbase.experimental-span-attributes` in favor of
+  `otel.instrumentation.couchbase.emit-experimental-telemetry`. It will be removed in the next minor
+  release.
+  ([#20117](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20117))
+- Deprecate the Elasticsearch REST library artifacts and their public entrypoints. Elasticsearch
+  Java API Client users should use its [native OpenTelemetry
+  support](https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/8.10/opentelemetry.html),
+  available in 7.17.20+ on the 7.x line and 8.10+. Applications that use the REST Client directly
+  have no drop-in library replacement; they can use the javaagent or migrate to the Java API Client.
+  ([#19697](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/19697))
+- Deprecate `SelectorConfig.resolve` overloads that do not specify `SelectorConfig.Stability` in favor
+  of overloads that require callers to choose the stability explicitly.
+  ([#19969](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19969))
+- Deprecate `otel.instrumentation.opensearch.capture-search-query`. There is no replacement.
+- Deprecate `otel.instrumentation.elasticsearch.capture-search-query` There is no replacement.
+  ([#19675](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19675))
 
 ## Version 2.31.1 (2026-08-23)
 
@@ -1925,7 +2006,7 @@ for more details.
 ### 🌟 New javaagent instrumentation
 
 - AWS Bedrock instrumentation, following
-  [Gen AI semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/README.md#semantic-conventions-for-generative-ai-systems)
+  [Gen AI semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/gen-ai/README.md#semantic-conventions-for-generative-ai-systems)
   ([#13355](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13355),
   [#13408](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13408),
   [#13473](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13473),
@@ -1938,7 +2019,7 @@ for more details.
 ### 🌟 New library instrumentation
 
 - AWS Bedrock instrumentation, following
-  [Gen AI semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/README.md#semantic-conventions-for-generative-ai-systems)
+  [Gen AI semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/v1.41.1/docs/gen-ai/README.md#semantic-conventions-for-generative-ai-systems)
   ([#13355](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13355),
   [#13408](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13408),
   [#13473](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13473),

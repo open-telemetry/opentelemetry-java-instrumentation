@@ -213,12 +213,17 @@ class WithSpanInstrumentation implements TypeInstrumentation {
               source.desc,
               source.signature,
               source.exceptions.toArray(new String[0]));
+      // Argument size includes an implicit this; the final Continuation occupies one slot.
+      int continuationArgumentLocal =
+          (Type.getArgumentsAndReturnSizes(source.desc) >> 2)
+              - ((source.access & Opcodes.ACC_STATIC) == 0 ? 1 : 2);
       GeneratorAdapter generatorAdapter =
           new GeneratorAdapter(
               AsmApi.VERSION, methodNode, source.access, source.name, source.desc) {
             int requestLocal;
             int ourContinuationLocal;
             int contextLocal;
+            int parentContextLocal;
             int scopeLocal;
             int lastLocal;
 
@@ -235,6 +240,7 @@ class WithSpanInstrumentation implements TypeInstrumentation {
               requestLocal = newLocal(Type.getType(Object.class));
               ourContinuationLocal = newLocal(Type.getType(Continuation.class));
               contextLocal = newLocal(Type.getType(Context.class));
+              parentContextLocal = newLocal(Type.getType(Context.class));
               scopeLocal = newLocal(Type.getType(Scope.class));
               // set lastLocal to the last local we added
               lastLocal = scopeLocal;
@@ -348,6 +354,9 @@ class WithSpanInstrumentation implements TypeInstrumentation {
                   temp.visitInsn(Opcodes.ACONST_NULL);
                   temp.visitInsn(Opcodes.DUP);
                   temp.visitVarInsn(Opcodes.ASTORE, ourContinuationLocal);
+                  visitInvokeHelperMethod(
+                      temp, "currentContext", "()" + Type.getDescriptor(Context.class));
+                  temp.visitVarInsn(Opcodes.ASTORE, parentContextLocal);
                 }
                 temp.visitLdcInsn(Type.getObjectType(className));
                 temp.visitLdcInsn(methodName);
@@ -382,6 +391,22 @@ class WithSpanInstrumentation implements TypeInstrumentation {
                         + ")"
                         + Type.getDescriptor(Scope.class));
                 temp.visitVarInsn(Opcodes.ASTORE, scopeLocal);
+                if (!hasBlockingOperation) {
+                  temp.visitVarInsn(Opcodes.ALOAD, continuationArgumentLocal);
+                  temp.visitVarInsn(Opcodes.ALOAD, contextLocal);
+                  temp.visitVarInsn(Opcodes.ALOAD, parentContextLocal);
+                  temp.visitVarInsn(Opcodes.ALOAD, requestLocal);
+                  visitInvokeHelperMethod(
+                      temp,
+                      "wrapContinuation",
+                      "(Lkotlin/coroutines/Continuation;"
+                          + Type.getDescriptor(Context.class)
+                          + Type.getDescriptor(Context.class)
+                          + "Ljava/lang/Object;)Lkotlin/coroutines/Continuation;");
+                  temp.visitInsn(Opcodes.DUP);
+                  temp.visitVarInsn(Opcodes.ASTORE, continuationArgumentLocal);
+                  temp.visitVarInsn(Opcodes.ASTORE, ourContinuationLocal);
+                }
                 // @SpanAttribute handling
                 for (Parameter parameter : annotatedParameters) {
                   // label on stack, make a copy
@@ -424,6 +449,8 @@ class WithSpanInstrumentation implements TypeInstrumentation {
                 temp.visitInsn(Opcodes.ACONST_NULL);
                 temp.visitVarInsn(Opcodes.ASTORE, contextLocal);
                 temp.visitInsn(Opcodes.ACONST_NULL);
+                temp.visitVarInsn(Opcodes.ASTORE, parentContextLocal);
+                temp.visitInsn(Opcodes.ACONST_NULL);
                 temp.visitVarInsn(Opcodes.ASTORE, scopeLocal);
 
                 methodNode.instructions.insertBefore(
@@ -442,6 +469,7 @@ class WithSpanInstrumentation implements TypeInstrumentation {
                 locals[requestLocal] = Type.getInternalName(Object.class);
                 locals[ourContinuationLocal] = Type.getInternalName(Continuation.class);
                 locals[contextLocal] = Type.getInternalName(Context.class);
+                locals[parentContextLocal] = Type.getInternalName(Context.class);
                 locals[scopeLocal] = Type.getInternalName(Scope.class);
 
                 temp.visitFrame(

@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
@@ -33,9 +34,26 @@ public class JedisInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
+        new HostAndPortInstrumentation(),
         new JedisConnectionInstrumentation(),
+        new JedisFactoryInstrumentation(),
+        new JedisPoolInstrumentation(),
+        new ShardedJedisInstrumentation(),
+        new JedisSentinelPoolInstrumentation(),
+        new PoolResourceInstrumentation(),
+        new JedisClusterInstrumentation(),
         new JedisInstrumentation(),
         new JedisPipelineInstrumentation(),
         new JedisTransactionInstrumentation());
+  }
+
+  @Override
+  public boolean isHelperClass(String className) {
+    return "redis.clients.jedis.JedisFactoryTarget".equals(className);
+  }
+
+  @Override
+  public List<String> injectedClassNames() {
+    return singletonList("redis.clients.jedis.JedisFactoryTarget");
   }
 }

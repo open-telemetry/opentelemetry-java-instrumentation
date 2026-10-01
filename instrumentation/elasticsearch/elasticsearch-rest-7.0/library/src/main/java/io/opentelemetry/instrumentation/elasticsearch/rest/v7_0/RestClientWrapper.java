@@ -66,7 +66,8 @@ class RestClientWrapper {
                     Request request = (Request) args[0];
                     Context parentContext = Context.current();
                     ElasticsearchRestRequest otelRequest =
-                        ElasticsearchRestRequest.create(request.getMethod(), request.getEndpoint());
+                        ElasticsearchRestRequest.create(
+                            request.getMethod(), request.getEndpoint(), null, request.getEntity());
                     if (!instrumenter.shouldStart(parentContext, otelRequest)) {
                       return method.invoke(target, args);
                     }
@@ -92,7 +93,8 @@ class RestClientWrapper {
                     ResponseListener responseListener = (ResponseListener) args[1];
                     Context parentContext = Context.current();
                     ElasticsearchRestRequest otelRequest =
-                        ElasticsearchRestRequest.create(request.getMethod(), request.getEndpoint());
+                        ElasticsearchRestRequest.create(
+                            request.getMethod(), request.getEndpoint(), null, request.getEntity());
                     if (!instrumenter.shouldStart(parentContext, otelRequest)) {
                       return method.invoke(target, args);
                     }

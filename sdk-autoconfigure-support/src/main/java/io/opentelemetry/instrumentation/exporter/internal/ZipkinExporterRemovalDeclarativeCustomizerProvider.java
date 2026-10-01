@@ -71,6 +71,6 @@ public class ZipkinExporterRemovalDeclarativeCustomizerProvider
 
   private static boolean isZipkin(@Nullable SpanExporterModel exporter) {
     return exporter != null
-        && exporter.getAdditionalProperties().containsKey(ZipkinExporterRemoval.EXPORTER_NAME);
+        && exporter.getExtensionProperties().containsKey(ZipkinExporterRemoval.EXPORTER_NAME);
   }
 }

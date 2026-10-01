@@ -19,6 +19,7 @@ public final class AwsSdkTelemetryBuilder {
   private IncludeExclude headers = IncludeExclude.builder().build();
   private boolean captureExperimentalSpanAttributes;
   private boolean messagingReceiveTelemetryEnabled;
+  private boolean batchSendMessageCreationSpansEnabled = true;
 
   AwsSdkTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -89,6 +90,21 @@ public final class AwsSdkTelemetryBuilder {
   }
 
   /**
+   * Sets whether a producer "Create" span is emitted for each eligible entry in an SQS batch send.
+   * An entry is eligible when it does not already contain a creation context and the AWS SDK
+   * version supports the per-entry {@code AWSTraceHeader} system attribute.
+   *
+   * <p>This option only applies when the stable messaging semantic conventions are enabled. It is
+   * enabled by default.
+   */
+  @CanIgnoreReturnValue
+  public AwsSdkTelemetryBuilder setBatchSendMessageCreationSpansEnabled(
+      boolean batchSendMessageCreationSpansEnabled) {
+    this.batchSendMessageCreationSpansEnabled = batchSendMessageCreationSpansEnabled;
+    return this;
+  }
+
+  /**
    * Returns a new {@link AwsSdkTelemetry} with the settings of this {@link AwsSdkTelemetryBuilder}.
    */
   public AwsSdkTelemetry build() {
@@ -96,6 +112,7 @@ public final class AwsSdkTelemetryBuilder {
         openTelemetry,
         headers,
         captureExperimentalSpanAttributes,
-        messagingReceiveTelemetryEnabled);
+        messagingReceiveTelemetryEnabled,
+        batchSendMessageCreationSpansEnabled);
   }
 }

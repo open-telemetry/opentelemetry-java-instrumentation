@@ -51,7 +51,7 @@ public final class AwsLambdaSqsInstrumenterFactory {
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
-  public static Instrumenter<SQSMessage, Void> forMessage(
+  public static Instrumenter<SQSMessage, Void> forSelectedMessageProcessing(
       OpenTelemetry openTelemetry, String instrumentationName) {
     SqsMessageAttributesGetter getter = new SqsMessageAttributesGetter();
     InstrumenterBuilder<SQSMessage, Void> builder =

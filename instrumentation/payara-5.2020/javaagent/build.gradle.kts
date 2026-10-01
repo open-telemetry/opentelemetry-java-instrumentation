@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 // No muzzle check because this instrumentation is written in ASM and muzzle won't work with it.

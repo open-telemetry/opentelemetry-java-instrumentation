@@ -14,31 +14,73 @@ To control the time interval between MBean detection attempts, one can use the `
 
 JMX is a popular metrics technology used throughout the JVM (see [runtime metrics](../runtime-telemetry/library/README.md)), application servers, third-party libraries, and applications.
 JMX Metric Insight comes with a number of predefined configurations containing curated sets of JMX metrics for frequently used application servers or frameworks.
-To enable collection of the predefined metrics, specify a list of targets as the value for the `otel.jmx.target.system` property. For example
+
+Stable predefined metrics are enabled by default, except for the JMX-based `jvm` definitions, which overlap with `runtime-telemetry`. Unstable bundled metrics require opt-in by name using `otel.jmx.metrics.experimental.included`. For example:
 
 ```bash
 $ java -javaagent:path/to/opentelemetry-javaagent.jar \
-     -Dotel.jmx.target.system=jetty,experimental-kafka-broker \
+     -Dotel.jmx.metrics.experimental.included=jetty.*,kafka.* \
      ... \
      -jar myapp.jar
 ```
 
-No targets are enabled by default. The supported target environments are listed below.
+This example will enable all stable metrics except the JMX-based `jvm` definitions (which are provided by `runtime-telemetry`) and all the non-stable metrics matching the `jetty.*` and `kafka.*` patterns.
+
+The deprecated `otel.jmx.target.system` setting remains a fallback when `otel.jmx.metrics.experimental.included` is empty. It collects both stable and unstable metrics for the selected targets. For example, `otel.jmx.target.system=jetty,kafka-broker` retains its existing behavior. This setting will be removed in 3.0.
+
+To migrate, replace the target selection with metric-name patterns:
+
+```diff
+-otel.jmx.target.system=tomcat
++otel.jmx.metrics.experimental.included=tomcat.*
+```
+
+A nonempty experimental inclusion takes precedence over the deprecated target setting without a deprecation warning. Normal metric include/exclude filters apply in both modes.
+
+Metrics from custom YAML files do not require experimental opt-in, even if their names match unstable bundled metrics. They are controlled by the normal metric include/exclude filters.
+
+The supported target systems are listed below.
 
 - [activemq](library/activemq.md)
 - [camel](library/camel.md)
 - [jetty](library/jetty.md)
-- [experimental-kafka-broker](library/kafka-broker.md)
-- [experimental-kafka-connect](library/kafka-connect.md)
+- [kafka-broker](library/kafka-broker.md)
+- [kafka-connect](library/kafka-connect.md)
 - [tomcat](library/tomcat.md)
 - [wildfly](library/wildfly.md)
 - [hadoop](library/hadoop.md)
-- [experimental-cassandra](library/cassandra.md)
+- [cassandra](library/cassandra.md)
 
 The [jvm](library/jvm.md) metrics definitions are also included in the [jmx-metrics library](./library)
 to allow reusing them without instrumentation. When using instrumentation, the [runtime-telemetry](../runtime-telemetry)
 instrumentation is used and recommended as it provides more metrics attributes that can't be captured
 through the YAML-based metric definitions.
+
+Metric filters apply to all loaded metric definitions, including predefined targets, custom YAML
+rules, and metric handlers:
+
+```properties
+otel.jmx.metrics.included=jvm.memory.*,jvm.thread.coun?
+otel.jmx.metrics.excluded=jvm.memory.limit
+```
+
+Matching is case-sensitive. `?` matches one character and `*` matches zero or more characters.
+Excluded patterns take precedence over included patterns. If included is not configured, all
+non-excluded metrics are collected. With neither property configured, all metrics are collected.
+
+The equivalent declarative configuration is:
+
+```yaml
+instrumentation/development:
+  java:
+    jmx:
+      metrics:
+        included:
+          - jvm.memory.*
+          - jvm.thread.coun?
+        excluded:
+          - jvm.memory.limit
+```
 
 ## Configuration Files
 
@@ -520,3 +562,8 @@ To contribute to pre-defined metrics definitions or extend them through custom c
 - when a metric represents a percentile, use the `.pXX` suffix where `XX` is the percentile value, for example:
   - `request.duration.p50` for the 50th percentile (median)
   - `request.duration.p99` for the 99th percentile
+- metrics definitions should have a semantic-convention compliant registry definition in the `model` subfolder, those definitions should be verified with weaver live-check when testing with real target systems.
+- metrics definitions must be split between stable and unstable metrics with the following convention:
+  - `xxx.yaml` : stable metrics for `xxx` target system, where `xxx` is identifier for system
+  - `xxx_unstable.yaml` : non-stable (experimental, development, ...) metrics for `xxx` target system, where `xxx` is identifier for system
+  - metric promotion to stable should be done by moving definitions from `xxx_unstable.yaml` to `xxx.yaml` and updating the stability of the metrics definitions in the `model` subfolder.

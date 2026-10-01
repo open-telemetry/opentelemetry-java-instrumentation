@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v7_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
@@ -32,6 +32,6 @@ public class ElasticsearchRest7InstrumentationModule extends InstrumentationModu
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new RestClientInstrumentation());
+    return asList(new RestClientConstructorInstrumentation(), new RestClientInstrumentation());
   }
 }

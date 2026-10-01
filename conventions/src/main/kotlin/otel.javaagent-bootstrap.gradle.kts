@@ -11,9 +11,11 @@ base.archivesName.set(projectDir.parentFile.name + "-bootstrap")
 dependencies {
   compileOnly("io.opentelemetry:opentelemetry-api")
   compileOnly(project(":instrumentation-api"))
+  compileOnly(project(":instrumentation-api-incubator"))
   compileOnly(project(":javaagent-bootstrap"))
 
   testImplementation("io.opentelemetry:opentelemetry-api")
   testImplementation(project(":instrumentation-api"))
+  testImplementation(project(":instrumentation-api-incubator"))
   testImplementation(project(":javaagent-bootstrap"))
 }

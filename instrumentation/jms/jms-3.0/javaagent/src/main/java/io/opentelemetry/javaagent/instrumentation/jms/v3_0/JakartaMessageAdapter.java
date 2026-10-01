@@ -5,7 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms.v3_0;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.RECEIVE;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
+
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.bootstrap.jms.JmsMessageProcessingState;
+import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveContext;
+import io.opentelemetry.javaagent.bootstrap.messaging.MessagingTelemetryCarrier;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.DestinationAdapter;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageAdapter;
 import jakarta.jms.Destination;
@@ -17,17 +24,24 @@ import javax.annotation.Nullable;
 
 public class JakartaMessageAdapter implements MessageAdapter {
 
-  private static final VirtualField<Message, Boolean> RECEIVE_TELEMETRY_RECORDED =
-      VirtualField.find(Message.class, Boolean.class);
+  private static final MessagingTelemetryCarrier<Message> messageTelemetry =
+      MessagingTelemetryCarrier.create(
+          VirtualField.find(Message.class, MessagingTelemetrySignals.class));
+  private static final VirtualField<Message, JmsReceiveContext> RECEIVE_CONTEXT =
+      VirtualField.find(Message.class, JmsReceiveContext.class);
+  private static final VirtualField<Message, JmsMessageProcessingState> PROCESSING_STATE =
+      VirtualField.find(Message.class, JmsMessageProcessingState.class);
 
-  public static MessageAdapter create(Message message) {
+  public static JakartaMessageAdapter create(Message message) {
     return new JakartaMessageAdapter(message);
   }
 
   private final Message message;
+  @Nullable private JmsMessageProcessingState processingState;
 
   private JakartaMessageAdapter(Message message) {
     this.message = message;
+    processingState = PROCESSING_STATE.get(message);
   }
 
   @Nullable
@@ -76,12 +90,57 @@ public class JakartaMessageAdapter implements MessageAdapter {
   }
 
   @Override
-  public boolean wasReceiveTelemetryRecorded() {
-    return Boolean.TRUE.equals(RECEIVE_TELEMETRY_RECORDED.get(message));
+  public JmsMessageProcessingState prepareForReceive() {
+    messageTelemetry.clear(message);
+    RECEIVE_CONTEXT.set(message, null);
+    processingState = new JmsMessageProcessingState();
+    PROCESSING_STATE.set(message, processingState);
+    return processingState;
   }
 
   @Override
-  public void markReceiveTelemetryRecorded() {
-    RECEIVE_TELEMETRY_RECORDED.set(message, Boolean.TRUE);
+  public void setReceiveContext(JmsReceiveContext context) {
+    if (PROCESSING_STATE.get(message) == context.processingState()) {
+      RECEIVE_CONTEXT.set(message, context);
+    }
+  }
+
+  @Nullable
+  @Override
+  public JmsReceiveContext getReceiveContext() {
+    JmsReceiveContext receiveContext = RECEIVE_CONTEXT.get(message);
+    return receiveContext != null && receiveContext.processingState() == processingState
+        ? receiveContext
+        : null;
+  }
+
+  @Override
+  public boolean wereConsumedMessagesRecorded() {
+    return messageTelemetry.contains(message, RECEIVE, CONSUMED_MESSAGES);
+  }
+
+  @Override
+  public void markConsumedMessagesRecorded() {
+    messageTelemetry.add(message, RECEIVE, CONSUMED_MESSAGES);
+  }
+
+  @Override
+  public boolean beginProcessing() {
+    JmsMessageProcessingState state = processingState;
+    if (state == null || state.isProcessingCompleted()) {
+      state = new JmsMessageProcessingState();
+      processingState = state;
+      PROCESSING_STATE.set(message, state);
+      RECEIVE_CONTEXT.set(message, null);
+    }
+    return state.beginProcessing();
+  }
+
+  @Override
+  public void endProcessing() {
+    JmsMessageProcessingState state = processingState;
+    if (state != null && state.endProcessing() && PROCESSING_STATE.get(message) == state) {
+      RECEIVE_CONTEXT.set(message, null);
+    }
   }
 }

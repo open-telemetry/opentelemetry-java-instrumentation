@@ -38,7 +38,7 @@ public class KeysVerifyingPropagator implements TextMapPropagator {
   }
 
   @Override
-  public <C> void inject(Context context, C carrier, TextMapSetter<C> setter) {
+  public <C> void inject(Context context, @Nullable C carrier, TextMapSetter<C> setter) {
     // This propagator doesn't inject anything
   }
 
@@ -46,7 +46,9 @@ public class KeysVerifyingPropagator implements TextMapPropagator {
   @SuppressWarnings("OtelCanIgnoreReturnValueSuggester")
   public <C> Context extract(Context context, @Nullable C carrier, TextMapGetter<C> getter) {
     // Exercise methods to verify no errors
-    getter.keys(carrier).forEach(key -> getter.get(carrier, key));
+    if (carrier != null) {
+      getter.keys(carrier).forEach(key -> getter.get(carrier, key));
+    }
 
     return context;
   }

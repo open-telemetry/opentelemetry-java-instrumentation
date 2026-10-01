@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.{
 import io.opentelemetry.semconv.HttpAttributes
 
 import java.util
-import java.util.function.{Function, Predicate}
+import java.util.function.{BiFunction, Function, Predicate}
 
 abstract class AbstractHttpServerInstrumentationTest
     extends AbstractHttpServerTest[Object] {
@@ -22,18 +22,27 @@ abstract class AbstractHttpServerInstrumentationTest
   override protected def configure(
       options: HttpServerTestOptions
   ): Unit = {
+    configure(options, hasRoute = false)
+  }
+
+  protected def configure(
+      options: HttpServerTestOptions,
+      hasRoute: Boolean
+  ): Unit = {
     options.setTestCaptureHttpHeaders(false)
-    options.setHttpAttributes(
-      new Function[ServerEndpoint, util.Set[AttributeKey[_]]] {
-        override def apply(v1: ServerEndpoint): util.Set[AttributeKey[_]] = {
-          val set = new util.HashSet[AttributeKey[_]](
-            HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES
-          )
-          set.remove(HttpAttributes.HTTP_ROUTE)
-          set
+    if (!hasRoute) {
+      options.setHttpAttributes(
+        new Function[ServerEndpoint, util.Set[AttributeKey[_]]] {
+          override def apply(v1: ServerEndpoint): util.Set[AttributeKey[_]] = {
+            val set = new util.HashSet[AttributeKey[_]](
+              HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES
+            )
+            set.remove(HttpAttributes.HTTP_ROUTE)
+            set
+          }
         }
-      }
-    )
+      )
+    }
     options.setHasResponseCustomizer(
       new Predicate[ServerEndpoint] {
         override def test(t: ServerEndpoint): Boolean =
@@ -42,5 +51,22 @@ abstract class AbstractHttpServerInstrumentationTest
     )
     // instrumentation does not create a span at all
     options.disableTestNonStandardHttpMethod
+  }
+
+  protected def configureRouteServer(options: HttpServerTestOptions): Unit = {
+    configure(options, hasRoute = true)
+
+    options.setTestException(false)
+    options.setTestPathParam(true)
+    options.setExpectedHttpRoute(
+      new BiFunction[ServerEndpoint, String, String] {
+        override def apply(
+            endpoint: ServerEndpoint,
+            method: String
+        ): String =
+          if (endpoint eq ServerEndpoint.PATH_PARAM) "/path/*/param"
+          else expectedHttpRoute(endpoint, method)
+      }
+    )
   }
 }

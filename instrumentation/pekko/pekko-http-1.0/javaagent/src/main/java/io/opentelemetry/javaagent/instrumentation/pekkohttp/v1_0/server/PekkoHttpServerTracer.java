@@ -5,17 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server;
 
+import static io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.PekkoHttpServerSingletons.HTTP_REQUEST_PEER_ADDRESS;
 import static io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.PekkoHttpServerSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
-import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route.PekkoRouteHolder;
+import java.net.InetSocketAddress;
 import java.util.ArrayDeque;
-import java.util.List;
 import java.util.Queue;
-import org.apache.pekko.http.javadsl.model.HttpHeader;
+import javax.annotation.Nullable;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
 import org.apache.pekko.http.scaladsl.model.HttpResponse;
 import org.apache.pekko.stream.Attributes;
@@ -50,13 +48,17 @@ public class PekkoHttpServerTracer
 
   @Override
   public GraphStageLogic createLogic(Attributes attributes) {
-    return new TracingLogic();
+    return new TracingLogic(
+        attributes
+            .getAttribute(PekkoHttpServerRemoteAddress.class)
+            .map(PekkoHttpServerRemoteAddress::getAddress)
+            .orElse(null));
   }
 
   private class TracingLogic extends GraphStageLogic {
     private final Queue<PekkoTracingRequest> requests = new ArrayDeque<>();
 
-    TracingLogic() {
+    TracingLogic(@Nullable InetSocketAddress remoteAddress) {
       super(shape);
 
       // server pulls response, pass response from user code to server
@@ -97,6 +99,9 @@ public class PekkoHttpServerTracer
             @Override
             public void onPush() {
               HttpRequest request = grab(requestIn);
+              if (remoteAddress != null) {
+                HTTP_REQUEST_PEER_ADDRESS.set(request, remoteAddress);
+              }
               PekkoTracingRequest tracingRequest = PekkoTracingRequest.EMPTY;
               Context parentContext = Context.current();
               if (instrumenter().shouldStart(parentContext, request)) {
@@ -137,23 +142,7 @@ public class PekkoHttpServerTracer
 
               PekkoTracingRequest tracingRequest = requests.poll();
               if (tracingRequest != null && tracingRequest != PekkoTracingRequest.EMPTY) {
-                // pekko response is immutable so the customizer just captures the added headers
-                PekkoHttpResponseMutator responseMutator = new PekkoHttpResponseMutator();
-                HttpServerResponseCustomizerHolder.getCustomizer()
-                    .customize(tracingRequest.context, response, responseMutator);
-                // build a new response with the added headers
-                List<HttpHeader> headers = responseMutator.getHeaders();
-                if (!headers.isEmpty()) {
-                  response = (HttpResponse) response.addHeaders(headers);
-                }
-
-                PekkoRouteHolder routeHolder =
-                    response
-                        .getAttribute(PekkoRouteHolder.ATTRIBUTE_KEY)
-                        .orElse(tracingRequest.initialRouteHolder);
-                HttpServerRoute.update(
-                    tracingRequest.context, HttpServerRouteSource.CONTROLLER, routeHolder.route());
-                instrumenter().end(tracingRequest.context, tracingRequest.request, response, null);
+                response = PekkoHttpServerSingletons.endSpan(tracingRequest, response);
               }
               push(responseOut, response);
             }
@@ -163,12 +152,7 @@ public class PekkoHttpServerTracer
               // End the span for the request that failed
               PekkoTracingRequest tracingRequest = requests.poll();
               if (tracingRequest != null && tracingRequest != PekkoTracingRequest.EMPTY) {
-                instrumenter()
-                    .end(
-                        tracingRequest.context,
-                        tracingRequest.request,
-                        PekkoHttpServerSingletons.errorResponse(),
-                        exception);
+                PekkoHttpServerSingletons.endSpanWithError(tracingRequest, exception);
               }
 
               fail(responseOut, exception);
@@ -182,12 +166,7 @@ public class PekkoHttpServerTracer
                 if (tracingRequest == PekkoTracingRequest.EMPTY) {
                   continue;
                 }
-                instrumenter()
-                    .end(
-                        tracingRequest.context,
-                        tracingRequest.request,
-                        PekkoHttpServerSingletons.errorResponse(),
-                        null);
+                PekkoHttpServerSingletons.endSpanWithError(tracingRequest, null);
               }
               completeStage();
             }

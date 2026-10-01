@@ -46,7 +46,7 @@ import javax.annotation.Nullable;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 
-class DbSpanDecorator extends BaseSpanDecorator {
+public class DbSpanDecorator extends BaseSpanDecorator {
 
   private static final SqlQueryAnalyzer analyzer =
       SqlQueryAnalyzer.create(

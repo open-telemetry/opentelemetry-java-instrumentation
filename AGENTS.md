@@ -5,8 +5,13 @@ build and test commands, style expectations, and scope.
 
 ## Knowledge Loading
 
-For coding, fix, and refactoring tasks, consult `.github/agents/knowledge/README.md`
-and load only the article(s) relevant to the current task.
+For any task that analyzes or changes repository code, consult
+`.github/agents/knowledge/README.md` before drawing conclusions. Load only the
+articles relevant to the task.
+
+Before introducing `WeakReference`, `WeakHashMap`, `Cache.weak()`, or another
+identity-keyed registry to attach javaagent state to a third-party object, load
+`.github/agents/knowledge/javaagent-virtual-fields.md`.
 
 ## Gradle Execution Rules
 

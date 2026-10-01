@@ -54,9 +54,9 @@ public abstract class AbstractJmsTest {
             asList(
                 equalTo(MESSAGING_SYSTEM, "jms"),
                 messagingDestinationName(destinationName),
-                oldOperation("publish"),
-                operationName("send"),
-                operationType("send"),
+                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
+                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
+                equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null),
                 satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class))));
     if (destinationName.equals("(temporary)")) {
       attributeAssertions.add(equalTo(MESSAGING_DESTINATION_TEMPORARY, true));
@@ -128,9 +128,10 @@ public abstract class AbstractJmsTest {
             asList(
                 equalTo(MESSAGING_SYSTEM, "jms"),
                 messagingDestinationName(destinationName),
-                oldOperation(operation),
-                operationName(operation),
-                operationType(operation)));
+                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? operation : null),
+                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? operation : null),
+                equalTo(
+                    MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operation : null)));
     if (msgId != null) {
       attributeAssertions.add(equalTo(MESSAGING_MESSAGE_ID, msgId));
     } else {
@@ -160,17 +161,5 @@ public abstract class AbstractJmsTest {
     return emitStableMessagingSemconv() && destinationName.equals("(temporary)")
         ? satisfies(MESSAGING_DESTINATION_NAME, val -> val.isNotEmpty())
         : equalTo(MESSAGING_DESTINATION_NAME, destinationName);
-  }
-
-  private static AttributeAssertion oldOperation(String operation) {
-    return equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? operation : null);
-  }
-
-  private static AttributeAssertion operationName(String operation) {
-    return equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? operation : null);
-  }
-
-  private static AttributeAssertion operationType(String operation) {
-    return equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operation : null);
   }
 }

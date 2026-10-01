@@ -164,6 +164,14 @@ testing {
         }
       }
     }
+
+    register<JvmTestSuite>("testRdsData") {
+      dependencies {
+        implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
+        val version = baseVersion("2.5.54").orLatest()
+        implementation("software.amazon.awssdk:rdsdata:$version")
+      }
+    }
   }
 }
 
@@ -176,7 +184,7 @@ tasks {
       excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
     }
     systemProperty("otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", "true")
-    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
+    systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
   }
 
   val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {
@@ -196,9 +204,18 @@ tasks {
     filter {
       excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
     }
-    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
+    systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
 
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+  }
+
+  val testRdsDataStableSemconv = register<Test>("testRdsDataStableSemconv") {
+    val testRdsDataSourceSet = sourceSets["testRdsData"]
+    testClassesDirs = testRdsDataSourceSet.output.classesDirs
+    classpath = testRdsDataSourceSet.runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
@@ -210,7 +227,7 @@ tasks {
       includeTestsMatching("*Sqs*")
       excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
     }
-    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
+    systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
 
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
@@ -237,7 +254,7 @@ tasks {
       includeTestsMatching("*Sqs*")
       excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
     }
-    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
+    systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
 
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
@@ -247,7 +264,7 @@ tasks {
     filter {
       excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
     }
-    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
+    systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
   }
 
   check {
@@ -255,6 +272,7 @@ tasks {
       testing.suites,
       testExperimentalSqs,
       testStableSemconv,
+      testRdsDataStableSemconv,
       testReceiveSpansDisabled,
       testMessagingPreview,
       testMessagingPreviewReceiveSpansDisabled,

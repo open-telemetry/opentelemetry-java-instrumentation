@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
@@ -43,7 +42,7 @@ public final class HbaseInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<String> injectedClassNames() {
-    return singletonList(CALL_UTIL);
+    return asList(CALL_UTIL);
   }
 
   @Override
@@ -52,6 +51,7 @@ public final class HbaseInstrumentationModule extends InstrumentationModule {
         new RegionServerCallableInstrumentation(),
         new AbstractRpcClientInstrumentation(),
         new RpcConnectionInstrumentation(),
+        new NettyRpcDuplexHandlerInstrumentation(),
         new IpcCallInstrumentation());
   }
 }

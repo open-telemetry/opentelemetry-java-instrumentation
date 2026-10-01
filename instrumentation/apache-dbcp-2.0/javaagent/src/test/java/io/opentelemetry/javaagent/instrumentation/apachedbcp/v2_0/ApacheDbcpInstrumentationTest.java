@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.opentelemetry.instrumentation.apachedbcp.AbstractApacheDbcpInstrumentationTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -16,6 +19,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTest {
+  private static final String COMMONS_POOL_INSTRUMENTATION_NAME =
+      "io.opentelemetry.apache-commons-pool-2.0";
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -35,7 +40,8 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
     BasicDataSource dataSource = createDataSource();
     dataSource.setUrl("jdbc:postgresql://db.example:5432/orders");
 
-    assertDataSourceName(dataSource, "db.example:5432/orders");
+    assertDataSourceName(
+        dataSource, emitStableDatabaseSemconv() ? "orders" : "db.example:5432/orders");
   }
 
   @Test
@@ -43,7 +49,8 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
     BasicDataSource dataSource = createDataSource();
     dataSource.setUrl("jdbc:postgresql://[2001:db8::1]:5432/orders");
 
-    assertDataSourceName(dataSource, "[2001:db8::1]:5432/orders");
+    assertDataSourceName(
+        dataSource, emitStableDatabaseSemconv() ? "orders" : "[2001:db8::1]:5432/orders");
   }
 
   @Test
@@ -55,7 +62,9 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
     dataSource.addConnectionProperty("portNumber", "5433");
     dataSource.addConnectionProperty("databaseName", "inventory");
 
-    assertDataSourceName(dataSource, "properties.example:5433/inventory");
+    assertDataSourceName(
+        dataSource,
+        emitStableDatabaseSemconv() ? "inventory" : "properties.example:5433/inventory");
   }
 
   @Test
@@ -80,6 +89,22 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
     BasicDataSource dataSource = createDataSource();
 
     assertDataSourceName(dataSource, "apache-dbcp2");
+  }
+
+  @Test
+  void shouldNotReportCommonsPoolMetrics() throws Exception {
+    BasicDataSource dataSource = createDataSource();
+
+    try {
+      dataSource.getConnection().close();
+
+      assertDataSourceMetrics("apache-dbcp2");
+      assertNoCommonsPoolMetrics();
+    } finally {
+      dataSource.close();
+    }
+
+    assertNoMetrics();
   }
 
   @Test
@@ -130,7 +155,7 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
   }
 
   @Test
-  void shouldUpdateDataSourceNameWhenMBeanIsRegisteredAfterPoolStart() throws Exception {
+  void shouldKeepDataSourceNameWhenMBeanIsRegisteredAfterPoolStart() throws Exception {
     BasicDataSource dataSource = createDataSource();
     dataSource.setUrl("jdbc:postgresql://db.example:5432/orders");
     ObjectName objectName =
@@ -139,10 +164,11 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
 
     try {
       dataSource.getConnection().close();
-      assertDataSourceMetrics("db.example:5432/orders");
+      assertDataSourceMetrics(emitStableDatabaseSemconv() ? "orders" : "db.example:5432/orders");
 
       objectName = mbeanServer.registerMBean(dataSource, objectName).getObjectName();
-      assertDataSourceMetrics("lateRegisteredPool");
+      testing.clearData();
+      assertDataSourceMetrics(emitStableDatabaseSemconv() ? "orders" : "db.example:5432/orders");
     } finally {
       dataSource.close();
       if (mbeanServer.isRegistered(objectName)) {
@@ -188,5 +214,16 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
     }
 
     assertNoMetrics();
+  }
+
+  private static void assertNoCommonsPoolMetrics() {
+    assertThat(testing.metrics())
+        .filteredOn(
+            metricData ->
+                metricData
+                    .getInstrumentationScopeInfo()
+                    .getName()
+                    .equals(COMMONS_POOL_INSTRUMENTATION_NAME))
+        .isEmpty();
   }
 }

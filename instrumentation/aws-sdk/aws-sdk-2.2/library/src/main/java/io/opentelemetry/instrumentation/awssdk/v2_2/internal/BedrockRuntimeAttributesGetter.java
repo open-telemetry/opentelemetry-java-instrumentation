@@ -37,6 +37,11 @@ class BedrockRuntimeAttributesGetter
     return BedrockRuntimeAccess.getModelId(executionAttributes);
   }
 
+  @Override
+  public boolean isRequestStreaming(ExecutionAttributes executionAttributes) {
+    return BedrockRuntimeAccess.isRequestStreaming(executionAttributes);
+  }
+
   @Nullable
   @Override
   public Long getRequestSeed(ExecutionAttributes executionAttributes) {

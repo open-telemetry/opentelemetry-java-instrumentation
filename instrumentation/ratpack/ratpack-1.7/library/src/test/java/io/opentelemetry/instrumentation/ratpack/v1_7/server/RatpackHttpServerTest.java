@@ -35,5 +35,6 @@ class RatpackHttpServerTest extends AbstractRatpackHttpServerTest {
     super.configure(options);
 
     options.setHasHandlerSpan(endpoint -> false);
+    options.setTestClientAddressFromSocketPeer(false);
   }
 }

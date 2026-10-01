@@ -48,6 +48,19 @@ class DefaultErrorCauseExtractorTest {
   }
 
   @Test
+  void cyclicWrapperCauseChain() {
+    // the public ExecutionException constructors always set a (possibly null) cause, after which
+    // initCause() throws IllegalStateException; a no-arg subclass leaves the cause unset so it
+    // can be assigned below to form a cycle
+    ExecutionException exception1 = new ExecutionException() {};
+    ExecutionException exception2 = new ExecutionException() {};
+    exception1.initCause(exception2);
+    exception2.initCause(exception1);
+
+    assertThat(ErrorCauseExtractor.getDefault().extract(exception1)).isSameAs(exception1);
+  }
+
+  @Test
   void notWrapped() {
     assertThat(ErrorCauseExtractor.getDefault().extract(new IllegalArgumentException("test")))
         .isInstanceOf(IllegalArgumentException.class)

@@ -39,17 +39,7 @@ response:
       "usage": {
         "prompt_tokens": 22,
         "completion_tokens": 2,
-        "total_tokens": 24,
-        "prompt_tokens_details": {
-          "cached_tokens": 0,
-          "audio_tokens": 0
-        },
-        "completion_tokens_details": {
-          "reasoning_tokens": 0,
-          "audio_tokens": 0,
-          "accepted_prediction_tokens": 0,
-          "rejected_prediction_tokens": 0
-        }
+        "total_tokens": 24
       },
       "service_tier": "default",
       "system_fingerprint": "fp_34a54ae93c"

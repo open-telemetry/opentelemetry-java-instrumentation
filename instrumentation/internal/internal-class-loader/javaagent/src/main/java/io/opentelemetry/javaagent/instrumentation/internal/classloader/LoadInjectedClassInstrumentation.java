@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.javaagent.instrumentation.internal.classloader.AdviceUtil.applyInlineAdvice;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
@@ -49,7 +48,7 @@ class LoadInjectedClassInstrumentation implements TypeInstrumentation {
             .and(isPublic().or(isProtected()))
             .and(not(isStatic()));
     // Inline instrumentation to prevent problems with invokedynamic-recursion
-    applyInlineAdvice(transformer, methodMatcher, getClass().getName() + "$LoadClassAdvice");
+    transformer.applyAdviceToMethod(methodMatcher, getClass().getName() + "$LoadClassAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -63,7 +62,7 @@ class LoadInjectedClassInstrumentation implements TypeInstrumentation {
     public static Class<?> onEnter(
         @Advice.This java.lang.ClassLoader classLoader,
         @Advice.This
-            io.opentelemetry.javaagent.instrumentation.internal.classloader.stub.ClassLoader
+            io.opentelemetry.javaagent.bootstrap.internal.classloader.stub.ClassLoader
                 classLoaderStub,
         @Advice.Argument(0) String name) {
 

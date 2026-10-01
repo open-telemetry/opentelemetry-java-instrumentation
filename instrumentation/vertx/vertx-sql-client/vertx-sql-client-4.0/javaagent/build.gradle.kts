@@ -33,21 +33,38 @@ dependencies {
   latestDepTestLibrary("io.vertx:vertx-codegen:4.+") // see vertx-sql-client-5.0 module
 }
 
+testing {
+  suites {
+    // pools over a list of servers were added in 4.2, and the module's own tests run against 4.0
+    register<JvmTestSuite>("vertx42Test") {
+      dependencies {
+        implementation("io.vertx:vertx-sql-client:${baseVersion("4.2.0").orLatest("4.+")}")
+        implementation("io.vertx:vertx-pg-client:${baseVersion("4.2.0").orLatest("4.+")}")
+        implementation("io.vertx:vertx-codegen:${baseVersion("4.2.0").orLatest("4.+")}")
+        implementation("org.testcontainers:testcontainers")
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
-  }
+  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+    .map { suite ->
+      register<Test>("${suite.name}StableSemconv") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
+        jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
+        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
+      }
+    }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites, stableSemconvSuites)
   }
 }
 

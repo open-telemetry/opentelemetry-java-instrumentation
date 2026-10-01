@@ -39,6 +39,11 @@ public class AnnotationInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public boolean isHelperClass(String className) {
+    return className.startsWith("io.opentelemetry.extension.kotlin.");
+  }
+
+  @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     return hasClassesNamed(
         // added in 1.0.0

@@ -11,6 +11,7 @@ import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryC
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalInstrumentationModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalLanguageSpecificInstrumentationModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalLanguageSpecificInstrumentationPropertyModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.OpenTelemetryConfigurationModelAccessor;
 
 /**
  * Adds {@code instrumentation/development.java.foo.customizer_key} at SDK-build time, so tests can
@@ -30,23 +31,24 @@ public class TestInstrumentationConfigCustomizerProvider
 
   private static OpenTelemetryConfigurationModel customizeModel(
       OpenTelemetryConfigurationModel model) {
-    ExperimentalInstrumentationModel instrumentation = model.getInstrumentationDevelopment();
+    ExperimentalInstrumentationModel instrumentation =
+        OpenTelemetryConfigurationModelAccessor.getInstrumentation(model);
     if (instrumentation == null) {
       instrumentation = new ExperimentalInstrumentationModel();
-      model.withInstrumentationDevelopment(instrumentation);
     }
     ExperimentalLanguageSpecificInstrumentationModel java = instrumentation.getJava();
     if (java == null) {
       java = new ExperimentalLanguageSpecificInstrumentationModel();
-      instrumentation.withJava(java);
+      instrumentation.setJava(java);
     }
     ExperimentalLanguageSpecificInstrumentationPropertyModel foo =
         java.getAdditionalProperties().get("foo");
     if (foo == null) {
       foo = new ExperimentalLanguageSpecificInstrumentationPropertyModel();
-      java.withAdditionalProperty("foo", foo);
     }
-    foo.withAdditionalProperty(CUSTOMIZER_KEY, CUSTOMIZED_VALUE);
+    foo.setAdditionalProperty(CUSTOMIZER_KEY, CUSTOMIZED_VALUE);
+    java.setAdditionalProperty("foo", foo);
+    OpenTelemetryConfigurationModelAccessor.setInstrumentation(model, instrumentation);
     return model;
   }
 }

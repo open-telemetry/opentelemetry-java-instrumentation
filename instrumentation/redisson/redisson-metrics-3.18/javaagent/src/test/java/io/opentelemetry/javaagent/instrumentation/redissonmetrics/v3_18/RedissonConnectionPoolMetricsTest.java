@@ -29,8 +29,7 @@ class RedissonConnectionPoolMetricsTest extends AbstractRedissonConnectionPoolMe
       Redisson redisson, String regularPool, String subscriptionPool)
       throws ReflectiveOperationException {
     MasterSlaveEntry entry = getMasterSlaveEntry(redisson);
-    ClientConnectionsEntry connectionsEntry =
-        (ClientConnectionsEntry) getMasterConnectionsEntry(entry);
+    ClientConnectionsEntry connectionsEntry = getMasterConnectionsEntry(entry);
     AsyncSemaphore semaphore = getFreeConnectionsCounter(connectionsEntry);
 
     clearMetrics();

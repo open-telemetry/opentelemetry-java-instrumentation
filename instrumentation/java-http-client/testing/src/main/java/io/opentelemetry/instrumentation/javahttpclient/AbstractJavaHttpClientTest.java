@@ -10,14 +10,12 @@ import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServ
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
@@ -29,9 +27,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.BeforeAll;
@@ -108,19 +104,6 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
     //  which is not what the test expects
     optionsBuilder.disableTestWithClientParent();
     optionsBuilder.spanEndsAfterBody();
-
-    optionsBuilder.setHttpAttributes(
-        uri -> {
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          // unopened port or non routable address; or timeout
-          if ("http://localhost:61/".equals(uri.toString())
-              || "https://192.0.2.1/".equals(uri.toString())
-              || uri.getPath().endsWith("/read-timeout")) {
-            attributes.remove(NETWORK_PROTOCOL_VERSION);
-          }
-          return attributes;
-        });
   }
 
   @SuppressWarnings("Interruption") // test calls CompletableFuture.cancel with true

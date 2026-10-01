@@ -15,6 +15,8 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Collections.emptyMap;
 
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.GetResponse;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.ContextKey;
@@ -34,6 +36,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,6 +44,10 @@ import java.util.List;
 import java.util.Map;
 
 public class RabbitSingletons {
+
+  // Shared with framework instrumentations through the application Consumer type.
+  public static final VirtualField<Consumer, Boolean> PROCESSING_OWNED_OUTSIDE_RABBIT_CLIENT =
+      VirtualField.find(Consumer.class, Boolean.class);
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.rabbitmq-2.7";
 
@@ -64,6 +71,13 @@ public class RabbitSingletons {
       createDeliverInstrumenter();
   static final ContextKey<RabbitChannelAndMethodHolder> CHANNEL_AND_METHOD_CONTEXT_KEY =
       ContextKey.named("opentelemetry-rabbitmq-channel-and-method-context-key");
+
+  /**
+   * The virtual host of a connection. {@link Connection} has never exposed it, so it is read off
+   * {@code AMQConnection} and remembered here.
+   */
+  public static final VirtualField<Connection, String> VIRTUAL_HOST =
+      VirtualField.find(Connection.class, String.class);
 
   public static Instrumenter<ChannelAndMethod, Void> channelInstrumenter(
       ChannelAndMethod channelAndMethod) {
@@ -96,6 +110,11 @@ public class RabbitSingletons {
                         CHANNEL_AND_METHOD_CONTEXT_KEY, new RabbitChannelAndMethodHolder()));
     if (messagingOperation && emitStableMessagingSemconv()) {
       builder.addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter));
+    }
+    if (RabbitInstrumenterHelper.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      builder.addAttributesExtractor(
+          new RabbitConnectionAttributesExtractor<>(
+              channelAndMethod -> channelAndMethod.getChannel().getConnection()));
     }
     return builder;
   }
@@ -169,6 +188,7 @@ public class RabbitSingletons {
     }
     if (RabbitInstrumenterHelper.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       extractors.add(new RabbitReceiveExperimentalAttributesExtractor());
+      extractors.add(new RabbitConnectionAttributesExtractor<>(ReceiveRequest::getConnection));
     }
 
     SpanNameExtractor<ReceiveRequest> spanNameExtractor =
@@ -207,6 +227,7 @@ public class RabbitSingletons {
     extractors.add(new RabbitDeliveryExtraAttributesExtractor());
     if (RabbitInstrumenterHelper.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       extractors.add(new RabbitDeliveryExperimentalAttributesExtractor());
+      extractors.add(new RabbitConnectionAttributesExtractor<>(DeliveryRequest::getConnection));
     }
 
     SpanNameExtractor<DeliveryRequest> spanNameExtractor =

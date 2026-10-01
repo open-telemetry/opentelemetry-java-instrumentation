@@ -462,27 +462,76 @@ It is possible to modify multiple fields at once by using an array, see usages o
 
 ## Using virtual fields to associate instrumentation classes to instrumented classes
 
-Sometimes there is a need to associate some instrumentation class with an instrumented library class, and
-the library does not offer a way to do this. The Java javaagent provides `VirtualField`
-for that purpose. Consider the following example:
+Sometimes javaagent instrumentation needs to associate instrumentation-owned state with an instance
+of an instrumented library class, but the library does not provide a field for that state. The
+javaagent provides `VirtualField` for this purpose.
+
+Prefer `VirtualField` over an external weak-key cache, `WeakHashMap`, or identity-keyed side table
+when:
+
+- the key is a third-party object instance such as a request, message, task, callback, or connection;
+- the value is instrumentation state associated with that exact instance; and
+- the state should live no longer than the carrier object.
+
+Weak references and caches still have other uses. For example, a cache of metadata derived from a
+`Class` or `ClassLoader` is memoization rather than state attached to an individual library object,
+and a weak interning pool can canonicalize equal value objects without retaining them.
+
+Outside an advice method, look up the virtual field once and store its handle in a field:
 
 ```java
-VirtualField<Runnable, Context> virtualField =
-    VirtualField.get(Runnable.class, Context.class);
+private static final VirtualField<Runnable, Context> RUNNABLE_CONTEXT =
+    VirtualField.find(Runnable.class, Context.class);
 ```
 
-A `VirtualField` has a very similar interface to a map. It is not a simple map though: the javaagent uses many
-bytecode tweaks to optimize it. Because of this, retrieving a `VirtualField` instance is rather
-limited: the `VirtualField#get()` method must receive class references as its parameters; it won't
-work with variables, method params, etc. Both the owner class and the field class must be known at
-compile time for it to work.
+The first argument is the carrier type and the second is the attached value type. In normal
+javaagent instrumentation, both should be class literals so muzzle can discover and register the
+mapping. Bytecode transformation rewrites calls with class-literal arguments in inlined `@Advice`
+methods. Lookups made outside advice execute at runtime and should be cached.
+A rare lookup that resolves carrier types at runtime must run outside advice in an `@NoMuzzle`
+method. The instrumentation module must implement `ExperimentalInstrumentationModule` and override
+`registerVirtualFields(...)` to register every possible carrier/value pair. The `(carrier class,
+value class)` pair identifies the virtual field across instrumentations, so use a dedicated holder
+class when common value types such as `Object`, `Boolean`, `String`, or `Map` could give unrelated
+state the same pair.
 
-Use of `VirtualField` requires the `muzzle-generation` gradle plugin. Failing to use the plugin will result in
-ClassNotFoundException when trying to access the field.
+When a shared bootstrap or common helper cannot name the library carrier type, keep the
+`VirtualField` lookup with the instrumentation-specific caller. Pass the typed handle, or a small
+typed accessor around it, into the shared logic:
 
-The call to `VirtualField.find()` is expensive, so it is best to call it once and cache the result in a field.
-In addition, when using [non-inlined instrumentation](#non-inlined-instrumentation), the calls to `VirtualField.find()` must be done outside the advice class and methods
-because those calls are re-written for efficiency. The `VirtualFieldChecker` class is used to check this at runtime when the advice class is loaded.
+```java
+public static <T> void attachContext(
+    VirtualField<T, Context> field, T carrier, Context context) {
+  field.set(carrier, context);
+}
+```
+
+Do not generalize this pattern with `VirtualField.find(Object.class, ...)`. The caller should select
+the narrow class or interface that identifies the library objects that can carry the state.
+
+Inside an inlined `@Advice` method, call `VirtualField.find(...)` directly where the virtual field
+is used. The call is rewritten during bytecode transformation and does not need to be cached. A
+non-inlined advice method (`inline = false`) must not call `VirtualField.find(...)` because the call
+is not rewritten. For non-inlined advice, put the handle in a `static final` field on a non-advice
+helper or singleton and reference that handle from the advice method. Use the same caching pattern
+for other lookups outside advice.
+
+The javaagent normally injects field-backed storage into eligible carrier implementations. It falls
+back to a weak-key, strong-value map when field injection is unavailable. Avoid storing a value that
+strongly references its carrier because that object graph can retain the weak key through the
+fallback value. If such a back-reference is required, make that reference weak.
+
+`VirtualField` follows object identity. Clear state with `field.set(carrier, null)` once it has been
+consumed or when an operation fails. Garbage collection is not enough for pooled or reused carriers:
+clear or replace their state at the lifecycle boundary so a later logical operation cannot observe
+stale state.
+
+Individual lookups and updates are safe, but a `get()` followed by `set()` is not an atomic
+read-modify-write operation. Attached state that can be updated concurrently must provide the
+required synchronization or atomic operations.
+
+Use of `VirtualField` requires the `muzzle-generation` Gradle plugin. Without it, the mapping is not
+registered and the javaagent cannot install or rewrite the field implementation.
 
 ## Avoid using @Advice.Origin Method
 

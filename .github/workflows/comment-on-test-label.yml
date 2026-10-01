@@ -1,6 +1,6 @@
 name: Comment on test-* label
 
-# Posts a notice when a `test openj9` / `test windows` label is added,
+# Posts a notice when a `test openj9` / `test windows` / `test full smoke` label is added,
 # explaining that `build-pull-request.yml` doesn't retrigger on `labeled`
 # events (see the design notes at the top of that file for the rationale).
 # This is conditional because labels can also be present when the PR is first
@@ -24,7 +24,8 @@ jobs:
   comment:
     if: |
       github.event.label.name == 'test openj9' ||
-      github.event.label.name == 'test windows'
+      github.event.label.name == 'test windows' ||
+      github.event.label.name == 'test full smoke'
     runs-on: ubuntu-latest
     steps:
       - name: Post explanatory comment

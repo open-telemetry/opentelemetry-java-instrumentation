@@ -2,7 +2,7 @@ ARG jdkImageName
 ARG jdkImageHash
 
 # Unzip in a separate container so that zip file layer is not part of final image
-FROM mcr.microsoft.com/windows/servercore:ltsc2022@sha256:b841bb042e13a079f68fc82461f15abcefe8063fb9a3072120348252f13a6ce3 as builder
+FROM mcr.microsoft.com/windows/servercore:ltsc2022@sha256:76cf422c98ca437b308374d0498280541fa42ac7061bb44015a6c8b70cf4db6a as builder
 ARG version
 
 ADD https://repo1.maven.org/maven2/io/openliberty/openliberty-runtime/${version}/openliberty-runtime-${version}.zip /server.zip

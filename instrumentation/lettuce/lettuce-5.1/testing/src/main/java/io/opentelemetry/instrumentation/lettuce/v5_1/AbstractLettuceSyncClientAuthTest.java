@@ -91,9 +91,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(maybeStable(DB_OPERATION), "CLIENT"),
                                       equalTo(
                                           ERROR_TYPE,
-                                          emitStableDatabaseSemconv()
-                                              ? "io.lettuce.core.RedisCommandExecutionException"
-                                              : null)))),
+                                          emitStableDatabaseSemconv() ? "NOAUTH" : null)))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
@@ -113,9 +111,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(maybeStable(DB_OPERATION), "CLIENT"),
                                       equalTo(
                                           ERROR_TYPE,
-                                          emitStableDatabaseSemconv()
-                                              ? "io.lettuce.core.RedisCommandExecutionException"
-                                              : null)))),
+                                          emitStableDatabaseSemconv() ? "NOAUTH" : null)))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
@@ -135,9 +131,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(maybeStable(DB_OPERATION), "CLIENT"),
                                       equalTo(
                                           ERROR_TYPE,
-                                          emitStableDatabaseSemconv()
-                                              ? "io.lettuce.core.RedisCommandExecutionException"
-                                              : null)))),
+                                          emitStableDatabaseSemconv() ? "NOAUTH" : null)))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->

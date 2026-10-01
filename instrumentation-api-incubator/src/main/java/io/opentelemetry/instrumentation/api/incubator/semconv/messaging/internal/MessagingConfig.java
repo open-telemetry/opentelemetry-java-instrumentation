@@ -5,22 +5,37 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal;
 
+import static io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig.Stability.STABLE;
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.instrumentation.api.internal.SystemProperty;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /**
- * Resolves the common messaging header selector, shared by every messaging instrumentation so that
- * precedence and deprecation warnings are uniform.
+ * Resolves common and instrumentation-specific messaging configuration.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
 public final class MessagingConfig {
 
+  private static final Logger logger = Logger.getLogger(MessagingConfig.class.getName());
+  private static final Set<String> warnedDeprecatedProperties = ConcurrentHashMap.newKeySet();
   private static final IncludeExclude NONE = IncludeExclude.builder().build();
+  private static final String COMMON_MESSAGING_PROPERTY_PREFIX =
+      "otel.instrumentation.common.messaging";
+  private static final String DEPRECATED_MESSAGING_PROPERTY_PREFIX =
+      "otel.instrumentation.messaging";
 
   /**
    * Returns the configured messaging header selector, or an {@linkplain IncludeExclude#isEmpty()
@@ -40,17 +55,205 @@ public final class MessagingConfig {
    */
   public static IncludeExclude getHeaders(
       OpenTelemetry openTelemetry, boolean systemPropertyFallback) {
-    return getHeaders(
-        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common").get("messaging"),
-        systemPropertyFallback);
+    DeclarativeConfigProperties messagingConfig =
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common").get("messaging");
+    DeclarativeConfigProperties headers = messagingConfig.get("headers");
+    boolean v3Preview = SemconvStability.v3Preview(openTelemetry);
+    DeclarativeConfigProperties deprecatedHeaders =
+        v3Preview
+            ? null
+            : DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "messaging")
+                .get("headers/development");
+    List<String> stableIncluded = headers.getScalarList("included", String.class);
+    List<String> stableExcluded = headers.getScalarList("excluded", String.class);
+    List<String> included =
+        getHeaderPatterns("included", stableIncluded, deprecatedHeaders, systemPropertyFallback);
+    List<String> excluded =
+        getHeaderPatterns("excluded", stableExcluded, deprecatedHeaders, systemPropertyFallback);
+    IncludeExclude selector =
+        IncludeExclude.builder()
+            .setIncluded(included == null ? emptyList() : included)
+            .setExcluded(excluded == null ? emptyList() : excluded)
+            .build();
+    if (v3Preview || !selector.isEmpty() || stableIncluded != null || stableExcluded != null) {
+      return selector;
+    }
+
+    selector =
+        SelectorConfig.resolveDeprecatedCapture(
+            messagingConfig,
+            "messaging",
+            "headers",
+            "common.messaging",
+            STABLE,
+            systemPropertyFallback);
+    return selector == null ? NONE : selector;
   }
 
-  // visible for testing
-  static IncludeExclude getHeaders(
-      DeclarativeConfigProperties messagingConfig, boolean systemPropertyFallback) {
-    IncludeExclude selector =
-        SelectorConfig.resolve(messagingConfig, "messaging", "headers", systemPropertyFallback);
-    return selector == null ? NONE : selector;
+  /** Returns the stable header patterns, or the matching deprecated patterns if absent. */
+  @Nullable
+  private static List<String> getHeaderPatterns(
+      String name,
+      @Nullable List<String> stablePatterns,
+      @Nullable DeclarativeConfigProperties deprecatedHeaders,
+      boolean systemPropertyFallback) {
+    String replacementProperty = COMMON_MESSAGING_PROPERTY_PREFIX + ".headers." + name;
+    if (stablePatterns != null) {
+      return stablePatterns;
+    }
+    if (systemPropertyFallback) {
+      List<String> patterns = SystemProperty.getList(replacementProperty);
+      if (patterns != null && !patterns.isEmpty()) {
+        return patterns;
+      }
+    }
+    if (deprecatedHeaders == null) {
+      return null;
+    }
+
+    // TODO: remove the deprecated flat messaging names in a future minor release.
+    String deprecatedProperty =
+        DEPRECATED_MESSAGING_PROPERTY_PREFIX + ".experimental.headers." + name;
+    List<String> patterns =
+        getList(deprecatedHeaders, name, deprecatedProperty, systemPropertyFallback);
+    if (patterns != null && !patterns.isEmpty()) {
+      warnDeprecatedProperty(
+          deprecatedProperty, replacementProperty, "may be removed in the next minor release");
+    }
+    return patterns;
+  }
+
+  /**
+   * Returns whether messaging receive telemetry is enabled.
+   *
+   * @param systemPropertyFallback whether to fall back to flat system properties when declarative
+   *     configuration does not contain a value. This is needed by library instrumentation entry
+   *     points that have no programmatic configuration surface.
+   */
+  public static boolean isReceiveTelemetryEnabled(
+      OpenTelemetry openTelemetry, boolean systemPropertyFallback) {
+    DeclarativeConfigProperties messagingConfig =
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common").get("messaging");
+    Boolean enabled =
+        getBoolean(
+            messagingConfig.get("receive_telemetry/development"),
+            "enabled",
+            COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.receive-telemetry.enabled",
+            systemPropertyFallback);
+    if (enabled != null) {
+      return enabled;
+    }
+
+    // TODO: remove the deprecated flat messaging name in a future minor release.
+    String deprecatedProperty =
+        DEPRECATED_MESSAGING_PROPERTY_PREFIX + ".experimental.receive-telemetry.enabled";
+    enabled =
+        getBoolean(
+            DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "messaging")
+                .get("receive_telemetry/development"),
+            "enabled",
+            deprecatedProperty,
+            systemPropertyFallback);
+    if (enabled != null) {
+      warnDeprecatedProperty(
+          deprecatedProperty,
+          COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.receive-telemetry.enabled",
+          "may be removed in the next minor release");
+      return enabled;
+    }
+    return false;
+  }
+
+  /**
+   * Returns whether an instrumentation should emit a creation span for each message in a batch
+   * send.
+   *
+   * <p>Resolves the instrumentation-specific {@code message_create_spans} declarative setting and
+   * {@code message-create-spans.enabled} flat property, then falls back to the common messaging
+   * setting.
+   */
+  public static boolean isBatchSendMessageCreationSpansEnabled(
+      OpenTelemetry openTelemetry, String instrumentationName) {
+    return isBatchSendMessageCreationSpansEnabled(openTelemetry, instrumentationName, false);
+  }
+
+  /**
+   * Returns whether an instrumentation should emit a creation span for each message in a batch
+   * send.
+   *
+   * <p>Resolves the instrumentation-specific {@code message_create_spans} declarative setting and
+   * {@code message-create-spans.enabled} flat property, then falls back to the common messaging
+   * setting.
+   *
+   * @param systemPropertyFallback whether to fall back to flat system properties when declarative
+   *     configuration does not contain a value. This is needed by library instrumentation entry
+   *     points that have no programmatic configuration surface.
+   */
+  public static boolean isBatchSendMessageCreationSpansEnabled(
+      OpenTelemetry openTelemetry, String instrumentationName, boolean systemPropertyFallback) {
+    String instrumentationPropertyPrefix =
+        "otel.instrumentation." + instrumentationName.replace('_', '-');
+    Boolean enabled =
+        getBoolean(
+            DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, instrumentationName)
+                .get("message_create_spans"),
+            "enabled",
+            instrumentationPropertyPrefix + ".message-create-spans.enabled",
+            systemPropertyFallback);
+    if (enabled != null) {
+      return enabled;
+    }
+
+    enabled =
+        getBoolean(
+            DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common")
+                .get("messaging")
+                .get("message_create_spans"),
+            "enabled",
+            COMMON_MESSAGING_PROPERTY_PREFIX + ".message-create-spans.enabled",
+            systemPropertyFallback);
+    return enabled != null ? enabled : true;
+  }
+
+  @Nullable
+  private static Boolean getBoolean(
+      DeclarativeConfigProperties config,
+      String name,
+      String flatProperty,
+      boolean systemPropertyFallback) {
+    Boolean value = config.getBoolean(name);
+    if (value != null) {
+      return value;
+    }
+    return systemPropertyFallback ? SystemProperty.getBoolean(flatProperty) : null;
+  }
+
+  @Nullable
+  private static List<String> getList(
+      DeclarativeConfigProperties config,
+      String name,
+      String flatProperty,
+      boolean systemPropertyFallback) {
+    List<String> value = config.getScalarList(name, String.class);
+    if (value != null) {
+      return value;
+    }
+    return systemPropertyFallback ? SystemProperty.getList(flatProperty) : null;
+  }
+
+  private static void warnDeprecatedProperty(
+      String deprecatedProperty, String replacementProperty, String removalSchedule) {
+    if (warnedDeprecatedProperties.add(deprecatedProperty)) {
+      logger.warning(
+          "The "
+              + deprecatedProperty
+              + " setting and the equivalent declarative configuration property are deprecated"
+              + " and "
+              + removalSchedule
+              + ". Use "
+              + replacementProperty
+              + " or equivalent declarative configuration instead.");
+    }
   }
 
   private MessagingConfig() {}

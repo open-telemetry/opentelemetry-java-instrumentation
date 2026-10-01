@@ -52,6 +52,8 @@ configurations:
       release.
     type: list
     default: ''
+    deprecated: true
+    replaced_by: otel.instrumentation.log4j-appender.experimental.mdc-attributes.included
     examples:
       - "custom-mdc-key"
       - "key1,key2,key3"

@@ -9,6 +9,8 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -27,6 +29,8 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -40,6 +44,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
+import rx.Observable;
 import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 
@@ -68,14 +73,16 @@ class LettuceReactiveClientTest {
 
   private static RedisReactiveCommands<String, String> reactiveCommands;
   private static String host;
+  private static String ip;
   private static int port;
 
   @BeforeAll
-  static void setUp() {
+  static void setUp() throws UnknownHostException {
     redisServer.start();
     cleanup.deferAfterAll(redisServer::stop);
 
     host = redisServer.getHost();
+    ip = InetAddress.getByName(host).getHostAddress();
     port = redisServer.getMappedPort(6379);
     String embeddedDbUri = "redis://" + host + ":" + port + "/" + DB_INDEX;
 
@@ -133,7 +140,11 @@ class LettuceReactiveClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port)),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null)),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -167,7 +178,51 @@ class LettuceReactiveClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "GET"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null))));
+  }
+
+  @Test
+  void resubscribedCommandUsesEachDispatchedPeer() {
+    Observable<String> command = reactiveCommands.get("TESTKEY");
+
+    assertThat(command.toBlocking().single()).isEqualTo("TESTVAL");
+    assertThat(command.toBlocking().single()).isEqualTo("TESTVAL");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "GET " + host + ":" + port : "GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(maybeStable(DB_OPERATION), "GET"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "GET " + host + ":" + port : "GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(maybeStable(DB_OPERATION), "GET"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null))));
   }
 
   // to make sure instrumentation's chained completion stages won't interfere with user's, while
@@ -208,7 +263,11 @@ class LettuceReactiveClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "GET"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port)),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null)),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -237,7 +296,11 @@ class LettuceReactiveClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "RANDOMKEY"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null))));
   }
 
   @Test
@@ -262,7 +325,11 @@ class LettuceReactiveClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "COMMAND"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null))));
   }
 
   @Test
@@ -291,7 +358,11 @@ class LettuceReactiveClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "COMMAND"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null))));
   }
 
   @Test
@@ -323,7 +394,9 @@ class LettuceReactiveClientTest {
                                   equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                                   equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"),
                                   equalTo(SERVER_ADDRESS, host),
-                                  equalTo(SERVER_PORT, port))));
+                                  equalTo(SERVER_PORT, port),
+                                  equalTo(NETWORK_PEER_ADDRESS, null),
+                                  equalTo(NETWORK_PEER_PORT, null))));
         });
   }
 
@@ -352,7 +425,11 @@ class LettuceReactiveClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port)),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null)),
                 span ->
                     span.hasName(emitStableDatabaseSemconv() ? "GET " + host + ":" + port : "GET")
                         .hasKind(SpanKind.CLIENT)
@@ -362,7 +439,11 @@ class LettuceReactiveClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "GET"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null))));
   }
 
   @Test
@@ -395,7 +476,11 @@ class LettuceReactiveClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port)),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null)),
                 span ->
                     span.hasName(emitStableDatabaseSemconv() ? "GET " + host + ":" + port : "GET")
                         .hasKind(SpanKind.CLIENT)
@@ -405,7 +490,11 @@ class LettuceReactiveClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "GET"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null))));
   }
 
   @Test
@@ -440,7 +529,11 @@ class LettuceReactiveClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port)),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null)),
                 span ->
                     span.hasName(emitStableDatabaseSemconv() ? "GET " + host + ":" + port : "GET")
                         .hasKind(SpanKind.CLIENT)
@@ -450,7 +543,11 @@ class LettuceReactiveClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "GET"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(
+                                NETWORK_PEER_PORT,
+                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null))));
   }
 
   private static void withIsolatedContainer(

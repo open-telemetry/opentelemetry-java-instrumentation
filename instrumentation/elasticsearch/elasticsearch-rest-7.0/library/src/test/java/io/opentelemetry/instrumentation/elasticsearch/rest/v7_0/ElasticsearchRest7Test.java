@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.elasticsearch.rest.v7_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -12,6 +13,7 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ELASTICSEARCH;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -96,6 +98,32 @@ class ElasticsearchRest7Test {
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"))));
+  }
+
+  @Test
+  void searchQueryCaptureFollowsV3Preview() throws IOException {
+    Request request = new Request("POST", "/_search");
+    request.setJsonEntity("{\"query\":{\"match\":{\"title\":\"secret user data\"}}}");
+
+    Response response = client.performRequest(request);
+
+    assertThat(response.getStatusLine().getStatusCode()).isEqualTo(200);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("POST")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                v3Preview() ? "{\"query\":{\"match\":{\"title\":\"?\"}}}" : null),
+                            equalTo(HTTP_REQUEST_METHOD, "POST"),
+                            equalTo(SERVER_ADDRESS, httpHost.getHostName()),
+                            equalTo(SERVER_PORT, httpHost.getPort()),
+                            equalTo(URL_FULL, httpHost.toURI() + "/_search"))));
   }
 
   @Test

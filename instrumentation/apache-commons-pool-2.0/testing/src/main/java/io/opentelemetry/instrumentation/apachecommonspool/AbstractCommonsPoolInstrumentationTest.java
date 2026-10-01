@@ -232,7 +232,7 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
     return new GenericKeyedObjectPool<>(new TestKeyedObjectFactory(), config);
   }
 
-  private void assertGenericObjectPoolMetrics(String poolName) {
+  protected void assertGenericObjectPoolMetrics(String poolName) {
     verifyCommonPoolMetrics(poolName);
     verifyMinIdleObjects(poolName);
     verifyMaxIdleObjects(poolName);
@@ -260,6 +260,17 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
             metricData ->
                 metricData.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
         .noneMatch(metricData -> metricData.getName().equals(metricName));
+  }
+
+  protected void verifyPoolNameNotReported(String poolName) {
+    assertThat(testing().metrics())
+        .filteredOn(
+            metricData ->
+                metricData.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
+        .noneMatch(
+            metricData ->
+                metricData.getLongSumData().getPoints().stream()
+                    .anyMatch(point -> poolName.equals(point.getAttributes().get(POOL_NAME))));
   }
 
   private void verifyObjectCount(String poolName) {

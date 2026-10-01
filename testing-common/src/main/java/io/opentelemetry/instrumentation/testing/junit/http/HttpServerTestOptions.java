@@ -61,6 +61,7 @@ public class HttpServerTestOptions {
   boolean testPathParam = false;
   boolean testCaptureHttpHeaders = true;
   boolean testCaptureRequestParameters = false;
+  boolean testClientAddressFromSocketPeer = true;
   boolean testHttpPipelining = true;
   boolean testHttpBodyPipelining = false;
   boolean testNonStandardHttpMethod = true;
@@ -199,6 +200,13 @@ public class HttpServerTestOptions {
   public HttpServerTestOptions setTestCaptureRequestParameters(
       boolean testCaptureRequestParameters) {
     this.testCaptureRequestParameters = testCaptureRequestParameters;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public HttpServerTestOptions setTestClientAddressFromSocketPeer(
+      boolean testClientAddressFromSocketPeer) {
+    this.testClientAddressFromSocketPeer = testClientAddressFromSocketPeer;
     return this;
   }
 

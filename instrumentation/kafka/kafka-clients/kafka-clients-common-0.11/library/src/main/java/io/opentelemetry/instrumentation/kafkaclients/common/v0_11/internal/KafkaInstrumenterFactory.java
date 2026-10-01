@@ -36,7 +36,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import java.util.function.ToLongFunction;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 /**
@@ -152,10 +151,9 @@ public final class KafkaInstrumenterFactory {
             operationType, KafkaProducerRequest::isSpanContextPropagated));
   }
 
-  // the producer interceptor returns from onSend before the record is sent to the broker, and its
-  // onAcknowledgement hook does not report the outcome back, so the span covers only the header
-  // injection. timing it would be misleading, so this instrumenter records only the sent messages
-  // counter.
+  // The producer interceptor runs before the record is sent to the broker and cannot correlate
+  // onAcknowledgement with individual sends, so it cannot measure send duration. This instrumenter
+  // records only the sent messages counter.
   public Instrumenter<KafkaProducerRequest, RecordMetadata> createProducerInterceptorInstrumenter(
       Iterable<AttributesExtractor<KafkaProducerRequest, RecordMetadata>> extractors) {
     return createProducerInstrumenter(extractors, MessagingProducerMetrics.getSentMessages());
@@ -279,10 +277,9 @@ public final class KafkaInstrumenterFactory {
       InstrumenterBuilder<KafkaReceiveRequest, Void> builder) {
     builder
         .addContextCustomizer(
-            (context, request, startAttributes) -> {
-              return context.with(
-                  CONSUMED_MESSAGES_COUNT_KEY, countConsumedMessages(request.getRecords()));
-            })
+            (context, request, startAttributes) ->
+                context.with(
+                    CONSUMED_MESSAGES_COUNT_KEY, countConsumedMessages(request.getRecordList())))
         .addOperationMetrics(consumedMessagesMetrics);
   }
 
@@ -295,7 +292,7 @@ public final class KafkaInstrumenterFactory {
   }
 
   /** Counts the records of a batch individually, so that they can be deduplicated one by one. */
-  private static long countConsumedMessages(ConsumerRecords<?, ?> records) {
+  private static long countConsumedMessages(Iterable<? extends ConsumerRecord<?, ?>> records) {
     long consumedMessagesCount = 0;
     for (ConsumerRecord<?, ?> record : records) {
       consumedMessagesCount += countConsumedMessages(record);
@@ -322,7 +319,7 @@ public final class KafkaInstrumenterFactory {
             .addOperationMetrics(MessagingProcessMetrics.get())
             .setErrorCauseExtractor(errorCauseExtractor);
     addConsumedMessagesIfNoReceiveOperation(
-        builder, request -> countConsumedMessages(request.getRecords()));
+        builder, request -> countConsumedMessages(request.getRecordList()));
     setMessagingProcessExceptionEventExtractor(builder);
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }

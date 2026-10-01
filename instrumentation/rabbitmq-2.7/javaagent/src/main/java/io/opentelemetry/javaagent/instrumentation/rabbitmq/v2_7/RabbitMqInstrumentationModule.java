@@ -20,6 +20,9 @@ public class RabbitMqInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new RabbitChannelInstrumentation(), new RabbitCommandInstrumentation());
+    return asList(
+        new RabbitChannelInstrumentation(),
+        new RabbitCommandInstrumentation(),
+        new RabbitConnectionInstrumentation());
   }
 }

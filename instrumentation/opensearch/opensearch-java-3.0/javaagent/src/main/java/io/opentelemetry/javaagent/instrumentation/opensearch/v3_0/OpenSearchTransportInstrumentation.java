@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.opensearch.v3_0.OpenSearchSingletons.CAPTURE_SEARCH_QUERY;
+import static io.opentelemetry.javaagent.instrumentation.opensearch.v3_0.OpenSearchSingletons.SANITIZE_SEARCH_QUERY;
 import static io.opentelemetry.javaagent.instrumentation.opensearch.v3_0.OpenSearchSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -72,19 +73,25 @@ class OpenSearchTransportInstrumentation implements TypeInstrumentation {
 
     @Nullable
     public static AdviceScope start(
-        Object request, Endpoint<Object, Object, Object> endpoint, JsonpMapper jsonpMapper) {
+        OpenSearchTransport transport,
+        Object request,
+        Endpoint<Object, Object, Object> endpoint,
+        JsonpMapper jsonpMapper) {
       Context parentContext = Context.current();
 
       String queryBody = null;
 
       if (CAPTURE_SEARCH_QUERY
           && (request instanceof SearchRequest || request instanceof MsearchRequest)) {
-        queryBody = OpenSearchBodyExtractor.extractSanitized(jsonpMapper, request);
+        queryBody = OpenSearchBodyExtractor.extract(jsonpMapper, request, SANITIZE_SEARCH_QUERY);
       }
 
       OpenSearchRequest otelRequest =
           OpenSearchRequest.create(
-              endpoint.method(request), endpoint.requestUrl(request), queryBody);
+              endpoint.method(request),
+              endpoint.requestUrl(request),
+              queryBody,
+              OpenSearchServerTargets.get(transport));
 
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {
         return null;
@@ -138,7 +145,8 @@ class OpenSearchTransportInstrumentation implements TypeInstrumentation {
         @Advice.This OpenSearchTransport openSearchTransport,
         @Advice.Argument(0) Object request,
         @Advice.Argument(1) Endpoint<Object, Object, Object> endpoint) {
-      return AdviceScope.start(request, endpoint, openSearchTransport.jsonpMapper());
+      return AdviceScope.start(
+          openSearchTransport, request, endpoint, openSearchTransport.jsonpMapper());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -160,7 +168,8 @@ class OpenSearchTransportInstrumentation implements TypeInstrumentation {
         @Advice.This OpenSearchTransport openSearchTransport,
         @Advice.Argument(0) Object request,
         @Advice.Argument(1) Endpoint<Object, Object, Object> endpoint) {
-      return AdviceScope.start(request, endpoint, openSearchTransport.jsonpMapper());
+      return AdviceScope.start(
+          openSearchTransport, request, endpoint, openSearchTransport.jsonpMapper());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

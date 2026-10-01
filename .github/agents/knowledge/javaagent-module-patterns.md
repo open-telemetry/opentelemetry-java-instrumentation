@@ -1,9 +1,8 @@
 # [Javaagent] Module Structure Patterns
 
-## Quick Reference
-
-- Use when: reviewing `InstrumentationModule`, `TypeInstrumentation`, `VirtualField`, or `CallDepth` code
-- Review focus: registration and naming, matcher performance, safe advice wiring
+Consult this article when adding or changing an instrumentation module,
+classloader boundary, method matcher, or `CallDepth` pair. It gives registration
+examples and version-boundary mechanics.
 
 ## InstrumentationModule
 
@@ -38,6 +37,18 @@ public class MyLibrary10InstrumentationModule extends InstrumentationModule {
 - `typeInstrumentations()` returns the list of `TypeInstrumentation` implementations — use
   `Arrays.asList(...)` for multiple items and `Collections.singletonList(...)` for a single
   item.
+
+### Multiple modules in one Gradle project
+
+When a javaagent Gradle project contains independently selected `InstrumentationModule` classes,
+give each one a unique instrumentation name. Muzzle passes use that name with
+`excludeInstrumentationName(...)` to select only the module covered by each compatibility range or
+target artifact. Every name passed to the `InstrumentationModule` constructor is also a user-facing
+`otel.instrumentation.<name>.enabled` alias, checked in constructor argument order. When adding a
+unique name, preserve the existing first (main) name and the order of existing names.
+
+See [Compatibility range ownership](gradle-conventions.md#compatibility-range-ownership) for when
+modules should share a javaagent project and how to separate their Muzzle passes and dependencies.
 
 ### `classLoaderMatcher()` — Version-Boundary Detection
 
@@ -365,9 +376,9 @@ full coordinate.
   optimization belongs on `TypeInstrumentation.classLoaderOptimization()`, not here.
   `classLoaderMatcher()` is only for **version-boundary detection**. Most modules do not need
   it.
-- **Do NOT flag modules that omit `classLoaderMatcher()`.** The default (`any()`) is correct
-  when muzzle can detect the version boundary on its own. Only flag a missing override when
-  the module truly depends on an added or removed landmark class that muzzle does not inspect.
+- **Omit `classLoaderMatcher()` when Muzzle detects the version boundary.** The default
+  (`any()`) is correct. Add an override only when the module truly depends on an
+  added or removed landmark class that Muzzle does not inspect.
 - **Version comments are required on landmark classes.** For multi-class checks, or whenever
   the landmark version differs from the module's base version, every `hasClassesNamed()` call
   needs a role comment. When the entire return expression is a single `hasClassesNamed(...)`
@@ -470,9 +481,40 @@ sufficient for optimization.
 - The `typeMatcher()` uses `named(...)` or `namedOneOf(...)` — no override needed because
   name-only matchers are already fast (they check only the class name, no bytecode).
 
+### Method matchers and advice bindings
+
+The method matcher must prove compatibility for every non-optional, statically typed value that the
+advice reads. For each `@Advice.Argument(n)`, normally include a compatible
+`takesArgument(n, ...)` matcher or an equivalent matcher for the complete typed signature. Apply the
+same rule to a concretely typed `@Advice.Return` with `returns(...)`.
+
+When supported signatures use different concrete subtypes accepted by the advice's common
+supertype, match the hierarchy:
+
+```java
+named("pool")
+    .and(takesArguments(3))
+    .and(takesArgument(1, hasSuperType(named("io.vertx.sqlclient.SqlConnectOptions"))))
+    .and(returns(hasSuperType(named("io.vertx.sqlclient.Pool"))))
+```
+
+Match argument positions that the advice does not bind only when they distinguish an intended
+overload or supported-version signature. Do not restate unrelated arguments, and do not bind unused
+arguments merely to mirror the matcher. The matcher selects methods; the advice signature lists the
+values it reads.
+
+`optional = true` permits the indexed argument to be absent; it does not relax type compatibility
+when the argument is present. A concretely typed optional argument still needs a compatible matcher
+for every signature that includes it. A binding typed as `Object` can intentionally cover broad
+reference types and does not require an exact type matcher. `typing = Assigner.Typing.DYNAMIC`
+instead permits otherwise-incompatible assignment by inserting a runtime cast. Use it without an
+explicit type constraint only when every matched signature has a separate runtime contract that
+guarantees the value is assignable to the advice parameter. Otherwise, constrain the matcher to
+prevent `ClassCastException`.
+
 ### Rules
 
-- Do not flag or change the visibility or `final` modifier on advice classes.
+- Do not change the visibility of advice classes solely for style.
 - `typeMatcher()` should match only the types the instrumentation genuinely needs. Prefer
   `named("fully.qualified.ClassName")` or `namedOneOf(...)` for single classes.
   `extendsClass(...)` and `implementsInterface(...)` are appropriate when the instrumentation
@@ -504,12 +546,10 @@ sufficient for optimization.
 - Reference the advice class using `getClass().getName() + "$InnerClassName"` — not
   `this.getClass().getName() + "$InnerClassName"`, `InnerClassName.class.getName()`,
   `OuterClass.class.getName()`, or a string literal.
-  Any `.class.getName()` reference — whether to the inner advice class or the outer
-  instrumentation class — causes class loading in the agent's class loader, where library
-  types used by the advice are unavailable (causing `NoClassDefFoundError`).
-  `getClass().getName()` avoids this because it is a virtual call on the already-loaded
-  instance, not a class literal. Omit the redundant `this.` qualifier and use the shorter
-  repository convention.
+  Do not use `.class.getName()` to construct an advice class name in `transform()`. Resolving the
+  class literal loads the advice class in the agent class loader, where library types referenced
+  by the advice may be unavailable (causing `NoClassDefFoundError`). Omit the redundant `this.`
+  qualifier and use the shorter repository convention.
 
 ## CallDepth (Preventing Recursive Instrumentation)
 
@@ -523,20 +563,9 @@ to prevent nested spans.
 - In `@OnMethodEnter`: call `getAndIncrement()`, return the `CallDepth`.
 - In `@OnMethodExit`: if `decrementAndGet() > 0`, skip span-ending logic (still nested).
 
-## VirtualField (Attaching Context to Library Objects)
+## VirtualField (Per-Object State Attached to Library Objects)
 
-`VirtualField` attaches virtual fields to library classes without modifying their bytecode,
-for associating OpenTelemetry context or state with library objects.
-
-### Rules
-
-- Call `VirtualField.find(Carrier.class, Value.class)` with class literals.
-- **Inside `@Advice` methods** these calls are **rewritten at bytecode transformation time**
-  by `VirtualFieldFindRewriter` into direct static calls to generated implementations —
-  they are never executed at runtime. It is perfectly fine to call `VirtualField.find()`
-  inside advice methods; do **not** extract them into helper classes or static final fields.
-- **Outside advice** (helper classes, singletons, etc.) the call executes at runtime, so
-  declare the result as a `static final` field to avoid repeated lookups.
-- The first type parameter is the "carrier" class (the library object); the second is the
-  attached value type.
-- Uses weak-key semantics: when the carrier is garbage-collected, the value is released.
+Load [Virtual Fields](javaagent-virtual-fields.md) when code uses `VirtualField` or introduces weak
+or identity-keyed storage for state associated with third-party object instances. That article
+covers storage selection, typed carrier boundaries, lookup placement, lifetime, fallback behavior,
+and concurrency.
