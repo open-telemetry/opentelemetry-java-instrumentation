@@ -475,21 +475,22 @@
       ],
       versioningTemplate: 'semver-partial',
     },
-    {
-      customType: 'regex',
-      datasourceTemplate: 'custom.azul-zulu',
-      managerFilePatterns: [
-        '.github/workflows/**',
-        '**/*.gradle.kts',
-      ],
-      matchStrings: [
-        '(?<currentValue>\\d+) # renovate\\(java-version\\)',
-        '"(?<currentValue>\\d+)" // renovate\\(java-version\\)',
-      ],
-      // using zulu because new releases get published quickly
-      depNameTemplate: 'azul-zulu',
-      versioningTemplate: 'regex:^(?<major>\\d+)$',
-    },
+// commented out to see whether weekly update passes without this block
+//    {
+//      customType: 'regex',
+//      datasourceTemplate: 'custom.azul-zulu',
+//      managerFilePatterns: [
+//        '.github/workflows/**',
+//        '**/*.gradle.kts',
+//      ],
+//      matchStrings: [
+//        '(?<currentValue>\\d+) # renovate\\(java-version\\)',
+//        '"(?<currentValue>\\d+)" // renovate\\(java-version\\)',
+//      ],
+//      // using zulu because new releases get published quickly
+//      depNameTemplate: 'azul-zulu',
+//      versioningTemplate: 'regex:^(?<major>\\d+)$',
+//    },
     {
       customType: 'regex',
       datasourceTemplate: 'docker',
