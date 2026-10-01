@@ -20,9 +20,7 @@ public class KotlinCoroutinesFlowInstrumentationModule extends InstrumentationMo
     super(
         AgentCommonConfig.get().isV3Preview() ? "kotlinx-coroutines" : "kotlinx-coroutines-flow",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {
-              "kotlinx-coroutines-1.0", "kotlinx-coroutines-flow", "kotlinx-coroutines-flow-1.3"
-            }
+            ? new String[] {"kotlinx-coroutines-1.0"}
             : new String[] {"kotlinx-coroutines-flow-1.3", "kotlinx-coroutines"});
   }
 

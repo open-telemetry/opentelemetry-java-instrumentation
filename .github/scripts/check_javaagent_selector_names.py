@@ -33,7 +33,7 @@ SHARED_FEATURE_FAMILIES = {
     "kotlinx-coroutines": {"opentelemetry-instrumentation-annotations"},
 }
 # Existing independent controls whose names identify a compatibility baseline.
-FEATURE_VERSION_SELECTORS = {"couchbase-2.6", "ratpack-1.7"}
+FEATURE_VERSION_SELECTORS = {"ratpack-1.7"}
 MODULE_SUPERCLASSES = ("InstrumentationModule", "V3PreviewFallbackEnabledInstrumentationModule")
 VERSIONED = re.compile(r"^([a-z][a-z0-9-]*)-([0-9]+(?:\.[0-9]+)+)(?:-|$)")
 KEBAB = re.compile(r"[a-z][a-z0-9]*(?:-[a-z0-9]+(?:\.[0-9]+)*)*")

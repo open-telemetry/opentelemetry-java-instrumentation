@@ -21,7 +21,7 @@ muzzle {
     versions.set("[3.4.3,)")
     assertInverse.set(true)
 
-    excludeInstrumentationName("couchbase-3.2-core")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v3_2.CouchbaseInstrumentationModule")
   }
 }
 

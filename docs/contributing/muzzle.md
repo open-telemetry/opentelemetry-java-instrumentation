@@ -149,7 +149,8 @@ excludeInstrumentationModule(
 
 Module classes can share all their public enablement names. Register additional names only for
 independently selectable behavior, such as client/server roles or an existing metrics opt-in, not
-for Muzzle selection. Both exclusion forms also apply to inverse checks.
+for Muzzle selection. An existing class-specific alias alone does not justify a feature selector.
+Both exclusion forms also apply to inverse checks.
 
 The source code of the gradle plugin is located in the `buildSrc` directory.
 

@@ -56,7 +56,7 @@ public abstract class InstrumentationModule implements Ordered {
    *       instrumented-library-1.0-server}. JDK instrumentations omit the versioned role selector.
    *       Role-specific modules, including route enrichment, share its selectors. Support needed by
    *       both roles is selected separately.
-   *   <li>Optional feature names for existing independently selectable behavior, e.g. {@code
+   *   <li>Optional feature names for independently useful behavior, e.g. {@code
    *       kafka-clients-metrics} or {@code reactor-context-propagation-operator}. Several module
    *       classes can share the same feature name. Existing framework controls such as {@code cxf}
    *       may be shared across API families.

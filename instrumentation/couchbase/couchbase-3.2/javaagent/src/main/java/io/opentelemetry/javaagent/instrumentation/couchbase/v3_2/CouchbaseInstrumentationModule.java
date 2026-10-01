@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseCoreInstrumentation;
@@ -23,8 +24,10 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule {
   public CouchbaseInstrumentationModule() {
     super(
         "couchbase",
-        expandDeprecatedNames(
-            "couchbase-3.2|deprecated:couchbase-3.4", "couchbase", "couchbase-3.2-core"));
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"couchbase-3.2"}
+            : expandDeprecatedNames(
+                "couchbase-3.2|deprecated:couchbase-3.4", "couchbase", "couchbase-3.2-core"));
   }
 
   @Override

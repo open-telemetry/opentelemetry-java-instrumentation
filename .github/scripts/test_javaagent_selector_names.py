@@ -375,6 +375,13 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         )
         self.assertIn("expected a feature selector", check(self.root)[0])
 
+    def test_compatibility_version_does_not_get_a_feature_exception(self):
+        self.module(
+            "couchbase/couchbase-2.0", "NetworkModule.java",
+            '"couchbase", "couchbase-2.0", "couchbase-2.6"',
+        )
+        self.assertIn("expected a feature selector", check(self.root)[0])
+
     def test_independent_opt_in_can_use_a_versionless_feature_selector(self):
         self.module(
             "kafka/kafka-clients/kafka-clients-0.11",
@@ -413,15 +420,11 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         )
         self.assertEqual(check(self.root), [])
 
-    def test_existing_version_shaped_feature_controls(self):
-        for family, base, feature in (
-            ("couchbase", "2.0", "2.6"),
-            ("ratpack", "1.4", "1.7"),
-        ):
-            self.module(
-                f"{family}/{family}-{base}", "FeatureModule.java",
-                f'"{family}", "{family}-{base}", "{family}-{feature}"',
-            )
+    def test_existing_version_shaped_feature_control(self):
+        self.module(
+            "ratpack/ratpack-1.4", "FeatureModule.java",
+            '"ratpack", "ratpack-1.4", "ratpack-1.7"',
+        )
         self.assertEqual(check(self.root), [])
 
     def test_version_shaped_features_cannot_cross_families(self):
