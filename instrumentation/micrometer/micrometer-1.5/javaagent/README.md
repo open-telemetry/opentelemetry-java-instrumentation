@@ -7,7 +7,6 @@
 | `otel.instrumentation.micrometer.experimental.histogram-gauges.enabled` | Boolean | `false` | Enables the generation of gauge-based Micrometer histograms for `DistributionSummary` and `Timer` instruments.                                                                                                                                              |
 | `otel.instrumentation.micrometer.histogram-gauges.enabled`              | Boolean | `false` | Deprecated alias for `otel.instrumentation.micrometer.experimental.histogram-gauges.enabled`. It will be removed in 3.0.                                                                                                                                    |
 
-
 ## Prefer agent JVM metrics
 
 Enable the bridge and opt into the agent's representation of reviewed standard JVM observations:
