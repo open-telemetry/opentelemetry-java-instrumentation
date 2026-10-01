@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network;
 
-import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.Couchbase26VirtualFieldHelper.COUCHBASE_REQUEST_INFO;
+import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.CouchbaseNetworkVirtualFields.COUCHBASE_REQUEST_INFO;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
