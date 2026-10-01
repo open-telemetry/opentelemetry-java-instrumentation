@@ -10,7 +10,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -20,11 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class VertxSqlClientInstrumentationModule extends InstrumentationModule {
 
   public VertxSqlClientInstrumentationModule() {
-    super(
-        "vertx-sql-client",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"vertx-sql-client-4.0"}
-            : new String[] {"vertx-sql-client-4.0", "vertx"});
+    super("vertx-sql-client", "vertx-sql-client-4.0", "vertx");
   }
 
   @Override

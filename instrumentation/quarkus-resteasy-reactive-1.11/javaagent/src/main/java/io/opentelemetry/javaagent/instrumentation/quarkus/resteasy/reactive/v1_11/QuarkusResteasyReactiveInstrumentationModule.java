@@ -21,7 +21,7 @@ public class QuarkusResteasyReactiveInstrumentationModule extends Instrumentatio
     super(
         AgentCommonConfig.get().isV3Preview() ? "quarkus-resteasy-reactive" : "quarkus",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"quarkus-resteasy-reactive-1.11"}
+            ? new String[] {"quarkus-resteasy-reactive-1.11", "jaxrs", "quarkus"}
             : expandDeprecatedNames(
                 "jaxrs",
                 "quarkus-resteasy-reactive",

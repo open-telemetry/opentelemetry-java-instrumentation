@@ -10,7 +10,6 @@ import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -20,11 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class AwsLambdaInstrumentationModule extends InstrumentationModule {
 
   public AwsLambdaInstrumentationModule() {
-    super(
-        "aws-lambda-core",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"aws-lambda-core-1.0"}
-            : new String[] {"aws-lambda-core-1.0", "aws-lambda"});
+    super("aws-lambda-core", "aws-lambda-core-1.0", "aws-lambda");
   }
 
   @Override

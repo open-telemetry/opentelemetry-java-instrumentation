@@ -18,9 +18,9 @@ import java.util.List;
 public class KafkaMetricsInstrumentationModule extends InstrumentationModule {
   public KafkaMetricsInstrumentationModule() {
     super(
-        AgentCommonConfig.get().isV3Preview() ? "kafka-clients" : "kafka-clients-metrics",
+        "kafka-clients-metrics",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"kafka-clients-0.11", "kafka-clients-metrics"}
+            ? new String[0]
             : new String[] {
               "kafka-clients", "kafka-clients-metrics-0.11", "kafka-clients-0.11", "kafka"
             });

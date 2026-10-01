@@ -18,11 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class HibernateInstrumentationModule extends InstrumentationModule {
   public HibernateInstrumentationModule() {
-    super(
-        "hibernate-procedure-call",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"hibernate-procedure-call-4.3"}
-            : new String[] {"hibernate-procedure-call-4.3", "hibernate"});
+    super("hibernate-procedure-call", "hibernate-procedure-call-4.3", "hibernate");
   }
 
   @Override

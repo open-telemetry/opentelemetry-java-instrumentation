@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.vertx.httpclient.common.v3_0.TaskQueueInstrumentation;
@@ -20,11 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class VertxClientInstrumentationModule extends InstrumentationModule {
 
   public VertxClientInstrumentationModule() {
-    super(
-        "vertx-http-client",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"vertx-http-client-5.0"}
-            : new String[] {"vertx-http-client-5.0", "vertx"});
+    super("vertx-http-client", "vertx-http-client-5.0", "vertx");
   }
 
   @Override

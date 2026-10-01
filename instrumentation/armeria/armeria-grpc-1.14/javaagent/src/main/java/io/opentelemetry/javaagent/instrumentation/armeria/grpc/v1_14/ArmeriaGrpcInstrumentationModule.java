@@ -19,7 +19,7 @@ public class ArmeriaGrpcInstrumentationModule extends InstrumentationModule {
     super(
         "armeria-grpc",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"armeria-grpc-1.14"}
+            ? new String[] {"armeria-grpc-1.14", "armeria"}
             : new String[] {"armeria-grpc-1.14", "armeria", "armeria-1.14"});
   }
 

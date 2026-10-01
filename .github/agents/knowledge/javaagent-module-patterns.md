@@ -36,6 +36,8 @@ public class MyLibrary10InstrumentationModule extends InstrumentationModule {
   [module-naming.md](module-naming.md) for the full naming convention.
   The Reactor Netty server registration housed in `spring-webflux-5.0` is an exception: its
   preview names are `reactor-netty` and `reactor-netty-server`, without a baseline selector.
+  Independent default-off features use their own feature names instead of a family or baseline
+  shared with default-on instrumentation.
 - `typeInstrumentations()` returns the list of `TypeInstrumentation` implementations — use
   `Arrays.asList(...)` for multiple items and `Collections.singletonList(...)` for a single
   item.
@@ -54,6 +56,24 @@ selectors.
 Preview selectors follow `family`, owning `baseline`, then an optional versionless client/server
 role. Do not add versioned role selectors. For example, WebFlux server modules use
 `spring-webflux`, `spring-webflux-5.0`, `spring-webflux-server`.
+
+An optional product umbrella selects instrumentation whose purpose is to observe or support that
+product's operations. Membership follows product ownership, not historical aliases, directory
+nesting, or shared prefixes. For example, Vert.x HTTP and SQL instrumentation share `vertx`, but
+the general JDBC instrumentation used underneath a Vert.x application does not.
+
+Place umbrellas after all component, baseline, role, and feature selectors so explicit component
+settings take precedence. Default-off features must not share any selector with default-on
+instrumentation. They use independent feature names, such as `kafka-clients-metrics`,
+`jdbc-datasource`, or `kotlinx-coroutines-opentelemetry-instrumentation-annotations`. A group whose
+members are all default-off can share an umbrella: `hibernate` selects synchronous Hibernate and
+procedure calls, but not default-on Hibernate Reactive. The deprecated Jedis 1.x and superseded
+Lettuce 5.1 implementations slated for removal in 3.0 do not define long-term group membership.
+
+The central selector checker records allowed product relationships explicitly and rejects shared
+selectors with mixed ordinary defaults in preview. Ordinary defaults assume global enablement on
+and optional feature settings absent. Unknown default expressions fail rather than silently
+exempting a registration.
 
 Muzzle passes prefer `excludeInstrumentationName(...)` when the public name selects the intended
 classes both outside v3 preview and in preview. Use `excludeInstrumentationModule(...)` with the

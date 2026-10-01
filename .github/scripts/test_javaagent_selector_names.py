@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from check_javaagent_selector_names import REACTOR_NETTY_SERVER_MODULE, check, main
+from check_javaagent_selector_names import REACTOR_NETTY_SERVER_MODULE, check, evaluate_default, main
 
 
 class JavaagentSelectorNamesTest(unittest.TestCase):
@@ -15,17 +15,20 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
 
-    def module(self, owner, filename, arguments, source_set="main"):
+    def module(self, owner, filename, arguments, source_set="main", default=None):
         path = self.root / owner / "javaagent" / "src" / source_set / "java" / filename
-        self.module_at(path, arguments)
+        self.module_at(path, arguments, default)
 
-    def module_at(self, path, arguments):
+    def module_at(self, path, arguments, default=None):
         path.parent.mkdir(parents=True, exist_ok=True)
+        default_method = (
+            f"  public boolean defaultEnabled() {{ return {default}; }}\n" if default else ""
+        )
         path.write_text(
             "@AutoService(InstrumentationModule.class)\n"
             f"class {path.stem} extends InstrumentationModule {{\n"
             f"  {path.stem}() {{ super({arguments}); }}\n"
-            "}\n",
+            + default_method + "}\n",
             encoding="utf-8",
         )
 
@@ -429,7 +432,8 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         self.module(
             "kafka/kafka-clients/kafka-clients-0.11",
             "MetricsModule.java",
-            '"kafka-clients", "kafka-clients-0.11", "kafka-clients-metrics"',
+            '"kafka-clients-metrics"',
+            default="false",
         )
         self.assertEqual(check(self.root), [])
 
@@ -455,11 +459,155 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         )
         self.assertIn("expected a feature selector", check(self.root)[0])
 
-    def test_annotation_opt_in_can_be_shared_with_coroutines(self):
+    def test_annotation_opt_in_cannot_use_the_default_on_annotation_selector(self):
         self.module(
             "kotlinx-coroutines/kotlinx-coroutines-1.0", "AnnotationsModule.java",
             '"kotlinx-coroutines", "kotlinx-coroutines-1.0", '
             '"opentelemetry-instrumentation-annotations"',
+        )
+        self.assertIn("expected a feature selector", check(self.root)[0])
+
+    def test_product_umbrella_follows_component_selectors(self):
+        self.module(
+            "vertx/vertx-http-client/vertx-http-client-4.0", "HttpModule.java",
+            '"vertx-http-client", "vertx-http-client-4.0", "vertx"',
+        )
+        self.module(
+            "vertx/vertx-sql-client/vertx-sql-client-4.0", "SqlModule.java",
+            '"vertx-sql-client", "vertx-sql-client-4.0", "vertx"',
+        )
+        self.assertEqual(check(self.root), [])
+
+    def test_umbrella_cannot_precede_component_or_feature_selectors(self):
+        for arguments in (
+            '"vertx", "vertx-http-client", "vertx-http-client-4.0"',
+            '"vertx-http-client", "vertx", "vertx-http-client-4.0"',
+            '"vertx-http-client", "vertx-http-client-4.0", "vertx", "vertx-http-client-metrics"',
+        ):
+            with self.subTest(arguments=arguments):
+                self.module(
+                    "vertx/vertx-http-client/vertx-http-client-4.0", "HttpModule.java",
+                    arguments,
+                )
+                self.assertNotEqual(check(self.root), [])
+
+    def test_product_ownership_is_not_inferred_from_a_shared_prefix(self):
+        self.module(
+            "vertx/vertx-http-client/vertx-http-client-4.0", "HttpModule.java",
+            '"vertx-http-client", "vertx-http-client-4.0", "vertx-http"',
+        )
+        self.assertIn("expected a feature selector", check(self.root)[0])
+
+    def test_default_off_members_can_share_an_all_off_umbrella(self):
+        self.module(
+            "hibernate/hibernate-6.0", "HibernateModule.java",
+            '"hibernate", "hibernate-6.0"',
+            default="super.defaultEnabled() && !AgentCommonConfig.get().isV3Preview()",
+        )
+        self.module(
+            "hibernate/hibernate-procedure-call-4.3", "ProcedureModule.java",
+            '"hibernate-procedure-call", "hibernate-procedure-call-4.3", "hibernate"',
+            default="super.defaultEnabled() && !AgentCommonConfig.get().isV3Preview()",
+        )
+        self.assertEqual(check(self.root), [])
+
+    def test_default_off_features_cannot_share_a_product_umbrella_with_on_members(self):
+        self.module(
+            "kafka/kafka-streams-0.11", "StreamsModule.java",
+            '"kafka-streams", "kafka-streams-0.11", "kafka"',
+        )
+        self.module(
+            "kafka/kafka-clients/kafka-clients-0.11", "MetricsModule.java",
+            '"kafka-clients", "kafka-clients-0.11", "kafka-clients-metrics", "kafka"',
+            default="false",
+        )
+        self.assertIn("default-off feature shares selector 'kafka'", check(self.root)[0])
+
+    def test_default_off_features_cannot_share_component_family_or_baseline(self):
+        self.module("http-5.0", "ClientModule.java", '"http", "http-5.0"')
+        self.module(
+            "http-5.0", "MetricsModule.java",
+            '"http", "http-5.0", "http-metrics"', default="false",
+        )
+        errors = check(self.root)
+        self.assertTrue(any("shares selector 'http'" in error for error in errors))
+        self.assertTrue(any("shares selector 'http-5.0'" in error for error in errors))
+
+    def test_default_off_feature_namespace_remains_independently_selectable(self):
+        self.module("http-5.0", "ClientModule.java", '"http", "http-5.0"')
+        self.module(
+            "http-5.0", "MetricsModule.java", '"http-metrics"', default="false",
+        )
+        self.assertEqual(check(self.root), [])
+
+    def test_default_on_module_cannot_omit_the_family_and_baseline(self):
+        self.module("http-5.0", "MetricsModule.java", '"http-metrics"')
+        self.assertIn("expected first selectors", check(self.root)[0])
+
+    def test_default_off_feature_cannot_keep_a_bare_owning_baseline(self):
+        self.module("http-5.0", "MetricsModule.java", '"http-metrics", "http-5.0"', default="false")
+        self.assertIn("expected a feature selector", check(self.root)[0])
+
+    def test_optional_controller_telemetry_counts_as_default_off(self):
+        self.module("jaxrs/jaxrs-2.0", "FrameworkModule.java", '"jaxrs", "jaxrs-2.0"')
+        self.module(
+            "jaxrs/jaxrs-2.0", "AnnotationsModule.java",
+            '"jaxrs", "jaxrs-2.0", "jaxrs-annotations"',
+            default="super.defaultEnabled() && ExperimentalConfig.get().controllerTelemetryEnabled()",
+        )
+        self.assertIn("default-off feature shares selector", check(self.root)[0])
+
+    def test_default_off_annotations_can_share_their_own_namespace(self):
+        for version in ("1.0", "2.0", "3.0"):
+            self.module(
+                f"jaxrs/jaxrs-{version}", "AnnotationsModule.java",
+                f'"jaxrs-annotations", "jaxrs-{version}-annotations"',
+                default="super.defaultEnabled() && ExperimentalConfig.get().controllerTelemetryEnabled()",
+            )
+        self.assertEqual(check(self.root), [])
+
+    def test_unknown_default_expression_fails_explicitly(self):
+        self.module(
+            "http-5.0", "ClientModule.java", '"http", "http-5.0"',
+            default="someNewDefault()",
+        )
+        self.assertIn("unsupported default enablement expression", check(self.root)[0])
+
+    def test_default_evaluation_uses_preview_and_ordinary_feature_defaults(self):
+        for expression, expected in (
+            ("super.defaultEnabled() && !AgentCommonConfig.get().isV3Preview()", False),
+            ("super.defaultEnabled() || AgentCommonConfig.get().isV3Preview()", True),
+            ("super.defaultEnabled() && AgentCommonConfig.get().getUserConfig().isAnyEnabled()", False),
+            ("!false && false || true", True),
+        ):
+            with self.subTest(expression=expression):
+                self.assertEqual(evaluate_default(expression), expected)
+
+    def test_default_enablement_from_an_abstract_superclass_is_preserved(self):
+        owner = "http-5.0"
+        self.module(owner, "ClientModule.java", '"http", "http-5.0"')
+        path = self.root / owner / "javaagent" / "src" / "main" / "java" / "MetricsModule.java"
+        self.module_at(path, '"http-metrics"', default="super.defaultEnabled()")
+        path.write_text(
+            path.read_text(encoding="utf-8").replace(
+                "extends InstrumentationModule", "extends AbstractMetricsModule"
+            ),
+            encoding="utf-8",
+        )
+        path.with_name("AbstractMetricsModule.java").write_text(
+            "abstract class AbstractMetricsModule extends InstrumentationModule {\n"
+            "  AbstractMetricsModule(String name) { super(name); }\n"
+            "  public boolean defaultEnabled() { return false; }\n"
+            "}\n",
+            encoding="utf-8",
+        )
+        self.assertEqual(check(self.root), [])
+
+    def test_v3_removed_baseline_does_not_define_long_term_umbrella_membership(self):
+        self.module("jedis/jedis-3.0", "CurrentModule.java", '"jedis", "jedis-3.0"')
+        self.module(
+            "jedis/jedis-1.4", "LegacyModule.java", '"jedis", "jedis-1.4"',
+            default="super.defaultEnabled() && !AgentCommonConfig.get().isV3Preview()",
         )
         self.assertEqual(check(self.root), [])
 

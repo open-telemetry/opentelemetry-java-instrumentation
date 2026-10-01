@@ -8,6 +8,8 @@ expression the checker cannot evaluate is an error, not an implicit exemption.
 Module classes may share all public names. Optional feature selectors preserve
 independent controls; Muzzle identifies individual modules by fully qualified class.
 Client/server role selectors are versionless and follow the baseline.
+Product umbrellas follow component selectors. Default-off features must not
+share selectors with default-on instrumentation.
 """
 
 import argparse
@@ -31,8 +33,40 @@ INTERNAL_MODULES = {"external-annotations", "methods"}
 SHARED_FEATURE_FAMILIES = {
     "jaxrs": {"cxf", "jersey", "resteasy"},
     "jaxws": {"axis2", "cxf", "metro"},
-    "kotlinx-coroutines": {"opentelemetry-instrumentation-annotations"},
 }
+# Product ownership is explicit; directory nesting and shared prefixes are not sufficient.
+UMBRELLA_SELECTORS = {
+    "armeria-grpc": ["armeria"],
+    "aws-lambda-core": ["aws-lambda"],
+    "aws-lambda-events": ["aws-lambda"],
+    "clickhouse-client-v1": ["clickhouse-client", "clickhouse"],
+    "clickhouse-client-v2": ["clickhouse-client", "clickhouse"],
+    "elasticsearch-api-client": ["elasticsearch"],
+    "elasticsearch-rest": ["elasticsearch"],
+    "elasticsearch-transport": ["elasticsearch"],
+    "hibernate-procedure-call": ["hibernate"],
+    "kafka-clients": ["kafka"],
+    "kafka-connect": ["kafka"],
+    "kafka-streams": ["kafka"],
+    "liberty-dispatcher": ["liberty"],
+    "mongo-async": ["mongo"],
+    "openai-java": ["openai"],
+    "opensearch-java": ["opensearch"],
+    "opensearch-rest": ["opensearch"],
+    "play-mvc": ["play"],
+    "quarkus-resteasy-reactive": ["jaxrs", "quarkus"],
+    "spring-boot-actuator-autoconfigure": ["micrometer"],
+    "spring-cloud-gateway-webmvc": ["spring-cloud-gateway"],
+    "vertx-http-client": ["vertx"],
+    "vertx-kafka-client": ["vertx"],
+    "vertx-redis-client": ["vertx"],
+    "vertx-rx-java": ["vertx"],
+    "vertx-sql-client": ["vertx"],
+    "vertx-web": ["vertx"],
+    "zio-http": ["zio"],
+}
+# These deprecated implementations disappear in 3.0 rather than becoming optional features.
+REMOVED_IN_V3_BASELINES = {"jedis-1.4", "lettuce-5.1"}
 # Existing independent controls whose names identify a compatibility baseline.
 FEATURE_VERSION_SELECTORS = {"ratpack-1.7"}
 # This generic Reactor Netty server support lives with the WebFlux tests that exercise it.
@@ -241,10 +275,50 @@ def validate_feature_selectors(family, extras):
         raise ValueError(f"expected a feature selector of {family!r}, found {name!r}")
 
 
+def evaluate_default(expression, inherited=True):
+    expression = expression.strip()
+    for operator in ("||", "&&"):
+        parts = expression.split(operator)
+        if len(parts) > 1:
+            values = [evaluate_default(part, inherited) for part in parts]
+            return any(values) if operator == "||" else all(values)
+    if expression.startswith("!"):
+        return not evaluate_default(expression[1:], inherited)
+    # Classify the ordinary defaults with global enablement on and optional settings absent.
+    values = {
+        "true": True,
+        "false": False,
+        "super.defaultEnabled()": inherited,
+        "AgentCommonConfig.get().isV3Preview()": True,
+        "ExperimentalConfig.get().controllerTelemetryEnabled()": False,
+        "AgentCommonConfig.get().getUserConfig().isAnyEnabled()": False,
+    }
+    if expression not in values:
+        raise ValueError(f"unsupported default enablement expression: {expression}")
+    return values[expression]
+
+
+def default_enabled(path, source):
+    source = without_comments(source)
+    parent = re.search(r"\bclass\s+\w+\s+extends\s+(\w+)\b", source).group(1)
+    inherited = True
+    if parent not in MODULE_SUPERCLASSES:
+        base_path = path.with_name(parent + ".java")
+        inherited = default_enabled(base_path, base_path.read_text(encoding="utf-8"))
+    method = re.search(r"\bboolean\s+defaultEnabled\s*\((.*?)\)\s*\{(.*?)\}", source, re.DOTALL)
+    if method:
+        result = re.fullmatch(r"\s*return\s+(.*?);\s*", method.group(2), re.DOTALL)
+        if method.group(1).strip() or result is None:
+            raise ValueError("unsupported defaultEnabled() method")
+        return evaluate_default(result.group(1), inherited)
+    return inherited
+
+
 def check(root, modules=None):
     errors = []
     if modules is None:
         modules = list(module_files(root))
+    defaults_by_selector = {}
 
     def report(path, source, error):
         match = re.search(r"\bsuper\s*\(", without_comments(source))
@@ -256,21 +330,41 @@ def check(root, modules=None):
         try:
             # InstrumentationModule stores the names in a LinkedHashSet.
             names = list(dict.fromkeys(selectors(path, source)))
+            enabled = default_enabled(path, source)
             if relative == REACTOR_NETTY_SERVER_MODULE:
                 required = ["reactor-netty", "reactor-netty-server"]
                 if names != required:
                     raise ValueError(f"expected selectors {required}, found {names}")
-                continue
-            family, base = owning_names(relative)
-            required = [family] + ([base] if base else [])
-            if names[: len(required)] != required:
-                raise ValueError(f"expected first selectors {required}, found {names}")
-            if any(not KEBAB.fullmatch(name) for name in names):
-                raise ValueError(f"selectors must use kebab-case: {names}")
-            validate_feature_selectors(family, names[len(required) :])
+                base = None
+            else:
+                family, base = owning_names(relative)
+                required = [family] + ([base] if base else [])
+                if not enabled and names and names[0] != family:
+                    # Independent default-off features use only their feature namespace.
+                    validate_feature_selectors(family, names)
+                else:
+                    if names[: len(required)] != required:
+                        raise ValueError(f"expected first selectors {required}, found {names}")
+                    extras = names[len(required) :]
+                    umbrellas = UMBRELLA_SELECTORS.get(family, [])
+                    used = [name for name in extras if name in umbrellas]
+                    if used:
+                        if used != umbrellas or extras[-len(umbrellas):] != umbrellas:
+                            raise ValueError(f"expected umbrella selectors {umbrellas} last, found {extras}")
+                        extras = extras[:-len(umbrellas)]
+                    validate_feature_selectors(family, extras)
+                if any(not KEBAB.fullmatch(name) for name in names):
+                    raise ValueError(f"selectors must use kebab-case: {names}")
+            if base not in REMOVED_IN_V3_BASELINES:
+                for name in names:
+                    defaults_by_selector.setdefault(name, {}).setdefault(enabled, []).append((path, source))
         except ValueError as error:
             report(path, source, error)
 
+    for name, defaults in defaults_by_selector.items():
+        if len(defaults) > 1:
+            for path, source in defaults[False]:
+                report(path, source, f"default-off feature shares selector {name!r} with default-on instrumentation")
     return errors
 
 

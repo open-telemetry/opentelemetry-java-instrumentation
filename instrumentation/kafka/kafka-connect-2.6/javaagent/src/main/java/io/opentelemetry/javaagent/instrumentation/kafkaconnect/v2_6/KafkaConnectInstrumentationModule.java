@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -18,7 +19,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class KafkaConnectInstrumentationModule extends InstrumentationModule {
 
   public KafkaConnectInstrumentationModule() {
-    super("kafka-connect", "kafka-connect-2.6");
+    super(
+        "kafka-connect",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"kafka-connect-2.6", "kafka"}
+            : new String[] {"kafka-connect-2.6"});
   }
 
   @Override

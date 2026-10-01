@@ -50,6 +50,11 @@ public MyLibraryInstrumentationModule() {
 
 Module names use `kebab-case`.
 
+Default-off features have independent names when the component family also contains default-on
+instrumentation. For example, JDBC's default-off DataSource instrumentation uses only
+`jdbc-datasource`, not the shared `jdbc` selector. Product umbrellas such as `vertx` come after
+the component's own selectors and must not mix default-on and default-off instrumentation.
+
 The generic Reactor Netty server registration housed in `spring-webflux-5.0` is an exception.
 Its preview names are `reactor-netty` and `reactor-netty-server`, without a baseline selector.
 Outside v3 preview, preserve existing names and their order.

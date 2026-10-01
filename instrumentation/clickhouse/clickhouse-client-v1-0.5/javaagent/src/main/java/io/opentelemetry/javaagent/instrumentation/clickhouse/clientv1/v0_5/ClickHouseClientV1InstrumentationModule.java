@@ -23,7 +23,7 @@ public class ClickHouseClientV1InstrumentationModule extends InstrumentationModu
     super(
         "clickhouse-client-v1",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"clickhouse-client-v1-0.5"}
+            ? new String[] {"clickhouse-client-v1-0.5", "clickhouse-client", "clickhouse"}
             : new String[] {"clickhouse-client-v1-0.5", "clickhouse", "clickhouse-client"});
   }
 
