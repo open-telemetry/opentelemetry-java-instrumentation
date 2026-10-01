@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SnsImpl;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -19,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class SnsInstrumentationModule extends AbstractAwsSdkInstrumentationModule {
 
   public SnsInstrumentationModule() {
-    super("aws-sdk-2.2-sns");
+    super("aws-sdk-2.2", AgentCommonConfig.get().isV3Preview() ? "aws-sdk-sns" : "aws-sdk-2.2-sns");
   }
 
   @Override

@@ -50,6 +50,11 @@ public MyLibraryInstrumentationModule() {
 
 Module names use `kebab-case`.
 
+Optional role and feature selectors are versionless, such as `ratpack-client`,
+`aws-sdk-sqs`, or `spring-security-config-webflux`. Compatibility implementations and
+support helpers share their parent's family and owning baseline. Existing provider
+family/baseline controls, such as `cxf` and `cxf-3.2`, can be shared across API families.
+
 Default-off features have independent names when the component family also contains default-on
 instrumentation. For example, JDBC's default-off DataSource instrumentation uses only
 `jdbc-datasource`, not the shared `jdbc` selector. Product umbrellas such as `vertx` come after

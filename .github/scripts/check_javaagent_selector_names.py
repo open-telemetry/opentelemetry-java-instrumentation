@@ -6,7 +6,7 @@ Component families include their owning baseline except for the JDK instrumentat
 listed below. Unsupported Java selector expressions are errors, not implicit exemptions.
 Module classes may share all public names. Optional feature selectors preserve
 independent controls; Muzzle identifies individual modules by fully qualified class.
-Client/server role selectors are versionless and follow the baseline.
+Client/server role and independent feature selectors are versionless and follow the baseline.
 Product umbrellas follow component selectors. Default-off features must not
 share selectors with default-on instrumentation.
 """
@@ -66,8 +66,6 @@ UMBRELLA_SELECTORS = {
 }
 # These deprecated implementations disappear in 3.0 rather than becoming optional features.
 REMOVED_IN_V3_BASELINES = {"jedis-1.4", "lettuce-5.1"}
-# Existing independent controls whose names identify a compatibility baseline.
-FEATURE_VERSION_SELECTORS = {"ratpack-1.7"}
 # This generic Reactor Netty server support lives with the WebFlux tests that exercise it.
 REACTOR_NETTY_SERVER_MODULE = Path(
     "spring", "spring-webflux", "spring-webflux-5.0", "javaagent", "src", "main", "java",
@@ -137,7 +135,7 @@ def super_arguments(source):
             continue
         # A balanced prefix could still be inside the call; only its closing ')' ends it.
         if source[ending] == ")":
-            return parts
+            return [] if parts == [""] else parts
     raise ValueError("unterminated super(...) call")
 
 
@@ -229,14 +227,18 @@ def selectors(path, source):
         rf"\babstract\s+class\s+{parent}\s+extends\s+(?:{inherited})\b", without_comments(base_source)
     ):
         raise ValueError(f"unsupported InstrumentationModule superclass {parent}")
-    parameter = re.search(rf"\b{parent}\s*\(\s*String\s+(\w+)\s*\)", without_comments(base_source))
-    if parameter is None or len(args) != 1:
+    parameter = re.search(
+        rf"\b{parent}\s*\(\s*String\s*(\.\.\.)?\s+(\w+)\s*\)",
+        without_comments(base_source),
+    )
+    if parameter is None or (parameter.group(1) is None and len(args) != 1):
         raise ValueError(f"unsupported {parent} constructor parameters")
     base_args = super_arguments(base_source)
     return [
         name
         for arg in base_args
-        for name in evaluate(args[0] if arg == parameter.group(1) else arg)
+        for expression in (args if arg == parameter.group(2) else [arg])
+        for name in evaluate(expression)
     ]
 
 
@@ -259,17 +261,16 @@ def validate_feature_selectors(family, extras):
             extras = extras[len(role_names) :]
             break
     for name in extras:
-        if name in FEATURE_VERSION_SELECTORS and name.startswith(family + "-"):
-            continue
         versioned = VERSIONED.match(name)
-        if versioned and versioned.group(1) == family:
-            prefix = f"{family}-{versioned.group(2)}-"
-        else:
-            prefix = family + "-"
+        if versioned and name.startswith(family + "-"):
+            raise ValueError(f"versioned feature selectors are not supported: {name!r}")
+        prefix = family + "-"
         if name.startswith(prefix) and KEBAB.fullmatch(name[len(prefix):]):
             continue
         shared_family = versioned.group(1) if versioned else name
-        if shared_family in SHARED_FEATURE_FAMILIES.get(family, set()):
+        if shared_family in SHARED_FEATURE_FAMILIES.get(family, set()) and (
+            versioned is None or not name[versioned.end():]
+        ):
             continue
         raise ValueError(f"expected a feature selector of {family!r}, found {name!r}")
 

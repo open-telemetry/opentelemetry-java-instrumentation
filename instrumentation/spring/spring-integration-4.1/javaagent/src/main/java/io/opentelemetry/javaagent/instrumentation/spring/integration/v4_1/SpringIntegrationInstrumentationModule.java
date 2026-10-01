@@ -21,7 +21,7 @@ public class SpringIntegrationInstrumentationModule extends InstrumentationModul
     super(
         "spring-integration",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"spring-integration-4.1", "spring-integration-4.1-core"}
+            ? new String[] {"spring-integration-4.1"}
             : new String[] {"spring-integration-4.1", "spring-integration-core-4.1"});
   }
 

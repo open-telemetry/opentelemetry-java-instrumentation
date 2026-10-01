@@ -22,7 +22,7 @@ public class SpringIntegrationAmqpInstrumentationModule extends InstrumentationM
     super(
         "spring-integration",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"spring-integration-4.1", "spring-integration-4.1-amqp"}
+            ? new String[] {"spring-integration-4.1"}
             : new String[] {"spring-integration-4.1", "spring-integration-amqp-4.1"});
   }
 

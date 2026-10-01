@@ -75,7 +75,7 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
     def test_nested_projects_share_the_owning_baseline(self):
         self.module(
             "jaxrs/jaxrs-2.0/jaxrs-2.0-cxf-3.2", "CxfModule.java",
-            '"jaxrs", "jaxrs-2.0", "jaxrs-2.0-cxf-3.2"',
+            '"jaxrs", "jaxrs-2.0", "cxf", "cxf-3.2"',
         )
         self.module(
             "jaxrs/jaxrs-2.0/jaxrs-2.0-jersey-2.0", "JerseyModule.java",
@@ -86,11 +86,11 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
     def test_identical_components_in_different_baselines_are_independent(self):
         self.module(
             "http-client-5.0", "CoreModule.java",
-            '"http-client", "http-client-5.0", "http-client-5.0-core"',
+            '"http-client", "http-client-5.0"',
         )
         self.module(
             "http-client-6.0", "CoreModule.java",
-            '"http-client", "http-client-6.0", "http-client-6.0-core"',
+            '"http-client", "http-client-6.0"',
         )
         self.module(
             "http-client-5.0", "ClientModule.java",
@@ -109,15 +109,15 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         )
         self.assertEqual(check(self.root), [])
 
-    def test_component_can_have_own_version_after_owning_base(self):
+    def test_provider_can_have_own_baseline_after_owning_base(self):
         self.module(
             "jaxrs/jaxrs-2.0/jaxrs-2.0-annotations", "AnnotationsModule.java",
-            '"jaxrs", "jaxrs-2.0", "jaxrs-2.0-annotations"',
+            '"jaxrs", "jaxrs-2.0", "jaxrs-annotations"',
         )
         self.module(
             "jaxrs/jaxrs-2.0/jaxrs-2.0-jersey-3.0",
             "JerseyModule.java",
-            '"jaxrs", "jaxrs-2.0", "jaxrs-2.0-jersey-3.0"',
+            '"jaxrs", "jaxrs-2.0", "jersey", "jersey-3.0"',
         )
         self.assertEqual(check(self.root), [])
 
@@ -133,7 +133,7 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         self.module(
             "akka/akka-http-10.0",
             "ServerModule.java",
-            '"akka-http", "akka-http-10.0", "akka-http-10.0-metrics", "akka-http-server"',
+            '"akka-http", "akka-http-10.0", "akka-http-metrics", "akka-http-server"',
         )
         self.assertIn("expected role selectors", check(self.root)[0])
 
@@ -148,11 +148,11 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         )
         self.module(
             "http-5.0", "RouteModule.java",
-            '"http", "http-5.0", "http-server", "http-5.0-server-route"',
+            '"http", "http-5.0", "http-server", "http-server-route"',
         )
         self.module(
             "http-5.0", "AdapterModule.java",
-            '"http", "http-5.0", "http-server", "http-5.0-adapter"',
+            '"http", "http-5.0", "http-server", "http-adapter"',
         )
         self.assertEqual(check(self.root), [])
 
@@ -180,7 +180,7 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         for filename in ("RouteModule.java", "OtherRouteModule.java"):
             self.module(
                 "http-5.0", filename,
-                '"http", "http-5.0", "http-server", "http-5.0-route"',
+                '"http", "http-5.0", "http-server", "http-route"',
             )
         self.assertEqual(check(self.root), [])
 
@@ -213,7 +213,7 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         self.module(
             "http-5.0", "RouteModule.java",
             '"http", "http-5.0", "http-server", '
-            '"http-5.0-routes", "http-5.0-route"',
+            '"http-routes", "http-route"',
         )
         self.assertEqual(check(self.root), [])
 
@@ -305,7 +305,7 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
     def test_explicit_deprecated_alias_dropped_in_preview(self):
         self.module(
             "http-client-5.0", "CoreModule.java",
-            '"http-client", "http-client-5.0", "http-client-5.0-core"',
+            '"http-client", "http-client-5.0"',
         )
         self.module(
             "http-client-5.0",
@@ -386,14 +386,14 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
 
     def test_preview_branches_on_both_main_name_and_varargs(self):
         self.module(
-            "jaxws/jaxws-2.0", "CoreModule.java", '"jaxws", "jaxws-2.0", "jaxws-2.0-core"',
+            "jaxws/jaxws-2.0", "CoreModule.java", '"jaxws", "jaxws-2.0"',
         )
         self.module(
             "jaxws/jaxws-2.0-cxf-3.0",
             "CxfModule.java",
             'AgentCommonConfig.get().isV3Preview() ? "jaxws" : "cxf", '
             'AgentCommonConfig.get().isV3Preview() '
-            '? new String[] {"jaxws-2.0", "jaxws-2.0-cxf-3.0"} '
+            '? new String[] {"jaxws-2.0", "cxf"} '
             ': expandDeprecatedNames("jaxws-2.0-cxf-3.0|deprecated:jaxws-cxf-3.0", "jaxws")',
         )
         self.assertEqual(check(self.root), [])
@@ -410,18 +410,18 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         )
         self.assertEqual(check(self.root), [])
 
-    def test_component_may_carry_its_own_patch_version(self):
-        self.module(
-            "vertx/vertx-redis-client/vertx-redis-client-4.0", "CoreModule.java",
-            '"vertx-redis-client", "vertx-redis-client-4.0", "vertx-redis-client-4.0-core"',
-        )
-        self.module(
-            "vertx/vertx-redis-client/vertx-redis-client-4.0",
-            "RedisModule.java",
-            '"vertx-redis-client", "vertx-redis-client-4.0", '
-            '"vertx-redis-client-4.0-core-4.4.5"',
-        )
-        self.assertEqual(check(self.root), [])
+    def test_versioned_feature_selectors_are_rejected(self):
+        for name in (
+            "http-5.0-metrics",
+            "http-metrics-5.0",
+            "http-5.0-core",
+            "http-5.0-server-route",
+            "http-5.0-cluster-6.0",
+            "http-cluster-6.0",
+        ):
+            with self.subTest(name=name):
+                self.module("http-5.0", "FeatureModule.java", f'"http", "http-5.0", "{name}"')
+                self.assertIn("versioned feature selectors are not supported", check(self.root)[0])
 
     def test_bare_version_is_not_a_component(self):
         self.module(
@@ -429,14 +429,14 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
             "RedisModule.java",
             '"vertx-redis-client", "vertx-redis-client-4.0", "vertx-redis-client-4.4.5"',
         )
-        self.assertIn("expected a feature selector", check(self.root)[0])
+        self.assertIn("versioned feature selectors are not supported", check(self.root)[0])
 
     def test_compatibility_version_does_not_get_a_feature_exception(self):
         self.module(
             "couchbase/couchbase-2.0", "NetworkModule.java",
             '"couchbase", "couchbase-2.0", "couchbase-2.6"',
         )
-        self.assertIn("expected a feature selector", check(self.root)[0])
+        self.assertIn("versioned feature selectors are not supported", check(self.root)[0])
 
     def test_independent_opt_in_can_use_a_versionless_feature_selector(self):
         self.module(
@@ -461,6 +461,13 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
                 f'"{family}", "{family}-2.0", "cxf", "cxf-3.2"',
             )
         self.assertEqual(check(self.root), [])
+
+    def test_framework_feature_versions_are_not_a_baseline_exception(self):
+        self.module(
+            "jaxrs/jaxrs-2.0", "FrameworkModule.java",
+            '"jaxrs", "jaxrs-2.0", "cxf", "cxf-3.2-metrics"',
+        )
+        self.assertIn("expected a feature selector", check(self.root)[0])
 
     def test_shared_framework_names_are_not_a_general_exemption(self):
         self.module(
@@ -556,7 +563,7 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
 
     def test_default_off_feature_cannot_keep_a_bare_owning_baseline(self):
         self.module("http-5.0", "MetricsModule.java", '"http-metrics", "http-5.0"', default="false")
-        self.assertIn("expected a feature selector", check(self.root)[0])
+        self.assertIn("versioned feature selectors are not supported", check(self.root)[0])
 
     def test_optional_controller_telemetry_counts_as_default_off(self):
         self.module("jaxrs/jaxrs-2.0", "FrameworkModule.java", '"jaxrs", "jaxrs-2.0"')
@@ -571,7 +578,7 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         for version in ("1.0", "2.0", "3.0"):
             self.module(
                 f"jaxrs/jaxrs-{version}", "AnnotationsModule.java",
-                f'"jaxrs-annotations", "jaxrs-{version}-annotations"',
+                '"jaxrs-annotations"',
                 default="super.defaultEnabled() && ExperimentalConfig.get().controllerTelemetryEnabled()",
             )
         self.assertEqual(check(self.root), [])
@@ -621,12 +628,21 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         )
         self.assertEqual(check(self.root), [])
 
-    def test_existing_version_shaped_feature_control(self):
+    def test_compatibility_version_cannot_stand_in_for_a_feature(self):
         self.module(
             "ratpack/ratpack-1.4", "FeatureModule.java",
             '"ratpack", "ratpack-1.4", "ratpack-1.7"',
         )
-        self.assertEqual(check(self.root), [])
+        self.assertIn("versioned feature selectors are not supported", check(self.root)[0])
+
+    def test_default_off_feature_cannot_have_a_versioned_alias(self):
+        for name in ("jaxrs-2.0-annotations", "jaxrs-annotations-2.0"):
+            with self.subTest(name=name):
+                self.module(
+                    "jaxrs/jaxrs-2.0", "AnnotationsModule.java",
+                    f'"jaxrs-annotations", "{name}"', default="false",
+                )
+                self.assertIn("versioned feature selectors are not supported", check(self.root)[0])
 
     def test_version_shaped_features_cannot_cross_families(self):
         self.module(
@@ -639,7 +655,7 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         owner = "opentelemetry-api/opentelemetry-api-1.31"
         self.module(
             owner, "CoreModule.java",
-            '"opentelemetry-api", "opentelemetry-api-1.31", "opentelemetry-api-1.31-core"',
+            '"opentelemetry-api", "opentelemetry-api-1.31"',
         )
         path = self.root / owner / "javaagent" / "src" / "main" / "java" / "ApiModule.java"
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -647,7 +663,7 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
             "@AutoService(InstrumentationModule.class)\n"
             "class ApiModule extends V3PreviewFallbackEnabledInstrumentationModule {\n"
             '  ApiModule() { super("opentelemetry-api", AgentCommonConfig.get().isV3Preview()\n'
-            '      ? new String[] {"opentelemetry-api-1.31", "opentelemetry-api-1.31-incubator"}\n'
+            '      ? new String[] {"opentelemetry-api-1.31"}\n'
             '      : new String[] {"opentelemetry-api-1.31", '
             '"opentelemetry-api-incubator-1.31"}); }\n'
             "}\n",
@@ -659,7 +675,7 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         owner = "http-client-5.0"
         self.module(
             owner, "CoreModule.java",
-            '"http-client", "http-client-5.0", "http-client-5.0-core"',
+            '"http-client", "http-client-5.0"',
         )
         concrete = self.root / owner / "javaagent" / "src" / "main" / "java" / "ClientModule.java"
         concrete.parent.mkdir(parents=True, exist_ok=True)
@@ -727,7 +743,7 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         owner = "http-client-5.0"
         self.module(
             owner, "CoreModule.java",
-            '"http-client", "http-client-5.0", "http-client-5.0-core"',
+            '"http-client", "http-client-5.0"',
         )
         self.module(owner, "ClientModule.java", '"http-client-client"')
         concrete = self.root / owner / "javaagent" / "src" / "main" / "java" / "ClientModule.java"
@@ -747,6 +763,52 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
             encoding="utf-8",
         )
         self.assertEqual(check(self.root), [])
+
+    def test_abstract_module_forwards_varargs_selectors(self):
+        owner = "aws-sdk/aws-sdk-2.2"
+        path = self.root / owner / "javaagent" / "src" / "main" / "java" / "ServiceModule.java"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.with_name("AbstractServiceModule.java").write_text(
+            "abstract class AbstractServiceModule extends InstrumentationModule {\n"
+            "  AbstractServiceModule(String... names) { super(\"aws-sdk\", names); }\n"
+            "}\n",
+            encoding="utf-8",
+        )
+        for arguments in (
+            '"aws-sdk-2.2"',
+            '"aws-sdk-2.2", "aws-sdk-sqs"',
+            'new String[] {"aws-sdk-2.2", "aws-sdk-sqs"}',
+            'AgentCommonConfig.get().isV3Preview() '
+            '? new String[] {"aws-sdk-2.2"} : new String[] {"aws-sdk-2.2", "aws-sdk-2.2-core"}',
+        ):
+            with self.subTest(arguments=arguments):
+                path.write_text(
+                    "@AutoService(InstrumentationModule.class)\n"
+                    "class ServiceModule extends AbstractServiceModule {\n"
+                    f"  ServiceModule() {{ super({arguments}); }}\n"
+                    "}\n",
+                    encoding="utf-8",
+                )
+                self.assertEqual(check(self.root), [])
+
+    def test_empty_abstract_varargs_still_require_the_owning_baseline(self):
+        owner = "aws-sdk/aws-sdk-2.2"
+        path = self.root / owner / "javaagent" / "src" / "main" / "java" / "ServiceModule.java"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            "@AutoService(InstrumentationModule.class)\n"
+            "class ServiceModule extends AbstractServiceModule {\n"
+            "  ServiceModule() { super(); }\n"
+            "}\n",
+            encoding="utf-8",
+        )
+        path.with_name("AbstractServiceModule.java").write_text(
+            "abstract class AbstractServiceModule extends InstrumentationModule {\n"
+            "  AbstractServiceModule(String... names) { super(\"aws-sdk\", names); }\n"
+            "}\n",
+            encoding="utf-8",
+        )
+        self.assertIn("expected first selectors", check(self.root)[0])
 
     def test_unsupported_inherited_module_reports_error(self):
         self.module("http-client-5.0", "ClientModule.java", '"client"')

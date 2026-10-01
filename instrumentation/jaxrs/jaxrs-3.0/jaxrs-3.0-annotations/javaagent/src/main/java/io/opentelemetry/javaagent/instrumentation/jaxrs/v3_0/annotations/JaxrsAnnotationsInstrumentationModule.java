@@ -22,7 +22,7 @@ public class JaxrsAnnotationsInstrumentationModule extends InstrumentationModule
     super(
         AgentCommonConfig.get().isV3Preview() ? "jaxrs-annotations" : "jaxrs",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"jaxrs-3.0-annotations"}
+            ? new String[0]
             : new String[] {"jaxrs-3.0", "jaxrs-annotations", "jaxrs-3.0-annotations"});
   }
 

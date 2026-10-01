@@ -22,7 +22,7 @@ public class SpringSecurityConfigServletInstrumentationModule extends Instrument
     super(
         "spring-security-config",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"spring-security-config-6.0", "spring-security-config-6.0-servlet"}
+            ? new String[] {"spring-security-config-6.0", "spring-security-config-servlet"}
             : new String[] {
               "spring-security-config-6.0",
               "spring-security-config-servlet",

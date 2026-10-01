@@ -20,7 +20,7 @@ public class CxfInstrumentationModule extends InstrumentationModule {
     super(
         AgentCommonConfig.get().isV3Preview() ? "jaxws" : "cxf",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"jaxws-2.0", "cxf", "jaxws-2.0-cxf-3.0"}
+            ? new String[] {"jaxws-2.0", "cxf"}
             : expandDeprecatedNames("jaxws-2.0-cxf-3.0|deprecated:jaxws-cxf-3.0", "jaxws"));
   }
 

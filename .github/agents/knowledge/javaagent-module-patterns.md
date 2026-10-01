@@ -49,14 +49,15 @@ Every name passed to the `InstrumentationModule` constructor is a user-facing
 `otel.instrumentation.<name>.enabled` alias, checked in constructor argument order. Multiple
 classes may share all their public names. Add an optional feature selector only for independently
 useful behavior, not to distinguish compatibility implementations. Preserve existing controls for
-independently useful features; an existing class-specific alias alone does not justify a feature
-selector. Network enrichment, transport compatibility, and asynchronous span-completion helpers can
-share their parent's selectors. Modules belonging to one client/server role share that role's
-selectors.
+independently useful features with versionless names; an existing class-specific alias alone does
+not justify a feature selector. Network enrichment, transport compatibility, and asynchronous
+span-completion helpers can share their parent's selectors. Modules belonging to one client/server
+role share that role's selectors.
 
 Preview selectors follow `family`, owning `baseline`, then an optional versionless client/server
-role. Do not add versioned role selectors. For example, WebFlux server modules use
-`spring-webflux`, `spring-webflux-5.0`, `spring-webflux-server`.
+role and versionless independent feature selectors. Do not add versioned role or feature selectors.
+Existing provider controls such as `cxf` and `cxf-3.2` can be shared across API families. For
+example, WebFlux server modules use `spring-webflux`, `spring-webflux-5.0`, `spring-webflux-server`.
 
 An optional product umbrella selects instrumentation whose purpose is to observe or support that
 product's operations. Membership follows product ownership, not historical aliases, directory

@@ -24,7 +24,7 @@ public class OpenTelemetryApiIncubatorInstrumentationModule
     super(
         "opentelemetry-api",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"opentelemetry-api-1.38", "opentelemetry-api-1.38-incubator"}
+            ? new String[] {"opentelemetry-api-1.38"}
             : new String[] {"opentelemetry-api-1.38", "opentelemetry-api-incubator-1.38"});
   }
 

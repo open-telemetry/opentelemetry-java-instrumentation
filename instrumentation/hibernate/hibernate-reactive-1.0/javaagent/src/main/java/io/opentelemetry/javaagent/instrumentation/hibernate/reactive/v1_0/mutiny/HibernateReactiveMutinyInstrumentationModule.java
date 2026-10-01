@@ -20,7 +20,7 @@ public class HibernateReactiveMutinyInstrumentationModule extends Instrumentatio
     super(
         "hibernate-reactive",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"hibernate-reactive-1.0", "hibernate-reactive-1.0-mutiny"}
+            ? new String[] {"hibernate-reactive-1.0"}
             : new String[] {"hibernate-reactive-1.0", "hibernate-reactive-mutiny"});
   }
 

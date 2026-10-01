@@ -54,9 +54,10 @@ public abstract class InstrumentationModule implements Ordered {
    *       role selectors: {@code instrumented-library-client} or {@code
    *       instrumented-library-server}. Role-specific modules, including route enrichment, share
    *       its selectors. Support needed by both roles is selected separately.
-   *   <li>Optional feature names for independently useful behavior, e.g. {@code
+   *   <li>Optional versionless feature names for independently useful behavior, e.g. {@code
    *       reactor-context-propagation-operator}. Several module classes can share the same feature
-   *       name. Existing framework controls such as {@code cxf} may be shared across API families.
+   *       name. Existing framework controls such as {@code cxf} and {@code cxf-3.2} may be shared
+   *       across API families.
    *   <li>Optional product or ecosystem umbrellas, e.g. {@code vertx} for Vert.x HTTP and SQL
    *       clients. These follow all component selectors so narrower settings take precedence.
    * </ul>
