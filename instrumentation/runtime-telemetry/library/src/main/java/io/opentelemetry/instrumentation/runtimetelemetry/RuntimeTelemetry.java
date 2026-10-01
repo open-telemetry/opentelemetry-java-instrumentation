@@ -5,11 +5,14 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry;
 
+import static java.util.Collections.emptySet;
 import static java.util.logging.Level.WARNING;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.runtimetelemetry.internal.Internal;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -20,7 +23,14 @@ public final class RuntimeTelemetry implements AutoCloseable {
 
   private final AtomicBoolean isClosed = new AtomicBoolean();
   private final List<AutoCloseable> observables;
+  private final Set<String> registeredJmxObservers;
   @Nullable private final AutoCloseable jfrTelemetry;
+
+  static {
+    // a closed instance no longer observes anything, so it reports no registered observers
+    Internal.internalSetRegisteredJmxObservers(
+        telemetry -> telemetry.isClosed.get() ? emptySet() : telemetry.registeredJmxObservers);
+  }
 
   /**
    * Create and start {@link RuntimeTelemetry}.
@@ -44,6 +54,14 @@ public final class RuntimeTelemetry implements AutoCloseable {
   }
 
   RuntimeTelemetry(List<AutoCloseable> observables, @Nullable AutoCloseable jfrTelemetry) {
+    this(observables, jfrTelemetry, emptySet());
+  }
+
+  RuntimeTelemetry(
+      List<AutoCloseable> observables,
+      @Nullable AutoCloseable jfrTelemetry,
+      Set<String> registeredJmxObservers) {
+    this.registeredJmxObservers = Collections.unmodifiableSet(registeredJmxObservers);
     this.observables = Collections.unmodifiableList(observables);
     this.jfrTelemetry = jfrTelemetry;
   }

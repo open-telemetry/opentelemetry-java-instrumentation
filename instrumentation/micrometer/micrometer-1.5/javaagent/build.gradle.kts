@@ -14,12 +14,29 @@ muzzle {
 dependencies {
   library("io.micrometer:micrometer-core:1.5.0")
 
+  bootstrap(project(":instrumentation:runtime-telemetry:bootstrap"))
   implementation(project(":instrumentation:micrometer:micrometer-1.5:library"))
 
   testImplementation(project(":instrumentation:micrometer:micrometer-1.5:testing"))
+
+  // provides the JMX class-loading metrics that jvm-metrics-ownership defers to
+  testInstrumentation(project(":instrumentation:runtime-telemetry:javaagent"))
 }
 
 tasks {
+  val testJvmMetricsOwnership = register<Test>("testJvmMetricsOwnership") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*JvmMetricsOwnershipEnabledTest")
+    }
+    include("**/*JvmMetricsOwnershipEnabledTest.*")
+    jvmArgs(
+      "-Dotel.instrumentation.micrometer.experimental.jvm-metrics-ownership.enabled=true",
+      "-Dotel.instrumentation.micrometer.experimental.jvm-metrics-ownership.kept=jvm.classes.unloaded",
+    )
+  }
+
   val testPrometheusMode = register<Test>("testPrometheusMode") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -81,6 +98,7 @@ tasks {
       excludeTestsMatching("*TimerMillisecondsTest")
       excludeTestsMatching("*PrometheusModeTest")
       excludeTestsMatching("*HistogramGaugesTest")
+      excludeTestsMatching("*JvmMetricsOwnershipEnabledTest")
     }
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
   }
@@ -90,11 +108,13 @@ tasks {
       excludeTestsMatching("*TimerMillisecondsTest")
       excludeTestsMatching("*PrometheusModeTest")
       excludeTestsMatching("*HistogramGaugesTest")
+      excludeTestsMatching("*JvmMetricsOwnershipEnabledTest")
     }
   }
 
   check {
     dependsOn(
+      testJvmMetricsOwnership,
       testBaseTimeUnit,
       testPrometheusMode,
       testHistogramGauges,

@@ -9,6 +9,7 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetry;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Internal;
+import io.opentelemetry.javaagent.bootstrap.runtimetelemetry.RuntimeTelemetryObservation;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
@@ -27,6 +28,8 @@ public class RuntimeTelemetryInstaller implements AgentListener {
       Runtime.getRuntime()
           .addShutdownHook(
               new Thread(runtimeTelemetry::close, "OpenTelemetry RuntimeTelemetryShutdownHook"));
+      RuntimeTelemetryObservation.internalSetRegisteredJmxObservers(
+          Internal.getRegisteredJmxObservers(runtimeTelemetry));
     }
   }
 }

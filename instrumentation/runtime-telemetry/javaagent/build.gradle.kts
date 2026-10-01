@@ -3,6 +3,7 @@ plugins {
 }
 
 dependencies {
+  bootstrap(project(":instrumentation:runtime-telemetry:bootstrap"))
   implementation(project(":instrumentation:runtime-telemetry:library"))
 
   compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")

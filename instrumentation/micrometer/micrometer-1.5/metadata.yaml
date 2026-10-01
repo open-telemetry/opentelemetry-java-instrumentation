@@ -6,6 +6,29 @@ description: >
   with metrics already captured by other instrumentations.
 library_link: https://micrometer.io/
 configurations:
+  - name: otel.instrumentation.micrometer.experimental.jvm-metrics-ownership.enabled
+    declarative_name: java.micrometer.jvm_metrics_ownership/development.enabled
+    description: >
+      Explicitly assigns standard JVM class-loading observations to agent runtime telemetry.
+      The reviewed Micrometer names are jvm.classes.loaded, jvm.classes.loaded.count,
+      jvm.classes.unloaded and their jvm.class.count, jvm.class.loaded, jvm.class.unloaded aliases.
+      A matching gauge or counter is suppressed only when its corresponding JMX observer was
+      registered at bridge initialization. This chooses the process-wide agent representation;
+      it does not preserve identical attributes. Custom meters reusing these names can also be
+      suppressed; use kept to retain them. All other meters remain bridged. Disabled by default.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.micrometer.experimental.jvm-metrics-ownership.kept
+    declarative_name: java.micrometer.jvm_metrics_ownership/development.kept
+    description: >
+      Exact registered Micrometer meter names to keep bridged despite JVM ownership, including
+      their companions. Names are matched after meter filters and before export naming
+      conventions. Use the active convention name; wildcards are not supported.
+    type: list
+    default: ""
+    examples:
+      - jvm.classes.loaded
+      - jvm.class.count,jvm.class.loaded
   - name: otel.instrumentation.micrometer.prometheus-mode.enabled
     declarative_name: java.micrometer.prometheus_mode.enabled
     description: >

@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 import io.opentelemetry.api.metrics.Meter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 /**
@@ -20,8 +21,23 @@ public class JmxRuntimeMetricsFactory {
       boolean captureGcCause,
       Predicate<String> metricNamePredicate,
       Meter meter) {
+    return buildObservables(
+        emitExperimentalTelemetry, captureGcCause, metricNamePredicate, meter, unused -> {});
+  }
+
+  /**
+   * Like {@link #buildObservables(boolean, boolean, Predicate, Meter)}, and passes the name of each
+   * metric whose observer registered successfully to {@code registeredObserver}. Currently only
+   * class-loading metrics are reported.
+   */
+  public static List<AutoCloseable> buildObservables(
+      boolean emitExperimentalTelemetry,
+      boolean captureGcCause,
+      Predicate<String> metricNamePredicate,
+      Meter meter,
+      Consumer<String> registeredObserver) {
     List<AutoCloseable> observables = new ArrayList<>();
-    observables.addAll(Classes.registerObservers(meter, metricNamePredicate));
+    observables.addAll(Classes.registerObservers(meter, metricNamePredicate, registeredObserver));
     observables.addAll(Cpu.registerObservers(meter, metricNamePredicate));
     if (metricNamePredicate.test("jvm.cpu.count")) {
       observables.addAll(CpuCount.registerObservers(meter));
