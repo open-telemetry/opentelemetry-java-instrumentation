@@ -5,7 +5,6 @@ import java.time.Duration
 
 plugins {
   `java-library`
-  groovy
   checkstyle
   idea
 
@@ -99,6 +98,17 @@ tasks.withType<JavaCompile>().configureEach {
       // when junit calls java.lang.reflect.Executable.getParameters() on the constructor of a
       // non-static nested test class
       compilerArgs.add("-parameters")
+    }
+  }
+}
+
+// Compile against project jars rather than class directories. Several projects add shaded classes
+// to their main output via sourceSets.main.output.dir(...), which is packaged into the jar but is
+// not part of the "classes" variant that java-library would otherwise select.
+sourceSets.configureEach {
+  configurations.named(compileClasspathConfigurationName) {
+    attributes {
+      attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR))
     }
   }
 }
