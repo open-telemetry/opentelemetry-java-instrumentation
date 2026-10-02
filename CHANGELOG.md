@@ -8,11 +8,9 @@
   embedding the per-message subject; with `otel.semconv-stability.opt-in=messaging`, they emit
   operation-specific `settle` client spans.
   ([#19396](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19396))
-- Remove the deprecated `HostIdResource.REGISTRY_QUERY` constant, breaking compatibility for library
-  consumers that reference it.
+- Remove the deprecated `HostIdResource.REGISTRY_QUERY` constant.
   ([#19778](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19778))
-- The `ExperimentalJmxMetricHandler` SPI now requires implementations to provide `getMetricNames()`,
-  so existing custom handlers must be updated before upgrading.
+- The `ExperimentalJmxMetricHandler` SPI now requires implementations to provide `getMetricNames()`.
   ([#19781](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19781))
 - Apache DBCP and Tomcat DBCP pool metrics now retain the name selected at initial registration
   instead of switching to the MBean `ObjectName` name when MBean registration happens later.
