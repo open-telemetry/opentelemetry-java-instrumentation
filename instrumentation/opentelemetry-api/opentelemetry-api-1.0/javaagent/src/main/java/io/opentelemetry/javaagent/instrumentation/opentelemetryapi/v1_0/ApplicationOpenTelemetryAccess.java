@@ -11,18 +11,23 @@ import java.util.logging.Logger;
 
 public final class ApplicationOpenTelemetryAccess {
 
+  private static volatile boolean failureLogged;
+
   private ApplicationOpenTelemetryAccess() {}
 
   public static application.io.opentelemetry.api.OpenTelemetry getInstanceOrNoop() {
     try {
       return ApplicationOpenTelemetry.INSTANCE;
     } catch (LinkageError e) {
-      Logger.getLogger(ApplicationOpenTelemetryAccess.class.getName())
-          .log(
-              WARNING,
-              "Failed to install the OpenTelemetry API bridge; GlobalOpenTelemetry will act as"
-                  + " a no-op for the remainder of this JVM's lifetime.",
-              e);
+      if (!failureLogged) {
+        Logger.getLogger(ApplicationOpenTelemetryAccess.class.getName())
+            .log(
+                WARNING,
+                "Failed to install the OpenTelemetry API bridge; GlobalOpenTelemetry will act as"
+                    + " a no-op for the remainder of this JVM's lifetime.",
+                e);
+        failureLogged = true;
+      }
       return application.io.opentelemetry.api.OpenTelemetry.noop();
     }
   }
