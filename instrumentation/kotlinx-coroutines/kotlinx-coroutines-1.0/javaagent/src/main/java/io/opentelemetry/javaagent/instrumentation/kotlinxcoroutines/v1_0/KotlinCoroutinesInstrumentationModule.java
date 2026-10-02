@@ -21,7 +21,7 @@ public class KotlinCoroutinesInstrumentationModule extends InstrumentationModule
         AgentCommonConfig.get().isV3Preview() ? "kotlinx-coroutines-1.0" : "kotlinx-coroutines",
         AgentCommonConfig.get().isV3Preview()
             ? new String[] {"kotlinx-coroutines"}
-            : new String[] {"kotlinx-coroutines-1.0"});
+            : new String[] {"kotlinx-coroutines-1.0", "kotlinx-coroutines-1.0-core"});
   }
 
   @Override
