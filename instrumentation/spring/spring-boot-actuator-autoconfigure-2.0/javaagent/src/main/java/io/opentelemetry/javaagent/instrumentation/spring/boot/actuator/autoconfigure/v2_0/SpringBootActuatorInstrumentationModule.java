@@ -25,6 +25,7 @@ public class SpringBootActuatorInstrumentationModule extends InstrumentationModu
         AgentCommonConfig.get().isV3Preview()
             ? "spring-boot-actuator-autoconfigure-2.0"
             : "spring-boot-actuator-autoconfigure",
+        // Share the micrometer selector so both registry integration paths use one setting.
         AgentCommonConfig.get().isV3Preview()
             ? new String[] {"spring-boot-actuator-autoconfigure", "micrometer"}
             : new String[] {"spring-boot-actuator-autoconfigure-2.0", "micrometer"});
