@@ -23,6 +23,7 @@ public class JedisInstrumentationModule extends InstrumentationModule {
   public JedisInstrumentationModule() {
     super(
         AgentCommonConfig.get().isV3Preview() ? "jedis-1.4" : "jedis",
+        // The default-off module must not share the jedis family selector in v3 preview.
         AgentCommonConfig.get().isV3Preview() ? new String[] {} : new String[] {"jedis-1.4"});
   }
 

@@ -22,6 +22,7 @@ public class JaxrsInstrumentationModule extends InstrumentationModule {
   public JaxrsInstrumentationModule() {
     super(
         AgentCommonConfig.get().isV3Preview() ? "jaxrs-1.0-annotations" : "jaxrs",
+        // Default-off annotations must not share the jaxrs family selector in v3 preview.
         AgentCommonConfig.get().isV3Preview()
             ? new String[] {"jaxrs-annotations"}
             : new String[] {"jaxrs-1.0"});

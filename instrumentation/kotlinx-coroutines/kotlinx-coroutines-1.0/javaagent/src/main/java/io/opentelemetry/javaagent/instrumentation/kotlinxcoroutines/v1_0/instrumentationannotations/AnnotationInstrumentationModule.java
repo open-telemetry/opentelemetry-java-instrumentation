@@ -24,6 +24,7 @@ public class AnnotationInstrumentationModule extends InstrumentationModule {
         AgentCommonConfig.get().isV3Preview()
             ? "kotlinx-coroutines-annotations"
             : "kotlinx-coroutines",
+        // Default-off coroutine annotations need independent selectors in v3 preview.
         AgentCommonConfig.get().isV3Preview()
             ? new String[] {}
             : new String[] {

@@ -20,6 +20,7 @@ public class JwsInstrumentationModule extends InstrumentationModule {
   public JwsInstrumentationModule() {
     super(
         AgentCommonConfig.get().isV3Preview() ? "jaxws-jws-api-1.1" : "jaxws-jws-api",
+        // Default-off annotations must not share the jaxws family selector in v3 preview.
         AgentCommonConfig.get().isV3Preview()
             ? new String[] {"jaxws-jws-api"}
             : new String[] {"jaxws-jws-api-1.1", "jaxws"});

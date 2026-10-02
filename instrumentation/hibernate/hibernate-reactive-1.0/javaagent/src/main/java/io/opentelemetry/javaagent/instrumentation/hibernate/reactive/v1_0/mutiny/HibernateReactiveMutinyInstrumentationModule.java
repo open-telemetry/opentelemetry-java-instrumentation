@@ -19,6 +19,7 @@ public class HibernateReactiveMutinyInstrumentationModule extends Instrumentatio
   public HibernateReactiveMutinyInstrumentationModule() {
     super(
         AgentCommonConfig.get().isV3Preview() ? "hibernate-reactive-1.0" : "hibernate-reactive",
+        // In v3 preview, the hibernate selector is reserved for default-off synchronous modules.
         AgentCommonConfig.get().isV3Preview()
             ? new String[] {"hibernate-reactive"}
             : new String[] {"hibernate-reactive-1.0", "hibernate-reactive-mutiny"});
