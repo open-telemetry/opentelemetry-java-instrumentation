@@ -19,7 +19,10 @@ public class SqsInstrumentationModule extends AbstractAwsSdkInstrumentationModul
 
   public SqsInstrumentationModule() {
     super(
-        "aws-sdk-1.11", AgentCommonConfig.get().isV3Preview() ? "aws-sdk-sqs" : "aws-sdk-1.11-sqs");
+        AgentCommonConfig.get().isV3Preview() ? "aws-sdk-1.11" : "aws-sdk",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"aws-sdk-sqs", "aws-sdk"}
+            : new String[] {"aws-sdk-1.11", "aws-sdk-1.11-sqs"});
   }
 
   @Override

@@ -18,9 +18,9 @@ public class VertxRedisClientInstrumentationModule extends InstrumentationModule
 
   public VertxRedisClientInstrumentationModule() {
     super(
-        "vertx-redis-client",
+        AgentCommonConfig.get().isV3Preview() ? "vertx-redis-client-4.0" : "vertx-redis-client",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"vertx-redis-client-4.0", "vertx"}
+            ? new String[] {"vertx-redis-client", "vertx"}
             : new String[] {"vertx-redis-client-4.0", "vertx-redis-client-4.0-core", "vertx"});
   }
 

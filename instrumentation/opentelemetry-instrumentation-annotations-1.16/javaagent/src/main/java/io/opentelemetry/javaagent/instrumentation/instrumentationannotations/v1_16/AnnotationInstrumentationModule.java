@@ -22,9 +22,11 @@ public class AnnotationInstrumentationModule extends V3PreviewFallbackEnabledIns
 
   public AnnotationInstrumentationModule() {
     super(
-        "opentelemetry-instrumentation-annotations",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"opentelemetry-instrumentation-annotations-1.16"}
+            ? "opentelemetry-instrumentation-annotations-1.16"
+            : "opentelemetry-instrumentation-annotations",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"opentelemetry-instrumentation-annotations"}
             : new String[] {"opentelemetry-instrumentation-annotations-1.16", "annotations"});
   }
 

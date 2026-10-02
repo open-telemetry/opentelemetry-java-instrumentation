@@ -17,9 +17,9 @@ import java.util.List;
 public class RatpackInstrumentationModule extends InstrumentationModule {
   public RatpackInstrumentationModule() {
     super(
-        "ratpack",
+        AgentCommonConfig.get().isV3Preview() ? "ratpack-1.4" : "ratpack",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"ratpack-1.4"}
+            ? new String[] {"ratpack"}
             : new String[] {"ratpack-1.4", "ratpack-1.4-core"});
   }
 

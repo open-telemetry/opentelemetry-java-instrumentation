@@ -19,9 +19,9 @@ public class JwsInstrumentationModule extends InstrumentationModule {
 
   public JwsInstrumentationModule() {
     super(
-        "jaxws-jws-api",
+        AgentCommonConfig.get().isV3Preview() ? "jaxws-jws-api-1.1" : "jaxws-jws-api",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"jaxws-jws-api-1.1"}
+            ? new String[] {"jaxws-jws-api"}
             : new String[] {"jaxws-jws-api-1.1", "jaxws"});
   }
 

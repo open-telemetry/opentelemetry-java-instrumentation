@@ -19,8 +19,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 // TODO: Copy & paste with only trivial adaptions from v2
 abstract class AbstractAwsSdkInstrumentationModule extends InstrumentationModule {
 
-  protected AbstractAwsSdkInstrumentationModule(String... instrumentationNames) {
-    super("aws-sdk", instrumentationNames);
+  protected AbstractAwsSdkInstrumentationModule(
+      String mainInstrumentationName, String... additionalInstrumentationNames) {
+    super(mainInstrumentationName, additionalInstrumentationNames);
   }
 
   @Override

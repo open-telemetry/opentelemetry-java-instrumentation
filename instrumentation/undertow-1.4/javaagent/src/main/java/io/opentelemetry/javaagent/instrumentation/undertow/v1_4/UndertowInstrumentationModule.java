@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -18,7 +19,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class UndertowInstrumentationModule extends InstrumentationModule {
 
   public UndertowInstrumentationModule() {
-    super("undertow", "undertow-1.4");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "undertow-1.4" : "undertow",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"undertow"}
+            : new String[] {"undertow-1.4"});
   }
 
   @Override

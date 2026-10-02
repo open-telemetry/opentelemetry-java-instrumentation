@@ -19,9 +19,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class Axis2InstrumentationModule extends InstrumentationModule {
   public Axis2InstrumentationModule() {
     super(
-        AgentCommonConfig.get().isV3Preview() ? "jaxws" : "axis2",
+        AgentCommonConfig.get().isV3Preview() ? "jaxws-2.0-axis2-1.6" : "axis2",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"jaxws-2.0", "axis2", "axis2-1.6"}
+            ? new String[] {"jaxws-axis2", "jaxws"}
             : new String[] {"axis2-1.6", "jaxws"});
   }
 

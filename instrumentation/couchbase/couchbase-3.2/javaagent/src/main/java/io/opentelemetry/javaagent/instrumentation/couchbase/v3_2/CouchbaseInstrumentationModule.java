@@ -23,9 +23,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class CouchbaseInstrumentationModule extends InstrumentationModule {
   public CouchbaseInstrumentationModule() {
     super(
-        "couchbase",
+        AgentCommonConfig.get().isV3Preview() ? "couchbase-3.2" : "couchbase",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"couchbase-3.2"}
+            ? new String[] {"couchbase"}
             : expandDeprecatedNames(
                 "couchbase-3.2|deprecated:couchbase-3.4", "couchbase", "couchbase-3.2-core"));
   }

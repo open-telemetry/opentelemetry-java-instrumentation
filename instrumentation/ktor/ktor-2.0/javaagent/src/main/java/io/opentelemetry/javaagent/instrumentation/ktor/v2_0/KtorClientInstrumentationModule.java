@@ -20,9 +20,9 @@ public class KtorClientInstrumentationModule extends InstrumentationModule {
 
   public KtorClientInstrumentationModule() {
     super(
-        "ktor",
+        AgentCommonConfig.get().isV3Preview() ? "ktor-2.0" : "ktor",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"ktor-2.0", "ktor-client"}
+            ? new String[] {"ktor-client", "ktor"}
             : new String[] {"ktor-2.0", "ktor-client", "ktor-client-2.0"});
   }
 

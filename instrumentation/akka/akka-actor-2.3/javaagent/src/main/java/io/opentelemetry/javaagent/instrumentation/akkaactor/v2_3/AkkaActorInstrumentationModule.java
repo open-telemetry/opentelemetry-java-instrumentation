@@ -17,9 +17,9 @@ import java.util.List;
 public class AkkaActorInstrumentationModule extends InstrumentationModule {
   public AkkaActorInstrumentationModule() {
     super(
-        "akka-actor",
+        AgentCommonConfig.get().isV3Preview() ? "akka-actor-2.3" : "akka-actor",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"akka-actor-2.3"}
+            ? new String[] {"akka-actor", "akka"}
             : new String[] {"akka-actor-2.3", "akka-actor-2.3-core"});
   }
 

@@ -39,33 +39,42 @@ Special leaves: `bootstrap` (classes needed in the bootstrap class loader).
 
 ## `InstrumentationModule` name
 
-In v3 preview, the first (main) name passed to `super()` normally equals the Gradle module directory name,
-excluding any version suffix that comes after the library name:
+In v3 preview, the first (main) name passed to `super()` normally equals the full Gradle module
+directory name, including versions. The version-stripped component name is a secondary:
 
 ```java
 public MyLibraryInstrumentationModule() {
-  super("my-library", "my-library-1.0");
+  super(
+      AgentCommonConfig.get().isV3Preview() ? "my-library-1.0" : "my-library",
+      AgentCommonConfig.get().isV3Preview()
+          ? new String[] {"my-library"}
+          : new String[] {"my-library-1.0"});
 }
 ```
 
 Module names use `kebab-case`.
 
-Optional role and feature selectors are versionless, such as `ratpack-client`,
-`aws-sdk-sqs`, or `spring-security-config-webflux`. Compatibility implementations and
-support helpers share their parent's family and owning baseline. Existing provider
-family/baseline controls, such as `cxf` and `cxf-3.2`, can be shared across API families.
+Optional role and feature selectors are versionless, such as `ratpack-client` or `aws-sdk-sqs`,
+and precede component secondaries. Compatibility helpers share their parent's names.
+Implementation splits such as `mongo-async-3.3` retain their directory primary but use only
+`mongo` as a secondary, without `mongo-async`.
+
+Compound API/provider modules keep the full compound primary, its version-stripped secondary,
+and the API umbrella. For example, `jaxrs-2.0-cxf-3.2`, `jaxrs-cxf`, `jaxrs`, without bare provider
+or API-generation aliases.
 
 Default-off features have independent names when the component family also contains default-on
 instrumentation. For example, JDBC's default-off DataSource instrumentation uses only
 `jdbc-datasource`, not the shared `jdbc` selector. Product umbrellas such as `vertx` come after
 the component's own selectors and must not mix default-on and default-off instrumentation.
-Standalone default-off feature modules may use their full directory name as the primary,
+Standalone default-off feature modules use their full directory name as the primary,
 followed by the versionless feature name. For example, `jaxrs-1.0-annotations` precedes
 `jaxrs-annotations`; neither shares `jaxrs` with default-on provider instrumentation.
 
-The generic Reactor Netty server registration housed in `spring-webflux-5.0` uses
-`spring-webflux`, `spring-webflux-5.0`, `reactor-netty`, and `reactor-netty-server` in both modes,
-in that order. This cross-family selector exception applies only to that registration.
+The generic Reactor Netty server registration housed in `spring-webflux-5.0` uses primary
+`spring-webflux-5.0` and secondaries `reactor-netty-server`, `spring-webflux-server`, and
+`spring-webflux`, without `reactor-netty` or `reactor`. This cross-family selector exception applies
+only to that registration.
 Outside v3 preview, preserve existing names and their order.
 
 ## Common modules (shared code across multiple versions)

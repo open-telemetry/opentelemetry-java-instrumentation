@@ -28,9 +28,9 @@ public class AzureContextInstrumentationModule extends InstrumentationModule {
 
   public AzureContextInstrumentationModule() {
     super(
-        "azure-core",
+        AgentCommonConfig.get().isV3Preview() ? "azure-core-1.53" : "azure-core",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"azure-core-1.53"}
+            ? new String[] {"azure-core"}
             : new String[] {"azure-core-1.53", "azure-core-1.53-context"});
   }
 

@@ -7,6 +7,28 @@ applyTo: "instrumentation/**/javaagent/**/*.java,instrumentation/**/javaagent*/*
 Apply these checks to executable advice and the helpers it calls. Inspect registration and
 library lifecycle before deciding whether an exception applies.
 
+## Enablement names in v3 preview
+
+Apply these rules to names registered under `otel.instrumentation.common.v3-preview=true`.
+Public enablement names describe selectable behavior, not Muzzle implementation identities.
+
+- The primary is the full module-directory name, including versions, except where a default-off
+  feature needs a separate identity within that module. Example: `spring-webflux-5.0`.
+- Normally include a secondary with all numeric versions removed from the module name.
+  Example: `jaxrs-2.0-cxf-3.2` has secondary `jaxrs-cxf`.
+- Omit unversioned selectors that merely distinguish implementations, while retaining full
+  module-directory primaries. Example: `mongo-async-3.3` has secondary `mongo`, not `mongo-async`.
+- Add role and feature selectors for useful, independently selectable behavior, not compatibility
+  helpers. Example: WebFlux has `spring-webflux-client` and `spring-webflux-server`; Reactor operator
+  bridges share ordinary Reactor selectors.
+- API/product umbrellas can group the base component and related integrations. Membership follows
+  the product/API being instrumented, not dependencies. Example: `tomcat` includes server and pool
+  instrumentation; Apache `kafka` does not include Spring Kafka.
+- A default-off feature within a default-on component must have an independent identity and share
+  no selector with default-on registrations. All-default-off groups may share selectors.
+  Example: `jdbc-datasource` does not share `jdbc`; synchronous Hibernate and procedure calls share
+  `hibernate`.
+
 ## Advice and matching
 
 - A new `InstrumentationModule` needs SPI registration and a compatible `TypeInstrumentation`;

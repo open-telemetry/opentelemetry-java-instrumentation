@@ -20,7 +20,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class SnsInstrumentationModule extends AbstractAwsSdkInstrumentationModule {
 
   public SnsInstrumentationModule() {
-    super("aws-sdk-2.2", AgentCommonConfig.get().isV3Preview() ? "aws-sdk-sns" : "aws-sdk-2.2-sns");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "aws-sdk-2.2" : "aws-sdk",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"aws-sdk-sns", "aws-sdk"}
+            : new String[] {"aws-sdk-2.2", "aws-sdk-2.2-sns"});
   }
 
   @Override

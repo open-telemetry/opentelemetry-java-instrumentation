@@ -31,7 +31,7 @@ muzzle {
     module.set("kotlinx-coroutines-core")
     versions.set("[1.3.0,1.3.8)")
     excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.KotlinCoroutinesInstrumentationModule")
-    excludeInstrumentationName("kotlinx-coroutines-opentelemetry-instrumentation-annotations")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.instrumentationannotations.AnnotationInstrumentationModule")
     excludeInstrumentationName("opentelemetry-instrumentation-annotations-1.16")
   }
   // 1.3.9 (and beyond?) have changed how artifact names are resolved due to multiplatform variants
@@ -43,7 +43,7 @@ muzzle {
     versions.set("[1.3.9,)")
     assertInverse.set(true)
     excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.KotlinCoroutinesInstrumentationModule")
-    excludeInstrumentationName("kotlinx-coroutines-opentelemetry-instrumentation-annotations")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.instrumentationannotations.AnnotationInstrumentationModule")
     excludeInstrumentationName("opentelemetry-instrumentation-annotations-1.16")
   }
 }

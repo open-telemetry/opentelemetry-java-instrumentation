@@ -17,9 +17,9 @@ import java.util.List;
 public class ArmeriaGrpcInstrumentationModule extends InstrumentationModule {
   public ArmeriaGrpcInstrumentationModule() {
     super(
-        "armeria-grpc",
+        AgentCommonConfig.get().isV3Preview() ? "armeria-grpc-1.14" : "armeria-grpc",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"armeria-grpc-1.14", "armeria"}
+            ? new String[] {"armeria-grpc", "armeria"}
             : new String[] {"armeria-grpc-1.14", "armeria", "armeria-1.14"});
   }
 

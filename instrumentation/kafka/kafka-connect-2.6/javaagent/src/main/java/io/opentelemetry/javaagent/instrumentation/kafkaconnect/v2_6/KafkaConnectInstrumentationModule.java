@@ -20,9 +20,9 @@ public class KafkaConnectInstrumentationModule extends InstrumentationModule {
 
   public KafkaConnectInstrumentationModule() {
     super(
-        "kafka-connect",
+        AgentCommonConfig.get().isV3Preview() ? "kafka-connect-2.6" : "kafka-connect",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"kafka-connect-2.6", "kafka"}
+            ? new String[] {"kafka-connect", "kafka"}
             : new String[] {"kafka-connect-2.6"});
   }
 

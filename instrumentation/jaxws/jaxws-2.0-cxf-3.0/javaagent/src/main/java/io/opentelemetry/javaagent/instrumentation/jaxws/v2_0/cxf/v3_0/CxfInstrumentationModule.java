@@ -18,9 +18,9 @@ import java.util.List;
 public class CxfInstrumentationModule extends InstrumentationModule {
   public CxfInstrumentationModule() {
     super(
-        AgentCommonConfig.get().isV3Preview() ? "jaxws" : "cxf",
+        AgentCommonConfig.get().isV3Preview() ? "jaxws-2.0-cxf-3.0" : "cxf",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"jaxws-2.0", "cxf"}
+            ? new String[] {"jaxws-cxf", "jaxws"}
             : expandDeprecatedNames("jaxws-2.0-cxf-3.0|deprecated:jaxws-cxf-3.0", "jaxws"));
   }
 

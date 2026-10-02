@@ -10,6 +10,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.HelperResourceBuilder;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -21,9 +22,12 @@ public class SpringBootActuatorInstrumentationModule extends InstrumentationModu
 
   public SpringBootActuatorInstrumentationModule() {
     super(
-        "spring-boot-actuator-autoconfigure",
-        "spring-boot-actuator-autoconfigure-2.0",
-        "micrometer");
+        AgentCommonConfig.get().isV3Preview()
+            ? "spring-boot-actuator-autoconfigure-2.0"
+            : "spring-boot-actuator-autoconfigure",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"spring-boot-actuator-autoconfigure", "micrometer"}
+            : new String[] {"spring-boot-actuator-autoconfigure-2.0", "micrometer"});
   }
 
   @Override

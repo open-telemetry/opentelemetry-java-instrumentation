@@ -19,9 +19,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class SpringIntegrationInstrumentationModule extends InstrumentationModule {
   public SpringIntegrationInstrumentationModule() {
     super(
-        "spring-integration",
+        AgentCommonConfig.get().isV3Preview() ? "spring-integration-4.1" : "spring-integration",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"spring-integration-4.1"}
+            ? new String[] {"spring-integration"}
             : new String[] {"spring-integration-4.1", "spring-integration-core-4.1"});
   }
 

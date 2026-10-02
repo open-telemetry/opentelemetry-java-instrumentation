@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.liberty.v20_0;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -29,7 +30,11 @@ import java.util.List;
 public class LibertyInstrumentationModule extends InstrumentationModule {
 
   public LibertyInstrumentationModule() {
-    super("liberty", "liberty-20.0");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "liberty-20.0" : "liberty",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"liberty"}
+            : new String[] {"liberty-20.0"});
   }
 
   @Override

@@ -17,9 +17,9 @@ import java.util.List;
 public class TapirPekkoHttpServerRouteInstrumentationModule extends InstrumentationModule {
   public TapirPekkoHttpServerRouteInstrumentationModule() {
     super(
-        "pekko-http",
+        AgentCommonConfig.get().isV3Preview() ? "pekko-http-1.0" : "pekko-http",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"pekko-http-1.0", "pekko-http-server"}
+            ? new String[] {"pekko-http-server", "pekko-http", "pekko"}
             : new String[] {
               "pekko-http-1.0",
               "pekko-http-server",

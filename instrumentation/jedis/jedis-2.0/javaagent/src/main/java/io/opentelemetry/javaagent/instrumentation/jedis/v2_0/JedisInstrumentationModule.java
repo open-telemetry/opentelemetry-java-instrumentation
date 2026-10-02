@@ -21,9 +21,9 @@ public class JedisInstrumentationModule extends InstrumentationModule {
 
   public JedisInstrumentationModule() {
     super(
-        "jedis",
+        AgentCommonConfig.get().isV3Preview() ? "jedis-2.0" : "jedis",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"jedis-2.0"}
+            ? new String[] {"jedis"}
             : new String[] {"jedis-2.0", "jedis-2.0-core"});
   }
 

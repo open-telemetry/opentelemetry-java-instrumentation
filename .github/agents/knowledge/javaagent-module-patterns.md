@@ -16,7 +16,11 @@ registers the instrumentation with the agent.
 public class MyLibrary10InstrumentationModule extends InstrumentationModule {
 
   public MyLibrary10InstrumentationModule() {
-    super("my-library", "my-library-1.0");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "my-library-1.0" : "my-library",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"my-library"}
+            : new String[] {"my-library-1.0"});
   }
 
   @Override
@@ -31,15 +35,15 @@ public class MyLibrary10InstrumentationModule extends InstrumentationModule {
 - Must have `@AutoService(InstrumentationModule.class)` — this registers it via SPI.
 - Class name follows `{Library}{Version}InstrumentationModule` (e.g.,
   `OkHttp3InstrumentationModule`, `JedisInstrumentationModule`).
-- Constructor `super()` arguments: the **first** (main) name must equal the Gradle module
-  directory name excluding version suffix. Names use **kebab-case**. See
+- Constructor `super()` arguments in v3 preview: the **first** (main) name normally equals the full
+  Gradle module directory name, including versions. Names use **kebab-case**. See
   [module-naming.md](module-naming.md) for the full naming convention.
   The Reactor Netty server registration housed in `spring-webflux-5.0` also includes
-  `reactor-netty` and `reactor-netty-server` after `spring-webflux` and `spring-webflux-5.0`
-  in both modes. This cross-family selector exception applies only to that registration.
+  `reactor-netty-server`, `spring-webflux-server`, and `spring-webflux` as secondaries, without
+  `reactor-netty` or `reactor`. This cross-family selector exception applies only to that registration.
   Independent default-off features use their own feature names instead of a family or baseline
   shared with default-on instrumentation.
-  Standalone default-off feature modules may use the full module directory name first,
+  Standalone default-off feature modules use the full module directory name first,
   followed by the versionless feature name, such as `jaxrs-1.0-annotations`, `jaxrs-annotations`.
 - `typeInstrumentations()` returns the list of `TypeInstrumentation` implementations — use
   `Arrays.asList(...)` for multiple items and `Collections.singletonList(...)` for a single
@@ -56,10 +60,11 @@ not justify a feature selector. Network enrichment, transport compatibility, and
 span-completion helpers can share their parent's selectors. Modules belonging to one client/server
 role share that role's selectors.
 
-Preview selectors follow `family`, owning `baseline`, then an optional versionless client/server
-role and versionless independent feature selectors. Do not add versioned role or feature selectors.
-Existing provider controls such as `cxf` and `cxf-3.2` can be shared across API families. For
-example, WebFlux server modules use `spring-webflux`, `spring-webflux-5.0`, `spring-webflux-server`.
+Preview selectors start with the full module directory name, then optional versionless client/server
+roles and independent features, then the version-stripped component name and API/product umbrellas.
+For example, WebFlux server modules use `spring-webflux-5.0`, `spring-webflux-server`, `spring-webflux`.
+Compound provider modules use the full primary, the version-stripped compound name, and the API
+umbrella, such as `jaxrs-2.0-cxf-3.2`, `jaxrs-cxf`, `jaxrs`.
 
 An optional product umbrella selects instrumentation whose purpose is to observe or support that
 product's operations. Membership follows product ownership, not historical aliases, directory
@@ -69,15 +74,13 @@ the general JDBC instrumentation used underneath a Vert.x application does not.
 Place umbrellas after all component, baseline, role, and feature selectors so explicit component
 settings take precedence. Default-off features must not share any selector with default-on
 instrumentation. They use independent feature names, such as `kafka-clients-metrics`,
-`jdbc-datasource`, or `kotlinx-coroutines-opentelemetry-instrumentation-annotations`. A group whose
+`jdbc-datasource`, or `kotlinx-coroutines-annotations`. A group whose
 members are all default-off can share an umbrella: `hibernate` selects synchronous Hibernate and
 procedure calls, but not default-on Hibernate Reactive. The deprecated Jedis 1.x and superseded
 Lettuce 5.1 implementations slated for removal in 3.0 do not define long-term group membership.
 
-The central selector checker records allowed product relationships explicitly and rejects shared
-selectors with mixed ordinary defaults in preview. Ordinary defaults assume global enablement on
-and optional feature settings absent. Unknown default expressions fail rather than silently
-exempting a registration.
+Ordinary defaults assume global enablement on and optional feature settings absent. The native
+Javaagent review instructions contain the naming and default-isolation rules.
 
 Muzzle passes prefer `excludeInstrumentationName(...)` when the public name selects the intended
 classes both outside v3 preview and in preview. Use `excludeInstrumentationModule(...)` with the

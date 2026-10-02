@@ -20,9 +20,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class JaxrsAnnotationsInstrumentationModule extends InstrumentationModule {
   public JaxrsAnnotationsInstrumentationModule() {
     super(
-        AgentCommonConfig.get().isV3Preview() ? "jaxrs-annotations" : "jaxrs",
+        AgentCommonConfig.get().isV3Preview() ? "jaxrs-2.0-annotations" : "jaxrs",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[0]
+            ? new String[] {"jaxrs-annotations"}
             : new String[] {"jaxrs-2.0", "jaxrs-annotations", "jaxrs-2.0-annotations"});
   }
 

@@ -24,10 +24,10 @@ public class BedrockRuntimeInstrumentationModule extends AbstractAwsSdkInstrumen
 
   public BedrockRuntimeInstrumentationModule() {
     super(
-        "aws-sdk-2.2",
+        AgentCommonConfig.get().isV3Preview() ? "aws-sdk-2.2" : "aws-sdk",
         AgentCommonConfig.get().isV3Preview()
-            ? "aws-sdk-bedrock-runtime"
-            : "aws-sdk-2.2-bedrock-runtime");
+            ? new String[] {"aws-sdk-bedrock-runtime", "aws-sdk"}
+            : new String[] {"aws-sdk-2.2", "aws-sdk-2.2-bedrock-runtime"});
   }
 
   @Override

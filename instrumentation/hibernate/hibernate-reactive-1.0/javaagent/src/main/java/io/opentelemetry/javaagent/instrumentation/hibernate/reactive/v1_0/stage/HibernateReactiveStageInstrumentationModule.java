@@ -18,9 +18,9 @@ public class HibernateReactiveStageInstrumentationModule extends Instrumentation
 
   public HibernateReactiveStageInstrumentationModule() {
     super(
-        "hibernate-reactive",
+        AgentCommonConfig.get().isV3Preview() ? "hibernate-reactive-1.0" : "hibernate-reactive",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"hibernate-reactive-1.0"}
+            ? new String[] {"hibernate-reactive"}
             : new String[] {"hibernate-reactive-1.0", "hibernate-reactive-stage"});
   }
 

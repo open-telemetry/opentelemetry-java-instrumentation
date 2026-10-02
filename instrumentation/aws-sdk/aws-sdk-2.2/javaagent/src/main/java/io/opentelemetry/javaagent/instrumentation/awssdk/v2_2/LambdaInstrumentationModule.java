@@ -21,8 +21,10 @@ public class LambdaInstrumentationModule extends AbstractAwsSdkInstrumentationMo
 
   public LambdaInstrumentationModule() {
     super(
-        "aws-sdk-2.2",
-        AgentCommonConfig.get().isV3Preview() ? "aws-sdk-lambda" : "aws-sdk-2.2-lambda");
+        AgentCommonConfig.get().isV3Preview() ? "aws-sdk-2.2" : "aws-sdk",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"aws-sdk-lambda", "aws-sdk"}
+            : new String[] {"aws-sdk-2.2", "aws-sdk-2.2-lambda"});
   }
 
   @Override

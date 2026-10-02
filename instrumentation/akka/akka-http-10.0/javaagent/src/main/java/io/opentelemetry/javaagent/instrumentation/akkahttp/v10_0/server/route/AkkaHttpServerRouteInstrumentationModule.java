@@ -21,9 +21,9 @@ import java.util.List;
 public class AkkaHttpServerRouteInstrumentationModule extends InstrumentationModule {
   public AkkaHttpServerRouteInstrumentationModule() {
     super(
-        "akka-http",
+        AgentCommonConfig.get().isV3Preview() ? "akka-http-10.0" : "akka-http",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"akka-http-10.0", "akka-http-server"}
+            ? new String[] {"akka-http-server", "akka-http", "akka"}
             : new String[] {"akka-http-10.0", "akka-http-server", "akka-http-server-route"});
   }
 

@@ -17,9 +17,9 @@ import java.util.List;
 public class AwsSdkInstrumentationModule extends InstrumentationModule {
   public AwsSdkInstrumentationModule() {
     super(
-        "aws-sdk",
+        AgentCommonConfig.get().isV3Preview() ? "aws-sdk-1.11" : "aws-sdk",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"aws-sdk-1.11"}
+            ? new String[] {"aws-sdk"}
             : new String[] {"aws-sdk-1.11", "aws-sdk-1.11-core"});
   }
 

@@ -20,8 +20,9 @@ import java.util.List;
 public class AwsSdkInstrumentationModule extends AbstractAwsSdkInstrumentationModule {
   public AwsSdkInstrumentationModule() {
     super(
+        AgentCommonConfig.get().isV3Preview() ? "aws-sdk-2.2" : "aws-sdk",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"aws-sdk-2.2"}
+            ? new String[] {"aws-sdk"}
             : new String[] {"aws-sdk-2.2", "aws-sdk-2.2-core"});
   }
 

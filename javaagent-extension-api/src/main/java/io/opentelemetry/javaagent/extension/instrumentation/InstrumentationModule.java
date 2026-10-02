@@ -47,17 +47,19 @@ public abstract class InstrumentationModule implements Ordered {
    * ordered hierarchy:
    *
    * <ul>
-   *   <li>The library family, e.g. {@code instrumented-library}, shared across its versions.
-   *   <li>The family with its owning instrumentation baseline, e.g. {@code
-   *       instrumented-library-1.0}. JDK instrumentations omit this version level.
+   *   <li>The full module directory name, including versions, e.g. {@code
+   *       instrumented-library-1.0}. An isolated default-off feature within a shared module uses an
+   *       independent primary instead.
    *   <li>When client and server instrumentation are independently selectable, optional versionless
    *       role selectors: {@code instrumented-library-client} or {@code
    *       instrumented-library-server}. Role-specific modules, including route enrichment, share
    *       its selectors. Support needed by both roles is selected separately.
    *   <li>Optional versionless feature names for independently useful behavior, e.g. {@code
-   *       reactor-context-propagation-operator}. Several module classes can share the same feature
-   *       name. Existing framework controls such as {@code cxf} and {@code cxf-3.2} may be shared
-   *       across API families.
+   *       aws-sdk-sqs}. Compatibility helpers share their parent's selectors rather than exposing
+   *       implementation-specific controls.
+   *   <li>Normally, the module name with all numeric versions removed, e.g. {@code
+   *       instrumented-library} or {@code jaxrs-cxf}. Omit unversioned names that merely
+   *       distinguish implementation splits, e.g. {@code mongo-async}.
    *   <li>Optional product or ecosystem umbrellas, e.g. {@code vertx} for Vert.x HTTP and SQL
    *       clients. These follow all component selectors so narrower settings take precedence.
    * </ul>
@@ -66,7 +68,7 @@ public abstract class InstrumentationModule implements Ordered {
    * independent feature selectors when their library's other instrumentation is default-on. They
    * must not share family, baseline, or umbrella selectors with default-on instrumentation. An
    * umbrella whose members are all default-off can enable them together. Standalone default-off
-   * feature modules may use their full directory name first, followed by their versionless feature
+   * feature modules use their full directory name first, followed by their versionless feature
    * name, e.g. {@code jaxrs-1.0-annotations}, {@code jaxrs-annotations}.
    *
    * <p>Names use kebab-case. Umbrella membership follows product ownership, not directory nesting

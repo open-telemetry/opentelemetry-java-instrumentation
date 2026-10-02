@@ -22,9 +22,9 @@ public class OpenTelemetryApiInstrumentationModule
     extends V3PreviewFallbackEnabledInstrumentationModule {
   public OpenTelemetryApiInstrumentationModule() {
     super(
-        "opentelemetry-api",
+        AgentCommonConfig.get().isV3Preview() ? "opentelemetry-api-1.31" : "opentelemetry-api",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"opentelemetry-api-1.31"}
+            ? new String[] {"opentelemetry-api"}
             : new String[] {"opentelemetry-api-1.31", "opentelemetry-api-incubator-1.31"});
   }
 

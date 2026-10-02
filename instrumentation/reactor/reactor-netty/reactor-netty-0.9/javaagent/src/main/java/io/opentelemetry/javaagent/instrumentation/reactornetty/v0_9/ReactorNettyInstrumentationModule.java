@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -27,7 +28,11 @@ import reactor.netty.http.client.HttpClient;
 public class ReactorNettyInstrumentationModule extends InstrumentationModule {
 
   public ReactorNettyInstrumentationModule() {
-    super("reactor-netty", "reactor-netty-0.9");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "reactor-netty-0.9" : "reactor-netty",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"reactor-netty", "reactor"}
+            : new String[] {"reactor-netty-0.9"});
   }
 
   @Override

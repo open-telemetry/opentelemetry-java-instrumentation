@@ -20,9 +20,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class SpringSecurityConfigServletInstrumentationModule extends InstrumentationModule {
   public SpringSecurityConfigServletInstrumentationModule() {
     super(
-        "spring-security-config",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"spring-security-config-6.0", "spring-security-config-servlet"}
+            ? "spring-security-config-6.0"
+            : "spring-security-config",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"spring-security-config"}
             : new String[] {
               "spring-security-config-6.0",
               "spring-security-config-servlet",

@@ -21,7 +21,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class LettuceInstrumentationModule extends InstrumentationModule {
 
   public LettuceInstrumentationModule() {
-    super("lettuce", "lettuce-5.1");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "lettuce-5.1" : "lettuce",
+        AgentCommonConfig.get().isV3Preview() ? new String[] {} : new String[] {"lettuce-5.1"});
   }
 
   @Override

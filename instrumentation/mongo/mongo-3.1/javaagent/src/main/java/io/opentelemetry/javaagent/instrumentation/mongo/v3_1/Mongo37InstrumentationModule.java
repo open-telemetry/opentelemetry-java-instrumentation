@@ -20,9 +20,9 @@ public class Mongo37InstrumentationModule extends InstrumentationModule {
 
   public Mongo37InstrumentationModule() {
     super(
-        "mongo",
+        AgentCommonConfig.get().isV3Preview() ? "mongo-3.1" : "mongo",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"mongo-3.1"}
+            ? new String[] {"mongo"}
             : new String[] {"mongo-3.7"});
   }
 

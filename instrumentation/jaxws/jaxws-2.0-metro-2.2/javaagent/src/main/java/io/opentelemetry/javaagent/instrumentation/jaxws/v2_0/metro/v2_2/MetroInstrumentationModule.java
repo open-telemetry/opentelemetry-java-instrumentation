@@ -21,9 +21,9 @@ public class MetroInstrumentationModule extends InstrumentationModule {
 
   public MetroInstrumentationModule() {
     super(
-        AgentCommonConfig.get().isV3Preview() ? "jaxws" : "metro",
+        AgentCommonConfig.get().isV3Preview() ? "jaxws-2.0-metro-2.2" : "metro",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"jaxws-2.0", "metro"}
+            ? new String[] {"jaxws-metro", "jaxws"}
             : expandDeprecatedNames("jaxws-2.0-metro-2.2|deprecated:jaxws-metro-2.2", "jaxws"));
   }
 

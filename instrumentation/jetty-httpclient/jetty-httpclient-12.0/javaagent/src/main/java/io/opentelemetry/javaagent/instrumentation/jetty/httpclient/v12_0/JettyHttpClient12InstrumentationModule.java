@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v12_0;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -15,7 +16,11 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class JettyHttpClient12InstrumentationModule extends InstrumentationModule {
   public JettyHttpClient12InstrumentationModule() {
-    super("jetty-httpclient", "jetty-httpclient-12.0");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "jetty-httpclient-12.0" : "jetty-httpclient",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"jetty-httpclient"}
+            : new String[] {"jetty-httpclient-12.0"});
   }
 
   @Override
