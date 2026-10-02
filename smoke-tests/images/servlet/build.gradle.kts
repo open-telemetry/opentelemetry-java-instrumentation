@@ -303,7 +303,7 @@ fun configureImage(
         "8" -> "eclipse-temurin:8u472-b08-jdk-windowsservercore-ltsc2022@sha256:2f2dc58147a9877ecde8644961b1e3c0f26f838af038ec8b8fc04dfbea61a4d0"
         "11" -> "eclipse-temurin:11.0.32_9-jdk-windowsservercore-ltsc2022@sha256:da84e48e0d15524af6515f5f157651417d6fa7fa0a9d0239f9b0c678857fcde9"
         "17" -> "eclipse-temurin:17.0.20_8-jdk-windowsservercore-ltsc2022@sha256:032e399849e961825aa850bf71fb8bd89688d220379c3c0edbf1b2bdb94ad128"
-        "21" -> "eclipse-temurin:21.0.12_8-jdk-windowsservercore-ltsc2022@sha256:858958399710bd20a18ded95d68525c68a1bde1899284369d04a83b916093a15"
+        "21" -> "eclipse-temurin:21.0.12_8-jdk-windowsservercore-ltsc2022@sha256:87883996bf34a15b691000be1f87650e523d995e8be6871c0bf98c601950f65a"
         "25" -> "eclipse-temurin:25.0.4_7-jdk-windowsservercore-ltsc2022@sha256:f8f6b2870e7947150962bef62452ce234d29d8a39aefd88dccde777800751ba7"
         "26" -> "eclipse-temurin:26.0.2_10-jdk-windowsservercore-ltsc2022@sha256:32d5c7548f3e94884d5af4185e9baf6eda9ea107b5920839f54caebcc8c83d1b"
         else -> throw GradleException("Unexpected jdk version for Windows: $jdk")
