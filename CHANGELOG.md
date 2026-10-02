@@ -58,10 +58,11 @@
   declarative `rule_based_routing` in favor of the SDK incubator composite/development `rule_based`
   sampler, whose configuration and matching behavior differ.
   ([#20249](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20249))
-- Deprecate `otel.instrumentation.common.experimental.controller-telemetry.enabled`
-  in favor of `otel.instrumentation.common.controller-telemetry.enabled` and
-  `otel.instrumentation.common.experimental.view-telemetry.enabled`
-  in favor of `otel.instrumentation.common.view-telemetry.enabled`.
+- Promote controller and view telemetry configuration to the stable properties
+  `otel.instrumentation.common.controller-telemetry.enabled` and
+  `otel.instrumentation.common.view-telemetry.enabled`, deprecating
+  `otel.instrumentation.common.experimental.controller-telemetry.enabled` and
+  `otel.instrumentation.common.experimental.view-telemetry.enabled`.
   ([#20258](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20258))
 - Deprecate `otel.instrumentation.experimental.span-suppression-strategy` in favor of
   `otel.instrumentation.common.span-suppression-strategy` for Java agent users and
