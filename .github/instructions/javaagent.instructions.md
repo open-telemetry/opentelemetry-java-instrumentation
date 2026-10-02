@@ -19,8 +19,9 @@ Public enablement names describe selectable behavior, not Muzzle implementation 
 - Omit unversioned selectors that merely distinguish implementations, while retaining full
   module-directory primaries. Example: `mongo-async-3.3` has secondary `mongo`, not `mongo-async`.
 - Add role and feature selectors for useful, independently selectable behavior, not compatibility
-  helpers. Example: WebFlux has `spring-webflux-client` and `spring-webflux-server`; Reactor operator
-  bridges share ordinary Reactor selectors.
+  helpers. Examples: WebFlux has `spring-webflux-client` and `spring-webflux-server`; incubator API
+  integration adds `opentelemetry-api-incubator` before `opentelemetry-api`. Reactor operator bridges
+  share ordinary Reactor selectors.
 - API/product umbrellas can group the base component and related integrations. Membership follows
   the product/API being instrumented, not dependencies. Example: `armeria` includes HTTP and gRPC
   instrumentation; Apache `kafka` does not include Spring Kafka. Keep `reactor` scoped to core

@@ -56,6 +56,8 @@ Module names use `kebab-case`.
 
 Optional role and feature selectors are versionless, such as `ratpack-client` or `aws-sdk-sqs`,
 and precede component secondaries. Compatibility helpers share their parent's names.
+Incubator API integration uses the full `opentelemetry-api-<version>` primary,
+then `opentelemetry-api-incubator` and `opentelemetry-api`.
 Implementation splits such as `mongo-async-3.3` retain their directory primary but use only
 `mongo` as a secondary, without `mongo-async`.
 
