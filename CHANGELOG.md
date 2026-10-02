@@ -63,10 +63,9 @@
   `otel.instrumentation.common.experimental.controller-telemetry.enabled` and
   `otel.instrumentation.common.experimental.view-telemetry.enabled`.
   ([#20258](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20258))
-- Deprecate `otel.instrumentation.experimental.span-suppression-strategy` in favor of
-  `otel.instrumentation.common.span-suppression-strategy` for Java agent users and
-  `Experimental.setSpanSuppressionStrategy(...)` for library instrumentation users without
-  declarative configuration.
+- Promote Java agent span suppression configuration to the stable property
+  `otel.instrumentation.common.span-suppression-strategy`, deprecating
+  `otel.instrumentation.experimental.span-suppression-strategy`.
   ([#20259](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20259))
 - Deprecate `otel.instrumentation.oshi.experimental-metrics.enabled`,
   `ProcessMetrics`, and its `registerObservers(...)` methods in favor of `jvm.memory.used` and
