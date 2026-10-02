@@ -282,13 +282,11 @@
 - When `otel.instrumentation.common.v3-preview=true`, Hibernate, Hibernate procedure-call, Hystrix,
   and Twilio instrumentation are disabled by default.
   ([#20128](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20128))
-- With `otel.semconv-stability.opt-in=messaging`, JMS, Spring JMS, and Camel SJMS coordinate
-  processing ownership to avoid duplicate process telemetry and record duration for nested
-  processing.
-  ([#20140](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20140))
-- With `otel.semconv-stability.opt-in=messaging`, avoid duplicate Process spans for Camel-managed
-  Kafka, RabbitMQ, and SQS deliveries while preserving client spans for separate processing.
-  ([#20144](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20144))
+- With `otel.semconv-stability.opt-in=messaging`, avoid duplicate processing telemetry across
+  JMS, Spring JMS, Camel SJMS, and Camel-managed Kafka, RabbitMQ, and SQS deliveries, preserving
+  nested processing durations and client spans for separate processing.
+  ([#20140](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20140),
+  [#20144](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20144))
 - Emit SofaRPC client and server exceptions as log records when
   `otel.semconv.exception.signal.preview=logs` is enabled.
   ([#20253](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20253))
@@ -339,9 +337,10 @@
 - Handle cyclic exception cause chains without hanging error extraction across instrumentations or
   JMX rule parsing.
   ([#19625](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19625))
-- Prevent duplicate instrumentation of Pulsar message callbacks when a message listener is already
-  wrapped.
-  ([#19699](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19699))
+- Prevent duplicate Pulsar listener instrumentation and suppress duplicate receive spans during
+  nested deliveries, preserving the parent context for processing spans.
+  ([#19699](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19699),
+  [#20137](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20137))
 - Apache HttpAsyncClient pipelined requests now produce client spans.
   ([#19710](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19710))
 - Async Thrift server requests following a failed request on the same connection are no longer
@@ -353,10 +352,12 @@
 - Fix Spring Boot auto-configuration discovery so `otel.spring-starter.debug=true` enables the
   logging exporter.
   ([#19725](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19725))
-- Spring Rabbit listener deliveries now produce a single Process span and
-  `messaging.process.duration` recording instead of duplicate telemetry from Spring Rabbit and
-  RabbitMQ.
-  ([#19732](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19732))
+- Fix duplicate processing spans and metrics across Spring Rabbit, RabbitMQ, and Spring
+  Integration, preserving telemetry for separately registered consumers and correctly parented
+  handler spans.
+  ([#19732](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19732),
+  [#20138](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20138),
+  [#20200](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20200))
 - Oracle UCP pool metrics now use a JDBC-derived name instead of the generated UCP name,
   consolidating pools connected to the same database under a consistent `pool.name` or
   `db.client.connection.pool.name` value.
@@ -443,22 +444,12 @@
 - Prevent truncation of sanitized database and search queries from splitting Unicode surrogate
   pairs.
   ([#20123](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20123))
-- Fix Pulsar listener processing so nested deliveries suppress duplicate receive spans while
-  preserving the parent context for Process spans.
-  ([#20137](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20137))
-- Preserve RabbitMQ Process spans per consumer registration so Spring Rabbit deliveries do not
-  suppress processing telemetry for unrelated consumers.
-  ([#20138](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20138))
-- Fix Kafka Process-span ownership so framework-owned deliveries avoid duplicate spans without
-  suppressing unrelated batches.
-  ([#20139](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20139))
-- Correct Kafka Connect and Kafka Streams process-span ownership so framework-handled batches do not
-  also produce Kafka-client process spans, and record Kafka Connect consumed-message metrics for
-  each processing attempt.
-  ([#20142](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20142))
-- Prevent duplicate Kafka Process spans when Reactor Kafka or Vert.x callbacks own record
-  processing, including across asynchronous handoffs.
-  ([#20143](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20143))
+- Prevent duplicate Kafka processing spans across Kafka Connect, Kafka Streams, Reactor Kafka,
+  and Vert.x, including asynchronous handoffs, without suppressing unrelated batches. Record
+  Kafka Connect consumed-message metrics for each processing attempt.
+  ([#20139](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20139),
+  [#20142](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20142),
+  [#20143](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20143))
 - Apache ShenYu server instrumentation no longer throws when route metadata is null, allowing
   request processing to continue without a route value.
   ([#20148](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20148))
@@ -477,9 +468,6 @@
   ([#20194](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20194))
 - Prevent duplicate SQS processing spans when nested AWS Lambda handlers process the same event.
   ([#20195](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20195))
-- Spring Integration now records correctly parented `PROCESS` spans and metrics for handler
-  executions while avoiding duplicate processing telemetry during Spring Rabbit handoffs.
-  ([#20200](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20200))
 - Spring MVC server spans for Spring Boot Actuator endpoints now include the `http.route` attribute.
   ([#20216](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20216))
 - Fix missing reflection hints for Spring Kafka listener interceptor fields and OAuth bearer JWT
