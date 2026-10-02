@@ -14,15 +14,6 @@
 - The `ExperimentalJmxMetricHandler` SPI now requires implementations to provide `getMetricNames()`,
   so existing custom handlers must be updated before upgrading.
   ([#19781](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19781))
-- Remove `DbServerTargetBuilder.setMaxEndpoints(int)`; database target addresses are now limited to
-  five endpoints, including Geode locator targets.
-  ([#20017](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20017))
-- Replace the internal JDBC pool-naming API `JdbcConnectionPoolNameUtil` with
-  `JdbcConnectionPoolMetricsUtil`, requiring callers to migrate to the new `poolName` signature.
-  ([#20041](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20041))
-- Replace direct construction of `DbServerTarget` with `DbServerTarget.create(String, Integer)`, as
-  its package-private constructor now takes no arguments.
-  ([#20051](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20051))
 - Apache DBCP and Tomcat DBCP pool metrics now retain the name selected at initial registration
   instead of switching to the MBean `ObjectName` name when MBean registration happens later.
   ([#20248](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20248))
@@ -40,9 +31,6 @@
   ([#19837](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19837))
 - Deprecate `otel.jmx.enabled` in favor of `otel.instrumentation.jmx.enabled`.
   ([#19945](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19945))
-- Deprecate the `SelectorConfig.resolve` overloads without `SelectorConfig.Stability` in favor of
-  overloads that require callers to specify the stability explicitly.
-  ([#19969](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19969))
 - Deprecate reliance on javaagent rewriting of `VirtualField.find(Class, Class)` in favor of looking
   up the `VirtualField` once and reusing it.
   ([#19980](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19980))
@@ -250,6 +238,11 @@
 - Add the `aws.bedrock.guardrail.id` span attribute to AWS Bedrock Runtime requests when a guardrail
   identifier is configured.
   ([#20040](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20040))
+- With `otel.semconv-stability.opt-in=database`, connection pool metrics include configured
+  `db.system.name`, `db.namespace`, `server.address`, and `server.port` attributes. Pools without
+  an explicit name use the database namespace, configured endpoint, or database system name before
+  falling back to the pool-specific name.
+  ([#20041](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20041))
 - With `otel.semconv-stability.opt-in=messaging`, RocketMQ batch sends emit a `Create` span per
   message by default, configurable with
   `otel.instrumentation.rocketmq-client.message-create-spans.enabled`.
@@ -402,6 +395,8 @@
 - Reject database endpoints with scoped IPv6 zone IDs that begin with percent-encoded URI
   delimiters.
   ([#20015](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20015))
+- Limit database target addresses to five endpoints consistently, including Geode locator targets.
+  ([#20017](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20017))
 - The JDBC `OpenTelemetryDriver` now honors `otel.instrumentation.jdbc.query-sanitization.enabled`,
   so JDBC-specific query sanitization can override the common setting.
   ([#20020](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20020))
