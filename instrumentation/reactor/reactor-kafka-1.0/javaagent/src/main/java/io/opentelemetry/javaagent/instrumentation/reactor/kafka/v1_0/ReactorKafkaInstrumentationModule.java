@@ -20,7 +20,7 @@ public class ReactorKafkaInstrumentationModule extends InstrumentationModule {
     super(
         AgentCommonConfig.get().isV3Preview() ? "reactor-kafka-1.0" : "reactor-kafka",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"reactor-kafka", "reactor"}
+            ? new String[] {"reactor-kafka"}
             : new String[] {"reactor-kafka-1.0"});
   }
 

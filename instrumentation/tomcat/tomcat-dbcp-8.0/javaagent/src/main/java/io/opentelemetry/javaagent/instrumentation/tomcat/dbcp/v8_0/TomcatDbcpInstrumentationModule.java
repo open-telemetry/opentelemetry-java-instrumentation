@@ -19,7 +19,7 @@ public class TomcatDbcpInstrumentationModule extends InstrumentationModule {
     super(
         AgentCommonConfig.get().isV3Preview() ? "tomcat-dbcp-8.0" : "tomcat-dbcp",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"tomcat-dbcp", "tomcat"}
+            ? new String[] {"tomcat-dbcp"}
             : new String[] {"tomcat-dbcp-8.0"});
   }
 

@@ -71,6 +71,11 @@ product's operations. Membership follows product ownership, not historical alias
 nesting, or shared prefixes. For example, Vert.x HTTP and SQL instrumentation share `vertx`, but
 the general JDBC instrumentation used underneath a Vert.x application does not.
 
+The `reactor` and `tomcat` names are component selectors, not product umbrellas. Core Reactor
+context propagation shares `reactor`; Reactor Kafka and Reactor Netty clients use their own
+component selectors. Tomcat server instrumentation shares `tomcat`; DBCP and JDBC pools use
+their own component selectors.
+
 Place umbrellas after all component, baseline, role, and feature selectors so explicit component
 settings take precedence. Default-off features must not share any selector with default-on
 instrumentation. They use independent feature names, such as `kafka-clients-metrics`,

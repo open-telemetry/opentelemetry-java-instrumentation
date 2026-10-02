@@ -19,7 +19,7 @@ public class TomcatJdbcInstrumentationModule extends InstrumentationModule {
     super(
         AgentCommonConfig.get().isV3Preview() ? "tomcat-jdbc-8.5" : "tomcat-jdbc",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"tomcat-jdbc", "tomcat"}
+            ? new String[] {"tomcat-jdbc"}
             : new String[] {"tomcat-jdbc-8.5"});
   }
 

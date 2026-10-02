@@ -71,6 +71,10 @@ Standalone default-off feature modules use their full directory name as the prim
 followed by the versionless feature name. For example, `jaxrs-1.0-annotations` precedes
 `jaxrs-annotations`; neither shares `jaxrs` with default-on provider instrumentation.
 
+The `reactor` selector covers core context propagation, not Reactor Kafka or Reactor Netty clients.
+The `tomcat` selector covers server instrumentation, not DBCP or JDBC pools. Those integrations
+retain their own versioned primaries and versionless component selectors.
+
 The generic Reactor Netty server registration housed in `spring-webflux-5.0` uses primary
 `spring-webflux-5.0` and secondaries `reactor-netty-server`, `spring-webflux-server`, and
 `spring-webflux`, without `reactor-netty` or `reactor`. This cross-family selector exception applies

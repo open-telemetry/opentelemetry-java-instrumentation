@@ -31,7 +31,7 @@ public class ReactorNettyInstrumentationModule extends InstrumentationModule {
     super(
         AgentCommonConfig.get().isV3Preview() ? "reactor-netty-0.9" : "reactor-netty",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"reactor-netty", "reactor"}
+            ? new String[] {"reactor-netty"}
             : new String[] {"reactor-netty-0.9"});
   }
 

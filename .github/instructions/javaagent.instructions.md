@@ -22,8 +22,10 @@ Public enablement names describe selectable behavior, not Muzzle implementation 
   helpers. Example: WebFlux has `spring-webflux-client` and `spring-webflux-server`; Reactor operator
   bridges share ordinary Reactor selectors.
 - API/product umbrellas can group the base component and related integrations. Membership follows
-  the product/API being instrumented, not dependencies. Example: `tomcat` includes server and pool
-  instrumentation; Apache `kafka` does not include Spring Kafka.
+  the product/API being instrumented, not dependencies. Example: `armeria` includes HTTP and gRPC
+  instrumentation; Apache `kafka` does not include Spring Kafka. Keep `reactor` scoped to core
+  propagation, excluding Reactor Kafka and Reactor Netty clients; keep `tomcat` scoped to server
+  instrumentation, excluding DBCP and JDBC pools.
 - A default-off feature within a default-on component must have an independent identity and share
   no selector with default-on registrations. All-default-off groups may share selectors.
   Example: `jdbc-datasource` does not share `jdbc`; synchronous Hibernate and procedure calls share
