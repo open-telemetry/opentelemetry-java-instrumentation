@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -17,7 +18,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class SpringPulsarInstrumentationModule extends InstrumentationModule {
   public SpringPulsarInstrumentationModule() {
-    super("spring-pulsar", "spring-pulsar-1.0");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "spring-pulsar-1.0" : "spring-pulsar",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"spring-pulsar"}
+            : new String[] {"spring-pulsar-1.0"});
   }
 
   @Override

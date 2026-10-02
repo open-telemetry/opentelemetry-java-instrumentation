@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
@@ -138,6 +140,11 @@ class JerseyTest extends AbstractHttpServerUsingTest<Server> {
                             equalTo(USER_AGENT_ORIGINAL, TEST_USER_AGENT)),
                 span ->
                     span.hasName(controllerName)
+                        .satisfies(
+                            hasScopeName(
+                                v3Preview()
+                                    ? "io.opentelemetry.jaxrs-1.0-annotations"
+                                    : "io.opentelemetry.jaxrs-1.0"))
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             SemconvCodeStabilityUtil.codeFunctionAssertions(

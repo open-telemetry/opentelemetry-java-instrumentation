@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -16,7 +17,11 @@ import java.util.List;
 public class VertxRedisClientInstrumentationModule extends InstrumentationModule {
 
   public VertxRedisClientInstrumentationModule() {
-    super("vertx-redis-client", "vertx-redis-client-4.0", "vertx-redis-client-4.0-core", "vertx");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "vertx-redis-client-4.0" : "vertx-redis-client",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"vertx-redis-client", "vertx"}
+            : new String[] {"vertx-redis-client-4.0", "vertx-redis-client-4.0-core", "vertx"});
   }
 
   @Override

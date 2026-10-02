@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.instrumentation.internal.Depr
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -16,7 +17,11 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class CxfInstrumentationModule extends InstrumentationModule {
   public CxfInstrumentationModule() {
-    super("cxf", expandDeprecatedNames("jaxws-2.0-cxf-3.0|deprecated:jaxws-cxf-3.0", "jaxws"));
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "jaxws-2.0-cxf-3.0" : "cxf",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"jaxws-cxf", "jaxws"}
+            : expandDeprecatedNames("jaxws-2.0-cxf-3.0|deprecated:jaxws-cxf-3.0", "jaxws"));
   }
 
   @Override

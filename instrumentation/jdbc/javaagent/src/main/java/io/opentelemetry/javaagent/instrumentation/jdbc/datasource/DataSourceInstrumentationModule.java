@@ -15,6 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class DataSourceInstrumentationModule extends InstrumentationModule {
   public DataSourceInstrumentationModule() {
+    // Data source instrumentation is default-off, so it must not share JDBC selectors.
     super("jdbc-datasource");
   }
 

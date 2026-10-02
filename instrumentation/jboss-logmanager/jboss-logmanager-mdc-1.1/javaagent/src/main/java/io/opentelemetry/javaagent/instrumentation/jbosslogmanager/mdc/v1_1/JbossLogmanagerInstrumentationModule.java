@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jbosslogmanager.mdc.v1_1;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -16,7 +17,11 @@ import java.util.List;
 public class JbossLogmanagerInstrumentationModule extends InstrumentationModule {
 
   public JbossLogmanagerInstrumentationModule() {
-    super("jboss-logmanager-mdc", "jboss-logmanager-mdc-1.1");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "jboss-logmanager-mdc-1.1" : "jboss-logmanager-mdc",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"jboss-logmanager-mdc", "jboss-logmanager"}
+            : new String[] {"jboss-logmanager-mdc-1.1"});
   }
 
   @Override

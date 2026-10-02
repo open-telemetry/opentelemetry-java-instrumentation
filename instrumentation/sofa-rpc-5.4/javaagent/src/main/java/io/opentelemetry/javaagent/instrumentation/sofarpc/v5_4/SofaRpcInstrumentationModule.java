@@ -11,6 +11,7 @@ import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.HelperResourceBuilder;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -22,7 +23,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class SofaRpcInstrumentationModule extends InstrumentationModule {
   public SofaRpcInstrumentationModule() {
-    super("sofa-rpc", "sofa-rpc-5.4");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "sofa-rpc-5.4" : "sofa-rpc",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"sofa-rpc"}
+            : new String[] {"sofa-rpc-5.4"});
   }
 
   @Override

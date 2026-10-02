@@ -17,7 +17,11 @@ import java.util.List;
 public class HystrixInstrumentationModule extends InstrumentationModule {
 
   public HystrixInstrumentationModule() {
-    super("hystrix", "hystrix-1.4");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "hystrix-1.4" : "hystrix",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"hystrix"}
+            : new String[] {"hystrix-1.4"});
   }
 
   @Override

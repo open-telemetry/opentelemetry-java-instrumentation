@@ -9,7 +9,7 @@ muzzle {
     versions.set("[2.0.0,3.0.0)")
     assertInverse.set(true)
 
-    excludeInstrumentationName("jedis-2.3-cluster")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisClusterInstrumentationModule")
   }
   pass {
     // instrumentation-docs:ignore - verification only, the directive above is the range we document
@@ -19,7 +19,7 @@ muzzle {
     versions.set("[2.3.0,3.0.0)")
     assertInverse.set(true)
 
-    excludeInstrumentationName("jedis-2.0-core")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisInstrumentationModule")
   }
 }
 

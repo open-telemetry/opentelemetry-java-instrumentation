@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetry.extension.kotli
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -16,7 +17,13 @@ import java.util.List;
 public class ContextExtensionInstrumentationModule extends InstrumentationModule {
 
   public ContextExtensionInstrumentationModule() {
-    super("opentelemetry-extension-kotlin", "opentelemetry-extension-kotlin-1.0");
+    super(
+        AgentCommonConfig.get().isV3Preview()
+            ? "opentelemetry-extension-kotlin-1.0"
+            : "opentelemetry-extension-kotlin",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"opentelemetry-extension-kotlin"}
+            : new String[] {"opentelemetry-extension-kotlin-1.0"});
   }
 
   @Override

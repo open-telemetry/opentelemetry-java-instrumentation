@@ -10,6 +10,7 @@ import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.hbase.client.common.RetryingCallableInstrumentation;
@@ -20,7 +21,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class HbaseInstrumentationModule extends InstrumentationModule {
 
   public HbaseInstrumentationModule() {
-    super("hbase-client", "hbase-client-1.0");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "hbase-client-1.0" : "hbase-client",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"hbase-client"}
+            : new String[] {"hbase-client-1.0"});
   }
 
   @Override
