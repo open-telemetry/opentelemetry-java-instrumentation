@@ -4,10 +4,6 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
-- NATS JetStream settlement publishes now use the fixed `$JS.ACK publish` span name instead of
-  embedding the per-message subject; with `otel.semconv-stability.opt-in=messaging`, they emit
-  operation-specific `settle` client spans.
-  ([#19396](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19396))
 - Remove the deprecated `HostIdResource.REGISTRY_QUERY` constant.
   ([#19778](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19778))
 - The `ExperimentalJmxMetricHandler` SPI now requires implementations to provide `getMetricNames()`.
@@ -300,6 +296,10 @@
 - Prevent javaagent startup deadlocks caused by lazy context-storage initialization under
   class-loader locks.
   ([#19265](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19265))
+- Fix high-cardinality NATS JetStream settlement span names. Use `$JS.ACK publish` under legacy
+  semantic conventions and operation-specific `settle` client spans with
+  `otel.semconv-stability.opt-in=messaging`.
+  ([#19396](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19396))
 - Fix context propagation for tail-delegated Kotlin `@WithSpan` methods so their spans retain the
   correct caller context.
   ([#19446](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19446))
