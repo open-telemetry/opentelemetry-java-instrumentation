@@ -14,8 +14,6 @@
 - The `ExperimentalJmxMetricHandler` SPI now requires implementations to provide `getMetricNames()`,
   so existing custom handlers must be updated before upgrading.
   ([#19781](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19781))
-- Truncate captured OpenSearch `db.statement` query bodies to 32 KiB.
-  ([#19870](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19870))
 - Remove `DbServerTargetBuilder.setMaxEndpoints(int)`; database target addresses are now limited to
   five endpoints, including Geode locator targets.
   ([#20017](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20017))
@@ -375,6 +373,9 @@
 - Fix context propagation for Pekko batched tasks so spans created inside scheduled futures retain
   their correct parent.
   ([#19862](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19862))
+- Limit captured OpenSearch query bodies to 32,768 characters, matching the Elasticsearch query
+  capture limit.
+  ([#19870](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19870))
 - OpenSearch query body capture now uses the configured JSON provider, preserving mapper-specific
   serialization settings.
   ([#19875](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19875))
