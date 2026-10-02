@@ -198,35 +198,62 @@
 - Add metric-name filtering for JMX metrics with `otel.jmx.metrics.included` and
   `otel.jmx.metrics.excluded`, or `JmxTelemetryBuilder.setMetrics(IncludeExclude)` in the library.
   ([#19782](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19782))
-- With `otel.semconv-stability.opt-in=database`, Geode database spans report configured pool servers
-  or locators in `server.address` and `server.port` when applicable.
-  ([#19795](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19795))
+- With `otel.semconv-stability.opt-in=database`, report configured database targets in
+  `server.address` and `server.port` across Cassandra, ClickHouse, Couchbase, Elasticsearch,
+  Geode, HBase, Jedis, Lettuce, MongoDB, OpenSearch, R2DBC, Rediscala, Redisson, Spymemcached,
+  and Vert.x clients, with target-aware span names where applicable. HBase reports the logical
+  cluster or master target and no longer emits `server.port`. MongoDB library users can supply
+  seed addresses with `MongoTelemetry.createCommandListener(List<ServerAddress>)`; Cassandra
+  4.4 library users supply contact points with `CassandraTelemetry.wrap(session, contactPoints)`,
+  while the Java agent captures them automatically.
+  ([#19795](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19795),
+  [#19830](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19830),
+  [#19831](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19831),
+  [#19838](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19838),
+  [#19839](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19839),
+  [#19844](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19844),
+  [#19864](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19864),
+  [#19868](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19868),
+  [#19877](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19877),
+  [#19901](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19901),
+  [#19902](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19902),
+  [#19903](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19903),
+  [#19904](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19904),
+  [#19981](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19981),
+  [#19983](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19983),
+  [#20008](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20008),
+  [#20070](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20070),
+  [#20071](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20071),
+  [#20072](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20072),
+  [#20073](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20073),
+  [#20074](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20074),
+  [#20075](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20075),
+  [#20076](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20076),
+  [#20077](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20077),
+  [#20078](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20078),
+  [#20082](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20082),
+  [#20089](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20089))
+- With `otel.semconv-stability.opt-in=database`, add `network.peer.address` and
+  `network.peer.port` for the node handling database operations across Cassandra 4.x, ClickHouse,
+  Couchbase, Jedis 2.x, Lettuce, MongoDB, and Spymemcached. HBase 2.x adds `network.peer.address`;
+  Cassandra 4.0 also reports network-peer attributes on database metrics.
+  ([#19832](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19832),
+  [#19834](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19834),
+  [#19845](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19845),
+  [#19848](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19848),
+  [#19850](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19850),
+  [#19872](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19872),
+  [#19883](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19883),
+  [#20011](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20011),
+  [#20080](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20080),
+  [#20084](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20084),
+  [#20086](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20086))
 - RabbitMQ spans now include `messaging.rabbitmq.vhost.name` and `messaging.rabbitmq.cluster.name`
   when `otel.instrumentation.rabbitmq.experimental-span-attributes=true`.
   ([#19822](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19822))
 - JMX metric creation messages are now logged at `FINE` instead of `INFO`, reducing default log
   noise.
   ([#19825](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19825))
-- With `otel.semconv-stability.opt-in=database`, HBase client spans report the configured logical
-  cluster or master target in `server.address` instead of the contacted region-server host, and no
-  longer emit `server.port`.
-  ([#19830](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19830))
-- With `otel.semconv-stability.opt-in=database`, Couchbase 2.x spans report the configured logical
-  server in `server.address` and `server.port`.
-  ([#19831](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19831))
-- With `otel.semconv-stability.opt-in=database`, HBase 2.x client spans include the resolved remote
-  address in `network.peer.address`.
-  ([#19832](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19832))
-- Couchbase 2.0-2.5 spans now include `network.peer.address` and `network.peer.port` when
-  `otel.semconv-stability.opt-in=database` is enabled.
-  ([#19834](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19834))
-- With `otel.semconv-stability.opt-in=database`, report the configured logical Spymemcached server
-  target in `server.address` instead of the selected node.
-  ([#19838](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19838))
-- With `otel.semconv-stability.opt-in=database`, MongoDB spans report the configured logical server
-  target in `server.address` and `server.port`; library users can provide seed addresses with
-  `MongoTelemetry.createCommandListener(List<ServerAddress>)`.
-  ([#19839](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19839))
 - Akka HTTP server spans now include the remote peer address in network peer address attributes.
   ([#19840](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19840))
 - Pekko HTTP server spans now include `client.address` from the socket peer for HTTP/1.1 and HTTP/2
@@ -237,75 +264,22 @@
   ([#19842](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19842))
 - Ratpack HTTP client spans now include the `network.protocol.version` attribute.
   ([#19843](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19843))
-- With `otel.semconv-stability.opt-in=database` enabled, Couchbase 3.1 and 3.2 spans include
-  configured `server.address` (and `server.port` when available) and database-aware names.
-  ([#19844](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19844))
-- MongoDB client spans now include `network.peer.address` and `network.peer.port` when
-  `otel.semconv-stability.opt-in=database` is enabled.
-  ([#19845](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19845))
 - With `otel.semconv-stability.opt-in=database`, JDBC spans report the configured database target,
   including multiple hosts and ports, in `server.address`, and `service_peer_mapping` can match the
   full target.
   ([#19846](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19846))
-- When `otel.semconv-stability.opt-in=database` is enabled, Couchbase dispatch spans include
-  `network.peer.address` and `network.peer.port`.
-  ([#19848](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19848))
-- Report the Spymemcached handling node as `network.peer.address` and `network.peer.port` when
-  `otel.semconv-stability.opt-in=database` is enabled.
-  ([#19850](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19850))
-- With `otel.semconv-stability.opt-in=database`, Cassandra 3.x spans report the configured server
-  address and port in `server.address` and `server.port`.
-  ([#19864](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19864))
-- With `otel.semconv-stability.opt-in=database`, Cassandra 4.0 spans report configured contact
-  points in `server.address` and `server.port`.
-  ([#19868](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19868))
 - Add `otel.instrumentation.opensearch.query-sanitization.enabled` (default `true`) to control
   whether captured search query bodies are sanitized; set it to `false` to capture them verbatim.
   ([#19869](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19869))
-- With `otel.semconv-stability.opt-in=database`, Cassandra 4.0 spans and database metrics report
-  `network.peer.address` and `network.peer.port` from the response connection.
-  ([#19872](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19872))
-- Cassandra 4.4 instrumentation now records stable `server.address` and `server.port` from
-  configured contact points when `otel.semconv-stability.opt-in=database` is enabled; library users
-  pass them to `CassandraTelemetry.wrap(session, contactPoints)`, while the Java agent captures them
-  automatically.
-  ([#19877](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19877))
 - GenAI spans now include the `gen_ai.request.stream` attribute when the request uses streaming.
   ([#19879](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19879))
-- With `otel.semconv-stability.opt-in=database`, Cassandra 4.4 instrumentation emits
-  `network.peer.address` and `network.peer.port` from the response connection.
-  ([#19883](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19883))
-- With `otel.semconv-stability.opt-in=database`, Elasticsearch REST spans report the configured node
-  list in `server.address` and include the target in database span names.
-  ([#19901](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19901))
-- Elasticsearch transport client spans now report configured endpoints as `server.address` and
-  non-default ports as `server.port` when `otel.semconv-stability.opt-in=database` is enabled.
-  ([#19902](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19902))
-- With `otel.semconv-stability.opt-in=database`, OpenSearch REST client spans include the configured
-  server's `server.address` and `server.port` attributes.
-  ([#19903](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19903))
-- With `otel.semconv-stability.opt-in=database` enabled, OpenSearch Java 3.0 client spans include
-  `server.address` and `server.port` from configured endpoints.
-  ([#19904](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19904))
 - OpenAI Java 1.1 instrumentation now reports cached input token counts as
   `gen_ai.usage.cache_read.input_tokens` and reasoning output token counts as
   `gen_ai.usage.reasoning.output_tokens` when usage details are available.
   ([#19906](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19906))
-- With `otel.semconv-stability.opt-in=database`, R2DBC spans report normalized configured server
-  targets in `server.address` and `server.port`.
-  ([#19981](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19981))
-- With `otel.semconv-stability.opt-in=database`, Vert.x SQL client spans now report configured
-  `server.address` and `server.port` values for pools built from server lists.
-  ([#19983](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19983))
 - Support database server targets with unknown default ports, retaining endpoints without ports and
   rendering configured ports inline when needed.
   ([#19988](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19988))
-- With `otel.semconv-stability.opt-in=database`, ClickHouse spans report configured server endpoints
-  in stable `server.address` and `server.port` attributes.
-  ([#20008](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20008))
-- Emit `network.peer.address` and `network.peer.port` for the ClickHouse endpoint that handled each
-  operation when `otel.semconv-stability.opt-in=database` is enabled.
-  ([#20011](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20011))
 - Add the `aws.bedrock.guardrail.id` span attribute to AWS Bedrock Runtime requests when a guardrail
   identifier is configured.
   ([#20040](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20040))
@@ -319,49 +293,6 @@
 - With `otel.semconv-stability.opt-in=database` enabled, OpenSearch spans no longer populate
   `db.query.text` with a synthetic method-and-endpoint value when the request body is absent.
   ([#20068](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20068))
-- With `otel.semconv-stability.opt-in=database`, Redisson database spans use the configured Redis
-  server target rather than the active connection endpoint for `server.address` and `server.port`.
-  ([#20070](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20070))
-- With `otel.semconv-stability.opt-in=database`, Jedis 3.x spans use configured Redis targets for
-  `server.address` and `server.port` when available.
-  ([#20071](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20071))
-- With `otel.semconv-stability.opt-in=database`, Lettuce 4 spans report configured Redis targets in
-  `server.address` and span names instead of only the connected node.
-  ([#20072](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20072))
-- With `otel.semconv-stability.opt-in=database`, Jedis 2.x spans report configured Redis targets in
-  `server.address` and, when available, `server.port`, including cluster, Sentinel, and sharded
-  clients.
-  ([#20073](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20073))
-- With `otel.semconv-stability.opt-in=database`, Jedis 1.4 spans report the configured Redis server
-  address and port, including configured targets for sharded clients.
-  ([#20074](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20074))
-- With `otel.semconv-stability.opt-in=database`, Rediscala spans report configured Redis server
-  targets through `server.address` and `server.port`.
-  ([#20075](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20075))
-- Use the configured Redis target for `server.address` and `server.port` on Vert.x Redis 4.x spans
-  when `otel.semconv-stability.opt-in=database` is enabled.
-  ([#20076](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20076))
-- With `otel.semconv-stability.opt-in=database`, Lettuce 5.0+ spans use the configured Redis target
-  for `server.address` and `server.port`.
-  ([#20077](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20077))
-- With `otel.semconv-stability.opt-in=database`, Jedis 4 spans report configured Redis targets in
-  `server.address` instead of only the node handling the command.
-  ([#20078](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20078))
-- Lettuce 5 database spans now include network peer address and port when
-  `otel.semconv-stability.opt-in=database` is enabled.
-  ([#20080](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20080))
-- Vert.x Redis 4.4.5 spans now report the configured Redis target in `server.address` when
-  `otel.semconv-stability.opt-in=database` is enabled.
-  ([#20082](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20082))
-- Jedis 2.x client spans now include socket peer attributes when
-  `otel.semconv-stability.opt-in=database` is enabled.
-  ([#20084](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20084))
-- Capture `network.peer.address` and `network.peer.port` for Lettuce 4 Redis spans when
-  `otel.semconv-stability.opt-in=database` is enabled.
-  ([#20086](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20086))
-- With `otel.semconv-stability.opt-in=database`, Couchbase Protostellar request spans include the
-  configured target as `server.address` and, when available, `server.port`.
-  ([#20089](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20089))
 - Make `host.id` resource detection opt-in for the Java agent with
   `otel.resource.providers.host-id.enabled=true`.
   ([#20099](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20099))
