@@ -123,10 +123,6 @@
 - Add `WARNING` logs for invalid or empty extension locations and failed extension JAR loads, plus
   `FINE` logs for successfully loaded extension JARs.
   ([#19584](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19584))
-- Sanitize captured Elasticsearch REST Java agent search query bodies by default, replacing
-  literal values with `?` while preserving the query structure. Disable sanitization with
-  `otel.instrumentation.elasticsearch.query-sanitization.enabled=false`.
-  ([#19675](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19675))
 - The JMX metrics library now includes the experimental Kafka broker metrics target.
   ([#19722](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19722))
 - Update the descriptions of `kafka.connect.connector.status` and `kafka.connect.task.status` to
@@ -301,6 +297,10 @@
 - Handle cyclic exception cause chains without hanging error extraction across instrumentations or
   JMX rule parsing.
   ([#19625](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19625))
+- Sanitize captured Elasticsearch REST Java agent search query bodies by default, replacing
+  literal values with `?` while preserving the query structure. Disable sanitization with
+  `otel.instrumentation.elasticsearch.query-sanitization.enabled=false`.
+  ([#19675](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19675))
 - Prevent duplicate Pulsar listener instrumentation and suppress duplicate receive spans during
   nested deliveries, preserving the parent context for processing spans.
   ([#19699](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19699),
