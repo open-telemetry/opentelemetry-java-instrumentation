@@ -27,7 +27,7 @@
   ([#19783](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19783))
 - Deprecate `otel.instrumentation.opensearch.capture-search-query`. It will be removed in 3.0,
   when search query bodies are always captured. There is no replacement. Sanitization remains
-  configurable with `otel.instrumentation.opensearch.query-sanitization.enabled`.
+  enabled by default and configurable with `otel.instrumentation.opensearch.query-sanitization.enabled`.
   ([#19837](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19837))
 - Deprecate `otel.jmx.enabled` in favor of `otel.instrumentation.jmx.enabled`.
   ([#19945](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19945))
