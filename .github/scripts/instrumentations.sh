@@ -346,6 +346,8 @@ readonly INSTRUMENTATIONS=(
   "spymemcached-2.12:javaagent:test"
   "spymemcached-2.12:javaagent:testExperimental"
   "spymemcached-2.12:javaagent:testStableSemconv"
+  "storm:storm-2.0:javaagent:test"
+  "storm:storm-2.0:javaagent:testMessagingPreview"
   "struts:struts-2.3:javaagent:test"
   "struts:struts-7.0:javaagent:test"
   "tapestry-5.4:javaagent:test"
