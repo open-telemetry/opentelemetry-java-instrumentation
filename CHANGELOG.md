@@ -42,8 +42,12 @@
   leaf; v3-preview ignores the deprecated header settings.
   ([#20060](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20060),
   [#20260](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20260))
-- Deprecate source-specific capture properties for Log4j `MapMessage` entries,
-  Logback key-value pairs, Logstash markers, and Logstash structured arguments in favor of
+- Deprecate the `.included` / `.excluded` properties under
+  `otel.instrumentation.log4j-appender.experimental.map-message-attributes`,
+  `otel.instrumentation.logback-appender.experimental.key-value-pair-attributes`,
+  `otel.instrumentation.logback-appender.experimental.logstash-marker-attributes`, and
+  `otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes`
+  in favor of the stable
   `otel.instrumentation.common.logging.structured-attributes.included` / `.excluded`.
   ([#20066](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20066))
 - Deprecate `otel.instrumentation.couchbase.experimental-span-attributes` in favor of
