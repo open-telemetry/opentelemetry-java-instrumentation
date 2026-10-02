@@ -14,6 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.apachecommonspool.CommonsPoolMetricsSuppression;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -92,6 +93,9 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
         return;
       }
 
+      if (!AgentCommonConfig.get().isV3Preview()) {
+        telemetry().unregisterMetrics(dataSource);
+      }
       ApacheDbcpSingletons.registerMetrics(dataSource, getDataSourceName(objectName));
     }
   }

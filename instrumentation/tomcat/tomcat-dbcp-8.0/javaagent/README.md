@@ -13,5 +13,9 @@ the pool name. With legacy database semantic conventions, the derived format is
 `server.address[:server.port][/db.namespace]`. With stable database semantic conventions, the first
 available value among `db.namespace`, the configured endpoint
 (`server.address[:server.port]`), and `db.system.name` is used. If none is available, `tomcat-dbcp`
-is used. The pool name selected when metrics are first registered is retained until the pool is
-closed, including when MBean registration occurs later.
+is used.
+
+By default, MBean registration after pool initialization updates the pool name to the JMX name.
+This also applies when `otel.semconv-stability.opt-in=database` is set. With
+`otel.instrumentation.common.v3-preview=true`, the pool name selected when metrics are first
+registered is retained until the pool is closed, including when MBean registration occurs later.

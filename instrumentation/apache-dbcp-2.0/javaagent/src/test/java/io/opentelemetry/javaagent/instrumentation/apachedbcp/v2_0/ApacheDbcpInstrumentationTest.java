@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.apachedbcp.AbstractApacheDbcpInstrumentationTest;
@@ -155,7 +156,7 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
   }
 
   @Test
-  void shouldKeepDataSourceNameWhenMBeanIsRegisteredAfterPoolStart() throws Exception {
+  void shouldUpdateDataSourceNameOnLateMBeanRegistrationOnlyOutsideV3Preview() throws Exception {
     BasicDataSource dataSource = createDataSource();
     dataSource.setUrl("jdbc:postgresql://db.example:5432/orders");
     ObjectName objectName =
@@ -168,7 +169,10 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
 
       objectName = mbeanServer.registerMBean(dataSource, objectName).getObjectName();
       testing.clearData();
-      assertDataSourceMetrics(emitStableDatabaseSemconv() ? "orders" : "db.example:5432/orders");
+      assertDataSourceMetrics(
+          v3Preview()
+              ? (emitStableDatabaseSemconv() ? "orders" : "db.example:5432/orders")
+              : "lateRegisteredPool");
     } finally {
       dataSource.close();
       if (mbeanServer.isRegistered(objectName)) {
