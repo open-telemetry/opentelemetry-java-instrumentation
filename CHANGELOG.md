@@ -104,10 +104,9 @@
 
 ### 🌟 New javaagent instrumentation
 
-- Add database connection-pool metrics for Redisson versions `[2.3.0,3.18.0)`.
-  ([#19152](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19152))
-- Add database connection pool metrics instrumentation for Redisson 3.18–3.25.
-  ([#19634](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19634))
+- Add Redisson database connection pool metrics for versions 2.3.0 through 3.25.
+  ([#19152](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19152),
+  [#19634](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19634))
 - Add Java agent instrumentation for Pekko remoting so trace context propagates across remote calls.
   ([#19823](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19823))
 - Add Java agent instrumentation for Couchbase SDK 3.0.
@@ -161,9 +160,11 @@
   exception class in `error.type`, while OpenSearch Java spans report the HTTP status code for
   OpenSearch errors.
   ([#19749](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19749))
-- Enable HBase database client exception log events with
-  `otel.semconv.exception.signal.preview=logs`.
-  ([#19750](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19750))
+- Add exception-log support for HBase database clients, SofaRPC clients and servers, and GWT RPC
+  with `otel.semconv.exception.signal.preview=logs`.
+  ([#19750](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19750),
+  [#20253](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20253),
+  [#20254](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20254))
 - Report the selected Redis database index as `db.namespace` on Rediscala spans.
   ([#19753](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19753))
 - With `otel.semconv-stability.opt-in=database`, Spymemcached `getBulk` and `getAndTouch` spans use
@@ -287,12 +288,6 @@
   nested processing durations and client spans for separate processing.
   ([#20140](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20140),
   [#20144](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20144))
-- Emit SofaRPC client and server exceptions as log records when
-  `otel.semconv.exception.signal.preview=logs` is enabled.
-  ([#20253](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20253))
-- GWT RPC failures are emitted as exception logs instead of span events when
-  `otel.semconv.exception.signal.preview=logs` is enabled.
-  ([#20254](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20254))
 - Add the semantic-conventions schema URL to runtime JVM metrics covered by the schema.
   ([#20255](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20255))
 - GraphQL operation spans now use the OpenTelemetry semantic conventions v1.44.0 schema URL.
@@ -319,8 +314,8 @@
 - Lettuce 5.1 client spans for Redis command failures now have error status and record the Redis
   error prefix in `error.type`.
   ([#19075](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19075))
-- Initialize context storage before installing instrumentations to prevent deadlocks caused by lazy
-  initialization under class-loader locks.
+- Prevent javaagent startup deadlocks caused by lazy context-storage initialization under
+  class-loader locks.
   ([#19265](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19265))
 - Fix context propagation for tail-delegated Kotlin `@WithSpan` methods so their spans retain the
   correct caller context.
@@ -343,9 +338,10 @@
 - Suppress duplicate Apache Commons Pool metrics for pools backing an Apache DBCP `BasicDataSource`
   when both instrumentations are enabled.
   ([#19721](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19721))
-- Fix Spring Boot auto-configuration discovery so `otel.spring-starter.debug=true` enables the
-  logging exporter.
-  ([#19725](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19725))
+- Fix Spring Boot starter debug logging for both `otel.spring-starter.debug=true` and declarative
+  `spring_starter.debug: true` configuration.
+  ([#19725](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19725),
+  [#20034](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20034))
 - Fix duplicate processing spans and metrics across Spring Rabbit, RabbitMQ, and Spring
   Integration, preserving telemetry for separately registered consumers and correctly parented
   handler spans.
@@ -382,8 +378,8 @@
   ([#19829](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19829))
 - OpenAI chat completion spans now use the `CLIENT` span kind.
   ([#19858](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19858))
-- Instrument the RocketMQ `ConsumeService` constructor overload with `MessageListener` at argument 2
-  so message consumption spans are created for that constructor as well.
+- Fix missing RocketMQ message-consumption spans for an additional `ConsumeService` constructor
+  overload.
   ([#19860](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19860))
 - Fix context propagation for Pekko batched tasks so spans created inside scheduled futures retain
   their correct parent.
@@ -402,8 +398,7 @@
 - AWS Lambda instrumentation now extracts the X-Ray trace header from `Context.getXrayTraceId()` to
   continue the incoming trace.
   ([#19920](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19920))
-- Fixes a scope leak in Thrift server request processing so the request context no longer remains
-  active after processing completes.
+- Fix a context scope leak in Thrift server request processing.
   ([#19925](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19925))
 - Vert.x SQL client 5 database spans now report the configured database targets.
   ([#19986](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19986))
@@ -418,9 +413,6 @@
 - The JDBC `OpenTelemetryDriver` now honors `otel.instrumentation.jdbc.query-sanitization.enabled`,
   so JDBC-specific query sanitization can override the common setting.
   ([#20020](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20020))
-- The Spring Boot starter now enables span logging when declarative configuration sets
-  `spring_starter.debug` to `true`.
-  ([#20034](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20034))
 - Fix inaccurate durations for Kafka producer and consumer interceptor spans by ending them
   immediately, since the interceptors cannot measure broker send or poll time.
   ([#20044](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20044))
