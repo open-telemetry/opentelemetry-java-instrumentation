@@ -66,41 +66,41 @@ or use the helper script that will run only the currently supported tests (recom
 
 ## Instrumentation Hierarchy
 
-An "InstrumentationModule" represents a module that targets specific code in a
-framework/library/technology. Each module will have a name, a namespace, and a group.
+The repository contains flat modules, version groups, and nested framework groups. For example:
 
-Using these structures as examples:
-
-```
-├── instrumentation
-│   ├── clickhouse-client-05
-│   ├── jaxrs
-│   │   ├── jaxrs-1.0-annotations
-│   │   ├── jaxrs-2.0
-│   ├── spring
-│   │   ├── spring-cloud-gateway
-│   │   │   ├── spring-cloud-gateway-2.0
-│   │   │   ├── spring-cloud-gateway-2.2
-│   │   │   └── spring-cloud-gateway-common
+```text
+instrumentation/
+├── grpc-1.6/
+├── netty/
+│   ├── netty-3.8/
+│   └── netty-4.1/
+└── spring/
+    └── spring-webmvc/
+        ├── spring-webmvc-3.1/
+        └── spring-webmvc-6.0/
 ```
 
-Results in the following:
+The doc generator uses the full module-directory name as the module's name. Namespace and group
+currently both use the prefix before the first hyphen in that name, regardless of directory nesting:
 
-- Name - the full name of the instrumentation module
-  - `clickhouse-client-05`, `jaxrs-1.0-annotations`, `spring-cloud-gateway-2.0`
-- Namespace - direct parent. if none, use name and strip version
-  - `clickhouse-client`, `jaxrs`, `spring-cloud-gateway`
-- Group - top most parent
-  - `clickhouse-client`, `jaxrs`, `spring`
+| Module name         | Namespace | Group    |
+| ------------------- | --------- | -------- |
+| `grpc-1.6`          | `grpc`    | `grpc`   |
+| `netty-4.1`         | `netty`   | `netty`  |
+| `spring-webmvc-3.1` | `spring`  | `spring` |
 
-This information is also referenced in `InstrumentationModule` code for each module:
+Namespace and group are documentation groupings, not javaagent enablement selectors.
+The names registered by a javaagent `InstrumentationModule` determine its selectors. In v3 preview,
+the primary normally matches the full module-directory name, followed by a versionless secondary:
 
 ```java
-public class SpringWebInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
-  public SpringWebInstrumentationModule() {
-    super("spring-web", "spring-web-3.1");
-  }
+public SpringWebMvcInstrumentationModule() {
+  super(
+      AgentCommonConfig.get().isV3Preview() ? "spring-webmvc-3.1" : "spring-webmvc",
+      AgentCommonConfig.get().isV3Preview()
+          ? new String[] {"spring-webmvc"}
+          : new String[] {"spring-webmvc-3.1"});
+}
 ```
 
 ## Instrumentation metadata
@@ -110,8 +110,7 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
   - `internal` - Instrumentation that is used internally by the OpenTelemetry Java Agent
   - `custom` - Utilities that are used to create custom instrumentation
 - name
-  - Identifier for instrumentation module, used to enable/disable
-  - Configured in `InstrumentationModule` code for each module
+  - Identifier derived from the full instrumentation module-directory name
 - semantic_conventions
   - The semantic conventions that the instrumentation module adheres to
   - Options are:
