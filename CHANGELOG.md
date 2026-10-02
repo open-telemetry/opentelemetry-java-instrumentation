@@ -28,10 +28,8 @@
 - Apache DBCP and Tomcat DBCP pool metrics now retain the name selected at initial registration
   instead of switching to the MBean `ObjectName` name when MBean registration happens later.
   ([#20248](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20248))
-- Common messaging header selectors move from
-  `otel.instrumentation.common.messaging.experimental.headers.included` and `.excluded` to
-  `otel.instrumentation.common.messaging.headers.included` and `.excluded`, and from
-  `java.common.messaging.headers/development` to `java.common.messaging.headers`.
+- The experimental `java.common.messaging.headers/development` YAML selector no longer configures
+  header capture. Use `java.common.messaging.headers` instead.
   ([#20260](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20260))
 
 ### 🚫 Deprecations
@@ -39,8 +37,9 @@
 - Deprecate `otel.jmx.target.system` (YAML: `java.jmx.target.system`) in favor of
   `otel.jmx.metrics.experimental.included` (YAML: `java.jmx.metrics.experimental.included`).
   ([#19783](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19783))
-- Deprecate `otel.instrumentation.opensearch.capture-search-query` in favor of always capturing
-  sanitized search query bodies in 3.0.
+- Deprecate `otel.instrumentation.opensearch.capture-search-query`. It will be removed in 3.0,
+  when search query bodies are always captured. There is no replacement. Sanitization remains
+  configurable with `otel.instrumentation.opensearch.query-sanitization.enabled`.
   ([#19837](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19837))
 - Deprecate `otel.jmx.enabled` in favor of `otel.instrumentation.jmx.enabled`.
   ([#19945](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19945))
@@ -54,13 +53,15 @@
   Elasticsearch Java API Client's native OpenTelemetry support; applications using `RestClient`
   directly can use the Java agent or migrate to the Java API Client.
   ([#19995](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19995))
-- Deprecate `otel.instrumentation.messaging.experimental.receive-telemetry.enabled`,
-  `otel.instrumentation.messaging.experimental.headers.included`, and
-  `otel.instrumentation.messaging.experimental.headers.excluded` in favor of
-  `otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled`,
-  `otel.instrumentation.common.messaging.experimental.headers.included`, and
-  `otel.instrumentation.common.messaging.experimental.headers.excluded`, respectively.
-  ([#20060](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20060))
+- Deprecate `otel.instrumentation.messaging.experimental.receive-telemetry.enabled` in favor of
+  `otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled`. For headers,
+  replace `otel.instrumentation.messaging.experimental.headers.included` and `.excluded` with
+  `otel.instrumentation.common.messaging.headers.included` and `.excluded`. Also deprecate
+  `otel.instrumentation.messaging.experimental.capture-headers` in favor of
+  `otel.instrumentation.common.messaging.headers.included`. Stable selectors take precedence per
+  leaf; v3-preview ignores the deprecated header settings.
+  ([#20060](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20060),
+  [#20260](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20260))
 - Deprecate `otel.instrumentation.log4j-appender.experimental.map-message-attributes.included`,
   `java.log4j_appender.map_message_attributes/development.included`,
   `otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes`,
@@ -117,6 +118,9 @@
   `java.oshi.experimental_metrics/development.enabled`, `ProcessMetrics`, and its
   `registerObservers(...)` methods in favor of `jvm.memory.used` and `jvm.cpu.time`.
   ([#20323](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20323))
+- Deprecate `SystemMetrics.registerObservers(Meter)` in the OSHI library instrumentation in favor of
+  `SystemMetrics.registerObservers(OpenTelemetry)`.
+  ([#20263](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20263))
 - Deprecate dotted instrumentation selectors in `distribution.javaagent.instrumentation.enabled` and
   `distribution.javaagent.instrumentation.disabled` in favor of selectors with periods replaced by
   underscores.
@@ -124,7 +128,7 @@
 
 ### 🌟 New javaagent instrumentation
 
-- Add database connection-pool metrics for Redisson 2.3+.
+- Add database connection-pool metrics for Redisson versions `[2.3.0,3.18.0)`.
   ([#19152](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19152))
 - Add database connection pool metrics instrumentation for Redisson 3.18–3.25.
   ([#19634](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19634))
@@ -147,8 +151,8 @@
   ([#19483](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19483))
 - With `otel.semconv-stability.opt-in=messaging`, SQS batch sends emit a `create` span for each
   eligible message by default; disable this with
-  `otel.instrumentation.aws-sdk.batch-send.message-creation-spans.enabled=false`, which overrides
-  `otel.instrumentation.messaging.batch-send.message-creation-spans.enabled`.
+  `otel.instrumentation.aws-sdk.message-create-spans.enabled=false`, which overrides
+  `otel.instrumentation.common.messaging.message-create-spans.enabled`.
   ([#19485](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19485))
 - Apache Camel 2.20 instrumentation now emits `messaging.client.operation.duration`,
   `messaging.client.sent.messages`, `messaging.client.consumed.messages`, and
