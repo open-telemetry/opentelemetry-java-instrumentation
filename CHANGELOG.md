@@ -51,7 +51,7 @@
   `otel.instrumentation.logback-appender.experimental.key-value-pair-attributes`,
   `otel.instrumentation.logback-appender.experimental.logstash-marker-attributes`, and
   `otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes`
-  in favor of the stable
+  in favor of the stable and unified
   `otel.instrumentation.common.logging.structured-attributes.included` / `.excluded`.
   ([#20066](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20066))
 - Deprecate `otel.instrumentation.couchbase.experimental-span-attributes` in favor of
