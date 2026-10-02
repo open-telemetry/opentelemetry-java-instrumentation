@@ -23,7 +23,8 @@
   when search query bodies are always captured. There is no replacement. Sanitization remains
   enabled by default and configurable with `otel.instrumentation.opensearch.query-sanitization.enabled`.
   ([#19837](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19837))
-- Deprecate `otel.jmx.enabled` in favor of `otel.instrumentation.jmx.enabled`.
+- Deprecate `otel.jmx.enabled` in favor of `otel.instrumentation.jmx.enabled` to align with
+  other instrumentation enablement properties.
   ([#19945](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19945))
 - Deprecate automatic rewriting of `VirtualField.find(Class, Class)` calls in inlined javaagent
   advice. Instead, look up the `VirtualField` once and store it in a helper class's `static final`
@@ -51,7 +52,8 @@
   `otel.instrumentation.common.logging.structured-attributes.included` / `.excluded`.
   ([#20066](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20066))
 - Deprecate `otel.instrumentation.couchbase.experimental-span-attributes` in favor of
-  `otel.instrumentation.couchbase.emit-experimental-telemetry`.
+  `otel.instrumentation.couchbase.emit-experimental-telemetry`, which also controls experimental
+  internal spans from the underlying Couchbase 3.x client under v3-preview.
   ([#20117](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20117))
 - Deprecate `otel.traces.sampler=linksbased_parentbased_always_on` with no replacement and
   declarative `rule_based_routing` in favor of the SDK incubator composite/development `rule_based`
