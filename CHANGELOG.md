@@ -33,9 +33,9 @@
   advice. Instead, look up the `VirtualField` once and store it in a helper class's `static final`
   field. The `find` method itself remains supported.
   ([#19980](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19980))
-- Deprecate the Elasticsearch REST library instrumentation. Java API Client users should use its
-  native OpenTelemetry support; applications using `RestClient` directly can use the Java agent
-  or migrate to the Java API Client. Java agent instrumentation is unaffected.
+- Deprecate the Elasticsearch REST library instrumentation. Use the Elasticsearch Java API Client's
+  native OpenTelemetry support, or the Java agent for direct `RestClient` usage. Java agent
+  instrumentation is unaffected.
   ([#19995](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19995))
 - Deprecate `otel.instrumentation.messaging.experimental.receive-telemetry.enabled` in favor of
   `otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled`. For headers,
