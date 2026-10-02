@@ -25,8 +25,9 @@
   ([#19837](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19837))
 - Deprecate `otel.jmx.enabled` in favor of `otel.instrumentation.jmx.enabled`.
   ([#19945](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19945))
-- Deprecate reliance on javaagent rewriting of `VirtualField.find(Class, Class)` in favor of looking
-  up the `VirtualField` once and reusing it.
+- Deprecate automatic rewriting of `VirtualField.find(Class, Class)` calls in inlined javaagent
+  advice. Instead, look up the `VirtualField` once and store it in a helper class's `static final`
+  field. The `find` method itself remains supported.
   ([#19980](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19980))
 - Deprecate the Elasticsearch REST library instrumentation. Java API Client users should use its
   native OpenTelemetry support; applications using `RestClient` directly can use the Java agent
