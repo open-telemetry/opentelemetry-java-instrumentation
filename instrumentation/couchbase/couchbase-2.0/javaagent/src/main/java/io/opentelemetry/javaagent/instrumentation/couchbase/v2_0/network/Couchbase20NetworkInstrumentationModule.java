@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.v2_0;
+package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
@@ -21,9 +21,9 @@ import net.bytebuddy.matcher.ElementMatcher;
  * it independently when the pre-2.6 core networking classes are not present.
  */
 @AutoService(InstrumentationModule.class)
-public class CouchbaseNetworkInstrumentationModule extends InstrumentationModule {
+public class Couchbase20NetworkInstrumentationModule extends InstrumentationModule {
 
-  public CouchbaseNetworkInstrumentationModule() {
+  public Couchbase20NetworkInstrumentationModule() {
     super(
         "couchbase",
         AgentCommonConfig.get().isV3Preview()
@@ -39,6 +39,7 @@ public class CouchbaseNetworkInstrumentationModule extends InstrumentationModule
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new CouchbaseCoreNetworkInstrumentation(), new CouchbaseNetworkInstrumentation());
+    return asList(
+        new CouchbaseCoreNetworkInstrumentation(), new Couchbase20NetworkInstrumentation());
   }
 }
