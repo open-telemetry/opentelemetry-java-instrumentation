@@ -39,8 +39,7 @@
       matchManagers: [
         'github-actions',
         'dockerfile',
-        // commented out to see whether weekly update passes without this line
-        // 'custom.regex',
+        'custom.regex',
       ],
       schedule: [
         '* 0-7 * * 2', // weekly, before 8am on Tuesday
@@ -532,8 +531,9 @@
         '**/*.java',
       ],
       matchStrings: [
-        '"(?<depName>otel/weaver):(?<currentValue>[^"]+)"',
+        '"(?<depName>otel/weaver):(?<currentValue>[^"@]+)(?:@(?<currentDigest>sha256:[0-9a-f]+))?"',
       ],
+      autoReplaceStringTemplate: '"{{{depName}}}:{{{newValue}}}{{#if newDigest}}@{{{newDigest}}}{{/if}}"',
     },
     {
       customType: 'regex',
