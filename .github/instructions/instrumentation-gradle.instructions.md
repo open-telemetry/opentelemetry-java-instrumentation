@@ -16,7 +16,9 @@ or test failure that CI will report.
   instrumentation. In shared modules, use a `-common`
   suffix qualified by the minimum version or API variant only when needed. For new javaagent
   modules, check that Muzzle covers their supported ranges and that the main enablement name
-  matches the module directory without its version suffix. Include new test variants in
+  matches the module directory without its version suffix. Standalone default-off feature
+  modules may instead use the full directory name first, followed by the versionless feature
+  name; neither may be shared with default-on instrumentation. Include new test variants in
   `.github/scripts/instrumentations.sh`, keep `settings.gradle.kts` entries alphabetical,
   add the supported-library entry, and regenerate `.fossa.yml` with
   `generateFossaConfiguration` when adding a module. For a new javaagent module with user-facing

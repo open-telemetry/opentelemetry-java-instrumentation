@@ -65,7 +65,9 @@ public abstract class InstrumentationModule implements Ordered {
    * <p>Default-off features, e.g. {@code kafka-clients-metrics} or {@code jdbc-datasource}, use
    * independent feature selectors when their library's other instrumentation is default-on. They
    * must not share family, baseline, or umbrella selectors with default-on instrumentation. An
-   * umbrella whose members are all default-off can enable them together.
+   * umbrella whose members are all default-off can enable them together. Standalone default-off
+   * feature modules may use their full directory name first, followed by their versionless feature
+   * name, e.g. {@code jaxrs-1.0-annotations}, {@code jaxrs-annotations}.
    *
    * <p>Names use kebab-case. Umbrella membership follows product ownership, not directory nesting
    * or a shared prefix. Module classes may share all their public names; separate compatibility

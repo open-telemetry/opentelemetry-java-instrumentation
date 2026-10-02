@@ -565,6 +565,45 @@ class JavaagentSelectorNamesTest(unittest.TestCase):
         self.module("http-5.0", "MetricsModule.java", '"http-metrics", "http-5.0"', default="false")
         self.assertIn("versioned feature selectors are not supported", check(self.root)[0])
 
+    def test_standalone_default_off_feature_can_use_module_name_first(self):
+        for version in ("5.0", "6.0"):
+            self.module(
+                f"http-{version}-metrics", "MetricsModule.java",
+                f'"http-{version}-metrics", "http-metrics"', default="false",
+            )
+        self.module("http-5.0", "ClientModule.java", '"http", "http-5.0"')
+        self.assertEqual(check(self.root), [])
+
+    def test_standalone_default_off_feature_requires_versionless_name_second(self):
+        self.module(
+            "http-5.0-metrics", "MetricsModule.java",
+            '"http-5.0-metrics"', default="false",
+        )
+        self.assertIn("expected first selectors", check(self.root)[0])
+
+    def test_standalone_default_off_feature_primary_must_match_module_directory(self):
+        self.module(
+            "http-5.0-metrics", "MetricsModule.java",
+            '"http-6.0-metrics", "http-metrics"', default="false",
+        )
+        self.assertIn("versioned feature selectors are not supported", check(self.root)[0])
+
+    def test_default_on_feature_cannot_use_module_name_first(self):
+        self.module(
+            "http-5.0-metrics", "MetricsModule.java", '"http-5.0-metrics", "http-metrics"',
+        )
+        self.assertIn("expected first selectors", check(self.root)[0])
+
+    def test_standalone_default_off_feature_cannot_share_default_on_names(self):
+        self.module(
+            "http-5.0-metrics", "MetricsModule.java",
+            '"http-5.0-metrics", "http-metrics"', default="false",
+        )
+        self.module(
+            "http-5.0", "ClientModule.java", '"http", "http-5.0", "http-metrics"',
+        )
+        self.assertIn("shares selector 'http-metrics'", check(self.root)[0])
+
     def test_optional_controller_telemetry_counts_as_default_off(self):
         self.module("jaxrs/jaxrs-2.0", "FrameworkModule.java", '"jaxrs", "jaxrs-2.0"')
         self.module(

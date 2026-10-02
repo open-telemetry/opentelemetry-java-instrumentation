@@ -39,6 +39,8 @@ public class MyLibrary10InstrumentationModule extends InstrumentationModule {
   in both modes. This cross-family selector exception applies only to that registration.
   Independent default-off features use their own feature names instead of a family or baseline
   shared with default-on instrumentation.
+  Standalone default-off feature modules may use the full module directory name first,
+  followed by the versionless feature name, such as `jaxrs-1.0-annotations`, `jaxrs-annotations`.
 - `typeInstrumentations()` returns the list of `TypeInstrumentation` implementations — use
   `Arrays.asList(...)` for multiple items and `Collections.singletonList(...)` for a single
   item.

@@ -21,8 +21,10 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class JaxrsInstrumentationModule extends InstrumentationModule {
   public JaxrsInstrumentationModule() {
     super(
-        AgentCommonConfig.get().isV3Preview() ? "jaxrs-annotations" : "jaxrs",
-        AgentCommonConfig.get().isV3Preview() ? new String[0] : new String[] {"jaxrs-1.0"});
+        AgentCommonConfig.get().isV3Preview() ? "jaxrs-1.0-annotations" : "jaxrs",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"jaxrs-annotations"}
+            : new String[] {"jaxrs-1.0"});
   }
 
   // this is required to make sure instrumentation won't apply to jax-rs 2

@@ -59,6 +59,9 @@ Default-off features have independent names when the component family also conta
 instrumentation. For example, JDBC's default-off DataSource instrumentation uses only
 `jdbc-datasource`, not the shared `jdbc` selector. Product umbrellas such as `vertx` come after
 the component's own selectors and must not mix default-on and default-off instrumentation.
+Standalone default-off feature modules may use their full directory name as the primary,
+followed by the versionless feature name. For example, `jaxrs-1.0-annotations` precedes
+`jaxrs-annotations`; neither shares `jaxrs` with default-on provider instrumentation.
 
 The generic Reactor Netty server registration housed in `spring-webflux-5.0` uses
 `spring-webflux`, `spring-webflux-5.0`, `reactor-netty`, and `reactor-netty-server` in both modes,

@@ -7,6 +7,8 @@ listed below. Unsupported Java selector expressions are errors, not implicit exe
 Module classes may share all public names. Optional feature selectors preserve
 independent controls; Muzzle identifies individual modules by fully qualified class.
 Client/server role and independent feature selectors are versionless and follow the baseline.
+Standalone default-off feature modules may use their directory name first, followed by
+their versionless feature name.
 Product umbrellas follow component selectors. Default-off features must not
 share selectors with default-on instrumentation.
 """
@@ -342,7 +344,15 @@ def check(root, modules=None):
                 required = [family] + ([base] if base else [])
                 if not enabled and names and names[0] != family:
                     # Independent default-off features use only their feature namespace.
-                    validate_feature_selectors(family, names)
+                    module = relative.parts[relative.parts.index("javaagent") - 1]
+                    if names[0] == module:
+                        feature = re.sub(r"-\d+(?:\.\d+)*", "", module)
+                        required = [module, feature]
+                        if names[:2] != required:
+                            raise ValueError(f"expected first selectors {required}, found {names}")
+                        validate_feature_selectors(family, names[1:])
+                    else:
+                        validate_feature_selectors(family, names)
                 else:
                     if names[: len(required)] != required:
                         raise ValueError(f"expected first selectors {required}, found {names}")
