@@ -92,8 +92,6 @@
   [#19634](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19634))
 - Add Java agent instrumentation for Pekko remoting so trace context propagates across remote calls.
   ([#19823](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19823))
-- Add Java agent instrumentation for Couchbase SDK 3.0.
-  ([#19996](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19996))
 
 ### 📈 Enhancements
 
@@ -236,6 +234,8 @@
 - Support database server targets with unknown default ports, retaining endpoints without ports and
   rendering configured ports inline when needed.
   ([#19988](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19988))
+- Extend Couchbase Java agent instrumentation to support SDK 3.0.x.
+  ([#19996](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19996))
 - Add the `aws.bedrock.guardrail.id` span attribute to AWS Bedrock Runtime requests when a guardrail
   identifier is configured.
   ([#20040](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20040))
