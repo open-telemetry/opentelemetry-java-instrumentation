@@ -21,12 +21,9 @@ dependencies {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
   test {
     jvmArgs("-Dotel.instrumentation.resilience4j-circuitbreaker.enabled=true")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
     systemProperty(
       "metadataConfig",
       "otel.instrumentation.resilience4j-circuitbreaker.enabled=true"
@@ -53,6 +50,7 @@ tasks {
       "-Dotel.instrumentation.resilience4j-circuitbreaker.enabled=true",
       "-Dotel.instrumentation.resilience4j-circuitbreaker.experimental-span-attributes=true"
     )
+    systemProperty("collectMetadata", otelProps.collectMetadata)
     systemProperty(
       "metadataConfig",
       "otel.instrumentation.resilience4j-circuitbreaker.enabled=true,otel.instrumentation.resilience4j-circuitbreaker.experimental-span-attributes=true"
