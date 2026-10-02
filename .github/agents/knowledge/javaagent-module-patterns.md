@@ -60,11 +60,19 @@ not justify a feature selector. Network enrichment, transport compatibility, and
 span-completion helpers can share their parent's selectors. Modules belonging to one client/server
 role share that role's selectors.
 
-Preview selectors start with the full module directory name, then optional versionless client/server
-roles and independent features, then the version-stripped component name and API/product umbrellas.
+Preview selectors normally start with the full module directory name, then optional versionless
+client/server roles and independent features, then the version-stripped component name and
+API/product umbrellas. A default-off feature within a default-on module uses an independent primary
+and shares no selectors with the default-on registrations.
 For example, WebFlux server modules use `spring-webflux-5.0`, `spring-webflux-server`, `spring-webflux`.
 Compound provider modules use the full primary, the version-stripped compound name, and the API
 umbrella, such as `jaxrs-2.0-cxf-3.2`, `jaxrs-cxf`, `jaxrs`.
+
+Implementation splits omit versionless names that merely distinguish implementations. For example,
+`mongo-async-3.3` has secondary `mongo`, not `mongo-async`; `spring-cloud-gateway-webmvc-4.3` has
+secondary `spring-cloud-gateway`, not `spring-cloud-gateway-webmvc`.
+Incubator API integration adds the independent feature selector `opentelemetry-api-incubator`
+between its `opentelemetry-api-<version>` primary and `opentelemetry-api` secondary.
 
 An optional product umbrella selects instrumentation whose purpose is to observe or support that
 product's operations. Membership follows product ownership, not historical aliases, directory
@@ -80,9 +88,10 @@ Place umbrellas after all component, baseline, role, and feature selectors so ex
 settings take precedence. Default-off features must not share any selector with default-on
 instrumentation. They use independent feature names, such as `kafka-clients-metrics`,
 `jdbc-datasource`, or `kotlinx-coroutines-annotations`. A group whose
-members are all default-off can share an umbrella: `hibernate` selects synchronous Hibernate and
-procedure calls, but not default-on Hibernate Reactive. The deprecated Jedis 1.x and superseded
-Lettuce 5.1 implementations slated for removal in 3.0 do not define long-term group membership.
+members are all default-off can share an umbrella: `hibernate` selects default-off telemetry,
+including procedure calls, but not default-on Hibernate Reactive context propagation.
+The deprecated Jedis 1.x and superseded Lettuce 5.1 implementations slated for removal in 3.0
+do not define long-term group membership.
 
 Ordinary defaults assume global enablement on and optional feature settings absent. The native
 Javaagent review instructions contain the naming and default-isolation rules.

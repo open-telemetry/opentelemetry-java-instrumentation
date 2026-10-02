@@ -1,8 +1,8 @@
 # [Naming] Module and Package Naming Conventions
 
-Use this article when adding or renaming an instrumentation module or
-package. It shows the directory, Gradle include, and Java package naming
-patterns for versioned and shared modules.
+Use this article when changing instrumentation enablement selectors or adding or renaming
+an instrumentation module or package. It shows selector, directory, Gradle include, and Java
+package naming patterns for versioned and shared modules.
 
 ## Top-level instrumentation module directory
 
@@ -71,6 +71,9 @@ Default-off features have independent names when the component family also conta
 instrumentation. For example, JDBC's default-off DataSource instrumentation uses only
 `jdbc-datasource`, not the shared `jdbc` selector. Product umbrellas such as `vertx` come after
 the component's own selectors and must not mix default-on and default-off instrumentation.
+All-default-off groups may share selectors: `hibernate` groups telemetry-producing Hibernate
+instrumentation, including procedure calls, but excludes default-on Hibernate Reactive context
+propagation.
 Standalone default-off feature modules use their full directory name as the primary,
 followed by the versionless feature name. For example, `jaxrs-1.0-annotations` precedes
 `jaxrs-annotations`; neither shares `jaxrs` with default-on provider instrumentation.
@@ -84,6 +87,8 @@ The generic Reactor Netty server registration housed in `spring-webflux-5.0` use
 `spring-webflux`, without `reactor-netty` or `reactor`. This cross-family selector exception applies
 only to that registration.
 Outside v3 preview, preserve existing names and their order.
+Enablement selectors are independent of emitted instrumentation scope names; changing selectors
+does not require renaming telemetry.
 
 ## Common modules (shared code across multiple versions)
 

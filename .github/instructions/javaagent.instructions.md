@@ -31,8 +31,8 @@ Public enablement names describe selectable behavior, not Muzzle implementation 
   instrumentation, excluding DBCP and JDBC pools.
 - A default-off feature within a default-on component must have an independent identity and share
   no selector with default-on registrations. All-default-off groups may share selectors.
-  Example: `jdbc-datasource` does not share `jdbc`; synchronous Hibernate and procedure calls share
-  `hibernate`.
+  Example: `jdbc-datasource` does not share `jdbc`; `hibernate` groups default-off telemetry,
+  including procedure calls, but excludes default-on Hibernate Reactive context propagation.
 
 ## Advice and matching
 
