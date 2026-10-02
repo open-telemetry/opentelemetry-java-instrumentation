@@ -75,9 +75,10 @@
 - Deprecate `SystemMetrics.registerObservers(Meter)` in the OSHI library instrumentation in favor of
   `SystemMetrics.registerObservers(OpenTelemetry)`.
   ([#20263](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20263))
-- Deprecate dotted instrumentation selectors in `distribution.javaagent.instrumentation.enabled` and
-  `distribution.javaagent.instrumentation.disabled` in favor of selectors with periods replaced by
-  underscores.
+- In declarative configuration YAML, deprecate dotted selectors in the
+  `distribution.javaagent.instrumentation.enabled` and `.disabled` lists. Use `reactor_3_1`
+  instead of `reactor_3.1`. Flat-property names such as `otel.instrumentation.reactor-3.1.enabled`
+  are unchanged.
   ([#20326](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20326))
 
 ### 🌟 New javaagent instrumentation
