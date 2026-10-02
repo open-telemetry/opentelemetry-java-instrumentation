@@ -59,6 +59,8 @@ public final class MessagingConfig {
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common").get("messaging");
     DeclarativeConfigProperties headers = messagingConfig.get("headers");
     boolean v3Preview = SemconvStability.v3Preview(openTelemetry);
+    DeclarativeConfigProperties deprecatedCommonHeaders =
+        v3Preview ? null : messagingConfig.get("headers/development");
     DeclarativeConfigProperties deprecatedHeaders =
         v3Preview
             ? null
@@ -67,9 +69,19 @@ public final class MessagingConfig {
     List<String> stableIncluded = headers.getScalarList("included", String.class);
     List<String> stableExcluded = headers.getScalarList("excluded", String.class);
     List<String> included =
-        getHeaderPatterns("included", stableIncluded, deprecatedHeaders, systemPropertyFallback);
+        getHeaderPatterns(
+            "included",
+            stableIncluded,
+            deprecatedCommonHeaders,
+            deprecatedHeaders,
+            systemPropertyFallback);
     List<String> excluded =
-        getHeaderPatterns("excluded", stableExcluded, deprecatedHeaders, systemPropertyFallback);
+        getHeaderPatterns(
+            "excluded",
+            stableExcluded,
+            deprecatedCommonHeaders,
+            deprecatedHeaders,
+            systemPropertyFallback);
     IncludeExclude selector =
         IncludeExclude.builder()
             .setIncluded(included == null ? emptyList() : included)
@@ -95,6 +107,7 @@ public final class MessagingConfig {
   private static List<String> getHeaderPatterns(
       String name,
       @Nullable List<String> stablePatterns,
+      @Nullable DeclarativeConfigProperties deprecatedCommonHeaders,
       @Nullable DeclarativeConfigProperties deprecatedHeaders,
       boolean systemPropertyFallback) {
     String replacementProperty = COMMON_MESSAGING_PROPERTY_PREFIX + ".headers." + name;
@@ -107,18 +120,27 @@ public final class MessagingConfig {
         return patterns;
       }
     }
-    if (deprecatedHeaders == null) {
+    if (deprecatedCommonHeaders == null || deprecatedHeaders == null) {
       return null;
     }
 
-    // TODO: remove the deprecated flat messaging names in a future minor release.
+    // TODO: remove the deprecated header aliases in 3.0.
+    String deprecatedCommonProperty =
+        COMMON_MESSAGING_PROPERTY_PREFIX + ".experimental.headers." + name;
+    List<String> patterns =
+        getList(deprecatedCommonHeaders, name, deprecatedCommonProperty, systemPropertyFallback);
+    if (patterns != null) {
+      if (!patterns.isEmpty()) {
+        warnDeprecatedProperty(
+            deprecatedCommonProperty, replacementProperty, "will be removed in 3.0");
+      }
+      return patterns;
+    }
     String deprecatedProperty =
         DEPRECATED_MESSAGING_PROPERTY_PREFIX + ".experimental.headers." + name;
-    List<String> patterns =
-        getList(deprecatedHeaders, name, deprecatedProperty, systemPropertyFallback);
+    patterns = getList(deprecatedHeaders, name, deprecatedProperty, systemPropertyFallback);
     if (patterns != null && !patterns.isEmpty()) {
-      warnDeprecatedProperty(
-          deprecatedProperty, replacementProperty, "may be removed in the next minor release");
+      warnDeprecatedProperty(deprecatedProperty, replacementProperty, "will be removed in 3.0");
     }
     return patterns;
   }
@@ -238,7 +260,8 @@ public final class MessagingConfig {
     if (value != null) {
       return value;
     }
-    return systemPropertyFallback ? SystemProperty.getList(flatProperty) : null;
+    List<String> patterns = systemPropertyFallback ? SystemProperty.getList(flatProperty) : null;
+    return patterns == null || patterns.isEmpty() ? null : patterns;
   }
 
   private static void warnDeprecatedProperty(

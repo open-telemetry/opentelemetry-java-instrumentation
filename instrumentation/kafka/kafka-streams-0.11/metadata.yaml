@@ -11,6 +11,8 @@ configurations:
     default: false
   - ref: messaging.headers.included
   - ref: messaging.headers.excluded
+  - ref: messaging.deprecated-common-headers.included
+  - ref: messaging.deprecated-common-headers.excluded
   - ref: messaging.capture-headers
   - ref: messaging.deprecated-headers.included
   - ref: messaging.deprecated-headers.excluded

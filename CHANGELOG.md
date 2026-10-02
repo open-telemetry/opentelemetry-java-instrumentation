@@ -4,9 +4,6 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
-- The experimental `java.common.messaging.headers/development` YAML selector no longer configures
-  header capture. Use `java.common.messaging.headers` instead.
-  ([#20260](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20260))
 - Add the required `isRequestStreaming(REQUEST)` method to `GenAiAttributesGetter`.
   ([#19879](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19879))
 - Elasticsearch REST javaagent and 7.x library instrumentation now capture sanitized search query
@@ -54,10 +51,15 @@
 - Deprecate `otel.instrumentation.messaging.experimental.receive-telemetry.enabled` in favor of
   `otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled`. For headers,
   replace `otel.instrumentation.messaging.experimental.headers.included` and `.excluded` with the
-  stable `otel.instrumentation.common.messaging.headers.included` and `.excluded`. Stable selectors
-  take precedence per leaf. V3-preview ignores the older header aliases and
-  `otel.instrumentation.messaging.experimental.capture-headers` without warnings. These deprecated
-  settings may be removed in a later minor release and will be removed no later than 3.0.
+  stable `otel.instrumentation.common.messaging.headers.included` and `.excluded`. The deprecated
+  common aliases `otel.instrumentation.common.messaging.experimental.headers.included` and
+  `.excluded` also remain supported, preserving compatibility with the previously shipped
+  experimental common YAML selector. Header selectors resolve each leaf independently: stable,
+  deprecated common, then older messaging aliases. The deprecated header selectors remain until
+  3.0 and warn only when applied. V3-preview ignores all deprecated header settings, including
+  `otel.instrumentation.messaging.experimental.capture-headers`, without warnings. The deprecated
+  receive-telemetry and capture-headers settings may be removed in a later minor release and will
+  be removed no later than 3.0.
   ([#20060](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20060),
   [#20260](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20260))
 - Deprecate the Java agent and Spring Boot starter's bundled contrib samplers, including the

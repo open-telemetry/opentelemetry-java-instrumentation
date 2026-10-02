@@ -33,6 +33,8 @@ configurations:
     replaced_by: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
   - ref: messaging.headers.included
   - ref: messaging.headers.excluded
+  - ref: messaging.deprecated-common-headers.included
+  - ref: messaging.deprecated-common-headers.excluded
   - ref: messaging.capture-headers
   - ref: messaging.deprecated-headers.included
   - ref: messaging.deprecated-headers.excluded

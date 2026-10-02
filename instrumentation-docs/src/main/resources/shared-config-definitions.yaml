@@ -149,11 +149,27 @@ configurations:
     deprecated: true
     replaced_by: otel.instrumentation.common.messaging.headers.included
 
+  messaging.deprecated-common-headers.included:
+    name: otel.instrumentation.common.messaging.experimental.headers.included
+    declarative_name: java.common.messaging.headers/development.included
+    description: "Deprecated: use `otel.instrumentation.common.messaging.headers.included` instead. The stable setting takes precedence per leaf. When unset, falls back to `otel.instrumentation.messaging.experimental.headers.included`. Ignored without a warning under v3-preview; will be removed in 3.0. Patterns are case-sensitive globs: `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. An absent or empty selector captures no headers; an exclude-only selector captures every header not excluded."
+    type: list
+    deprecated: true
+    replaced_by: otel.instrumentation.common.messaging.headers.included
+
+  messaging.deprecated-common-headers.excluded:
+    name: otel.instrumentation.common.messaging.experimental.headers.excluded
+    declarative_name: java.common.messaging.headers/development.excluded
+    description: "Deprecated: use `otel.instrumentation.common.messaging.headers.excluded` instead. The stable setting takes precedence per leaf. When unset, falls back to `otel.instrumentation.messaging.experimental.headers.excluded`. Ignored without a warning under v3-preview; will be removed in 3.0. Patterns are case-sensitive globs: `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. An absent or empty selector captures no headers; an exclude-only selector captures every header not excluded, which may expose sensitive information."
+    type: list
+    deprecated: true
+    replaced_by: otel.instrumentation.common.messaging.headers.excluded
+
   # The deprecated names below are flat properties only: the declarative configuration schema keeps
   # them under `java.common.messaging`, so they declare no declarative_name.
   messaging.deprecated-headers.included:
     name: otel.instrumentation.messaging.experimental.headers.included
-    description: "Deprecated: use `otel.instrumentation.common.messaging.headers.included` instead. Ignored without a warning under v3-preview; may be removed in a later minor release and will be removed no later than 3.0."
+    description: "Deprecated: use `otel.instrumentation.common.messaging.headers.included` instead. The stable and deprecated common settings take precedence per leaf. Ignored without a warning under v3-preview; will be removed in 3.0."
     type: list
     default: ""
     deprecated: true
@@ -161,7 +177,7 @@ configurations:
 
   messaging.deprecated-headers.excluded:
     name: otel.instrumentation.messaging.experimental.headers.excluded
-    description: "Deprecated: use `otel.instrumentation.common.messaging.headers.excluded` instead. Ignored without a warning under v3-preview; may be removed in a later minor release and will be removed no later than 3.0."
+    description: "Deprecated: use `otel.instrumentation.common.messaging.headers.excluded` instead. The stable and deprecated common settings take precedence per leaf. Ignored without a warning under v3-preview; will be removed in 3.0."
     type: list
     default: ""
     deprecated: true
