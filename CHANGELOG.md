@@ -62,34 +62,10 @@
   leaf; v3-preview ignores the deprecated header settings.
   ([#20060](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20060),
   [#20260](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20260))
-- Deprecate `otel.instrumentation.log4j-appender.experimental.map-message-attributes.included`,
-  `java.log4j_appender.map_message_attributes/development.included`,
-  `otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes`,
-  `java.log4j_appender.capture_map_message_attributes/development`,
-  `otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included`,
-  `java.logback_appender.key_value_pair_attributes/development.included`,
-  `otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes`,
-  `java.logback_appender.capture_key_value_pair_attributes/development`,
-  `otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.included`,
-  `java.logback_appender.logstash_marker_attributes/development.included`,
-  `otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes`,
-  `java.logback_appender.capture_logstash_marker_attributes/development`,
-  `otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included`,
-  `java.logback_appender.logstash_structured_argument_attributes/development.included`,
-  `otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments`, and
-  `java.logback_appender.capture_logstash_structured_arguments/development` in favor of
-  `otel.instrumentation.common.logging.structured-attributes.included` and
-  `java.common.logging.structured_attributes.included`; deprecate
-  `otel.instrumentation.log4j-appender.experimental.map-message-attributes.excluded`,
-  `java.log4j_appender.map_message_attributes/development.excluded`,
-  `otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.excluded`,
-  `java.logback_appender.key_value_pair_attributes/development.excluded`,
-  `otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.excluded`,
-  `java.logback_appender.logstash_marker_attributes/development.excluded`,
-  `otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.excluded`,
-  and `java.logback_appender.logstash_structured_argument_attributes/development.excluded` in favor
-  of `otel.instrumentation.common.logging.structured-attributes.excluded` and
-  `java.common.logging.structured_attributes.excluded`.
+- Deprecate source-specific capture properties and YAML selectors for Log4j `MapMessage` entries,
+  Logback key-value pairs, Logstash markers, and Logstash structured arguments in favor of
+  `otel.instrumentation.common.logging.structured-attributes.included` / `.excluded` and
+  `java.common.logging.structured_attributes.included` / `.excluded`.
   ([#20066](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20066))
 - Deprecate `otel.instrumentation.couchbase.experimental-span-attributes` and
   `java.couchbase.experimental_span_attributes/development` in favor of
