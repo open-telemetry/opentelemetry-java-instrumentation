@@ -60,6 +60,8 @@ Incubator API integration uses the full `opentelemetry-api-<version>` primary,
 then `opentelemetry-api-incubator` and `opentelemetry-api`.
 Implementation splits such as `mongo-async-3.3` retain their directory primary but use only
 `mongo` as a secondary, without `mongo-async`.
+Spring Cloud Gateway's WebMVC implementation uses primary `spring-cloud-gateway-webmvc-4.3`
+and only `spring-cloud-gateway` as its secondary, without `spring-cloud-gateway-webmvc`.
 
 Compound API/provider modules keep the full compound primary, its version-stripped secondary,
 and the API umbrella. For example, `jaxrs-2.0-cxf-3.2`, `jaxrs-cxf`, `jaxrs`, without bare provider

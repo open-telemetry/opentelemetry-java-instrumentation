@@ -17,7 +17,9 @@ Public enablement names describe selectable behavior, not Muzzle implementation 
 - Normally include a secondary with all numeric versions removed from the module name.
   Example: `jaxrs-2.0-cxf-3.2` has secondary `jaxrs-cxf`.
 - Omit unversioned selectors that merely distinguish implementations, while retaining full
-  module-directory primaries. Example: `mongo-async-3.3` has secondary `mongo`, not `mongo-async`.
+  module-directory primaries. Examples: `mongo-async-3.3` has secondary `mongo`, not `mongo-async`;
+  `spring-cloud-gateway-webmvc-4.3` has secondary `spring-cloud-gateway`, not
+  `spring-cloud-gateway-webmvc`.
 - Add role and feature selectors for useful, independently selectable behavior, not compatibility
   helpers. Examples: WebFlux has `spring-webflux-client` and `spring-webflux-server`; incubator API
   integration adds `opentelemetry-api-incubator` before `opentelemetry-api`. Reactor operator bridges

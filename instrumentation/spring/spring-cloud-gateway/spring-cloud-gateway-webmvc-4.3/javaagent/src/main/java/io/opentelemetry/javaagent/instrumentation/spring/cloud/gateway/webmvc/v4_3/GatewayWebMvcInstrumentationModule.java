@@ -24,7 +24,7 @@ public class GatewayWebMvcInstrumentationModule extends InstrumentationModule {
             ? "spring-cloud-gateway-webmvc-4.3"
             : "spring-cloud-gateway",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"spring-cloud-gateway-webmvc", "spring-cloud-gateway"}
+            ? new String[] {"spring-cloud-gateway"}
             : new String[] {"spring-cloud-gateway-webmvc-4.3"});
   }
 
