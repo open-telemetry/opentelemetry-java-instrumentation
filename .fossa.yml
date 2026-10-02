@@ -1065,6 +1065,9 @@ targets:
       target: ':instrumentation:spring:starters:zipkin-spring-boot-starter'
     - type: gradle
       path: ./
+      target: ':instrumentation:storm:storm-2.0:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:struts:struts-2.3:javaagent'
     - type: gradle
       path: ./

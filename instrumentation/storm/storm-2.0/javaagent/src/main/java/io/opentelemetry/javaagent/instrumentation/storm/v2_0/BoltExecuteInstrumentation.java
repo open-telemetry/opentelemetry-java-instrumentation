@@ -18,7 +18,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.util.Map;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -81,9 +80,11 @@ class BoltExecuteInstrumentation implements TypeInstrumentation {
       }
 
       TupleImpl tupleImpl = (TupleImpl) tuple;
-      Map<String, String> headers = VirtualFieldStore.getHeaders(tupleImpl);
-      if (headers == null || headers.isEmpty()) {
-        // Not a tuple produced by an instrumented emit, e.g. an internal ack tuple.
+      // Storm's internal streams (acks, ticks, metrics) are an implementation detail of the
+      // runtime, not part of the user's data flow. Tuples that were serialized to another worker
+      // carry no propagation headers, so they must not be filtered out here: they start a new
+      // trace instead.
+      if (StormSingletons.isInternalStream(tupleImpl.getSourceStreamId())) {
         return null;
       }
 
@@ -100,10 +101,12 @@ class BoltExecuteInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Enter @Nullable ExecuteScope scope, @Advice.Thrown @Nullable Throwable throwable) {
+      // restore the guard before the fallible span completion work, so that an exception thrown
+      // while ending the span cannot leave this thread permanently at positive call depth
+      CallDepth.forClass(IBolt.class).decrementAndGet();
       if (scope != null) {
         scope.end(throwable);
       }
-      CallDepth.forClass(IBolt.class).decrementAndGet();
     }
   }
 }
