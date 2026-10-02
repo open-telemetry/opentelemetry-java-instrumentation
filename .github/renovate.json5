@@ -3,8 +3,7 @@
   extends: [
     "github>grafana/flint#v0.22.14",
     'config:best-practices',
-    // commented out to see whether weekly update passes without this line
-    // 'workarounds:javaLTSVersions',
+    'workarounds:javaLTSVersions',
     'helpers:pinGitHubActionDigestsToSemver',
     ':semanticCommits',
   ],
@@ -116,21 +115,21 @@
       ],
       allowedVersions: '!/\\-SNAPSHOT$/',
     },
-//    {
-//      // workarounds:javaLTSVersions supplies the LTS allowlist and parses full JDK versions.
-//      // Its partial-version exception covers GitHub Actions and mise, but not custom.regex.
-//      // This keeps .java-version as 25 instead of 25.0.4+7.0.LTS without losing the LTS restriction.
-//      matchDatasources: [
-//        'java-version',
-//      ],
-//      matchDepNames: [
-//        'java-jdk',
-//      ],
-//      matchManagers: [
-//        'custom.regex',
-//      ],
-//      versioning: 'semver-partial',
-//    },
+    {
+      // workarounds:javaLTSVersions supplies the LTS allowlist and parses full JDK versions.
+      // Its partial-version exception covers GitHub Actions and mise, but not custom.regex.
+      // This keeps .java-version as 25 instead of 25.0.4+7.0.LTS without losing the LTS restriction.
+      matchDatasources: [
+        'java-version',
+      ],
+      matchDepNames: [
+        'java-jdk',
+      ],
+      matchManagers: [
+        'custom.regex',
+      ],
+      versioning: 'semver-partial',
+    },
     {
       // prevent 3.0.1u2 -> 3.0.1
       matchPackageNames: [
@@ -440,17 +439,16 @@
       ],
     },
   ],
-// commented out to see whether weekly update passes without this block
-//  customDatasources: {
-//    'azul-zulu': {
-//      // The Docker datasource scans thousands of tags and can hit Docker Hub rate limits.
-//      // This filtered datasource returns only major versions, without digests, for scalar Java markers.
-//      defaultRegistryUrlTemplate: 'https://hub.docker.com/v2/repositories/library/azul-zulu/tags?page_size=100&name=-jdk-debian',
-//      transformTemplates: [
-//        '{"releases": results[$match(name, /^\\d+-jdk-debian$/)].{"version": $substringBefore(name, "-jdk-debian")}}',
-//      ],
-//    },
-//  },
+  customDatasources: {
+    'azul-zulu': {
+      // The Docker datasource scans thousands of tags and can hit Docker Hub rate limits.
+      // This filtered datasource returns only major versions, without digests, for scalar Java markers.
+      defaultRegistryUrlTemplate: 'https://hub.docker.com/v2/repositories/library/azul-zulu/tags?page_size=100&name=-jdk-debian',
+      transformTemplates: [
+        '{"releases": results[$match(name, /^\\d+-jdk-debian$/)].{"version": $substringBefore(name, "-jdk-debian")}}',
+      ],
+    },
+  },
   customManagers: [
     {
       customType: 'regex',
@@ -464,35 +462,34 @@
         'gh extension install github/gh-aw --pin (?<currentValue>v\\d+\\.\\d+\\.\\d+)',
       ],
     },
-// commented out to see whether weekly update passes without this block
-//    {
-//      // Build JDK updates are LTS-only; explicit java-version markers below track every major.
-//      customType: 'regex',
-//      datasourceTemplate: 'java-version',
-//      depNameTemplate: 'java-jdk',
-//      managerFilePatterns: [
-//        '/^\\.java-version$/',
-//      ],
-//      matchStrings: [
-//        '(?<currentValue>\\d+)',
-//      ],
-//      versioningTemplate: 'semver-partial',
-//    },
-//    {
-//      customType: 'regex',
-//      datasourceTemplate: 'custom.azul-zulu',
-//      managerFilePatterns: [
-//        '.github/workflows/**',
-//        '**/*.gradle.kts',
-//      ],
-//      matchStrings: [
-//        '(?<currentValue>\\d+) # renovate\\(java-version\\)',
-//        '"(?<currentValue>\\d+)" // renovate\\(java-version\\)',
-//      ],
-//      // using zulu because new releases get published quickly
-//      depNameTemplate: 'azul-zulu',
-//      versioningTemplate: 'regex:^(?<major>\\d+)$',
-//    },
+    {
+      // Build JDK updates are LTS-only; explicit java-version markers below track every major.
+      customType: 'regex',
+      datasourceTemplate: 'java-version',
+      depNameTemplate: 'java-jdk',
+      managerFilePatterns: [
+        '/^\\.java-version$/',
+      ],
+      matchStrings: [
+        '(?<currentValue>\\d+)',
+      ],
+      versioningTemplate: 'semver-partial',
+    },
+    {
+      customType: 'regex',
+      datasourceTemplate: 'custom.azul-zulu',
+      managerFilePatterns: [
+        '.github/workflows/**',
+        '**/*.gradle.kts',
+      ],
+      matchStrings: [
+        '(?<currentValue>\\d+) # renovate\\(java-version\\)',
+        '"(?<currentValue>\\d+)" // renovate\\(java-version\\)',
+      ],
+      // using zulu because new releases get published quickly
+      depNameTemplate: 'azul-zulu',
+      versioningTemplate: 'regex:^(?<major>\\d+)$',
+    },
     {
       customType: 'regex',
       datasourceTemplate: 'docker',
