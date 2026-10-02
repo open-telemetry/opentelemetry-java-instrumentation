@@ -34,8 +34,7 @@
 
 ### 🚫 Deprecations
 
-- Deprecate `otel.jmx.target.system` (YAML: `java.jmx.target.system`) in favor of
-  `otel.jmx.metrics.experimental.included` (YAML: `java.jmx.metrics.experimental.included`).
+- Deprecate `otel.jmx.target.system` in favor of `otel.jmx.metrics.experimental.included`.
   ([#19783](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19783))
 - Deprecate `otel.instrumentation.opensearch.capture-search-query`. It will be removed in 3.0,
   when search query bodies are always captured. There is no replacement. Sanitization remains
@@ -62,37 +61,30 @@
   leaf; v3-preview ignores the deprecated header settings.
   ([#20060](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20060),
   [#20260](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20260))
-- Deprecate source-specific capture properties and YAML selectors for Log4j `MapMessage` entries,
+- Deprecate source-specific capture properties for Log4j `MapMessage` entries,
   Logback key-value pairs, Logstash markers, and Logstash structured arguments in favor of
-  `otel.instrumentation.common.logging.structured-attributes.included` / `.excluded` and
-  `java.common.logging.structured_attributes.included` / `.excluded`.
+  `otel.instrumentation.common.logging.structured-attributes.included` / `.excluded`.
   ([#20066](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20066))
-- Deprecate `otel.instrumentation.couchbase.experimental-span-attributes` and
-  `java.couchbase.experimental_span_attributes/development` in favor of
-  `otel.instrumentation.couchbase.emit-experimental-telemetry` and
-  `java.couchbase.emit_experimental_telemetry/development`.
+- Deprecate `otel.instrumentation.couchbase.experimental-span-attributes` in favor of
+  `otel.instrumentation.couchbase.emit-experimental-telemetry`.
   ([#20117](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20117))
 - Deprecate `otel.traces.sampler=linksbased_parentbased_always_on` with no replacement and
   declarative `rule_based_routing` in favor of the SDK incubator composite/development `rule_based`
   sampler, whose configuration and matching behavior differ.
   ([#20249](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20249))
 - Deprecate `otel.instrumentation.common.experimental.controller-telemetry.enabled`
-  (`java.common.controller_telemetry/development.enabled`) in favor of
-  `otel.instrumentation.common.controller-telemetry.enabled`
-  (`java.common.controller_telemetry.enabled`) and
+  in favor of `otel.instrumentation.common.controller-telemetry.enabled` and
   `otel.instrumentation.common.experimental.view-telemetry.enabled`
-  (`java.common.view_telemetry/development.enabled`) in favor of
-  `otel.instrumentation.common.view-telemetry.enabled` (`java.common.view_telemetry.enabled`).
+  in favor of `otel.instrumentation.common.view-telemetry.enabled`.
   ([#20258](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20258))
 - Deprecate `otel.instrumentation.experimental.span-suppression-strategy` in favor of
   `otel.instrumentation.common.span-suppression-strategy` for Java agent users and
   `Experimental.setSpanSuppressionStrategy(...)` for library instrumentation users without
-  declarative configuration, and deprecate `java.common.span_suppression_strategy/development` in
-  favor of `java.common.span_suppression_strategy`.
+  declarative configuration.
   ([#20259](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20259))
 - Deprecate `otel.instrumentation.oshi.experimental-metrics.enabled`,
-  `java.oshi.experimental_metrics/development.enabled`, `ProcessMetrics`, and its
-  `registerObservers(...)` methods in favor of `jvm.memory.used` and `jvm.cpu.time`.
+  `ProcessMetrics`, and its `registerObservers(...)` methods in favor of `jvm.memory.used` and
+  `jvm.cpu.time`.
   ([#20323](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20323))
 - Deprecate `SystemMetrics.registerObservers(Meter)` in the OSHI library instrumentation in favor of
   `SystemMetrics.registerObservers(OpenTelemetry)`.
@@ -338,8 +330,7 @@
 - Suppress duplicate Apache Commons Pool metrics for pools backing an Apache DBCP `BasicDataSource`
   when both instrumentations are enabled.
   ([#19721](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19721))
-- Fix Spring Boot starter debug logging for both `otel.spring-starter.debug=true` and declarative
-  `spring_starter.debug: true` configuration.
+- Fix Spring Boot starter debug logging when `otel.spring-starter.debug=true`.
   ([#19725](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19725),
   [#20034](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20034))
 - Fix duplicate processing spans and metrics across Spring Rabbit, RabbitMQ, and Spring
