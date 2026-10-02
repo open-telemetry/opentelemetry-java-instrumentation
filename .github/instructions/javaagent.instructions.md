@@ -7,12 +7,40 @@ applyTo: "instrumentation/**/javaagent/**/*.java,instrumentation/**/javaagent*/*
 Apply these checks to executable advice and the helpers it calls. Inspect registration and
 library lifecycle before deciding whether an exception applies.
 
+## Enablement names in v3 preview
+
+Apply these rules to names registered under `otel.instrumentation.common.v3-preview=true`.
+Public enablement names describe selectable behavior, not Muzzle implementation identities.
+
+- The primary is the full module-directory name, including versions, except where a default-off
+  feature needs a separate identity within that module. Example: `spring-webflux-5.0`.
+- Normally include a secondary with all numeric versions removed from the module name.
+  Example: `jaxrs-2.0-cxf-3.2` has secondary `jaxrs-cxf`.
+- Omit unversioned selectors that merely distinguish implementations, while retaining full
+  module-directory primaries. Examples: `mongo-async-3.3` has secondary `mongo`, not `mongo-async`;
+  `spring-cloud-gateway-webmvc-4.3` has secondary `spring-cloud-gateway`, not
+  `spring-cloud-gateway-webmvc`.
+- Add role and feature selectors for useful, independently selectable behavior, not compatibility
+  helpers. Examples: WebFlux has `spring-webflux-client` and `spring-webflux-server`; incubator API
+  integration adds `opentelemetry-api-incubator` before `opentelemetry-api`. Reactor operator bridges
+  share ordinary Reactor selectors.
+- API/product umbrellas can group the base component and related integrations. Membership follows
+  the product/API being instrumented, not dependencies. Example: `armeria` includes HTTP and gRPC
+  instrumentation; Apache `kafka` does not include Spring Kafka. Keep `reactor` scoped to core
+  propagation, excluding Reactor Kafka and Reactor Netty clients; keep `tomcat` scoped to server
+  instrumentation, excluding DBCP and JDBC pools.
+- A default-off feature within a default-on component must have an independent identity and share
+  no selector with default-on registrations. All-default-off groups may share selectors.
+  Example: `jdbc-datasource` does not share `jdbc`; `hibernate` groups default-off telemetry,
+  including procedure calls, but excludes default-on Hibernate Reactive context propagation.
+
 ## Advice and matching
 
 - A new `InstrumentationModule` needs SPI registration and a compatible `TypeInstrumentation`;
-  in a project with multiple independently selected modules, each needs a distinct name and
-  the correct Muzzle selection. `CallDepth` suppresses recursively instrumented calls only
-  when entry increments and exit decrements on every applicable path.
+  public names distinguish independently selectable behavior, not implementation classes.
+  Multiple classes may share all public names; Muzzle supports name-based exclusions and precise
+  class-based exclusions with `excludeInstrumentationModule(...)`. `CallDepth` suppresses recursively
+  instrumented calls only when entry increments and exit decrements on every applicable path.
 - Executable `@Advice.OnMethodEnter` and `@Advice.OnMethodExit` methods with fallible bodies
   need `suppress = Throwable.class`; inspect helper calls too. Exclude test code, intentional
   internal infrastructure, provably throw-free methods such as a literal return, and dummy

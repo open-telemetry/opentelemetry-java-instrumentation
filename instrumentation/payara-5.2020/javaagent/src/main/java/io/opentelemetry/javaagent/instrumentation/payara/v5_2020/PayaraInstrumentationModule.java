@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -18,7 +19,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class PayaraInstrumentationModule extends InstrumentationModule {
 
   public PayaraInstrumentationModule() {
-    super("payara", "payara-5.2020");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "payara-5.2020" : "payara",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"payara"}
+            : new String[] {"payara-5.2020"});
   }
 
   @Override

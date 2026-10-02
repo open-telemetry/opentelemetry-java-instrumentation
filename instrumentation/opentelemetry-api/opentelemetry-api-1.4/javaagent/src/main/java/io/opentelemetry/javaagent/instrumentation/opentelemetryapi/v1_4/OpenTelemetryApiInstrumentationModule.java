@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_4;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.V3PreviewFallbackEnabledInstrumentationModule;
@@ -18,7 +19,11 @@ import java.util.List;
 public class OpenTelemetryApiInstrumentationModule
     extends V3PreviewFallbackEnabledInstrumentationModule {
   public OpenTelemetryApiInstrumentationModule() {
-    super("opentelemetry-api", "opentelemetry-api-1.4");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "opentelemetry-api-1.4" : "opentelemetry-api",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"opentelemetry-api"}
+            : new String[] {"opentelemetry-api-1.4"});
   }
 
   @Override

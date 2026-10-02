@@ -10,7 +10,7 @@ muzzle {
     module.set("mongo-java-driver")
     versions.set("[3.1,)")
     assertInverse.set(true)
-    excludeInstrumentationName("mongo-3.7")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.mongo.v3_1.Mongo37InstrumentationModule")
   }
   pass {
     // instrumentation-docs:ignore - verification only, the directive above is the range we document
@@ -19,7 +19,7 @@ muzzle {
     module.set("mongo-java-driver")
     versions.set("[3.7,4.0)")
     assertInverse.set(true)
-    excludeInstrumentationName("mongo-3.1")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.mongo.v3_1.Mongo31InstrumentationModule")
   }
   pass {
     name.set("mongo-3.1-client-settings")
@@ -27,7 +27,7 @@ muzzle {
     module.set("mongodb-driver-core")
     versions.set("[3.7,4.0)")
     assertInverse.set(true)
-    excludeInstrumentationName("mongo-3.1")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.mongo.v3_1.Mongo31InstrumentationModule")
   }
 }
 

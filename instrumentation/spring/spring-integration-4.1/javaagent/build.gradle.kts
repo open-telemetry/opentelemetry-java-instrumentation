@@ -9,14 +9,14 @@ muzzle {
     module.set("spring-integration-core")
     versions.set("[4.1.0.RELEASE,)")
     assertInverse.set(true)
-    excludeInstrumentationName("spring-integration-amqp-4.1")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationAmqpInstrumentationModule")
   }
   pass {
     group.set("org.springframework.integration")
     module.set("spring-integration-amqp")
     versions.set("[4.1.0.RELEASE,)")
     assertInverse.set(true)
-    excludeInstrumentationName("spring-integration-core-4.1")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationInstrumentationModule")
   }
 }
 

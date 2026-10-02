@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -17,7 +18,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class OpenSearchInstrumentationModule extends InstrumentationModule {
   public OpenSearchInstrumentationModule() {
-    super("opensearch-java", "opensearch-java-3.0", "opensearch");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "opensearch-java-3.0" : "opensearch-java",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"opensearch-java", "opensearch"}
+            : new String[] {"opensearch-java-3.0", "opensearch"});
   }
 
   @Override

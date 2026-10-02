@@ -21,7 +21,10 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class LettuceInstrumentationModule extends InstrumentationModule {
 
   public LettuceInstrumentationModule() {
-    super("lettuce", "lettuce-5.1");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "lettuce-5.1" : "lettuce",
+        // The default-off module must not share the lettuce family selector in v3 preview.
+        AgentCommonConfig.get().isV3Preview() ? new String[] {} : new String[] {"lettuce-5.1"});
   }
 
   @Override

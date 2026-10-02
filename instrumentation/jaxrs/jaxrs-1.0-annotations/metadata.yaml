@@ -1,4 +1,4 @@
-display_name: JAX-RS 1.x
+display_name: JAX-RS 1.x annotations
 description: >
   This instrumentation enriches HTTP server spans with route information and enables controller
   spans for JAX-RS annotated methods (controller spans are disabled by default).

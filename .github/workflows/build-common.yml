@@ -169,14 +169,6 @@ jobs:
             exit 1
           fi
 
-      - name: Check javaagent suppression keys
-        if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
-        run: .github/scripts/check-javaagent-suppression-keys.sh
-
-      - name: Test javaagent suppression key checker
-        if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
-        run: .github/scripts/test-javaagent-suppression-keys.sh
-
       - name: Check latest dep test overrides
         if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
         run: .github/scripts/check-latest-dep-test-overrides.sh

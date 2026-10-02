@@ -20,9 +20,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class RatpackHttpClientInstrumentationModule extends InstrumentationModule {
   public RatpackHttpClientInstrumentationModule() {
     super(
-        "ratpack",
+        AgentCommonConfig.get().isV3Preview() ? "ratpack-1.4" : "ratpack",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"ratpack-1.4", "ratpack-1.4-http-client"}
+            ? new String[] {"ratpack-client", "ratpack"}
             : new String[] {"ratpack-1.7"});
   }
 

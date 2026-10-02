@@ -10,6 +10,7 @@ import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -19,7 +20,12 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class JaxrsInstrumentationModule extends InstrumentationModule {
   public JaxrsInstrumentationModule() {
-    super("jaxrs", "jaxrs-1.0");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "jaxrs-1.0-annotations" : "jaxrs",
+        // Default-off annotations must not share the jaxrs family selector in v3 preview.
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"jaxrs-annotations"}
+            : new String[] {"jaxrs-1.0"});
   }
 
   // this is required to make sure instrumentation won't apply to jax-rs 2

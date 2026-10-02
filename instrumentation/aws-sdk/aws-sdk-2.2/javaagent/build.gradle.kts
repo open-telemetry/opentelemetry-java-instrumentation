@@ -15,10 +15,10 @@ muzzle {
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
 
-    excludeInstrumentationName("aws-sdk-2.2-bedrock-runtime")
-    excludeInstrumentationName("aws-sdk-2.2-sqs")
-    excludeInstrumentationName("aws-sdk-2.2-sns")
-    excludeInstrumentationName("aws-sdk-2.2-lambda")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.BedrockRuntimeInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.SqsInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.SnsInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.LambdaInstrumentationModule")
   }
 
   fail {
@@ -31,7 +31,7 @@ muzzle {
 
     // "fail" asserts that *all* the instrumentation modules fail to load, but the core one is
     // actually expected to succeed, so exclude it from checks.
-    excludeInstrumentationName("aws-sdk-2.2-core")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.AwsSdkInstrumentationModule")
   }
 
   pass {
@@ -43,9 +43,9 @@ muzzle {
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
 
-    excludeInstrumentationName("aws-sdk-2.2-bedrock-runtime")
-    excludeInstrumentationName("aws-sdk-2.2-sns")
-    excludeInstrumentationName("aws-sdk-2.2-lambda")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.BedrockRuntimeInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.SnsInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.LambdaInstrumentationModule")
   }
 
   pass {
@@ -56,9 +56,9 @@ muzzle {
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
 
-    excludeInstrumentationName("aws-sdk-2.2-bedrock-runtime")
-    excludeInstrumentationName("aws-sdk-2.2-sqs")
-    excludeInstrumentationName("aws-sdk-2.2-lambda")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.BedrockRuntimeInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.SqsInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.LambdaInstrumentationModule")
   }
   pass {
     group.set("software.amazon.awssdk")
@@ -69,9 +69,9 @@ muzzle {
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
 
-    excludeInstrumentationName("aws-sdk-2.2-bedrock-runtime")
-    excludeInstrumentationName("aws-sdk-2.2-sqs")
-    excludeInstrumentationName("aws-sdk-2.2-sns")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.BedrockRuntimeInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.SqsInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.SnsInstrumentationModule")
   }
   pass {
     group.set("software.amazon.awssdk")
@@ -81,9 +81,9 @@ muzzle {
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
 
-    excludeInstrumentationName("aws-sdk-2.2-lambda")
-    excludeInstrumentationName("aws-sdk-2.2-sqs")
-    excludeInstrumentationName("aws-sdk-2.2-sns")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.LambdaInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.SqsInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.SnsInstrumentationModule")
   }
 }
 
