@@ -115,7 +115,7 @@ tasks {
     // the new messaging semconv
     jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
     // kafka metrics are disabled by default with v3-preview enabled
-    jvmArgs("-Dotel.instrumentation.kafka-clients-0.11-metrics.enabled=true")
+    jvmArgs("-Dotel.instrumentation.kafka-clients-metrics.enabled=true")
     systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
   }
 
