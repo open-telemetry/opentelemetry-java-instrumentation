@@ -19,7 +19,9 @@ public class HibernateReactiveStageInstrumentationModule extends Instrumentation
   public HibernateReactiveStageInstrumentationModule() {
     super(
         AgentCommonConfig.get().isV3Preview() ? "hibernate-reactive-1.0" : "hibernate-reactive",
-        // In v3 preview, the hibernate selector is reserved for default-off synchronous modules.
+        // In v3 preview, hibernate selects default-off telemetry, not Reactive context propagation.
+        // Reactive propagation stays enabled so asynchronous database spans retain their parent
+        // context.
         AgentCommonConfig.get().isV3Preview()
             ? new String[] {"hibernate-reactive"}
             : new String[] {"hibernate-reactive-1.0", "hibernate-reactive-stage"});
