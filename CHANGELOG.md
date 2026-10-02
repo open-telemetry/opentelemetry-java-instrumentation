@@ -300,25 +300,19 @@
 - With `otel.instrumentation.common.v3-preview=true`, OSHI system metrics use updated
   semantic-convention attributes such as `system.memory.state` and `network.interface.name`.
   ([#20263](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20263))
-- With `otel.instrumentation.common.v3-preview`, Akka fork-join instrumentation is grouped under the
-  `akka-actor` identity.
-  ([#20265](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20265))
-- With `otel.instrumentation.common.v3-preview` enabled, Ratpack 1.7 HTTP client telemetry uses the
-  `io.opentelemetry.ratpack-1.4` scope instead of `io.opentelemetry.ratpack-1.7`.
-  ([#20266](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20266))
-- With `otel.instrumentation.common.v3-preview=true`, Kotlin Flow instrumentation is controlled by
-  `otel.instrumentation.kotlinx-coroutines.enabled` alongside core coroutine instrumentation instead
-  of `otel.instrumentation.kotlinx-coroutines-flow.enabled`.
-  ([#20267](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20267))
-- With `otel.instrumentation.common.v3-preview=true`, MongoDB 3.7 spans use the
-  `io.opentelemetry.mongo-3.1` instrumentation scope.
-  ([#20269](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20269))
-- With `otel.instrumentation.common.v3-preview=true`, Couchbase 2.6 instrumentation uses the
-  `couchbase-2.0` and `couchbase-2.0-network-2.6` aliases instead of `couchbase-2.6`.
-  ([#20270](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20270))
-- With `otel.instrumentation.common.v3-preview` enabled, Reactor `ContextView` context propagation
-  uses the `reactor-3.1-context-propagation-operator-context-view` alias instead of `reactor-3.4`.
-  ([#20271](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20271))
+- With `otel.instrumentation.common.v3-preview=true`, group Akka fork-join instrumentation under
+  `akka-actor` and control Kotlin Flow with `otel.instrumentation.kotlinx-coroutines.enabled`
+  instead of `otel.instrumentation.kotlinx-coroutines-flow.enabled`. Ratpack 1.7 HTTP client
+  telemetry and MongoDB 3.7 spans use the `io.opentelemetry.ratpack-1.4` and
+  `io.opentelemetry.mongo-3.1` scopes, respectively. Couchbase 2.6 uses the `couchbase-2.0` and
+  `couchbase-2.0-network-2.6` aliases instead of `couchbase-2.6`; Reactor `ContextView` propagation
+  uses `reactor-3.1-context-propagation-operator-context-view` instead of `reactor-3.4`.
+  ([#20265](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20265),
+  [#20266](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20266),
+  [#20267](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20267),
+  [#20269](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20269),
+  [#20270](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20270),
+  [#20271](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20271))
 
 ### 🛠️ Bug fixes
 
