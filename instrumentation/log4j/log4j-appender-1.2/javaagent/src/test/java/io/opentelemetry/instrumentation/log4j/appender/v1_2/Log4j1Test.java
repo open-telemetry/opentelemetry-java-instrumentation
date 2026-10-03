@@ -21,7 +21,7 @@ import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
+import io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.time.Instant;
@@ -59,9 +59,9 @@ class Log4j1Test {
   void testCodeAttributes() {
     logger.info("this is test message");
     List<AttributeAssertion> assertions =
-        SemconvCodeStabilityUtil.codeFileAndLineAssertions("Log4j1Test.java");
+        CodeAssertions.codeFileAndLineAssertions("Log4j1Test.java");
     assertions.addAll(
-        SemconvCodeStabilityUtil.codeFunctionAssertions(Log4j1Test.class, "testCodeAttributes"));
+        CodeAssertions.codeFunctionAssertions(Log4j1Test.class, "testCodeAttributes"));
     assertions.add(equalTo(THREAD_NAME, Thread.currentThread().getName()));
     assertions.add(equalTo(THREAD_ID, Thread.currentThread().getId()));
 
@@ -141,10 +141,8 @@ class Log4j1Test {
                           EXCEPTION_STACKTRACE, val -> val.contains(Log4j1Test.class.getName()))));
             }
             attributeAsserts.addAll(
-                SemconvCodeStabilityUtil.codeFunctionAssertions(
-                    Log4j1Test.class, "performLogging"));
-            attributeAsserts.addAll(
-                SemconvCodeStabilityUtil.codeFileAndLineAssertions("Log4j1Test.java"));
+                CodeAssertions.codeFunctionAssertions(Log4j1Test.class, "performLogging"));
+            attributeAsserts.addAll(CodeAssertions.codeFileAndLineAssertions("Log4j1Test.java"));
             logRecord.hasAttributesSatisfyingExactly(attributeAsserts);
 
             assertThat(logRecord.actual().getTimestampEpochNanos())
@@ -171,8 +169,8 @@ class Log4j1Test {
     }
 
     List<AttributeAssertion> assertions =
-        SemconvCodeStabilityUtil.codeFileAndLineAssertions("Log4j1Test.java");
-    assertions.addAll(SemconvCodeStabilityUtil.codeFunctionAssertions(Log4j1Test.class, "testMdc"));
+        CodeAssertions.codeFileAndLineAssertions("Log4j1Test.java");
+    assertions.addAll(CodeAssertions.codeFunctionAssertions(Log4j1Test.class, "testMdc"));
     assertions.add(equalTo(stringKey("key1"), "val1"));
     assertions.add(equalTo(stringKey("key2"), "val2"));
     assertions.add(equalTo(THREAD_NAME, Thread.currentThread().getName()));

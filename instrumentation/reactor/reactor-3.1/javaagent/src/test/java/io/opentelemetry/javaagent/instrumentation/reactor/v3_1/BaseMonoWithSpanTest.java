@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactor.v3_1;
 
-import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions.codeFunctionAssertions;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 
 import io.opentelemetry.api.trace.SpanKind;

@@ -12,7 +12,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
+import io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +36,7 @@ class AddingSpanAttributesInstrumentationTest {
 
     List<AttributeAssertion> attributesAssertions =
         new ArrayList<>(
-            SemconvCodeStabilityUtil.codeFunctionAssertions(
+            CodeAssertions.codeFunctionAssertions(
                 ExtractAttributesUsingAddingSpanAttributes.class, "withSpanTakesPrecedence"));
     attributesAssertions.add(equalTo(stringKey("implicitName"), "foo"));
     attributesAssertions.add(equalTo(stringKey("explicitName"), "bar"));

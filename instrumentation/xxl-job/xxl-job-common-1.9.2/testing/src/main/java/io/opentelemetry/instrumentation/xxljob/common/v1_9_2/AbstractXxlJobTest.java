@@ -19,7 +19,7 @@ import com.xxl.job.core.thread.JobThread;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
+import io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
@@ -172,8 +172,7 @@ public abstract class AbstractXxlJobTest {
       String codeMethod) {
     List<AttributeAssertion> attributeAssertions = new ArrayList<>();
     attributeAssertions.addAll(attributeAssertions(glueType));
-    attributeAssertions.addAll(
-        SemconvCodeStabilityUtil.codeFunctionAssertions(codeClass, codeMethod));
+    attributeAssertions.addAll(CodeAssertions.codeFunctionAssertions(codeClass, codeMethod));
 
     checkXxlJob(spanName, statusData, attributeAssertions);
   }

@@ -15,7 +15,7 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
+import io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.annotations.JavaInterfaces.Jax;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -125,8 +125,7 @@ class JaxRs3AnnotationsInstrumentationTest {
                     span.hasName(className + ".call")
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            SemconvCodeStabilityUtil.codeFunctionAssertions(
-                                action.getClass(), "call"))));
+                            CodeAssertions.codeFunctionAssertions(action.getClass(), "call"))));
   }
 
   @Test

@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
+import io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
@@ -116,7 +116,7 @@ class Struts2ActionSpanTest extends AbstractHttpServerTest<Server> {
     }
 
     span.hasAttributesSatisfyingExactly(
-        SemconvCodeStabilityUtil.codeFunctionAssertions(
+        CodeAssertions.codeFunctionAssertions(
             GreetingAction.class, endpoint.name().toLowerCase(Locale.ROOT)));
     return span;
   }

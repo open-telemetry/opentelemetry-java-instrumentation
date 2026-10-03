@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
+import io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions;
 import io.opentelemetry.javaagent.instrumentation.spring.data.v3_0.repository.CustomerRepository;
 import io.opentelemetry.javaagent.instrumentation.spring.data.v3_0.repository.PersistenceConfig;
 import java.time.Duration;
@@ -72,7 +72,7 @@ class ReactiveSpringDataTest {
                     span.hasName("CustomerRepository.findAll")
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            SemconvCodeStabilityUtil.codeFunctionAssertions(
+                            CodeAssertions.codeFunctionAssertions(
                                 CustomerRepository.class, "findAll")),
                 span ->
                     span.hasName(

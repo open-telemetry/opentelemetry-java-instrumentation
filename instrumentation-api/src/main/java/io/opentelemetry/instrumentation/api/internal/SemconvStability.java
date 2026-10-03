@@ -28,9 +28,6 @@ public final class SemconvStability {
   private static final boolean emitOldDatabaseSemconv;
   private static final boolean emitStableDatabaseSemconv;
 
-  private static final boolean emitOldCodeSemconv;
-  private static final boolean emitStableCodeSemconv;
-
   private static final boolean emitOldServicePeerSemconv;
   private static final boolean emitStableServicePeerSemconv;
 
@@ -50,10 +47,6 @@ public final class SemconvStability {
     SemconvMode databaseSelection = semconvSelection.database();
     emitOldDatabaseSemconv = emitOld(databaseSelection);
     emitStableDatabaseSemconv = emitStable(databaseSelection);
-
-    SemconvMode codeSelection = semconvSelection.code();
-    emitOldCodeSemconv = emitOld(codeSelection);
-    emitStableCodeSemconv = emitStable(codeSelection);
 
     SemconvMode servicePeerSelection = semconvSelection.servicePeer();
     emitOldServicePeerSemconv = emitOld(servicePeerSelection);
@@ -125,14 +118,6 @@ public final class SemconvStability {
   public static String stableDbSystemName(String oldDbSystem) {
     String dbSystemName = dbSystemNameMap.get(oldDbSystem);
     return dbSystemName != null ? dbSystemName : oldDbSystem;
-  }
-
-  public static boolean emitOldCodeSemconv() { // to be removed in 3.0
-    return emitOldCodeSemconv;
-  }
-
-  public static boolean emitStableCodeSemconv() { // to be removed in 3.0
-    return emitStableCodeSemconv;
   }
 
   public static boolean emitOldRpcSemconv() {

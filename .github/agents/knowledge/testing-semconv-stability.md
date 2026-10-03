@@ -15,14 +15,13 @@ controls which attributes are emitted at runtime. Tests must run in all applicab
 | `database`     |        ❌         |          ✅          | Stable-only — users who have opted in             |
 | `database/dup` |        ✅         |          ✅          | Both — migration period support                   |
 
-Multiple domains can be comma-separated: `database,code,service.peer`.
+Multiple domains can be comma-separated: `database,service.peer`.
 
 Available domains and their `SemconvStability` methods:
 
 | Domain       | `opt-in` value                      | Methods                                                         |
 | ------------ | ----------------------------------- | --------------------------------------------------------------- |
 | Database     | `database` / `database/dup`         | `emitOldDatabaseSemconv()`, `emitStableDatabaseSemconv()`       |
-| Code         | `code` / `code/dup`                 | `emitOldCodeSemconv()`, `emitStableCodeSemconv()`               |
 | RPC          | `rpc` / `rpc/dup`                   | `emitOldRpcSemconv()`, `emitStableRpcSemconv()`                 |
 | Service peer | `service.peer` / `service.peer/dup` | `emitOldServicePeerSemconv()`, `emitStableServicePeerSemconv()` |
 
@@ -35,8 +34,11 @@ Every Gradle project whose tests exercise semconv attributes **must** define its
 `emitOld*()` or `emitStable*()` accessor.
 
 A `testBothSemconv` task (testing the `/dup` mode) is **only required for the RPC domain**.
-Database, code, and service-peer domains do not need a `testBothSemconv` task — only
+Database and service-peer domains do not need a `testBothSemconv` task — only
 `testStableSemconv` (and the default `test` task for the legacy/unset mode).
+
+Code attributes always use the stable conventions. They have no legacy or dual-emission mode and
+need no semconv opt-in test tasks.
 
 See [gradle-conventions.md](gradle-conventions.md) for `testClassesDirs`, `classpath`,
 `collectMetadata`, `metadataConfig`, and `check` wiring requirements. In a module that also

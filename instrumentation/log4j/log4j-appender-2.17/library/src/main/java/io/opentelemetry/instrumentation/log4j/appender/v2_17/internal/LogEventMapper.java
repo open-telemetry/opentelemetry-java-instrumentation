@@ -6,8 +6,6 @@
 package io.opentelemetry.instrumentation.log4j.appender.v2_17.internal;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldCodeSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableCodeSemconv;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
@@ -36,11 +34,6 @@ import org.apache.logging.log4j.message.Message;
  */
 public final class LogEventMapper<T> {
 
-  // copied from CodeIncubatingAttributes
-  private static final AttributeKey<String> CODE_FILEPATH = stringKey("code.filepath");
-  private static final AttributeKey<String> CODE_FUNCTION = stringKey("code.function");
-  private static final AttributeKey<String> CODE_NAMESPACE = stringKey("code.namespace");
-  private static final AttributeKey<Long> CODE_LINENO = AttributeKey.longKey("code.lineno");
   // copied from ThreadIncubatingAttributes
   private static final AttributeKey<Long> THREAD_ID = AttributeKey.longKey("thread.id");
   private static final AttributeKey<String> THREAD_NAME = stringKey("thread.name");
@@ -154,29 +147,13 @@ public final class LogEventMapper<T> {
       StackTraceElement source = sourceSupplier.get();
       if (source != null) {
         String fileName = source.getFileName();
-        if (emitStableCodeSemconv()) {
-          builder.setAttribute(CODE_FILE_PATH, fileName);
-        }
-        if (emitOldCodeSemconv()) {
-          builder.setAttribute(CODE_FILEPATH, fileName);
-        }
-        if (emitStableCodeSemconv()) {
-          builder.setAttribute(
-              CODE_FUNCTION_NAME, source.getClassName() + "." + source.getMethodName());
-        }
-        if (emitOldCodeSemconv()) {
-          builder.setAttribute(CODE_NAMESPACE, source.getClassName());
-          builder.setAttribute(CODE_FUNCTION, source.getMethodName());
-        }
+        builder.setAttribute(CODE_FILE_PATH, fileName);
+        builder.setAttribute(
+            CODE_FUNCTION_NAME, source.getClassName() + "." + source.getMethodName());
 
         int lineNumber = source.getLineNumber();
         if (lineNumber > 0) {
-          if (emitStableCodeSemconv()) {
-            builder.setAttribute(CODE_LINE_NUMBER, (long) lineNumber);
-          }
-          if (emitOldCodeSemconv()) {
-            builder.setAttribute(CODE_LINENO, (long) lineNumber);
-          }
+          builder.setAttribute(CODE_LINE_NUMBER, (long) lineNumber);
         }
       }
     }

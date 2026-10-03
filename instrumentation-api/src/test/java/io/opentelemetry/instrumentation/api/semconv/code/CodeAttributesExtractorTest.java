@@ -3,21 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.incubator.semconv.code;
+package io.opentelemetry.instrumentation.api.semconv.code;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldCodeSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableCodeSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
 import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonMap;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -41,7 +37,6 @@ class CodeAttributesExtractorTest {
     }
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void shouldExtractAllAttributes() {
     // given
@@ -63,18 +58,43 @@ class CodeAttributesExtractorTest {
 
     // then
     Attributes attributes = startAttributes.build();
-    SemconvCodeStabilityUtil.codeFunctionAssertions(TestClass.class, "doSomething");
+    assertThat(attributes)
+        .isEqualTo(Attributes.of(CODE_FUNCTION_NAME, TestClass.class.getName() + ".doSomething"));
+    assertThat(endAttributes.build()).isEqualTo(Attributes.empty());
+  }
 
-    if (emitStableCodeSemconv()) {
-      assertThat(attributes)
-          .containsEntry(CODE_FUNCTION_NAME, TestClass.class.getName() + ".doSomething");
-    }
-    if (emitOldCodeSemconv()) {
-      assertThat(attributes)
-          .containsEntry(CODE_NAMESPACE, TestClass.class.getName())
-          .containsEntry(CODE_FUNCTION, "doSomething");
-    }
-    assertThat(endAttributes.build().isEmpty()).isTrue();
+  @Test
+  void shouldExtractClassWithoutMethod() {
+    AttributesExtractor<Map<String, String>, Void> underTest =
+        CodeAttributesExtractor.create(new TestAttributesGetter());
+    AttributesBuilder attributes = Attributes.builder();
+
+    underTest.onStart(attributes, Context.root(), singletonMap("class", TestClass.class.getName()));
+
+    assertThat(attributes.build())
+        .isEqualTo(Attributes.of(CODE_FUNCTION_NAME, TestClass.class.getName()));
+  }
+
+  @Test
+  void shouldExtractMethodWithoutClass() {
+    AttributesExtractor<Map<String, String>, Void> underTest =
+        CodeAttributesExtractor.create(new TestAttributesGetter());
+    AttributesBuilder attributes = Attributes.builder();
+
+    underTest.onStart(attributes, Context.root(), singletonMap("methodName", "doSomething"));
+
+    assertThat(attributes.build()).isEqualTo(Attributes.of(CODE_FUNCTION_NAME, "doSomething"));
+  }
+
+  @Test
+  void shouldOmitEmptyFunctionName() {
+    AttributesExtractor<Map<String, String>, Void> underTest =
+        CodeAttributesExtractor.create(new TestAttributesGetter());
+    AttributesBuilder attributes = Attributes.builder();
+
+    underTest.onStart(attributes, Context.root(), singletonMap("methodName", ""));
+
+    assertThat(attributes.build()).isEqualTo(Attributes.empty());
   }
 
   @Test
@@ -88,7 +108,7 @@ class CodeAttributesExtractorTest {
     underTest.onStart(attributes, Context.root(), emptyMap());
 
     // then
-    assertThat(attributes.build().isEmpty()).isTrue();
+    assertThat(attributes.build()).isEqualTo(Attributes.empty());
   }
 
   static class TestClass {}

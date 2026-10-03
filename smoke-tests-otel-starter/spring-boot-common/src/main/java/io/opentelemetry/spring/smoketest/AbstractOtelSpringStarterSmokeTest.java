@@ -8,8 +8,6 @@ package io.opentelemetry.spring.smoketest;
 import static io.opentelemetry.api.common.AttributeKey.booleanKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldCodeSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
@@ -21,8 +19,6 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_INSTANCE_ID;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
@@ -183,7 +179,6 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
 
   @Test
   @org.junit.jupiter.api.Order(1) // This test validates startup telemetry, so must run first
-  @SuppressWarnings("deprecation") // testing deprecated code semconv
   void shouldSendTelemetry() throws InterruptedException, TimeoutException {
     makeClientCall();
 
@@ -275,15 +270,8 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
       MapAssert<AttributeKey<?>, Object> attributesAssert =
           assertThat(firstLog.getAttributes().asMap());
 
-      if (emitStableDatabaseSemconv()) {
-        attributesAssert.containsEntry(
-            CODE_FUNCTION_NAME, "org.springframework.boot.StartupInfoLogger.logStarting");
-      }
-      if (emitOldCodeSemconv()) {
-        attributesAssert
-            .containsEntry(CODE_NAMESPACE, "org.springframework.boot.StartupInfoLogger")
-            .containsEntry(CODE_FUNCTION, "logStarting");
-      }
+      attributesAssert.containsEntry(
+          CODE_FUNCTION_NAME, "org.springframework.boot.StartupInfoLogger.logStarting");
     }
   }
 
