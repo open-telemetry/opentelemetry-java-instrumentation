@@ -273,7 +273,6 @@ readonly INSTRUMENTATIONS=(
   "play:play-ws:play-ws-2.0:javaagent:test"
   "play:play-ws:play-ws-2.1:javaagent:test"
   "powerjob-4.0:javaagent:test"
-  "powerjob-4.0:javaagent:testStableSemconv"
   "powerjob-4.0:javaagent:testExperimental"
   "pulsar:pulsar-2.8:javaagent:test"
   "pulsar:pulsar-2.8:javaagent:testExperimental"

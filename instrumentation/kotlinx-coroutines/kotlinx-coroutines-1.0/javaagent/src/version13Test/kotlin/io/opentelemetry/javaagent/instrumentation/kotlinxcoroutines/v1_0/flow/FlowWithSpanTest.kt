@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.flow
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
-import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil
+import io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -46,7 +46,7 @@ class FlowWithSpanTest {
             it.hasName("FlowWithSpanTest.simple")
               .hasNoParent()
               .hasAttributesSatisfyingExactly(
-                SemconvCodeStabilityUtil.codeFunctionAssertions(this.javaClass, "simple")
+                CodeAssertions.codeFunctionAssertions(this.javaClass, "simple")
               )
               .satisfies(Consumer { spanData ->
                 assertThat(spanData.endEpochNanos).isGreaterThan(flowStartTime)

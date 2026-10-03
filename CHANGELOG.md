@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+### ⚠️ Breaking changes
+
+- Emit only stable source code attributes: `code.function.name` replaces `code.namespace` and
+  `code.function`, and log records use `code.file.path` and `code.line.number` instead of
+  `code.filepath` and `code.lineno`. The `code` and `code/dup` opt-ins and
+  `general.code.semconv` declarative settings no longer select legacy emission.
+
+### ⚠️ Breaking changes to non-stable APIs
+
+- Move `CodeAttributesGetter`, `CodeAttributesExtractor`, and `CodeSpanNameExtractor` from
+  `io.opentelemetry.instrumentation.api.incubator.semconv.code` in
+  `opentelemetry-instrumentation-api-incubator` to `io.opentelemetry.instrumentation.api.semconv.code`
+  in `opentelemetry-instrumentation-api`. Update imports and dependencies to the stable API.
+- Replace the testing helper `SemconvCodeStabilityUtil` with `CodeAssertions`, which always assert
+  stable source code attributes.
+
 ## Version 2.32.0 (2026-10-03)
 
 This release targets the OpenTelemetry SDK 1.66.0.

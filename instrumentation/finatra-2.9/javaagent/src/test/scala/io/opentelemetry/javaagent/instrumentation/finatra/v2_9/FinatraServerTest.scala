@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.finatra.v2_9
 import com.twitter.finatra.http.HttpServer
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
-import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionPrefixAssertions
+import io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions.codeFunctionPrefixAssertions
 import io.opentelemetry.instrumentation.testing.junit.http.{
   AbstractHttpServerTest,
   HttpServerInstrumentationExtension,

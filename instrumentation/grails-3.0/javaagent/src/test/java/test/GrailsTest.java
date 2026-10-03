@@ -22,7 +22,7 @@ import grails.boot.config.GrailsAutoConfiguration;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
+import io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
@@ -162,7 +162,7 @@ class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationContext> 
     span.hasName(handlerSpanName).hasKind(SpanKind.INTERNAL);
 
     span.hasAttributesSatisfyingExactly(
-        SemconvCodeStabilityUtil.codeFunctionAssertions(handlerClass, handlerMethod));
+        CodeAssertions.codeFunctionAssertions(handlerClass, handlerMethod));
 
     if (endpoint == EXCEPTION) {
       span.hasStatus(StatusData.error());
@@ -185,8 +185,7 @@ class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationContext> 
 
     span.hasKind(SpanKind.INTERNAL)
         .satisfies(spanData -> assertThat(spanData.getName()).endsWith("." + methodName))
-        .hasAttributesSatisfyingExactly(
-            SemconvCodeStabilityUtil.codeFunctionSuffixAssertions(methodName));
+        .hasAttributesSatisfyingExactly(CodeAssertions.codeFunctionSuffixAssertions(methodName));
     return span;
   }
 
@@ -200,8 +199,7 @@ class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationContext> 
           span.hasName("ErrorController." + actionName)
               .hasKind(SpanKind.INTERNAL)
               .hasAttributesSatisfyingExactly(
-                  SemconvCodeStabilityUtil.codeFunctionAssertions(
-                      "test.ErrorController", actionName));
+                  CodeAssertions.codeFunctionAssertions("test.ErrorController", actionName));
         });
     if (endpoint == NOT_FOUND) {
       spanAssertions.add(
@@ -209,7 +207,7 @@ class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationContext> 
               span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendError"))
                   .hasKind(SpanKind.INTERNAL)
                   .hasAttributesSatisfyingExactly(
-                      SemconvCodeStabilityUtil.codeFunctionSuffixAssertions("sendError")));
+                      CodeAssertions.codeFunctionSuffixAssertions("sendError")));
     }
     return spanAssertions;
   }

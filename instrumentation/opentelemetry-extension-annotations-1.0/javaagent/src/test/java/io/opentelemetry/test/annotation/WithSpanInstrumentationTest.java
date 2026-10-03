@@ -13,7 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import io.opentelemetry.api.trace.SpanId;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
+import io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.lang.reflect.Modifier;
@@ -37,7 +37,7 @@ class WithSpanInstrumentationTest {
       AgentInstrumentationExtension.create();
 
   private static List<AttributeAssertion> codeAttributeAssertions(String methodName) {
-    return SemconvCodeStabilityUtil.codeFunctionAssertions(TracedWithSpan.class, methodName);
+    return CodeAssertions.codeFunctionAssertions(TracedWithSpan.class, methodName);
   }
 
   @Test
@@ -375,7 +375,7 @@ class WithSpanInstrumentationTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParentSpanId(SpanId.getInvalid())
                         .hasAttributesSatisfyingExactly(
-                            SemconvCodeStabilityUtil.codeFunctionAssertions(
+                            CodeAssertions.codeFunctionAssertions(
                                 "GeneratedJava6TestClass", "run")),
                 span ->
                     span.hasName("intercept")

@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
-import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
+import io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
@@ -98,8 +98,7 @@ public abstract class AbstractServletFilterTest
             span.hasName("BasicErrorController.error")
                 .hasKind(SpanKind.INTERNAL)
                 .hasAttributesSatisfyingExactly(
-                    SemconvCodeStabilityUtil.codeFunctionSuffixAssertions(
-                        ".BasicErrorController", "error")));
+                    CodeAssertions.codeFunctionSuffixAssertions(".BasicErrorController", "error")));
     return spanAssertions;
   }
 

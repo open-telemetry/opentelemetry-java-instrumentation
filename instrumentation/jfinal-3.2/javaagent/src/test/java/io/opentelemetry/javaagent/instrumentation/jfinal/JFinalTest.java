@@ -20,7 +20,7 @@ import com.jfinal.core.JFinalFilter;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
+import io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
@@ -99,7 +99,7 @@ class JFinalTest extends AbstractHttpServerTest<Server> {
         .hasParent(serverSpan)
         .hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfyingExactly(
-            SemconvCodeStabilityUtil.codeFunctionAssertions(Response.class, "sendRedirect"));
+            CodeAssertions.codeFunctionAssertions(Response.class, "sendRedirect"));
   }
 
   @Override
@@ -108,7 +108,7 @@ class JFinalTest extends AbstractHttpServerTest<Server> {
     span.hasName(getHandlerSpanName(endpoint))
         .hasKind(INTERNAL)
         .hasAttributesSatisfyingExactly(
-            SemconvCodeStabilityUtil.codeFunctionAssertions(
+            CodeAssertions.codeFunctionAssertions(
                 TestController.class, getHandlerMethod(endpoint)));
 
     if (endpoint == EXCEPTION) {

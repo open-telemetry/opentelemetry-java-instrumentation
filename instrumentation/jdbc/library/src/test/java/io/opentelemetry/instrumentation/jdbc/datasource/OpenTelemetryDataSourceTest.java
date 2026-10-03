@@ -20,7 +20,7 @@ import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
+import io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -50,7 +50,7 @@ class OpenTelemetryDataSourceTest {
     Connection connection = testing.runWithSpan("parent", () -> getConnection.call(dataSource));
 
     List<AttributeAssertion> assertions =
-        SemconvCodeStabilityUtil.codeFunctionAssertions(TestDataSource.class, "getConnection");
+        CodeAssertions.codeFunctionAssertions(TestDataSource.class, "getConnection");
     assertions.add(equalTo(maybeStable(DB_SYSTEM), POSTGRESQL));
     assertions.add(equalTo(maybeStable(DB_NAME), "dbname"));
     assertions.add(

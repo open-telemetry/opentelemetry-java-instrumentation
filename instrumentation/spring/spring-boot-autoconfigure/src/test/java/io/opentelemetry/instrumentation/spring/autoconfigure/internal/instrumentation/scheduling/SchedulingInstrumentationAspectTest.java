@@ -14,7 +14,7 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
+import io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.List;
@@ -56,7 +56,7 @@ class SchedulingInstrumentationAspectTest {
   }
 
   private List<AttributeAssertion> assertCodeFunction(String method) {
-    return SemconvCodeStabilityUtil.codeFunctionAssertions(unproxiedTesterClassName, method);
+    return CodeAssertions.codeFunctionAssertions(unproxiedTesterClassName, method);
   }
 
   @Test

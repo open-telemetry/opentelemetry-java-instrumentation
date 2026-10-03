@@ -10,7 +10,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
+import io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.List;
 import java.util.Locale;
@@ -30,8 +30,7 @@ class TraceProvidersTest {
     provider.test();
 
     List<AttributeAssertion> attributeAssertions =
-        SemconvCodeStabilityUtil.codeFunctionAssertions(
-            SayTracedHello.class, provider.testMethodName());
+        CodeAssertions.codeFunctionAssertions(SayTracedHello.class, provider.testMethodName());
     attributeAssertions.add(equalTo(stringKey("providerAttr"), provider.name()));
 
     testing.waitAndAssertTraces(

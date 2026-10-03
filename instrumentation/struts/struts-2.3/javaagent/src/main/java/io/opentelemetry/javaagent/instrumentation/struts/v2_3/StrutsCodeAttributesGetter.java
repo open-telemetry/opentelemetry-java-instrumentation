@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.struts.v2_3;
 
 import com.opensymphony.xwork2.ActionInvocation;
-import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesGetter;
 
 class StrutsCodeAttributesGetter implements CodeAttributesGetter<ActionInvocation> {
 
