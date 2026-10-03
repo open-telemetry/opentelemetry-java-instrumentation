@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0.ApacheDbcpSingletons.getDataSourceName;
 import static io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0.ApacheDbcpSingletons.telemetry;
@@ -14,7 +15,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.apachecommonspool.CommonsPoolMetricsSuppression;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -93,7 +93,7 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      if (!AgentCommonConfig.get().isV3Preview()) {
+      if (!emitStableDatabaseSemconv()) {
         telemetry().unregisterMetrics(dataSource);
       }
       ApacheDbcpSingletons.registerMetrics(dataSource, getDataSourceName(objectName));
