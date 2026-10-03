@@ -6,9 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.clickhouse.clientv1.v0_5;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -18,7 +20,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class ClickHouseClientV1InstrumentationModule extends InstrumentationModule {
 
   public ClickHouseClientV1InstrumentationModule() {
-    super("clickhouse-client-v1", "clickhouse-client-v1-0.5", "clickhouse", "clickhouse-client");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "clickhouse-client-v1-0.5" : "clickhouse-client-v1",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"clickhouse-client-v1", "clickhouse-client"}
+            : new String[] {"clickhouse-client-v1-0.5", "clickhouse", "clickhouse-client"});
   }
 
   @Override
@@ -39,6 +45,9 @@ public class ClickHouseClientV1InstrumentationModule extends InstrumentationModu
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new ClickHouseClientV1Instrumentation());
+    return asList(
+        new ClickHouseClientV1Instrumentation(),
+        new ClickHouseNodesInstrumentation(),
+        new ClickHouseRequestInstrumentation());
   }
 }

@@ -10,6 +10,7 @@ import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.HelperResourceBuilder;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -21,7 +22,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class Log4j2InstrumentationModule extends InstrumentationModule {
   public Log4j2InstrumentationModule() {
-    super("log4j-context-data", "log4j-context-data-2.17");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "log4j-context-data-2.17" : "log4j-context-data",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"log4j-context-data", "log4j"}
+            : new String[] {"log4j-context-data-2.17"});
   }
 
   @Override

@@ -15,19 +15,34 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.MINUTES;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.ArrayDeque;
+import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicReference;
+import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.MessageListener;
 import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.api.SubscriptionInitialPosition;
+import org.apache.pulsar.client.impl.ConsumerBase;
+import org.apache.pulsar.client.impl.conf.ConsumerConfigurationData;
 import org.junit.jupiter.api.Test;
 
 class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
@@ -375,6 +390,95 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
   }
 
   @Test
+  void nestedListenerDoesNotEmitReceiveSpan() throws Exception {
+    String innerTopic = "persistent://public/default/nestedListenerInner";
+    String receiveTopic = "persistent://public/default/nestedListenerReceive";
+    admin.topics().createNonPartitionedTopic(innerTopic);
+    admin.topics().createNonPartitionedTopic(receiveTopic);
+    consumer =
+        client
+            .newConsumer(Schema.STRING)
+            .subscriptionName("test_sub")
+            .topic(innerTopic)
+            .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+            .subscribe();
+    Consumer<String> receiveConsumer =
+        client
+            .newConsumer(Schema.STRING)
+            .subscriptionName("test_sub")
+            .topic(receiveTopic)
+            .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+            .subscribe();
+    producer = client.newProducer(Schema.STRING).topic(receiveTopic).enableBatching(false).create();
+    producer2 = client.newProducer(Schema.STRING).topic(innerTopic).enableBatching(false).create();
+    MessageId innerMessageId = testing.runWithSpan("inner-parent", () -> producer2.send("inner"));
+    MessageId receiveMessageId =
+        testing.runWithSpan("receive-parent", () -> producer.send("receive"));
+
+    Queue<Message<String>> innerMessages = new ArrayDeque<>();
+    ConsumerBase<String> innerDispatcher =
+        listenerDispatcher(innerMessages, (unused1, unused2) -> {}, false);
+
+    AtomicReference<Throwable> listenerFailure = new AtomicReference<>();
+    Message<String> outerMessage = listenerMessage("outer-topic", MessageId.latest);
+    Queue<Message<String>> outerMessages = new ArrayDeque<>();
+    outerMessages.add(outerMessage);
+    ConsumerBase<String> outerDispatcher =
+        listenerDispatcher(
+            outerMessages,
+            (unused1, unused2) -> {
+              try {
+                try (Scope ignored = Context.root().makeCurrent()) {
+                  innerMessages.add(consumer.receiveAsync().join());
+                  triggerListener(innerDispatcher);
+                }
+                Message<String> received = receiveConsumer.receiveAsync().join();
+                acknowledgeMessage(receiveConsumer, received);
+              } catch (Throwable t) {
+                listenerFailure.set(t);
+              }
+            },
+            true);
+
+    try {
+      triggerListener(outerDispatcher);
+    } finally {
+      receiveConsumer.close();
+    }
+
+    assertThat(listenerFailure.get()).isNull();
+
+    testing.waitAndAssertSortedTraces(
+        orderByRootSpanName("inner-parent", spanName("process", "outer-topic"), "receive-parent"),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("inner-parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(spanName("send", innerTopic))
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            sendAttributes(innerTopic, innerMessageId.toString(), false))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(spanName("process", "outer-topic"))
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            processAttributes("outer-topic", MessageId.latest.toString(), false))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("receive-parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(spanName("send", receiveTopic))
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            sendAttributes(receiveTopic, receiveMessageId.toString(), false))));
+  }
+
+  @Test
   void testConsumeMultiTopics() throws Exception {
     String topicNamePrefix = "persistent://public/default/testConsumeMulti_";
     String topic1 = topicNamePrefix + "1";
@@ -442,5 +546,109 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
     return emitStableMessagingSemconv()
         ? operationName + " " + destinationName(destination)
         : destination + " " + oldOperation;
+  }
+
+  @SuppressWarnings("unchecked")
+  private static Message<String> listenerMessage(String topic, MessageId messageId) {
+    Message<String> message = mock(Message.class);
+    when(message.getTopicName()).thenReturn(topic);
+    when(message.getMessageId()).thenReturn(messageId);
+    when(message.getProperties()).thenReturn(emptyMap());
+    return message;
+  }
+
+  @SuppressWarnings("unchecked")
+  private static ConsumerBase<String> listenerDispatcher(
+      Queue<Message<String>> messages, MessageListener<String> listener, boolean instrumentListener)
+      throws ReflectiveOperationException {
+    AtomicReference<MessageListener<String>> listenerReference = new AtomicReference<>();
+    ConsumerBase<String> dispatcher =
+        mock(
+            ConsumerBase.class,
+            withSettings()
+                .defaultAnswer(
+                    invocation -> {
+                      if (invocation.getMethod().getName().equals("internalReceive")
+                          && invocation.getArguments().length == 2) {
+                        return messages.poll();
+                      }
+                      if (invocation.getMethod().getName().equals("callMessageListener")) {
+                        listenerReference
+                            .get()
+                            .received(
+                                (Consumer<String>) invocation.getMock(),
+                                (Message<String>) invocation.getArgument(0));
+                        return null;
+                      }
+                      return invocation.callRealMethod();
+                    }));
+    ConsumerConfigurationData<String> conf = new ConsumerConfigurationData<>();
+    conf.setMessageListener(listener);
+    ScheduledThreadPoolExecutor directExecutor =
+        new ScheduledThreadPoolExecutor(1) {
+          @Override
+          public void execute(Runnable command) {
+            command.run();
+          }
+        };
+    directExecutor.shutdown();
+    MessageListener<String> wrappedListener =
+        instrumentListener ? conf.getMessageListener() : listener;
+    listenerReference.set(wrappedListener);
+    setField(dispatcher, "conf", conf);
+    setField(dispatcher, "listener", wrappedListener);
+    try {
+      setField(dispatcher, "pinnedExecutor", directExecutor);
+    } catch (NoSuchFieldException ignored) {
+      try {
+        setField(dispatcher, "internalPinnedExecutor", directExecutor);
+        Field messageListenerExecutor =
+            ConsumerBase.class.getDeclaredField("messageListenerExecutor");
+        Object executor =
+            Proxy.newProxyInstance(
+                messageListenerExecutor.getType().getClassLoader(),
+                new Class<?>[] {messageListenerExecutor.getType()},
+                (proxy, method, arguments) -> {
+                  if (method.getName().equals("execute")) {
+                    ((Runnable) arguments[1]).run();
+                  }
+                  return null;
+                });
+        messageListenerExecutor.setAccessible(true);
+        messageListenerExecutor.set(dispatcher, executor);
+      } catch (NoSuchFieldException ignoredAgain) {
+        Field listenerTaskScheduler = ConsumerBase.class.getDeclaredField("listenerTaskScheduler");
+        Object scheduler =
+            mock(
+                listenerTaskScheduler.getType(),
+                invocation -> {
+                  if (invocation.getMethod().getName().equals("trigger")) {
+                    wrappedListener.received(dispatcher, messages.poll());
+                  }
+                  return null;
+                });
+        listenerTaskScheduler.setAccessible(true);
+        listenerTaskScheduler.set(dispatcher, scheduler);
+      }
+    }
+    setField(dispatcher, "subscription", "test_sub");
+    return dispatcher;
+  }
+
+  private static void setField(Object target, String name, Object value)
+      throws ReflectiveOperationException {
+    Field field = ConsumerBase.class.getDeclaredField(name);
+    field.setAccessible(true);
+    field.set(target, value);
+  }
+
+  private static void triggerListener(ConsumerBase<String> dispatcher) {
+    try {
+      Method method = ConsumerBase.class.getDeclaredMethod("triggerListener");
+      method.setAccessible(true);
+      method.invoke(dispatcher);
+    } catch (ReflectiveOperationException e) {
+      throw new IllegalStateException(e.getCause() == null ? e : e.getCause());
+    }
   }
 }

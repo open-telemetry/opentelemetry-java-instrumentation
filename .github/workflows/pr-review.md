@@ -28,6 +28,7 @@ permissions:
   contents: read
   issues: read
   pull-requests: read
+  copilot-requests: write
 
 concurrency:
   group: pr-review-${{ github.event.pull_request.number || github.event.issue.number }}

@@ -10,6 +10,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -19,7 +20,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class JedisInstrumentationModule extends InstrumentationModule {
 
   public JedisInstrumentationModule() {
-    super("jedis", "jedis-4.0");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "jedis-4.0" : "jedis",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"jedis"}
+            : new String[] {"jedis-4.0"});
   }
 
   @Override
@@ -31,7 +36,10 @@ public class JedisInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
+        new DefaultJedisSocketFactoryInstrumentation(),
         new JedisConnectionInstrumentation(),
+        new JedisConnectionProviderInstrumentation(),
+        new JedisSentinelPoolInstrumentation(),
         new JedisInstrumentation(),
         new JedisPipelineInstrumentation(),
         new JedisTransactionInstrumentation());

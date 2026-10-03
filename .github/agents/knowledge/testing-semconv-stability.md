@@ -1,9 +1,8 @@
 # [Semconv] Dual Semconv Testing
 
-## Quick Reference
-
-- Use when: reviewing semconv dual-mode assertions or `testStableSemconv` / `testBothSemconv` tasks
-- Review focus: mode-specific assertions, `maybeStable()` usage boundaries
+Use this article when changing semconv opt-in tests or their Gradle tasks.
+It shows which modes each domain requires and how to express their
+expected attributes without hiding mode differences.
 
 ## Background: The Three Modes
 
@@ -31,9 +30,9 @@ All methods are in `io.opentelemetry.instrumentation.api.internal.SemconvStabili
 
 ## Gradle Test Task Setup
 
-Every instrumentation module with Semconv versioning **must** define a `testStableSemconv` task.
-Only add it to modules whose tests actually exercise semconv attributes — not to sibling
-submodules (e.g. unit-test modules) that don't touch semconv.
+Every Gradle project whose tests exercise semconv attributes **must** define its own
+`testStableSemconv` task. This includes `javaagent-unit-tests` projects whose tests branch on an
+`emitOld*()` or `emitStable*()` accessor.
 
 A `testBothSemconv` task (testing the `/dup` mode) is **only required for the RPC domain**.
 Database, code, and service-peer domains do not need a `testBothSemconv` task — only

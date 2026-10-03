@@ -10,6 +10,7 @@ import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -19,7 +20,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class JFinalInstrumentationModule extends InstrumentationModule {
 
   public JFinalInstrumentationModule() {
-    super("jfinal", "jfinal-3.2");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "jfinal-3.2" : "jfinal",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"jfinal"}
+            : new String[] {"jfinal-3.2"});
   }
 
   @Override

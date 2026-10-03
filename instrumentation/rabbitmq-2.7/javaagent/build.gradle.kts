@@ -12,9 +12,15 @@ muzzle {
 }
 
 dependencies {
-  bootstrap(project(":instrumentation:rabbitmq-2.7:bootstrap"))
-
   library("com.rabbitmq:amqp-client:2.7.0")
+
+  // automatic recovery (Recoverable, RecoveryListener, ConnectionFactory#setAutomaticRecoveryEnabled)
+  // does not exist at the 2.7.0 muzzle floor. testCompileOnly lets the recovery test compile
+  // against a client new enough to have it without pulling a newer client onto the test runtime
+  // classpath, so the floor (2.7.0) still gets exercised by every other test; the recovery test
+  // itself is gated with Assumptions.assumeTrue(testLatestDeps) and only actually runs when
+  // testLatestDeps bumps the library() floor to a version that has the feature.
+  testCompileOnly("com.rabbitmq:amqp-client:4.0.0")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
@@ -33,9 +39,14 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
 
-    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
+    systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
 
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+
+    // add byte buddy agent for mockito
+    configurations.testRuntimeClasspath.get().find { it.name.contains("byte-buddy-agent") }?.apply {
+      jvmArgs("-javaagent:$absolutePath")
+    }
   }
 
   val testExperimental = register<Test>("testExperimental") {
@@ -49,7 +60,7 @@ tasks {
   val testMessagingPreview = register<Test>("testMessagingPreview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "false")
+    systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "false")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
@@ -62,6 +73,10 @@ tasks {
   }
 
   check {
-    dependsOn(testExperimental, testMessagingPreview, testBothSemconv)
+    dependsOn(
+      testExperimental,
+      testMessagingPreview,
+      testBothSemconv,
+    )
   }
 }

@@ -10,6 +10,33 @@ muzzle {
     // these versions were released as ".bundle" instead of ".jar"
     skip("2.7.5", "2.7.8")
     assertInverse.set(true)
+
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.v2_0.CouchbaseNetworkInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.v2_6.CouchbaseNetwork26InstrumentationModule")
+  }
+  pass {
+    // instrumentation-docs:ignore - verification only, the directive above is the range we document
+    name.set("Pre-2.6 network instrumentation")
+    group.set("com.couchbase.client")
+    module.set("java-client")
+    versions.set("[2,2.6)")
+    assertInverse.set(true)
+
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.v2_6.CouchbaseNetwork26InstrumentationModule")
+  }
+  pass {
+    // instrumentation-docs:ignore - verification only, the first directive is the range we document
+    name.set("Couchbase 2.6 network instrumentation")
+    group.set("com.couchbase.client")
+    module.set("java-client")
+    versions.set("[2.6.0,3)")
+    // these versions were released as ".bundle" instead of ".jar"
+    skip("2.7.5", "2.7.8")
+    assertInverse.set(true)
+
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.v2_0.CouchbaseNetworkInstrumentationModule")
   }
   fail {
     group.set("com.couchbase.client")
@@ -23,16 +50,31 @@ dependencies {
   implementation(project(":instrumentation:rxjava:rxjava-1.0:library"))
 
   library("com.couchbase.client:java-client:2.0.0")
+  compileOnly("com.couchbase.client:core-io:1.6.0")
 
   testImplementation(project(":instrumentation:couchbase:couchbase-common:testing"))
 
-  testInstrumentation(project(":instrumentation:couchbase:couchbase-2.6:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.1:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.2:javaagent"))
 
-  latestDepTestLibrary("org.springframework.data:spring-data-couchbase:2.+") // see couchbase-2.6 module
-  latestDepTestLibrary("com.couchbase.client:java-client:2.5.+") // see couchbase-2.6 module
+  latestDepTestLibrary("org.springframework.data:spring-data-couchbase:2.+") // see test suite below
+  latestDepTestLibrary("com.couchbase.client:java-client:2.5.+") // see test suite below
+}
+
+testing {
+  suites {
+    register<JvmTestSuite>("version26Test") {
+      dependencies {
+        implementation(project(":instrumentation:couchbase:couchbase-common:testing"))
+        implementation("com.couchbase.client:java-client:${baseVersion("2.6.0").orLatest("2.+")}")
+        implementation(
+          "org.springframework.data:spring-data-couchbase:${baseVersion("3.1.0.RELEASE").orLatest("3.1.+")}"
+        )
+        implementation("com.couchbase.client:encryption:${baseVersion("1.0.0").orLatest("1.+")}")
+      }
+    }
+  }
 }
 
 tasks {
@@ -45,16 +87,40 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
+    register<Test>("${suite.name}StableSemconv") {
+      isEnabled = named<Test>(suite.name).get().enabled
+      testClassesDirs = suite.sources.output.classesDirs
+      classpath = suite.sources.runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+      jvmArgs("-Dotel.semconv-stability.opt-in=database")
+      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+    }
+  }
+
+  val experimentalSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
+    register<Test>("${suite.name}Experimental") {
+      isEnabled = named<Test>(suite.name).get().enabled
+      testClassesDirs = suite.sources.output.classesDirs
+      classpath = suite.sources.runtimeClasspath
+
+      jvmArgs("-Dotel.instrumentation.couchbase.emit-experimental-telemetry=true")
+      systemProperty("metadataConfig", "otel.instrumentation.couchbase.emit-experimental-telemetry=true")
+    }
+  }
+
+  val version26TestLegacyConfig = register<Test>("version26TestLegacyConfig") {
+    val suite = testing.suites.named<JvmTestSuite>("version26Test").get()
+    isEnabled = named<Test>(suite.name).get().enabled
+    testClassesDirs = suite.sources.output.classesDirs
+    classpath = suite.sources.runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.couchbase.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.couchbase.experimental-span-attributes=true")
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites, stableSemconvSuites, experimentalSuites, version26TestLegacyConfig)
   }
 
   if (otelProps.denyUnsafe) {

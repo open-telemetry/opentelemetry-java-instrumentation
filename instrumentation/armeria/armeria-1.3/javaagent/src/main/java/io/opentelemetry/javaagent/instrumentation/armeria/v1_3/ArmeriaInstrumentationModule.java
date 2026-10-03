@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -17,7 +18,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class ArmeriaInstrumentationModule extends InstrumentationModule {
   public ArmeriaInstrumentationModule() {
-    super("armeria", "armeria-1.3");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "armeria-1.3" : "armeria",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"armeria"}
+            : new String[] {"armeria-1.3"});
   }
 
   @Override

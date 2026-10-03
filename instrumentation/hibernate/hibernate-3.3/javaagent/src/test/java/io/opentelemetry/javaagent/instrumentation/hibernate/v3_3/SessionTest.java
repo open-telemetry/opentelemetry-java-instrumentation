@@ -30,6 +30,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class SessionTest extends AbstractHibernateTest {
+
   @ParameterizedTest
   @MethodSource("provideArguments")
   void testHibernateAction(Parameter parameter) {

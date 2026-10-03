@@ -44,6 +44,18 @@ dependencies {
 
 testing {
   suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":javaagent-bootstrap"))
+        implementation(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
+        implementation(project(":instrumentation:jms:jms-1.1:javaagent"))
+        implementation(project(":instrumentation:jms:jms-common-1.1:javaagent"))
+        implementation(project(":javaagent-extension-api"))
+        implementation("javax.jms:jms-api:1.1-rev-1")
+      }
+    }
+
     register<JvmTestSuite>("testReceiveSpansDisabled") {
       dependencies {
         implementation(project(":instrumentation:spring:spring-jms:spring-jms-2.0:testing"))
@@ -84,17 +96,17 @@ tasks {
 
   // this does not apply to testReceiveSpansDisabled
   test {
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true",
+      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
     )
   }
 
   val testMessagingPreview = register<Test>("testMessagingPreview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
@@ -109,8 +121,8 @@ tasks {
     }
     jvmArgs("-Dotel.instrumentation.jms.enabled=false")
     // receive telemetry is enabled here because the jms instrumentation that would create the
-    // receive operation is disabled, so the process operation has to count the consumed message
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    // receive operation is disabled, so the process operation owns the messaging telemetry
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
     systemProperty("testJmsDisabled", "true")
   }
@@ -118,7 +130,7 @@ tasks {
   val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
   }

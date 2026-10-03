@@ -46,6 +46,7 @@ class CamelContextInstrumentation implements TypeInstrumentation {
         // start this service eager so we init before Camel is starting up
         context.addService(new CamelTracingService(context), true, true);
       }
+      CamelInstrumentationEnabled.markEnabled(context);
     }
   }
 }

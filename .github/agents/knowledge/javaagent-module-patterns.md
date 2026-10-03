@@ -1,9 +1,8 @@
 # [Javaagent] Module Structure Patterns
 
-## Quick Reference
-
-- Use when: reviewing `InstrumentationModule`, `TypeInstrumentation`, or `CallDepth` code
-- Review focus: registration and naming, matcher performance, safe advice wiring
+Consult this article when adding or changing an instrumentation module,
+classloader boundary, method matcher, or `CallDepth` pair. It gives registration
+examples and version-boundary mechanics.
 
 ## InstrumentationModule
 
@@ -17,7 +16,11 @@ registers the instrumentation with the agent.
 public class MyLibrary10InstrumentationModule extends InstrumentationModule {
 
   public MyLibrary10InstrumentationModule() {
-    super("my-library", "my-library-1.0");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "my-library-1.0" : "my-library",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"my-library"}
+            : new String[] {"my-library-1.0"});
   }
 
   @Override
@@ -32,12 +35,75 @@ public class MyLibrary10InstrumentationModule extends InstrumentationModule {
 - Must have `@AutoService(InstrumentationModule.class)` — this registers it via SPI.
 - Class name follows `{Library}{Version}InstrumentationModule` (e.g.,
   `OkHttp3InstrumentationModule`, `JedisInstrumentationModule`).
-- Constructor `super()` arguments: the **first** (main) name must equal the Gradle module
-  directory name excluding version suffix. Names use **kebab-case**. See
+- Constructor `super()` arguments in v3 preview: the **first** (main) name normally equals the full
+  Gradle module directory name, including versions. Names use **kebab-case**. See
   [module-naming.md](module-naming.md) for the full naming convention.
+  The Reactor Netty server registration housed in `spring-webflux-5.0` also includes
+  `reactor-netty-server`, `spring-webflux-server`, and `spring-webflux` as secondaries, without
+  `reactor-netty` or `reactor`. This cross-family selector exception applies only to that registration.
+  Independent default-off features use their own feature names instead of a family or baseline
+  shared with default-on instrumentation.
+  Standalone default-off feature modules use the full module directory name first,
+  followed by the versionless feature name, such as `jaxrs-1.0-annotations`, `jaxrs-annotations`.
 - `typeInstrumentations()` returns the list of `TypeInstrumentation` implementations — use
   `Arrays.asList(...)` for multiple items and `Collections.singletonList(...)` for a single
   item.
+
+### Multiple modules in one Gradle project
+
+Every name passed to the `InstrumentationModule` constructor is a user-facing
+`otel.instrumentation.<name>.enabled` alias, checked in constructor argument order. Multiple
+classes may share all their public names. Add an optional feature selector only for independently
+useful behavior, not to distinguish compatibility implementations. Preserve existing controls for
+independently useful features with versionless names; an existing class-specific alias alone does
+not justify a feature selector. Network enrichment, transport compatibility, and asynchronous
+span-completion helpers can share their parent's selectors. Modules belonging to one client/server
+role share that role's selectors.
+
+Preview selectors normally start with the full module directory name, then optional versionless
+client/server roles and independent features, then the version-stripped component name and
+API/product umbrellas. A default-off feature within a default-on module uses an independent primary
+and shares no selectors with the default-on registrations.
+For example, WebFlux server modules use `spring-webflux-5.0`, `spring-webflux-server`, `spring-webflux`.
+Compound provider modules use the full primary, the version-stripped compound name, and the API
+umbrella, such as `jaxrs-2.0-cxf-3.2`, `jaxrs-cxf`, `jaxrs`.
+
+Implementation splits omit versionless names that merely distinguish implementations. For example,
+`mongo-async-3.3` has secondary `mongo`, not `mongo-async`; `spring-cloud-gateway-webmvc-4.3` has
+secondary `spring-cloud-gateway`, not `spring-cloud-gateway-webmvc`.
+Incubator API integration adds the independent feature selector `opentelemetry-api-incubator`
+between its `opentelemetry-api-<version>` primary and `opentelemetry-api` secondary.
+
+An optional product umbrella selects instrumentation whose purpose is to observe or support that
+product's operations. Membership follows product ownership, not historical aliases, directory
+nesting, or shared prefixes. For example, Vert.x HTTP and SQL instrumentation share `vertx`, but
+the general JDBC instrumentation used underneath a Vert.x application does not.
+
+The `reactor` and `tomcat` names are component selectors, not product umbrellas. Core Reactor
+context propagation shares `reactor`; Reactor Kafka and Reactor Netty clients use their own
+component selectors. Tomcat server instrumentation shares `tomcat`; DBCP and JDBC pools use
+their own component selectors.
+
+Place umbrellas after all component, baseline, role, and feature selectors so explicit component
+settings take precedence. Default-off features must not share any selector with default-on
+instrumentation. They use independent feature names, such as `kafka-clients-metrics`,
+`jdbc-datasource`, or `kotlinx-coroutines-annotations`. A group whose
+members are all default-off can share an umbrella: `hibernate` selects default-off telemetry,
+including procedure calls, but not default-on Hibernate Reactive context propagation.
+The deprecated Jedis 1.x and superseded Lettuce 5.1 implementations slated for removal in 3.0
+do not define long-term group membership.
+
+Ordinary defaults assume global enablement on and optional feature settings absent. The native
+Javaagent review instructions contain the naming and default-isolation rules.
+
+Muzzle passes prefer `excludeInstrumentationName(...)` when the public name selects the intended
+classes both outside v3 preview and in preview. Use `excludeInstrumentationModule(...)` with the
+fully qualified module class name when shared public names cannot distinguish the required
+implementations. Public enablement names do not need to identify individual classes. Outside v3
+preview, preserve the existing first name and the order of existing names.
+
+See [Compatibility range ownership](gradle-conventions.md#compatibility-range-ownership) for when
+modules should share a javaagent project and how to separate their Muzzle passes and dependencies.
 
 ### `classLoaderMatcher()` — Version-Boundary Detection
 
@@ -365,9 +431,9 @@ full coordinate.
   optimization belongs on `TypeInstrumentation.classLoaderOptimization()`, not here.
   `classLoaderMatcher()` is only for **version-boundary detection**. Most modules do not need
   it.
-- **Do NOT flag modules that omit `classLoaderMatcher()`.** The default (`any()`) is correct
-  when muzzle can detect the version boundary on its own. Only flag a missing override when
-  the module truly depends on an added or removed landmark class that muzzle does not inspect.
+- **Omit `classLoaderMatcher()` when Muzzle detects the version boundary.** The default
+  (`any()`) is correct. Add an override only when the module truly depends on an
+  added or removed landmark class that Muzzle does not inspect.
 - **Version comments are required on landmark classes.** For multi-class checks, or whenever
   the landmark version differs from the module's base version, every `hasClassesNamed()` call
   needs a role comment. When the entire return expression is a single `hasClassesNamed(...)`
@@ -470,9 +536,40 @@ sufficient for optimization.
 - The `typeMatcher()` uses `named(...)` or `namedOneOf(...)` — no override needed because
   name-only matchers are already fast (they check only the class name, no bytecode).
 
+### Method matchers and advice bindings
+
+The method matcher must prove compatibility for every non-optional, statically typed value that the
+advice reads. For each `@Advice.Argument(n)`, normally include a compatible
+`takesArgument(n, ...)` matcher or an equivalent matcher for the complete typed signature. Apply the
+same rule to a concretely typed `@Advice.Return` with `returns(...)`.
+
+When supported signatures use different concrete subtypes accepted by the advice's common
+supertype, match the hierarchy:
+
+```java
+named("pool")
+    .and(takesArguments(3))
+    .and(takesArgument(1, hasSuperType(named("io.vertx.sqlclient.SqlConnectOptions"))))
+    .and(returns(hasSuperType(named("io.vertx.sqlclient.Pool"))))
+```
+
+Match argument positions that the advice does not bind only when they distinguish an intended
+overload or supported-version signature. Do not restate unrelated arguments, and do not bind unused
+arguments merely to mirror the matcher. The matcher selects methods; the advice signature lists the
+values it reads.
+
+`optional = true` permits the indexed argument to be absent; it does not relax type compatibility
+when the argument is present. A concretely typed optional argument still needs a compatible matcher
+for every signature that includes it. A binding typed as `Object` can intentionally cover broad
+reference types and does not require an exact type matcher. `typing = Assigner.Typing.DYNAMIC`
+instead permits otherwise-incompatible assignment by inserting a runtime cast. Use it without an
+explicit type constraint only when every matched signature has a separate runtime contract that
+guarantees the value is assignable to the advice parameter. Otherwise, constrain the matcher to
+prevent `ClassCastException`.
+
 ### Rules
 
-- Do not flag or change the visibility of advice classes.
+- Do not change the visibility of advice classes solely for style.
 - `typeMatcher()` should match only the types the instrumentation genuinely needs. Prefer
   `named("fully.qualified.ClassName")` or `namedOneOf(...)` for single classes.
   `extendsClass(...)` and `implementsInterface(...)` are appropriate when the instrumentation
@@ -504,12 +601,10 @@ sufficient for optimization.
 - Reference the advice class using `getClass().getName() + "$InnerClassName"` — not
   `this.getClass().getName() + "$InnerClassName"`, `InnerClassName.class.getName()`,
   `OuterClass.class.getName()`, or a string literal.
-  Any `.class.getName()` reference — whether to the inner advice class or the outer
-  instrumentation class — causes class loading in the agent's class loader, where library
-  types used by the advice are unavailable (causing `NoClassDefFoundError`).
-  `getClass().getName()` avoids this because it is a virtual call on the already-loaded
-  instance, not a class literal. Omit the redundant `this.` qualifier and use the shorter
-  repository convention.
+  Do not use `.class.getName()` to construct an advice class name in `transform()`. Resolving the
+  class literal loads the advice class in the agent class loader, where library types referenced
+  by the advice may be unavailable (causing `NoClassDefFoundError`). Omit the redundant `this.`
+  qualifier and use the shorter repository convention.
 
 ## CallDepth (Preventing Recursive Instrumentation)
 

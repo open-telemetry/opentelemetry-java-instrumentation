@@ -16,7 +16,7 @@ muzzle {
     versions.set("[1.10.33,)")
     assertInverse.set(true)
 
-    excludeInstrumentationName("aws-sdk-1.11-sqs")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.SqsInstrumentationModule")
   }
 
   fail {
@@ -24,7 +24,7 @@ muzzle {
     module.set("aws-java-sdk-core")
     versions.set("[1.10.33,)")
 
-    excludeInstrumentationName("aws-sdk-1.11-core")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.AwsSdkInstrumentationModule")
   }
 
   pass {
@@ -103,7 +103,7 @@ testing {
       targets {
         all {
           testTask.configure {
-            jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+            jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
           }
         }
       }
@@ -149,7 +149,7 @@ tasks {
     testClassesDirs = sourceSets["testSqs"].output.classesDirs
     classpath = sourceSets["testSqs"].runtimeClasspath
 
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
@@ -166,7 +166,7 @@ tasks {
     testClassesDirs = sourceSets["testSqs"].output.classesDirs
     classpath = sourceSets["testSqs"].runtimeClasspath
 
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     // with the v3 preview off, the legacy opt-in flag selects the new messaging semconv too
     jvmArgs("-Dotel.semconv-stability.opt-in=messaging/dup")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging/dup")

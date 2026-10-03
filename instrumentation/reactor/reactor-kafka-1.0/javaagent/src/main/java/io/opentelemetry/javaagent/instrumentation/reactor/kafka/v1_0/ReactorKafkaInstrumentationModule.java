@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.reactor.kafka.v1_0;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -16,7 +17,11 @@ import java.util.List;
 public class ReactorKafkaInstrumentationModule extends InstrumentationModule {
 
   public ReactorKafkaInstrumentationModule() {
-    super("reactor-kafka", "reactor-kafka-1.0");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "reactor-kafka-1.0" : "reactor-kafka",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"reactor-kafka"}
+            : new String[] {"reactor-kafka-1.0"});
   }
 
   @Override

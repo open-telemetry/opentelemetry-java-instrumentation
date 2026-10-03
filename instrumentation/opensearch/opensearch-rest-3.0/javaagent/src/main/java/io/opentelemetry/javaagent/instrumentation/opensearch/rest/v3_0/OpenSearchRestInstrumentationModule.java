@@ -6,9 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest.v3_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -17,7 +18,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class OpenSearchRestInstrumentationModule extends InstrumentationModule {
   public OpenSearchRestInstrumentationModule() {
-    super("opensearch-rest", "opensearch-rest-3.0", "opensearch");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "opensearch-rest-3.0" : "opensearch-rest",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"opensearch-rest", "opensearch"}
+            : new String[] {"opensearch-rest-3.0", "opensearch"});
   }
 
   @Override
@@ -28,6 +33,6 @@ public class OpenSearchRestInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new RestClientInstrumentation());
+    return asList(new RestClientConstructorInstrumentation(), new RestClientInstrumentation());
   }
 }

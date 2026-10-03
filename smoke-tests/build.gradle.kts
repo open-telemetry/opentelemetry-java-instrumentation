@@ -23,7 +23,7 @@ dependencies {
   implementation("io.opentelemetry.proto:opentelemetry-proto")
   implementation("org.testcontainers:testcontainers")
   implementation("com.fasterxml.jackson.core:jackson-databind")
-  implementation("com.google.protobuf:protobuf-java-util:4.36.1")
+  implementation("com.google.protobuf:protobuf-java-util:4.36.2")
   implementation("io.grpc:grpc-netty-shaded")
   implementation("io.grpc:grpc-protobuf")
   implementation("io.grpc:grpc-stub")
@@ -57,6 +57,7 @@ tasks {
       "tomee" to listOf("**/Tomee*.*"),
       "websphere" to listOf("**/Websphere*.*"),
       "wildfly" to listOf("**/Wildfly*.*"),
+      "spring-aot" to listOf("**/SpringBootAotSmokeTest.*"),
     )
 
     val smokeTestSuite = project.findProperty("smokeTestSuite") as String?

@@ -18,6 +18,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CONSUMER_GROUP_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CLUSTER_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET;
@@ -119,6 +120,10 @@ public abstract class KafkaClientBaseTest {
 
     producer = new KafkaProducer<>(producerProps());
     cleanup.deferAfterAll(producer);
+    // Required by the interceptor-based tests that extend this class: those pass the cluster id as
+    // a plain String captured from ClusterResourceListener.onUpdate and hold no Producer reference,
+    // so they have no onEnd retry to fall back on and would miss the id on the very first send.
+    producer.partitionsFor(SHARED_TOPIC);
 
     consumer = new KafkaConsumer<>(consumerProps());
     cleanup.deferAfterAll(consumer);
@@ -208,6 +213,7 @@ public abstract class KafkaClientBaseTest {
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
+    assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(
           satisfies(
@@ -243,6 +249,7 @@ public abstract class KafkaClientBaseTest {
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
+    assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     return assertions;
   }
 
@@ -275,6 +282,7 @@ public abstract class KafkaClientBaseTest {
                 equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty)));
     addClientIdAssertions(assertions, "consumer");
+    assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(
           satisfies(longKey("kafka.record.queue_time_ms"), AbstractLongAssert::isNotNegative));

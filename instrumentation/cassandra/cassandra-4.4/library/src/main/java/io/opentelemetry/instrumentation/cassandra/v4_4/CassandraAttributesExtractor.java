@@ -155,28 +155,43 @@ final class CassandraAttributesExtractor
     }
   }
 
-  private static void updateServerAddressAndPort(AttributesBuilder attributes, Node coordinator) {
+  static void updateServerAddressAndPort(AttributesBuilder attributes, Node coordinator) {
+    // Stable server attributes come only from the configured target recorded on span start.
+    // In duplicate mode this also prevents legacy coordinator data from replacing that target.
+    if (emitStableDatabaseSemconv()) {
+      return;
+    }
     EndPoint endPoint = coordinator.getEndPoint();
+    if (endPoint instanceof SniEndPoint) {
+      // Legacy semconv keeps recording the proxy as the server.
+      updateLegacySniServerAddressAndPort(attributes, (SniEndPoint) endPoint);
+      return;
+    }
     if (endPoint instanceof DefaultEndPoint) {
       InetSocketAddress address = ((DefaultEndPoint) endPoint).resolve();
       attributes.put(SERVER_ADDRESS, address.getHostString());
       attributes.put(SERVER_PORT, address.getPort());
-    } else if (endPoint instanceof SniEndPoint && PROXY_ADDRESS_FIELD != null) {
-      SniEndPoint sniEndPoint = (SniEndPoint) endPoint;
-      Object object = null;
-      try {
-        object = PROXY_ADDRESS_FIELD.get(sniEndPoint);
-      } catch (Exception e) {
-        logger.log(
-            FINE,
-            "Error when accessing the private field proxyAddress of SniEndPoint using reflection.",
-            e);
-      }
-      if (object instanceof InetSocketAddress) {
-        InetSocketAddress address = (InetSocketAddress) object;
-        attributes.put(SERVER_ADDRESS, address.getHostString());
-        attributes.put(SERVER_PORT, address.getPort());
-      }
+    }
+  }
+
+  private static void updateLegacySniServerAddressAndPort(
+      AttributesBuilder attributes, SniEndPoint sniEndPoint) {
+    if (PROXY_ADDRESS_FIELD == null) {
+      return;
+    }
+    Object object = null;
+    try {
+      object = PROXY_ADDRESS_FIELD.get(sniEndPoint);
+    } catch (Exception e) {
+      logger.log(
+          FINE,
+          "Error when accessing the private field proxyAddress of SniEndPoint using reflection.",
+          e);
+    }
+    if (object instanceof InetSocketAddress) {
+      InetSocketAddress address = (InetSocketAddress) object;
+      attributes.put(SERVER_ADDRESS, address.getHostString());
+      attributes.put(SERVER_PORT, address.getPort());
     }
   }
 

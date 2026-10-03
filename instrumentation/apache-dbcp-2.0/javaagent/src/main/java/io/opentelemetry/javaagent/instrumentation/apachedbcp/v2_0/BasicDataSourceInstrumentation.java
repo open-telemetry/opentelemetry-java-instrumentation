@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0.ApacheDbcpSingletons.getDataSourceName;
 import static io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0.ApacheDbcpSingletons.telemetry;
@@ -70,9 +71,8 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This BasicDataSource dataSource) {
       ObjectName objectName = OpenTelemetryBasicDataSourceUtil.getRegisteredJmxName(dataSource);
-      String dataSourceName =
-          objectName != null ? getDataSourceName(objectName) : getDataSourceName(dataSource);
-      telemetry().registerMetrics(dataSource, dataSourceName);
+      String poolName = objectName == null ? null : getDataSourceName(objectName);
+      ApacheDbcpSingletons.registerMetrics(dataSource, poolName);
     }
   }
 
@@ -93,10 +93,10 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      String dataSourceName = getDataSourceName(objectName);
-
-      telemetry().unregisterMetrics(dataSource);
-      telemetry().registerMetrics(dataSource, dataSourceName);
+      if (!emitStableDatabaseSemconv()) {
+        telemetry().unregisterMetrics(dataSource);
+      }
+      ApacheDbcpSingletons.registerMetrics(dataSource, getDataSourceName(objectName));
     }
   }
 }

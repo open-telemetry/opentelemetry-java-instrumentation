@@ -1,0 +1,75 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.reactor.v3_1;
+
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
+import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+class ContextPropagationOperatorContextViewInstrumentationTest {
+
+  @RegisterExtension
+  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @Test
+  void storeAndGetContext() {
+    reactor.util.context.Context reactorContext = reactor.util.context.Context.empty();
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          reactor.util.context.Context newReactorContext =
+              ContextPropagationOperator.storeOpenTelemetryContext(
+                  reactorContext, Context.current());
+          Context otelContext =
+              ContextPropagationOperator.getOpenTelemetryContextFromContextView(
+                  newReactorContext, null);
+          assertThat(otelContext).isNotNull();
+          Span.fromContext(otelContext).setAttribute("foo", "bar");
+          Context otelContext2 =
+              ContextPropagationOperator.getOpenTelemetryContext(newReactorContext, null);
+          assertThat(otelContext2).isNotNull();
+          Span.fromContext(otelContext2).setAttribute("foo2", "bar2");
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("parent")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("foo"), "bar"), equalTo(stringKey("foo2"), "bar2"))));
+  }
+
+  @Test
+  void getMissingContextWithNullFallback() {
+    Context context =
+        ContextPropagationOperator.getOpenTelemetryContextFromContextView(
+            reactor.util.context.Context.empty(), null);
+
+    assertThat(context).isNull();
+  }
+
+  @Test
+  void getMissingContextWithExplicitFallback() {
+    Context fallback = Context.root();
+    Context context =
+        ContextPropagationOperator.getOpenTelemetryContextFromContextView(
+            reactor.util.context.Context.empty(), fallback);
+
+    assertThat(context).isSameAs(fallback);
+  }
+}

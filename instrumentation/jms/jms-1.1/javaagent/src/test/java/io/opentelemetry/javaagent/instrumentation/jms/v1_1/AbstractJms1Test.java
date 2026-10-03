@@ -18,7 +18,6 @@ import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAss
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
@@ -29,6 +28,7 @@ import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.opentelemetry.api.common.Attributes;
@@ -36,6 +36,7 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 import javax.jms.Connection;
@@ -142,9 +143,14 @@ abstract class AbstractJms1Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName(destinationName, isTemporary),
-                            oldOperation("publish"),
-                            operationName("send"),
-                            operationType("send"),
+                            equalTo(
+                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_NAME,
+                                emitStableMessagingSemconv() ? "send" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_TYPE,
+                                emitStableMessagingSemconv() ? "send" : null),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary)),
                 span ->
@@ -159,9 +165,14 @@ abstract class AbstractJms1Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName(destinationName, isTemporary),
-                            oldOperation("process"),
-                            operationName("process"),
-                            operationType("process"),
+                            equalTo(
+                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_NAME,
+                                emitStableMessagingSemconv() ? "process" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_TYPE,
+                                emitStableMessagingSemconv() ? "process" : null),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary)),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
@@ -236,9 +247,14 @@ abstract class AbstractJms1Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName(destinationName, isTemporary),
-                            oldOperation("publish"),
-                            operationName("send"),
-                            operationType("send"),
+                            equalTo(
+                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_NAME,
+                                emitStableMessagingSemconv() ? "send" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_TYPE,
+                                emitStableMessagingSemconv() ? "send" : null),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary),
                             equalTo(
@@ -259,9 +275,14 @@ abstract class AbstractJms1Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName(destinationName, isTemporary),
-                            oldOperation("process"),
-                            operationName("process"),
-                            operationType("process"),
+                            equalTo(
+                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_NAME,
+                                emitStableMessagingSemconv() ? "process" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_TYPE,
+                                emitStableMessagingSemconv() ? "process" : null),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary),
                             equalTo(
@@ -320,9 +341,14 @@ abstract class AbstractJms1Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName(destinationName, isTemporary),
-                            oldOperation("publish"),
-                            operationName("send"),
-                            operationType("send"),
+                            equalTo(
+                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_NAME,
+                                emitStableMessagingSemconv() ? "send" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_TYPE,
+                                emitStableMessagingSemconv() ? "send" : null),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary))),
         trace ->
@@ -340,9 +366,14 @@ abstract class AbstractJms1Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName(destinationName, isTemporary),
-                            oldOperation("receive"),
-                            operationName("receive"),
-                            operationType("receive"),
+                            equalTo(
+                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_NAME,
+                                emitStableMessagingSemconv() ? "receive" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_TYPE,
+                                emitStableMessagingSemconv() ? "receive" : null),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary))));
   }
@@ -430,8 +461,7 @@ abstract class AbstractJms1Test {
   }
 
   @Test
-  void shouldRecordConsumedMessagesOnceWhenReceivedMessageIsDispatchedToListener()
-      throws Exception {
+  void shouldRecordProcessDurationWhenReceivedMessageIsDispatchedToListener() throws Exception {
 
     // given
     Destination destination = session.createQueue("metricsReceiveAndDispatchQueue");
@@ -463,14 +493,72 @@ abstract class AbstractJms1Test {
         INSTRUMENTATION_NAME,
         "messaging.process.duration",
         messagingMetricAttributes("process", "metricsReceiveAndDispatchQueue"));
-    // the receive operation already counted this delivery, so the process operation must not count
-    // it again
     assertCounter(
         testing,
         INSTRUMENTATION_NAME,
         "messaging.client.consumed.messages",
         1,
         messagingMetricAttributes("receive", "metricsReceiveAndDispatchQueue"));
+  }
+
+  @Test
+  void shouldUseReceivedMessageAsStableProcessParent() throws Exception {
+    assumeTrue(emitStableMessagingSemconv());
+    Destination destination = session.createQueue("stableProcessParentQueue");
+    MessageProducer producer = session.createProducer(destination);
+    cleanup.deferCleanup(producer::close);
+    MessageConsumer consumer = session.createConsumer(destination);
+    cleanup.deferCleanup(consumer::close);
+
+    producer.send(session.createTextMessage("a message"));
+    Message receivedMessage = consumer.receive();
+    MessageListener listener = message -> {};
+    listener.onMessage(receivedMessage);
+
+    testing.waitForTraces(2);
+    assertThat(testing.spans()).hasSize(3);
+    SpanData receiveSpan =
+        testing.spans().stream()
+            .filter(span -> span.getName().equals("receive stableProcessParentQueue"))
+            .findFirst()
+            .orElseThrow(IllegalStateException::new);
+    assertThat(testing.spans())
+        .filteredOn(span -> span.getName().equals("process stableProcessParentQueue"))
+        .singleElement()
+        .satisfies(span -> assertThat(span.getParentSpanId()).isEqualTo(receiveSpan.getSpanId()));
+  }
+
+  @Test
+  void shouldProcessNestedDistinctMessagesAccordingToParentContext() throws Exception {
+    Destination destination = session.createQueue("nestedProcessingQueue");
+    MessageProducer producer = session.createProducer(destination);
+    cleanup.deferCleanup(producer::close);
+    MessageConsumer consumer = session.createConsumer(destination);
+    cleanup.deferCleanup(consumer::close);
+
+    producer.send(session.createTextMessage("outer"));
+    producer.send(session.createTextMessage("inner"));
+    Message outerMessage = consumer.receive();
+    Message innerMessage = consumer.receive();
+
+    MessageListener innerListener = message -> {};
+    MessageListener outerListener = message -> innerListener.onMessage(innerMessage);
+    outerListener.onMessage(outerMessage);
+
+    await()
+        .untilAsserted(
+            () -> {
+              assertThat(testing.spans()).hasSize(emitStableMessagingSemconv() ? 6 : 5);
+              assertThat(testing.spans())
+                  .filteredOn(
+                      span ->
+                          span.getName()
+                              .equals(
+                                  emitStableMessagingSemconv()
+                                      ? "process nestedProcessingQueue"
+                                      : "nestedProcessingQueue process"))
+                  .hasSize(emitStableMessagingSemconv() ? 2 : 1);
+            });
   }
 
   private static Attributes messagingMetricAttributes(String operationName, String destination) {
@@ -493,24 +581,6 @@ abstract class AbstractJms1Test {
     return emitStableMessagingSemconv() && isTemporary
         ? satisfies(MESSAGING_DESTINATION_NAME, val -> val.isNotEmpty())
         : equalTo(MESSAGING_DESTINATION_NAME, destinationName);
-  }
-
-  static AttributeAssertion oldOperation(String operation) {
-    return equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? operation : null);
-  }
-
-  static AttributeAssertion operationName(String operation) {
-    return equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? operation : null);
-  }
-
-  static AttributeAssertion operationType(String operation) {
-    return equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operation : null);
-  }
-
-  static AttributeAssertion subscriptionName(String subscriptionName) {
-    return equalTo(
-        MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-        emitStableMessagingSemconv() ? subscriptionName : null);
   }
 
   private static Stream<Arguments> emptyReceiveArguments() {

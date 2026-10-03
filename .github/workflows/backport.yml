@@ -11,8 +11,6 @@ permissions:
 
 jobs:
   backport:
-    permissions:
-      contents: write  # for git push to PR branch
     runs-on: ubuntu-latest
     steps:
       - run: |
@@ -25,8 +23,7 @@ jobs:
         with:
           # history is needed to run git cherry-pick below
           fetch-depth: 0
-          # zizmor: ignore[artipacked] Credentials are required by the branch push below.
-          persist-credentials: true
+          persist-credentials: false
 
       - name: Use CLA approved bot
         run: .github/scripts/use-cla-approved-bot.sh
@@ -34,16 +31,18 @@ jobs:
       - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         id: otelbot-token
         with:
-          client-id: ${{ vars.OTELBOT_CLIENT_ID }}
-          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+          client-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_CLIENT_ID }}
+          private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
+          permission-contents: write
           permission-pull-requests: write
+          permission-workflows: write
 
       - name: Create pull request
         env:
           NUMBER: ${{ github.event.inputs.number }}
-          # pull requests from secrets.GITHUB_TOKEN do not run workflows
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
+          gh auth setup-git
           commit=$(gh pr view $NUMBER --json mergeCommit --jq .mergeCommit.oid)
           title=$(gh pr view $NUMBER --json title --jq .title)
 
@@ -52,11 +51,6 @@ jobs:
           git checkout -b $branch
           git cherry-pick $commit
 
-          # note this push will fail if the backport contains any workflow files
-          # because secrets.GITHUB_TOKEN doesn't have this permission
-          # supporting this would require another access token with content write
-          # and workflow write permissions
-          # so for now at least PRs that update workflow files need to be backported manually
           git push --set-upstream origin $branch
 
           gh pr create \

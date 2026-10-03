@@ -7,12 +7,16 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v3_1;
 
 import static io.opentelemetry.javaagent.extension.instrumentation.internal.DeprecatedInstrumentationNames.expandDeprecatedNames;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseCoreInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseMessageHandlerInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseSeedNodesInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -20,8 +24,10 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class CouchbaseInstrumentationModule extends InstrumentationModule {
   public CouchbaseInstrumentationModule() {
     super(
-        "couchbase",
-        expandDeprecatedNames("couchbase-3.1|deprecated:couchbase-3.1.6", "couchbase"));
+        AgentCommonConfig.get().isV3Preview() ? "couchbase-3.1" : "couchbase",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"couchbase"}
+            : expandDeprecatedNames("couchbase-3.1|deprecated:couchbase-3.1.6", "couchbase"));
   }
 
   @Override
@@ -34,6 +40,10 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new CouchbaseEnvironmentInstrumentation());
+    return asList(
+        new CouchbaseEnvironmentInstrumentation(),
+        new CouchbaseCoreInstrumentation(),
+        new CouchbaseSeedNodesInstrumentation(),
+        new CouchbaseMessageHandlerInstrumentation());
   }
 }

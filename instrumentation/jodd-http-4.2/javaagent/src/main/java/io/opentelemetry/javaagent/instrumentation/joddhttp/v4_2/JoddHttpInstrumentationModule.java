@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.joddhttp.v4_2;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -16,7 +17,11 @@ import java.util.List;
 public class JoddHttpInstrumentationModule extends InstrumentationModule {
 
   public JoddHttpInstrumentationModule() {
-    super("jodd-http", "jodd-http-4.2");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "jodd-http-4.2" : "jodd-http",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"jodd-http"}
+            : new String[] {"jodd-http-4.2"});
   }
 
   @Override

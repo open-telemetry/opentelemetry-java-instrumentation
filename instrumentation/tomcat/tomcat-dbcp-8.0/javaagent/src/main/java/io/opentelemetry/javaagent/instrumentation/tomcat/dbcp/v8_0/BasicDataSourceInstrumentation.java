@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.dbcp.v8_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.instrumentation.tomcat.dbcp.v8_0.TomcatDbcpSingletons.getDataSourceName;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -45,9 +46,8 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This BasicDataSource dataSource) {
       ObjectName objectName = OpenTelemetryBasicDataSourceUtil.getRegisteredJmxName(dataSource);
-      String dataSourceName =
-          objectName != null ? getDataSourceName(objectName) : getDataSourceName(dataSource);
-      TomcatDbcpDataSourceMetrics.registerMetrics(dataSource, dataSourceName);
+      String poolName = objectName == null ? null : getDataSourceName(objectName);
+      TomcatDbcpSingletons.registerMetrics(dataSource, poolName);
     }
   }
 
@@ -68,10 +68,10 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      String dataSourceName = getDataSourceName(objectName);
-
-      TomcatDbcpDataSourceMetrics.unregisterMetrics(dataSource);
-      TomcatDbcpDataSourceMetrics.registerMetrics(dataSource, dataSourceName);
+      if (!emitStableDatabaseSemconv()) {
+        TomcatDbcpDataSourceMetrics.unregisterMetrics(dataSource);
+      }
+      TomcatDbcpSingletons.registerMetrics(dataSource, getDataSourceName(objectName));
     }
   }
 }

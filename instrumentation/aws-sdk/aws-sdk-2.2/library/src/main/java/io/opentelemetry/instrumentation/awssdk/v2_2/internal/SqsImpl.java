@@ -23,7 +23,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -95,9 +94,9 @@ public final class SqsImpl {
     Instrumenter<SqsReceiveRequest, Response> consumerReceiveInstrumenter =
         config.getConsumerReceiveInstrumenter();
     io.opentelemetry.context.Context receiveContext = null;
+    List<SqsMessage> tracingMessages = SqsMessageImpl.wrap(response.messages(), config);
     SqsReceiveRequest receiveRequest =
-        SqsReceiveRequest.create(
-            executionAttributes, SqsMessageImpl.wrap(response.messages(), config));
+        SqsReceiveRequest.create(executionAttributes, tracingMessages);
     if (timer != null && consumerReceiveInstrumenter.shouldStart(parentContext, receiveRequest)) {
       receiveContext =
           InstrumenterUtil.startAndEnd(
@@ -127,6 +126,7 @@ public final class SqsImpl {
     TracingList tracingList =
         TracingList.wrap(
             response.messages(),
+            tracingMessages,
             config.getConsumerProcessInstrumenter(),
             copy,
             new Response(context.httpResponse(), response),
@@ -238,16 +238,10 @@ public final class SqsImpl {
         continue;
       }
 
-      Instant timestamp = Instant.now();
+      // These spans provide creation contexts for message propagation and linking.
       io.opentelemetry.context.Context creationContext =
-          InstrumenterUtil.startAndEnd(
-              producerCreateInstrumenter,
-              creationParentContext,
-              createRequest,
-              null,
-              null,
-              timestamp,
-              timestamp);
+          producerCreateInstrumenter.start(creationParentContext, createRequest);
+      producerCreateInstrumenter.end(creationContext, createRequest, null, null);
       // A no-op tracer can pass shouldStart() but return a context with an invalid span.
       if (!Span.fromContext(creationContext).getSpanContext().isValid()) {
         continue;
