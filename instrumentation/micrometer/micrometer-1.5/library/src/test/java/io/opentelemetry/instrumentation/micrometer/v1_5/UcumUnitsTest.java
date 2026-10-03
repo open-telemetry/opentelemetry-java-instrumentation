@@ -28,7 +28,6 @@ class UcumUnitsTest {
     "buffers, {buffer}",
     "connections, {connection}",
     "operations, {operation}",
-    "requests, {request}",
     "records, {record}",
     "rows, {row}",
   })

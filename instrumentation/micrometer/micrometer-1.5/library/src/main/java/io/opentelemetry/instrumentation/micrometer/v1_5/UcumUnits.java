@@ -29,7 +29,6 @@ final class UcumUnits {
     UNITS.put("objects", "{object}");
     UNITS.put("operations", "{operation}");
     UNITS.put("records", "{record}");
-    UNITS.put("requests", "{request}");
     UNITS.put("rows", "{row}");
     UNITS.put("sessions", "{session}");
     UNITS.put("tasks", "{task}");
