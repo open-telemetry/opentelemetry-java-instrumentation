@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### ⚠️ Breaking changes
+
+- Change the Java agent's `telemetry.distro.name` resource attribute from
+  `opentelemetry-java-instrumentation` to `opentelemetry-javaagent` when using flat configuration,
+  matching declarative configuration. Update filters that match the previous value.
+
 ## Version 2.32.0 (2026-10-03)
 
 This release targets the OpenTelemetry SDK 1.66.0.
