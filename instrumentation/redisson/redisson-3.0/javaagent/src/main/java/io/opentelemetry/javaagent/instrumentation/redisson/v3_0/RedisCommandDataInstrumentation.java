@@ -13,6 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.CompletableFutureWrapper;
+import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.RedissonBatchContext;
 import java.util.concurrent.CompletableFuture;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
@@ -31,6 +32,7 @@ class RedisCommandDataInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$MarkCommandAdvice");
     // before 3.16.8
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(0, named("org.redisson.misc.RPromise"))),
@@ -39,6 +41,14 @@ class RedisCommandDataInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(0, CompletableFuture.class)),
         getClass().getName() + "$WrapCompletableFutureAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class MarkCommandAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.This Object command) {
+      RedissonBatchContext.markCommand(command);
+    }
   }
 
   @SuppressWarnings("unused")
