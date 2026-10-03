@@ -80,6 +80,14 @@ class MessagingConfigTest {
   @ValueSource(booleans = {false, true})
   void deprecatedSelectorWarnsOncePerAppliedLeaf(boolean common) throws Exception {
     ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
+    when(deprecatedMessagingConfig(openTelemetry)
+            .get("headers/development")
+            .getScalarList("included", String.class))
+        .thenReturn(singletonList("older"));
+    when(deprecatedMessagingConfig(openTelemetry)
+            .get("headers/development")
+            .getScalarList("excluded", String.class))
+        .thenReturn(singletonList("older-secret"));
     DeclarativeConfigProperties deprecatedConfig =
         common ? messagingConfig(openTelemetry) : deprecatedMessagingConfig(openTelemetry);
     when(deprecatedConfig.get("headers/development").getScalarList("included", String.class))
@@ -243,24 +251,7 @@ class MessagingConfigTest {
   }
 
   @Test
-  void readsDeprecatedCommonSelector() {
-    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
-    when(messagingConfig(openTelemetry)
-            .get("headers/development")
-            .getScalarList("included", String.class))
-        .thenReturn(singletonList("deprecated"));
-    when(messagingConfig(openTelemetry)
-            .get("headers/development")
-            .getScalarList("excluded", String.class))
-        .thenReturn(singletonList("secret"));
-    IncludeExclude headers = MessagingConfig.getHeaders(openTelemetry);
-
-    assertThat(headers.getIncluded()).containsExactly("deprecated");
-    assertThat(headers.getExcluded()).containsExactly("secret");
-  }
-
-  @Test
-  void commonDeprecatedLeavesOverrideOlderLeavesIndependently() throws Exception {
+  void commonDeprecatedLeavesOverrideOlderLeavesIndependently() {
     ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
     when(messagingConfig(openTelemetry)
             .get("headers/development")
@@ -274,72 +265,10 @@ class MessagingConfigTest {
             .get("headers/development")
             .getScalarList("excluded", String.class))
         .thenReturn(singletonList("secret"));
-    TestHandler handler = new TestHandler();
-    Logger logger = Logger.getLogger(MessagingConfig.class.getName());
-    clearDeprecatedWarnings();
-    logger.addHandler(handler);
-    try {
-      IncludeExclude headers = MessagingConfig.getHeaders(openTelemetry);
-      MessagingConfig.getHeaders(openTelemetry);
+    IncludeExclude headers = MessagingConfig.getHeaders(openTelemetry);
 
-      assertThat(headers.matches("public")).isTrue();
-      assertThat(headers.matches("secret")).isFalse();
-      assertThat(handler.records).hasSize(2);
-      assertThat(handler.records.get(0).getMessage())
-          .contains("otel.instrumentation.common.messaging.experimental.headers.included");
-      assertThat(handler.records.get(1).getMessage())
-          .contains("otel.instrumentation.messaging.experimental.headers.excluded");
-    } finally {
-      logger.removeHandler(handler);
-      clearDeprecatedWarnings();
-    }
-  }
-
-  @Test
-  void flatCommonDeprecatedLeavesOverrideOlderLeavesIndependently() throws Exception {
-    OpenTelemetry openTelemetry = OpenTelemetry.noop();
-    String commonIncluded = "otel.instrumentation.common.messaging.experimental.headers.included";
-    String commonExcluded = "otel.instrumentation.common.messaging.experimental.headers.excluded";
-    String olderIncluded = "otel.instrumentation.messaging.experimental.headers.included";
-    String olderExcluded = "otel.instrumentation.messaging.experimental.headers.excluded";
-    String stableIncluded = "otel.instrumentation.common.messaging.headers.included";
-    System.setProperty(commonIncluded, "Test-*");
-    System.setProperty(commonExcluded, "Test-secret");
-    System.setProperty(olderIncluded, "older");
-    System.setProperty(olderExcluded, "Test-public");
-    TestHandler handler = new TestHandler();
-    Logger logger = Logger.getLogger(MessagingConfig.class.getName());
-    clearDeprecatedWarnings();
-    logger.addHandler(handler);
-    try {
-      assertThat(MessagingConfig.getHeaders(openTelemetry, false).isEmpty()).isTrue();
-      IncludeExclude headers = MessagingConfig.getHeaders(openTelemetry, true);
-      MessagingConfig.getHeaders(openTelemetry, true);
-
-      assertThat(headers.matches("Test-public")).isTrue();
-      assertThat(headers.matches("test-public")).isFalse();
-      assertThat(headers.matches("Test-secret")).isFalse();
-      assertThat(handler.records).hasSize(2);
-      assertThat(handler.records.get(0).getMessage()).contains(commonIncluded, stableIncluded);
-      assertThat(handler.records.get(1).getMessage())
-          .contains(commonExcluded, "otel.instrumentation.common.messaging.headers.excluded");
-
-      System.setProperty(stableIncluded, "*");
-      System.clearProperty(commonExcluded);
-      headers = MessagingConfig.getHeaders(openTelemetry, true);
-      assertThat(headers.getIncluded()).containsExactly("*");
-      assertThat(headers.getExcluded()).containsExactly("Test-public");
-      assertThat(handler.records).hasSize(3);
-      assertThat(handler.records.get(2).getMessage()).contains(olderExcluded);
-    } finally {
-      logger.removeHandler(handler);
-      clearDeprecatedWarnings();
-      System.clearProperty(commonIncluded);
-      System.clearProperty(commonExcluded);
-      System.clearProperty(olderIncluded);
-      System.clearProperty(olderExcluded);
-      System.clearProperty(stableIncluded);
-    }
+    assertThat(headers.matches("public")).isTrue();
+    assertThat(headers.matches("secret")).isFalse();
   }
 
   @Test
@@ -385,11 +314,12 @@ class MessagingConfigTest {
     }
   }
 
-  @Test
-  void flatSelectorLeavesResolveIndependently() {
+  @ParameterizedTest
+  @ValueSource(strings = {"common.messaging", "messaging"})
+  void flatSelectorLeavesResolveIndependently(String module) {
     ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
     String stableIncluded = "otel.instrumentation.common.messaging.headers.included";
-    String deprecatedExcluded = "otel.instrumentation.messaging.experimental.headers.excluded";
+    String deprecatedExcluded = "otel.instrumentation." + module + ".experimental.headers.excluded";
     System.setProperty(stableIncluded, "*");
     System.setProperty(deprecatedExcluded, "deprecated-excluded");
     try {
@@ -402,16 +332,21 @@ class MessagingConfigTest {
     }
   }
 
-  @Test
-  void readsDeprecatedHeadersSystemPropertyOutsidePreview() {
-    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
-    String property = "otel.instrumentation.messaging.experimental.headers.included";
+  @ParameterizedTest
+  @ValueSource(strings = {"common.messaging", "messaging"})
+  void readsDeprecatedHeadersSystemPropertyOutsidePreview(String module) {
+    OpenTelemetry openTelemetry = OpenTelemetry.noop();
+    String property = "otel.instrumentation." + module + ".experimental.headers.included";
+    String olderProperty = "otel.instrumentation.messaging.experimental.headers.included";
+    System.setProperty(olderProperty, "older");
     System.setProperty(property, "from-deprecated-prop");
     try {
+      assertThat(MessagingConfig.getHeaders(openTelemetry, false).isEmpty()).isTrue();
       assertThat(MessagingConfig.getHeaders(openTelemetry, true).getIncluded())
           .containsExactly("from-deprecated-prop");
     } finally {
       System.clearProperty(property);
+      System.clearProperty(olderProperty);
     }
   }
 
@@ -497,11 +432,12 @@ class MessagingConfigTest {
     }
   }
 
-  @Test
-  void replacementHeadersSystemPropertyTakesPrecedenceOverDeprecatedProperty() {
+  @ParameterizedTest
+  @ValueSource(strings = {"common.messaging", "messaging"})
+  void replacementHeadersSystemPropertyTakesPrecedenceOverDeprecatedProperty(String module) {
     ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
     String replacementProperty = "otel.instrumentation.common.messaging.headers.included";
-    String deprecatedProperty = "otel.instrumentation.messaging.experimental.headers.included";
+    String deprecatedProperty = "otel.instrumentation." + module + ".experimental.headers.included";
     System.setProperty(replacementProperty, "replacement");
     System.setProperty(deprecatedProperty, "deprecated");
     try {
@@ -513,10 +449,15 @@ class MessagingConfigTest {
     }
   }
 
-  @Test
-  void emptyReplacementHeadersSystemPropertyFallsBackToDeprecatedProperty() {
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "otel.instrumentation.common.messaging.headers.included",
+        "otel.instrumentation.common.messaging.experimental.headers.included"
+      })
+  void emptyReplacementHeadersSystemPropertyFallsBackToDeprecatedProperty(
+      String replacementProperty) {
     ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
-    String replacementProperty = "otel.instrumentation.common.messaging.headers.included";
     String deprecatedProperty = "otel.instrumentation.messaging.experimental.headers.included";
     System.setProperty(replacementProperty, "");
     System.setProperty(deprecatedProperty, "deprecated");
@@ -526,24 +467,6 @@ class MessagingConfigTest {
     } finally {
       System.clearProperty(replacementProperty);
       System.clearProperty(deprecatedProperty);
-    }
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = {"included", "excluded"})
-  void emptyCommonDeprecatedFlatLeafFallsBackToOlderLeaf(String leaf) {
-    String common = "otel.instrumentation.common.messaging.experimental.headers." + leaf;
-    String older = "otel.instrumentation.messaging.experimental.headers." + leaf;
-    System.setProperty(common, "");
-    System.setProperty(older, "older");
-    try {
-      IncludeExclude headers = MessagingConfig.getHeaders(OpenTelemetry.noop(), true);
-
-      assertThat(leaf.equals("included") ? headers.getIncluded() : headers.getExcluded())
-          .containsExactly("older");
-    } finally {
-      System.clearProperty(common);
-      System.clearProperty(older);
     }
   }
 

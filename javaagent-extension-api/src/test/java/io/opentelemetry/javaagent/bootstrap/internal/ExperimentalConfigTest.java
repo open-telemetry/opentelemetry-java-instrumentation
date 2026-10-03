@@ -7,9 +7,11 @@ package io.opentelemetry.javaagent.bootstrap.internal;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Answers.RETURNS_DEEP_STUBS;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -176,15 +178,14 @@ class ExperimentalConfigTest {
 
   private static ExtendedOpenTelemetry yamlConfig(String yaml) {
     ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
-    when(openTelemetry.getInstrumentationConfig("common"))
-        .thenReturn(
-            SdkConfigProvider.create(
-                    DeclarativeConfiguration.toConfigProperties(
-                        DeclarativeConfiguration.parse(
-                            new ByteArrayInputStream(yaml.getBytes(UTF_8)))))
-                .getInstrumentationConfig()
-                .getStructured("java")
-                .getStructured("common"));
+    DeclarativeConfigProperties javaConfig =
+        SdkConfigProvider.create(
+                DeclarativeConfiguration.toConfigProperties(
+                    DeclarativeConfiguration.parse(new ByteArrayInputStream(yaml.getBytes(UTF_8)))))
+            .getInstrumentationConfig()
+            .getStructured("java");
+    when(openTelemetry.getInstrumentationConfig(anyString()))
+        .thenAnswer(invocation -> javaConfig.get(invocation.getArgument(0)));
 
     return openTelemetry;
   }
@@ -203,6 +204,50 @@ class ExperimentalConfigTest {
 
     assertThat(headers.getIncluded()).containsExactly("Test-*", "other");
     assertThat(headers.getExcluded()).containsExactly("*-secret");
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void messagingHeaderYamlAliases(boolean v3Preview) {
+    String yaml =
+        "file_format: 1.1\n"
+            + "instrumentation/development:\n"
+            + "  java:\n"
+            + "    messaging:\n"
+            + "      headers/development:\n"
+            + "        included: [older]\n"
+            + "        excluded: [older-secret]\n"
+            + "    common:\n"
+            + "      v3_preview: "
+            + v3Preview
+            + "\n"
+            + "      messaging:\n"
+            + "        headers/development:\n"
+            + "          included: [Test-*]\n"
+            + "          excluded: [Test-secret]\n";
+    IncludeExclude headers = new ExperimentalConfig(yamlConfig(yaml)).getMessagingHeaders();
+
+    assertThat(headers.getIncluded()).isEqualTo(v3Preview ? emptyList() : singletonList("Test-*"));
+    assertThat(headers.getExcluded())
+        .isEqualTo(v3Preview ? emptyList() : singletonList("Test-secret"));
+
+    assertThat(
+            new ExperimentalConfig(
+                    yamlConfig(
+                        yaml
+                            + "        headers:\n          included: []\n          excluded: []\n"))
+                .getMessagingHeaders()
+                .isEmpty())
+        .isTrue();
+
+    headers =
+        new ExperimentalConfig(
+                yamlConfig(yaml + "        headers:\n          included: [stable-*]\n"))
+            .getMessagingHeaders();
+
+    assertThat(headers.getIncluded()).containsExactly("stable-*");
+    assertThat(headers.getExcluded())
+        .isEqualTo(v3Preview ? emptyList() : singletonList("Test-secret"));
   }
 
   @Test
