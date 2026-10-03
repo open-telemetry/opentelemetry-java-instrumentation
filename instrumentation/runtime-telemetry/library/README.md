@@ -96,9 +96,9 @@ otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included=jvm.mem
 otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.excluded=jvm.memory.allocation
 ```
 
-Matching is case-sensitive. `*` matches any number of characters and `?` matches one character. Configuring either selector property activates JFR. An exclude-only selector includes all metrics minus the excluded metrics, and `included=*` selects all metrics explicitly. Excluded patterns take precedence over included patterns, including over shorthand and legacy selections.
+Matching is case-sensitive. `*` matches any number of characters and `?` matches one character. Configuring either selector property activates JFR. An exclude-only selector includes all metrics minus the excluded metrics, and `included=*` selects all metrics explicitly. Excluded patterns take precedence over included patterns, including over experimental JFR shorthand selections.
 
-JFR registers only matching metrics and starts its recording stream only when at least one handler remains. Metrics whose JFR handlers cannot fully replace the JMX series, such as memory-pool metrics with collector-specific gaps, remain on JMX while overlapping suppression is enabled. JMX also registers JMX-only metrics such as `jvm.cpu.time` and `jvm.system.cpu.load_1m`.
+JFR registers only matching metrics and starts its recording stream only when at least one handler remains. Metrics whose JFR handlers cannot fully replace the JMX series, such as memory-pool metrics with collector-specific gaps, remain on JMX. JMX also registers JMX-only metrics such as `jvm.cpu.time` and `jvm.system.cpu.load_1m`.
 
 The equivalent declarative configuration is:
 
@@ -188,7 +188,7 @@ These metrics are collected via JMX on all Java versions unless selected for JFR
 
 #### JFR-based (Overlap with JMX)
 
-The following metrics have JFR implementations and can be selected for JFR. JMX suppression is based on the metric names JFR actually registered, so unsupported JFR handlers fall back to JMX. The `jvm.memory.*` implementations do not cover every memory pool and therefore remain sourced from JMX while overlapping suppression is active. The `jvm.buffer.*` and `jvm.memory.init` implementations likewise remain on JMX while experimental JMX metrics are enabled:
+The following metrics have JFR implementations and can be selected for JFR. JMX suppression is based on the metric names JFR actually registered, so unsupported JFR handlers fall back to JMX. The `jvm.memory.*` implementations do not cover every memory pool and therefore remain sourced from JMX. The `jvm.buffer.*` and `jvm.memory.init` implementations likewise remain on JMX while experimental JMX metrics are enabled:
 
 | Metric                          |
 | ------------------------------- |
@@ -212,6 +212,9 @@ The following metrics have JFR implementations and can be selected for JFR. JMX 
 ## Garbage Collector Dependent Metrics
 
 The attributes reported on the memory metrics (`jvm.memory.*`) and gc metrics (`jvm.gc.*`) are dependent on the garbage collector used by the application, since each garbage collector organizes memory pools differently and has different strategies for reclaiming memory during garbage collection.
+
+JMX `jvm.gc.duration` metrics always include `jvm.gc.cause` from the JVM's GC notification. All metrics
+use the `io.opentelemetry.runtime-telemetry` instrumentation scope.
 
 The following lists attributes reported for a variety of garbage collectors. Notice that attributes are not necessarily constant across `*.used`, `*.committed`, and `*.limit` since not all memory pools report a limit.
 

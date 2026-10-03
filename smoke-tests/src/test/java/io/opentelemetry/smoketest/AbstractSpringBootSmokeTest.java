@@ -51,7 +51,7 @@ abstract class AbstractSpringBootSmokeTest extends AbstractSmokeTest<Integer> {
     assertThat(output.getLoggedTraceIds()).isEqualTo(getSpanTraceIds());
 
     testing.waitAndAssertMetrics(
-        "io.opentelemetry.runtime-telemetry-java8",
+        "io.opentelemetry.runtime-telemetry",
         metric -> metric.hasName("jvm.memory.used"),
         metric -> metric.hasName("jvm.memory.committed"),
         metric -> metric.hasName("jvm.memory.limit"),
