@@ -240,8 +240,7 @@
 
 ### 🛠️ Bug fixes
 
-- Lettuce 5.1 client spans for Redis command failures now have error status and record the Redis
-  error prefix in `error.type`.
+- Lettuce 5.1 client spans for Redis command failures now have error status.
   ([#19075](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19075))
 - Prevent javaagent startup deadlocks caused by lazy context-storage initialization under
   class-loader locks.
