@@ -47,7 +47,7 @@ class KtorServerTelemetry private constructor(
         )
     }
 
-    fun setStatusExtractor(
+    fun spanStatusExtractor(
       extractor: (SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> SpanStatusExtractor<ApplicationRequest, ApplicationResponse>
     ) {
       builder.setSpanStatusExtractorCustomizer { prevExtractor ->
@@ -62,15 +62,15 @@ class KtorServerTelemetry private constructor(
       }
     }
 
-    fun setSpanKindExtractor(extractor: (SpanKindExtractor<ApplicationRequest>) -> SpanKindExtractor<ApplicationRequest>) {
+    fun spanKindExtractor(extractor: (SpanKindExtractor<ApplicationRequest>) -> SpanKindExtractor<ApplicationRequest>) {
       this.spanKindExtractor = extractor
     }
 
-    fun setSpanNameExtractorCustomizer(extractor: UnaryOperator<SpanNameExtractor<ApplicationRequest>>) {
+    fun spanNameExtractor(extractor: UnaryOperator<SpanNameExtractor<ApplicationRequest>>) {
       builder.setSpanNameExtractorCustomizer(extractor)
     }
 
-    fun addAttributesExtractor(extractor: AttributesExtractor<ApplicationRequest, ApplicationResponse>) {
+    fun attributesExtractor(extractor: AttributesExtractor<ApplicationRequest, ApplicationResponse>) {
       builder.addAttributesExtractor(extractor)
     }
 
@@ -86,7 +86,7 @@ class KtorServerTelemetry private constructor(
      * patterns captures every header that is not excluded, and an [empty][IncludeExclude.isEmpty]
      * selector captures no headers.
      */
-    fun setRequestHeaders(requestHeaders: IncludeExclude) {
+    fun requestHeaders(requestHeaders: IncludeExclude) {
       builder.setRequestHeaders(requestHeaders)
     }
 
@@ -102,11 +102,11 @@ class KtorServerTelemetry private constructor(
      * patterns captures every header that is not excluded, and an [empty][IncludeExclude.isEmpty]
      * selector captures no headers.
      */
-    fun setResponseHeaders(responseHeaders: IncludeExclude) {
+    fun responseHeaders(responseHeaders: IncludeExclude) {
       builder.setResponseHeaders(responseHeaders)
     }
 
-    fun setKnownMethods(knownMethods: Collection<String>) {
+    fun knownMethods(knownMethods: Collection<String>) {
       builder.setKnownMethods(knownMethods)
     }
 
