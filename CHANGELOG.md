@@ -173,8 +173,7 @@
   resolved.
   ([#18978](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18978))
 - Add SQL database attributes to AWS SDK v2 RDS Data API `ExecuteStatement` and
-  `BatchExecuteStatement` spans, plus database duration metrics with
-  `otel.semconv-stability.opt-in=database`.
+  `BatchExecuteStatement` spans.
   ([#19259](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19259))
 - Add `WARNING` logs for invalid or empty extension locations and failed extension JAR loads, plus
   `FINE` logs for successfully loaded extension JARs.
@@ -230,9 +229,6 @@
 - Make `host.id` resource detection opt-in for the Java agent with
   `otel.resource.providers.host-id.enabled=true`.
   ([#20099](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20099))
-- Cache repeated reflective method lookups in Dubbo, JAX-RS, MongoDB, and Redisson instrumentation
-  to reduce overhead on request and connection paths.
-  ([#20124](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20124))
 - Add mode-aware semantic-conventions schema URLs to database, messaging, and RPC telemetry scopes.
   ([#20127](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20127))
 - Add the semantic-conventions schema URL to runtime JVM metrics covered by the schema.
