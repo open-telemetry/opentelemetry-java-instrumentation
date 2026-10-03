@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### ⚠️ Breaking changes to non-stable APIs
+
+- Remove the deprecated `opentelemetry-elasticsearch-rest-7.0` and
+  `opentelemetry-elasticsearch-rest-common-5.0` library artifacts. Use the Elasticsearch Java API
+  Client's native OpenTelemetry support, or the Java agent for direct `RestClient` usage.
+  Java agent instrumentation is unaffected.
+
 ## Version 2.32.0 (2026-10-03)
 
 This release targets the OpenTelemetry SDK 1.66.0.
