@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-### ⚠️ Breaking changes
+### ⚠️ Breaking changes to non-stable APIs
 
 - Remove `otel.javaagent.experimental.indy` and `distribution.javaagent.indy/development`.
   The javaagent now always uses invokedynamic for compatible instrumentation. Remove these settings
