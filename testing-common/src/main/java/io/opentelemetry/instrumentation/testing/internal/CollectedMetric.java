@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.testing.internal;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.metrics.data.MetricDataType;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Set;
 import java.util.TreeSet;
@@ -77,6 +78,6 @@ public final class CollectedMetric {
   }
 
   public Set<AttributeKey<?>> getAttributeKeys() {
-    return attributeKeys;
+    return Collections.unmodifiableSet(attributeKeys);
   }
 }
