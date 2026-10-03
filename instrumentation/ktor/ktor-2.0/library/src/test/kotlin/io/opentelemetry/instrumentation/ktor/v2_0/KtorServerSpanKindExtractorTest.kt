@@ -57,7 +57,7 @@ class KtorServerSpanKindExtractorTest : AbstractHttpServerUsingTest<ApplicationE
 
   override fun setupServer(): ApplicationEngine = embeddedServer(Netty, port = port) {
     install(KtorServerTelemetry) {
-      openTelemetry(testing.openTelemetry)
+      setOpenTelemetry(testing.openTelemetry)
       spanKindExtractor {
         if (uri.startsWith("/from-pubsub/")) {
           SpanKind.CONSUMER

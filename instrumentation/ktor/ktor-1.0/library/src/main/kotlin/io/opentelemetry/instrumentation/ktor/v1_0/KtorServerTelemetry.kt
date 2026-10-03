@@ -38,7 +38,7 @@ class KtorServerTelemetry private constructor(
     internal var spanKindExtractor:
       (SpanKindExtractor<ApplicationRequest>) -> SpanKindExtractor<ApplicationRequest> = { a -> a }
 
-    fun openTelemetry(openTelemetry: OpenTelemetry) {
+    fun setOpenTelemetry(openTelemetry: OpenTelemetry) {
       this.builder =
         DefaultHttpServerInstrumenterBuilder.create(
           INSTRUMENTATION_NAME,
@@ -47,7 +47,7 @@ class KtorServerTelemetry private constructor(
         )
     }
 
-    fun spanStatusExtractor(
+    fun setStatusExtractor(
       extractor: (SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> SpanStatusExtractor<ApplicationRequest, ApplicationResponse>
     ) {
       builder.setSpanStatusExtractorCustomizer { prevExtractor ->
@@ -62,15 +62,15 @@ class KtorServerTelemetry private constructor(
       }
     }
 
-    fun spanKindExtractor(extractor: (SpanKindExtractor<ApplicationRequest>) -> SpanKindExtractor<ApplicationRequest>) {
+    fun setSpanKindExtractor(extractor: (SpanKindExtractor<ApplicationRequest>) -> SpanKindExtractor<ApplicationRequest>) {
       this.spanKindExtractor = extractor
     }
 
-    fun spanNameExtractor(extractor: UnaryOperator<SpanNameExtractor<ApplicationRequest>>) {
+    fun setSpanNameExtractorCustomizer(extractor: UnaryOperator<SpanNameExtractor<ApplicationRequest>>) {
       builder.setSpanNameExtractorCustomizer(extractor)
     }
 
-    fun attributesExtractor(extractor: AttributesExtractor<ApplicationRequest, ApplicationResponse>) {
+    fun addAttributesExtractor(extractor: AttributesExtractor<ApplicationRequest, ApplicationResponse>) {
       builder.addAttributesExtractor(extractor)
     }
 
@@ -86,8 +86,22 @@ class KtorServerTelemetry private constructor(
      * patterns captures every header that is not excluded, and an [empty][IncludeExclude.isEmpty]
      * selector captures no headers.
      */
-    fun requestHeaders(requestHeaders: IncludeExclude) {
+    fun setRequestHeaders(requestHeaders: IncludeExclude) {
       builder.setRequestHeaders(requestHeaders)
+    }
+
+    /**
+     * Configures which HTTP request headers are captured as span attributes, by exact header name.
+     *
+     * The header names are matched literally, so `*` and `?` are not treated as glob patterns.
+     */
+    // may be removed in the next minor release
+    @Deprecated(
+      "Use setRequestHeaders(IncludeExclude) instead, which matches glob patterns rather than " +
+        "literal header names. May be removed in the next minor release."
+    )
+    fun setCapturedRequestHeaders(requestHeaders: List<String>) {
+      builder.setCapturedRequestHeaders(requestHeaders)
     }
 
     /**
@@ -102,11 +116,25 @@ class KtorServerTelemetry private constructor(
      * patterns captures every header that is not excluded, and an [empty][IncludeExclude.isEmpty]
      * selector captures no headers.
      */
-    fun responseHeaders(responseHeaders: IncludeExclude) {
+    fun setResponseHeaders(responseHeaders: IncludeExclude) {
       builder.setResponseHeaders(responseHeaders)
     }
 
-    fun knownMethods(knownMethods: Collection<String>) {
+    /**
+     * Configures which HTTP response headers are captured as span attributes, by exact header name.
+     *
+     * The header names are matched literally, so `*` and `?` are not treated as glob patterns.
+     */
+    // may be removed in the next minor release
+    @Deprecated(
+      "Use setResponseHeaders(IncludeExclude) instead, which matches glob patterns rather than " +
+        "literal header names. May be removed in the next minor release."
+    )
+    fun setCapturedResponseHeaders(responseHeaders: List<String>) {
+      builder.setCapturedResponseHeaders(responseHeaders)
+    }
+
+    fun setKnownMethods(knownMethods: Collection<String>) {
       builder.setKnownMethods(knownMethods)
     }
 

@@ -40,7 +40,7 @@ val openTelemetry: OpenTelemetry = ...
 
 embeddedServer(Netty, 8080) {
   install(KtorServerTelemetry) {
-    openTelemetry(openTelemetry)
+    setOpenTelemetry(openTelemetry)
   }
 }
 ```
@@ -56,7 +56,7 @@ val openTelemetry: OpenTelemetry = ...
 
 val client = HttpClient {
   install(KtorClientTelemetry) {
-    openTelemetry(openTelemetry)
+    setOpenTelemetry(openTelemetry)
   }
 }
 ```

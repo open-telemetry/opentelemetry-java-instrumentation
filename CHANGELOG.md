@@ -5,20 +5,10 @@
 ### ⚠️ Breaking changes to non-stable APIs
 
 - Remove deprecated `setCapturedRequestHeaders` and `setCapturedResponseHeaders` methods from
-  HTTP library telemetry builders, including Ktor 1.0 configuration, and the
-  `capturedRequestHeaders` and `capturedResponseHeaders` overloads from Ktor 2.0/3.0 builders.
-  Use `setRequestHeaders` and `setResponseHeaders`, or `requestHeaders` and `responseHeaders`
-  for Ktor, with `IncludeExclude` selectors instead. Selector patterns interpret
-  `*` and `?` as wildcards rather than literal header-name characters.
+  non-Ktor HTTP library telemetry builders. Use `setRequestHeaders` and `setResponseHeaders`
+  with `IncludeExclude` selectors instead. Selector patterns interpret `*` and `?` as wildcards
+  rather than literal header-name characters.
   Deprecated header-capture methods in the stable `instrumentation-api` artifact remain available.
-- Rename Ktor 1.0 configuration methods to match Ktor 2.0/3.0:
-  `setRequestHeaders` to `requestHeaders`, `setResponseHeaders` to `responseHeaders`,
-  `setKnownMethods` to `knownMethods`, `addAttributesExtractor` to `attributesExtractor`,
-  `setSpanNameExtractorCustomizer` to `spanNameExtractor`, `setStatusExtractor` to
-  `spanStatusExtractor`, and `setSpanKindExtractor` to `spanKindExtractor`.
-  Parameter types and behavior are unchanged.
-- Rename `setOpenTelemetry` to `openTelemetry` in Ktor 1.0 configuration and Ktor 2.0/3.0
-  client and server builders. The parameter type and initialization behavior are unchanged.
 
 ## Version 2.32.0 (2026-10-03)
 

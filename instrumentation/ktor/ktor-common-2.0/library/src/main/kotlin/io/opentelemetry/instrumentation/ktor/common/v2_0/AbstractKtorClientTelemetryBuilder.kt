@@ -32,7 +32,7 @@ abstract class AbstractKtorClientTelemetryBuilder(
 
   internal fun builder(): DefaultHttpClientInstrumenterBuilder<HttpRequestData, HttpResponse> = builder
 
-  fun openTelemetry(openTelemetry: OpenTelemetry) {
+  fun setOpenTelemetry(openTelemetry: OpenTelemetry) {
     this.openTelemetry = openTelemetry
     this.builder = DefaultHttpClientInstrumenterBuilder.create(
       instrumentationName,
@@ -60,6 +60,34 @@ abstract class AbstractKtorClientTelemetryBuilder(
   }
 
   /**
+   * Configures which HTTP request headers are captured as span attributes, by exact header name.
+   *
+   * The header names are matched literally, so `*` and `?` are not treated as glob patterns.
+   */
+  // may be removed in the next minor release
+  @Deprecated(
+    "Use requestHeaders(IncludeExclude) instead, which matches glob patterns rather than " +
+      "literal header names. May be removed in the next minor release."
+  )
+  fun capturedRequestHeaders(vararg headers: String) {
+    builder.setCapturedRequestHeaders(headers.toList())
+  }
+
+  /**
+   * Configures which HTTP request headers are captured as span attributes, by exact header name.
+   *
+   * The header names are matched literally, so `*` and `?` are not treated as glob patterns.
+   */
+  // may be removed in the next minor release
+  @Deprecated(
+    "Use requestHeaders(IncludeExclude) instead, which matches glob patterns rather than " +
+      "literal header names. May be removed in the next minor release."
+  )
+  fun capturedRequestHeaders(headers: Iterable<String>) {
+    builder.setCapturedRequestHeaders(headers.toList())
+  }
+
+  /**
    * Configures which HTTP response headers are captured as span attributes.
    *
    * Header values are captured under the `http.response.header.<key>` attribute key. The `<key>`
@@ -73,6 +101,34 @@ abstract class AbstractKtorClientTelemetryBuilder(
    */
   fun responseHeaders(responseHeaders: IncludeExclude) {
     builder.setResponseHeaders(responseHeaders)
+  }
+
+  /**
+   * Configures which HTTP response headers are captured as span attributes, by exact header name.
+   *
+   * The header names are matched literally, so `*` and `?` are not treated as glob patterns.
+   */
+  // may be removed in the next minor release
+  @Deprecated(
+    "Use responseHeaders(IncludeExclude) instead, which matches glob patterns rather than " +
+      "literal header names. May be removed in the next minor release."
+  )
+  fun capturedResponseHeaders(vararg headers: String) {
+    builder.setCapturedResponseHeaders(headers.toList())
+  }
+
+  /**
+   * Configures which HTTP response headers are captured as span attributes, by exact header name.
+   *
+   * The header names are matched literally, so `*` and `?` are not treated as glob patterns.
+   */
+  // may be removed in the next minor release
+  @Deprecated(
+    "Use responseHeaders(IncludeExclude) instead, which matches glob patterns rather than " +
+      "literal header names. May be removed in the next minor release."
+  )
+  fun capturedResponseHeaders(headers: Iterable<String>) {
+    builder.setCapturedResponseHeaders(headers.toList())
   }
 
   fun knownMethods(vararg methods: String) = knownMethods(methods.asIterable())

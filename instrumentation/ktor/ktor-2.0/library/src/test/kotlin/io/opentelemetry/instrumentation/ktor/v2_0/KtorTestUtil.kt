@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTes
 internal object KtorTestUtil {
   fun installOpenTelemetry(application: Application, openTelemetry: OpenTelemetry) {
     application.install(KtorServerTelemetry) {
-      openTelemetry(openTelemetry)
+      setOpenTelemetry(openTelemetry)
       requestHeaders(AbstractHttpServerTest.TEST_HEADERS)
       responseHeaders(AbstractHttpServerTest.TEST_HEADERS)
     }

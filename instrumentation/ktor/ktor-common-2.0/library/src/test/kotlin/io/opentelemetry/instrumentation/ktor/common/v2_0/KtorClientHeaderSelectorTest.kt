@@ -53,19 +53,30 @@ class KtorClientHeaderSelectorTest {
   @Test
   fun capturesHeadersConfiguredByName() {
     val span = record { telemetryBuilder ->
-      telemetryBuilder.requestHeaders(IncludeExclude.builder().setIncluded("X-Test-Request", "Authorization").build())
-      telemetryBuilder.responseHeaders(IncludeExclude.builder().setIncluded("X-Test-Response").build())
+      @Suppress("DEPRECATION") // testing the deprecated API
+      telemetryBuilder.capturedRequestHeaders("X-Test-Request", "Authorization")
+      @Suppress("DEPRECATION") // testing the deprecated API
+      telemetryBuilder.capturedResponseHeaders("X-Test-Response")
     }
 
     assertThat(span.attributes.get(REQUEST_HEADER)).containsExactly("request-value")
     assertThat(span.attributes.get(RESPONSE_HEADER)).containsExactly("response-value")
+    // capturing Authorization here is what makes asserting that it is absent in
+    // deprecatedSettersMatchHeaderNamesLiterally meaningful
     assertThat(span.attributes.get(AUTHORIZATION_HEADER)).containsExactly("secret-value")
   }
 
   @Test
-  fun doesNotCaptureHeadersByDefault() {
-    val span = record {}
+  fun deprecatedSettersMatchHeaderNamesLiterally() {
+    val span = record { telemetryBuilder ->
+      @Suppress("DEPRECATION") // testing the deprecated API
+      telemetryBuilder.capturedRequestHeaders("*")
+      @Suppress("DEPRECATION") // testing the deprecated API
+      telemetryBuilder.capturedResponseHeaders("*")
+    }
 
+    // "*" is matched literally, so it captures nothing; the request carries an Authorization header
+    // so that treating "*" as a glob pattern would capture it
     assertThat(span.attributes.get(AUTHORIZATION_HEADER)).isNull()
     assertThat(span.attributes.asMap().keys.map { it.key })
       .noneMatch { it.startsWith("http.request.header.") }
@@ -74,7 +85,7 @@ class KtorClientHeaderSelectorTest {
 
   private fun record(configure: (TestKtorClientTelemetryBuilder) -> Unit): SpanData {
     val telemetryBuilder = TestKtorClientTelemetryBuilder()
-    telemetryBuilder.openTelemetry(testing.openTelemetry)
+    telemetryBuilder.setOpenTelemetry(testing.openTelemetry)
     configure(telemetryBuilder)
     val instrumenter = telemetryBuilder.buildInstrumenter()
 

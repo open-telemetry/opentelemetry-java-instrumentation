@@ -26,7 +26,7 @@ class ServerMetricsTest : AbstractKtorServerMetricsTest() {
 
   override fun serverInstall(application: io.ktor.server.application.Application) {
     application.install(KtorServerTelemetry) {
-      openTelemetry(testing.openTelemetry)
+      setOpenTelemetry(testing.openTelemetry)
       Experimental.emitExperimentalTelemetry(this)
     }
   }

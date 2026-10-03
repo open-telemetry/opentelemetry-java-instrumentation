@@ -12,7 +12,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.common.Attributes
-import io.opentelemetry.instrumentation.api.config.IncludeExclude
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension
@@ -45,7 +44,7 @@ class KtorServerHeaderSelectorTest : AbstractHttpServerUsingTest<ApplicationEngi
 
   override fun setupServer(): ApplicationEngine = embeddedServer(Netty, port = port) {
     install(KtorServerTelemetry) {
-      openTelemetry(testing.openTelemetry)
+      setOpenTelemetry(testing.openTelemetry)
       configureHeaders(this)
     }
 
@@ -64,21 +63,30 @@ class KtorServerHeaderSelectorTest : AbstractHttpServerUsingTest<ApplicationEngi
   @Test
   fun capturesHeadersConfiguredByName() {
     val attributes = captureAttributes { telemetry ->
-      telemetry.requestHeaders(IncludeExclude.builder().setIncluded("X-Test-Request", "Authorization").build())
-      telemetry.responseHeaders(IncludeExclude.builder().setIncluded("X-Test-Response").build())
+      @Suppress("DEPRECATION") // testing the deprecated API
+      telemetry.capturedRequestHeaders("X-Test-Request", "Authorization")
+      @Suppress("DEPRECATION") // testing the deprecated API
+      telemetry.capturedResponseHeaders("X-Test-Response")
     }
 
     assertThat(attributes.get(REQUEST_HEADER)).containsExactly("request-value")
     assertThat(attributes.get(RESPONSE_HEADER)).containsExactly("response-value")
+    // capturing Authorization here is what makes asserting that it is absent in
+    // deprecatedSettersMatchHeaderNamesLiterally meaningful
     assertThat(attributes.get(AUTHORIZATION_HEADER)).containsExactly("secret-value")
   }
 
   @Test
-  fun capturesOnlyConfiguredHeaders() {
+  fun deprecatedSettersMatchHeaderNamesLiterally() {
     val attributes = captureAttributes { telemetry ->
-      telemetry.requestHeaders(IncludeExclude.builder().setIncluded("X-Test-Request").build())
+      @Suppress("DEPRECATION") // testing the deprecated API
+      telemetry.capturedRequestHeaders("X-Test-Request", "*")
+      @Suppress("DEPRECATION") // testing the deprecated API
+      telemetry.capturedResponseHeaders("*")
     }
 
+    // "*" is matched literally, so it never widens what is captured; the request carries an
+    // Authorization header so that treating "*" as a glob pattern would capture it
     assertThat(attributes.get(AUTHORIZATION_HEADER)).isNull()
     assertThat(headerAttributeKeys(attributes, "http.request.header."))
       .containsExactly("http.request.header.x-test-request")

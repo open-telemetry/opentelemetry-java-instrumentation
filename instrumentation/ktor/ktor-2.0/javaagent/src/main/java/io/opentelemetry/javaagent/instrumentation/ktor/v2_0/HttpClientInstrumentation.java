@@ -54,7 +54,7 @@ class HttpClientInstrumentation implements TypeInstrumentation {
 
     @Override
     public Unit invoke(KtorClientTelemetryBuilder builder) {
-      builder.openTelemetry(GlobalOpenTelemetry.get());
+      builder.setOpenTelemetry(GlobalOpenTelemetry.get());
       KtorBuilderUtil.clientBuilderExtractor.invoke(builder).configure(AgentCommonConfig.get());
       return Unit.INSTANCE;
     }
