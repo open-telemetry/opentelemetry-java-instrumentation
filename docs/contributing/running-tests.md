@@ -20,7 +20,7 @@ auto-instrumentations using that java version which runs the Gradle build
 itself. These tests usually use the minimal supported version of the
 instrumented library.
 
-Javaagent instrumentation tests enable invokedynamic by default. Instrumentation that
+The javaagent uses invokedynamic for compatible instrumentation, including in tests. Instrumentation that
 intentionally uses inlined advice remains inlined.
 
 ### Executing tests with specific java version

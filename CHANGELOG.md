@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### ⚠️ Breaking changes
+
+- Remove `otel.javaagent.experimental.indy` and `distribution.javaagent.indy/development`.
+  The javaagent now always uses invokedynamic for compatible instrumentation. Remove these settings
+  from your configuration; there is no global opt-out. Instrumentation that intentionally uses
+  inlined advice remains supported.
+  ([#20377](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20377))
+
 ## Version 2.32.0 (2026-10-03)
 
 This release targets the OpenTelemetry SDK 1.66.0.

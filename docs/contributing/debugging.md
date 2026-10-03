@@ -5,9 +5,9 @@ or inlined advice.
 
 ## Indy compatible instrumentation
 
-Javaagent tests enable the
+The javaagent uses the
 [invokedynamic based instrumentation mechanism](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/8999)
-by default. For compatible instrumentation, breakpoints work in advice methods when running tests:
+for compatible instrumentation. Breakpoints work in these advice methods when running tests:
 
 ```
 ./gradlew :instrumentation:<INSTRUMENTATION_NAME>:test

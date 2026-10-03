@@ -56,7 +56,6 @@ class ExtensionsSmokeTest {
     config.put("otel.traces.exporter", "none");
     // add extension
     config.put("otel.javaagent.extensions", TARGET_EXTENSION_FILENAME);
-    config.put("otel.javaagent.experimental.indy", "true");
     // toggle debug if needed
     config.put("otel.javaagent.debug", "false");
     config.forEach((k, v) -> cmd.add(String.format("-D%s=%s", k, v)));
