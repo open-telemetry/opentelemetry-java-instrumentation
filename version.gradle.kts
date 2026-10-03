@@ -1,5 +1,5 @@
-val stableVersion = "2.32.0-SNAPSHOT"
-val alphaVersion = "2.32.0-alpha-SNAPSHOT"
+val stableVersion = "2.33.0-SNAPSHOT"
+val alphaVersion = "2.33.0-alpha-SNAPSHOT"
 
 val apidiffBaselineVersion = "2.31.1"
 
