@@ -158,14 +158,16 @@
   [#20105](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20105))
 - Expand the upcoming 3.0 messaging semantic conventions behind `otel.semconv-stability.opt-in=messaging`,
   including operation-based spans, client and process metrics, per-message batch creation and
-  propagation, consistent timestamps, and duplicate processing suppression for Camel, Kafka Connect,
-  SQS, and RocketMQ. Batch creation spans default to enabled; disable them with
+  propagation, consistent timestamps, durable subscription names, and duplicate processing
+  suppression for Camel, Kafka Connect, JMS, SQS, and RocketMQ. Batch creation spans default to
+  enabled; disable them with
   `otel.instrumentation.aws-sdk.message-create-spans.enabled=false` or
   `otel.instrumentation.rocketmq-client.message-create-spans.enabled=false`.
   ([#19483](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19483),
   [#19485](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19485),
   [#19503](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19503),
   [#19517](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19517),
+  [#19915](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19915),
   [#20045](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20045),
   [#20067](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20067),
   [#20144](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20144))
@@ -285,8 +287,7 @@
   [#20138](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20138),
   [#20200](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20200))
 - Oracle UCP pool metrics now use a JDBC-derived name instead of the generated UCP name,
-  consolidating pools connected to the same database under a consistent `pool.name` or
-  `db.client.connection.pool.name` value.
+  consolidating pools connected to the same database under a consistent `pool.name` value.
   ([#19745](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19745))
 - Populate Redis command names for client spans when using Lettuce 6.0.0–6.0.2.
   ([#19763](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19763))
@@ -325,9 +326,6 @@
   ([#19895](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19895))
 - Fix a race in Ratpack protocol-version capture so spans record the correct protocol version.
   ([#19911](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19911))
-- Fix JMS consumer spans missing the durable subscription name when a provider dispatches a message
-  before `setMessageListener` returns.
-  ([#19915](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19915))
 - AWS Lambda instrumentation now extracts the X-Ray trace header from `Context.getXrayTraceId()` to
   continue the incoming trace.
   ([#19920](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19920))
@@ -344,8 +342,8 @@
 - Fix inaccurate durations for Kafka producer and consumer interceptor spans by ending them
   immediately, since the interceptors cannot measure broker send or poll time.
   ([#20044](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20044))
-- Vert.x SQL client 5 query spans now report `db.namespace` (or legacy `db.name`), `server.address`,
-  and `server.port` for connections configured with `connectingTo` suppliers.
+- Vert.x SQL client 5 query spans now report `db.name`, `server.address`, and `server.port` for
+  connections configured with `connectingTo` suppliers.
   ([#20050](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20050))
 - Keep Java agent and Spring Boot declarative configuration customizers working with OpenTelemetry
   SDK 1.66.0.
@@ -354,8 +352,7 @@
   pairs.
   ([#20123](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20123))
 - Prevent duplicate Kafka processing spans across Kafka Connect, Kafka Streams, Reactor Kafka,
-  and Vert.x, including asynchronous handoffs, without suppressing unrelated batches. Record
-  Kafka Connect consumed-message metrics for each processing attempt.
+  and Vert.x, including asynchronous handoffs, without suppressing unrelated batches.
   ([#20139](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20139),
   [#20142](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20142),
   [#20143](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20143))
