@@ -247,8 +247,7 @@
   class-loader locks.
   ([#19265](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19265))
 - Fix high-cardinality NATS JetStream settlement span names. Use `$JS.ACK publish` under legacy
-  semantic conventions and operation-specific `settle` client spans with
-  `otel.semconv-stability.opt-in=messaging`.
+  semantic conventions.
   ([#19396](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19396))
 - Fix context propagation for tail-delegated Kotlin `@WithSpan` methods so their spans retain the
   correct caller context.
