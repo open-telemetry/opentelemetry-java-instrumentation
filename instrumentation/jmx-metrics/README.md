@@ -47,6 +47,7 @@ The supported target systems are listed below.
 - [kafka-broker](library/kafka-broker.md)
 - [kafka-connect](library/kafka-connect.md)
 - [tomcat](library/tomcat.md)
+- [experimental-trino](library/trino.md)
 - [wildfly](library/wildfly.md)
 - [hadoop](library/hadoop.md)
 - [cassandra](library/cassandra.md)
