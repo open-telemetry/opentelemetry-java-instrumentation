@@ -47,7 +47,7 @@ final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer
         otelMeter
             .upDownCounterBuilder(name + ".active")
             .setDescription(bridging.description(name + ".active", id))
-            .setUnit("{tasks}")
+            .setUnit(bridging.longTaskTimerActiveUnit())
             .buildWithCallback(
                 new LongMeasurementRecorder<>(this, DefaultLongTaskTimer::activeTasks, attributes));
     this.observableDuration =

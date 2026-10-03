@@ -220,7 +220,7 @@ public abstract class AbstractPrometheusModeTest {
                 metric
                     .hasName("testPrometheusLongTaskTimer.seconds.active")
                     .hasDescription("This is a test long task timer")
-                    .hasUnit("{tasks}")
+                    .hasUnit(SemconvStability.v3Preview() ? "{task}" : "{tasks}")
                     .hasLongSumSatisfying(
                         sum ->
                             sum.isNotMonotonic()
@@ -308,9 +308,11 @@ public abstract class AbstractPrometheusModeTest {
             INSTRUMENTATION_NAME,
             metric ->
                 metric
+                    // the name keeps the raw base unit appended by the Prometheus naming
+                    // convention, even when the unit itself is normalized to UCUM
                     .hasName(expectedName)
                     .hasDescription("This is a test meter")
-                    .hasUnit("bytes")
+                    .hasUnit(SemconvStability.v3Preview() ? "By" : "bytes")
                     .hasDoubleSumSatisfying(
                         sum ->
                             sum.isMonotonic()

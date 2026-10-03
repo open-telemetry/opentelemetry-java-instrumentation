@@ -13,6 +13,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.micrometer.core.instrument.LongTaskTimer;
 import io.micrometer.core.instrument.Metrics;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
@@ -41,7 +42,7 @@ public abstract class AbstractLongTaskTimerTest {
                 metric
                     .hasName("testLongTaskTimer.active")
                     .hasDescription("This is a test long task timer")
-                    .hasUnit("{tasks}")
+                    .hasUnit(SemconvStability.v3Preview() ? "{task}" : "{tasks}")
                     .hasLongSumSatisfying(
                         sum ->
                             sum.isNotMonotonic()

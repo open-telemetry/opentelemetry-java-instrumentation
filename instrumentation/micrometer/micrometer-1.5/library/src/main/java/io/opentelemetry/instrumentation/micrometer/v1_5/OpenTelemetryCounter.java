@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
-import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.baseUnit;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.name;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.tagsAsAttributes;
 import static java.util.Collections.emptyList;
@@ -38,7 +37,7 @@ final class OpenTelemetryCounter extends AbstractMeter
         otelMeter
             .counterBuilder(conventionName)
             .setDescription(bridging.description(conventionName, id))
-            .setUnit(baseUnit(id))
+            .setUnit(bridging.baseUnit(id))
             .ofDoubles()
             .build();
   }

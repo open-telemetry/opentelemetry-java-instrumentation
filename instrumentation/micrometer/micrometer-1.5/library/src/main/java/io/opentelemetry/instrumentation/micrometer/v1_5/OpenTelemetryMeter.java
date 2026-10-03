@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
-import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.baseUnit;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.tagsAsAttributes;
 import static java.util.Collections.emptyList;
 
@@ -37,7 +36,7 @@ final class OpenTelemetryMeter extends AbstractMeter
       String name =
           bridging.statisticInstrumentName(id, measurement.getStatistic(), namingConvention);
       String description = bridging.description(name, id);
-      String baseUnit = baseUnit(id);
+      String baseUnit = bridging.baseUnit(id);
       DoubleMeasurementRecorder<Measurement> callback =
           new DoubleMeasurementRecorder<>(measurement, Measurement::getValue, attributes);
 
