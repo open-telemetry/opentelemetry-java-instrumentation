@@ -8,6 +8,8 @@
   ([#19778](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19778))
 - The `ExperimentalJmxMetricHandler` SPI now requires implementations to provide `getMetricNames()`.
   ([#19781](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19781))
+- Add the required `isRequestStreaming(REQUEST)` method to `GenAiAttributesGetter`.
+  ([#19879](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19879))
 - Apache DBCP and Tomcat DBCP pool metrics now retain the name selected at initial registration
   instead of switching to the MBean `ObjectName` name when MBean registration happens later.
   ([#20248](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20248))
