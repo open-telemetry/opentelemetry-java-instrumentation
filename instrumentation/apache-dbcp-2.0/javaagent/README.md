@@ -10,7 +10,7 @@ is closed. JMX registration is not required. When a JMX `ObjectName` is availabl
 property is used as the pool name; if the property is absent, the full `ObjectName` is used.
 Otherwise, the JDBC URL and connection properties are used to derive
 the pool name. By default, the derived format is
-`server.address[:server.port][/db.namespace]`. With stable database semantic conventions, the first
+`server.address[:server.port][/db.namespace]`. Under `otel.semconv-stability.opt-in=database`, the first
 available value among `db.namespace`, the configured endpoint
 (`server.address[:server.port]`), and `db.system.name` is used. If none is available, `apache-dbcp2`
 is used.
