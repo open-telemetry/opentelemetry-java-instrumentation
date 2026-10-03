@@ -72,4 +72,40 @@ class DbServerEndpointUtilTest {
   void rejectsNonIpv4Literals(String host) {
     assertThat(DbServerEndpointUtil.isIpv4Literal(host)).isFalse();
   }
+
+  @ParameterizedTest
+  @ValueSource(ints = {1, 5432, 65535})
+  void acceptsValidPorts(int port) {
+    assertThat(DbServerEndpointUtil.parsePort(Integer.toString(port))).isEqualTo(port);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"00001", "000001", "000000000000000000000000000000000000001"})
+  void acceptsPortsWithLeadingZeros(String value) {
+    assertThat(DbServerEndpointUtil.parsePort(value)).isEqualTo(1);
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "",
+        "0",
+        "000000",
+        "65536",
+        "00065536",
+        "99999999999999999999",
+        "-1",
+        "+80",
+        " 80",
+        "80 ",
+        "8 0",
+        "80\n",
+        "8a",
+        "1.5",
+        "\uFF18\uFF10",
+        "\u0668\u0660"
+      })
+  void rejectsInvalidPorts(String value) {
+    assertThat(DbServerEndpointUtil.parsePort(value)).isNull();
+  }
 }
