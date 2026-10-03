@@ -38,7 +38,21 @@ OpenTelemetry openTelemetry = ...
 
 embeddedServer(Netty, 8080) {
   install(KtorServerTelemetry) {
-    setOpenTelemetry(openTelemetry)
+    openTelemetry(openTelemetry)
   }
 }
 ```
+
+Configure header capture with `requestHeaders` and `responseHeaders`:
+
+```kotlin
+install(KtorServerTelemetry) {
+  openTelemetry(openTelemetry)
+  requestHeaders(IncludeExclude.builder().setIncluded("x-request-id").build())
+  responseHeaders(IncludeExclude.builder().setIncluded("x-response-id").build())
+}
+```
+
+Other configuration methods are `knownMethods`, `attributesExtractor`, `spanNameExtractor`,
+`spanStatusExtractor`, and `spanKindExtractor`. Extractor customizers receive the default extractor
+and return its replacement.
