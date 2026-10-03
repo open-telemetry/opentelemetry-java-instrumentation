@@ -56,10 +56,8 @@
   `.excluded` also remain supported, preserving compatibility with the previously shipped
   experimental common YAML selector. Header selectors resolve each leaf independently: stable,
   deprecated common, then older messaging aliases. The deprecated header selectors remain until
-  3.0 and warn only when applied. V3-preview ignores all deprecated header settings, including
-  `otel.instrumentation.messaging.experimental.capture-headers`, without warnings. The deprecated
-  receive-telemetry and capture-headers settings may be removed in a later minor release and will
-  be removed no later than 3.0.
+  3.0 and warn only when applied. The deprecated receive-telemetry and capture-headers settings may
+  be removed in a later minor release and will be removed no later than 3.0.
   ([#20060](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20060),
   [#20260](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20260))
 - Deprecate the Java agent and Spring Boot starter's bundled contrib samplers, including the
