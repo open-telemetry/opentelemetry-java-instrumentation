@@ -32,7 +32,7 @@ abstract class AbstractKtorClientTelemetryBuilder(
 
   internal fun builder(): DefaultHttpClientInstrumenterBuilder<HttpRequestData, HttpResponse> = builder
 
-  fun setOpenTelemetry(openTelemetry: OpenTelemetry) {
+  fun openTelemetry(openTelemetry: OpenTelemetry) {
     this.openTelemetry = openTelemetry
     this.builder = DefaultHttpClientInstrumenterBuilder.create(
       instrumentationName,

@@ -53,7 +53,7 @@ class KtorServerHeaderSelectorTest : AbstractHttpServerUsingTest<ApplicationEngi
 
   override fun setupServer(): ApplicationEngine = embeddedServer(Netty, port = port) {
     install(KtorServerTelemetry) {
-      setOpenTelemetry(testing.openTelemetry)
+      openTelemetry(testing.openTelemetry)
       configureHeaders(this)
     }
 

@@ -38,7 +38,7 @@ OpenTelemetry openTelemetry = ...
 
 embeddedServer(Netty, 8080) {
   install(KtorServerTelemetry) {
-    setOpenTelemetry(openTelemetry)
+    openTelemetry(openTelemetry)
   }
 }
 ```
@@ -47,7 +47,7 @@ Configure header capture with `requestHeaders` and `responseHeaders`:
 
 ```kotlin
 install(KtorServerTelemetry) {
-  setOpenTelemetry(openTelemetry)
+  openTelemetry(openTelemetry)
   requestHeaders(IncludeExclude.builder().setIncluded("x-request-id").build())
   responseHeaders(IncludeExclude.builder().setIncluded("x-response-id").build())
 }

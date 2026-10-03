@@ -38,7 +38,7 @@ class KtorServerTelemetry private constructor(
     internal var spanKindExtractor:
       (SpanKindExtractor<ApplicationRequest>) -> SpanKindExtractor<ApplicationRequest> = { a -> a }
 
-    fun setOpenTelemetry(openTelemetry: OpenTelemetry) {
+    fun openTelemetry(openTelemetry: OpenTelemetry) {
       this.builder =
         DefaultHttpServerInstrumenterBuilder.create(
           INSTRUMENTATION_NAME,

@@ -74,7 +74,7 @@ class KtorClientHeaderSelectorTest {
 
   private fun record(configure: (TestKtorClientTelemetryBuilder) -> Unit): SpanData {
     val telemetryBuilder = TestKtorClientTelemetryBuilder()
-    telemetryBuilder.setOpenTelemetry(testing.openTelemetry)
+    telemetryBuilder.openTelemetry(testing.openTelemetry)
     configure(telemetryBuilder)
     val instrumenter = telemetryBuilder.buildInstrumenter()
 

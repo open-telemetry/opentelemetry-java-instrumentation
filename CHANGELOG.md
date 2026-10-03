@@ -16,7 +16,9 @@
   `setKnownMethods` to `knownMethods`, `addAttributesExtractor` to `attributesExtractor`,
   `setSpanNameExtractorCustomizer` to `spanNameExtractor`, `setStatusExtractor` to
   `spanStatusExtractor`, and `setSpanKindExtractor` to `spanKindExtractor`.
-  Parameter types and behavior are unchanged; `setOpenTelemetry` retains its name.
+  Parameter types and behavior are unchanged.
+- Rename `setOpenTelemetry` to `openTelemetry` in Ktor 1.0 configuration and Ktor 2.0/3.0
+  client and server builders. The parameter type and initialization behavior are unchanged.
 
 ## Version 2.32.0 (2026-10-03)
 

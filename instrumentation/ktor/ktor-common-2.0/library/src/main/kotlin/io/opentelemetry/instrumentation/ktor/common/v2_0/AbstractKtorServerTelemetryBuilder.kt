@@ -34,7 +34,7 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
   internal var spanKindExtractor:
     (SpanKindExtractor<ApplicationRequest>) -> SpanKindExtractor<ApplicationRequest> = { a -> a }
 
-  fun setOpenTelemetry(openTelemetry: OpenTelemetry) {
+  fun openTelemetry(openTelemetry: OpenTelemetry) {
     this.builder =
       DefaultHttpServerInstrumenterBuilder.create(
         instrumentationName,
@@ -167,6 +167,6 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
     builder.setKnownMethods(methods.toSet())
   }
 
-  /** `setOpenTelemetry()` initializes `builder`. */
+  /** `openTelemetry()` initializes `builder`. */
   protected fun isOpenTelemetryInitialized(): Boolean = this::builder.isInitialized
 }
