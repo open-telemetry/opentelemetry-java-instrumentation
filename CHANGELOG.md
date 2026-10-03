@@ -10,9 +10,6 @@
   ([#19781](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19781))
 - Add the required `isRequestStreaming(REQUEST)` method to `GenAiAttributesGetter`.
   ([#19879](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19879))
-- Apache DBCP and Tomcat DBCP pool metrics now retain the name selected at initial registration
-  instead of switching to the MBean `ObjectName` name when MBean registration happens later.
-  ([#20248](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20248))
 - The experimental `java.common.messaging.headers/development` YAML selector no longer configures
   header capture. Use `java.common.messaging.headers` instead.
   ([#20260](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20260))
