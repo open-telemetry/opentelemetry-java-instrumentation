@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrConfig;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.JmxRuntimeMetricsFactory;
 import io.opentelemetry.semconv.SchemaUrls;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -117,6 +118,7 @@ public final class RuntimeTelemetryBuilder {
     Set<String> jfrMetricNames = jfrTelemetry.getMetricNames();
 
     Meter jmxMeter = getMeter(openTelemetry, jmxName, SchemaUrls.V1_44_0);
+    Set<String> registeredJmxObservers = new HashSet<>();
     List<AutoCloseable> observables =
         disableJmx
             ? emptyList()
@@ -125,8 +127,9 @@ public final class RuntimeTelemetryBuilder {
                 captureGcCause,
                 metricName ->
                     !suppressOverlappingJmxMetrics || !jfrMetricNames.contains(metricName),
-                jmxMeter);
-    return new RuntimeTelemetry(observables, jfrTelemetry.getTelemetry());
+                jmxMeter,
+                registeredJmxObservers::add);
+    return new RuntimeTelemetry(observables, jfrTelemetry.getTelemetry(), registeredJmxObservers);
   }
 
   private boolean isJfrMetricCoveredBySchema(String metricName) {

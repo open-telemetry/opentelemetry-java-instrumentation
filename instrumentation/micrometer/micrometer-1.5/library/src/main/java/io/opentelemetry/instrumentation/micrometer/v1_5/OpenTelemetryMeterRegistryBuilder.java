@@ -11,6 +11,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.micrometer.core.instrument.Clock;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.LongTaskTimer;
+import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.config.NamingConvention;
@@ -21,6 +22,7 @@ import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.micrometer.v1_5.internal.Experimental;
 import io.opentelemetry.instrumentation.micrometer.v1_5.internal.Internal;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 /** A builder of {@link OpenTelemetryMeterRegistry}. */
 public final class OpenTelemetryMeterRegistryBuilder {
@@ -31,6 +33,8 @@ public final class OpenTelemetryMeterRegistryBuilder {
   static {
     Experimental.internalSetMicrometerHistogramGaugesEnabled(
         (builder, enabled) -> builder.histogramGaugesEnabled = enabled);
+    Experimental.internalSetSuppressionPredicate(
+        (builder, predicate) -> builder.suppressionPredicate = predicate);
     Internal.internalSetMetersHiddenFromSearch(
         (builder, hidden) -> builder.metersHiddenFromSearch = hidden);
   }
@@ -41,6 +45,7 @@ public final class OpenTelemetryMeterRegistryBuilder {
   private boolean prometheusMode = false;
   private boolean histogramGaugesEnabled = false;
   private boolean metersHiddenFromSearch = false;
+  private Predicate<Meter.Id> suppressionPredicate = id -> false;
 
   OpenTelemetryMeterRegistryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -125,6 +130,7 @@ public final class OpenTelemetryMeterRegistryBuilder {
         modifier,
         SemconvStability.v3Preview(openTelemetry),
         metersHiddenFromSearch,
+        suppressionPredicate,
         meterBuilder.build());
   }
 }

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
@@ -17,7 +18,9 @@ import io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetry;
 import io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetryBuilder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -30,6 +33,23 @@ import javax.annotation.Nullable;
  * be simplified or removed in a future major version (3.0).
  */
 public final class Internal {
+
+  @Nullable
+  private static volatile Function<RuntimeTelemetry, Set<String>> getRegisteredJmxObservers;
+
+  /**
+   * Returns the names of the JMX metrics whose observers were registered. Registration does not
+   * guarantee that a metric is exported, for example when an SDK view drops it.
+   */
+  public static Set<String> getRegisteredJmxObservers(@Nullable RuntimeTelemetry telemetry) {
+    Function<RuntimeTelemetry, Set<String>> getter = getRegisteredJmxObservers;
+    return telemetry == null || getter == null ? emptySet() : getter.apply(telemetry);
+  }
+
+  public static void internalSetRegisteredJmxObservers(
+      Function<RuntimeTelemetry, Set<String>> getter) {
+    getRegisteredJmxObservers = getter;
+  }
 
   private static final Logger logger = Logger.getLogger(Internal.class.getName());
 

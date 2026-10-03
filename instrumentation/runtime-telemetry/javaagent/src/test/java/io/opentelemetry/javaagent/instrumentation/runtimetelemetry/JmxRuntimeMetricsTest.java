@@ -5,8 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.runtimetelemetry;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -14,6 +17,30 @@ class JmxRuntimeMetricsTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @Test
+  void registeredObserversArePublishedOnBootstrap() throws Exception {
+    // loading through the bootstrap loader proves the holder is visible to every class loader
+    Class<?> holder =
+        Class.forName(
+            "io.opentelemetry.javaagent.bootstrap.runtimetelemetry.RuntimeTelemetryObservation",
+            true,
+            null);
+    @SuppressWarnings("unchecked")
+    Set<String> observers = (Set<String>) holder.getMethod("registeredJmxObservers").invoke(null);
+    assertThat(observers)
+        .contains(
+            "jvm.class.count",
+            "jvm.class.loaded",
+            "jvm.class.unloaded",
+            "jvm.memory.used",
+            "jvm.memory.committed",
+            "jvm.memory.limit",
+            "jvm.thread.count",
+            "jvm.cpu.count")
+        .doesNotContain(
+            "jvm.buffer.count", "jvm.system.cpu.utilization", "jvm.file_descriptor.count");
+  }
 
   @Test
   void runtimeMetricsAreEnabled() {
