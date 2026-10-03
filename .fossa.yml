@@ -486,16 +486,10 @@ targets:
       target: ':instrumentation:elasticsearch:elasticsearch-rest-7.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:elasticsearch:elasticsearch-rest-7.0:library'
-    - type: gradle
-      path: ./
       target: ':instrumentation:elasticsearch:elasticsearch-rest-common-5.0:bootstrap'
     - type: gradle
       path: ./
       target: ':instrumentation:elasticsearch:elasticsearch-rest-common-5.0:javaagent'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:elasticsearch:elasticsearch-rest-common-5.0:library'
     - type: gradle
       path: ./
       target: ':instrumentation:elasticsearch:elasticsearch-transport-5.0:javaagent'
