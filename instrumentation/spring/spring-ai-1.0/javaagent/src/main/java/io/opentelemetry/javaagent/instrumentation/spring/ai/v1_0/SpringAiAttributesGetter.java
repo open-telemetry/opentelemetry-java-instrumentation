@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0;
 
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues.CHAT;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
@@ -20,7 +21,7 @@ import org.springframework.ai.chat.model.Generation;
 class SpringAiAttributesGetter implements GenAiAttributesGetter<SpringAiRequest, SpringAiResponse> {
   @Override
   public String getOperationName(SpringAiRequest request) {
-    return "chat";
+    return CHAT;
   }
 
   @Override

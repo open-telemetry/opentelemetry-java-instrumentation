@@ -162,6 +162,7 @@ class ChatModelTest {
     testing.runWithSpan(
         "failed setup",
         () -> assertThat(chatModel.stream(prompt()).blockLast()).isSameAs(response));
+    assertThat(TestAgentListenerAccess.getAndResetAdviceFailureCount()).isEqualTo(1);
 
     chatModel.setDefaultOptionsFailure(null);
     testing.runWithSpan("stream parent", () -> chatModel.stream(prompt()).blockLast());
@@ -294,8 +295,9 @@ class ChatModelTest {
   void stream() {
     testing.runWithSpan("parent", () -> chatModel.stream(prompt()).blockLast());
 
+    SpanContext parentSpanContext = testing.waitForTraces(1).get(0).get(0).getSpanContext();
     SpanContext spanContext = testing.waitForTraces(1).get(0).get(1).getSpanContext();
-    assertCurrentSpanContext(chatModel.getLastSpanContext(), spanContext);
+    assertCurrentSpanContext(chatModel.getLastSpanContext(), parentSpanContext);
     assertTraces("test", true);
     assertMessageEvents(spanContext);
   }
@@ -324,23 +326,28 @@ class ChatModelTest {
 
     testing.runWithSpan("parent", () -> chatModel.stream(prompt()).blockLast());
 
+    SpanContext parentSpanContext = testing.waitForTraces(1).get(0).get(0).getSpanContext();
     SpanContext spanContext = testing.waitForTraces(1).get(0).get(1).getSpanContext();
-    assertCurrentSpanContext(delegate.getLastSpanContext(), spanContext);
+    assertCurrentSpanContext(delegate.getLastSpanContext(), parentSpanContext);
     assertTraces("test", true);
     assertMetrics();
     assertMessageEvents(spanContext);
   }
 
   @Test
-  void streamNestedInDownstreamCallbackIsInstrumented() {
-    chatModel.stream(prompt())
-        .flatMap(response -> chatModel.stream(new Prompt("Tell me more about traces")))
-        .blockLast();
+  void streamNestedInDownstreamCallbackUsesSubscriptionParent() {
+    testing.runWithSpan(
+        "parent",
+        () ->
+            chatModel.stream(prompt())
+                .flatMap(response -> chatModel.stream(new Prompt("Tell me more about traces")))
+                .blockLast());
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasNoParent(),
+                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+                span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0)),
                 span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0))));
   }
 

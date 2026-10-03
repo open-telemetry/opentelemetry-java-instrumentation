@@ -25,6 +25,17 @@ dependencies {
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation("org.springframework.ai:spring-ai-model:1.0.0")
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     systemProperty("collectMetadata", otelProps.collectMetadata)
@@ -82,6 +93,11 @@ tasks {
   }
 
   check {
-    dependsOn(testExperimental, testExperimentalWithSmallMessageContentLimit, testContentDisabled)
+    dependsOn(
+      testing.suites,
+      testExperimental,
+      testExperimentalWithSmallMessageContentLimit,
+      testContentDisabled
+    )
   }
 }

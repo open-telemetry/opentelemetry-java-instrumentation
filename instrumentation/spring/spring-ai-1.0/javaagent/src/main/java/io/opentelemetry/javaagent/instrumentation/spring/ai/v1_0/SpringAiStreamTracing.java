@@ -86,10 +86,8 @@ public class SpringAiStreamTracing {
             .doOnError(error -> end(chatInstrumenter, context, request, state, error, ended))
             .doOnComplete(() -> end(chatInstrumenter, context, request, state, null, ended))
             .doOnCancel(() -> end(chatInstrumenter, context, request, state, null, ended));
-    // Downstream callbacks may start a separate GenAI operation. Propagate the span as their
-    // parent without the source's suppression key and operation-listener state.
-    return ContextPropagationOperator.runWithContext(
-        traced, parentContext.with(Span.fromContext(context)));
+    // Downstream callbacks run with the parent context, matching other client instrumentations.
+    return ContextPropagationOperator.runWithContext(traced, parentContext);
   }
 
   private static void end(
@@ -165,52 +163,52 @@ public class SpringAiStreamTracing {
     }
 
     private synchronized void add(ChatResponse response) {
-      hasResponse = true;
       try {
-        List<Generation> generations = response.getResults();
-        for (int position = 0; position < generations.size(); position++) {
-          Generation generation = generations.get(position);
-          int index = SpringAiMessageEvents.choiceIndex(generation, position);
-          GenerationState generationState = this.generations.get(index);
-          if (generationState == null) {
-            generationState =
-                new GenerationState(
-                    captureToolCallArguments, toolCallArgumentMaxLength, captureMedia);
-            this.generations.put(index, generationState);
-          }
-          generationState.add(generation);
-          if (streamedContents != null) {
-            ContentBuffer contentBuffer = streamedContents.get(index);
-            if (contentBuffer == null) {
-              contentBuffer = new ContentBuffer(contentMaxLength);
-              streamedContents.put(index, contentBuffer);
-            }
-            String content = generation.getOutput().getText();
-            if (content != null) {
-              contentBuffer.append(content);
-            }
-          }
-        }
+        addInternal(response);
       } catch (Throwable ignored) {
         // Telemetry state must not affect the instrumented publisher.
       }
+    }
 
-      try {
-        ChatResponseMetadata metadata = response.getMetadata();
-        if (metadata != null) {
-          if (metadata.getId() != null && !metadata.getId().isEmpty()) {
-            responseId = metadata.getId();
+    private void addInternal(ChatResponse response) {
+      hasResponse = true;
+      ChatResponseMetadata metadata = response.getMetadata();
+      if (metadata != null) {
+        if (metadata.getId() != null && !metadata.getId().isEmpty()) {
+          responseId = metadata.getId();
+        }
+        if (metadata.getModel() != null && !metadata.getModel().isEmpty()) {
+          responseModel = metadata.getModel();
+        }
+        Usage newUsage = metadata.getUsage();
+        if (newUsage != null && !(newUsage instanceof EmptyUsage)) {
+          usage = newUsage;
+        }
+      }
+
+      List<Generation> generations = response.getResults();
+      for (int position = 0; position < generations.size(); position++) {
+        Generation generation = generations.get(position);
+        int index = SpringAiMessageEvents.choiceIndex(generation, position);
+        GenerationState generationState = this.generations.get(index);
+        if (generationState == null) {
+          generationState =
+              new GenerationState(
+                  captureToolCallArguments, toolCallArgumentMaxLength, captureMedia);
+          this.generations.put(index, generationState);
+        }
+        generationState.add(generation);
+        if (streamedContents != null) {
+          ContentBuffer contentBuffer = streamedContents.get(index);
+          if (contentBuffer == null) {
+            contentBuffer = new ContentBuffer(contentMaxLength);
+            streamedContents.put(index, contentBuffer);
           }
-          if (metadata.getModel() != null && !metadata.getModel().isEmpty()) {
-            responseModel = metadata.getModel();
-          }
-          Usage newUsage = metadata.getUsage();
-          if (newUsage != null && !(newUsage instanceof EmptyUsage)) {
-            usage = newUsage;
+          String content = generation.getOutput().getText();
+          if (content != null) {
+            contentBuffer.append(content);
           }
         }
-      } catch (Throwable ignored) {
-        // Telemetry state must not affect the instrumented publisher.
       }
     }
 

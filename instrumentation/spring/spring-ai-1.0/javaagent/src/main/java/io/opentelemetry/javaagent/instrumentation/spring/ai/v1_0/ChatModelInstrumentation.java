@@ -13,7 +13,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
@@ -93,17 +92,12 @@ class ChatModelInstrumentation implements TypeInstrumentation {
         } catch (Throwable t) {
           logger.log(FINE, "Failed to emit Spring AI response events", t);
         }
-        try {
-          instrumenter()
-              .end(
-                  context,
-                  request,
-                  response == null ? null : new SpringAiResponse(response, null),
-                  throwable);
-        } catch (Throwable t) {
-          Span.fromContext(context).end();
-          logger.log(FINE, "Failed to end Spring AI call instrumentation", t);
-        }
+        instrumenter()
+            .end(
+                context,
+                request,
+                response == null ? null : new SpringAiResponse(response, null),
+                throwable);
       }
     }
 
@@ -128,7 +122,6 @@ class ChatModelInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class StreamAdvice {
     public static class StreamAdviceScope {
-      private static final Logger logger = Logger.getLogger(StreamAdviceScope.class.getName());
       private final CallDepth callDepth;
       private final boolean suppressed;
 
@@ -149,14 +142,8 @@ class ChatModelInstrumentation implements TypeInstrumentation {
 
       public static Flux<ChatResponse> wrap(
           Flux<ChatResponse> publisher, Object chatModel, Prompt prompt) {
-        try {
-          return SpringAiStreamTracing.wrap(
-              publisher, SpringAiRequest.create(prompt, chatModel, true));
-        } catch (Throwable t) {
-          // Request setup calls application-provided getDefaultOptions(), which can fail.
-          logger.log(FINE, "Failed to wrap Spring AI stream publisher", t);
-          return publisher;
-        }
+        return SpringAiStreamTracing.wrap(
+            publisher, SpringAiRequest.create(prompt, chatModel, true));
       }
     }
 
