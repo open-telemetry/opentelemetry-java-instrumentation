@@ -16,6 +16,5 @@ available value among `db.namespace`, the configured endpoint
 is used.
 
 By default, MBean registration after pool initialization updates the pool name to the JMX name.
-With stable database semantic conventions
-(`otel.semconv-stability.opt-in=database`), the pool name selected when metrics are first registered
-is retained until the pool is closed, including when MBean registration occurs later.
+Under `otel.semconv-stability.opt-in=database`, the pool name selected when metrics are first
+registered is retained until the pool is closed, including when MBean registration occurs later.
