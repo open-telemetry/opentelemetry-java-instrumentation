@@ -16,7 +16,9 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -35,6 +37,20 @@ import software.amazon.awssdk.services.bedrockruntime.model.InvokeModelRequest;
 import software.amazon.awssdk.services.bedrockruntime.model.InvokeModelWithResponseStreamRequest;
 
 class BedrockRuntimeAttributesExtractorTest {
+
+  @Test
+  void selectsRegularAwsInstrumenterWhenGenAiSpanAlreadyExists() {
+    ConverseRequest request = ConverseRequest.builder().modelId("model").build();
+
+    assertThat(
+            TracingExecutionInterceptor.shouldUseBedrockRuntimeInstrumenter(
+                Context.root(), request))
+        .isTrue();
+    Context genAiContext = SpanKey.GEN_AI_CLIENT.storeInContext(Context.root(), Span.getInvalid());
+    assertThat(
+            TracingExecutionInterceptor.shouldUseBedrockRuntimeInstrumenter(genAiContext, request))
+        .isFalse();
+  }
 
   private final BedrockRuntimeAttributesExtractor extractor =
       new BedrockRuntimeAttributesExtractor();
