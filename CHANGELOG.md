@@ -101,9 +101,7 @@
   including configured server targets and span names, endpoint validation, network-peer attributes,
   Redis namespaces, operation names, error types, query text, and connection pool metric names and
   database identity for Cassandra, ClickHouse, Couchbase, Elasticsearch, Geode, HBase, JDBC, Redis
-  clients, MongoDB, OpenSearch, R2DBC, Spymemcached, and Vert.x. MongoDB library users can supply
-  targets with `MongoTelemetry.createCommandListener(List<ServerAddress>)`; Cassandra 4.4 library
-  users can use `CassandraTelemetry.wrap(session, contactPoints)`.
+  clients, MongoDB, OpenSearch, R2DBC, Spymemcached, and Vert.x.
   ([#19728](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19728),
   [#19747](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19747),
   [#19749](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19749),
@@ -159,10 +157,7 @@
 - Expand the upcoming 3.0 messaging semantic conventions behind `otel.semconv-stability.opt-in=messaging`,
   including operation-based spans, client and process metrics, per-message batch creation and
   propagation, consistent timestamps, durable subscription names, and duplicate processing
-  suppression for Camel, Kafka Connect, JMS, SQS, and RocketMQ. Batch creation spans default to
-  enabled; disable them with
-  `otel.instrumentation.aws-sdk.message-create-spans.enabled=false` or
-  `otel.instrumentation.rocketmq-client.message-create-spans.enabled=false`.
+  suppression for Camel, Kafka Connect, JMS, SQS, and RocketMQ.
   ([#19483](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19483),
   [#19485](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19485),
   [#19503](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19503),
