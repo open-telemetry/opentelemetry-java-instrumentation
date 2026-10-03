@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### ⚠️ Breaking changes to non-stable APIs
+
+- Remove deprecated `setCapturedRequestHeaders` and `setCapturedResponseHeaders` methods from
+  HTTP library telemetry builders, including Ktor 1.0 configuration, and the
+  `capturedRequestHeaders` and `capturedResponseHeaders` overloads from Ktor 2.0/3.0 builders.
+  Use `setRequestHeaders` and `setResponseHeaders`, or `requestHeaders` and `responseHeaders`
+  for Ktor 2.0/3.0, with `IncludeExclude` selectors instead. Selector patterns interpret
+  `*` and `?` as wildcards rather than literal header-name characters.
+  Deprecated header-capture methods in the stable `instrumentation-api` artifact remain available.
+
 ## Version 2.32.0 (2026-10-03)
 
 This release targets the OpenTelemetry SDK 1.66.0.
