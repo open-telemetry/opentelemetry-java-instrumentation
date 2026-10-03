@@ -194,10 +194,6 @@ class CamelProcessMetricsTest {
 
   private static Class<?> camelHelperClass(String simpleName) throws ReflectiveOperationException {
     String className = INSTRUMENTATION_PACKAGE + simpleName;
-    if (!Boolean.getBoolean("otel.javaagent.experimental.indy")) {
-      return Class.forName(className);
-    }
-
     Class<?> registryClass =
         AgentClassLoaderAccess.loadClass(
             "io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry");

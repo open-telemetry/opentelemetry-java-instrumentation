@@ -36,11 +36,6 @@ public class IndyInstrumentationTestModule extends InstrumentationModule {
     return className.equals(LocalHelper.class.getName());
   }
 
-  @Override
-  public boolean defaultEnabled() {
-    return Boolean.getBoolean("otel.javaagent.experimental.indy");
-  }
-
   static class Instrumentation implements TypeInstrumentation {
 
     @Override
