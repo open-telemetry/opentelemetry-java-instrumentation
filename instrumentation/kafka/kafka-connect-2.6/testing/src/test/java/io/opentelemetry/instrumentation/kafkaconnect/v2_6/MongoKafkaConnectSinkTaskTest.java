@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.kafkaconnect.v2_6;
 
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.restassured.RestAssured.given;
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -120,22 +119,14 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
             // producer is in a separate trace, linked to consumer with a span link
             trace.hasSpansSatisfyingExactly(
                 span -> {
-                  span.hasName(
-                          emitStableMessagingSemconv()
-                              ? "send " + testTopicName
-                              : testTopicName + " publish")
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasNoParent();
+                  span.hasName("send " + testTopicName).hasKind(SpanKind.PRODUCER).hasNoParent();
                   producerSpanContext.set(span.actual().getSpanContext());
                 }),
         trace ->
             // kafka connect consumer trace, linked to producer span via a span link
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process " + testTopicName
-                                : testTopicName + " process")
+                    span.hasName("process " + testTopicName)
                         .hasKind(CONSUMER)
                         .hasNoParent()
                         .hasLinks(recordLink(producerSpanContext.get(), "test-key"))

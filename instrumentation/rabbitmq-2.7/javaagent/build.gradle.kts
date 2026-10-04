@@ -57,26 +57,20 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.rabbitmq.experimental-span-attributes=true")
   }
 
-  val testMessagingPreview = register<Test>("testMessagingPreview") {
+  val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "false")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false",
+    )
   }
 
   check {
     dependsOn(
       testExperimental,
-      testMessagingPreview,
-      testBothSemconv,
+      testReceiveSpansDisabled,
     )
   }
 }

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
@@ -57,8 +56,7 @@ class PulsarBatchRequestSpanLinksExtractorTest {
     extractor.extract(spanLinks, Context.root(), request);
 
     Attributes batchAttributes = batchSpanAttributes(request);
-    assertThat(batchAttributes.get(MESSAGING_DESTINATION_NAME))
-        .isEqualTo(emitStableMessagingSemconv() ? topic : partitionTopic);
+    assertThat(batchAttributes.get(MESSAGING_DESTINATION_NAME)).isEqualTo(topic);
     assertThat(batchAttributes.get(MESSAGING_DESTINATION_PARTITION_ID)).isEqualTo("0");
     assertThat(spanLinks.links)
         .containsExactly(
@@ -100,8 +98,7 @@ class PulsarBatchRequestSpanLinksExtractorTest {
 
     extractor.extract(spanLinks, Context.root(), request);
 
-    assertThat(batchSpanAttributes(request).get(MESSAGING_DESTINATION_NAME))
-        .isEqualTo(emitStableMessagingSemconv() ? null : topic1);
+    assertThat(batchSpanAttributes(request).get(MESSAGING_DESTINATION_NAME)).isEqualTo(null);
     assertThat(spanLinks.links)
         .containsExactly(
             linkData(
@@ -126,8 +123,7 @@ class PulsarBatchRequestSpanLinksExtractorTest {
     // a partition id is only unique within a destination name, so it is not recorded on the batch
     // span when the destination name is not recorded there either
     Attributes batchAttributes = batchSpanAttributes(request);
-    assertThat(batchAttributes.get(MESSAGING_DESTINATION_NAME))
-        .isEqualTo(emitStableMessagingSemconv() ? null : topic1);
+    assertThat(batchAttributes.get(MESSAGING_DESTINATION_NAME)).isEqualTo(null);
     assertThat(batchAttributes.get(MESSAGING_DESTINATION_PARTITION_ID)).isNull();
     assertThat(spanLinks.links)
         .containsExactly(
@@ -176,8 +172,7 @@ class PulsarBatchRequestSpanLinksExtractorTest {
     SpanContext spanContext =
         SpanContext.createFromRemoteParent(
             TRACE_ID, spanId, TraceFlags.getSampled(), TraceState.getDefault());
-    return LinkData.create(
-        spanContext, emitStableMessagingSemconv() ? stableAttributes : Attributes.empty());
+    return LinkData.create(spanContext, stableAttributes);
   }
 
   private static Attributes batchSpanAttributes(PulsarBatchRequest request) {

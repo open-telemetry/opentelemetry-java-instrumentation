@@ -6,8 +6,6 @@
 package io.opentelemetry.instrumentation.spring.pulsar.v1_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -115,9 +113,6 @@ public abstract class AbstractSpringPulsarTest {
   protected abstract void assertSpringPulsar();
 
   protected void assertStableProcessMetrics() {
-    if (!emitStableMessagingSemconv()) {
-      return;
-    }
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.spring-pulsar-1.0",
@@ -188,9 +183,9 @@ public abstract class AbstractSpringPulsarTest {
   protected List<AttributeAssertion> publishAttributes() {
     return asList(
         equalTo(MESSAGING_SYSTEM, "pulsar"),
-        equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
-        equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
-        equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null),
+        equalTo(MESSAGING_OPERATION, null),
+        equalTo(MESSAGING_OPERATION_NAME, "send"),
+        equalTo(MESSAGING_OPERATION_TYPE, "send"),
         equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC),
         bodySize(),
         satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotEmpty),
@@ -206,9 +201,9 @@ public abstract class AbstractSpringPulsarTest {
   protected List<AttributeAssertion> processAttributes() {
     return asList(
         equalTo(MESSAGING_SYSTEM, "pulsar"),
-        equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-        equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null),
-        equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null),
+        equalTo(MESSAGING_OPERATION, null),
+        equalTo(MESSAGING_OPERATION_NAME, "process"),
+        equalTo(MESSAGING_OPERATION_TYPE, "process"),
         bodySize(),
         satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotEmpty),
         equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC));
@@ -216,24 +211,20 @@ public abstract class AbstractSpringPulsarTest {
 
   // messaging.message.body.size is opt-in in the v1.43 messaging semantic conventions
   private static AttributeAssertion bodySize() {
-    return emitOldMessagingSemconv()
-        ? satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative)
-        : equalTo(MESSAGING_MESSAGE_BODY_SIZE, null);
+    return equalTo(MESSAGING_MESSAGE_BODY_SIZE, null);
   }
 
   protected List<AttributeAssertion> receiveAttributes() {
     return asList(
         equalTo(MESSAGING_SYSTEM, "pulsar"),
-        equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null),
-        equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "receive" : null),
-        equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "receive" : null),
+        equalTo(MESSAGING_OPERATION, null),
+        equalTo(MESSAGING_OPERATION_NAME, "receive"),
+        equalTo(MESSAGING_OPERATION_TYPE, "receive"),
         equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC),
         satisfies(MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isNotNegative),
         equalTo(SERVER_ADDRESS, brokerHost),
         equalTo(SERVER_PORT, brokerPort),
-        equalTo(
-            MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-            emitStableMessagingSemconv() ? OTEL_SUBSCRIPTION : null),
+        equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, OTEL_SUBSCRIPTION),
         bodySize());
   }
 

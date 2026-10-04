@@ -5,10 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.pulsar.v1_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -84,7 +82,7 @@ class SpringPulsarAdviceTest {
 
   @Test
   void processingPreservesParentAndProducerLinkAfterFailure() {
-    assumeTrue(emitStableMessagingSemconv());
+
     Message<?> message = message("test-topic");
     Span parent = openTelemetry.getTracer("test").spanBuilder("delivery-parent").startSpan();
     Context parentContext = Context.root().with(parent);
@@ -116,7 +114,7 @@ class SpringPulsarAdviceTest {
 
   @Test
   void completionKeepsCapturedProcessParent() {
-    assumeTrue(emitStableMessagingSemconv());
+
     Message<?> message = message("test-topic");
     Span firstParent = openTelemetry.getTracer("test").spanBuilder("first-parent").startSpan();
     Span secondParent = openTelemetry.getTracer("test").spanBuilder("second-parent").startSpan();
@@ -147,7 +145,7 @@ class SpringPulsarAdviceTest {
 
   @Test
   void nestedProcessingKeepsIndependentParentsAndRestoresScopes() {
-    assumeTrue(emitStableMessagingSemconv());
+
     Context previous = Context.current();
     Message<?> outerMessage = message("outer-topic");
     Message<?> innerMessage = message("inner-topic");
@@ -203,17 +201,10 @@ class SpringPulsarAdviceTest {
         .singleElement()
         .satisfies(
             span -> {
-              assertThat(span.getParentSpanId())
-                  .isEqualTo(
-                      emitStableMessagingSemconv()
-                          ? parent.getSpanContext().getSpanId()
-                          : PRODUCER_CONTEXT.getSpanId());
-              if (emitStableMessagingSemconv()) {
-                assertThat(span.getLinks())
-                    .singleElement()
-                    .satisfies(
-                        link -> assertThat(link.getSpanContext()).isEqualTo(PRODUCER_CONTEXT));
-              }
+              assertThat(span.getParentSpanId()).isEqualTo(parent.getSpanContext().getSpanId());
+              assertThat(span.getLinks())
+                  .singleElement()
+                  .satisfies(link -> assertThat(link.getSpanContext()).isEqualTo(PRODUCER_CONTEXT));
             });
   }
 

@@ -9,7 +9,6 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.M
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.PROCESS_DURATION;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.add;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.enable;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.AbstractSpringIntegrationTracingTest.verifyCorrectSpanWasPropagated;
 import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.assertNoMetrics;
@@ -63,18 +62,14 @@ class SpringIntegrationMetricsTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                 span -> {
-                  span.hasName(emitStableMessagingSemconv() ? "send output" : "output publish")
+                  span.hasName("send output")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(messagingAttributes("send", "output"));
                   verifyCorrectSpanWasPropagated(capturedMessage.get(), trace.getSpan(1));
                 }));
 
-    if (emitStableMessagingSemconv()) {
-      assertSendMetrics(testing, "output");
-    } else {
-      assertNoMetrics(testing);
-    }
+    assertSendMetrics(testing, "output");
   }
 
   @Test
@@ -124,18 +119,14 @@ class SpringIntegrationMetricsTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                 span -> {
-                  span.hasName(emitStableMessagingSemconv() ? "process input" : "input process")
+                  span.hasName("process input")
                       .hasParent(trace.getSpan(0))
                       .hasKind(SpanKind.CONSUMER)
                       .hasAttributesSatisfyingExactly(messagingAttributes("process", "input"));
                   verifyCorrectSpanWasPropagated(capturedMessage, trace.getSpan(1));
                 },
                 span -> span.hasName("handler").hasParent(trace.getSpan(1))));
-    if (emitStableMessagingSemconv()) {
-      assertProcessMetrics(testing, "input", false);
-    } else {
-      assertNoMetrics(testing);
-    }
+    assertProcessMetrics(testing, "input", false);
   }
 
   @Test
@@ -163,15 +154,9 @@ class SpringIntegrationMetricsTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(emitStableMessagingSemconv() ? "send output" : "output publish")
-                        .hasKind(SpanKind.PRODUCER),
+                span -> span.hasName("send output").hasKind(SpanKind.PRODUCER),
                 span -> span.hasName("outerAfterNested").hasParent(trace.getSpan(0))));
-    if (emitStableMessagingSemconv()) {
-      assertSendMetrics(testing, "output");
-    } else {
-      assertNoMetrics(testing);
-    }
+    assertSendMetrics(testing, "output");
   }
 
   @Test

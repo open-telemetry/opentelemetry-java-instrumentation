@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20.aws;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.ExperimentalTest.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -43,17 +42,14 @@ class CamelSpanAssertions {
                     stringKey("camel.uri"),
                     experimental(
                         "aws-sqs://" + queueName + "?amazonSQSClient=%23sqsClient&delay=1000")),
-                equalTo(MESSAGING_SYSTEM, emitStableMessagingSemconv() ? "aws_sqs" : null),
+                equalTo(MESSAGING_SYSTEM, "aws_sqs"),
                 equalTo(MESSAGING_DESTINATION_NAME, queueName),
-                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
-                equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null)));
-    if (emitStableMessagingSemconv()) {
-      attributeAssertions.add(
-          satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)));
-    }
+                equalTo(MESSAGING_OPERATION_NAME, "send"),
+                equalTo(MESSAGING_OPERATION_TYPE, "send")));
+    attributeAssertions.add(satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)));
 
-    return span.hasName(emitStableMessagingSemconv() ? "send " + queueName : queueName)
-        .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.INTERNAL)
+    return span.hasName("send " + queueName)
+        .hasKind(SpanKind.CLIENT)
         .hasAttributesSatisfyingExactly(attributeAssertions);
   }
 
@@ -62,17 +58,17 @@ class CamelSpanAssertions {
   }
 
   static SpanDataAssert sqsConsume(SpanDataAssert span, String queueName, int delay) {
-    return span.hasName(emitStableMessagingSemconv() ? "process " + queueName : queueName)
-        .hasKind(emitStableMessagingSemconv() ? SpanKind.CONSUMER : SpanKind.INTERNAL)
+    return span.hasName("process " + queueName)
+        .hasKind(SpanKind.CONSUMER)
         .hasAttributesSatisfyingExactly(
             equalTo(
                 stringKey("camel.uri"),
                 experimental(
                     "aws-sqs://" + queueName + "?amazonSQSClient=%23sqsClient&delay=" + delay)),
-            equalTo(MESSAGING_SYSTEM, emitStableMessagingSemconv() ? "aws_sqs" : null),
+            equalTo(MESSAGING_SYSTEM, "aws_sqs"),
             equalTo(MESSAGING_DESTINATION_NAME, queueName),
-            equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null),
-            equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null),
+            equalTo(MESSAGING_OPERATION_NAME, "process"),
+            equalTo(MESSAGING_OPERATION_TYPE, "process"),
             satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)));
   }
 
@@ -83,17 +79,14 @@ class CamelSpanAssertions {
                 equalTo(
                     stringKey("camel.uri"),
                     experimental("aws-sns://" + topicName + "?amazonSNSClient=%23snsClient")),
-                equalTo(MESSAGING_SYSTEM, emitStableMessagingSemconv() ? "aws.sns" : null),
+                equalTo(MESSAGING_SYSTEM, "aws.sns"),
                 equalTo(MESSAGING_DESTINATION_NAME, topicName),
-                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
-                equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null)));
-    if (emitStableMessagingSemconv()) {
-      attributeAssertions.add(
-          satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)));
-    }
+                equalTo(MESSAGING_OPERATION_NAME, "send"),
+                equalTo(MESSAGING_OPERATION_TYPE, "send")));
+    attributeAssertions.add(satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)));
 
-    return span.hasName(emitStableMessagingSemconv() ? "send " + topicName : topicName)
-        .hasKind(emitStableMessagingSemconv() ? SpanKind.PRODUCER : SpanKind.INTERNAL)
+    return span.hasName("send " + topicName)
+        .hasKind(SpanKind.PRODUCER)
         .hasAttributesSatisfyingExactly(attributeAssertions);
   }
 

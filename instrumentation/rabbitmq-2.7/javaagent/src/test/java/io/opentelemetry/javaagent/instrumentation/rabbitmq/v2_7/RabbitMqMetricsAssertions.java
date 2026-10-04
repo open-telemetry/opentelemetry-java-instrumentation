@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -28,10 +27,6 @@ class RabbitMqMetricsAssertions {
 
   static void assertProducerMetrics(
       InstrumentationExtension testing, String destination, String errorType) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoMessagingMetrics(testing);
-      return;
-    }
 
     assertClientOperationDuration(testing, "publish", "send", destination, errorType);
     testing.waitAndAssertMetrics(
@@ -69,10 +64,6 @@ class RabbitMqMetricsAssertions {
       String destination,
       String errorType,
       long consumedMessages) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoMessagingMetrics(testing);
-      return;
-    }
 
     assertClientOperationDuration(testing, "receive", "receive", destination, errorType);
     if (consumedMessages == 0) {
@@ -88,10 +79,6 @@ class RabbitMqMetricsAssertions {
       String destination,
       String errorType,
       long consumedMessages) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoMessagingMetrics(testing);
-      return;
-    }
 
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
@@ -128,10 +115,6 @@ class RabbitMqMetricsAssertions {
 
   static void assertSettleMetrics(
       InstrumentationExtension testing, String operationName, String errorType) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoMessagingMetrics(testing);
-      return;
-    }
 
     assertClientOperationDuration(testing, operationName, "settle", null, errorType);
     assertNoMetric(testing, "messaging.client.consumed.messages");

@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.SEND;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.mock;
@@ -40,15 +39,11 @@ class MessagingDestinationTest {
             CamelDirection.OUTBOUND,
             SpanKind.PRODUCER);
 
-    assertThat(request.getMessagingDestination())
-        .isEqualTo(emitStableMessagingSemconv() ? expectedDestination : null);
+    assertThat(request.getMessagingDestination()).isEqualTo(expectedDestination);
     CamelMessagingAttributesGetter attributesGetter = new CamelMessagingAttributesGetter();
-    assertThat(attributesGetter.isTemporaryDestination(request))
-        .isEqualTo(emitStableMessagingSemconv() && expectedTemporary);
-    if (emitStableMessagingSemconv()) {
-      assertThat(MessagingSpanNameExtractor.create(attributesGetter, SEND, "send").extract(request))
-          .isEqualTo(expectedTemporary ? "send" : "send " + expectedDestination);
-    }
+    assertThat(attributesGetter.isTemporaryDestination(request)).isEqualTo(expectedTemporary);
+    assertThat(MessagingSpanNameExtractor.create(attributesGetter, SEND, "send").extract(request))
+        .isEqualTo(expectedTemporary ? "send" : "send " + expectedDestination);
   }
 
   private static Stream<Arguments> destinations() {
@@ -88,8 +83,7 @@ class MessagingDestinationTest {
             camelDirection,
             camelDirection == CamelDirection.OUTBOUND ? SpanKind.PRODUCER : SpanKind.CONSUMER);
 
-    assertThat(request.getMessagingDestination())
-        .isEqualTo(emitStableMessagingSemconv() ? expectedDestination : null);
+    assertThat(request.getMessagingDestination()).isEqualTo(expectedDestination);
   }
 
   private static Stream<Arguments> rabbitMqDestinations() {

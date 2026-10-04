@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -36,8 +35,7 @@ class PulsarRequestDestinationTest {
 
     // the stable semantic conventions record the partition in messaging.destination.partition.id,
     // which is only unique within the destination name, so the destination name must not embed it
-    assertThat(request.getDestination())
-        .isEqualTo(emitStableMessagingSemconv() ? TOPIC : partitionTopic);
+    assertThat(request.getDestination()).isEqualTo(TOPIC);
     assertThat(request.getDestinationPartitionId()).isEqualTo("1");
   }
 
@@ -48,7 +46,7 @@ class PulsarRequestDestinationTest {
     // a producer can be created with a short topic name, while a consumer always sees the fully
     // qualified form, so expanding it here is what makes producer and consumer spans for the same
     // topic agree on the destination name
-    assertThat(request.getDestination()).isEqualTo(emitStableMessagingSemconv() ? TOPIC : "test");
+    assertThat(request.getDestination()).isEqualTo(TOPIC);
     assertThat(request.getDestinationPartitionId()).isNull();
   }
 
@@ -56,8 +54,7 @@ class PulsarRequestDestinationTest {
   void expandsTopicNameThatIsNotFullyQualifiedWhenSeparatingPartition() {
     PulsarRequest request = request(message("test-partition-1"));
 
-    assertThat(request.getDestination())
-        .isEqualTo(emitStableMessagingSemconv() ? TOPIC : "test-partition-1");
+    assertThat(request.getDestination()).isEqualTo(TOPIC);
     assertThat(request.getDestinationPartitionId()).isEqualTo("1");
   }
 
@@ -98,8 +95,7 @@ class PulsarRequestDestinationTest {
     String partitionTopic = TOPIC + "-partition-0";
     PulsarBatchRequest request = batchRequest(message(partitionTopic), message(partitionTopic));
 
-    assertThat(request.getDestination())
-        .isEqualTo(emitStableMessagingSemconv() ? TOPIC : partitionTopic);
+    assertThat(request.getDestination()).isEqualTo(TOPIC);
     assertThat(request.getDestinationPartitionId()).isEqualTo("0");
   }
 
@@ -117,7 +113,7 @@ class PulsarRequestDestinationTest {
     PulsarBatchRequest request =
         batchRequest(message("test-partition-0"), message("test-partition-1"));
 
-    assertThat(request.getDestination()).isEqualTo(emitStableMessagingSemconv() ? TOPIC : "test");
+    assertThat(request.getDestination()).isEqualTo(TOPIC);
     assertThat(request.getDestinationPartitionId()).isNull();
   }
 

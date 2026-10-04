@@ -10,12 +10,7 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertCounter;
 import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertHistogram;
-import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertNoMetric;
-import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertNoStableMetrics;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -155,10 +150,7 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("producer parent").hasNoParent(),
               span ->
-                  span.hasName(
-                          emitStableMessagingSemconv()
-                              ? "send spring-jms-listener"
-                              : "spring-jms-listener publish")
+                  span.hasName("send spring-jms-listener")
                       .hasKind(PRODUCER)
                       .hasParent(trace.getSpan(0)));
           producerSpan.set(trace.getSpan(1));
@@ -167,20 +159,14 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("ambient").hasNoParent(),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "receive spring-jms-listener"
-                                : "spring-jms-listener receive")
-                        .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
+                    span.hasName("receive spring-jms-listener")
+                        .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext())),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process spring-jms-listener"
-                                : "spring-jms-listener process")
+                    span.hasName("process spring-jms-listener")
                         .hasKind(CONSUMER)
-                        .hasParent(trace.getSpan(emitStableMessagingSemconv() ? 0 : 1))
+                        .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))));
   }
 
@@ -190,168 +176,54 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
   }
 
   private static void assertSpringJmsListener(String destinationName, String subscriptionName) {
-    if (emitStableMessagingSemconv()) {
-      AtomicReference<SpanData> producerSpan = new AtomicReference<>();
-      testing.waitAndAssertSortedTraces(
-          orderByRootSpanKind(INTERNAL, CLIENT),
-          trace -> {
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span ->
-                    span.hasName("send " + destinationName)
-                        .hasKind(PRODUCER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
-                            equalTo(MESSAGING_DESTINATION_NAME, destinationName),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "send" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "send" : null),
-                            satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank)),
-                span ->
-                    span.hasName("process " + destinationName)
-                        .hasKind(CONSUMER)
-                        .hasParent(trace.getSpan(1))
-                        .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
-                            equalTo(MESSAGING_DESTINATION_NAME, destinationName),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
-                            equalTo(
-                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                emitStableMessagingSemconv() ? subscriptionName : null)),
-                span -> span.hasName("consumer").hasParent(trace.getSpan(2)));
-            producerSpan.set(trace.getSpan(1));
-          },
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("receive " + destinationName)
-                          .hasKind(CLIENT)
-                          .hasNoParent()
-                          .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(MESSAGING_SYSTEM, "jms"),
-                              equalTo(MESSAGING_DESTINATION_NAME, destinationName),
-                              equalTo(
-                                  MESSAGING_OPERATION,
-                                  emitOldMessagingSemconv() ? "receive" : null),
-                              equalTo(
-                                  MESSAGING_OPERATION_NAME,
-                                  emitStableMessagingSemconv() ? "receive" : null),
-                              equalTo(
-                                  MESSAGING_OPERATION_TYPE,
-                                  emitStableMessagingSemconv() ? "receive" : null),
-                              satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
-                              equalTo(
-                                  MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                  emitStableMessagingSemconv() ? subscriptionName : null))));
-      return;
-    }
-
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
     testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(INTERNAL, CONSUMER),
+        orderByRootSpanKind(INTERNAL, CLIENT),
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasNoParent(),
               span ->
-                  span.hasName(destinationName + " publish")
+                  span.hasName("send " + destinationName)
                       .hasKind(PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
                           equalTo(MESSAGING_SYSTEM, "jms"),
                           equalTo(MESSAGING_DESTINATION_NAME, destinationName),
-                          equalTo(
-                              MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
-                          equalTo(
-                              MESSAGING_OPERATION_NAME,
-                              emitStableMessagingSemconv() ? "send" : null),
-                          equalTo(
-                              MESSAGING_OPERATION_TYPE,
-                              emitStableMessagingSemconv() ? "send" : null),
-                          satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank)));
-
+                          equalTo(MESSAGING_OPERATION, null),
+                          equalTo(MESSAGING_OPERATION_NAME, "send"),
+                          equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                          satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank)),
+              span ->
+                  span.hasName("process " + destinationName)
+                      .hasKind(CONSUMER)
+                      .hasParent(trace.getSpan(1))
+                      .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(MESSAGING_SYSTEM, "jms"),
+                          equalTo(MESSAGING_DESTINATION_NAME, destinationName),
+                          equalTo(MESSAGING_OPERATION, null),
+                          equalTo(MESSAGING_OPERATION_NAME, "process"),
+                          equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                          satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
+                          equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, subscriptionName)),
+              span -> span.hasName("consumer").hasParent(trace.getSpan(2)));
           producerSpan.set(trace.getSpan(1));
         },
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(destinationName + " receive")
-                        .hasKind(CONSUMER)
+                    span.hasName("receive " + destinationName)
+                        .hasKind(CLIENT)
                         .hasNoParent()
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, destinationName),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "receive" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "receive" : null),
+                            equalTo(MESSAGING_OPERATION, null),
+                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                             satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
-                            equalTo(
-                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                emitStableMessagingSemconv() ? subscriptionName : null)),
-                span ->
-                    span.hasName(destinationName + " process")
-                        .hasKind(CONSUMER)
-                        .hasParent(trace.getSpan(0))
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
-                            equalTo(MESSAGING_DESTINATION_NAME, destinationName),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
-                            equalTo(
-                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                emitStableMessagingSemconv() ? subscriptionName : null)),
-                span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
-
-    if (!emitStableMessagingSemconv()) {
-      assertNoStableMetrics(testing, "io.opentelemetry.jms-3.0");
-      assertNoStableMetrics(testing, "io.opentelemetry.spring-jms-6.0");
-      return;
-    }
-
-    Attributes receiveAttributes =
-        Attributes.builder()
-            .put(MESSAGING_OPERATION_NAME, "receive")
-            .put(MESSAGING_SYSTEM, "jms")
-            .put(MESSAGING_DESTINATION_NAME, "spring-jms-listener")
-            .put(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "durable-subscription")
-            .build();
-    assertCounter(
-        testing,
-        "io.opentelemetry.jms-3.0",
-        "messaging.client.consumed.messages",
-        1,
-        receiveAttributes);
-    assertNoMetric(
-        testing, "io.opentelemetry.spring-jms-6.0", "messaging.client.consumed.messages");
+                            equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, subscriptionName))));
   }
 
   @ParameterizedTest
@@ -388,176 +260,73 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
         applicationContext.getBean("receivedMessage", CompletableFuture.class);
     assertThat(receivedMessage.get(10, SECONDS)).isEqualTo(message);
 
-    if (emitStableMessagingSemconv()) {
-      AtomicReference<SpanData> producerSpan = new AtomicReference<>();
-      testing.waitAndAssertSortedTraces(
-          orderByRootSpanKind(INTERNAL, CLIENT),
-          trace -> {
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span ->
-                    span.hasName("send spring-jms-listener")
-                        .hasKind(PRODUCER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
-                            equalTo(MESSAGING_DESTINATION_NAME, "spring-jms-listener"),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "send" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "send" : null),
-                            satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
-                            equalTo(
-                                stringArrayKey("messaging.header.Test_Message_Header"),
-                                singletonList("test")),
-                            equalTo(
-                                stringArrayKey("messaging.header.Test_Message_Int_Header"),
-                                singletonList("1234"))),
-                span ->
-                    span.hasName("process spring-jms-listener")
-                        .hasKind(CONSUMER)
-                        .hasParent(trace.getSpan(1))
-                        .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
-                            equalTo(MESSAGING_DESTINATION_NAME, "spring-jms-listener"),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
-                            equalTo(
-                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                emitStableMessagingSemconv() ? "durable-subscription" : null),
-                            equalTo(
-                                stringArrayKey("messaging.header.Test_Message_Header"),
-                                singletonList("test")),
-                            equalTo(
-                                stringArrayKey("messaging.header.Test_Message_Int_Header"),
-                                singletonList("1234"))),
-                span -> span.hasName("consumer").hasParent(trace.getSpan(2)));
-            producerSpan.set(trace.getSpan(1));
-          },
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("receive spring-jms-listener")
-                          .hasKind(CLIENT)
-                          .hasNoParent()
-                          .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(MESSAGING_SYSTEM, "jms"),
-                              equalTo(MESSAGING_DESTINATION_NAME, "spring-jms-listener"),
-                              equalTo(
-                                  MESSAGING_OPERATION,
-                                  emitOldMessagingSemconv() ? "receive" : null),
-                              equalTo(
-                                  MESSAGING_OPERATION_NAME,
-                                  emitStableMessagingSemconv() ? "receive" : null),
-                              equalTo(
-                                  MESSAGING_OPERATION_TYPE,
-                                  emitStableMessagingSemconv() ? "receive" : null),
-                              satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
-                              equalTo(
-                                  MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                  emitStableMessagingSemconv() ? "durable-subscription" : null),
-                              equalTo(
-                                  stringArrayKey("messaging.header.Test_Message_Header"),
-                                  singletonList("test")),
-                              equalTo(
-                                  stringArrayKey("messaging.header.Test_Message_Int_Header"),
-                                  singletonList("1234")))));
-      return;
-    }
-
+    AtomicReference<SpanData> producerSpan = new AtomicReference<>();
     testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(INTERNAL, CONSUMER),
+        orderByRootSpanKind(INTERNAL, CLIENT),
+        trace -> {
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("parent").hasNoParent(),
+              span ->
+                  span.hasName("send spring-jms-listener")
+                      .hasKind(PRODUCER)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(MESSAGING_SYSTEM, "jms"),
+                          equalTo(MESSAGING_DESTINATION_NAME, "spring-jms-listener"),
+                          equalTo(MESSAGING_OPERATION, null),
+                          equalTo(MESSAGING_OPERATION_NAME, "send"),
+                          equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                          satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
+                          equalTo(
+                              stringArrayKey("messaging.header.Test_Message_Header"),
+                              singletonList("test")),
+                          equalTo(
+                              stringArrayKey("messaging.header.Test_Message_Int_Header"),
+                              singletonList("1234"))),
+              span ->
+                  span.hasName("process spring-jms-listener")
+                      .hasKind(CONSUMER)
+                      .hasParent(trace.getSpan(1))
+                      .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(MESSAGING_SYSTEM, "jms"),
+                          equalTo(MESSAGING_DESTINATION_NAME, "spring-jms-listener"),
+                          equalTo(MESSAGING_OPERATION, null),
+                          equalTo(MESSAGING_OPERATION_NAME, "process"),
+                          equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                          satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
+                          equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "durable-subscription"),
+                          equalTo(
+                              stringArrayKey("messaging.header.Test_Message_Header"),
+                              singletonList("test")),
+                          equalTo(
+                              stringArrayKey("messaging.header.Test_Message_Int_Header"),
+                              singletonList("1234"))),
+              span -> span.hasName("consumer").hasParent(trace.getSpan(2)));
+          producerSpan.set(trace.getSpan(1));
+        },
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
                 span ->
-                    span.hasName("spring-jms-listener publish")
-                        .hasKind(PRODUCER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
-                            equalTo(MESSAGING_DESTINATION_NAME, "spring-jms-listener"),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "send" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "send" : null),
-                            satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
-                            equalTo(
-                                stringArrayKey("messaging.header.Test_Message_Header"),
-                                singletonList("test")),
-                            equalTo(
-                                stringArrayKey("messaging.header.Test_Message_Int_Header"),
-                                singletonList("1234")))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("spring-jms-listener receive")
-                        .hasKind(CONSUMER)
+                    span.hasName("receive spring-jms-listener")
+                        .hasKind(CLIENT)
                         .hasNoParent()
+                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, "spring-jms-listener"),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "receive" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "receive" : null),
+                            equalTo(MESSAGING_OPERATION, null),
+                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                             satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
                             equalTo(
-                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                emitStableMessagingSemconv() ? "durable-subscription" : null),
+                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "durable-subscription"),
                             equalTo(
                                 stringArrayKey("messaging.header.Test_Message_Header"),
                                 singletonList("test")),
                             equalTo(
                                 stringArrayKey("messaging.header.Test_Message_Int_Header"),
-                                singletonList("1234"))),
-                span ->
-                    span.hasName("spring-jms-listener process")
-                        .hasKind(CONSUMER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
-                            equalTo(MESSAGING_DESTINATION_NAME, "spring-jms-listener"),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
-                            equalTo(
-                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                emitStableMessagingSemconv() ? "durable-subscription" : null),
-                            equalTo(
-                                stringArrayKey("messaging.header.Test_Message_Header"),
-                                singletonList("test")),
-                            equalTo(
-                                stringArrayKey("messaging.header.Test_Message_Int_Header"),
-                                singletonList("1234"))),
-                span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
+                                singletonList("1234")))));
   }
 
   @ParameterizedTest
@@ -610,13 +379,11 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
         .hasAttributesSatisfyingExactly(
             equalTo(MESSAGING_SYSTEM, "jms"),
             equalTo(MESSAGING_DESTINATION_NAME, "spring-jms-listener"),
-            equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-            equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null),
-            equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null),
+            equalTo(MESSAGING_OPERATION, null),
+            equalTo(MESSAGING_OPERATION_NAME, "process"),
+            equalTo(MESSAGING_OPERATION_TYPE, "process"),
             satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
-            equalTo(
-                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                emitStableMessagingSemconv() ? "durable-subscription" : null));
+            equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "durable-subscription"));
   }
 
   @TestConfiguration

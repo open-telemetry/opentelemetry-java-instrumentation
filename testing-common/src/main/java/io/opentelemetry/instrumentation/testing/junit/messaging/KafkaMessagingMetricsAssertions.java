@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.testing.junit.messaging;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
@@ -28,10 +27,6 @@ public final class KafkaMessagingMetricsAssertions {
       String partition,
       long count,
       String errorType) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoNewMetrics(testing, instrumentationName);
-      return;
-    }
 
     assertDuration(
         testing,
@@ -56,10 +51,6 @@ public final class KafkaMessagingMetricsAssertions {
       String partition,
       long count,
       String errorType) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoNewMetrics(testing, instrumentationName);
-      return;
-    }
 
     assertDeprecatedMetricsAbsent(testing);
     assertCounter(
@@ -84,10 +75,6 @@ public final class KafkaMessagingMetricsAssertions {
       long operationCount,
       long messageCount,
       String errorType) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoNewMetrics(testing, instrumentationName);
-      return;
-    }
 
     assertReceiveDurationMetrics(
         testing, instrumentationName, destination, group, partition, operationCount, errorType);
@@ -103,10 +90,6 @@ public final class KafkaMessagingMetricsAssertions {
       String partition,
       long messageCount,
       String errorType) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoNewMetrics(testing, instrumentationName);
-      return;
-    }
 
     assertCounter(
         testing,
@@ -130,10 +113,6 @@ public final class KafkaMessagingMetricsAssertions {
       String partition,
       long operationCount,
       String errorType) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoNewMetrics(testing, instrumentationName);
-      return;
-    }
 
     assertDuration(
         testing,
@@ -162,10 +141,6 @@ public final class KafkaMessagingMetricsAssertions {
       String partition,
       long operationCount,
       String errorType) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoNewMetrics(testing, instrumentationName);
-      return;
-    }
 
     assertProcessDurationMetrics(
         testing, instrumentationName, destination, group, partition, operationCount, errorType);
@@ -186,10 +161,6 @@ public final class KafkaMessagingMetricsAssertions {
       long operationCount,
       long messageCount,
       String errorType) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoNewMetrics(testing, instrumentationName);
-      return;
-    }
 
     assertProcessDurationMetrics(
         testing, instrumentationName, destination, group, partition, operationCount, errorType);
@@ -214,10 +185,6 @@ public final class KafkaMessagingMetricsAssertions {
       String partition,
       long operationCount,
       String errorType) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoNewMetrics(testing, instrumentationName);
-      return;
-    }
 
     assertDuration(
         testing,
@@ -254,9 +221,7 @@ public final class KafkaMessagingMetricsAssertions {
 
   public static void assertProcessMetricPointCounts(
       InstrumentationExtension testing, String instrumentationName, int durationPointCount) {
-    if (!emitStableMessagingSemconv()) {
-      return;
-    }
+
     testing.waitAndAssertMetrics(
         instrumentationName,
         PROCESS_DURATION,
@@ -273,10 +238,7 @@ public final class KafkaMessagingMetricsAssertions {
    */
   public static void assertTotalConsumedMessages(
       InstrumentationExtension testing, String instrumentationName, long total) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoNewMetrics(testing, instrumentationName);
-      return;
-    }
+
     testing.waitAndAssertMetrics(
         instrumentationName,
         CONSUMED_MESSAGES,

@@ -8,8 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.jms.v1_1;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
@@ -159,14 +157,9 @@ class Jms2InstrumentationTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(MESSAGING_SYSTEM, "jms"),
                           messagingDestinationName("someTopic", false),
-                          equalTo(
-                              MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
-                          equalTo(
-                              MESSAGING_OPERATION_NAME,
-                              emitStableMessagingSemconv() ? "send" : null),
-                          equalTo(
-                              MESSAGING_OPERATION_TYPE,
-                              emitStableMessagingSemconv() ? "send" : null),
+                          equalTo(MESSAGING_OPERATION, null),
+                          equalTo(MESSAGING_OPERATION_NAME, "send"),
+                          equalTo(MESSAGING_OPERATION_TYPE, "send"),
                           equalTo(MESSAGING_MESSAGE_ID, messageId),
                           messagingTempDestination(false)));
           producerSpan.set(trace.getSpan(1));
@@ -175,24 +168,18 @@ class Jms2InstrumentationTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("consumer parent").hasNoParent(),
                 span ->
-                    span.hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
+                    span.hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName("someTopic", false),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "receive" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "receive" : null),
+                            equalTo(MESSAGING_OPERATION, null),
+                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             equalTo(
-                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                emitStableMessagingSemconv() ? "durable-subscription" : null))));
+                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "durable-subscription"))));
   }
 
   @ParameterizedTest
@@ -222,14 +209,9 @@ class Jms2InstrumentationTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(MESSAGING_SYSTEM, "jms"),
                           messagingDestinationName("someTopic", false),
-                          equalTo(
-                              MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
-                          equalTo(
-                              MESSAGING_OPERATION_NAME,
-                              emitStableMessagingSemconv() ? "send" : null),
-                          equalTo(
-                              MESSAGING_OPERATION_TYPE,
-                              emitStableMessagingSemconv() ? "send" : null),
+                          equalTo(MESSAGING_OPERATION, null),
+                          equalTo(MESSAGING_OPERATION_NAME, "send"),
+                          equalTo(MESSAGING_OPERATION_TYPE, "send"),
                           equalTo(MESSAGING_MESSAGE_ID, messageId),
                           messagingTempDestination(false)));
           producerSpan.set(trace.getSpan(1));
@@ -238,24 +220,17 @@ class Jms2InstrumentationTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("consumer parent").hasNoParent(),
                 span ->
-                    span.hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
+                    span.hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName("someTopic", false),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "receive" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "receive" : null),
+                            equalTo(MESSAGING_OPERATION, null),
+                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
-                            equalTo(
-                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                emitStableMessagingSemconv() ? subscriptionName : null))));
+                            equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, subscriptionName))));
   }
 
   @ParameterizedTest
@@ -278,27 +253,17 @@ class Jms2InstrumentationTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process someTopic"
-                                : "someTopic process")
+                    span.hasName("process someTopic")
                         .hasKind(CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName("someTopic", false),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "process" : null),
+                            equalTo(MESSAGING_OPERATION, null),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             messagingTempDestination(false),
-                            equalTo(
-                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                emitStableMessagingSemconv() ? subscriptionName : null))));
+                            equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, subscriptionName))));
   }
 
   @Test
@@ -328,20 +293,13 @@ class Jms2InstrumentationTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName("someTopic", false),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "process" : null),
+                            equalTo(MESSAGING_OPERATION, null),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             messagingTempDestination(false),
                             equalTo(
                                 MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                emitStableMessagingSemconv()
-                                    ? "reused-listener-subscription"
-                                    : null))));
+                                "reused-listener-subscription"))));
   }
 
   @MethodSource("destinationArguments")
@@ -377,24 +335,17 @@ class Jms2InstrumentationTest {
               span -> span.hasName("producer parent").hasNoParent(),
               span ->
                   span.hasName(
-                          emitStableMessagingSemconv()
-                              ? destinationName.equals("(temporary)")
-                                  ? "send"
-                                  : "send " + destinationName
-                              : destinationName + " publish")
+                          destinationName.equals("(temporary)")
+                              ? "send"
+                              : "send " + destinationName)
                       .hasKind(PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
                           equalTo(MESSAGING_SYSTEM, "jms"),
                           messagingDestinationName(destinationName, isTemporary),
-                          equalTo(
-                              MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
-                          equalTo(
-                              MESSAGING_OPERATION_NAME,
-                              emitStableMessagingSemconv() ? "send" : null),
-                          equalTo(
-                              MESSAGING_OPERATION_TYPE,
-                              emitStableMessagingSemconv() ? "send" : null),
+                          equalTo(MESSAGING_OPERATION, null),
+                          equalTo(MESSAGING_OPERATION_NAME, "send"),
+                          equalTo(MESSAGING_OPERATION_TYPE, "send"),
                           equalTo(MESSAGING_MESSAGE_ID, messageId),
                           messagingTempDestination(isTemporary)));
 
@@ -405,25 +356,18 @@ class Jms2InstrumentationTest {
                 span -> span.hasName("consumer parent").hasNoParent(),
                 span ->
                     span.hasName(
-                            emitStableMessagingSemconv()
-                                ? destinationName.equals("(temporary)")
-                                    ? "receive"
-                                    : "receive " + destinationName
-                                : destinationName + " receive")
-                        .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
+                            destinationName.equals("(temporary)")
+                                ? "receive"
+                                : "receive " + destinationName)
+                        .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName(destinationName, isTemporary),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "receive" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "receive" : null),
+                            equalTo(MESSAGING_OPERATION, null),
+                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary))));
   }
@@ -464,46 +408,32 @@ class Jms2InstrumentationTest {
                 span -> span.hasName("producer parent").hasNoParent(),
                 span ->
                     span.hasName(
-                            emitStableMessagingSemconv()
-                                ? destinationName.equals("(temporary)")
-                                    ? "send"
-                                    : "send " + destinationName
-                                : destinationName + " publish")
+                            destinationName.equals("(temporary)")
+                                ? "send"
+                                : "send " + destinationName)
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName(destinationName, isTemporary),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "send" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "send" : null),
+                            equalTo(MESSAGING_OPERATION, null),
+                            equalTo(MESSAGING_OPERATION_NAME, "send"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary)),
                 span ->
                     span.hasName(
-                            emitStableMessagingSemconv()
-                                ? destinationName.equals("(temporary)")
-                                    ? "process"
-                                    : "process " + destinationName
-                                : destinationName + " process")
+                            destinationName.equals("(temporary)")
+                                ? "process"
+                                : "process " + destinationName)
                         .hasKind(CONSUMER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName(destinationName, isTemporary),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "process" : null),
+                            equalTo(MESSAGING_OPERATION, null),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary)),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
@@ -537,7 +467,7 @@ class Jms2InstrumentationTest {
 
   private static AttributeAssertion messagingDestinationName(
       String destinationName, boolean isTemporary) {
-    return emitStableMessagingSemconv() && isTemporary
+    return isTemporary
         ? satisfies(MESSAGING_DESTINATION_NAME, val -> val.isNotEmpty())
         : equalTo(MESSAGING_DESTINATION_NAME, destinationName);
   }

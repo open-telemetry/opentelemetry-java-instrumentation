@@ -9,8 +9,6 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.M
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.PROCESS_DURATION;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.contains;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.enable;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -54,28 +52,17 @@ class MessagingProcessMetricsTest {
             .put(MESSAGING_SYSTEM, "pulsar")
             .put(MESSAGING_DESTINATION_NAME, "topic")
             .put(MESSAGING_DESTINATION_TEMPLATE, "topic-{id}")
-            .put(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null)
-            .put(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null)
-            .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null)
+            .put(MESSAGING_OPERATION, null)
+            .put(MESSAGING_OPERATION_NAME, "process")
+            .put(MESSAGING_OPERATION_TYPE, "process")
             .build();
 
     Context root = enable(Context.root());
     Context context = listener.onStart(root, attributes, nanos(100));
-    assertThat(contains(context, PROCESS, PROCESS_DURATION))
-        .isEqualTo(emitStableMessagingSemconv());
+    assertThat(contains(context, PROCESS, PROCESS_DURATION)).isTrue();
     Attributes endAttributes =
-        Attributes.builder()
-            .put(
-                ERROR_TYPE,
-                emitStableMessagingSemconv() ? IllegalStateException.class.getName() : null)
-            .build();
+        Attributes.builder().put(ERROR_TYPE, IllegalStateException.class.getName()).build();
     listener.onEnd(context, endAttributes, nanos(350));
-
-    if (!emitStableMessagingSemconv()) {
-      assertThat(context).isSameAs(root);
-      assertThat(metricReader.collectAllMetrics()).isEmpty();
-      return;
-    }
 
     assertThat(metricReader.collectAllMetrics())
         .satisfiesExactly(
@@ -111,8 +98,8 @@ class MessagingProcessMetricsTest {
     Attributes attributes =
         Attributes.builder()
             .put(MESSAGING_SYSTEM, "kafka")
-            .put(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null)
-            .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null)
+            .put(MESSAGING_OPERATION_NAME, "process")
+            .put(MESSAGING_OPERATION_TYPE, "process")
             .build();
 
     Context outerContext = outer.onStart(enable(Context.root()), attributes, nanos(100));
@@ -121,14 +108,10 @@ class MessagingProcessMetricsTest {
     outer.onEnd(outerContext, Attributes.empty(), nanos(250));
 
     Collection<MetricData> metrics = metricReader.collectAllMetrics();
-    if (emitStableMessagingSemconv()) {
-      assertThat(metrics)
-          .allMatch(metric -> metric.getInstrumentationScopeInfo().getName().equals("outer"))
-          .extracting(MetricData::getName)
-          .containsExactly("messaging.process.duration");
-    } else {
-      assertThat(metrics).isEmpty();
-    }
+    assertThat(metrics)
+        .allMatch(metric -> metric.getInstrumentationScopeInfo().getName().equals("outer"))
+        .extracting(MetricData::getName)
+        .containsExactly("messaging.process.duration");
   }
 
   @Test
@@ -141,8 +124,8 @@ class MessagingProcessMetricsTest {
     OperationListener inner = MessagingProcessMetrics.get().create(meterProvider.get("inner"));
     Attributes attributes =
         Attributes.builder()
-            .put(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null)
-            .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null)
+            .put(MESSAGING_OPERATION_NAME, "process")
+            .put(MESSAGING_OPERATION_TYPE, "process")
             .build();
 
     Context outerContext = outer.onStart(Context.root(), attributes, nanos(100));
@@ -151,13 +134,9 @@ class MessagingProcessMetricsTest {
     outer.onEnd(outerContext, Attributes.empty(), nanos(250));
 
     Collection<MetricData> metrics = metricReader.collectAllMetrics();
-    if (emitStableMessagingSemconv()) {
-      assertThat(metrics)
-          .extracting(metric -> metric.getInstrumentationScopeInfo().getName())
-          .containsExactlyInAnyOrder("outer", "inner");
-    } else {
-      assertThat(metrics).isEmpty();
-    }
+    assertThat(metrics)
+        .extracting(metric -> metric.getInstrumentationScopeInfo().getName())
+        .containsExactlyInAnyOrder("outer", "inner");
   }
 
   private static long nanos(int millis) {

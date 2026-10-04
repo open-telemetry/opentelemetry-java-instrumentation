@@ -5,10 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -68,7 +66,6 @@ class SjmsCamelTest {
 
   @Test
   void recordsTwoProcessOperationsThroughSjms() throws Exception {
-    assumeTrue(emitStableMessagingSemconv());
 
     ProducerTemplate template = camelContext.createProducerTemplate();
     template.sendBody("direct:input", "test message");

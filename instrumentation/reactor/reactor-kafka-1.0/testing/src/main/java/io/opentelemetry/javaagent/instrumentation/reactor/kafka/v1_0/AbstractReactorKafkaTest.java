@@ -7,8 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.reactor.kafka.v1_0;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveMetrics;
@@ -22,16 +20,12 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CLUSTER_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -198,77 +192,34 @@ public abstract class AbstractReactorKafkaTest {
   private static void assertWithReceiveTelemetry(SenderRecord<String, String, Object> record) {
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
 
-    if (emitStableMessagingSemconv()) {
-      testing.waitAndAssertSortedTraces(
-          orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CLIENT),
-          trace -> {
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("producer"),
-                span ->
-                    span.hasName(
-                            emitStableMessagingSemconv() ? "send testTopic" : "testTopic publish")
-                        .hasKind(SpanKind.PRODUCER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(sendAttributes(record)),
-                span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process testTopic"
-                                : "testTopic process")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(1))
-                        .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
-                        .hasAttributesSatisfyingExactly(processAttributes(record)),
-                span -> span.hasName("consumer").hasParent(trace.getSpan(2)));
-
-            producerSpan.set(trace.getSpan(1));
-          },
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName(
-                              emitStableMessagingSemconv() ? "poll testTopic" : "testTopic receive")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasNoParent()
-                          .hasLinks(receiveRecordLink(producerSpan.get()))
-                          .hasAttributesSatisfyingExactly(receiveAttributes("testTopic"))));
-      assertReceiveAndProcessMetrics();
-      return;
-    }
-
     testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(
-            SpanKind.INTERNAL, emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER),
+        orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CLIENT),
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("producer"),
               span ->
-                  span.hasName(
-                          emitStableMessagingSemconv() ? "send testTopic" : "testTopic publish")
+                  span.hasName("send testTopic")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(sendAttributes(record)));
+                      .hasAttributesSatisfyingExactly(sendAttributes(record)),
+              span ->
+                  span.hasName("process testTopic")
+                      .hasKind(SpanKind.CONSUMER)
+                      .hasParent(trace.getSpan(1))
+                      .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
+                      .hasAttributesSatisfyingExactly(processAttributes(record)),
+              span -> span.hasName("consumer").hasParent(trace.getSpan(2)));
 
           producerSpan.set(trace.getSpan(1));
         },
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv() ? "poll testTopic" : "testTopic receive")
-                        .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
+                    span.hasName("poll testTopic")
+                        .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(receiveAttributes("testTopic")),
-                span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process testTopic"
-                                : "testTopic process")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(0))
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
-                        .hasAttributesSatisfyingExactly(processAttributes(record)),
-                span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
+                        .hasLinks(receiveRecordLink(producerSpan.get()))
+                        .hasAttributesSatisfyingExactly(receiveAttributes("testTopic"))));
     assertReceiveAndProcessMetrics();
   }
 
@@ -278,20 +229,16 @@ public abstract class AbstractReactorKafkaTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("producer"),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv() ? "send testTopic" : "testTopic publish")
+                    span.hasName("send testTopic")
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(sendAttributes(record)),
                 span -> {
-                  span.hasName(
-                          emitStableMessagingSemconv() ? "process testTopic" : "testTopic process")
+                  span.hasName("process testTopic")
                       .hasKind(SpanKind.CONSUMER)
                       .hasParent(trace.getSpan(1))
                       .hasAttributesSatisfyingExactly(processAttributes(record));
-                  if (emitStableMessagingSemconv()) {
-                    span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
-                  }
+                  span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
                 },
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
     assertProcessMetricsWithConsumedMessages(
@@ -315,7 +262,7 @@ public abstract class AbstractReactorKafkaTest {
 
   private static List<AttributeAssertion> sendAttributes(ProducerRecord<String, String> record) {
     List<AttributeAssertion> assertions =
-        messagingAttributes(record.topic(), "publish", "send", "send", "producer");
+        messagingAttributes(record.topic(), "send", "send", "producer");
     assertions.add(satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
     addOffsetAssertion(assertions);
     assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
@@ -331,26 +278,20 @@ public abstract class AbstractReactorKafkaTest {
   }
 
   private static List<AttributeAssertion> receiveAttributes(String topic) {
-    List<AttributeAssertion> assertions =
-        messagingAttributes(topic, "receive", "poll", "receive", "consumer");
+    List<AttributeAssertion> assertions = messagingAttributes(topic, "poll", "receive", "consumer");
     assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
     assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
     if (HAS_CONSUMER_GROUP) {
       addGroupAssertions(assertions);
     }
-    if (emitStableMessagingSemconv()) {
-      assertions.add(
-          satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
-    }
+    assertions.add(satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
     return assertions;
   }
 
   // the offset and the message key stay on the link even when the batch carries a single record,
   // because they are only recommended on spans that describe an operation on a single message
   private static LinkData receiveRecordLink(SpanData producerSpan) {
-    if (!emitStableMessagingSemconv()) {
-      return LinkData.create(producerSpan.getSpanContext());
-    }
+
     return LinkData.create(
         producerSpan.getSpanContext(),
         Attributes.builder()
@@ -363,7 +304,7 @@ public abstract class AbstractReactorKafkaTest {
 
   private static List<AttributeAssertion> processAttributes(ProducerRecord<String, String> record) {
     List<AttributeAssertion> assertions =
-        messagingAttributes(record.topic(), "process", "process", "process", "consumer");
+        messagingAttributes(record.topic(), "process", "process", "consumer");
     assertions.add(satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
     addOffsetAssertion(assertions);
     if (HAS_CONSUMER_GROUP) {
@@ -378,55 +319,32 @@ public abstract class AbstractReactorKafkaTest {
     if (messageKey != null) {
       assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
     }
-    String messageValue = record.value();
-    if (messageValue != null && emitOldMessagingSemconv()) {
-      assertions.add(equalTo(MESSAGING_MESSAGE_BODY_SIZE, messageValue.getBytes(UTF_8).length));
-    }
+
     return assertions;
   }
 
   private static List<AttributeAssertion> messagingAttributes(
-      String topic,
-      String oldOperation,
-      String operationName,
-      String operationType,
-      String clientIdPrefix) {
+      String topic, String operationName, String operationType, String clientIdPrefix) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
-                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? oldOperation : null),
-                equalTo(
-                    MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? operationName : null),
-                equalTo(
-                    MESSAGING_OPERATION_TYPE,
-                    emitStableMessagingSemconv() ? operationType : null)));
-    if (emitOldMessagingSemconv()) {
-      assertions.add(
-          satisfies(stringKey("messaging.client_id"), val -> val.startsWith(clientIdPrefix)));
-    }
-    if (emitStableMessagingSemconv()) {
-      assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith(clientIdPrefix)));
-    }
+                equalTo(MESSAGING_OPERATION, null),
+                equalTo(MESSAGING_OPERATION_NAME, operationName),
+                equalTo(MESSAGING_OPERATION_TYPE, operationType)));
+
+    assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith(clientIdPrefix)));
     return assertions;
   }
 
   private static void addOffsetAssertion(List<AttributeAssertion> assertions) {
-    if (emitOldMessagingSemconv()) {
-      assertions.add(satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative));
-    }
-    if (emitStableMessagingSemconv()) {
-      assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
-    }
+
+    assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
   }
 
   private static void addGroupAssertions(List<AttributeAssertion> assertions) {
-    if (emitOldMessagingSemconv()) {
-      assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
-    }
-    if (emitStableMessagingSemconv()) {
-      assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test"));
-    }
+
+    assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test"));
   }
 }

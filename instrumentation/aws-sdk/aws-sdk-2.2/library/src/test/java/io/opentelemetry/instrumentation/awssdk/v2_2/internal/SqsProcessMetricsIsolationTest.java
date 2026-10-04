@@ -9,10 +9,8 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.M
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.PROCESS_DURATION;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.contains;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.enable;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -69,7 +67,6 @@ class SqsProcessMetricsIsolationTest {
 
   @Test
   void overlappingProcessOperationsCountDeliveryOnce() {
-    assumeTrue(emitStableMessagingSemconv());
 
     Instrumenter<SqsProcessRequest, Response> instrumenter =
         new AwsSdkInstrumenterFactory(
@@ -116,7 +113,6 @@ class SqsProcessMetricsIsolationTest {
   }
 
   private static void assertProcessDurationIsolated(boolean receiveTelemetryEnabled) {
-    assumeTrue(emitStableMessagingSemconv());
 
     Instrumenter<String, Void> outerInstrumenter = newOuterProcessInstrumenter();
     Context callerContext = Context.current();

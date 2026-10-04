@@ -5,14 +5,12 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.v2_6.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -86,7 +84,6 @@ class OpenTelemetryConsumerInterceptorTest {
 
   @Test
   void deduplicatesRecordsAcrossReceiveInstrumentations() {
-    assumeTrue(emitStableMessagingSemconv());
 
     KafkaTelemetry telemetry =
         KafkaTelemetry.builder(testing.getOpenTelemetry())
@@ -114,7 +111,6 @@ class OpenTelemetryConsumerInterceptorTest {
 
   @Test
   void disabledReceiveClearsInheritedReceiveOperation() {
-    assumeTrue(emitStableMessagingSemconv());
 
     KafkaTelemetry telemetry =
         KafkaTelemetry.builder(testing.getOpenTelemetry())

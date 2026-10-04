@@ -5,10 +5,8 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -30,7 +28,7 @@ class SqsImplTest {
 
   @Test
   void injectsSendContextIntoContextFreeStableBatchEntries() {
-    assumeTrue(emitStableMessagingSemconv());
+
     SendMessageBatchRequest request =
         SendMessageBatchRequest.builder()
             .queueUrl("https://sqs.us-east-1.amazonaws.com/123456789012/test")

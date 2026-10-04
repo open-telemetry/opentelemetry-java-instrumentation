@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.v3_11;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.awslambdaevents.v2_2.AwsLambdaSqsMetricsAssertions.assertMetrics;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -95,24 +93,15 @@ class AwsLambdaSqsEventWrapperTest {
                             equalTo(CLOUD_ACCOUNT_ID, "123456789"),
                             equalTo(FAAS_INVOCATION_ID, "1-22-333")),
                 span ->
-                    span.hasName(emitStableMessagingSemconv() ? "process otel" : "aws:sqs process")
+                    span.hasName("process otel")
                         .hasKind(SpanKind.CONSUMER)
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_DESTINATION_NAME,
-                                emitStableMessagingSemconv() ? "otel" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_BATCH_MESSAGE_COUNT,
-                                emitStableMessagingSemconv() ? Long.valueOf(1) : null))));
+                            equalTo(MESSAGING_OPERATION, null),
+                            equalTo(MESSAGING_DESTINATION_NAME, "otel"),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, Long.valueOf(1)))));
     assertMetrics(testing, TracingSqsEventHandler.INSTRUMENTATION_NAME, "otel", 1, 1, null);
   }
 
