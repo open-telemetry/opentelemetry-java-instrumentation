@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingReceiveExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -190,12 +189,10 @@ public final class KafkaInstrumenterFactory {
     if (addClientOperationDuration) {
       builder.addOperationMetrics(MessagingConsumerMetrics.getClientOperationDuration());
     }
-    if (emitStableMessagingSemconv()) {
-      addReceiveConsumedMessages(builder);
-      builder.addSpanLinksExtractor(
-          new KafkaBatchProcessSpanLinksExtractor(
-              openTelemetry.getPropagators().getTextMapPropagator()));
-    }
+    addReceiveConsumedMessages(builder);
+    builder.addSpanLinksExtractor(
+        new KafkaBatchProcessSpanLinksExtractor(
+            openTelemetry.getPropagators().getTextMapPropagator()));
     setMessagingReceiveExceptionEventExtractor(builder);
     return builder.buildInstrumenter(MessagingSpanKindExtractor.create(operationType));
   }
@@ -259,18 +256,16 @@ public final class KafkaInstrumenterFactory {
    */
   private static <REQUEST> void addConsumedMessagesIfNoReceiveOperation(
       InstrumenterBuilder<REQUEST, Void> builder, ToLongFunction<REQUEST> messageCounter) {
-    if (emitStableMessagingSemconv()) {
-      builder
-          .addContextCustomizer(
-              (context, request, startAttributes) -> {
-                long consumedMessagesCount =
-                    KafkaConsumerContextUtil.hasReceiveOperation(context)
-                        ? 0
-                        : messageCounter.applyAsLong(request);
-                return context.with(CONSUMED_MESSAGES_COUNT_KEY, consumedMessagesCount);
-              })
-          .addOperationMetrics(consumedMessagesMetrics);
-    }
+    builder
+        .addContextCustomizer(
+            (context, request, startAttributes) -> {
+              long consumedMessagesCount =
+                  KafkaConsumerContextUtil.hasReceiveOperation(context)
+                      ? 0
+                      : messageCounter.applyAsLong(request);
+              return context.with(CONSUMED_MESSAGES_COUNT_KEY, consumedMessagesCount);
+            })
+        .addOperationMetrics(consumedMessagesMetrics);
   }
 
   private static void addReceiveConsumedMessages(

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitInstrumenterHelper.consumerDestinationName;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitInstrumenterHelper.isGeneratedQueueName;
 import static java.util.Collections.emptyList;
@@ -29,23 +28,16 @@ final class RabbitDeliveryAttributesGetter
   @Nullable
   @Override
   public String getDestination(DeliveryRequest request) {
-    if (emitStableMessagingSemconv()) {
-      return consumerDestinationName(
-          request.getEnvelope().getExchange(),
-          request.getEnvelope().getRoutingKey(),
-          request.getQueue());
-    }
-    return normalizeExchangeName(request.getEnvelope().getExchange());
+    return consumerDestinationName(
+        request.getEnvelope().getExchange(),
+        request.getEnvelope().getRoutingKey(),
+        request.getQueue());
   }
 
   @Nullable
   @Override
   public String getDestinationTemplate(DeliveryRequest request) {
     return null;
-  }
-
-  private static String normalizeExchangeName(String exchange) {
-    return exchange == null || exchange.isEmpty() ? "<default>" : exchange;
   }
 
   @Override
@@ -55,7 +47,7 @@ final class RabbitDeliveryAttributesGetter
 
   @Override
   public boolean isAnonymousDestination(DeliveryRequest request) {
-    return emitStableMessagingSemconv() && isGeneratedQueueName(request.getQueue());
+    return isGeneratedQueueName(request.getQueue());
   }
 
   @Nullable

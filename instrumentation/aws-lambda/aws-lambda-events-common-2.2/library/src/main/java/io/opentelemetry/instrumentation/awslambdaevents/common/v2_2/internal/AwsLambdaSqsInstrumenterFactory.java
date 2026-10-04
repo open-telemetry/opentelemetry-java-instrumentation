@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
@@ -36,10 +35,8 @@ public final class AwsLambdaSqsInstrumenterFactory {
         Instrumenter.<SQSEvent, Void>builder(
                 openTelemetry,
                 instrumentationName,
-                emitStableMessagingSemconv()
-                    ? MessagingSpanNameExtractor.create(
-                        getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME)
-                    : event -> SqsEventAttributesGetter.source(event) + " process")
+                MessagingSpanNameExtractor.create(
+                    getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME))
             .addAttributesExtractor(
                 new SpanKeyOmittingAttributesExtractor<>(
                     MessagingAttributesExtractor.create(
@@ -58,17 +55,11 @@ public final class AwsLambdaSqsInstrumenterFactory {
         Instrumenter.<SQSMessage, Void>builder(
                 openTelemetry,
                 instrumentationName,
-                emitStableMessagingSemconv()
-                    ? MessagingSpanNameExtractor.create(
-                        getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME)
-                    : message -> message.getEventSource() + " process")
+                MessagingSpanNameExtractor.create(
+                    getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME))
             .addAttributesExtractor(
-                emitStableMessagingSemconv()
-                    ? MessagingAttributesExtractor.create(
-                        getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME)
-                    : new SpanKeyOmittingAttributesExtractor<>(
-                        MessagingAttributesExtractor.create(
-                            getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME)))
+                MessagingAttributesExtractor.create(
+                    getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME))
             .addOperationMetrics(MessagingProcessMetrics.get());
     setMessagingProcessExceptionEventExtractor(builder);
     return MessagingProcessInstrumenterFactory.create(

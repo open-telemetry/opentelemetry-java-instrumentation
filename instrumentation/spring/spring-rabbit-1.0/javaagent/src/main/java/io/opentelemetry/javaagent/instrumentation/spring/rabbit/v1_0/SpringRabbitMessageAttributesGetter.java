@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
@@ -39,10 +38,6 @@ class SpringRabbitMessageAttributesGetter
   @Nullable
   public String getDestination(SpringRabbitRequest request) {
     MessageProperties properties = request.getMessage().getMessageProperties();
-    if (!emitStableMessagingSemconv()) {
-      return properties.getReceivedRoutingKey();
-    }
-
     String exchange = properties.getReceivedExchange();
     String routingKey = properties.getReceivedRoutingKey();
     String queue = getQueue(properties);
@@ -117,8 +112,7 @@ class SpringRabbitMessageAttributesGetter
 
   @Override
   public boolean isAnonymousDestination(SpringRabbitRequest request) {
-    return emitStableMessagingSemconv()
-        && isGeneratedQueueName(getQueue(request.getMessage().getMessageProperties()));
+    return isGeneratedQueueName(getQueue(request.getMessage().getMessageProperties()));
   }
 
   private static boolean isGeneratedQueueName(@Nullable String queue) {

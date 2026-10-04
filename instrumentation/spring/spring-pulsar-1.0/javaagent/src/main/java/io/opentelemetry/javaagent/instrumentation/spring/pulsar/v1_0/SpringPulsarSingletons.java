@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.spring.pulsar.v1_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
@@ -51,9 +50,7 @@ public class SpringPulsarSingletons {
                     .setHeaders(ExperimentalConfig.get().getMessagingHeaders())
                     .build())
             .addOperationMetrics(MessagingProcessMetrics.get());
-    if (emitStableMessagingSemconv()) {
-      builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
-    }
+    builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
     setMessagingProcessExceptionEventExtractor(builder);
     return MessagingProcessInstrumenterFactory.create(
         builder,

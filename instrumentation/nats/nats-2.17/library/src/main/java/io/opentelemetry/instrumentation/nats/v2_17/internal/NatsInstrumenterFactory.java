@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.nats.v2_17.internal;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSettleExceptionEventExtractor;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
@@ -22,7 +21,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -49,24 +47,12 @@ public final class NatsInstrumenterFactory {
   private static Instrumenter<NatsRequest, NatsRequest> createProducerInstrumenter(
       OpenTelemetry openTelemetry, IncludeExclude headers, String operationName) {
     NatsRequestMessagingAttributesGetter getter = new NatsRequestMessagingAttributesGetter(true);
-    NatsRequestMessagingAttributesGetter spanNameAttributesGetter =
-        new NatsRequestMessagingAttributesGetter(true) {
-          @Nullable
-          @Override
-          public String getDestination(NatsRequest request) {
-            if (!emitStableMessagingSemconv()
-                && NatsSubject.isJetStreamSettlement(request.getSubject())) {
-              return NatsSubject.JETSTREAM_ACK_SUBJECT;
-            }
-            return super.getDestination(request);
-          }
-        };
     InstrumenterBuilder<NatsRequest, NatsRequest> builder =
         Instrumenter.<NatsRequest, NatsRequest>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(
-                    spanNameAttributesGetter, MessagingOperationType.SEND, operationName))
+                    getter, MessagingOperationType.SEND, operationName))
             .addAttributesExtractor(
                 messagingAttributesExtractor(
                     getter, MessagingOperationType.SEND, operationName, headers))
