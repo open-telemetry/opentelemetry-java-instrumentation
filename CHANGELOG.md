@@ -8,7 +8,6 @@
   HTTP library telemetry builders. Use `setRequestHeaders` and `setResponseHeaders`
   with `IncludeExclude` selectors instead. Selector patterns interpret `*` and `?` as wildcards
   rather than literal header-name characters.
-  Deprecated header-capture methods in the stable `instrumentation-api` artifact remain available.
 
 ## Version 2.32.0 (2026-10-03)
 
