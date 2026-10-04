@@ -5,7 +5,7 @@
 ### ⚠️ Breaking changes to non-stable APIs
 
 - Remove deprecated `setCapturedRequestHeaders` and `setCapturedResponseHeaders` methods from
-  non-Ktor HTTP library telemetry builders. Use `setRequestHeaders` and `setResponseHeaders`
+  HTTP library telemetry builders. Use `setRequestHeaders` and `setResponseHeaders`
   with `IncludeExclude` selectors instead. Selector patterns interpret `*` and `?` as wildcards
   rather than literal header-name characters.
   Deprecated header-capture methods in the stable `instrumentation-api` artifact remain available.
