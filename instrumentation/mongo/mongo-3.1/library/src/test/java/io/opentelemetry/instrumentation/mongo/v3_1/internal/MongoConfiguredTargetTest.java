@@ -26,6 +26,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.mongo.v3_1.MongoTelemetry;
 import org.bson.BsonDocument;
@@ -181,17 +182,6 @@ class MongoConfiguredTargetTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // db.connection_string is part of the old semantic conventions
-  void theOldConnectionStringKeepsDescribingTheServerThatAnswered() {
-    ClusterId clusterId =
-        configuredCluster(
-            MongoServerTarget.seeds(singletonList(new ServerAddress("db1.example", 27017))));
-    CommandStartedEvent event = commandStartedEvent(clusterId, "test_db", "find");
-
-    assertThat(getter.getConnectionString(event)).isEqualTo("mongodb://db2.example:27018");
-  }
-
-  @Test
   void commandWithNoDatabaseUsesConfiguredSeedsInSpanName() {
     ClusterId clusterId = new ClusterId();
     MongoClusterTargets.register(
@@ -199,7 +189,7 @@ class MongoConfiguredTargetTest {
         MongoServerTarget.seeds(asList(SELECTED_SERVER, new ServerAddress("db1.example", 27017))));
     CommandStartedEvent event = commandStartedEvent(clusterId, null, "listDatabases");
 
-    String spanName = new MongoSpanNameExtractor(getter).extract(event);
+    String spanName = DbClientSpanNameExtractor.create(getter).extract(event);
 
     assertThat(spanName).isEqualTo("listDatabases db1.example:27017,db2.example:27018");
   }

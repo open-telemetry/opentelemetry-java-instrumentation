@@ -34,7 +34,6 @@ class RediscalaRequest {
           "PUBSUB", "SCRIPT", "SLOWLOG", "XGROUP", "XINFO");
 
   private final String operationName;
-  private final String stableOperationName;
   @Nullable private final Long batchSize;
   @Nullable private final ServerEndpoint endpoint;
   @Nullable private final RedisServerTarget serverTarget;
@@ -43,12 +42,7 @@ class RediscalaRequest {
       RedisCommand<?, ?> command,
       @Nullable ServerEndpoint endpoint,
       @Nullable RedisServerTarget serverTarget) {
-    return new RediscalaRequest(
-        operationName(command, /* stable= */ false),
-        operationName(command, /* stable= */ true),
-        null,
-        endpoint,
-        serverTarget);
+    return new RediscalaRequest(operationName(command), null, endpoint, serverTarget);
   }
 
   static RediscalaRequest createTransaction(
@@ -56,21 +50,15 @@ class RediscalaRequest {
       @Nullable ServerEndpoint endpoint,
       @Nullable RedisServerTarget serverTarget) {
     return new RediscalaRequest(
-        transactionOperationName(operations, /* stable= */ false),
-        transactionOperationName(operations, /* stable= */ true),
-        batchSize(operations),
-        endpoint,
-        serverTarget);
+        transactionOperationName(operations), batchSize(operations), endpoint, serverTarget);
   }
 
   private RediscalaRequest(
       String operationName,
-      String stableOperationName,
       @Nullable Long batchSize,
       @Nullable ServerEndpoint endpoint,
       @Nullable RedisServerTarget serverTarget) {
     this.operationName = operationName;
-    this.stableOperationName = stableOperationName;
     this.batchSize = batchSize;
     this.endpoint = endpoint;
     this.serverTarget = serverTarget;
@@ -80,23 +68,9 @@ class RediscalaRequest {
     return operationName;
   }
 
-  String getStableOperationName() {
-    return stableOperationName;
-  }
-
   @Nullable
   Long getBatchSize() {
     return batchSize;
-  }
-
-  @Nullable
-  String getHost() {
-    return endpoint != null ? endpoint.getHost() : null;
-  }
-
-  @Nullable
-  Integer getPort() {
-    return endpoint != null ? endpoint.getPort() : null;
   }
 
   @Nullable
@@ -109,16 +83,15 @@ class RediscalaRequest {
     return serverTarget;
   }
 
-  private static String transactionOperationName(
-      Queue<Operation<?, ?>> operations, boolean stable) {
+  private static String transactionOperationName(Queue<Operation<?, ?>> operations) {
     if (operations.isEmpty()) {
       return "MULTI";
     }
 
     Iterator<Operation<?, ?>> iterator = operations.iterator();
-    String operationName = operationName(iterator.next().redisCommand(), stable);
+    String operationName = operationName(iterator.next().redisCommand());
     while (iterator.hasNext()) {
-      if (!operationName.equals(operationName(iterator.next().redisCommand(), stable))) {
+      if (!operationName.equals(operationName(iterator.next().redisCommand()))) {
         return "MULTI";
       }
     }
@@ -131,9 +104,9 @@ class RediscalaRequest {
     return size != 1 ? (long) size : null;
   }
 
-  private static String operationName(RedisCommand<?, ?> command, boolean stable) {
+  private static String operationName(RedisCommand<?, ?> command) {
     String name = command.getClass().getSimpleName().toUpperCase(Locale.ROOT);
-    return stable ? stableOperationName(name) : name;
+    return stableOperationName(name);
   }
 
   private static String stableOperationName(String className) {

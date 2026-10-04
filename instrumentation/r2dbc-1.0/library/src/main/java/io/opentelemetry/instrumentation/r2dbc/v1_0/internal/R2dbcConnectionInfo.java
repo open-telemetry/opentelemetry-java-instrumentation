@@ -11,7 +11,6 @@ import static io.r2dbc.spi.ConnectionFactoryOptions.HOST;
 import static io.r2dbc.spi.ConnectionFactoryOptions.PORT;
 import static io.r2dbc.spi.ConnectionFactoryOptions.PROTOCOL;
 import static io.r2dbc.spi.ConnectionFactoryOptions.SSL;
-import static io.r2dbc.spi.ConnectionFactoryOptions.USER;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.r2dbc.spi.ConnectionFactoryOptions;
@@ -44,12 +43,8 @@ final class R2dbcConnectionInfo {
   private static final Map<String, Integer> DRIVER_TO_DEFAULT_PORT = buildDriverToDefaultPort();
 
   private final String systemName;
-  @Nullable private final String user;
   @Nullable private final String namespace;
-  @Nullable private final String serverAddress;
-  @Nullable private final Integer serverPort;
   @Nullable private final DbServerTarget configuredServerTarget;
-  private final String connectionString;
 
   R2dbcConnectionInfo(ConnectionFactoryOptions factoryOptions) {
     String driver =
@@ -59,32 +54,19 @@ final class R2dbcConnectionInfo {
     String resolvedDriver = resolveDriver(driver, protocol);
     String resolvedProtocol = resolveProtocol(driver, protocol);
     this.systemName = resolveDbSystemName(driver, protocol);
-    this.user = factoryOptions.hasOption(USER) ? (String) factoryOptions.getValue(USER) : null;
     this.namespace =
         factoryOptions.hasOption(DATABASE) ? (String) factoryOptions.getValue(DATABASE) : null;
-    this.serverAddress =
+    String serverAddress =
         factoryOptions.hasOption(HOST) ? (String) factoryOptions.getValue(HOST) : null;
-    this.serverPort =
+    Integer serverPort =
         factoryOptions.hasOption(PORT) ? (Integer) factoryOptions.getValue(PORT) : null;
     Integer defaultPort =
         resolveDefaultPort(resolvedDriver, resolvedProtocol, isSslEnabled(factoryOptions));
     this.configuredServerTarget = R2dbcServerTarget.create(serverAddress, serverPort, defaultPort);
-    this.connectionString =
-        String.format(
-            "%s%s:%s%s",
-            driver != null ? driver : "",
-            protocol != null ? ":" + protocol : "",
-            serverAddress != null ? "//" + serverAddress : "",
-            serverPort != null ? ":" + serverPort : "");
   }
 
   String getSystemName() {
     return systemName;
-  }
-
-  @Nullable
-  String getUser() {
-    return user;
   }
 
   @Nullable
@@ -93,22 +75,8 @@ final class R2dbcConnectionInfo {
   }
 
   @Nullable
-  String getServerAddress() {
-    return serverAddress;
-  }
-
-  @Nullable
-  Integer getServerPort() {
-    return serverPort;
-  }
-
-  @Nullable
   DbServerTarget getConfiguredServerTarget() {
     return configuredServerTarget;
-  }
-
-  String getConnectionString() {
-    return connectionString;
   }
 
   private static Map<String, String> buildDriverToSystemName() {

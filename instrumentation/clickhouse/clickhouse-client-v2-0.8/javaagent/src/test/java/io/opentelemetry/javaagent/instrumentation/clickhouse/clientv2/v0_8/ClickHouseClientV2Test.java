@@ -540,14 +540,7 @@ class ClickHouseClientV2Test {
 
   private static Object createDbRequest() throws Exception {
     return uniqueMethod(dbRequestClass(), "create")
-        .invoke(
-            null,
-            "initial.example",
-            8123,
-            null,
-            null,
-            DATABASE_NAME,
-            "select * from " + TABLE_NAME);
+        .invoke(null, null, null, DATABASE_NAME, "select * from " + TABLE_NAME);
   }
 
   private static void capturePeer(Object request, Object contactedEndpoint) throws Exception {

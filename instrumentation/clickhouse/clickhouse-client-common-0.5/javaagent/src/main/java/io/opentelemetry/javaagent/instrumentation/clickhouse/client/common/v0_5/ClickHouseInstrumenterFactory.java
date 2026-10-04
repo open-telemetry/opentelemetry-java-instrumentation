@@ -19,7 +19,6 @@ import java.util.function.Function;
 
 public class ClickHouseInstrumenterFactory {
 
-  @SuppressWarnings("deprecation") // to support old semconv
   public static Instrumenter<ClickHouseDbRequest, Void> createInstrumenter(
       String instrumenterName, Function<Throwable, String> errorCodeExtractor) {
     ClickHouseAttributesGetter dbAttributesGetter =
@@ -29,10 +28,9 @@ public class ClickHouseInstrumenterFactory {
         Instrumenter.<ClickHouseDbRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 instrumenterName,
-                DbClientSpanNameExtractor.createWithGenericOldSpanName(dbAttributesGetter))
+                DbClientSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(
                 SqlClientAttributesExtractor.builder(dbAttributesGetter)
-                    .setTableAttribute(null)
                     .setQuerySanitizationEnabled(
                         DbConfig.isQuerySanitizationEnabled(
                             GlobalOpenTelemetry.get(), "clickhouse"))

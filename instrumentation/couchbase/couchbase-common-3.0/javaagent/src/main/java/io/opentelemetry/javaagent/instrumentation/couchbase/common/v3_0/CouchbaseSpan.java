@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -63,45 +61,27 @@ public final class CouchbaseSpan {
 
   public void setAttribute(String key, @Nullable String value) {
     String stableKey = stableKey(key);
-    if (emitStableDatabaseSemconv()) {
-      if (stableKey != null) {
-        span.setAttribute(stableKey, value);
-      } else if (captureExperimentalAttribute(key)) {
-        span.setAttribute(key, value);
-      }
-    }
-    if (emitOldDatabaseSemconv()
-        && (!v3Preview || stableKey != null || captureExperimentalAttribute(key))) {
+    if (stableKey != null) {
+      span.setAttribute(stableKey, value);
+    } else if (captureExperimentalAttribute(key)) {
       span.setAttribute(key, value);
     }
   }
 
   public void setAttribute(String key, boolean value) {
     String stableKey = stableKey(key);
-    if (emitStableDatabaseSemconv()) {
-      if (stableKey != null) {
-        span.setAttribute(stableKey, value);
-      } else if (captureExperimentalAttribute(key)) {
-        span.setAttribute(key, value);
-      }
-    }
-    if (emitOldDatabaseSemconv()
-        && (!v3Preview || stableKey != null || captureExperimentalAttribute(key))) {
+    if (stableKey != null) {
+      span.setAttribute(stableKey, value);
+    } else if (captureExperimentalAttribute(key)) {
       span.setAttribute(key, value);
     }
   }
 
   public void setAttribute(String key, long value) {
     String stableKey = stableKey(key);
-    if (emitStableDatabaseSemconv()) {
-      if (stableKey != null) {
-        span.setAttribute(stableKey, value);
-      } else if (captureExperimentalAttribute(key)) {
-        span.setAttribute(key, value);
-      }
-    }
-    if (emitOldDatabaseSemconv()
-        && (!v3Preview || stableKey != null || captureExperimentalAttribute(key))) {
+    if (stableKey != null) {
+      span.setAttribute(stableKey, value);
+    } else if (captureExperimentalAttribute(key)) {
       span.setAttribute(key, value);
     }
   }

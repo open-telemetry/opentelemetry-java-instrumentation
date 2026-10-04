@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -49,7 +50,7 @@ public final class ElasticsearchRestInstrumenterFactory {
         Instrumenter.<ElasticsearchRestRequest, Response>builder(
                 GlobalOpenTelemetry.get(),
                 instrumentationName,
-                new ElasticsearchSpanNameExtractor(dbClientAttributesGetter))
+                DbClientSpanNameExtractor.create(dbClientAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributesGetter))
             .addAttributesExtractor(esClientAttributesExtractor)
             .addOperationMetrics(DbClientMetrics.get());

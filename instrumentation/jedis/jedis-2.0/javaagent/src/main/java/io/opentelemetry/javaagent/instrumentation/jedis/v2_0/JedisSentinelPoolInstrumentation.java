@@ -70,7 +70,7 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
       RedisServerTarget target = JedisServerTargets.ofSentinels(masterName, sentinels);
       JedisSingletons.setPoolTarget(pool, target);
       Context context = JedisSingletons.configuredTargetContext(target);
-      return context != null ? context.makeCurrent() : null;
+      return context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

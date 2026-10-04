@@ -41,7 +41,7 @@ class ShardedJedisInstrumentation implements TypeInstrumentation {
     public static Scope onEnter(@Advice.Argument(0) @Nullable List<JedisShardInfo> shards) {
       Context context =
           JedisSingletons.configuredTargetContext(JedisServerTargets.ofShards(shards));
-      return context != null ? context.makeCurrent() : null;
+      return context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
