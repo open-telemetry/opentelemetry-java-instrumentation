@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
@@ -18,7 +19,6 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -33,7 +33,7 @@ import org.opensearch.client.opensearch.core.SearchResponse;
 /**
  * Tests compatibility for the deprecated capture-search-query=false configuration. This test class
  * runs with -Dotel.instrumentation.opensearch.capture-search-query=false and verifies that query
- * bodies are NOT captured in DB_STATEMENT.
+ * bodies are not captured in db.query.text.
  */
 @SuppressWarnings("deprecation") // using deprecated semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -69,11 +69,7 @@ class OpenSearchDisabledCaptureSearchQueryTest extends AbstractOpenSearchQueryTe
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), "opensearch"),
                                 equalTo(maybeStable(DB_OPERATION), "POST"),
-                                satisfies(
-                                    maybeStable(DB_STATEMENT),
-                                    val ->
-                                        val.asString()
-                                            .startsWith("POST /" + INDEX_NAME + "/_search")),
+                                equalTo(DB_QUERY_TEXT, null),
                                 equalTo(NETWORK_TYPE, null),
                                 equalTo(
                                     SERVER_ADDRESS,

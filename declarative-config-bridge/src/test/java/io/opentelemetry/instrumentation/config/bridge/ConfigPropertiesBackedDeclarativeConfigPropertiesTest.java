@@ -25,6 +25,17 @@ import org.junit.jupiter.params.provider.ValueSource;
 class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
 
   @Test
+  void testSemconvOptInPreservesOtherDomainsAlongsideRetiredDatabaseTokens() {
+    DeclarativeConfigProperties general =
+        createConfig("otel.semconv-stability.opt-in", "database/dup,code/dup,rpc")
+            .getStructured("general");
+
+    assertThat(general.getString("stability_opt_in_list")).isEqualTo("database/dup,code/dup,rpc");
+    assertThat(general.getStructured("semconv_stability").getScalarList("opt_in", String.class))
+        .containsExactly("database/dup", "code/dup", "rpc");
+  }
+
+  @Test
   void testTranslateName_regularName() {
     DeclarativeConfigProperties config =
         createConfig("otel.instrumentation.kafka.producer-propagation.enabled", "false");
