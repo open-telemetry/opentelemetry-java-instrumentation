@@ -77,6 +77,6 @@ Include contact points from every source, including the session builder and driv
 Do not use the current coordinator or discovered cluster nodes. The wrapper snapshots this list
 without changing the session's connections.
 
-`telemetry.wrap(session)` still traces operations but omits stable `server.address` and `server.port`.
-Legacy database attributes are unchanged. The Java agent captures configured contact points
+`telemetry.wrap(session)` still traces operations but omits `server.address` and `server.port`.
+The Java agent captures configured contact points
 automatically and does not require this overload.

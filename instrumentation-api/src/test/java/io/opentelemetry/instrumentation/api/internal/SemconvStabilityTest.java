@@ -116,37 +116,36 @@ class SemconvStabilityTest {
   @Test
   void explicitDomainConfigTakesPrecedenceWhenV3PreviewIsDisabled() {
     // general:
-    //   stability_opt_in_list: "database"
-    //   db:
+    //   stability_opt_in_list: "code"
+    //   code:
     //     semconv:
     //       version: 1
     //       dual_emit: true
     DeclarativeConfigProperties general =
-        general(stabilityOptInList("database"), domainSemconv("db", 1, true));
+        general(stabilityOptInList("code"), domainSemconv("code", 1, true));
     boolean v3Preview = false;
 
-    // otel.semconv-stability.opt-in=database
-    SemconvMode database =
-        new SemconvSelectionResolver(general, v3Preview, stableOptIn("database"), noPreview())
-            .database();
+    // otel.semconv-stability.opt-in=code
+    SemconvMode code =
+        new SemconvSelectionResolver(general, v3Preview, stableOptIn("code"), noPreview()).code();
 
-    assertThat(database).isEqualTo(SemconvMode.V1_STABLE.withDualEmit());
+    assertThat(code).isEqualTo(SemconvMode.V1_STABLE.withDualEmit());
   }
 
   @Test
   void experimentalIsTreatedAsStableForSupportedDomainVersion() {
     // general:
-    //   db:
+    //   code:
     //     semconv:
     //       version: 1
     //       experimental: true
-    DeclarativeConfigProperties general = general(domainSemconv("db", 1, true, false));
+    DeclarativeConfigProperties general = general(domainSemconv("code", 1, true, false));
     boolean v3Preview = false;
 
-    SemconvMode database =
-        new SemconvSelectionResolver(general, v3Preview, noStableOptIn(), noPreview()).database();
+    SemconvMode code =
+        new SemconvSelectionResolver(general, v3Preview, noStableOptIn(), noPreview()).code();
 
-    assertThat(database).isEqualTo(SemconvMode.V1_STABLE);
+    assertThat(code).isEqualTo(SemconvMode.V1_STABLE);
   }
 
   @Test
@@ -198,59 +197,59 @@ class SemconvStabilityTest {
   @Test
   void unsupportedExplicitDomainVersionZeroFallsBackWhenV3PreviewIsEnabled() {
     // general:
-    //   db:
+    //   code:
     //     semconv:
     //       version: 0
     //       dual_emit: true
     // java:
     //   common:
     //     v3_preview: true
-    DeclarativeConfigProperties general = general(domainSemconv("db", 0, true));
+    DeclarativeConfigProperties general = general(domainSemconv("code", 0, true));
     boolean v3Preview = true;
 
-    SemconvMode database =
-        new SemconvSelectionResolver(general, v3Preview, noStableOptIn(), noPreview()).database();
+    SemconvMode code =
+        new SemconvSelectionResolver(general, v3Preview, noStableOptIn(), noPreview()).code();
 
-    assertThat(database).isEqualTo(SemconvMode.V1_STABLE);
+    assertThat(code).isEqualTo(SemconvMode.V1_STABLE);
   }
 
   @Test
   void unsupportedExplicitDomainDualEmitFallsBackWhenV3PreviewIsEnabled() {
     // general:
-    //   db:
+    //   code:
     //     semconv:
     //       version: 1
     //       dual_emit: true
     // java:
     //   common:
     //     v3_preview: true
-    DeclarativeConfigProperties general = general(domainSemconv("db", 1, true));
+    DeclarativeConfigProperties general = general(domainSemconv("code", 1, true));
     boolean v3Preview = true;
 
-    SemconvMode dualEmitDatabase =
-        new SemconvSelectionResolver(general, v3Preview, noStableOptIn(), noPreview()).database();
+    SemconvMode dualEmitCode =
+        new SemconvSelectionResolver(general, v3Preview, noStableOptIn(), noPreview()).code();
 
-    assertThat(dualEmitDatabase).isEqualTo(SemconvMode.V1_STABLE);
+    assertThat(dualEmitCode).isEqualTo(SemconvMode.V1_STABLE);
   }
 
   @Test
   void explicitDomainVersionZeroMeansOldOnlyEvenWithDualEmit() {
     // general:
-    //   db:
+    //   code:
     //     semconv:
     //       version: 0
     //       dual_emit: true
-    DeclarativeConfigProperties general = general(domainSemconv("db", 0, true));
+    DeclarativeConfigProperties general = general(domainSemconv("code", 0, true));
     boolean v3Preview = false;
 
-    SemconvMode database =
-        new SemconvSelectionResolver(general, v3Preview, noStableOptIn(), noPreview()).database();
+    SemconvMode code =
+        new SemconvSelectionResolver(general, v3Preview, noStableOptIn(), noPreview()).code();
 
-    assertThat(database).isEqualTo(SemconvMode.V0_STABLE);
+    assertThat(code).isEqualTo(SemconvMode.V0_STABLE);
   }
 
   @Test
-  void stableOptInAppliesToDatabaseAndCode() {
+  void stableOptInStillAppliesToCodeAlongsideDatabase() {
     // general:
     //   stability_opt_in_list: "database, code"
     //
@@ -270,7 +269,7 @@ class SemconvStabilityTest {
   }
 
   @Test
-  void stableOptInDupDualEmitsDatabaseAndCodeWhenV3PreviewIsDisabled() {
+  void stableOptInDupDualEmitsOnlyCodeWhenV3PreviewIsDisabled() {
     // general:
     //   stability_opt_in_list: "database/dup, code/dup"
     // java:
@@ -286,7 +285,7 @@ class SemconvStabilityTest {
     SemconvMode database = resolver.database();
     SemconvMode code = resolver.code();
 
-    assertThat(database).isEqualTo(SemconvMode.V1_STABLE.withDualEmit());
+    assertThat(database).isEqualTo(SemconvMode.V1_STABLE);
     assertThat(code).isEqualTo(SemconvMode.V1_STABLE.withDualEmit());
   }
 
@@ -309,6 +308,54 @@ class SemconvStabilityTest {
 
     assertThat(database).isEqualTo(SemconvMode.V1_STABLE);
     assertThat(code).isEqualTo(SemconvMode.V1_STABLE);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void databaseAlwaysUsesStableOnlySemconv(boolean v3Preview) {
+    for (String flags : asList("", "database", "database/dup", "database/dup,code/dup")) {
+      for (DeclarativeConfigProperties config :
+          asList(
+              general(),
+              general(domainSemconv("db", 0)),
+              general(domainSemconv("db", 0, true)),
+              general(domainSemconv("db", 1, true)),
+              general(domainSemconv("db", 1, true, true)),
+              general(domainSemconv("db", 99, true)))) {
+        SemconvSelectionResolver resolver =
+            new SemconvSelectionResolver(
+                config,
+                v3Preview,
+                SemconvSelectionResolver.parseCommaSeparatedSet(flags),
+                noPreview());
+
+        assertThat(resolver.database()).isEqualTo(SemconvMode.V1_STABLE);
+      }
+      for (DeclarativeConfigProperties config :
+          asList(
+              general(stabilityOptInList(flags)),
+              general(
+                  structured("semconv_stability", property("opt_in", asList(flags.split(","))))))) {
+        Set<String> fallback =
+            SemconvSelectionResolver.resolveStringListWithFallbackValue(
+                config.get("semconv_stability"), "opt_in", null);
+        SemconvSelectionResolver resolver =
+            new SemconvSelectionResolver(
+                config,
+                v3Preview,
+                SemconvSelectionResolver.resolveStableOptInValues(config, fallback),
+                noPreview());
+
+        assertThat(resolver.database()).isEqualTo(SemconvMode.V1_STABLE);
+        assertThat(resolver.code())
+            .isEqualTo(
+                v3Preview
+                    ? SemconvMode.V1_STABLE
+                    : flags.contains("code/dup")
+                        ? SemconvMode.V1_STABLE.withDualEmit()
+                        : SemconvMode.V0_STABLE);
+      }
+    }
   }
 
   @Test

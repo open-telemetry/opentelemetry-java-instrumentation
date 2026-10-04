@@ -2,6 +2,27 @@
 
 ## Unreleased
 
+### Breaking changes
+
+- Database instrumentation now always emits the existing stable semantic conventions with schema
+  version 1.44.0. Legacy and duplicate database emission are no longer available, even outside
+  v3 preview. Remove only the `database` and `database/dup` tokens from
+  `otel.semconv-stability.opt-in`, `OTEL_SEMCONV_STABILITY_OPT_IN`,
+  `general.stability_opt_in_list`, or `general.semconv_stability.opt_in`, retaining any tokens for
+  other domains. For example, change `database/dup,code/dup` to `code/dup`. Remove
+  `general.db.semconv.version` and `general.db.semconv.dual_emit`; these settings are ignored.
+  Update telemetry queries and dashboards for `db.system.name`, `db.namespace`, `db.query.text`,
+  `db.operation.name`, and `db.collection.name` instead of their legacy keys, and for stable system
+  values such as `microsoft.sql_server`, `oracle.db`, and `h2database`. Database span names use query
+  summaries or stable operation/target fallbacks rather than legacy database-prefixed names.
+  Instrumentations using the shared database client metrics now emit `db.client.operation.duration`
+  in seconds by default. Pool metrics use `db.client.connection.*` rather than
+  `db.client.connections.*`, including `count` instead of `usage` and `limit` instead of `max`,
+  singular count units such as `{connection}`, and seconds instead of milliseconds for durations.
+  Pool attributes use `db.client.connection.pool.name` and `db.client.connection.state`; unnamed
+  pools use stable database-derived names, and DBCP retains the first registered pool name.
+  There is no legacy fallback. See [database migration guidance](docs/database-semconv-migration.md).
+
 ## Version 2.32.0 (2026-10-03)
 
 This release targets the OpenTelemetry SDK 1.66.0.
