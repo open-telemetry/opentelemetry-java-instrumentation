@@ -37,9 +37,6 @@ A `testBothSemconv` task (testing the `/dup` mode) is **only required for the RP
 Database and service-peer domains do not need a `testBothSemconv` task — only
 `testStableSemconv` (and the default `test` task for the legacy/unset mode).
 
-Code attributes always use the stable conventions. They have no legacy or dual-emission mode and
-need no semconv opt-in test tasks.
-
 See [gradle-conventions.md](gradle-conventions.md) for `testClassesDirs`, `classpath`,
 `collectMetadata`, `metadataConfig`, and `check` wiring requirements. In a module that also
 registers custom `JvmTestSuite`s, add opt-in tasks only for suites whose tests exercise the
