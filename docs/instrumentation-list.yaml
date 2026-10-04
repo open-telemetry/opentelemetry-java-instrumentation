@@ -5652,28 +5652,6 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    messaging.client.operation.duration-df200871:
-      name: messaging.client.operation.duration
-      description: Duration of messaging operation initiated by a producer or consumer
-        client.
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: s
-      attributes:
-      - name: messaging.destination.name
-        type: STRING
-      - name: messaging.destination.subscription.name
-        type: STRING
-      - name: messaging.operation.name
-        type: STRING
-      - name: messaging.operation.type
-        type: STRING
-      - name: messaging.system
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
     messaging.client.sent.messages-38a90199:
       name: messaging.client.sent.messages
       description: Number of messages producer attempted to send to the broker.
@@ -6698,7 +6676,8 @@ libraries:
   display_name: Apache DBCP
   description: |
     This instrumentation enables database connection pools metrics for Apache DBCP.
-    The auto-instrumentation registers metrics when the connection pool is initialized (`BasicDataSource.startPoolMaintenance()`) or when `BasicDataSource.preRegister(...)` is invoked during MBean registration, whichever comes first, and unregisters them when the `BasicDataSource` is closed. JMX registration is not required. When a JMX `ObjectName` is available, its `name` property is used as the pool name; if the property is absent, the full `ObjectName` is used. Otherwise, the JDBC URL and connection properties are used to derive the pool name. With legacy database semantic conventions, the derived format is `server.address[:server.port][/db.namespace]`. With stable database semantic conventions, the first available value among `db.namespace`, the configured endpoint (`server.address[:server.port]`), and `db.system.name` is used. If none is available, `apache-dbcp2` is used. The pool name selected when metrics are first registered is retained until the pool is closed, including when MBean registration occurs later.
+    The auto-instrumentation registers metrics when the connection pool is initialized (`BasicDataSource.startPoolMaintenance()`) or when `BasicDataSource.preRegister(...)` is invoked during MBean registration, whichever comes first, and unregisters them when the `BasicDataSource` is closed. JMX registration is not required. When a JMX `ObjectName` is available, its `name` property is used as the pool name; if the property is absent, the full `ObjectName` is used. Otherwise, the JDBC URL and connection properties are used to derive the pool name. By default, the derived format is `server.address[:server.port][/db.namespace]`. Under `otel.semconv-stability.opt-in=database`, the first available value among `db.namespace`, the configured endpoint (`server.address[:server.port]`), and `db.system.name` is used. If none is available, `apache-dbcp2` is used.
+    By default, MBean registration after pool initialization updates the pool name to the JMX name. Under `otel.semconv-stability.opt-in=database`, the pool name selected when metrics are first registered is retained until the pool is closed, including when MBean registration occurs later.
   semantic_conventions:
   - DATABASE_POOL_METRICS
   library_link: https://commons.apache.org/proper/commons-dbcp/
@@ -10491,6 +10470,8 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
+      - name: server.port
+        type: LONG
 - name: executors
   display_name: Java Executors
   description: |
@@ -11843,8 +11824,8 @@ libraries:
   has_javaagent: true
   javaagent_target_versions:
   - io.javalin:javalin:[7.0.0,)
-- name: jaxrs-1.0
-  display_name: JAX-RS 1.x
+- name: jaxrs-1.0-annotations
+  display_name: JAX-RS 1.x annotations
   description: |
     This instrumentation enriches HTTP server spans with route information and enables controller spans for JAX-RS annotated methods (controller spans are disabled by default).
   library_link: https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/package-summary.html
@@ -11852,9 +11833,9 @@ libraries:
   features:
   - HTTP_ROUTE
   - CONTROLLER_SPANS
-  source_path: instrumentation/jaxrs/jaxrs-1.0
+  source_path: instrumentation/jaxrs/jaxrs-1.0-annotations
   scope:
-    name: io.opentelemetry.jaxrs-1.0
+    name: io.opentelemetry.jaxrs-1.0-annotations
   has_javaagent: true
   javaagent_target_versions:
   - javax.ws.rs:jsr311-api:[0.5,)
@@ -11862,13 +11843,11 @@ libraries:
   - common.controller-telemetry.enabled
   - common.deprecated-controller-telemetry.enabled
   telemetry:
-  - when: otel.instrumentation.common.controller-telemetry.enabled=true
+  - when: otel.instrumentation.common.controller-telemetry.enabled=true,otel.instrumentation.common.v3-preview=true
     spans:
     - span_kind: INTERNAL
       attributes:
-      - name: code.function
-        type: STRING
-      - name: code.namespace
+      - name: code.function.name
         type: STRING
 - name: jaxrs-2.0-annotations
   display_name: JAX-RS 2.x
@@ -16988,7 +16967,7 @@ libraries:
   - when: otel.semconv-stability.preview=messaging
     metric_refs:
     - messaging.client.consumed.messages-5c21579f
-    - messaging.client.operation.duration-df200871
+    - messaging.client.operation.duration-dab7c60a
     - messaging.client.sent.messages-38a90199
     - messaging.process.duration-9ee3dd0a
     spans:
@@ -20406,7 +20385,8 @@ libraries:
   display_name: Tomcat DBCP
   description: |
     This instrumentation enables database connection pool metrics for Tomcat DBCP.
-    The auto-instrumentation registers metrics when the connection pool is initialized (`BasicDataSource.startPoolMaintenance()`) or when `BasicDataSource.preRegister(...)` is invoked during MBean registration, whichever comes first, and unregisters them when the `BasicDataSource` is closed. JMX registration is not required. When a JMX `ObjectName` is available, its `name` property is used as the pool name; if the property is absent, the full `ObjectName` is used. Otherwise, the JDBC URL and connection properties are used to derive the pool name. With legacy database semantic conventions, the derived format is `server.address[:server.port][/db.namespace]`. With stable database semantic conventions, the first available value among `db.namespace`, the configured endpoint (`server.address[:server.port]`), and `db.system.name` is used. If none is available, `tomcat-dbcp` is used. The pool name selected when metrics are first registered is retained until the pool is closed, including when MBean registration occurs later.
+    The auto-instrumentation registers metrics when the connection pool is initialized (`BasicDataSource.startPoolMaintenance()`) or when `BasicDataSource.preRegister(...)` is invoked during MBean registration, whichever comes first, and unregisters them when the `BasicDataSource` is closed. JMX registration is not required. When a JMX `ObjectName` is available, its `name` property is used as the pool name; if the property is absent, the full `ObjectName` is used. Otherwise, the JDBC URL and connection properties are used to derive the pool name. By default, the derived format is `server.address[:server.port][/db.namespace]`. Under `otel.semconv-stability.opt-in=database`, the first available value among `db.namespace`, the configured endpoint (`server.address[:server.port]`), and `db.system.name` is used. If none is available, `tomcat-dbcp` is used.
+    By default, MBean registration after pool initialization updates the pool name to the JMX name. Under `otel.semconv-stability.opt-in=database`, the pool name selected when metrics are first registered is retained until the pool is closed, including when MBean registration occurs later.
   semantic_conventions:
   - DATABASE_POOL_METRICS
   library_link: https://tomcat.apache.org/tomcat-8.5-doc/api/org/apache/tomcat/dbcp/dbcp2/BasicDataSource.html
