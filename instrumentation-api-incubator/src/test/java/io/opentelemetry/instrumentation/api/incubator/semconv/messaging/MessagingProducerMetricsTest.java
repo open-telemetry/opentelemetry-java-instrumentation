@@ -54,9 +54,7 @@ class MessagingProducerMetricsTest {
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
     cleanup.deferCleanup(meterProvider);
-    OperationListener listener =
-        MessagingProducerMetrics.getForOperationTypeWithOldMetrics()
-            .create(meterProvider.get("test"));
+    OperationListener listener = MessagingProducerMetrics.get().create(meterProvider.get("test"));
 
     Attributes requestAttributes =
         Attributes.builder()
@@ -148,15 +146,13 @@ class MessagingProducerMetricsTest {
   }
 
   @Test
-  void outerOperationPreventsDuplicateNestedStableMetrics() {
+  void outerOperationPreventsDuplicateNestedMetrics() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
     cleanup.deferCleanup(meterProvider);
-    OperationListener outer =
-        MessagingProducerMetrics.getForOperationType().create(meterProvider.get("outer"));
-    OperationListener inner =
-        MessagingProducerMetrics.getForOperationType().create(meterProvider.get("inner"));
+    OperationListener outer = MessagingProducerMetrics.get().create(meterProvider.get("outer"));
+    OperationListener inner = MessagingProducerMetrics.get().create(meterProvider.get("inner"));
     Attributes attributes =
         Attributes.builder()
             .put(MESSAGING_SYSTEM, "kafka")
@@ -183,10 +179,8 @@ class MessagingProducerMetricsTest {
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
     cleanup.deferCleanup(meterProvider);
-    OperationListener outer =
-        MessagingProducerMetrics.getForOperationType().create(meterProvider.get("outer"));
-    OperationListener inner =
-        MessagingProducerMetrics.getForOperationType().create(meterProvider.get("inner"));
+    OperationListener outer = MessagingProducerMetrics.get().create(meterProvider.get("outer"));
+    OperationListener inner = MessagingProducerMetrics.get().create(meterProvider.get("inner"));
     Attributes attributes =
         Attributes.builder()
             .put(MESSAGING_OPERATION_NAME, "send")
@@ -210,8 +204,7 @@ class MessagingProducerMetricsTest {
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
     cleanup.deferCleanup(meterProvider);
-    OperationListener listener =
-        MessagingProducerMetrics.getForOperationType().create(meterProvider.get("test"));
+    OperationListener listener = MessagingProducerMetrics.get().create(meterProvider.get("test"));
     Attributes attributes =
         Attributes.builder()
             .put(MESSAGING_SYSTEM, "kafka")
@@ -241,9 +234,7 @@ class MessagingProducerMetricsTest {
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
     cleanup.deferCleanup(meterProvider);
-    OperationListener listener =
-        MessagingProducerMetrics.getForOperationTypeWithOldMetrics()
-            .create(meterProvider.get("test"));
+    OperationListener listener = MessagingProducerMetrics.get().create(meterProvider.get("test"));
 
     Attributes attributes =
         Attributes.builder()
@@ -278,8 +269,7 @@ class MessagingProducerMetricsTest {
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
     cleanup.deferCleanup(meterProvider);
-    OperationListener listener =
-        MessagingProducerMetrics.getForOperationType().create(meterProvider.get("test"));
+    OperationListener listener = MessagingProducerMetrics.get().create(meterProvider.get("test"));
 
     Attributes attributes =
         Attributes.builder()
@@ -319,13 +309,12 @@ class MessagingProducerMetricsTest {
   }
 
   @Test
-  void operationTypeEntryPointNeverCollectsLegacyMetrics() {
+  void neverCollectsLegacyMetrics() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
     cleanup.deferCleanup(meterProvider);
-    OperationListener listener =
-        MessagingProducerMetrics.getForOperationType().create(meterProvider.get("test"));
+    OperationListener listener = MessagingProducerMetrics.get().create(meterProvider.get("test"));
 
     Attributes attributes =
         Attributes.builder()
@@ -343,30 +332,6 @@ class MessagingProducerMetricsTest {
         .anySatisfy(metric -> assertThat(metric).hasName("messaging.client.operation.duration"))
         .anySatisfy(metric -> assertThat(metric).hasName("messaging.client.sent.messages"))
         .noneSatisfy(metric -> assertThat(metric).hasName("messaging.publish.duration"));
-  }
-
-  @Test
-  void deprecatedEntryPointCollectsOnlyAdoptedMetrics() {
-    InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
-    SdkMeterProvider meterProvider =
-        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
-    cleanup.deferCleanup(meterProvider);
-    OperationListener listener = MessagingProducerMetrics.get().create(meterProvider.get("test"));
-
-    Context context =
-        listener.onStart(
-            Context.root(),
-            Attributes.of(
-                MESSAGING_SYSTEM, "pulsar",
-                MESSAGING_OPERATION_NAME, "send",
-                MESSAGING_OPERATION_TYPE, "send"),
-            nanos(100));
-    listener.onEnd(context, Attributes.empty(), nanos(250));
-
-    assertThat(metricReader.collectAllMetrics())
-        .hasSize(2)
-        .anySatisfy(metric -> assertThat(metric).hasName("messaging.client.operation.duration"))
-        .anySatisfy(metric -> assertThat(metric).hasName("messaging.client.sent.messages"));
   }
 
   private static long nanos(int millis) {

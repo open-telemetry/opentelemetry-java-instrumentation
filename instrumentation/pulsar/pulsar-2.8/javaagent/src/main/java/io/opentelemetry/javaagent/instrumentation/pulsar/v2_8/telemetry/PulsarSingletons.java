@@ -100,7 +100,7 @@ public class PulsarSingletons {
             .addAttributesExtractor(
                 createMessagingAttributesExtractor(
                     getter, MessagingOperationType.RECEIVE, RECEIVE_OPERATION_NAME))
-            .addOperationMetrics(MessagingConsumerMetrics.getForOperationTypeWithOldMetrics())
+            .addOperationMetrics(MessagingConsumerMetrics.get())
             .addAttributesExtractor(
                 ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()));
     setMessagingReceiveExceptionEventExtractor(instrumenterBuilder);
@@ -127,7 +127,7 @@ public class PulsarSingletons {
             .addAttributesExtractor(
                 ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()))
             .addSpanLinksExtractor(new PulsarBatchRequestSpanLinksExtractor(propagator))
-            .addOperationMetrics(MessagingConsumerMetrics.getForOperationTypeWithOldMetrics());
+            .addOperationMetrics(MessagingConsumerMetrics.get());
     setMessagingReceiveExceptionEventExtractor(instrumenterBuilder);
     return instrumenterBuilder.buildInstrumenter(
         MessagingSpanKindExtractor.create(MessagingOperationType.RECEIVE));
@@ -152,10 +152,7 @@ public class PulsarSingletons {
     setMessagingProcessExceptionEventExtractor(instrumenterBuilder);
 
     return MessagingProcessInstrumenterFactory.create(
-        instrumenterBuilder,
-        propagator,
-        MessageTextMapGetter.INSTANCE,
-        receiveInstrumentationEnabled);
+        instrumenterBuilder, propagator, MessageTextMapGetter.INSTANCE);
   }
 
   private static Instrumenter<PulsarRequest, Void> createProducerInstrumenter() {
@@ -172,7 +169,7 @@ public class PulsarSingletons {
                     getter, MessagingOperationType.SEND, SEND_OPERATION_NAME))
             .addAttributesExtractor(
                 ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()))
-            .addOperationMetrics(MessagingProducerMetrics.getForOperationTypeWithOldMetrics());
+            .addOperationMetrics(MessagingProducerMetrics.get());
 
     if (DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "pulsar")
         .getBoolean("experimental_span_attributes/development", false)) {

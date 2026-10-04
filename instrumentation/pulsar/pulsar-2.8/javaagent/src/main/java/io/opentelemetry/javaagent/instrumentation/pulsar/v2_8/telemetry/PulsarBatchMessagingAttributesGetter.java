@@ -54,24 +54,6 @@ final class PulsarBatchMessagingAttributesGetter
 
   @Nullable
   @Override
-  public Long getMessageBodySize(PulsarBatchRequest request) {
-    long size = 0;
-    boolean hasMessages = false;
-    for (Message<?> message : request.getMessages()) {
-      hasMessages = true;
-      size += message.size();
-    }
-    return hasMessages ? size : null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(PulsarBatchRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getMessageId(PulsarBatchRequest request, @Nullable Void response) {
     return null;
   }

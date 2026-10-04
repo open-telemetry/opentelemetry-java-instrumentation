@@ -415,6 +415,23 @@ In some rare cases it may be useful to completely disable the constructed `Instr
 example, based on a configuration property. The `InstrumenterBuilder` exposes a `setEnabled()`
 method for that: passing `false` will turn the newly created `Instrumenter` into a no-op instance.
 
+### Messaging extractors and metrics
+
+The alpha `opentelemetry-instrumentation-api-incubator` artifact provides messaging extractors for the adopted v1.43.0 conventions. Pass a `MessagingOperationType` and a system-specific operation name to the attribute and span-name extractors:
+
+```java
+MessagingAttributesExtractor.create(getter, MessagingOperationType.SEND, "send");
+MessagingSpanNameExtractor.create(getter, MessagingOperationType.SEND, "send");
+MessagingSpanKindExtractor.create(MessagingOperationType.SEND);
+MessagingProducerMetrics.get();
+MessagingConsumerMetrics.get();
+MessagingProcessMetrics.get();
+```
+
+Use `MessagingProducerMetrics.getSentMessages()`, `MessagingConsumerMetrics.getConsumedMessages()`, or `MessagingConsumerMetrics.getClientOperationDuration()` when only that metric is needed. `MessagingAttributesGetter` does not extract message body or envelope sizes.
+
+For processing, `MessagingProcessInstrumenterFactory.create(builder, propagator, getter)` uses the ambient span as parent, falling back to the message creation context when no ambient span exists. It also links the creation context, even when that context is the parent.
+
 ### Finally, set the span kind with the `SpanKindExtractor` and get a new `Instrumenter`
 
 The `Instrumenter` creation process ends with calling one of the following `InstrumenterBuilder`
@@ -452,9 +469,4 @@ class MySpanKindExtractor implements SpanKindExtractor<Request> {
 }
 ```
 
-The example `SpanKindExtractor` above decides whether to use `PRODUCER` or `CLIENT` based on how the
-request is going to be processed. This example reflects a real-life scenario: you might find
-similar code in a messaging library instrumentation, since according to
-the [OpenTelemetry messaging semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md#span-kind)
-the span kind should be set to `CLIENT` if sending the message is completely synchronous and waits
-for the response.
+The example `SpanKindExtractor` above chooses the kind per request. For messaging, use `MessagingSpanKindExtractor` instead: under the [adopted v1.43.0 conventions](https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/messaging/messaging-spans.md#span-kind), a Send span uses `PRODUCER` when its context is propagated as the message creation context, and `CLIENT` otherwise. Receive and Settle spans use `CLIENT`, Create spans use `PRODUCER`, and Process spans use `CONSUMER`.

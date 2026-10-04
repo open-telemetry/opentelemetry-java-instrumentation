@@ -23,15 +23,13 @@ public class JmsSingletons {
   static {
     JmsInstrumenterFactory factory =
         new JmsInstrumenterFactory(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME)
-            .setHeaders(ExperimentalConfig.get().getMessagingHeaders())
-            .setMessagingReceiveTelemetryEnabled(
-                ExperimentalConfig.get().messagingReceiveInstrumentationEnabled());
+            .setHeaders(ExperimentalConfig.get().getMessagingHeaders());
 
     producerInstrumenter = factory.createProducerInstrumenter();
     consumerReceiveInstrumenter = factory.createConsumerReceiveInstrumenter();
-    consumerProcessInstrumenter = factory.createConsumerProcessInstrumenter(false, false);
+    consumerProcessInstrumenter = factory.createConsumerProcessInstrumenter(false);
     consumerProcessInstrumenterWithConsumedMessages =
-        factory.createConsumerProcessInstrumenter(false, true);
+        factory.createConsumerProcessInstrumenter(true);
   }
 
   public static Instrumenter<MessageWithDestination, Void> producerInstrumenter() {

@@ -36,12 +36,6 @@ public interface MessagingAttributesGetter<REQUEST, RESPONSE> {
   String getConversationId(REQUEST request);
 
   @Nullable
-  Long getMessageBodySize(REQUEST request);
-
-  @Nullable
-  Long getMessageEnvelopeSize(REQUEST request);
-
-  @Nullable
   String getMessageId(REQUEST request, @Nullable RESPONSE response);
 
   @Nullable

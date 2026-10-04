@@ -24,12 +24,10 @@ public class SpringJmsSingletons {
   static {
     JmsInstrumenterFactory factory =
         new JmsInstrumenterFactory(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME)
-            .setHeaders(ExperimentalConfig.get().getMessagingHeaders())
-            .setMessagingReceiveTelemetryEnabled(RECEIVE_TELEMETRY_ENABLED);
+            .setHeaders(ExperimentalConfig.get().getMessagingHeaders());
 
-    listenerInstrumenter = factory.createConsumerProcessInstrumenter(true, false);
-    listenerInstrumenterWithConsumedMessages =
-        factory.createConsumerProcessInstrumenter(true, true);
+    listenerInstrumenter = factory.createConsumerProcessInstrumenter(false);
+    listenerInstrumenterWithConsumedMessages = factory.createConsumerProcessInstrumenter(true);
     receiveInstrumenter = factory.createConsumerReceiveInstrumenter();
   }
 

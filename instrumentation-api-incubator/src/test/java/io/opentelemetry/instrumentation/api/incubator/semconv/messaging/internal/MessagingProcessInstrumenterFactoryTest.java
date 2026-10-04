@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.messaging.interna
 
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
-import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -21,12 +20,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import java.util.Map;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 
 class MessagingProcessInstrumenterFactoryTest {
 
@@ -58,8 +53,7 @@ class MessagingProcessInstrumenterFactoryTest {
             Instrumenter.<Map<String, String>, Void>builder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "process"),
             W3CTraceContextPropagator.getInstance(),
-            getter,
-            false);
+            getter);
 
     Map<String, String> carrier =
         singletonMap("traceparent", "00-22222222222222222222222222222222-2222222222222222-01");
@@ -92,8 +86,7 @@ class MessagingProcessInstrumenterFactoryTest {
             Instrumenter.<Map<String, String>, Void>builder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "process"),
             W3CTraceContextPropagator.getInstance(),
-            getter,
-            false);
+            getter);
 
     Map<String, String> carrier =
         singletonMap("traceparent", "00-22222222222222222222222222222222-2222222222222222-01");
@@ -120,8 +113,7 @@ class MessagingProcessInstrumenterFactoryTest {
             Instrumenter.<Map<String, String>, Void>builder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "process"),
             W3CTraceContextPropagator.getInstance(),
-            getter,
-            false);
+            getter);
 
     Map<String, String> carrier = emptyMap();
     Context context = instrumenter.start(Context.root().with(Span.wrap(ambientParent)), carrier);
@@ -140,16 +132,14 @@ class MessagingProcessInstrumenterFactoryTest {
                             .hasLinks()));
   }
 
-  @ParameterizedTest
-  @MethodSource("receiveInstrumentationSettings")
-  void usesExpectedParentAndLink(boolean receiveInstrumentationEnabled) {
+  @Test
+  void usesAmbientParentAndLinksCreationContext() {
     Instrumenter<Map<String, String>, Void> instrumenter =
         MessagingProcessInstrumenterFactory.create(
             Instrumenter.<Map<String, String>, Void>builder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "process"),
             W3CTraceContextPropagator.getInstance(),
-            getter,
-            receiveInstrumentationEnabled);
+            getter);
 
     Map<String, String> carrier =
         singletonMap("traceparent", "00-22222222222222222222222222222222-2222222222222222-01");
@@ -167,10 +157,6 @@ class MessagingProcessInstrumenterFactoryTest {
                             .hasTraceId(ambientParent.getTraceId())
                             .hasParentSpanId(ambientParent.getSpanId())
                             .hasLinks(LinkData.create(producer))));
-  }
-
-  private static Stream<Arguments> receiveInstrumentationSettings() {
-    return Stream.of(argumentSet("receive disabled", false), argumentSet("receive enabled", true));
   }
 
   private static SpanContext spanContext(String traceId, String spanId) {

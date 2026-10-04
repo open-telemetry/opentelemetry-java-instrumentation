@@ -93,7 +93,7 @@ class CamelSingletons {
     builder.addContextCustomizer((context, request, startAttributes) -> enable(context));
 
     if (operationType == SEND) {
-      builder.addOperationMetrics(MessagingProducerMetrics.getForOperationType());
+      builder.addOperationMetrics(MessagingProducerMetrics.get());
     }
     if (operationType == PROCESS) {
       builder.addOperationMetrics(MessagingProcessMetrics.get());
@@ -106,8 +106,7 @@ class CamelSingletons {
       return MessagingProcessInstrumenterFactory.create(
           builder,
           CamelPropagationUtil.messagingPropagator(),
-          CamelPropagationUtil.messagingGetter(),
-          false);
+          CamelPropagationUtil.messagingGetter());
     }
     return builder.buildInstrumenter(
         MessagingSpanKindExtractor.create(

@@ -159,22 +159,6 @@ class SpringRabbitMessageAttributesGetter
 
   @Override
   @Nullable
-  public Long getMessageBodySize(SpringRabbitRequest request) {
-    if (request.isBatch()) {
-      return null;
-    }
-    byte[] body = request.getMessage().getBody();
-    return body == null ? null : (long) body.length;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(SpringRabbitRequest request) {
-    return null;
-  }
-
-  @Override
-  @Nullable
   public String getMessageId(SpringRabbitRequest request, @Nullable Void unused) {
     return request.getMessage().getMessageProperties().getMessageId();
   }

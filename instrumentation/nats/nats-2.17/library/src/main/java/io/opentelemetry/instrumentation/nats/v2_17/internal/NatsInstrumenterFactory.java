@@ -56,7 +56,7 @@ public final class NatsInstrumenterFactory {
             .addAttributesExtractor(
                 messagingAttributesExtractor(
                     getter, MessagingOperationType.SEND, operationName, headers))
-            .addOperationMetrics(MessagingProducerMetrics.getForOperationType());
+            .addOperationMetrics(MessagingProducerMetrics.get());
     setMessagingSendExceptionEventExtractor(builder);
     return builder.buildProducerInstrumenter(new NatsRequestTextMapSetter());
   }
@@ -73,7 +73,7 @@ public final class NatsInstrumenterFactory {
                 messagingAttributesExtractor(
                     getter, MessagingOperationType.SETTLE, "settle", headers))
             .addAttributesExtractor(new NatsSettlementOperationNameExtractor())
-            .addOperationMetrics(MessagingConsumerMetrics.getForOperationType());
+            .addOperationMetrics(MessagingConsumerMetrics.get());
     setMessagingSettleExceptionEventExtractor(builder);
     return builder.buildClientInstrumenter(new NatsRequestTextMapSetter());
   }
@@ -97,8 +97,7 @@ public final class NatsInstrumenterFactory {
     return MessagingProcessInstrumenterFactory.create(
         builder,
         openTelemetry.getPropagators().getTextMapPropagator(),
-        new NatsRequestTextMapGetter(),
-        false);
+        new NatsRequestTextMapGetter());
   }
 
   private static AttributesExtractor<NatsRequest, Object> messagingAttributesExtractor(

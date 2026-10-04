@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
@@ -380,9 +378,7 @@ class SemconvStabilityTest {
   }
 
   @Test
-  void messagingEmitsOnlyAdoptedConventions() {
-    assertThat(emitOldMessagingSemconv()).isFalse();
-    assertThat(emitStableMessagingSemconv()).isTrue();
+  void messagingUsesAdoptedSchemaUrl() {
     assertThat(SemconvStability.messagingSchemaUrl()).isEqualTo(SchemaUrls.V1_43_0);
   }
 

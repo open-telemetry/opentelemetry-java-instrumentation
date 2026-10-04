@@ -254,7 +254,7 @@ public final class AwsSdkInstrumenterFactory {
         toSqsRequestExtractors(consumerAttributesExtractors()),
         singletonList(messagingAttributeExtractor),
         builder -> {
-          builder.addOperationMetrics(MessagingConsumerMetrics.getForOperationType());
+          builder.addOperationMetrics(MessagingConsumerMetrics.get());
           builder.setSchemaUrl(messagingSchemaUrl());
           setMessagingReceiveExceptionEventExtractor(builder);
           builder.addSpanLinksExtractor(
@@ -369,7 +369,7 @@ public final class AwsSdkInstrumenterFactory {
         attributesExtractorsWithLateServerAttributes(),
         singletonList(messagingAttributeExtractor),
         builder -> {
-          builder.addOperationMetrics(MessagingProducerMetrics.getForOperationType());
+          builder.addOperationMetrics(MessagingProducerMetrics.get());
           builder.setSchemaUrl(messagingSchemaUrl());
           setMessagingSendExceptionEventExtractor(builder);
           builder.addSpanLinksExtractor(
@@ -412,7 +412,7 @@ public final class AwsSdkInstrumenterFactory {
         attributesExtractorsWithLateServerAttributes(),
         singletonList(messagingAttributeExtractor),
         builder -> {
-          builder.addOperationMetrics(MessagingConsumerMetrics.getForOperationType());
+          builder.addOperationMetrics(MessagingConsumerMetrics.get());
           builder.setSchemaUrl(messagingSchemaUrl());
           setMessagingSettleExceptionEventExtractor(builder);
         },

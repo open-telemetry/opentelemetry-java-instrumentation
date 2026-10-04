@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import java.util.function.Predicate;
@@ -44,14 +42,10 @@ public final class MessagingSpanKindExtractor {
         break;
       case SEND:
         spanKindExtractor =
-            request ->
-                emitStableMessagingSemconv() && !spanContextPropagated.test(request)
-                    ? SpanKind.CLIENT
-                    : SpanKind.PRODUCER;
+            request -> spanContextPropagated.test(request) ? SpanKind.PRODUCER : SpanKind.CLIENT;
         break;
       case RECEIVE:
-        SpanKind receiveKind = emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER;
-        spanKindExtractor = request -> receiveKind;
+        spanKindExtractor = request -> SpanKind.CLIENT;
         break;
       case PROCESS:
         spanKindExtractor = request -> SpanKind.CONSUMER;
@@ -63,19 +57,6 @@ public final class MessagingSpanKindExtractor {
         throw new IllegalStateException("Can't possibly happen");
     }
     return spanKindExtractor;
-  }
-
-  /**
-   * Selects the span kind for the corresponding {@link MessagingOperationType}. Publish spans
-   * propagate their context and use {@link SpanKind#PRODUCER}; receive spans use {@link
-   * SpanKind#CLIENT}.
-   *
-   * @deprecated Use {@link #create(MessagingOperationType)}. May be removed in the next minor
-   *     release.
-   */
-  @Deprecated // may be removed in the next minor release
-  public static <REQUEST> SpanKindExtractor<REQUEST> create(MessageOperation operation) {
-    return create(operation.type());
   }
 
   private MessagingSpanKindExtractor() {}

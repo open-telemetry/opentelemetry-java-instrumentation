@@ -61,18 +61,6 @@ class SqsAttributesGetter implements MessagingAttributesGetter<ExecutionAttribut
     return null;
   }
 
-  @Nullable
-  @Override
-  public Long getMessageBodySize(ExecutionAttributes request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(ExecutionAttributes request) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String getMessageId(ExecutionAttributes request, @Nullable Response response) {

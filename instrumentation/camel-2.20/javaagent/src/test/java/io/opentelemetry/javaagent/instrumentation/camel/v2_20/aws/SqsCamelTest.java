@@ -73,7 +73,6 @@ class SqsCamelTest {
 
   @Test
   void awsSdkSqsProducerToCamelSqsConsumer() {
-    assertMessagingSemconvMode();
     String queueName = "sqsCamelTest";
     String queueUrl = awsConnector.createQueue(queueName);
     waitAndClearSetupTraces(queueUrl, queueName);
@@ -192,10 +191,5 @@ class SqsCamelTest {
             producerContext.getSpanId(),
             TraceFlags.getSampled(),
             producerContext.getTraceState()));
-  }
-
-  private static void assertMessagingSemconvMode() {
-    assertThat(false).isFalse();
-    assertThat(true).isTrue();
   }
 }

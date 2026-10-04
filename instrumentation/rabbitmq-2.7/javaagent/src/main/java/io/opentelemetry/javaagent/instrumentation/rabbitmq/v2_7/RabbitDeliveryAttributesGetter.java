@@ -58,18 +58,6 @@ final class RabbitDeliveryAttributesGetter
 
   @Nullable
   @Override
-  public Long getMessageBodySize(DeliveryRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(DeliveryRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getMessageId(DeliveryRequest request, @Nullable Void unused) {
     return null;
   }

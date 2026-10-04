@@ -59,18 +59,6 @@ final class RabbitChannelAttributesGetter
 
   @Nullable
   @Override
-  public Long getMessageBodySize(ChannelAndMethod channelAndMethod) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(ChannelAndMethod channelAndMethod) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getMessageId(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
     return null;
   }

@@ -60,18 +60,6 @@ final class RabbitReceiveAttributesGetter
 
   @Nullable
   @Override
-  public Long getMessageBodySize(ReceiveRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(ReceiveRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getMessageId(ReceiveRequest request, @Nullable GetResponse response) {
     return null;
   }

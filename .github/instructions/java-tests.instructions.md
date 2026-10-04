@@ -163,7 +163,7 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
   expected values differ by mode or an attribute exists in only one mode:
 
   ```java
-  span.hasName(emitPreviewMessagingSemconv() ? "send orders" : "orders publish");
+  span.hasName(emitPreviewRpcSemconv() ? "Greeter/SayHello" : "helloworld.Greeter/SayHello");
   equalTo(RPC_RESPONSE_STATUS_CODE, emitPreviewRpcSemconv() ? "OK" : null);
   ```
 
