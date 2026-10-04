@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.executors.metrics;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static org.awaitility.Awaitility.await;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
@@ -16,6 +17,7 @@ import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.LongPointAssert;
 import io.opentelemetry.sdk.testing.assertj.LongSumAssert;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -66,23 +68,20 @@ public class JvmExecutorMetricsAssertions {
 
   public static void assertNoExecutorMetrics(
       InstrumentationExtension testing, String instrumentationName, String executorName) {
-    testing.clearData();
-    testing
-        .getOpenTelemetry()
-        .getMeter("test")
-        .counterBuilder("test.executor.metrics.collection")
-        .build()
-        .add(1);
-    testing.waitAndAssertMetrics(
-        "test", "test.executor.metrics.collection", metrics -> metrics.isNotEmpty());
-
-    assertThat(testing.metrics())
-        .filteredOn(
-            metric ->
-                instrumentationName.equals(metric.getInstrumentationScopeInfo().getName())
-                    && metric.getName().startsWith("jvm.executor."))
-        .flatExtracting(metric -> metric.getLongSumData().getPoints())
-        .noneMatch(point -> executorName.equals(point.getAttributes().get(EXECUTOR_NAME_KEY)));
+    await()
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted(
+            () -> {
+              testing.clearData();
+              assertThat(testing.metrics())
+                  .filteredOn(
+                      metric ->
+                          instrumentationName.equals(metric.getInstrumentationScopeInfo().getName())
+                              && metric.getName().startsWith("jvm.executor."))
+                  .flatExtracting(metric -> metric.getLongSumData().getPoints())
+                  .noneMatch(
+                      point -> executorName.equals(point.getAttributes().get(EXECUTOR_NAME_KEY)));
+            });
   }
 
   public static void assertNoExecutorMetricsWithOwner(

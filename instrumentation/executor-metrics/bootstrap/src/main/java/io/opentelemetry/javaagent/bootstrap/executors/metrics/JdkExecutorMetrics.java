@@ -105,10 +105,7 @@ public final class JdkExecutorMetrics {
               }
               completedTasks.record(
                   threadPoolExecutor.getCompletedTaskCount(), metrics.getAttributes());
-              long rejected = rejectedTaskCount.sum();
-              if (rejected > 0) {
-                rejectedTasks.record(rejected, metrics.getAttributes());
-              }
+              rejectedTasks.record(rejectedTaskCount.sum(), metrics.getAttributes());
             },
             threadCount,
             coreThreads,

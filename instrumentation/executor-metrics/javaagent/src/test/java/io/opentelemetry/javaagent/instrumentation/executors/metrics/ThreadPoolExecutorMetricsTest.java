@@ -55,7 +55,7 @@ class ThreadPoolExecutorMetricsTest {
   }
 
   @Test
-  void recordsThreadPoolMetricsAndUnregistersOnShutdown() throws Exception {
+  void recordsThreadPoolMetricsUntilTermination() throws InterruptedException {
     ThreadPoolExecutor executor =
         new ThreadPoolExecutor(
             1,
@@ -67,23 +67,22 @@ class ThreadPoolExecutorMetricsTest {
 
     CountDownLatch started = new CountDownLatch(1);
     CountDownLatch release = new CountDownLatch(1);
+    CountDownLatch queuedStarted = new CountDownLatch(1);
+    CountDownLatch releaseQueued = new CountDownLatch(1);
 
     try {
       executor.execute(
           () -> {
             started.countDown();
-            try {
-              release.await(10, SECONDS);
-            } catch (InterruptedException e) {
-              Thread.currentThread().interrupt();
-              throw new AssertionError(e);
-            }
+            awaitLatch(release);
           });
       assertThat(started.await(10, SECONDS)).isTrue();
 
-      executor.execute(() -> {});
-      assertThatThrownBy(() -> executor.execute(() -> {}))
-          .isInstanceOf(RejectedExecutionException.class);
+      executor.execute(
+          () -> {
+            queuedStarted.countDown();
+            awaitLatch(releaseQueued);
+          });
 
       JvmExecutorMetricsAssertions.create(
               testing, INSTRUMENTATION_NAME, "metrics-pool-*", THREAD_POOL_EXECUTOR_TYPE)
@@ -94,6 +93,16 @@ class ThreadPoolExecutorMetricsTest {
           .withQueueSize(1)
           .withQueueCapacity(1)
           .withCompletedTasks(0)
+          .withRejectedTasks(0)
+          .assertExecutorEmitsMetrics();
+
+      testing.clearData();
+
+      assertThatThrownBy(() -> executor.execute(() -> {}))
+          .isInstanceOf(RejectedExecutionException.class);
+
+      JvmExecutorMetricsAssertions.create(
+              testing, INSTRUMENTATION_NAME, "metrics-pool-*", THREAD_POOL_EXECUTOR_TYPE)
           .withRejectedTasks(1)
           .assertExecutorEmitsMetrics();
 
@@ -106,13 +115,128 @@ class ThreadPoolExecutorMetricsTest {
               testing, INSTRUMENTATION_NAME, "metrics-pool-*", THREAD_POOL_EXECUTOR_TYPE)
           .withRejectedTasks(1)
           .assertExecutorEmitsMetrics();
+
+      executor.shutdown();
+      assertThat(executor.isShutdown()).isTrue();
+      assertThat(executor.isTerminated()).isFalse();
+
+      testing.clearData();
+
+      release.countDown();
+      assertThat(queuedStarted.await(10, SECONDS)).isTrue();
+
+      JvmExecutorMetricsAssertions.create(
+              testing, INSTRUMENTATION_NAME, "metrics-pool-*", THREAD_POOL_EXECUTOR_TYPE)
+          .withCompletedTasks(1)
+          .withQueueSize(-1)
+          .assertExecutorEmitsMetrics();
     } finally {
       release.countDown();
-      executor.shutdown();
+      releaseQueued.countDown();
+      executor.shutdownNow();
       assertThat(executor.awaitTermination(10, SECONDS)).isTrue();
     }
 
     assertNoExecutorMetrics(testing, INSTRUMENTATION_NAME, "metrics-pool-*");
+  }
+
+  @Test
+  void retainsMetricsAfterShutdownNowUntilWorkerExits() throws InterruptedException {
+    ThreadPoolExecutor executor =
+        new ThreadPoolExecutor(
+            1,
+            1,
+            0,
+            MILLISECONDS,
+            new ArrayBlockingQueue<>(1),
+            new NamedThreadFactory("shutdown-now-pool"));
+
+    CountDownLatch started = new CountDownLatch(1);
+    CountDownLatch release = new CountDownLatch(1);
+
+    try {
+      executor.execute(
+          () -> {
+            started.countDown();
+            awaitLatch(release);
+          });
+      assertThat(started.await(10, SECONDS)).isTrue();
+
+      executor.execute(() -> {});
+
+      JvmExecutorMetricsAssertions.create(
+              testing, INSTRUMENTATION_NAME, "shutdown-now-pool-*", THREAD_POOL_EXECUTOR_TYPE)
+          .withRejectedTasks(0)
+          .assertExecutorEmitsMetrics();
+
+      assertThat(executor.shutdownNow()).hasSize(1);
+      assertThat(executor.isShutdown()).isTrue();
+      assertThat(executor.isTerminated()).isFalse();
+
+      testing.clearData();
+
+      assertThatThrownBy(() -> executor.execute(() -> {}))
+          .isInstanceOf(RejectedExecutionException.class);
+
+      JvmExecutorMetricsAssertions.create(
+              testing, INSTRUMENTATION_NAME, "shutdown-now-pool-*", THREAD_POOL_EXECUTOR_TYPE)
+          .withRejectedTasks(1)
+          .assertExecutorEmitsMetrics();
+    } finally {
+      release.countDown();
+      executor.shutdownNow();
+      assertThat(executor.awaitTermination(10, SECONDS)).isTrue();
+    }
+
+    assertNoExecutorMetrics(testing, INSTRUMENTATION_NAME, "shutdown-now-pool-*");
+  }
+
+  @Test
+  void unregistersWhenTerminationHookThrows() throws Exception {
+    AtomicBoolean throwOnTermination = new AtomicBoolean();
+    ThreadPoolExecutor executor =
+        new ThreadPoolExecutor(
+            0,
+            1,
+            25,
+            MILLISECONDS,
+            new SynchronousQueue<>(),
+            new NamedThreadFactory("throwing-termination-pool")) {
+          @Override
+          protected void terminated() {
+            if (throwOnTermination.get()) {
+              throw new IllegalStateException("expected termination failure");
+            }
+          }
+        };
+
+    try {
+      Thread worker = executor.submit(Thread::currentThread).get(10, SECONDS);
+
+      JvmExecutorMetricsAssertions.create(
+              testing,
+              INSTRUMENTATION_NAME,
+              "throwing-termination-pool-*",
+              executor.getClass().getName())
+          .withCompletedTasks(1)
+          .assertExecutorEmitsMetrics();
+
+      worker.join(SECONDS.toMillis(10));
+      assertThat(worker.isAlive()).isFalse();
+
+      throwOnTermination.set(true);
+
+      assertThatThrownBy(executor::shutdown)
+          .isInstanceOf(IllegalStateException.class)
+          .hasMessage("expected termination failure");
+
+      assertThat(executor.isTerminated()).isTrue();
+      assertNoExecutorMetrics(testing, INSTRUMENTATION_NAME, "throwing-termination-pool-*");
+    } finally {
+      throwOnTermination.set(false);
+      executor.shutdownNow();
+      assertThat(executor.awaitTermination(10, SECONDS)).isTrue();
+    }
   }
 
   @Test

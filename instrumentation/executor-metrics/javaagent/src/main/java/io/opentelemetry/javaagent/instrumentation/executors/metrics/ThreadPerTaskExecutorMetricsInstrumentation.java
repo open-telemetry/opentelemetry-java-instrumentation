@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.executors.metrics;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.methodIsDeclaredByType;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -43,10 +42,10 @@ public class ThreadPerTaskExecutorMetricsInstrumentation implements TypeInstrume
         named("start").and(takesArgument(0, Thread.class)).and(takesArguments(1)),
         getClass().getName() + "$StartAdvice");
     transformer.applyAdviceToMethod(
-        namedOneOf("shutdown", "shutdownNow", "close")
+        named("tryTerminate")
             .and(takesArguments(0))
             .and(methodIsDeclaredByType(named(THREAD_PER_TASK_EXECUTOR))),
-        getClass().getName() + "$ShutdownAdvice");
+        getClass().getName() + "$TerminationAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -77,13 +76,13 @@ public class ThreadPerTaskExecutorMetricsInstrumentation implements TypeInstrume
   }
 
   @SuppressWarnings("unused")
-  public static class ShutdownAdvice {
+  public static class TerminationAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.This ExecutorService executor,
         @Advice.FieldValue("factory") ThreadFactory threadFactory) {
-      if (executor.isShutdown()) {
+      if (executor.isTerminated()) {
         ExecutorMetricsRegistry.unregister(executor, threadFactory);
       }
     }

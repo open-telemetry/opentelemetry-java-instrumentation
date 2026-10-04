@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.executors.metrics;
 import static io.opentelemetry.javaagent.instrumentation.executors.metrics.JvmExecutorMetricsAssertions.assertNoExecutorMetrics;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.instrumentation.test.utils.GcUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -21,8 +22,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class ThreadPerTaskExecutorMetricsTest {
 
@@ -65,6 +70,69 @@ class ThreadPerTaskExecutorMetricsTest {
     }
 
     assertNoExecutorMetrics(testing, INSTRUMENTATION_NAME, EXECUTOR_NAME);
+  }
+
+  @ParameterizedTest
+  @MethodSource("terminationCases")
+  void retainsMetricsUntilTermination(boolean virtualThreads, boolean shutdownNow)
+      throws InterruptedException {
+    ThreadFactory threadFactory =
+        virtualThreads
+            ? Thread.ofVirtual().name("draining-thread-per-task-", 0).factory()
+            : Thread.ofPlatform().name("draining-thread-per-task-", 0).factory();
+    ExecutorService executor = Executors.newThreadPerTaskExecutor(threadFactory);
+    CountDownLatch started = new CountDownLatch(2);
+    CountDownLatch releaseFirst = new CountDownLatch(1);
+    CountDownLatch releaseSecond = new CountDownLatch(1);
+
+    try {
+      executor.execute(
+          () -> {
+            started.countDown();
+            awaitLatch(releaseFirst);
+          });
+      executor.execute(
+          () -> {
+            started.countDown();
+            awaitLatch(releaseSecond);
+          });
+      assertThat(started.await(10, SECONDS)).isTrue();
+      JvmExecutorMetricsAssertions.create(
+              testing, INSTRUMENTATION_NAME, "draining-thread-per-task-*", EXECUTOR_TYPE)
+          .withActiveThreads(2)
+          .assertExecutorEmitsMetrics();
+
+      if (shutdownNow) {
+        assertThat(executor.shutdownNow()).isEmpty();
+      } else {
+        executor.shutdown();
+      }
+      assertThat(executor.isShutdown()).isTrue();
+      assertThat(executor.isTerminated()).isFalse();
+      testing.clearData();
+
+      releaseFirst.countDown();
+      JvmExecutorMetricsAssertions.create(
+              testing, INSTRUMENTATION_NAME, "draining-thread-per-task-*", EXECUTOR_TYPE)
+          .withActiveThreads(-1)
+          .assertExecutorEmitsMetrics();
+      assertThat(executor.isTerminated()).isFalse();
+    } finally {
+      releaseFirst.countDown();
+      releaseSecond.countDown();
+      executor.shutdownNow();
+      assertThat(executor.awaitTermination(10, SECONDS)).isTrue();
+    }
+
+    assertNoExecutorMetrics(testing, INSTRUMENTATION_NAME, "draining-thread-per-task-*");
+  }
+
+  private static Stream<Arguments> terminationCases() {
+    return Stream.of(
+        argumentSet("platform threads, shutdown", false, false),
+        argumentSet("platform threads, shutdownNow", false, true),
+        argumentSet("virtual threads, shutdown", true, false),
+        argumentSet("virtual threads, shutdownNow", true, true));
   }
 
   @Test
@@ -181,6 +249,21 @@ class ThreadPerTaskExecutorMetricsTest {
             throw new AssertionError(e);
           }
         });
+  }
+
+  private static void awaitLatch(CountDownLatch latch) {
+    boolean interrupted = false;
+    while (true) {
+      try {
+        latch.await();
+        break;
+      } catch (InterruptedException e) {
+        interrupted = true;
+      }
+    }
+    if (interrupted) {
+      Thread.currentThread().interrupt();
+    }
   }
 
   private static void reregister(

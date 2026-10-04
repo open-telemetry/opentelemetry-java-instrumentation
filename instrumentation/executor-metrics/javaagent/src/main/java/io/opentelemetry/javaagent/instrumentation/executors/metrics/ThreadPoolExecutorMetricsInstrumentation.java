@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.methodIsDeclaredByType;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -51,8 +50,10 @@ public class ThreadPoolExecutorMetricsInstrumentation implements TypeInstrumenta
             .and(methodIsDeclaredByType(named(ThreadPoolExecutor.class.getName()))),
         getClass().getName() + "$RejectAdvice");
     transformer.applyAdviceToMethod(
-        namedOneOf("shutdown", "shutdownNow").and(takesArguments(0)),
-        getClass().getName() + "$ShutdownAdvice");
+        named("tryTerminate")
+            .and(takesArguments(0))
+            .and(methodIsDeclaredByType(named(ThreadPoolExecutor.class.getName()))),
+        getClass().getName() + "$TerminationAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -93,11 +94,11 @@ public class ThreadPoolExecutorMetricsInstrumentation implements TypeInstrumenta
   }
 
   @SuppressWarnings("unused")
-  public static class ShutdownAdvice {
+  public static class TerminationAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(@Advice.This ExecutorService executor) {
-      if (!(executor instanceof ScheduledThreadPoolExecutor) && executor.isShutdown()) {
+      if (!(executor instanceof ScheduledThreadPoolExecutor) && executor.isTerminated()) {
         ExecutorMetricsRegistry.unregister(executor);
       }
     }
