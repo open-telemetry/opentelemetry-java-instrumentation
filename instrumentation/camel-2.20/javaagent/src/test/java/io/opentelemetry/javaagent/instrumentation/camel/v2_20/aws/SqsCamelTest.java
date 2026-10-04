@@ -229,17 +229,7 @@ class SqsCamelTest {
   }
 
   private static void assertMessagingSemconvMode() {
-    if (Boolean.getBoolean("otel.instrumentation.common.v3-preview")) {
-      return;
-    }
-    String optIn = System.getProperty("otel.semconv-stability.opt-in");
-    if (optIn == null) {
-      assertThat(emitOldMessagingSemconv()).isTrue();
-      assertThat(emitStableMessagingSemconv()).isFalse();
-    } else {
-      assertThat(optIn).isEqualTo("messaging");
-      assertThat(emitOldMessagingSemconv()).isFalse();
-      assertThat(emitStableMessagingSemconv()).isTrue();
-    }
+    assertThat(emitOldMessagingSemconv()).isFalse();
+    assertThat(emitStableMessagingSemconv()).isTrue();
   }
 }

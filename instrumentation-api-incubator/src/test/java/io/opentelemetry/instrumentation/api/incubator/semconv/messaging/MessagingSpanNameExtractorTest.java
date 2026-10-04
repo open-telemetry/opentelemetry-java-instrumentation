@@ -14,10 +14,10 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -28,16 +28,16 @@ class MessagingSpanNameExtractorTest {
   @Mock MessagingAttributesGetter<Message, Void> getter;
 
   @SuppressWarnings("deprecation")
-  @Test
-  void shouldKeepLegacyNameForMessageOperation() {
+  @ParameterizedTest
+  @EnumSource(MessageOperation.class)
+  void shouldUseOperationTypeNameForMessageOperation(MessageOperation operation) {
     Message message = new Message();
     when(getter.isTemporaryDestination(message)).thenReturn(false);
     when(getter.getDestination(message)).thenReturn("destination");
 
-    SpanNameExtractor<Message> underTest =
-        MessagingSpanNameExtractor.create(getter, MessageOperation.PUBLISH);
+    SpanNameExtractor<Message> underTest = MessagingSpanNameExtractor.create(getter, operation);
 
-    assertThat(underTest.extract(message)).isEqualTo("destination publish");
+    assertThat(underTest.extract(message)).isEqualTo(operation.type().value() + " destination");
   }
 
   @ParameterizedTest

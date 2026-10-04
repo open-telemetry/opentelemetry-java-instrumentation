@@ -283,24 +283,9 @@ class AwsLambdaSqsMessageHandlerTest {
   }
 
   @Test
-  void keyedEventSuppressesSelectedMessageOnlyInStableMode() {
-    String messagingPreview = System.getProperty("otel.semconv-stability.preview");
-    String v3Preview = System.getProperty("otel.instrumentation.common.v3-preview");
-    if ("true".equals(v3Preview)) {
-      assertThat(messagingPreview).isNull();
-      assertThat(emitOldMessagingSemconv()).isFalse();
-      assertThat(emitStableMessagingSemconv()).isTrue();
-    } else if ("messaging".equals(messagingPreview)) {
-      assertThat(emitOldMessagingSemconv()).isFalse();
-      assertThat(emitStableMessagingSemconv()).isTrue();
-    } else if ("messaging/dup".equals(messagingPreview)) {
-      assertThat(emitOldMessagingSemconv()).isTrue();
-      assertThat(emitStableMessagingSemconv()).isTrue();
-    } else {
-      assertThat(messagingPreview).isNull();
-      assertThat(emitOldMessagingSemconv()).isTrue();
-      assertThat(emitStableMessagingSemconv()).isFalse();
-    }
+  void keyedEventSuppressesSelectedMessage() {
+    assertThat(emitOldMessagingSemconv()).isFalse();
+    assertThat(emitStableMessagingSemconv()).isTrue();
 
     SQSEvent.SQSMessage message = newMessage();
     message.setAttributes(singletonMap("AWSTraceHeader", AWS_TRACE_HEADER1));

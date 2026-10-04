@@ -11,7 +11,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import java.util.function.Predicate;
 
-/** Selects messaging span kinds according to the configured semantic convention version. */
+/** Selects messaging span kinds according to the v1.43 semantic conventions. */
 public final class MessagingSpanKindExtractor {
 
   /**
@@ -66,24 +66,16 @@ public final class MessagingSpanKindExtractor {
   }
 
   /**
+   * Selects the span kind for the corresponding {@link MessagingOperationType}. Publish spans
+   * propagate their context and use {@link SpanKind#PRODUCER}; receive spans use {@link
+   * SpanKind#CLIENT}.
+   *
    * @deprecated Use {@link #create(MessagingOperationType)}. May be removed in the next minor
    *     release.
    */
   @Deprecated // may be removed in the next minor release
   public static <REQUEST> SpanKindExtractor<REQUEST> create(MessageOperation operation) {
-    SpanKind spanKind;
-    switch (operation) {
-      case PUBLISH:
-        spanKind = SpanKind.PRODUCER;
-        break;
-      case RECEIVE:
-      case PROCESS:
-        spanKind = SpanKind.CONSUMER;
-        break;
-      default:
-        throw new IllegalStateException("Can't possibly happen");
-    }
-    return request -> spanKind;
+    return create(operation.type());
   }
 
   private MessagingSpanKindExtractor() {}

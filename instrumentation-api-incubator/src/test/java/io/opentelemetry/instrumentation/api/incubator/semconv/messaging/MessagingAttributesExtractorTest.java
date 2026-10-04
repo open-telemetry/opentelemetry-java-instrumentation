@@ -48,6 +48,7 @@ import org.assertj.core.data.MapEntry;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class MessagingAttributesExtractorTest {
@@ -64,12 +65,12 @@ class MessagingAttributesExtractorTest {
 
   @SuppressWarnings("deprecation")
   @Test
-  void deprecatedExtractorShouldProvideLegacySchemaUrl() {
+  void deprecatedExtractorShouldProvideAdoptedSchemaUrl() {
     AttributesExtractor<Map<String, String>, String> extractor =
         MessagingAttributesExtractor.create(TestGetter.INSTANCE, MessageOperation.PUBLISH);
 
     assertThat(((SchemaUrlProvider) extractor).internalGetSchemaUrl())
-        .isEqualTo(SchemaUrls.V1_24_0);
+        .isEqualTo(SchemaUrls.V1_43_0);
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
@@ -214,17 +215,48 @@ class MessagingAttributesExtractorTest {
   }
 
   @SuppressWarnings("deprecation") // testing deprecated API
-  @Test
-  void shouldSupportDeprecatedMessageOperation() {
+  @ParameterizedTest
+  @EnumSource(MessageOperation.class)
+  void shouldSupportDeprecatedMessageOperation(MessageOperation operation) {
     AttributesExtractor<Map<String, String>, String> underTest =
-        MessagingAttributesExtractor.create(TestGetter.INSTANCE, MessageOperation.PUBLISH);
+        MessagingAttributesExtractor.create(TestGetter.INSTANCE, operation);
 
     AttributesBuilder attributes = Attributes.builder();
     underTest.onStart(attributes, Context.root(), singletonMap("anonymousDestination", "y"));
 
     assertThat(attributes.build())
         .containsOnly(
-            entry(MESSAGING_DESTINATION_ANONYMOUS, true), entry(MESSAGING_OPERATION, "publish"));
+            entry(MESSAGING_DESTINATION_ANONYMOUS, true),
+            entry(MESSAGING_OPERATION_NAME, operation.type().value()),
+            entry(MESSAGING_OPERATION_TYPE, operation.type().value()));
+  }
+
+  @SuppressWarnings("deprecation")
+  @Test
+  void deprecatedBuilderUsesAdoptedAttributesWithNullableOperation() {
+    Map<String, String> request = new HashMap<>();
+    request.put("system", "myQueue");
+    request.put("clientId", "43");
+    request.put("bodySize", "100");
+    request.put("envelopeSize", "120");
+    request.put("destination", "generated");
+    request.put("temporaryDestination", "y");
+
+    AttributesExtractor<Map<String, String>, String> extractor =
+        MessagingAttributesExtractor.builder(TestGetter.INSTANCE, (MessageOperation) null).build();
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+    extractor.onEnd(attributes, Context.root(), request, null, new IllegalStateException());
+
+    assertThat(attributes.build())
+        .containsOnly(
+            entry(MESSAGING_SYSTEM, "myQueue"),
+            entry(MESSAGING_CLIENT_ID, "43"),
+            entry(MESSAGING_DESTINATION_NAME, "generated"),
+            entry(MESSAGING_DESTINATION_TEMPORARY, true),
+            entry(ERROR_TYPE, IllegalStateException.class.getName()));
+    assertThat(((SchemaUrlProvider) extractor).internalGetSchemaUrl())
+        .isEqualTo(SchemaUrls.V1_43_0);
   }
 
   @Test
