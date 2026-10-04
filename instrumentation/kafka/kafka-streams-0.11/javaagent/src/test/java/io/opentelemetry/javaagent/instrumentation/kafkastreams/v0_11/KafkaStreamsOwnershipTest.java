@@ -103,6 +103,7 @@ class KafkaStreamsOwnershipTest extends KafkaStreamsBaseTest {
     assertThat(invoked.await(30, SECONDS)).isTrue();
 
     await()
+        .dontCatchUncaughtExceptions()
         .atMost(Duration.ofSeconds(30))
         .untilAsserted(
             () ->
