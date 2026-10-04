@@ -59,9 +59,6 @@ final class RabbitDeliveryAttributesGetter
   @Nullable
   @Override
   public Long getMessageBodySize(DeliveryRequest request) {
-    if (request.getBody() != null) {
-      return (long) request.getBody().length;
-    }
     return null;
   }
 
