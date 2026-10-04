@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -59,10 +58,8 @@ class LettuceNetworkAttributesGetterTest {
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
 
     assertThat(LettuceCommandPeer.address(command)).isEqualTo(address);
-    assertThat(getter.getNetworkPeerAddress(command, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? expectedAddress : null);
-    assertThat(getter.getNetworkPeerPort(command, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? PORT : null);
+    assertThat(getter.getNetworkPeerAddress(command, null)).isEqualTo(expectedAddress);
+    assertThat(getter.getNetworkPeerPort(command, null)).isEqualTo(PORT);
   }
 
   @Test
@@ -140,8 +137,7 @@ class LettuceNetworkAttributesGetterTest {
       LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
 
       assertThat(getter.getServerAddress(command)).isEqualTo("redis.example");
-      assertThat(getter.getServerPort(command))
-          .isEqualTo(emitStableDatabaseSemconv() ? null : PORT);
+      assertThat(getter.getServerPort(command)).isEqualTo(null);
       assertThat(getter.getNetworkPeerAddress(command, null)).isNull();
       assertThat(getter.getNetworkPeerPort(command, null)).isNull();
     } finally {
@@ -159,10 +155,8 @@ class LettuceNetworkAttributesGetterTest {
     LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
 
     assertThat(request.getPeerAddress()).isEqualTo(address);
-    assertThat(getter.getNetworkPeerAddress(request, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? "10.1.2.3" : null);
-    assertThat(getter.getNetworkPeerPort(request, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? PORT : null);
+    assertThat(getter.getNetworkPeerAddress(request, null)).isEqualTo("10.1.2.3");
+    assertThat(getter.getNetworkPeerPort(request, null)).isEqualTo(PORT);
   }
 
   @Test
@@ -206,10 +200,8 @@ class LettuceNetworkAttributesGetterTest {
 
     LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
 
-    assertThat(getter.getNetworkPeerAddress(request, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? "10.1.2.4" : null);
-    assertThat(getter.getNetworkPeerPort(request, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? PORT : null);
+    assertThat(getter.getNetworkPeerAddress(request, null)).isEqualTo("10.1.2.4");
+    assertThat(getter.getNetworkPeerPort(request, null)).isEqualTo(PORT);
   }
 
   @Test
@@ -240,10 +232,8 @@ class LettuceNetworkAttributesGetterTest {
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
 
-    assertThat(getter.getNetworkPeerAddress(command, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? "10.1.2.4" : null);
-    assertThat(getter.getNetworkPeerPort(command, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? PORT : null);
+    assertThat(getter.getNetworkPeerAddress(command, null)).isEqualTo("10.1.2.4");
+    assertThat(getter.getNetworkPeerPort(command, null)).isEqualTo(PORT);
   }
 
   @Test
@@ -258,10 +248,8 @@ class LettuceNetworkAttributesGetterTest {
     LettuceCommandEncoderInstrumentation.EncodeAdvice.onEnter(context, command);
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
-    assertThat(LettuceCommandPeer.address(command))
-        .isEqualTo(emitStableDatabaseSemconv() ? address : null);
-    assertThat(getter.getNetworkPeerAddress(command, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? "/var/run/redis.sock" : null);
+    assertThat(LettuceCommandPeer.address(command)).isEqualTo(address);
+    assertThat(getter.getNetworkPeerAddress(command, null)).isEqualTo("/var/run/redis.sock");
     assertThat(getter.getNetworkPeerPort(command, null)).isNull();
   }
 
@@ -280,12 +268,9 @@ class LettuceNetworkAttributesGetterTest {
     LettuceCommandEncoderInstrumentation.EncodeAdvice.onEnter(context, singletonList(wrapper));
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
-    assertThat(LettuceCommandPeer.address(wrapper))
-        .isEqualTo(emitStableDatabaseSemconv() ? address : null);
-    assertThat(getter.getNetworkPeerAddress(wrapper, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? "10.1.2.3" : null);
-    assertThat(getter.getNetworkPeerPort(wrapper, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? PORT : null);
+    assertThat(LettuceCommandPeer.address(wrapper)).isEqualTo(address);
+    assertThat(getter.getNetworkPeerAddress(wrapper, null)).isEqualTo("10.1.2.3");
+    assertThat(getter.getNetworkPeerPort(wrapper, null)).isEqualTo(PORT);
   }
 
   @Test
@@ -300,8 +285,7 @@ class LettuceNetworkAttributesGetterTest {
 
     LettuceCommandEncoderInstrumentation.EncodeAdvice.onEnter(context, command);
 
-    assertThat(LettuceCommandPeer.address(command))
-        .isEqualTo(emitStableDatabaseSemconv() ? address : null);
+    assertThat(LettuceCommandPeer.address(command)).isEqualTo(address);
   }
 
   @Test
@@ -387,8 +371,7 @@ class LettuceNetworkAttributesGetterTest {
     AsyncCommand<String, String, String> replayWrapper = new AsyncCommand<>(command);
     LettuceCommandPeer.initialize(replayWrapper);
 
-    assertThat(LettuceCommandPeer.address(firstWrapper))
-        .isEqualTo(emitStableDatabaseSemconv() ? first : null);
+    assertThat(LettuceCommandPeer.address(firstWrapper)).isEqualTo(first);
     assertThat(LettuceCommandPeer.address(replayWrapper)).isNull();
 
     Channel secondChannel = mock(Channel.class);
@@ -398,10 +381,8 @@ class LettuceNetworkAttributesGetterTest {
     LettuceCommandEncoderInstrumentation.EncodeAdvice.onEnter(
         secondContext, singletonList(replayWrapper));
 
-    assertThat(LettuceCommandPeer.address(firstWrapper))
-        .isEqualTo(emitStableDatabaseSemconv() ? first : null);
-    assertThat(LettuceCommandPeer.address(replayWrapper))
-        .isEqualTo(emitStableDatabaseSemconv() ? second : null);
+    assertThat(LettuceCommandPeer.address(firstWrapper)).isEqualTo(first);
+    assertThat(LettuceCommandPeer.address(replayWrapper)).isEqualTo(second);
   }
 
   private static RedisCommand<String, String, String> command() {

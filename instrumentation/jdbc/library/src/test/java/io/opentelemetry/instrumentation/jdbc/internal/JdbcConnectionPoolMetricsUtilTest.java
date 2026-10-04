@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -37,7 +36,7 @@ class JdbcConnectionPoolMetricsUtilTest {
     DbInfo dbInfo = JdbcConnectionPoolMetricsUtil.dbInfo(properties);
 
     assertThat(JdbcConnectionPoolMetricsUtil.poolName(dbInfo, null, FALLBACK_NAME))
-        .isEqualTo(emitStableDatabaseSemconv() ? "inventory" : "properties.example:5433/inventory");
+        .isEqualTo("inventory");
   }
 
   @Test
@@ -51,7 +50,7 @@ class JdbcConnectionPoolMetricsUtilTest {
     DbInfo dbInfo = JdbcConnectionPoolMetricsUtil.dbInfo(properties);
 
     assertThat(JdbcConnectionPoolMetricsUtil.poolName(dbInfo, null, FALLBACK_NAME))
-        .isEqualTo(emitStableDatabaseSemconv() ? "inventory" : "properties.example:5433/inventory");
+        .isEqualTo("inventory");
   }
 
   @Test
@@ -64,7 +63,7 @@ class JdbcConnectionPoolMetricsUtilTest {
     DbInfo dbInfo = JdbcConnectionPoolMetricsUtil.dbInfo(properties);
 
     assertThat(JdbcConnectionPoolMetricsUtil.poolName(dbInfo, null, FALLBACK_NAME))
-        .isEqualTo(emitStableDatabaseSemconv() ? "orders" : "[2001:db8::1]:5432/orders");
+        .isEqualTo("orders");
   }
 
   @Test
@@ -207,10 +206,9 @@ class JdbcConnectionPoolMetricsUtilTest {
 
   @ParameterizedTest
   @MethodSource("poolNameArguments")
-  void returnsExpectedPoolName(
-      DbInfo dbInfo, String oldExpectedPoolName, String stableExpectedPoolName) {
+  void returnsExpectedPoolName(DbInfo dbInfo, String expectedPoolName) {
     assertThat(JdbcConnectionPoolMetricsUtil.poolName(dbInfo, null, FALLBACK_NAME))
-        .isEqualTo(emitStableDatabaseSemconv() ? stableExpectedPoolName : oldExpectedPoolName);
+        .isEqualTo(expectedPoolName);
   }
 
   private static Stream<Arguments> poolNameArguments() {
@@ -222,7 +220,6 @@ class JdbcConnectionPoolMetricsUtilTest {
                 .legacyServerPort(5432)
                 .dbNamespace("orders")
                 .build(),
-            "db.example:5432/orders",
             "orders"),
         argumentSet(
             "IPv6 address, port, and namespace",
@@ -231,62 +228,48 @@ class JdbcConnectionPoolMetricsUtilTest {
                 .legacyServerPort(5432)
                 .dbNamespace("orders")
                 .build(),
-            "[2001:db8::1]:5432/orders",
             "orders"),
         argumentSet(
             "address only",
             DbInfo.builder().legacyServerAddress("db.example").build(),
-            "db.example",
             FALLBACK_NAME),
         argumentSet(
             "address and port",
             DbInfo.builder().legacyServerAddress("db.example").legacyServerPort(5432).build(),
-            "db.example:5432",
             FALLBACK_NAME),
         argumentSet(
             "address and namespace",
             DbInfo.builder().legacyServerAddress("db.example").dbNamespace("orders").build(),
-            "db.example/orders",
             "orders"),
-        argumentSet(
-            "namespace only", DbInfo.builder().dbNamespace("orders").build(), "orders", "orders"),
-        argumentSet(
-            "port only",
-            DbInfo.builder().legacyServerPort(5432).build(),
-            FALLBACK_NAME,
-            FALLBACK_NAME),
+        argumentSet("namespace only", DbInfo.builder().dbNamespace("orders").build(), "orders"),
+        argumentSet("port only", DbInfo.builder().legacyServerPort(5432).build(), FALLBACK_NAME),
         argumentSet(
             "port and namespace",
             DbInfo.builder().legacyServerPort(5432).dbNamespace("orders").build(),
-            "orders",
             "orders"),
         argumentSet(
             "configured address and port",
             DbInfo.builder()
                 .configuredServerTarget(DbServerTarget.create("db.example", 5432))
                 .build(),
-            FALLBACK_NAME,
             "db.example:5432"),
         argumentSet(
             "configured IPv6 address and port",
             DbInfo.builder()
                 .configuredServerTarget(DbServerTarget.create("2001:db8::1", 5432))
                 .build(),
-            FALLBACK_NAME,
             "[2001:db8::1]:5432"),
         argumentSet(
             "configured target list",
             DbInfo.builder()
                 .configuredServerTarget(DbServerTarget.create("db-a:5432,db-b:6432", null))
                 .build(),
-            FALLBACK_NAME,
             "db-a:5432,db-b:6432"),
         argumentSet(
             "portless configured IPv6 address",
             DbInfo.builder()
                 .configuredServerTarget(DbServerTarget.create("2001:db8::1", null))
                 .build(),
-            FALLBACK_NAME,
             "2001:db8::1"),
         argumentSet(
             "empty namespace",
@@ -295,7 +278,6 @@ class JdbcConnectionPoolMetricsUtilTest {
                 .dbNamespace("")
                 .configuredServerTarget(DbServerTarget.create("db.example", null))
                 .build(),
-            "db.example/",
             "db.example"),
         argumentSet(
             "empty configured address",
@@ -304,14 +286,9 @@ class JdbcConnectionPoolMetricsUtilTest {
                 .legacyServerAddress("postgresql")
                 .configuredServerTarget(DbServerTarget.create("", null))
                 .build(),
-            "postgresql",
             "postgresql"),
         argumentSet(
-            "empty database system",
-            DbInfo.builder().dbSystemName("").build(),
-            FALLBACK_NAME,
-            FALLBACK_NAME),
-        argumentSet(
-            "no address, port, or namespace", DbInfo.DEFAULT, FALLBACK_NAME, FALLBACK_NAME));
+            "empty database system", DbInfo.builder().dbSystemName("").build(), FALLBACK_NAME),
+        argumentSet("no address, port, or namespace", DbInfo.DEFAULT, FALLBACK_NAME));
   }
 }

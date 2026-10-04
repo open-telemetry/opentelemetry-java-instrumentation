@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -31,10 +30,8 @@ class VertxRedisClientAttributesGetterTest {
   void capturedUnrepresentableTargetOmitsSelectedEndpointForStableSemconv() {
     VertxRedisClientRequest request = request(null, true);
 
-    assertThat(getter.getServerAddress(request))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : SELECTED_HOST);
-    assertThat(getter.getServerPort(request))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : SELECTED_PORT);
+    assertThat(getter.getServerAddress(request)).isEqualTo(null);
+    assertThat(getter.getServerPort(request)).isEqualTo(null);
     assertThat(request.getPeerAddress()).isEqualTo(PEER_HOST);
     assertThat(request.getPeerPort()).isEqualTo(PEER_PORT);
   }
@@ -54,10 +51,8 @@ class VertxRedisClientAttributesGetterTest {
     VertxRedisClientRequest request =
         request(RedisServerTarget.ofHostAndPort("configured-node", 6381), true);
 
-    assertThat(getter.getServerAddress(request))
-        .isEqualTo(emitStableDatabaseSemconv() ? "configured-node" : SELECTED_HOST);
-    assertThat(getter.getServerPort(request))
-        .isEqualTo(emitStableDatabaseSemconv() ? 6381 : SELECTED_PORT);
+    assertThat(getter.getServerAddress(request)).isEqualTo("configured-node");
+    assertThat(getter.getServerPort(request)).isEqualTo(6381);
     assertThat(request.getPeerAddress()).isEqualTo(PEER_HOST);
     assertThat(request.getPeerPort()).isEqualTo(PEER_PORT);
   }

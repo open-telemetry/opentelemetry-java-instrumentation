@@ -55,7 +55,7 @@ testing {
 
       targets.all {
         testTask.configure {
-          jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
+          jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
         }
       }
     }
@@ -169,7 +169,7 @@ tasks {
         testClassesDirs = suite.sources.output.classesDirs
         classpath = suite.sources.runtimeClasspath
 
-        val stableSemconvConfig = "otel.semconv-stability.opt-in=database,service.peer"
+        val stableSemconvConfig = "otel.semconv-stability.opt-in=service.peer"
         jvmArgs("-D$stableSemconvConfig")
         systemProperty(
           "metadataConfig",
@@ -186,11 +186,11 @@ tasks {
       classpath = sourceSets.test.get().runtimeClasspath
       jvmArgs(
         "-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true",
-        "-Dotel.semconv-stability.opt-in=database,service.peer"
+        "-Dotel.semconv-stability.opt-in=service.peer"
       )
       systemProperty(
         "metadataConfig",
-        "otel.instrumentation.lettuce.connection-telemetry.enabled=true,otel.semconv-stability.opt-in=database,service.peer"
+        "otel.instrumentation.lettuce.connection-telemetry.enabled=true,otel.semconv-stability.opt-in=service.peer"
       )
     }
 

@@ -6,9 +6,7 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -67,7 +65,7 @@ class SqlQuerySanitizerUtilCacheTest {
         .isSameAs(SqlQueryAnalyzerUtil.analyze(testQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS));
 
     // verify that the attributes extractor produces correct values
-    AttributeKey<String> queryTextKey = emitStableDatabaseSemconv() ? DB_QUERY_TEXT : DB_STATEMENT;
+    AttributeKey<String> queryTextKey = DB_QUERY_TEXT;
     {
       AttributesBuilder builder = Attributes.builder();
       attributesExtractor.onStart(builder, Context.root(), null);

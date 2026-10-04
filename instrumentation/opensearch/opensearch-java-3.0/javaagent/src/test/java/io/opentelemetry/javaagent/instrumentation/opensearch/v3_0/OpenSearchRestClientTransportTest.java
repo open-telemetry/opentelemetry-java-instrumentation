@@ -5,16 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OPENSEARCH;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -94,20 +90,10 @@ class OpenSearchRestClientTransportTest extends AbstractOpenSearchTest {
             trace ->
                 assertThat(trace.getSpan(0))
                     .hasAttributesSatisfyingExactly(
-                        equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
-                        equalTo(maybeStable(DB_OPERATION), "GET"),
-                        equalTo(
-                            maybeStable(DB_STATEMENT),
-                            emitStableDatabaseSemconv() ? null : "GET /_cluster/health"),
-                        equalTo(NETWORK_TYPE, null),
-                        equalTo(
-                            SERVER_ADDRESS,
-                            emitStableDatabaseSemconv() ? httpHost.getHost() : null),
-                        equalTo(
-                            SERVER_PORT,
-                            emitStableDatabaseSemconv()
-                                ? Long.valueOf(httpHost.getPort())
-                                : null)));
+                        equalTo(DB_SYSTEM_NAME, OPENSEARCH),
+                        equalTo(DB_OPERATION_NAME, "GET"),
+                        equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                        equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))));
   }
 
   private HttpHost configuredHost() {

@@ -6,20 +6,15 @@
 package io.opentelemetry.instrumentation.mongo.testing;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_MONGODB_COLLECTION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.MONGODB;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -233,10 +228,7 @@ public abstract class AbstractMongoConfiguredTargetTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName(
-                                emitStableDatabaseSemconv()
-                                    ? "listDatabases db1.example:27018,db2.example:27018"
-                                    : "listDatabases")
+                        span.hasName("listDatabases db1.example:27018,db2.example:27018")
                             .hasKind(CLIENT)));
   }
 
@@ -265,44 +257,23 @@ public abstract class AbstractMongoConfiguredTargetTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName(
-                                emitStableDatabaseSemconv()
-                                    ? "find " + COLLECTION_NAME
-                                    : "find " + DATABASE_NAME + "." + COLLECTION_NAME)
+                        span.hasName("find " + COLLECTION_NAME)
                             .hasKind(CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(
-                                    SERVER_ADDRESS,
-                                    emitStableDatabaseSemconv()
-                                        ? configuredAddress
-                                        : SELECTED_SERVER.getHost()),
-                                equalTo(
-                                    SERVER_PORT,
-                                    emitStableDatabaseSemconv()
-                                        ? configuredPort
-                                        : Long.valueOf(SELECTED_SERVER.getPort())),
-                                equalTo(NETWORK_PEER_ADDRESS, null),
-                                equalTo(NETWORK_PEER_PORT, null),
+                                equalTo(SERVER_ADDRESS, configuredAddress),
+                                equalTo(SERVER_PORT, configuredPort),
                                 satisfies(
-                                    maybeStable(DB_STATEMENT),
+                                    DB_QUERY_TEXT,
                                     val ->
                                         val.satisfies(
                                             v ->
                                                 assertThat(v.replaceAll(" ", ""))
                                                     .isEqualTo(
                                                         "{\"find\":\"" + COLLECTION_NAME + "\"}"))),
-                                equalTo(maybeStable(DB_SYSTEM), MONGODB),
-                                equalTo(
-                                    DB_CONNECTION_STRING,
-                                    emitStableDatabaseSemconv()
-                                        ? null
-                                        : "mongodb://"
-                                            + SELECTED_SERVER.getHost()
-                                            + ":"
-                                            + SELECTED_SERVER.getPort()),
-                                equalTo(maybeStable(DB_NAME), DATABASE_NAME),
-                                equalTo(maybeStable(DB_OPERATION), "find"),
-                                equalTo(maybeStable(DB_MONGODB_COLLECTION), COLLECTION_NAME))));
+                                equalTo(DB_SYSTEM_NAME, MONGODB),
+                                equalTo(DB_NAMESPACE, DATABASE_NAME),
+                                equalTo(DB_OPERATION_NAME, "find"),
+                                equalTo(DB_COLLECTION_NAME, COLLECTION_NAME))));
   }
 
   private static CommandStartedEvent commandStartedEvent(

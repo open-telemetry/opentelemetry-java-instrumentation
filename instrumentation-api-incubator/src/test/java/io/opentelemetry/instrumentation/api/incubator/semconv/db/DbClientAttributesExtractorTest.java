@@ -15,12 +15,6 @@ import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.entry;
 
@@ -78,7 +72,7 @@ class DbClientAttributesExtractorTest {
         DbClientAttributesExtractor.create(new TestAttributesGetter());
 
     assertThat(((SchemaUrlProvider) extractor).internalGetSchemaUrl())
-        .isEqualTo(emitStableDatabaseSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_24_0);
+        .isEqualTo(SchemaUrls.V1_44_0);
   }
 
   static class TestAttributesGetter implements DbClientAttributesGetter<Map<String, String>, Void> {
@@ -160,41 +154,14 @@ class DbClientAttributesExtractorTest {
     underTest.onEnd(endAttributes, context, request, null, null);
 
     // then
-    if (emitStableDatabaseSemconv() && emitOldDatabaseSemconv()) {
-      assertThat(startAttributes.build())
-          .containsOnly(
-              entry(DB_SYSTEM, "myDb"),
-              entry(DB_SYSTEM_NAME, "myDb"),
-              entry(DB_USER, "username"),
-              entry(DB_NAME, "potatoes"),
-              entry(DB_CONNECTION_STRING, "mydb:///potatoes"),
-              entry(DB_STATEMENT, "SELECT * FROM potato"),
-              entry(DB_OPERATION, "old SELECT"),
-              entry(DB_COLLECTION_NAME, "potato"),
-              entry(DB_NAMESPACE, "potatoes"),
-              entry(DB_QUERY_TEXT, "SELECT * FROM potato"),
-              entry(DB_QUERY_SUMMARY, "SELECT potato"),
-              entry(DB_OPERATION_NAME, "SELECT"));
-    } else if (emitOldDatabaseSemconv()) {
-      assertThat(startAttributes.build())
-          .containsOnly(
-              entry(DB_SYSTEM, "myDb"),
-              entry(DB_USER, "username"),
-              entry(DB_NAME, "potatoes"),
-              entry(DB_CONNECTION_STRING, "mydb:///potatoes"),
-              entry(DB_STATEMENT, "SELECT * FROM potato"),
-              entry(DB_OPERATION, "old SELECT"));
-    } else if (emitStableDatabaseSemconv()) {
-      assertThat(startAttributes.build())
-          .containsOnly(
-              entry(DB_SYSTEM_NAME, "myDb"),
-              entry(DB_COLLECTION_NAME, "potato"),
-              entry(DB_NAMESPACE, "potatoes"),
-              entry(DB_QUERY_TEXT, "SELECT * FROM potato"),
-              entry(DB_QUERY_SUMMARY, "SELECT potato"),
-              entry(DB_OPERATION_NAME, "SELECT"));
-    }
-
+    assertThat(startAttributes.build())
+        .containsOnly(
+            entry(DB_SYSTEM_NAME, "myDb"),
+            entry(DB_COLLECTION_NAME, "potato"),
+            entry(DB_NAMESPACE, "potatoes"),
+            entry(DB_QUERY_TEXT, "SELECT * FROM potato"),
+            entry(DB_QUERY_SUMMARY, "SELECT potato"),
+            entry(DB_OPERATION_NAME, "SELECT"));
     assertThat(endAttributes.build().isEmpty()).isTrue();
   }
 
@@ -221,11 +188,7 @@ class DbClientAttributesExtractorTest {
     AttributesBuilder attributes = Attributes.builder();
     underTest.onEnd(attributes, Context.root(), emptyMap(), null, error);
 
-    if (emitStableDatabaseSemconv()) {
-      assertThat(attributes.build())
-          .containsOnly(entry(ERROR_TYPE, IllegalStateException.class.getName()));
-    } else {
-      assertThat(attributes.build().isEmpty()).isTrue();
-    }
+    assertThat(attributes.build())
+        .containsOnly(entry(ERROR_TYPE, IllegalStateException.class.getName()));
   }
 }

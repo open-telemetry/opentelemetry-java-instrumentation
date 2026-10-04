@@ -85,13 +85,6 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-  }
-
   val testMessagingPreview = register<Test>("testMessagingPreview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -110,14 +103,6 @@ tasks {
     jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
   }
 
-  val testCoreOnlyStableSemconv = register<Test>("testCoreOnlyStableSemconv") {
-    val testCoreOnlySourceSet = sourceSets["testCoreOnly"]
-    testClassesDirs = testCoreOnlySourceSet.output.classesDirs
-    classpath = testCoreOnlySourceSet.runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-  }
-
   val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -125,22 +110,11 @@ tasks {
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
   }
 
-  val testRdsDataStableSemconv = register<Test>("testRdsDataStableSemconv") {
-    val testRdsDataSourceSet = sourceSets["testRdsData"]
-    testClassesDirs = testRdsDataSourceSet.output.classesDirs
-    classpath = testRdsDataSourceSet.runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-  }
-
   check {
     dependsOn(
       testing.suites,
-      testStableSemconv,
-      testRdsDataStableSemconv,
       testMessagingPreview,
       testBothSemconv,
-      testCoreOnlyStableSemconv,
       testExceptionSignalLogs,
     )
   }

@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoInstrumenterFactory.DEFAULT_MAX_NORMALIZED_QUERY_LENGTH;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
@@ -49,10 +47,8 @@ class MongoConfiguredTargetTest {
         MongoServerTarget.seeds(asList(SELECTED_SERVER, new ServerAddress("db1.example", 27017))));
     CommandStartedEvent event = commandStartedEvent(clusterId, "test_db", "find");
 
-    assertThat(getter.getServerAddress(event))
-        .isEqualTo(
-            emitStableDatabaseSemconv() ? "db1.example:27017,db2.example:27018" : "db2.example");
-    assertThat(getter.getServerPort(event)).isEqualTo(emitStableDatabaseSemconv() ? null : 27018);
+    assertThat(getter.getServerAddress(event)).isEqualTo("db1.example:27017,db2.example:27018");
+    assertThat(getter.getServerPort(event)).isEqualTo(null);
   }
 
   @Test
@@ -62,9 +58,8 @@ class MongoConfiguredTargetTest {
             MongoServerTarget.seeds(singletonList(new ServerAddress("db1.example", 27017))));
     CommandStartedEvent event = commandStartedEvent(clusterId, "test_db", "find");
 
-    assertThat(getter.getServerAddress(event))
-        .isEqualTo(emitStableDatabaseSemconv() ? "db1.example" : "db2.example");
-    assertThat(getter.getServerPort(event)).isEqualTo(emitStableDatabaseSemconv() ? null : 27018);
+    assertThat(getter.getServerAddress(event)).isEqualTo("db1.example");
+    assertThat(getter.getServerPort(event)).isEqualTo(null);
     assertThat(getter.getNetworkPeerAddress(event, null)).isNull();
     assertThat(getter.getNetworkPeerPort(event, null)).isNull();
   }
@@ -76,9 +71,8 @@ class MongoConfiguredTargetTest {
             MongoServerTarget.seeds(singletonList(new ServerAddress("db1.example", 28017))));
     CommandStartedEvent event = commandStartedEvent(clusterId, "test_db", "find");
 
-    assertThat(getter.getServerAddress(event))
-        .isEqualTo(emitStableDatabaseSemconv() ? "db1.example" : "db2.example");
-    assertThat(getter.getServerPort(event)).isEqualTo(emitStableDatabaseSemconv() ? 28017 : 27018);
+    assertThat(getter.getServerAddress(event)).isEqualTo("db1.example");
+    assertThat(getter.getServerPort(event)).isEqualTo(28017);
   }
 
   @Test
@@ -93,12 +87,10 @@ class MongoConfiguredTargetTest {
     CommandStartedEvent second =
         commandStartedEvent(clusterId, new ServerAddress("db3.example", 27019), "test_db", "find");
 
-    assertThat(getter.getServerAddress(first))
-        .isEqualTo(emitStableDatabaseSemconv() ? "db1.example,db2.example" : "db2.example");
-    assertThat(getter.getServerPort(first)).isEqualTo(emitStableDatabaseSemconv() ? null : 27018);
-    assertThat(getter.getServerAddress(second))
-        .isEqualTo(emitStableDatabaseSemconv() ? "db1.example,db2.example" : "db3.example");
-    assertThat(getter.getServerPort(second)).isEqualTo(emitStableDatabaseSemconv() ? null : 27019);
+    assertThat(getter.getServerAddress(first)).isEqualTo("db1.example,db2.example");
+    assertThat(getter.getServerPort(first)).isEqualTo(null);
+    assertThat(getter.getServerAddress(second)).isEqualTo("db1.example,db2.example");
+    assertThat(getter.getServerPort(second)).isEqualTo(null);
   }
 
   @Test
@@ -106,10 +98,8 @@ class MongoConfiguredTargetTest {
     ClusterId clusterId = configuredCluster(MongoServerTarget.srvHost("cluster0.example.com"));
     CommandStartedEvent event = commandStartedEvent(clusterId, "test_db", "find");
 
-    assertThat(getter.getServerAddress(event))
-        .isEqualTo(
-            emitStableDatabaseSemconv() ? "mongodb+srv://cluster0.example.com" : "db2.example");
-    assertThat(getter.getServerPort(event)).isEqualTo(emitStableDatabaseSemconv() ? null : 27018);
+    assertThat(getter.getServerAddress(event)).isEqualTo("mongodb+srv://cluster0.example.com");
+    assertThat(getter.getServerPort(event)).isEqualTo(null);
   }
 
   @Test
@@ -121,9 +111,8 @@ class MongoConfiguredTargetTest {
 
     Attributes attributes = extractAttributes(event);
 
-    assertThat(attributes.get(SERVER_ADDRESS))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : "db2.example");
-    assertThat(attributes.get(SERVER_PORT)).isEqualTo(emitStableDatabaseSemconv() ? null : 27018L);
+    assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo(null);
+    assertThat(attributes.get(SERVER_PORT)).isEqualTo(null);
     assertThat(attributes.get(NETWORK_PEER_ADDRESS)).isNull();
     assertThat(attributes.get(NETWORK_PEER_PORT)).isNull();
   }
@@ -141,13 +130,11 @@ class MongoConfiguredTargetTest {
 
     Attributes attributes = extractAttributes(event);
 
-    assertThat(attributes.get(SERVER_ADDRESS))
-        .isEqualTo(emitStableDatabaseSemconv() ? "configured.example" : "db2.example");
-    assertThat(attributes.get(SERVER_PORT)).isEqualTo(emitStableDatabaseSemconv() ? null : 27018L);
+    assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("configured.example");
+    assertThat(attributes.get(SERVER_PORT)).isEqualTo(null);
     assertThat(attributes.get(NETWORK_PEER_ADDRESS)).isNull();
     assertThat(attributes.get(NETWORK_PEER_PORT)).isNull();
-    assertThat(attributes.get(DB_CONNECTION_STRING))
-        .isEqualTo(emitOldDatabaseSemconv() ? "mongodb://db2.example:27018" : null);
+    assertThat(attributes.get(DB_CONNECTION_STRING)).isEqualTo(null);
   }
 
   @Test
@@ -166,11 +153,8 @@ class MongoConfiguredTargetTest {
     Attributes attributes = extractAttributes(event);
 
     assertThat(attributes.get(SERVER_ADDRESS))
-        .isEqualTo(
-            emitStableDatabaseSemconv()
-                ? "configured1.example:27017,configured2.example:27018"
-                : "db2.example");
-    assertThat(attributes.get(SERVER_PORT)).isEqualTo(emitStableDatabaseSemconv() ? null : 27018L);
+        .isEqualTo("configured1.example:27017,configured2.example:27018");
+    assertThat(attributes.get(SERVER_PORT)).isEqualTo(null);
     assertThat(attributes.get(NETWORK_PEER_ADDRESS)).isNull();
     assertThat(attributes.get(NETWORK_PEER_PORT)).isNull();
   }
@@ -190,9 +174,8 @@ class MongoConfiguredTargetTest {
 
     Attributes attributes = extractAttributes(event);
 
-    assertThat(attributes.get(SERVER_ADDRESS))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : "db2.example");
-    assertThat(attributes.get(SERVER_PORT)).isEqualTo(emitStableDatabaseSemconv() ? null : 27018L);
+    assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo(null);
+    assertThat(attributes.get(SERVER_PORT)).isEqualTo(null);
     assertThat(attributes.get(NETWORK_PEER_ADDRESS)).isNull();
     assertThat(attributes.get(NETWORK_PEER_PORT)).isNull();
   }
@@ -218,11 +201,7 @@ class MongoConfiguredTargetTest {
 
     String spanName = new MongoSpanNameExtractor(getter).extract(event);
 
-    assertThat(spanName)
-        .isEqualTo(
-            emitStableDatabaseSemconv()
-                ? "listDatabases db1.example:27017,db2.example:27018"
-                : "listDatabases");
+    assertThat(spanName).isEqualTo("listDatabases db1.example:27017,db2.example:27018");
   }
 
   private Attributes extractAttributes(CommandStartedEvent event) {

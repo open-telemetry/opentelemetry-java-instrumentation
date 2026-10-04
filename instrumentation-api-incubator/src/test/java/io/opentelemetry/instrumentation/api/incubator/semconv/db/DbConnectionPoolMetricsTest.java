@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.DbConnectionPoolMetrics.POOL_NAME;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -54,9 +53,7 @@ class DbConnectionPoolMetricsTest {
 
     assertThat(metricReader.collectAllMetrics())
         .singleElement()
-        .satisfies(
-            hasScopeSchemaUrl(
-                emitStableDatabaseSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_24_0));
+        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0));
   }
 
   @Test

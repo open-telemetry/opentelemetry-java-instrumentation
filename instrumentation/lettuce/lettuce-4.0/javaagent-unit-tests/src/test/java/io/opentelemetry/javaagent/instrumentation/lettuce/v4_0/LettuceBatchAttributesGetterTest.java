@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -34,9 +33,8 @@ class LettuceBatchAttributesGetterTest {
             null,
             RedisServerTarget.ofEndpoint("configured-node:6379"));
 
-    assertThat(getter.getServerAddress(request))
-        .isEqualTo(emitStableDatabaseSemconv() ? "configured-node" : "selected-node");
-    assertThat(getter.getServerPort(request)).isEqualTo(emitStableDatabaseSemconv() ? null : 6380);
+    assertThat(getter.getServerAddress(request)).isEqualTo("configured-node");
+    assertThat(getter.getServerPort(request)).isEqualTo(null);
   }
 
   private static RedisCommand<String, String, String> command() {

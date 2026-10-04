@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -76,9 +75,8 @@ class VertxSqlClientInfoTest {
     assertThat(request.getConfiguredServerAddress()).isNull();
     assertThat(request.getConfiguredServerPort()).isNull();
     VertxSqlClientAttributesGetter getter = new VertxSqlClientAttributesGetter();
-    assertThat(getter.getServerAddress(request))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : "invalid host");
-    assertThat(getter.getServerPort(request)).isEqualTo(emitStableDatabaseSemconv() ? null : 5432);
+    assertThat(getter.getServerAddress(request)).isEqualTo(null);
+    assertThat(getter.getServerPort(request)).isEqualTo(null);
   }
 
   @Test

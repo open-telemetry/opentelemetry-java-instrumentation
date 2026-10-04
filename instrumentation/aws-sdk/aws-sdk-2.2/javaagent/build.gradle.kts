@@ -197,28 +197,6 @@ tasks {
     include("**/Aws2SqsSuppressReceiveSpansTest.*")
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
-    }
-    systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
-  val testRdsDataStableSemconv = register<Test>("testRdsDataStableSemconv") {
-    val testRdsDataSourceSet = sourceSets["testRdsData"]
-    testClassesDirs = testRdsDataSourceSet.output.classesDirs
-    classpath = testRdsDataSourceSet.runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
   val testMessagingPreview = register<Test>("testMessagingPreview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -271,8 +249,6 @@ tasks {
     dependsOn(
       testing.suites,
       testExperimentalSqs,
-      testStableSemconv,
-      testRdsDataStableSemconv,
       testReceiveSpansDisabled,
       testMessagingPreview,
       testMessagingPreviewReceiveSpansDisabled,
