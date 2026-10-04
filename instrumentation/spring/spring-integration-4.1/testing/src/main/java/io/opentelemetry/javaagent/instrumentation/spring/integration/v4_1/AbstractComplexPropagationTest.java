@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.messagingAttributes;
 import static java.util.Collections.singletonMap;
 import static java.util.stream.Collectors.toMap;
@@ -84,18 +83,12 @@ abstract class AbstractComplexPropagationTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process application.sendChannel"
-                                : "application.sendChannel process")
+                    span.hasName("process application.sendChannel")
                         .hasKind(SpanKind.CONSUMER)
                         .hasAttributesSatisfyingExactly(
                             messagingAttributes("process", "application.sendChannel")),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process application.receiveChannel"
-                                : "application.receiveChannel process")
+                    span.hasName("process application.receiveChannel")
                         .hasParent(trace.getSpan(0))
                         .hasKind(SpanKind.CONSUMER)
                         .hasAttributesSatisfyingExactly(

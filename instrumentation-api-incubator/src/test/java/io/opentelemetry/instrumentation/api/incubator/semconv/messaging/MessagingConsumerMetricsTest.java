@@ -10,8 +10,6 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.i
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.contains;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.enable;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -65,131 +63,74 @@ class MessagingConsumerMetricsTest {
             .put(MESSAGING_SYSTEM, "pulsar")
             .put(MESSAGING_DESTINATION_NAME, "topic")
             .put(MESSAGING_DESTINATION_TEMPLATE, "topic-{id}")
-            .put(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null)
-            .put(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "receive" : null)
-            .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "receive" : null)
+            .put(MESSAGING_OPERATION, null)
+            .put(MESSAGING_OPERATION_NAME, "receive")
+            .put(MESSAGING_OPERATION_TYPE, "receive")
             .put(MESSAGING_CONSUMER_GROUP_NAME, "group")
             .put(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "subscription")
             .build();
     Attributes responseAttributes =
         Attributes.builder()
             .put(MESSAGING_BATCH_MESSAGE_COUNT, 3)
-            .put(
-                ERROR_TYPE,
-                emitStableMessagingSemconv() ? IllegalStateException.class.getName() : null)
+            .put(ERROR_TYPE, IllegalStateException.class.getName())
             .build();
 
     Context context = listener.onStart(enable(Context.root()), requestAttributes, nanos(100));
-    assertThat(contains(context, RECEIVE, CLIENT_OPERATION_DURATION))
-        .isEqualTo(emitStableMessagingSemconv());
-    assertThat(contains(context, RECEIVE, CONSUMED_MESSAGES))
-        .isEqualTo(emitStableMessagingSemconv());
+    assertThat(contains(context, RECEIVE, CLIENT_OPERATION_DURATION)).isTrue();
+    assertThat(contains(context, RECEIVE, CONSUMED_MESSAGES)).isTrue();
     listener.onEnd(context, responseAttributes, nanos(300));
 
     Collection<MetricData> metrics = metricReader.collectAllMetrics();
-    assertThat(metrics)
-        .hasSize((emitOldMessagingSemconv() ? 2 : 0) + (emitStableMessagingSemconv() ? 2 : 0));
+    assertThat(metrics).hasSize(2);
 
-    if (emitOldMessagingSemconv()) {
-      assertThat(metrics)
-          .anySatisfy(
-              metric ->
-                  assertThat(metric)
-                      .hasName("messaging.receive.duration")
-                      .hasUnit("s")
-                      .hasDescription("Measures the duration of receive operation.")
-                      .hasHistogramSatisfying(
-                          histogram ->
-                              histogram.hasPointsSatisfying(
-                                  point ->
-                                      point
-                                          .hasSum(0.2)
-                                          .hasBucketBoundaries(DURATION_BUCKETS)
-                                          .hasAttributesSatisfyingExactly(
-                                              equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                              equalTo(MESSAGING_DESTINATION_NAME, "topic"),
-                                              equalTo(MESSAGING_DESTINATION_TEMPLATE, "topic-{id}"),
-                                              equalTo(MESSAGING_OPERATION, "receive"),
-                                              equalTo(
-                                                  ERROR_TYPE,
-                                                  emitStableMessagingSemconv()
-                                                      ? IllegalStateException.class.getName()
-                                                      : null)))))
-          .anySatisfy(
-              metric ->
-                  assertThat(metric)
-                      .hasName("messaging.receive.messages")
-                      .hasUnit("{message}")
-                      .hasDescription("Measures the number of received messages.")
-                      .hasLongSumSatisfying(
-                          sum ->
-                              sum.hasPointsSatisfying(
-                                  point ->
-                                      point
-                                          .hasValue(3)
-                                          .hasAttributesSatisfyingExactly(
-                                              equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                              equalTo(MESSAGING_DESTINATION_NAME, "topic"),
-                                              equalTo(MESSAGING_DESTINATION_TEMPLATE, "topic-{id}"),
-                                              equalTo(MESSAGING_OPERATION, "receive"),
-                                              equalTo(
-                                                  ERROR_TYPE,
-                                                  emitStableMessagingSemconv()
-                                                      ? IllegalStateException.class.getName()
-                                                      : null)))));
-    }
-    if (emitStableMessagingSemconv()) {
-      assertThat(metrics)
-          .anySatisfy(
-              metric ->
-                  assertThat(metric)
-                      .hasName("messaging.client.operation.duration")
-                      .hasUnit("s")
-                      .hasDescription(
-                          "Duration of messaging operation initiated by a producer or consumer client.")
-                      .hasHistogramSatisfying(
-                          histogram ->
-                              histogram.hasPointsSatisfying(
-                                  point ->
-                                      point
-                                          .hasSum(0.2)
-                                          .hasBucketBoundaries(DURATION_BUCKETS)
-                                          .hasAttributesSatisfyingExactly(
-                                              equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                                              equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                              equalTo(MESSAGING_CONSUMER_GROUP_NAME, "group"),
-                                              equalTo(MESSAGING_DESTINATION_TEMPLATE, "topic-{id}"),
-                                              equalTo(
-                                                  MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                                  "subscription"),
-                                              equalTo(
-                                                  ERROR_TYPE,
-                                                  IllegalStateException.class.getName()),
-                                              equalTo(MESSAGING_OPERATION_TYPE, "receive")))))
-          .anySatisfy(
-              metric ->
-                  assertThat(metric)
-                      .hasName("messaging.client.consumed.messages")
-                      .hasUnit("{message}")
-                      .hasDescription("Number of messages that were delivered to the application.")
-                      .hasLongSumSatisfying(
-                          sum ->
-                              sum.hasPointsSatisfying(
-                                  point ->
-                                      point
-                                          .hasValue(3)
-                                          .hasAttributesSatisfyingExactly(
-                                              equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                                              equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                              equalTo(
-                                                  ERROR_TYPE,
-                                                  IllegalStateException.class.getName()),
-                                              equalTo(MESSAGING_CONSUMER_GROUP_NAME, "group"),
-                                              equalTo(MESSAGING_DESTINATION_TEMPLATE, "topic-{id}"),
-                                              equalTo(
-                                                  MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                                  "subscription")))));
-    }
+    assertThat(metrics)
+        .anySatisfy(
+            metric ->
+                assertThat(metric)
+                    .hasName("messaging.client.operation.duration")
+                    .hasUnit("s")
+                    .hasDescription(
+                        "Duration of messaging operation initiated by a producer or consumer client.")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(0.2)
+                                        .hasBucketBoundaries(DURATION_BUCKETS)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                            equalTo(MESSAGING_CONSUMER_GROUP_NAME, "group"),
+                                            equalTo(MESSAGING_DESTINATION_TEMPLATE, "topic-{id}"),
+                                            equalTo(
+                                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                                "subscription"),
+                                            equalTo(
+                                                ERROR_TYPE, IllegalStateException.class.getName()),
+                                            equalTo(MESSAGING_OPERATION_TYPE, "receive")))))
+        .anySatisfy(
+            metric ->
+                assertThat(metric)
+                    .hasName("messaging.client.consumed.messages")
+                    .hasUnit("{message}")
+                    .hasDescription("Number of messages that were delivered to the application.")
+                    .hasLongSumSatisfying(
+                        sum ->
+                            sum.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(3)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                            equalTo(
+                                                ERROR_TYPE, IllegalStateException.class.getName()),
+                                            equalTo(MESSAGING_CONSUMER_GROUP_NAME, "group"),
+                                            equalTo(MESSAGING_DESTINATION_TEMPLATE, "topic-{id}"),
+                                            equalTo(
+                                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                                "subscription")))));
   }
 
   @Test
@@ -205,8 +146,8 @@ class MessagingConsumerMetricsTest {
     Attributes attributes =
         Attributes.builder()
             .put(MESSAGING_SYSTEM, "kafka")
-            .put(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "receive" : null)
-            .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "receive" : null)
+            .put(MESSAGING_OPERATION_NAME, "receive")
+            .put(MESSAGING_OPERATION_TYPE, "receive")
             .put(MESSAGING_BATCH_MESSAGE_COUNT, 3)
             .build();
 
@@ -216,23 +157,19 @@ class MessagingConsumerMetricsTest {
     outer.onEnd(outerContext, Attributes.empty(), nanos(250));
 
     Collection<MetricData> metrics = metricReader.collectAllMetrics();
-    if (emitStableMessagingSemconv()) {
-      assertThat(metrics)
-          .allMatch(metric -> metric.getInstrumentationScopeInfo().getName().equals("outer"))
-          .extracting(MetricData::getName)
-          .containsExactlyInAnyOrder(
-              "messaging.client.operation.duration", "messaging.client.consumed.messages");
-      assertThat(metrics)
-          .filteredOn(metric -> metric.getName().equals("messaging.client.consumed.messages"))
-          .singleElement()
-          .satisfies(
-              metric ->
-                  assertThat(metric)
-                      .hasLongSumSatisfying(
-                          sum -> sum.hasPointsSatisfying(point -> point.hasValue(3))));
-    } else {
-      assertThat(metrics).isEmpty();
-    }
+    assertThat(metrics)
+        .allMatch(metric -> metric.getInstrumentationScopeInfo().getName().equals("outer"))
+        .extracting(MetricData::getName)
+        .containsExactlyInAnyOrder(
+            "messaging.client.operation.duration", "messaging.client.consumed.messages");
+    assertThat(metrics)
+        .filteredOn(metric -> metric.getName().equals("messaging.client.consumed.messages"))
+        .singleElement()
+        .satisfies(
+            metric ->
+                assertThat(metric)
+                    .hasLongSumSatisfying(
+                        sum -> sum.hasPointsSatisfying(point -> point.hasValue(3))));
   }
 
   @Test
@@ -247,8 +184,8 @@ class MessagingConsumerMetricsTest {
         MessagingConsumerMetrics.getForOperationType().create(meterProvider.get("inner"));
     Attributes attributes =
         Attributes.builder()
-            .put(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "receive" : null)
-            .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "receive" : null)
+            .put(MESSAGING_OPERATION_NAME, "receive")
+            .put(MESSAGING_OPERATION_TYPE, "receive")
             .build();
 
     Context outerContext = outer.onStart(Context.root(), attributes, nanos(100));
@@ -257,13 +194,9 @@ class MessagingConsumerMetricsTest {
     outer.onEnd(outerContext, Attributes.empty(), nanos(250));
 
     Collection<MetricData> metrics = metricReader.collectAllMetrics();
-    if (emitStableMessagingSemconv()) {
-      assertThat(metrics)
-          .extracting(metric -> metric.getInstrumentationScopeInfo().getName())
-          .containsExactlyInAnyOrder("outer", "outer", "inner", "inner");
-    } else {
-      assertThat(metrics).isEmpty();
-    }
+    assertThat(metrics)
+        .extracting(metric -> metric.getInstrumentationScopeInfo().getName())
+        .containsExactlyInAnyOrder("outer", "outer", "inner", "inner");
   }
 
   @Test
@@ -278,8 +211,8 @@ class MessagingConsumerMetricsTest {
         MessagingConsumerMetrics.getConsumedMessages().create(meterProvider.get("test"));
     Attributes attributes =
         Attributes.builder()
-            .put(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "receive" : null)
-            .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "receive" : null)
+            .put(MESSAGING_OPERATION_NAME, "receive")
+            .put(MESSAGING_OPERATION_TYPE, "receive")
             .build();
 
     Context context = durationListener.onStart(Context.root(), attributes, nanos(100));
@@ -288,14 +221,10 @@ class MessagingConsumerMetricsTest {
     durationListener.onEnd(context, Attributes.empty(), nanos(200));
 
     Collection<MetricData> metrics = metricReader.collectAllMetrics();
-    if (emitStableMessagingSemconv()) {
-      assertThat(metrics)
-          .extracting(MetricData::getName)
-          .containsExactlyInAnyOrder(
-              "messaging.client.operation.duration", "messaging.client.consumed.messages");
-    } else {
-      assertThat(metrics).isEmpty();
-    }
+    assertThat(metrics)
+        .extracting(MetricData::getName)
+        .containsExactlyInAnyOrder(
+            "messaging.client.operation.duration", "messaging.client.consumed.messages");
   }
 
   @Test
@@ -310,13 +239,13 @@ class MessagingConsumerMetricsTest {
         MessagingConsumerMetrics.getClientOperationDuration().create(meterProvider.get("settle"));
     Attributes receiveAttributes =
         Attributes.builder()
-            .put(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "receive" : null)
-            .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "receive" : null)
+            .put(MESSAGING_OPERATION_NAME, "receive")
+            .put(MESSAGING_OPERATION_TYPE, "receive")
             .build();
     Attributes settleAttributes =
         Attributes.builder()
-            .put(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "settle" : null)
-            .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "settle" : null)
+            .put(MESSAGING_OPERATION_NAME, "settle")
+            .put(MESSAGING_OPERATION_TYPE, "settle")
             .build();
 
     Context receiveContext = receive.onStart(Context.root(), receiveAttributes, nanos(100));
@@ -325,13 +254,9 @@ class MessagingConsumerMetricsTest {
     receive.onEnd(receiveContext, Attributes.empty(), nanos(250));
 
     Collection<MetricData> metrics = metricReader.collectAllMetrics();
-    if (emitStableMessagingSemconv()) {
-      assertThat(metrics)
-          .extracting(metric -> metric.getInstrumentationScopeInfo().getName())
-          .containsExactlyInAnyOrder("receive", "settle");
-    } else {
-      assertThat(metrics).isEmpty();
-    }
+    assertThat(metrics)
+        .extracting(metric -> metric.getInstrumentationScopeInfo().getName())
+        .containsExactlyInAnyOrder("receive", "settle");
   }
 
   @Test
@@ -347,9 +272,9 @@ class MessagingConsumerMetricsTest {
     Attributes requestAttributes =
         Attributes.builder()
             .put(MESSAGING_SYSTEM, "pulsar")
-            .put(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null)
-            .put(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "receive" : null)
-            .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "receive" : null)
+            .put(MESSAGING_OPERATION, null)
+            .put(MESSAGING_OPERATION_NAME, "receive")
+            .put(MESSAGING_OPERATION_TYPE, "receive")
             .build();
     Attributes responseAttributes =
         Attributes.of(ERROR_TYPE, IllegalStateException.class.getName());
@@ -358,20 +283,10 @@ class MessagingConsumerMetricsTest {
     listener.onEnd(context, responseAttributes, nanos(300));
 
     Collection<MetricData> metrics = metricReader.collectAllMetrics();
-    if (emitOldMessagingSemconv()) {
-      assertThat(metrics)
-          .anySatisfy(
-              metric ->
-                  assertThat(metric)
-                      .hasName("messaging.receive.messages")
-                      .hasLongSumSatisfying(
-                          sum -> sum.hasPointsSatisfying(point -> point.hasValue(1))));
-    }
-    if (emitStableMessagingSemconv()) {
-      assertThat(metrics)
-          .anySatisfy(metric -> assertThat(metric).hasName("messaging.client.operation.duration"))
-          .noneSatisfy(metric -> assertThat(metric).hasName("messaging.client.consumed.messages"));
-    }
+
+    assertThat(metrics)
+        .anySatisfy(metric -> assertThat(metric).hasName("messaging.client.operation.duration"))
+        .noneSatisfy(metric -> assertThat(metric).hasName("messaging.client.consumed.messages"));
   }
 
   @Test
@@ -387,19 +302,16 @@ class MessagingConsumerMetricsTest {
         Attributes.builder()
             .put(MESSAGING_SYSTEM, "pulsar")
             .put(MESSAGING_DESTINATION_NAME, "topic")
-            .put(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null)
-            .put(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null)
-            .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null)
+            .put(MESSAGING_OPERATION, null)
+            .put(MESSAGING_OPERATION_NAME, "process")
+            .put(MESSAGING_OPERATION_TYPE, "process")
             .build();
     Context context = listener.onStart(Context.root(), attributes, nanos(100));
     listener.onEnd(
         context, Attributes.of(ERROR_TYPE, IllegalStateException.class.getName()), nanos(300));
 
     Collection<MetricData> metrics = metricReader.collectAllMetrics();
-    if (!emitStableMessagingSemconv()) {
-      assertThat(metrics).isEmpty();
-      return;
-    }
+
     assertThat(metrics)
         .satisfiesExactly(
             metric ->
@@ -432,21 +344,17 @@ class MessagingConsumerMetricsTest {
     Attributes attributes =
         Attributes.builder()
             .put(MESSAGING_SYSTEM, "kafka")
-            .put(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "poll" : null)
-            .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "receive" : null)
+            .put(MESSAGING_OPERATION_NAME, "poll")
+            .put(MESSAGING_OPERATION_TYPE, "receive")
             .put(MESSAGING_BATCH_MESSAGE_COUNT, 3)
             .build();
     Context context = listener.onStart(Context.root(), attributes, nanos(100));
     listener.onEnd(context, Attributes.empty(), nanos(300));
 
     Collection<MetricData> metrics = metricReader.collectAllMetrics();
-    if (emitStableMessagingSemconv()) {
-      assertThat(metrics)
-          .satisfiesExactly(
-              metric -> assertThat(metric).hasName("messaging.client.operation.duration"));
-    } else {
-      assertThat(metrics).isEmpty();
-    }
+    assertThat(metrics)
+        .satisfiesExactly(
+            metric -> assertThat(metric).hasName("messaging.client.operation.duration"));
   }
 
   @ParameterizedTest
@@ -462,9 +370,9 @@ class MessagingConsumerMetricsTest {
 
     Attributes attributes =
         Attributes.builder()
-            .put(MESSAGING_OPERATION, emitOldMessagingSemconv() ? operationType : null)
-            .put(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? operationType : null)
-            .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operationType : null)
+            .put(MESSAGING_OPERATION, null)
+            .put(MESSAGING_OPERATION_NAME, operationType)
+            .put(MESSAGING_OPERATION_TYPE, operationType)
             .build();
     Context context = listener.onStart(Context.root(), attributes, nanos(100));
     assertThat(contains(context, RECEIVE, CONSUMED_MESSAGES)).isFalse();
@@ -475,7 +383,7 @@ class MessagingConsumerMetricsTest {
             metrics.stream()
                 .filter(metric -> metric.getName().equals("messaging.client.operation.duration"))
                 .count())
-        .isEqualTo(emitStableMessagingSemconv() && recordsClientDuration ? 1 : 0);
+        .isEqualTo(recordsClientDuration ? 1 : 0);
     assertThat(
             metrics.stream()
                 .filter(metric -> metric.getName().equals("messaging.client.consumed.messages"))
@@ -505,9 +413,9 @@ class MessagingConsumerMetricsTest {
 
     Attributes attributes =
         Attributes.builder()
-            .put(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null)
-            .put(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "receive" : null)
-            .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "receive" : null)
+            .put(MESSAGING_OPERATION, null)
+            .put(MESSAGING_OPERATION_NAME, "receive")
+            .put(MESSAGING_OPERATION_TYPE, "receive")
             .put(MESSAGING_BATCH_MESSAGE_COUNT, 0)
             .build();
     Context context = listener.onStart(Context.root(), attributes, nanos(100));
@@ -534,9 +442,9 @@ class MessagingConsumerMetricsTest {
 
     Attributes startAttributes =
         Attributes.builder()
-            .put(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null)
-            .put(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "receive" : null)
-            .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "receive" : null)
+            .put(MESSAGING_OPERATION, null)
+            .put(MESSAGING_OPERATION_NAME, "receive")
+            .put(MESSAGING_OPERATION_TYPE, "receive")
             .put(MESSAGING_BATCH_MESSAGE_COUNT, 3)
             .build();
     Attributes endAttributes = Attributes.of(MESSAGING_BATCH_MESSAGE_COUNT, 5L);
@@ -568,24 +476,19 @@ class MessagingConsumerMetricsTest {
     Attributes attributes =
         Attributes.builder()
             .put(MESSAGING_SYSTEM, "pulsar")
-            .put(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null)
-            .put(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "receive" : null)
-            .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "receive" : null)
+            .put(MESSAGING_OPERATION, null)
+            .put(MESSAGING_OPERATION_NAME, "receive")
+            .put(MESSAGING_OPERATION_TYPE, "receive")
             .build();
     Context context = listener.onStart(Context.root(), attributes, nanos(100));
     listener.onEnd(context, Attributes.empty(), nanos(300));
 
     Collection<MetricData> metrics = metricReader.collectAllMetrics();
-    if (emitStableMessagingSemconv()) {
-      assertThat(metrics)
-          .anySatisfy(metric -> assertThat(metric).hasName("messaging.client.operation.duration"))
-          .anySatisfy(metric -> assertThat(metric).hasName("messaging.client.consumed.messages"))
-          .noneSatisfy(metric -> assertThat(metric).hasName("messaging.receive.duration"))
-          .noneSatisfy(metric -> assertThat(metric).hasName("messaging.receive.messages"));
-    } else {
-      // the stable-only entry point must be completely inert on the default path
-      assertThat(metrics).isEmpty();
-    }
+    assertThat(metrics)
+        .anySatisfy(metric -> assertThat(metric).hasName("messaging.client.operation.duration"))
+        .anySatisfy(metric -> assertThat(metric).hasName("messaging.client.consumed.messages"))
+        .noneSatisfy(metric -> assertThat(metric).hasName("messaging.receive.duration"))
+        .noneSatisfy(metric -> assertThat(metric).hasName("messaging.receive.messages"));
   }
 
   @Test

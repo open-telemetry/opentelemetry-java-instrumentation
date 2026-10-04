@@ -7,9 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
-import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -174,7 +171,7 @@ abstract class AbstractPulsarClientTest {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
               span ->
-                  span.hasName(emitStableMessagingSemconv() ? "send " + topic : topic + " publish")
+                  span.hasName("send " + topic)
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
@@ -185,77 +182,12 @@ abstract class AbstractPulsarClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("receive-parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv() ? "receive " + topic : topic + " receive")
-                        .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
+                    span.hasName("receive " + topic)
+                        .hasKind(CLIENT)
                         .hasLinks(batchLink(producerSpan.get(), msgId.toString()))
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             batchReceiveAttributes(topic, null, false))));
-
-    if (!emitOldMessagingSemconv()) {
-      return;
-    }
-
-    assertThat(testing.metrics())
-        .filteredOn(
-            metric ->
-                !metric.getName().startsWith("otel.sdk.")
-                    && !metric.getName().startsWith("pulsar.client."))
-        .satisfiesExactlyInAnyOrder(
-            metric ->
-                assertThat(metric)
-                    .hasName("messaging.receive.duration")
-                    .hasUnit("s")
-                    .hasDescription("Measures the duration of receive operation.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                            equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                            equalTo(MESSAGING_OPERATION, "receive"),
-                                            equalTo(SERVER_PORT, brokerPort),
-                                            equalTo(SERVER_ADDRESS, brokerHost))
-                                        .hasBucketBoundaries(DURATION_BUCKETS))),
-            metric ->
-                assertThat(metric)
-                    .hasName("messaging.publish.duration")
-                    .hasUnit("s")
-                    .hasDescription("Measures the duration of publish operation.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                            equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                            equalTo(MESSAGING_OPERATION, "publish"),
-                                            equalTo(SERVER_PORT, brokerPort),
-                                            equalTo(SERVER_ADDRESS, brokerHost))
-                                        .hasBucketBoundaries(DURATION_BUCKETS))),
-            metric ->
-                assertThat(metric)
-                    .hasName("messaging.receive.messages")
-                    .hasUnit("{message}")
-                    .hasDescription("Measures the number of received messages.")
-                    .hasLongSumSatisfying(
-                        sum ->
-                            sum.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                            equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                            equalTo(MESSAGING_OPERATION, "receive"),
-                                            equalTo(SERVER_PORT, brokerPort),
-                                            equalTo(SERVER_ADDRESS, brokerHost)))));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
@@ -299,7 +231,7 @@ abstract class AbstractPulsarClientTest {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
               span ->
-                  span.hasName(emitStableMessagingSemconv() ? "send " + topic : topic + " publish")
+                  span.hasName("send " + topic)
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
@@ -311,89 +243,15 @@ abstract class AbstractPulsarClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("receive-parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv() ? "receive " + topic : topic + " receive")
-                        .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
+                    span.hasName("receive " + topic)
+                        .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasLinks(batchLink(producerSpan.get(), msgId.toString()))
                         .hasAttributesSatisfyingExactly(batchReceiveAttributes(topic, null, false)),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasParent(
-                            emitStableMessagingSemconv() ? trace.getSpan(0) : trace.getSpan(1))));
-
-    if (!emitOldMessagingSemconv()) {
-      return;
-    }
-
-    testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME,
-        "messaging.receive.duration",
-        metrics ->
-            metrics.satisfiesExactlyInAnyOrder(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("s")
-                        .hasDescription("Measures the duration of receive operation.")
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasSumGreaterThan(0.0)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                                equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                                equalTo(MESSAGING_OPERATION, "receive"),
-                                                equalTo(SERVER_PORT, brokerPort),
-                                                equalTo(SERVER_ADDRESS, brokerHost))
-                                            .hasBucketBoundaries(DURATION_BUCKETS)))));
-
-    testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME,
-        "messaging.publish.duration",
-        metrics ->
-            metrics.satisfiesExactlyInAnyOrder(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("s")
-                        .hasDescription("Measures the duration of publish operation.")
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasSumGreaterThan(0.0)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                                equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                                equalTo(MESSAGING_OPERATION, "publish"),
-                                                equalTo(SERVER_PORT, brokerPort),
-                                                equalTo(SERVER_ADDRESS, brokerHost))
-                                            .hasBucketBoundaries(DURATION_BUCKETS)))));
-
-    testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME,
-        "messaging.receive.messages",
-        metrics ->
-            metrics.satisfiesExactlyInAnyOrder(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("{message}")
-                        .hasDescription("Measures the number of received messages.")
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(1)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                                equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                                equalTo(MESSAGING_OPERATION, "receive"),
-                                                equalTo(SERVER_PORT, brokerPort),
-                                                equalTo(SERVER_ADDRESS, brokerHost))))));
+                        .hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -444,9 +302,9 @@ abstract class AbstractPulsarClientTest {
                 equalTo(SERVER_ADDRESS, brokerHost),
                 equalTo(SERVER_PORT, brokerPort),
                 equalTo(MESSAGING_DESTINATION_NAME, destinationName(destination)),
-                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
-                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
-                equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null),
+                equalTo(MESSAGING_OPERATION, null),
+                equalTo(MESSAGING_OPERATION_NAME, "send"),
+                equalTo(MESSAGING_OPERATION_TYPE, "send"),
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
                 bodySize(),
                 equalTo(stringKey("messaging.pulsar.message.type"), experimental("normal"))));
@@ -465,10 +323,7 @@ abstract class AbstractPulsarClientTest {
 
   private static LinkData batchLink(SpanData producerSpan, String messageId) {
     return LinkData.create(
-        producerSpan.getSpanContext(),
-        emitStableMessagingSemconv()
-            ? Attributes.of(MESSAGING_MESSAGE_ID, messageId)
-            : Attributes.empty());
+        producerSpan.getSpanContext(), Attributes.of(MESSAGING_MESSAGE_ID, messageId));
   }
 
   static List<AttributeAssertion> receiveAttributes(
@@ -486,13 +341,11 @@ abstract class AbstractPulsarClientTest {
                 equalTo(SERVER_ADDRESS, brokerHost),
                 equalTo(SERVER_PORT, brokerPort),
                 equalTo(MESSAGING_DESTINATION_NAME, destinationName(destination)),
-                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null),
-                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "receive" : null),
-                equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "receive" : null),
+                equalTo(MESSAGING_OPERATION, null),
+                equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
-                equalTo(
-                    MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                    emitStableMessagingSemconv() ? "test_sub" : null),
+                equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "test_sub"),
                 bodySize()));
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
@@ -513,13 +366,11 @@ abstract class AbstractPulsarClientTest {
             asList(
                 equalTo(MESSAGING_SYSTEM, "pulsar"),
                 equalTo(MESSAGING_DESTINATION_NAME, destinationName(destination)),
-                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null),
-                equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null),
+                equalTo(MESSAGING_OPERATION, null),
+                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                equalTo(MESSAGING_OPERATION_TYPE, "process"),
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
-                equalTo(
-                    MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                    emitStableMessagingSemconv() ? "test_sub" : null),
+                equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "test_sub"),
                 bodySize()));
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
@@ -533,9 +384,7 @@ abstract class AbstractPulsarClientTest {
   // messaging.destination.partition.id, so the destination name does not include the
   // "-partition-N" suffix there
   static String destinationName(String topic) {
-    if (!emitStableMessagingSemconv()) {
-      return topic;
-    }
+
     int suffixIndex = partitionSuffixIndex(topic);
     String destination = suffixIndex == -1 ? topic : topic.substring(0, suffixIndex);
     return TopicName.get(destination).toString();
@@ -565,9 +414,7 @@ abstract class AbstractPulsarClientTest {
 
   // messaging.message.body.size is opt-in in the v1.43 messaging semantic conventions
   private static AttributeAssertion bodySize() {
-    return emitOldMessagingSemconv()
-        ? satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative)
-        : equalTo(MESSAGING_MESSAGE_BODY_SIZE, null);
+    return equalTo(MESSAGING_MESSAGE_BODY_SIZE, null);
   }
 
   static void acknowledgeMessage(Consumer<String> consumer, Message<String> message) {

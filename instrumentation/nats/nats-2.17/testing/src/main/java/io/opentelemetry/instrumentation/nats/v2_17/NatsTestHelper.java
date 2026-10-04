@@ -6,8 +6,6 @@
 package io.opentelemetry.instrumentation.nats.v2_17;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CLIENT_ID;
@@ -37,57 +35,29 @@ class NatsTestHelper {
 
   static AttributeAssertion[] messagingAttributes(
       String operation, String subject, int clientId, AttributeAssertion... other) {
-    return messagingAttributes(operation, subject, clientId, 1L, other);
-  }
-
-  static AttributeAssertion[] messagingAttributes(
-      String operation,
-      String subject,
-      int clientId,
-      long messageBodySize,
-      AttributeAssertion... other) {
     boolean send = operation.equals("publish") || operation.equals("request");
     boolean settlement = isSettlementOperation(operation);
     List<AttributeAssertion> assertions = new ArrayList<>();
-    // the old conventions did not distinguish request from publish
-    assertions.add(
-        equalTo(
-            MESSAGING_OPERATION,
-            emitOldMessagingSemconv()
-                ? settlement ? "settle" : send ? "publish" : operation
-                : null));
-    assertions.add(
-        equalTo(
-            MESSAGING_OPERATION_NAME,
-            emitStableMessagingSemconv() || settlement ? operation : null));
+    assertions.add(equalTo(MESSAGING_OPERATION, null));
+    assertions.add(equalTo(MESSAGING_OPERATION_NAME, operation));
     assertions.add(
         equalTo(
             MESSAGING_OPERATION_TYPE,
-            emitStableMessagingSemconv()
-                ? send ? "send" : isSettlementOperation(operation) ? "settle" : operation
-                : null));
+            send ? "send" : isSettlementOperation(operation) ? "settle" : operation));
     assertions.add(equalTo(MESSAGING_SYSTEM, "nats"));
     if (settlement) {
       assertions.add(equalTo(MESSAGING_DESTINATION_TEMPLATE, "$JS.ACK"));
     }
-    if (subject.equals("(temporary)") && emitStableMessagingSemconv()) {
+    if (subject.equals("(temporary)")) {
       assertions.add(satisfies(MESSAGING_DESTINATION_NAME, val -> val.startsWith("_INBOX.")));
       assertions.add(equalTo(MESSAGING_DESTINATION_TEMPLATE, "_INBOX."));
       assertions.add(equalTo(MESSAGING_DESTINATION_TEMPORARY, true));
     } else {
       assertions.add(equalTo(MESSAGING_DESTINATION_NAME, subject));
-      if (subject.equals("(temporary)")) {
-        assertions.add(equalTo(MESSAGING_DESTINATION_TEMPORARY, true));
-      }
     }
-    assertions.add(
-        equalTo(MESSAGING_MESSAGE_BODY_SIZE, emitOldMessagingSemconv() ? messageBodySize : null));
-    assertions.add(
-        equalTo(
-            MESSAGING_CLIENT_ID_OLD, emitOldMessagingSemconv() ? String.valueOf(clientId) : null));
-    assertions.add(
-        equalTo(
-            MESSAGING_CLIENT_ID, emitStableMessagingSemconv() ? String.valueOf(clientId) : null));
+    assertions.add(equalTo(MESSAGING_MESSAGE_BODY_SIZE, null));
+    assertions.add(equalTo(MESSAGING_CLIENT_ID_OLD, null));
+    assertions.add(equalTo(MESSAGING_CLIENT_ID, String.valueOf(clientId)));
     AttributeAssertion[] standard = assertions.toArray(new AttributeAssertion[0]);
     AttributeAssertion[] result = new AttributeAssertion[standard.length + other.length];
     System.arraycopy(standard, 0, result, 0, standard.length);

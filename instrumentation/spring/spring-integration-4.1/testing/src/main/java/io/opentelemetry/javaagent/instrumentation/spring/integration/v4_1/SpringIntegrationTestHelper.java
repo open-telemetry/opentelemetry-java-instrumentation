@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -33,16 +31,13 @@ final class SpringIntegrationTestHelper {
   @SuppressWarnings("deprecation") // using deprecated semconv
   static AttributeAssertion[] messagingAttributes(
       String operationName, String destinationName, AttributeAssertion... additionalAssertions) {
-    // the old semantic conventions used "publish" where the stable ones use "send"
-    String oldOperation = operationName.equals("send") ? "publish" : operationName;
     AttributeAssertion[] standard =
         new AttributeAssertion[] {
-          equalTo(MESSAGING_SYSTEM, emitStableMessagingSemconv() ? "spring_integration" : null),
-          equalTo(
-              MESSAGING_DESTINATION_NAME, emitStableMessagingSemconv() ? destinationName : null),
-          equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? oldOperation : null),
-          equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? operationName : null),
-          equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operationName : null)
+          equalTo(MESSAGING_SYSTEM, "spring_integration"),
+          equalTo(MESSAGING_DESTINATION_NAME, destinationName),
+          equalTo(MESSAGING_OPERATION, null),
+          equalTo(MESSAGING_OPERATION_NAME, operationName),
+          equalTo(MESSAGING_OPERATION_TYPE, operationName)
         };
     AttributeAssertion[] result =
         new AttributeAssertion[standard.length + additionalAssertions.length];

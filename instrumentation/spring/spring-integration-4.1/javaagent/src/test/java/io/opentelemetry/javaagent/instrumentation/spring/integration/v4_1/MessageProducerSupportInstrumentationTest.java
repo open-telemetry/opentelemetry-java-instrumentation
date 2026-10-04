@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.assertNoMetrics;
 import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.assertProcessMetrics;
@@ -131,14 +130,8 @@ class MessageProducerSupportInstrumentationTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(emitStableMessagingSemconv() ? "process outer" : "outer process")
-                        .hasKind(SpanKind.CONSUMER)));
-    if (emitStableMessagingSemconv()) {
-      assertProcessMetrics(testing, "outer", false);
-    } else {
-      assertNoMetrics(testing);
-    }
+                span -> span.hasName("process outer").hasKind(SpanKind.CONSUMER)));
+    assertProcessMetrics(testing, "outer", false);
   }
 
   @Test
@@ -193,14 +186,8 @@ class MessageProducerSupportInstrumentationTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(emitStableMessagingSemconv() ? "process input" : "input process")
-                        .hasKind(SpanKind.CONSUMER)));
-    if (emitStableMessagingSemconv()) {
-      assertProcessMetrics(testing, "input", false);
-    } else {
-      assertNoMetrics(testing);
-    }
+                span -> span.hasName("process input").hasKind(SpanKind.CONSUMER)));
+    assertProcessMetrics(testing, "input", false);
   }
 
   @Test
@@ -220,14 +207,8 @@ class MessageProducerSupportInstrumentationTest {
                 span -> span.hasName(lowerProcessSpanName()).hasKind(SpanKind.CONSUMER)),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(emitStableMessagingSemconv() ? "process input" : "input process")
-                        .hasKind(SpanKind.CONSUMER)));
-    if (emitStableMessagingSemconv()) {
-      assertProcessMetrics(testing, "input", false);
-    } else {
-      assertNoMetrics(testing);
-    }
+                span -> span.hasName("process input").hasKind(SpanKind.CONSUMER)));
+    assertProcessMetrics(testing, "input", false);
   }
 
   @Test
@@ -251,9 +232,7 @@ class MessageProducerSupportInstrumentationTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("lower process").hasKind(SpanKind.CONSUMER)));
-    if (emitStableMessagingSemconv()) {
-      assertUnrelatedProcessMetrics();
-    }
+    assertUnrelatedProcessMetrics();
     assertNoMetrics(testing);
   }
 
@@ -355,9 +334,7 @@ class MessageProducerSupportInstrumentationTest {
   }
 
   private static void assertSpringRabbitProcessMetrics() {
-    if (!emitStableMessagingSemconv()) {
-      return;
-    }
+
     testing.waitAndAssertMetrics(
         SPRING_RABBIT_INSTRUMENTATION_NAME,
         "messaging.process.duration",
@@ -378,7 +355,7 @@ class MessageProducerSupportInstrumentationTest {
   }
 
   private static String lowerProcessSpanName() {
-    return emitStableMessagingSemconv() ? "process input" : "input process";
+    return "process input";
   }
 
   private static void assumeRabbitInstrumentationEnabled() {

@@ -5,10 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.Span;
@@ -55,7 +53,7 @@ class MessagingProcessInstrumenterFactoryTest {
 
   @Test
   void stableUsesProducerAsParentAndLinksIt() {
-    assumeTrue(emitStableMessagingSemconv());
+
     Instrumenter<Map<String, String>, Void> instrumenter =
         MessagingProcessInstrumenterFactory.create(
             Instrumenter.<Map<String, String>, Void>builder(
@@ -84,7 +82,7 @@ class MessagingProcessInstrumenterFactoryTest {
 
   @Test
   void stableLinksCreationContextEvenWhenItIsTheAmbientParent() {
-    assumeTrue(emitStableMessagingSemconv());
+
     SpanContext localProducer =
         SpanContext.create(
             producer.getTraceId(),
@@ -119,7 +117,7 @@ class MessagingProcessInstrumenterFactoryTest {
 
   @Test
   void stableDoesNotLinkWhenCarrierHasNoCreationContext() {
-    assumeTrue(emitStableMessagingSemconv());
+
     Instrumenter<Map<String, String>, Void> instrumenter =
         MessagingProcessInstrumenterFactory.create(
             Instrumenter.<Map<String, String>, Void>builder(
@@ -181,10 +179,10 @@ class MessagingProcessInstrumenterFactoryTest {
   }
 
   private static Stream<Arguments> receiveInstrumentationSettings() {
-    boolean stable = emitStableMessagingSemconv();
-    String semconv = stable ? "stable" : "old";
+
+    String semconv = "stable";
     return Stream.of(
-        argumentSet(semconv + " receive disabled", false, !stable),
+        argumentSet(semconv + " receive disabled", false, false),
         argumentSet(semconv + " receive enabled", true, false));
   }
 

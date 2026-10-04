@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -96,7 +95,7 @@ class SqsCamelOwnershipInstrumentationTest {
     assertThat(testing.spans())
         .filteredOn(
             span -> span.getName().equals("process test") || span.getName().equals("test process"))
-        .hasSize(emitStableMessagingSemconv() && !CAMEL_DISABLED && !ADAPTER_DISABLED ? 1 : 2);
+        .hasSize(!CAMEL_DISABLED && !ADAPTER_DISABLED ? 1 : 2);
     assertThat(testing.spans())
         .filteredOn(span -> span.getName().equals("nested"))
         .singleElement()
