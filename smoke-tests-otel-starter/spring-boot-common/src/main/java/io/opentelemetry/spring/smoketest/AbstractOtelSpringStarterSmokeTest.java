@@ -9,11 +9,12 @@ import static io.opentelemetry.api.common.AttributeKey.booleanKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldCodeSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableCodeSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
@@ -23,7 +24,6 @@ import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_INSTANCE_ID;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
 import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.Arrays.asList;
@@ -194,7 +194,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
                     spanDataAssert
                         .hasKind(SpanKind.CLIENT)
                         .hasAttribute(
-                            DB_STATEMENT,
+                            DB_QUERY_TEXT,
                             "create table customer (id bigint not null, name varchar not null, primary key (id))")),
         traceAssert ->
             traceAssert.hasSpansSatisfyingExactly(
@@ -275,7 +275,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
       MapAssert<AttributeKey<?>, Object> attributesAssert =
           assertThat(firstLog.getAttributes().asMap());
 
-      if (emitStableDatabaseSemconv()) {
+      if (emitStableCodeSemconv()) {
         attributesAssert.containsEntry(
             CODE_FUNCTION_NAME, "org.springframework.boot.StartupInfoLogger.logStarting");
       }
@@ -345,7 +345,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
                 span -> span.hasName("server"),
                 span ->
                     span.hasKind(SpanKind.CLIENT)
-                        .hasAttribute(DB_STATEMENT, "select name from customer where id = 1")));
+                        .hasAttribute(DB_QUERY_TEXT, "select name from customer where id = 1")));
   }
 
   @Test

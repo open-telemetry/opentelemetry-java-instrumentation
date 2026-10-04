@@ -5,9 +5,9 @@
 
 package io.opentelemetry.spring.smoketest;
 
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -39,7 +39,6 @@ public class AbstractOtelReactiveSpringStarterSmokeTest extends AbstractSpringSt
   }
 
   @Test
-  @SuppressWarnings("deprecation") // using deprecated semconv
   void webClientAndWebFluxAndR2dbc() {
     webClient
         .get()
@@ -49,8 +48,7 @@ public class AbstractOtelReactiveSpringStarterSmokeTest extends AbstractSpringSt
         .blockLast();
 
     testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(span -> span.hasName("CREATE TABLE testdb.player")),
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("CREATE TABLE player")),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> HttpSpanDataAssert.create(span).assertClientGetRequest("/webflux"),
@@ -58,17 +56,15 @@ public class AbstractOtelReactiveSpringStarterSmokeTest extends AbstractSpringSt
                 span ->
                     span.hasKind(SpanKind.CLIENT)
                         .satisfies(
-                            s ->
-                                assertThat(s.getName())
-                                    .isEqualToIgnoringCase("SELECT testdb.PLAYER"))
-                        .hasAttribute(DB_NAME, "testdb")
+                            s -> assertThat(s.getName()).isEqualToIgnoringCase("SELECT PLAYER"))
+                        .hasAttribute(DB_NAMESPACE, "testdb")
                         // 2 is not replaced by ?,
                         // otel.instrumentation.common.db.query-sanitization.enabled=false
                         .hasAttributesSatisfying(
                             a ->
-                                assertThat(a.get(DB_STATEMENT))
+                                assertThat(a.get(DB_QUERY_TEXT))
                                     .isEqualToIgnoringCase(
                                         "SELECT PLAYER.* FROM PLAYER WHERE PLAYER.ID = $1 LIMIT 2"))
-                        .hasAttribute(DB_SYSTEM, "h2")));
+                        .hasAttribute(DB_SYSTEM_NAME, "h2database")));
   }
 }
