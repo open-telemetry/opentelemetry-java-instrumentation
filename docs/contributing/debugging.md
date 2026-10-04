@@ -1,23 +1,22 @@
 # Debugging
 
-Debugging javaagent instrumentation can be a challenging task since instrumentation
-code is directly inlined into target classes.
+Debugging advice methods depends on whether the instrumentation uses invokedynamic
+or inlined advice.
 
 ## Indy compatible instrumentation
 
-For instrumentation that has been migrated to use the
-[invokedynamic based instrumentation mechanism](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/8999),
-you can leverage breakpoints and standard debugging strategies by adding `-PtestIndy=true` to the
-gradle command when running tests:
+The javaagent uses the
+[invokedynamic based instrumentation mechanism](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/8999)
+for compatible instrumentation. Breakpoints work in these advice methods when running tests:
 
 ```
-./gradlew -PtestIndy=true :instrumentation:<INSTRUMENTATION_NAME>:test
+./gradlew :instrumentation:<INSTRUMENTATION_NAME>:test
 ```
 
-## Advice methods
+## Inlined advice methods
 
-Breakpoints do not work in advice methods, because their code is directly inlined
-by ByteBuddy into the target class. It is good to keep these methods as small as possible.
+Some instrumentation intentionally uses inlined advice. Breakpoints do not work in these methods,
+because ByteBuddy copies their code into the target class. Keep these methods as small as possible.
 The advice methods are annotated with:
 
 ```java
@@ -58,7 +57,7 @@ before the `-javaagent:` JVM arg and use `suspend=y` (see full example below).
 ## Enabling debugging
 
 The following example shows remote debugger configuration. The breakpoints
-should work in any code except ByteBuddy advice methods.
+should work in any code except inlined advice methods.
 
 ```bash
 java -agentlib:jdwp="transport=dt_socket,server=y,suspend=y,address=5000" -javaagent:opentelemetry-javaagent-<version>.jar -jar app.jar
