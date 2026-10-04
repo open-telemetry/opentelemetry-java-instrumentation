@@ -18,14 +18,6 @@ import java.util.Map;
 class SqlQueryAnalyzerUtil {
   private static final SqlQueryAnalyzer analyzer = SqlQueryAnalyzer.create(true);
 
-  static SqlQuery analyze(String queryText, SqlDialect dialect) {
-    Map<CacheKey, SqlQuery> map =
-        InstrumenterContext.computeIfAbsent("sanitized-sql-map", unused -> new HashMap<>());
-    return map.computeIfAbsent(
-        CacheKey.create(queryText, dialect),
-        key -> analyzer.analyze(key.getQueryText(), key.getDialect()));
-  }
-
   static SqlQuery analyzeWithSummary(String queryText, SqlDialect dialect) {
     Map<CacheKey, SqlQuery> map =
         InstrumenterContext.computeIfAbsent(

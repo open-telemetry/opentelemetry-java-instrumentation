@@ -55,10 +55,6 @@ class SemconvSelectionResolver {
     this.previewFlags = previewFlags;
   }
 
-  SemconvMode database() {
-    return SemconvMode.V1_STABLE;
-  }
-
   SemconvMode rpc() {
     return resolveSemconvSelection(
         SemconvDomain.builder("rpc")

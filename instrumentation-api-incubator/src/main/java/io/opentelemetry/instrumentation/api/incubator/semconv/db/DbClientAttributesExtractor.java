@@ -6,8 +6,6 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.databaseSchemaUrl;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
@@ -17,7 +15,6 @@ import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -42,14 +39,6 @@ import javax.annotation.Nullable;
 public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE>, SchemaUrlProvider, SpanKeyProvider {
 
-  // copied from DbIncubatingAttributes
-  private static final AttributeKey<String> DB_NAME = AttributeKey.stringKey("db.name");
-  private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
-  private static final AttributeKey<String> DB_USER = AttributeKey.stringKey("db.user");
-  private static final AttributeKey<String> DB_CONNECTION_STRING =
-      AttributeKey.stringKey("db.connection_string");
-  private static final AttributeKey<String> DB_STATEMENT = AttributeKey.stringKey("db.statement");
-  private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
   private static final AttributeKeyTemplate<String> DB_QUERY_PARAMETER =
       AttributeKeyTemplate.stringKeyTemplate("db.query.parameter");
 
@@ -77,19 +66,16 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
       DbClientAttributesGetter<REQUEST, RESPONSE> getter, boolean captureQueryParameters) {
     this.getter = getter;
     this.captureQueryParameters = captureQueryParameters;
-    internalNetworkExtractor =
-        new InternalNetworkAttributesExtractor<>(getter, emitOldDatabaseSemconv(), false);
+    internalNetworkExtractor = new InternalNetworkAttributesExtractor<>(getter, false, false);
     serverAttributesExtractor = ServerAttributesExtractor.create(getter);
   }
 
-  @SuppressWarnings("deprecation") // until old db semconv are dropped
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     onStartCommon(attributes, getter, request, captureQueryParameters);
     serverAttributesExtractor.onStart(attributes, parentContext, request);
   }
 
-  @SuppressWarnings("deprecation") // until old db semconv are dropped
   static <REQUEST, RESPONSE> void onStartCommon(
       AttributesBuilder attributes,
       DbClientAttributesGetter<REQUEST, RESPONSE> getter,
@@ -100,28 +86,17 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
     // size 0); it is only omitted for a single-statement batch, which is reported as a non-batch
     boolean isBatch = batchSize != null && batchSize != 1;
 
-    if (emitStableDatabaseSemconv()) {
-      attributes.put(
-          DB_SYSTEM_NAME, SemconvStability.stableDbSystemName(getter.getDbSystemName(request)));
-      attributes.put(DB_NAMESPACE, getter.getDbNamespace(request));
-      attributes.put(DB_COLLECTION_NAME, getter.getDbCollectionName(request));
-      attributes.put(DB_QUERY_TEXT, getter.getDbQueryText(request));
-      attributes.put(DB_OPERATION_NAME, getter.getDbOperationName(request));
-      attributes.put(DB_QUERY_SUMMARY, getter.getDbQuerySummary(request));
-      if (isBatch) {
-        attributes.put(DB_OPERATION_BATCH_SIZE, batchSize);
-      }
-    }
-    if (emitOldDatabaseSemconv()) {
-      attributes.put(DB_SYSTEM, getter.getDbSystem(request));
-      attributes.put(DB_USER, getter.getUser(request));
-      attributes.put(DB_NAME, getter.getDbName(request));
-      attributes.put(DB_CONNECTION_STRING, getter.getConnectionString(request));
-      attributes.put(DB_STATEMENT, getter.getDbQueryText(request));
-      attributes.put(DB_OPERATION, getter.getDbOperation(request));
+    attributes.put(
+        DB_SYSTEM_NAME, SemconvStability.stableDbSystemName(getter.getDbSystemName(request)));
+    attributes.put(DB_NAMESPACE, getter.getDbNamespace(request));
+    attributes.put(DB_COLLECTION_NAME, getter.getDbCollectionName(request));
+    attributes.put(DB_QUERY_TEXT, getter.getDbQueryText(request));
+    attributes.put(DB_OPERATION_NAME, getter.getDbOperationName(request));
+    attributes.put(DB_QUERY_SUMMARY, getter.getDbQuerySummary(request));
+    if (isBatch) {
+      attributes.put(DB_OPERATION_BATCH_SIZE, batchSize);
     }
 
-    // Query parameters are an incubating feature and work with both old and new semconv
     if (captureQueryParameters && !isBatch) {
       Map<String, String> queryParameters = getter.getDbQueryParameters(request);
       if (queryParameters != null && !queryParameters.isEmpty()) {
@@ -151,14 +126,12 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
-    if (emitStableDatabaseSemconv()) {
-      String errorType = getter.getErrorType(request, response, error);
-      // fall back to exception class name
-      if (errorType == null && error != null) {
-        errorType = error.getClass().getName();
-      }
-      attributes.put(ERROR_TYPE, errorType);
+    String errorType = getter.getErrorType(request, response, error);
+    // fall back to exception class name
+    if (errorType == null && error != null) {
+      errorType = error.getClass().getName();
     }
+    attributes.put(ERROR_TYPE, errorType);
   }
 
   /**

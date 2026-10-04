@@ -134,22 +134,6 @@ class SemconvStabilityTest {
   }
 
   @Test
-  void databaseIgnoresExperimentalDomainVersion() {
-    // general:
-    //   db:
-    //     semconv:
-    //       version: 1
-    //       experimental: true
-    DeclarativeConfigProperties general = general(domainSemconv("db", 1, true, false));
-    boolean v3Preview = false;
-
-    SemconvMode database =
-        new SemconvSelectionResolver(general, v3Preview, noStableOptIn(), noPreview()).database();
-
-    assertThat(database).isEqualTo(SemconvMode.V1_STABLE);
-  }
-
-  @Test
   void unsupportedExplicitDomainVersionFallsBackToDefault() {
     // general:
     //   rpc:
@@ -196,44 +180,6 @@ class SemconvStabilityTest {
   }
 
   @Test
-  void unsupportedExplicitDomainVersionZeroFallsBackWhenV3PreviewIsEnabled() {
-    // general:
-    //   db:
-    //     semconv:
-    //       version: 0
-    //       dual_emit: true
-    // java:
-    //   common:
-    //     v3_preview: true
-    DeclarativeConfigProperties general = general(domainSemconv("db", 0, true));
-    boolean v3Preview = true;
-
-    SemconvMode database =
-        new SemconvSelectionResolver(general, v3Preview, noStableOptIn(), noPreview()).database();
-
-    assertThat(database).isEqualTo(SemconvMode.V1_STABLE);
-  }
-
-  @Test
-  void unsupportedExplicitDomainDualEmitFallsBackWhenV3PreviewIsEnabled() {
-    // general:
-    //   db:
-    //     semconv:
-    //       version: 1
-    //       dual_emit: true
-    // java:
-    //   common:
-    //     v3_preview: true
-    DeclarativeConfigProperties general = general(domainSemconv("db", 1, true));
-    boolean v3Preview = true;
-
-    SemconvMode dualEmitDatabase =
-        new SemconvSelectionResolver(general, v3Preview, noStableOptIn(), noPreview()).database();
-
-    assertThat(dualEmitDatabase).isEqualTo(SemconvMode.V1_STABLE);
-  }
-
-  @Test
   void explicitDomainVersionZeroMeansOldOnlyEvenWithDualEmit() {
     // general:
     //   rpc:
@@ -247,62 +193,6 @@ class SemconvStabilityTest {
         new SemconvSelectionResolver(general, v3Preview, noStableOptIn(), noPreview()).rpc();
 
     assertThat(rpc).isEqualTo(SemconvMode.V0_STABLE);
-  }
-
-  @Test
-  void stableOptInAppliesToDatabase() {
-    // general:
-    //   stability_opt_in_list: "database, code"
-    //
-    // Same resolver input is also produced by bridged otel.semconv-stability.opt-in=database,code.
-    DeclarativeConfigProperties general = general(stabilityOptInList("database, code"));
-    boolean v3Preview = false;
-    // otel.semconv-stability.opt-in=database,code
-    Set<String> stableOptIn = stableOptIn("database", "code");
-
-    SemconvSelectionResolver resolver =
-        new SemconvSelectionResolver(general, v3Preview, stableOptIn, noPreview());
-    SemconvMode database = resolver.database();
-
-    assertThat(database).isEqualTo(SemconvMode.V1_STABLE);
-  }
-
-  @Test
-  void stableOptInDupEmitsStableDatabaseWhenV3PreviewIsDisabled() {
-    // general:
-    //   stability_opt_in_list: "database/dup, code/dup"
-    // java:
-    //   common:
-    //     v3_preview: false
-    DeclarativeConfigProperties general = general(stabilityOptInList("database/dup, code/dup"));
-    boolean v3Preview = false;
-    // otel.semconv-stability.opt-in=database/dup,code/dup
-    Set<String> stableOptIn = stableOptIn("database/dup", "code/dup");
-
-    SemconvSelectionResolver resolver =
-        new SemconvSelectionResolver(general, v3Preview, stableOptIn, noPreview());
-    SemconvMode database = resolver.database();
-
-    assertThat(database).isEqualTo(SemconvMode.V1_STABLE);
-  }
-
-  @Test
-  void stableOptInDupEmitsStableDatabaseWhenV3PreviewIsEnabled() {
-    // general:
-    //   stability_opt_in_list: "database/dup, code/dup"
-    // java:
-    //   common:
-    //     v3_preview: true
-    DeclarativeConfigProperties general = general(stabilityOptInList("database/dup, code/dup"));
-    boolean v3Preview = true;
-    // otel.semconv-stability.opt-in=database/dup,code/dup
-    Set<String> stableOptIn = stableOptIn("database/dup", "code/dup");
-
-    SemconvSelectionResolver resolver =
-        new SemconvSelectionResolver(general, v3Preview, stableOptIn, noPreview());
-    SemconvMode database = resolver.database();
-
-    assertThat(database).isEqualTo(SemconvMode.V1_STABLE);
   }
 
   @Test

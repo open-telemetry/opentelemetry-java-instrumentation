@@ -26,7 +26,6 @@ class SqlQuerySanitizerUtilCacheTest {
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @Test
-  @SuppressWarnings("deprecation") // using deprecated semconv
   void testSqlSanitizerCaching() {
     String testQuery = "SELECT name FROM test WHERE id = 1";
     SqlClientAttributesGetter<Object, Void> getter =
@@ -60,9 +59,11 @@ class SqlQuerySanitizerUtilCacheTest {
 
     assertThat(spanNameExtractor.extract(null)).isEqualTo("SELECT test");
     // verify that analyzed query was cached
-    SqlQuery cached = SqlQueryAnalyzerUtil.analyze(testQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+    SqlQuery cached =
+        SqlQueryAnalyzerUtil.analyzeWithSummary(testQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS);
     assertThat(cached)
-        .isSameAs(SqlQueryAnalyzerUtil.analyze(testQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS));
+        .isSameAs(
+            SqlQueryAnalyzerUtil.analyzeWithSummary(testQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS));
 
     // verify that the attributes extractor produces correct values
     AttributeKey<String> queryTextKey = DB_QUERY_TEXT;

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.logging.Level.FINE;
 
@@ -45,10 +44,7 @@ public final class DbClientMetrics implements OperationListener {
    * @see InstrumenterBuilder#addOperationMetrics(OperationMetrics)
    */
   public static OperationMetrics get() {
-    if (emitStableDatabaseSemconv()) {
-      return OperationMetricsUtil.create("database client", DbClientMetrics::new);
-    }
-    return meter -> OperationMetricsUtil.NOOP_OPERATION_LISTENER;
+    return OperationMetricsUtil.create("database client", DbClientMetrics::new);
   }
 
   private final DoubleHistogram duration;

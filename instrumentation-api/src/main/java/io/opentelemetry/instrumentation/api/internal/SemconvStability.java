@@ -25,9 +25,6 @@ public final class SemconvStability {
 
   private static final boolean v3Preview;
 
-  private static final boolean emitOldDatabaseSemconv;
-  private static final boolean emitStableDatabaseSemconv;
-
   private static final boolean emitOldServicePeerSemconv;
   private static final boolean emitStableServicePeerSemconv;
 
@@ -43,10 +40,6 @@ public final class SemconvStability {
     v3Preview = v3Preview(openTelemetry);
     SemconvSelectionResolver semconvSelection =
         new SemconvSelectionResolver(openTelemetry, generalConfig, v3Preview);
-
-    SemconvMode databaseSelection = semconvSelection.database();
-    emitOldDatabaseSemconv = emitOld(databaseSelection);
-    emitStableDatabaseSemconv = emitStable(databaseSelection);
 
     SemconvMode servicePeerSelection = semconvSelection.servicePeer();
     emitOldServicePeerSemconv = emitOld(servicePeerSelection);
@@ -75,16 +68,8 @@ public final class SemconvStability {
     return v3Preview;
   }
 
-  public static boolean emitOldDatabaseSemconv() { // to be removed in 3.0
-    return emitOldDatabaseSemconv;
-  }
-
-  public static boolean emitStableDatabaseSemconv() { // to be removed in 3.0
-    return emitStableDatabaseSemconv;
-  }
-
   public static String databaseSchemaUrl() {
-    return emitStableDatabaseSemconv ? SchemaUrls.V1_44_0 : SchemaUrls.V1_24_0;
+    return SchemaUrls.V1_44_0;
   }
 
   public static boolean emitOldServicePeerSemconv() {
