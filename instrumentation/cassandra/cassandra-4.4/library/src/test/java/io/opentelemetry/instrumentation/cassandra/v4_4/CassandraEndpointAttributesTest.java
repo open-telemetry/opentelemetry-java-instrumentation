@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.cassandra.v4_4;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -54,90 +52,50 @@ class CassandraEndpointAttributesTest {
   @Mock private Session session;
 
   @Test
-  void unconfiguredSessionUsesTheCoordinatorOnlyForLegacySemconv() throws UnknownHostException {
-    if (!emitStableDatabaseSemconv()) {
-      when(coordinator.getEndPoint()).thenReturn(new DefaultEndPoint(resolved(9042)));
-    }
-
+  void unconfiguredSessionDoesNotUseTheCoordinatorAsServer() {
     Attributes attributes = serverAttributes(null);
 
-    if (emitStableDatabaseSemconv()) {
-      assertThat(attributes.get(SERVER_ADDRESS)).isNull();
-      assertThat(attributes.get(SERVER_PORT)).isNull();
-      verify(coordinator, never()).getEndPoint();
-    } else {
-      assertCoordinatorIsServer(attributes);
-    }
+    assertThat(attributes.get(SERVER_ADDRESS)).isNull();
+    assertThat(attributes.get(SERVER_PORT)).isNull();
+    verify(coordinator, never()).getEndPoint();
   }
 
   @Test
   void singleContactPointOmitsTheDefaultPort() throws UnknownHostException {
-    if (!emitStableDatabaseSemconv()) {
-      when(coordinator.getEndPoint()).thenReturn(new DefaultEndPoint(resolved(9042)));
-    }
-
     Attributes attributes =
         serverAttributes(CassandraServerTarget.of(singletonList("cassandra.example.com:9042")));
 
-    if (emitStableDatabaseSemconv()) {
-      assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("cassandra.example.com");
-      assertThat(attributes.get(SERVER_PORT)).isNull();
-    } else {
-      assertCoordinatorIsServer(attributes);
-    }
+    assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("cassandra.example.com");
+    assertThat(attributes.get(SERVER_PORT)).isNull();
   }
 
   @Test
   void severalContactPointsAreOneTargetWithoutAPort() throws UnknownHostException {
-    if (!emitStableDatabaseSemconv()) {
-      when(coordinator.getEndPoint()).thenReturn(new DefaultEndPoint(resolved(9042)));
-    }
-
     Attributes attributes =
         serverAttributes(CassandraServerTarget.of(asList("node1.example.com:9042", "[::1]:9042")));
 
-    if (emitStableDatabaseSemconv()) {
-      assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("::1,node1.example.com");
-      assertThat(attributes.get(SERVER_PORT)).isNull();
-    } else {
-      assertCoordinatorIsServer(attributes);
-    }
+    assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("::1,node1.example.com");
+    assertThat(attributes.get(SERVER_PORT)).isNull();
   }
 
   @Test
   void severalContactPointsInlineASharedNonDefaultPort() throws UnknownHostException {
-    if (!emitStableDatabaseSemconv()) {
-      when(coordinator.getEndPoint()).thenReturn(new DefaultEndPoint(resolved(9042)));
-    }
-
     Attributes attributes =
         serverAttributes(
             CassandraServerTarget.of(asList("node1.example.com:9142", "node2.example.com:9142")));
 
-    if (emitStableDatabaseSemconv()) {
-      assertThat(attributes.get(SERVER_ADDRESS))
-          .isEqualTo("node1.example.com:9142,node2.example.com:9142");
-      assertThat(attributes.get(SERVER_PORT)).isNull();
-    } else {
-      assertCoordinatorIsServer(attributes);
-    }
+    assertThat(attributes.get(SERVER_ADDRESS))
+        .isEqualTo("node1.example.com:9142,node2.example.com:9142");
+    assertThat(attributes.get(SERVER_PORT)).isNull();
   }
 
   @Test
   void mixedPortsInlineIpv4AndIpv6Endpoints() throws UnknownHostException {
-    if (!emitStableDatabaseSemconv()) {
-      when(coordinator.getEndPoint()).thenReturn(new DefaultEndPoint(resolved(9042)));
-    }
-
     Attributes attributes =
         serverAttributes(CassandraServerTarget.of(asList("[::1]:9042", "10.0.0.5:9142")));
 
-    if (emitStableDatabaseSemconv()) {
-      assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("10.0.0.5:9142,[::1]:9042");
-      assertThat(attributes.get(SERVER_PORT)).isNull();
-    } else {
-      assertCoordinatorIsServer(attributes);
-    }
+    assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("10.0.0.5:9142,[::1]:9042");
+    assertThat(attributes.get(SERVER_PORT)).isNull();
   }
 
   @Test
@@ -145,9 +103,7 @@ class CassandraEndpointAttributesTest {
     CassandraRequest request =
         CassandraRequest.create(
             session,
-            emitStableDatabaseSemconv()
-                ? CassandraServerTarget.of(singletonList("cassandra.example.com:9042"))
-                : null,
+            CassandraServerTarget.of(singletonList("cassandra.example.com:9042")),
             "SELECT 1");
     AttributesBuilder builder = Attributes.builder();
 
@@ -155,26 +111,8 @@ class CassandraEndpointAttributesTest {
         .onStart(builder, Context.root(), request);
 
     Attributes attributes = builder.build();
-    assertThat(attributes.get(SERVER_ADDRESS))
-        .isEqualTo(emitStableDatabaseSemconv() ? "cassandra.example.com" : null);
+    assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("cassandra.example.com");
     assertThat(attributes.get(SERVER_PORT)).isNull();
-  }
-
-  @Test
-  void sniEndPointIsNotUsedAsAStableServerTarget() {
-    if (!emitStableDatabaseSemconv()) {
-      when(coordinator.getEndPoint()).thenReturn(new SniEndPoint(PROXY_ADDRESS, "host-id"));
-    }
-
-    Attributes attributes = serverAttributes(null);
-
-    if (emitStableDatabaseSemconv()) {
-      assertThat(attributes.get(SERVER_ADDRESS)).isNull();
-      assertThat(attributes.get(SERVER_PORT)).isNull();
-      verify(coordinator, never()).getEndPoint();
-    } else {
-      assertProxyIsServer(attributes);
-    }
   }
 
   @Test
@@ -189,12 +127,8 @@ class CassandraEndpointAttributesTest {
             .getNetworkPeerInetSocketAddress(
                 CassandraRequest.create(session, null, "SELECT 1"), executionInfo);
 
-    if (emitStableDatabaseSemconv()) {
-      assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("configured.example.com");
-      assertThat(attributes.get(SERVER_PORT)).isEqualTo(9142L);
-    } else {
-      assertCoordinatorIsServer(attributes);
-    }
+    assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("configured.example.com");
+    assertThat(attributes.get(SERVER_PORT)).isEqualTo(9142L);
     assertThat(peer).isNotNull();
     assertThat(peer.getHostString()).isEqualTo("127.0.0.1");
     assertThat(peer.getPort()).isEqualTo(9042);
@@ -222,7 +156,7 @@ class CassandraEndpointAttributesTest {
   }
 
   @Test
-  void unresolvedDefaultEndPointPreservesLegacyPeer() {
+  void unresolvedDefaultEndPointDoesNotReportNetworkPeer() {
     InetSocketAddress unresolvedPeer =
         InetSocketAddress.createUnresolved("cassandra.example.com", 9042);
     when(executionInfo.getCoordinator()).thenReturn(coordinator);
@@ -230,8 +164,7 @@ class CassandraEndpointAttributesTest {
 
     CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
 
-    assertThat(getter.getNetworkPeerInetSocketAddress(null, executionInfo))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : unresolvedPeer);
+    assertThat(getter.getNetworkPeerInetSocketAddress(null, executionInfo)).isEqualTo(null);
   }
 
   @Test
@@ -248,88 +181,53 @@ class CassandraEndpointAttributesTest {
   }
 
   @Test
-  void responsePeerPrecedenceFollowsSemconvMode() throws UnknownHostException {
+  void responsePeerTakesPrecedenceOverCoordinator() throws UnknownHostException {
     InetSocketAddress responsePeer = resolved(29042);
-    InetSocketAddress legacyPeer = resolved(9042);
     CassandraNetworkPeer.setExecutionInfoPeer(executionInfo, responsePeer);
-    if (!emitStableDatabaseSemconv()) {
-      when(executionInfo.getCoordinator()).thenReturn(coordinator);
-      when(coordinator.getEndPoint()).thenReturn(new DefaultEndPoint(legacyPeer));
-    }
-
     CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
-    assertThat(getter.getNetworkPeerInetSocketAddress(null, executionInfo))
-        .isEqualTo(emitStableDatabaseSemconv() ? responsePeer : legacyPeer);
-    if (emitStableDatabaseSemconv()) {
-      verify(executionInfo, never()).getCoordinator();
-      verifyNoInteractions(coordinator);
-    } else {
-      verify(executionInfo).getCoordinator();
-    }
+    assertThat(getter.getNetworkPeerInetSocketAddress(null, executionInfo)).isEqualTo(responsePeer);
+    verify(executionInfo, never()).getCoordinator();
+    verifyNoInteractions(coordinator);
   }
 
   @Test
-  void sniResponsePeerIsOnlyUsedByStableSemconv() throws UnknownHostException {
+  void sniResponsePeerDoesNotRequireCoordinatorFallback() throws UnknownHostException {
     InetSocketAddress responsePeer = resolved(29042);
     CassandraNetworkPeer.setExecutionInfoPeer(executionInfo, responsePeer);
-    if (!emitStableDatabaseSemconv()) {
-      when(executionInfo.getCoordinator()).thenReturn(coordinator);
-      when(coordinator.getEndPoint()).thenReturn(new SniEndPoint(PROXY_ADDRESS, "host-id"));
-    }
-
     CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
 
-    assertThat(getter.getNetworkPeerInetSocketAddress(null, executionInfo))
-        .isEqualTo(emitStableDatabaseSemconv() ? responsePeer : null);
-    if (emitStableDatabaseSemconv()) {
-      verify(executionInfo, never()).getCoordinator();
-      verifyNoInteractions(coordinator);
-    }
+    assertThat(getter.getNetworkPeerInetSocketAddress(null, executionInfo)).isEqualTo(responsePeer);
+    verify(executionInfo, never()).getCoordinator();
+    verifyNoInteractions(coordinator);
   }
 
   @Test
-  void customEndPointResponsePeerIsOnlyUsedByStableSemconv() throws UnknownHostException {
+  void customEndPointResponsePeerDoesNotResolveEndpoint() throws UnknownHostException {
     InetSocketAddress responsePeer = resolved(29042);
     CassandraNetworkPeer.setExecutionInfoPeer(executionInfo, responsePeer);
-    if (!emitStableDatabaseSemconv()) {
-      when(executionInfo.getCoordinator()).thenReturn(coordinator);
-      when(coordinator.getEndPoint()).thenReturn(customEndPoint);
-    }
-
     CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
 
-    assertThat(getter.getNetworkPeerInetSocketAddress(null, executionInfo))
-        .isEqualTo(emitStableDatabaseSemconv() ? responsePeer : null);
+    assertThat(getter.getNetworkPeerInetSocketAddress(null, executionInfo)).isEqualTo(responsePeer);
     verifyNoInteractions(customEndPoint);
   }
 
   @Test
-  void emittedNetworkAttributesUseTheModeSpecificPeerSource() throws UnknownHostException {
+  void emittedNetworkAttributesUseTheResponsePeer() throws UnknownHostException {
     InetSocketAddress responsePeer = resolved(19042);
-    InetSocketAddress legacyPeer = InetSocketAddress.createUnresolved("legacy.example.com", 9042);
     CassandraNetworkPeer.setExecutionInfoPeer(executionInfo, responsePeer);
-    if (!emitStableDatabaseSemconv()) {
-      when(executionInfo.getCoordinator()).thenReturn(coordinator);
-      when(coordinator.getEndPoint()).thenReturn(new DefaultEndPoint(legacyPeer));
-    }
     AttributesBuilder attributes = Attributes.builder();
 
     SqlClientAttributesExtractor.create(new CassandraSqlAttributesGetter())
         .onEnd(attributes, Context.root(), null, executionInfo, null);
 
     Attributes result = attributes.build();
-    assertThat(result.get(NETWORK_PEER_ADDRESS))
-        .isEqualTo(emitStableDatabaseSemconv() ? "127.0.0.1" : null);
-    assertThat(result.get(NETWORK_PEER_PORT))
-        .isEqualTo(emitStableDatabaseSemconv() ? 19042L : null);
-    assertThat(result.get(NETWORK_TYPE))
-        .isEqualTo(emitOldDatabaseSemconv() && emitStableDatabaseSemconv() ? "ipv4" : null);
+    assertThat(result.get(NETWORK_PEER_ADDRESS)).isEqualTo("127.0.0.1");
+    assertThat(result.get(NETWORK_PEER_PORT)).isEqualTo(19042L);
+    assertThat(result.get(NETWORK_TYPE)).isEqualTo(null);
   }
 
   private Attributes serverAttributes(DbServerTarget serverTarget) {
-    CassandraRequest request =
-        CassandraRequest.create(
-            session, emitStableDatabaseSemconv() ? serverTarget : null, "SELECT 1");
+    CassandraRequest request = CassandraRequest.create(session, serverTarget, "SELECT 1");
     AttributesBuilder startAttributes = Attributes.builder();
     ServerAttributesExtractor.create(new CassandraSqlAttributesGetter())
         .onStart(startAttributes, Context.root(), request);
@@ -339,16 +237,6 @@ class CassandraEndpointAttributesTest {
         .putAll(startAttributes.build())
         .putAll(endAttributes.build())
         .build();
-  }
-
-  private static void assertCoordinatorIsServer(Attributes attributes) {
-    assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("127.0.0.1");
-    assertThat(attributes.get(SERVER_PORT)).isEqualTo(9042L);
-  }
-
-  private static void assertProxyIsServer(Attributes attributes) {
-    assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("proxy.example.com");
-    assertThat(attributes.get(SERVER_PORT)).isEqualTo(29042L);
   }
 
   // DefaultEndPoint requires a resolved address; build one from raw loopback bytes so getHostString

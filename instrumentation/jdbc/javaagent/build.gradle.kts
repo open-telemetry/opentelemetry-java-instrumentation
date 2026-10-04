@@ -78,19 +78,8 @@ tasks {
       excludeTestsMatching("PreparedStatementParametersTest")
     }
     jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
-  }
-
-  val testSlickStableSemconv = register<Test>("testSlickStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("SlickTest")
-    }
-    include("**/SlickTest.*")
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
   }
 
   val testCaptureParameters = register<Test>("testCaptureParameters") {
@@ -130,7 +119,7 @@ tasks {
     dependsOn(testSlick)
     dependsOn(testSqlCommenter)
     dependsOn(testStableSemconv)
-    dependsOn(testSlickStableSemconv)
+
     dependsOn(testCaptureParameters)
     dependsOn(testExceptionSignalLogs)
   }

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoInstrumenterFactory.DEFAULT_MAX_NORMALIZED_QUERY_LENGTH;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -151,12 +150,9 @@ class MongoDbAttributesGetterTest {
     assertThat(libraryGetter.getNetworkPeerPort(event, null)).isNull();
     assertThat(libraryGetter.getNetworkPeerInetSocketAddress(event, null)).isNull();
     assertThat(agentGetter.getNetworkPeerAddress(event, null))
-        .isEqualTo(
-            emitStableDatabaseSemconv() ? InetAddress.getLoopbackAddress().getHostAddress() : null);
-    assertThat(agentGetter.getNetworkPeerPort(event, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? 27018 : null);
-    assertThat(agentGetter.getNetworkPeerInetSocketAddress(event, null))
-        .isSameAs(emitStableDatabaseSemconv() ? socketAddress : null);
+        .isEqualTo(InetAddress.getLoopbackAddress().getHostAddress());
+    assertThat(agentGetter.getNetworkPeerPort(event, null)).isEqualTo(27018);
+    assertThat(agentGetter.getNetworkPeerInetSocketAddress(event, null)).isSameAs(socketAddress);
   }
 
   @Test
@@ -170,9 +166,8 @@ class MongoDbAttributesGetterTest {
         new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH, ignored -> peer);
 
     assertThat(getter.getNetworkPeerAddress(commandStartedEvent(), null))
-        .isEqualTo(emitStableDatabaseSemconv() ? "0:0:0:0:0:0:0:1" : null);
-    assertThat(getter.getNetworkPeerPort(commandStartedEvent(), null))
-        .isEqualTo(emitStableDatabaseSemconv() ? 27018 : null);
+        .isEqualTo("0:0:0:0:0:0:0:1");
+    assertThat(getter.getNetworkPeerPort(commandStartedEvent(), null)).isEqualTo(27018);
   }
 
   @Test
@@ -187,8 +182,7 @@ class MongoDbAttributesGetterTest {
     MongoDbAttributesGetter getter =
         new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH, ignored -> peer);
 
-    assertThat(getter.getNetworkPeerAddress(commandStartedEvent(), null))
-        .isEqualTo(emitStableDatabaseSemconv() ? socketPath : null);
+    assertThat(getter.getNetworkPeerAddress(commandStartedEvent(), null)).isEqualTo(socketPath);
     assertThat(getter.getNetworkPeerPort(commandStartedEvent(), null)).isNull();
     assertThat(getter.getNetworkPeerInetSocketAddress(commandStartedEvent(), null)).isNull();
   }
@@ -200,8 +194,7 @@ class MongoDbAttributesGetterTest {
     MongoDbAttributesGetter getter =
         new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH, ignored -> peer);
 
-    assertThat(getter.getNetworkPeerAddress(commandStartedEvent(), null))
-        .isEqualTo(emitStableDatabaseSemconv() ? socketPath : null);
+    assertThat(getter.getNetworkPeerAddress(commandStartedEvent(), null)).isEqualTo(socketPath);
     assertThat(getter.getNetworkPeerPort(commandStartedEvent(), null)).isNull();
     assertThat(getter.getNetworkPeerInetSocketAddress(commandStartedEvent(), null)).isNull();
   }

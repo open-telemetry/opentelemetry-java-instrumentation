@@ -237,7 +237,7 @@ class SqsCamelTest {
       assertThat(emitOldMessagingSemconv()).isTrue();
       assertThat(emitStableMessagingSemconv()).isFalse();
     } else {
-      assertThat(optIn).isEqualTo("database,messaging");
+      assertThat(optIn).isEqualTo("messaging");
       assertThat(emitOldMessagingSemconv()).isFalse();
       assertThat(emitStableMessagingSemconv()).isTrue();
     }

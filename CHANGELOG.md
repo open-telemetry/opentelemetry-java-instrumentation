@@ -23,6 +23,12 @@
   pools use stable database-derived names, and DBCP retains the first registered pool name.
   There is no legacy fallback. See [database migration guidance](docs/database-semconv-migration.md).
 
+### ⚠️ Breaking changes to non-stable APIs
+
+- Remove `io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil` from
+  `io.opentelemetry.javaagent:opentelemetry-testing-common`. Database instrumentation tests should
+  assert stable semantic-convention keys and values directly.
+
 ## Version 2.32.0 (2026-10-03)
 
 This release targets the OpenTelemetry SDK 1.66.0.

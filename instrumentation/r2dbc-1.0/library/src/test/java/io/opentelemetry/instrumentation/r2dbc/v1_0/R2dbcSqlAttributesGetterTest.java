@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.r2dbc.v1_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
@@ -121,8 +120,7 @@ class R2dbcSqlAttributesGetterTest {
                 .build());
 
     assertThat(getter.getServerAddress(dbExecution)).isEqualTo("host1,host2");
-    assertThat(getter.getServerPort(dbExecution))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : 3306);
+    assertThat(getter.getServerPort(dbExecution)).isEqualTo(null);
   }
 
   @Test
@@ -136,10 +134,8 @@ class R2dbcSqlAttributesGetterTest {
                 .option(ConnectionFactoryOptions.PORT, 3307)
                 .build());
 
-    assertThat(getter.getServerAddress(dbExecution))
-        .isEqualTo(emitStableDatabaseSemconv() ? "host1:3307,host2:3307" : "host1,host2");
-    assertThat(getter.getServerPort(dbExecution))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : 3307);
+    assertThat(getter.getServerAddress(dbExecution)).isEqualTo("host1:3307,host2:3307");
+    assertThat(getter.getServerPort(dbExecution)).isEqualTo(null);
   }
 
   @Test
@@ -152,8 +148,7 @@ class R2dbcSqlAttributesGetterTest {
                 .option(ConnectionFactoryOptions.HOST, "user:secret@host1,host2")
                 .build());
 
-    assertThat(getter.getServerAddress(dbExecution))
-        .isEqualTo(emitStableDatabaseSemconv() ? "host1,host2" : "user:secret@host1,host2");
+    assertThat(getter.getServerAddress(dbExecution)).isEqualTo("host1,host2");
   }
 
   @Test
@@ -166,8 +161,7 @@ class R2dbcSqlAttributesGetterTest {
                 .option(ConnectionFactoryOptions.HOST, "host1:invalid,host2")
                 .build());
 
-    assertThat(getter.getServerAddress(dbExecution))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : "host1:invalid,host2");
+    assertThat(getter.getServerAddress(dbExecution)).isEqualTo(null);
   }
 
   @ParameterizedTest
@@ -181,8 +175,7 @@ class R2dbcSqlAttributesGetterTest {
                 .option(ConnectionFactoryOptions.HOST, host)
                 .build());
 
-    assertThat(getter.getServerAddress(dbExecution))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : host);
+    assertThat(getter.getServerAddress(dbExecution)).isEqualTo(null);
     assertThat(getter.getServerPort(dbExecution)).isNull();
   }
 
@@ -197,10 +190,8 @@ class R2dbcSqlAttributesGetterTest {
                 .option(ConnectionFactoryOptions.PORT, 5432)
                 .build());
 
-    assertThat(getter.getServerAddress(dbExecution))
-        .isEqualTo(emitStableDatabaseSemconv() ? "host1" : "user:secret@host1");
-    assertThat(getter.getServerPort(dbExecution))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : 5432);
+    assertThat(getter.getServerAddress(dbExecution)).isEqualTo("host1");
+    assertThat(getter.getServerPort(dbExecution)).isEqualTo(null);
   }
 
   @Test
@@ -214,10 +205,8 @@ class R2dbcSqlAttributesGetterTest {
                 .option(ConnectionFactoryOptions.PORT, 5432)
                 .build());
 
-    assertThat(getter.getServerAddress(dbExecution))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : "host1:invalid");
-    assertThat(getter.getServerPort(dbExecution))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : 5432);
+    assertThat(getter.getServerAddress(dbExecution)).isEqualTo(null);
+    assertThat(getter.getServerPort(dbExecution)).isEqualTo(null);
   }
 
   @Test
@@ -228,8 +217,7 @@ class R2dbcSqlAttributesGetterTest {
             ConnectionFactoryOptions.parse("r2dbc:postgresql://host1:5432/db"));
 
     assertThat(getter.getServerAddress(dbExecution)).isEqualTo("host1");
-    assertThat(getter.getServerPort(dbExecution))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : 5432);
+    assertThat(getter.getServerPort(dbExecution)).isEqualTo(null);
   }
 
   @Test
@@ -244,8 +232,7 @@ class R2dbcSqlAttributesGetterTest {
                 .build());
 
     assertThat(getter.getServerAddress(dbExecution)).isEqualTo("/var/run/postgresql/.s.PGSQL.5432");
-    assertThat(getter.getServerPort(dbExecution))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : 5432);
+    assertThat(getter.getServerPort(dbExecution)).isEqualTo(null);
   }
 
   private static QueryExecutionInfo queryExecutionInfo() {

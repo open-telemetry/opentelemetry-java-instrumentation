@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -46,10 +45,8 @@ class LettuceAttributesGetterTest {
 
       LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
 
-      assertThat(getter.getServerAddress(command))
-          .isEqualTo(emitStableDatabaseSemconv() ? null : "selected-node");
-      assertThat(getter.getServerPort(command))
-          .isEqualTo(emitStableDatabaseSemconv() ? null : 6379);
+      assertThat(getter.getServerAddress(command)).isEqualTo(null);
+      assertThat(getter.getServerPort(command)).isEqualTo(null);
     }
   }
 
@@ -61,9 +58,8 @@ class LettuceAttributesGetterTest {
 
     LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
 
-    assertThat(getter.getServerAddress(request))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : "selected-node");
-    assertThat(getter.getServerPort(request)).isEqualTo(emitStableDatabaseSemconv() ? null : 6379);
+    assertThat(getter.getServerAddress(request)).isEqualTo(null);
+    assertThat(getter.getServerPort(request)).isEqualTo(null);
   }
 
   @Test
@@ -82,19 +78,15 @@ class LettuceAttributesGetterTest {
         LettuceBatchRequest.create(
             singletonList(command()),
             new LettuceConnectionState(SELECTED_ADDRESS, null, multipleSocketTarget));
-    assertThat(getter.getServerAddress(multipleSocketRequest))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : "selected-node");
-    assertThat(getter.getServerPort(multipleSocketRequest))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : 6379);
+    assertThat(getter.getServerAddress(multipleSocketRequest)).isEqualTo(null);
+    assertThat(getter.getServerPort(multipleSocketRequest)).isEqualTo(null);
 
     LettuceBatchRequest singleSocketRequest =
         LettuceBatchRequest.create(
             singletonList(command()),
             new LettuceConnectionState(SELECTED_ADDRESS, null, singleSocketTarget));
-    assertThat(getter.getServerAddress(singleSocketRequest))
-        .isEqualTo(emitStableDatabaseSemconv() ? "/var/run/redis1.sock" : "selected-node");
-    assertThat(getter.getServerPort(singleSocketRequest))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : 6379);
+    assertThat(getter.getServerAddress(singleSocketRequest)).isEqualTo("/var/run/redis1.sock");
+    assertThat(getter.getServerPort(singleSocketRequest)).isEqualTo(null);
   }
 
   @Test
@@ -111,8 +103,7 @@ class LettuceAttributesGetterTest {
       assertThat(LettuceConnectionState.serverTarget(endpoint)).isNull();
       assertThat(wrappedAddressSource).isInstanceOf(Supplier.class);
       assertThat(((Supplier<?>) wrappedAddressSource).get()).isEqualTo(SELECTED_ADDRESS);
-      assertThat(LettuceConnectionState.serverAddress(endpoint))
-          .isEqualTo(emitStableDatabaseSemconv() ? SELECTED_ADDRESS : null);
+      assertThat(LettuceConnectionState.serverAddress(endpoint)).isEqualTo(SELECTED_ADDRESS);
     } finally {
       client.shutdown(0, 15, SECONDS);
     }

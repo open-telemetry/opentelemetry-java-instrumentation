@@ -5,9 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
@@ -16,9 +14,6 @@ import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_TABLE_NAMES;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.DYNAMODB;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.AWS_DYNAMODB;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
@@ -67,14 +62,10 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
     List<AttributeAssertion> additionalAttributes =
         new ArrayList<>(
             asList(
-                equalTo(
-                    maybeStable(DB_SYSTEM), emitStableDatabaseSemconv() ? AWS_DYNAMODB : DYNAMODB),
-                equalTo(maybeStable(DB_OPERATION), "CreateTable"),
+                equalTo(DB_SYSTEM_NAME, AWS_DYNAMODB),
+                equalTo(DB_OPERATION_NAME, "CreateTable"),
                 equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable"))));
-    if (emitStableDatabaseSemconv()) {
-      additionalAttributes.add(equalTo(DB_COLLECTION_NAME, "sometable"));
-    }
-
+    additionalAttributes.add(equalTo(DB_COLLECTION_NAME, "sometable"));
     Object response = client.createTable(new CreateTableRequest("sometable", null));
     assertRequestWithMockedResponse(
         response, client, "DynamoDBv2", "CreateTable", "POST", additionalAttributes);
@@ -105,17 +96,10 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
     List<AttributeAssertion> additionalAttributes =
         new ArrayList<>(
             asList(
-                equalTo(
-                    maybeStable(DB_SYSTEM), emitStableDatabaseSemconv() ? AWS_DYNAMODB : DYNAMODB),
-                equalTo(
-                    maybeStable(DB_OPERATION),
-                    emitStableDatabaseSemconv() ? scenario.stableOperation : scenario.awsOperation),
-                equalTo(
-                    DB_OPERATION_BATCH_SIZE,
-                    emitStableDatabaseSemconv() ? scenario.batchSize : null),
-                equalTo(
-                    DB_COLLECTION_NAME,
-                    emitStableDatabaseSemconv() && scenario.hasCollection ? "sometable" : null)));
+                equalTo(DB_SYSTEM_NAME, AWS_DYNAMODB),
+                equalTo(DB_OPERATION_NAME, scenario.stableOperation),
+                equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
+                equalTo(DB_COLLECTION_NAME, scenario.hasCollection ? "sometable" : null)));
 
     Object response = scenario.execute.apply(client);
     assertRequestWithMockedResponse(

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.COMMAND_ADDRESS;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -44,10 +43,8 @@ class LettuceNetworkAttributesGetterTest {
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
 
     assertThat(LettuceSingletons.commandPeerAddress(command)).isEqualTo(address);
-    assertThat(getter.getNetworkPeerAddress(command, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? expectedAddress : null);
-    assertThat(getter.getNetworkPeerPort(command, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? PORT : null);
+    assertThat(getter.getNetworkPeerAddress(command, null)).isEqualTo(expectedAddress);
+    assertThat(getter.getNetworkPeerPort(command, null)).isEqualTo(PORT);
   }
 
   @Test
@@ -72,10 +69,8 @@ class LettuceNetworkAttributesGetterTest {
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
 
-    assertThat(getter.getNetworkPeerAddress(command, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? "10.1.2.4" : null);
-    assertThat(getter.getNetworkPeerPort(command, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? PORT : null);
+    assertThat(getter.getNetworkPeerAddress(command, null)).isEqualTo("10.1.2.4");
+    assertThat(getter.getNetworkPeerPort(command, null)).isEqualTo(PORT);
   }
 
   @Test
@@ -92,8 +87,7 @@ class LettuceNetworkAttributesGetterTest {
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
     assertThat(LettuceSingletons.commandPeerAddress(command)).isEqualTo(address);
-    assertThat(getter.getNetworkPeerAddress(command, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? "/var/run/redis.sock" : null);
+    assertThat(getter.getNetworkPeerAddress(command, null)).isEqualTo("/var/run/redis.sock");
     assertThat(getter.getNetworkPeerPort(command, null)).isNull();
   }
 
@@ -119,7 +113,7 @@ class LettuceNetworkAttributesGetterTest {
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
 
     assertThat(getter.getServerAddress(command)).isEqualTo("redis.example");
-    assertThat(getter.getServerPort(command)).isEqualTo(emitStableDatabaseSemconv() ? null : PORT);
+    assertThat(getter.getServerPort(command)).isEqualTo(null);
     assertThat(getter.getNetworkPeerAddress(command, null)).isNull();
     assertThat(getter.getNetworkPeerPort(command, null)).isNull();
   }
@@ -215,10 +209,8 @@ class LettuceNetworkAttributesGetterTest {
 
     LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
 
-    assertThat(getter.getNetworkPeerAddress(request, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? "10.1.2.3" : null);
-    assertThat(getter.getNetworkPeerPort(request, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? PORT : null);
+    assertThat(getter.getNetworkPeerAddress(request, null)).isEqualTo("10.1.2.3");
+    assertThat(getter.getNetworkPeerPort(request, null)).isEqualTo(PORT);
   }
 
   @Test

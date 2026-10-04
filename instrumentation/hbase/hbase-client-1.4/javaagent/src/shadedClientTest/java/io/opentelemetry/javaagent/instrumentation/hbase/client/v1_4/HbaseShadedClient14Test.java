@@ -45,11 +45,6 @@ class HbaseShadedClient14Test extends AbstractHbaseTest {
   }
 
   @Override
-  protected String oldPutOperation() {
-    return MULTI;
-  }
-
-  @Override
   protected byte[] checkAndMutateCheckedRowKey() {
     return Bytes.toBytes(CHECK_MUTATE_ROW);
   }

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisPipelineContext.transactionFraming;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSingletons.currentBatch;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSingletons.currentCommandContext;
@@ -14,7 +13,6 @@ import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisClusterCommandInstrumentation.CommandAdvice.AdviceState;
@@ -73,7 +71,7 @@ class JedisNetworkAttributesGetterTest {
     request.capturePeerAddress();
 
     assertThat(new JedisDbAttributesGetter().getNetworkPeerInetSocketAddress(request, null))
-        .isEqualTo(emitStableDatabaseSemconv() ? peerAddress : null);
+        .isEqualTo(peerAddress);
   }
 
   @Test
@@ -181,7 +179,6 @@ class JedisNetworkAttributesGetterTest {
 
   @Test
   void clusterContextIgnoresCommandsOutsideExecute() {
-    assumeTrue(emitStableDatabaseSemconv());
 
     JedisClusterCommandContext commandContext = JedisClusterCommandContext.create();
     JedisClusterCommandContext previous = currentCommandContext().set(commandContext);
@@ -215,7 +212,6 @@ class JedisNetworkAttributesGetterTest {
 
   @Test
   void clusterContextTracksNestedConnectionAcquisition() {
-    assumeTrue(emitStableDatabaseSemconv());
 
     JedisClusterCommandContext commandContext = JedisClusterCommandContext.create();
     JedisClusterCommandContext previous = currentCommandContext().set(commandContext);
@@ -243,7 +239,6 @@ class JedisNetworkAttributesGetterTest {
 
   @Test
   void clusterContextRejectsNestingWithoutClearingOuterContext() {
-    assumeTrue(emitStableDatabaseSemconv());
 
     AdviceState outerState = JedisClusterCommandInstrumentation.CommandAdvice.onEnter();
     assertThat(outerState).isNotNull();
@@ -260,7 +255,6 @@ class JedisNetworkAttributesGetterTest {
 
   @Test
   void clusterContextTracksNestedExecuteCalls() {
-    assumeTrue(emitStableDatabaseSemconv());
 
     JedisClusterCommandContext commandContext = JedisClusterCommandContext.create();
     JedisClusterCommandContext previous = currentCommandContext().set(commandContext);
@@ -288,7 +282,6 @@ class JedisNetworkAttributesGetterTest {
 
   @Test
   void connectionAcquisitionSuppressesOnlyHealthCheck() {
-    assumeTrue(emitStableDatabaseSemconv());
 
     Connection connection = new Connection();
     JedisClusterCommandContext commandContext = JedisClusterCommandContext.create();
@@ -320,7 +313,6 @@ class JedisNetworkAttributesGetterTest {
 
   @Test
   void clusterContextMatchesOnlyCapturedRequest() {
-    assumeTrue(emitStableDatabaseSemconv());
 
     Connection connection = new Connection();
     JedisClusterCommandContext commandContext = JedisClusterCommandContext.create();
