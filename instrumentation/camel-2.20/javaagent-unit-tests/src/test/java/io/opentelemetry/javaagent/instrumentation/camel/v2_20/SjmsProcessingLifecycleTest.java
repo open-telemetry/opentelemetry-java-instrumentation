@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -33,8 +32,7 @@ class SjmsProcessingLifecycleTest {
     SjmsConsumerInstrumentation.CreateMessageHandlerAdvice.onExit(
         consumerWithCoreInstrumentation(true), listener);
 
-    assertThat(CAMEL_OWNS_PROCESSING.get(listener))
-        .isEqualTo(emitStableMessagingSemconv() ? Boolean.TRUE : null);
+    assertThat(CAMEL_OWNS_PROCESSING.get(listener)).isTrue();
   }
 
   @Test

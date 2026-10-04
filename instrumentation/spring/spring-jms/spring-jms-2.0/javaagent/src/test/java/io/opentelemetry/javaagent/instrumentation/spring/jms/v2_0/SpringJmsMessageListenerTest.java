@@ -5,14 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SpanKey.CONSUMER_PROCESS;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Collections.emptyEnumeration;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -40,7 +38,7 @@ class SpringJmsMessageListenerTest {
 
   @Test
   void sameMessageDelegationProducesOneProcessOperation() throws Exception {
-    assumeTrue(emitStableMessagingSemconv());
+
     Message message = message("same");
     SessionAwareMessageListener<Message> inner = new TestMessageListener(ignored -> {});
     SessionAwareMessageListener<Message> outer =
@@ -81,13 +79,8 @@ class SpringJmsMessageListenerTest {
     assertThat(Span.current().getSpanContext()).isEqualTo(callerSpan);
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(emitStableMessagingSemconv() ? "process nested" : "nested process")
-                        .hasNoParent()));
-    if (emitStableMessagingSemconv()) {
-      assertProcessDuration("nested", 1);
-    }
+            trace.hasSpansSatisfyingExactly(span -> span.hasName("process nested").hasNoParent()));
+    assertProcessDuration("nested", 1);
   }
 
   @Test
@@ -107,21 +100,9 @@ class SpringJmsMessageListenerTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("caller").hasNoParent(),
-                span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process independent"
-                                : "independent process")
-                        .hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process independent"
-                                : "independent process")
-                        .hasParent(trace.getSpan(0))));
-    if (emitStableMessagingSemconv()) {
-      assertProcessDuration("independent", 2);
-    }
+                span -> span.hasName("process independent").hasParent(trace.getSpan(0)),
+                span -> span.hasName("process independent").hasParent(trace.getSpan(0))));
+    assertProcessDuration("independent", 2);
   }
 
   private static void assertProcessDuration(String destination, long count) {

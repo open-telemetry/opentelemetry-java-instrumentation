@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -63,7 +62,7 @@ class SqsTracingTest extends AbstractSqsTracingTest {
 
   @Test
   void testProcessingOwnershipDisablesRawProcessSpansForResponse() {
-    assumeTrue(emitStableMessagingSemconv());
+
     AmazonSQSAsync client = configureClient(newClientBuilder()).build();
     cleanup.deferCleanup(client::shutdown);
     String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
@@ -94,7 +93,7 @@ class SqsTracingTest extends AbstractSqsTracingTest {
 
   @Test
   void testDisableSqsMessageCreateSpans() {
-    assumeTrue(emitStableMessagingSemconv());
+
     AwsSdkTelemetryBuilder telemetryBuilder =
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
             .setCaptureExperimentalSpanAttributes(true);
@@ -129,7 +128,7 @@ class SqsTracingTest extends AbstractSqsTracingTest {
 
   @Test
   void testNoopTelemetryDoesNotInjectInvalidCreationContext() {
-    assumeTrue(emitStableMessagingSemconv());
+
     assumeTrue(supportsMessageSystemAttributes());
     AmazonSQSAsync client =
         newClientBuilder()
@@ -155,7 +154,7 @@ class SqsTracingTest extends AbstractSqsTracingTest {
   @Test
   void testDisableSqsMessageCreateSpansPreservesCustomContext()
       throws ReflectiveOperationException {
-    assumeTrue(emitStableMessagingSemconv());
+
     assumeTrue(supportsMessageSystemAttributes());
     AwsSdkTelemetryBuilder telemetryBuilder =
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
@@ -208,7 +207,7 @@ class SqsTracingTest extends AbstractSqsTracingTest {
 
   @Test
   void testBatchLinksSurviveLaterRequestClone() {
-    assumeTrue(emitStableMessagingSemconv());
+
     assumeTrue(supportsMessageSystemAttributes());
     RequestHandler2 tracingHandler =
         AwsSdkTelemetry.builder(testing().getOpenTelemetry()).build().createRequestHandler();

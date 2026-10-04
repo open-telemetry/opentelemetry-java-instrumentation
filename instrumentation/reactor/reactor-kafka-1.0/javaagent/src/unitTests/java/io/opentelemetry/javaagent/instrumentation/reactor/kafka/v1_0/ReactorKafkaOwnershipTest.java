@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactor.kafka.v1_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessDurationMetrics;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
@@ -90,16 +89,12 @@ class ReactorKafkaOwnershipTest {
       assertThat(spans)
           .extracting(SpanData::getParentSpanId)
           .containsExactly(firstProducer.getSpanId(), secondProducer.getSpanId());
-      if (emitStableMessagingSemconv()) {
-        assertThat(spans.get(0).getLinks())
-            .extracting(link -> link.getSpanContext().getSpanId())
-            .containsExactly(firstProducer.getSpanId());
-        assertThat(spans.get(1).getLinks())
-            .extracting(link -> link.getSpanContext().getSpanId())
-            .containsExactly(secondProducer.getSpanId());
-      } else {
-        assertThat(spans).allSatisfy(span -> assertThat(span.getLinks()).isEmpty());
-      }
+      assertThat(spans.get(0).getLinks())
+          .extracting(link -> link.getSpanContext().getSpanId())
+          .containsExactly(firstProducer.getSpanId());
+      assertThat(spans.get(1).getLinks())
+          .extracting(link -> link.getSpanContext().getSpanId())
+          .containsExactly(secondProducer.getSpanId());
       assertThat(Span.current().getSpanContext().isValid()).isFalse();
 
       assertProcessDurationMetrics(testing, INSTRUMENTATION_NAME, "orders", "group", "0", 2, null);

@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.spring.kafka.v2_7;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessDurationMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricPointCounts;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -469,7 +467,7 @@ class SpringKafkaInterceptorTest {
 
   private static SpanDataAssert assertRecordSpan(
       SpanDataAssert span, ConsumerRecord<String, String> record, Throwable error) {
-    return span.hasName(emitStableMessagingSemconv() ? "process orders" : "orders process")
+    return span.hasName("process orders")
         .hasKind(SpanKind.CONSUMER)
         .hasStatus(error == null ? StatusData.unset() : StatusData.error())
         .hasAttributesSatisfyingExactly(
@@ -477,55 +475,44 @@ class SpringKafkaInterceptorTest {
             equalTo(MESSAGING_DESTINATION_NAME, "orders"),
             equalTo(MESSAGING_DESTINATION_PARTITION_ID, Integer.toString(record.partition())),
             equalTo(MESSAGING_KAFKA_MESSAGE_KEY, record.key()),
-            equalTo(
-                MESSAGING_KAFKA_MESSAGE_OFFSET, emitOldMessagingSemconv() ? record.offset() : null),
-            equalTo(MESSAGING_KAFKA_OFFSET, emitStableMessagingSemconv() ? record.offset() : null),
-            equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-            equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null),
-            equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null),
-            equalTo(
-                ERROR_TYPE,
-                emitStableMessagingSemconv() && error != null ? error.getClass().getName() : null));
+            equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, null),
+            equalTo(MESSAGING_KAFKA_OFFSET, record.offset()),
+            equalTo(MESSAGING_OPERATION, null),
+            equalTo(MESSAGING_OPERATION_NAME, "process"),
+            equalTo(MESSAGING_OPERATION_TYPE, "process"),
+            equalTo(ERROR_TYPE, error != null ? error.getClass().getName() : null));
   }
 
   private static SpanDataAssert assertBatchSpan(
       SpanDataAssert span, int count, String partition, Throwable error) {
-    return span.hasName(emitStableMessagingSemconv() ? "process orders" : "orders process")
+    return span.hasName("process orders")
         .hasKind(SpanKind.CONSUMER)
         .hasStatus(error == null ? StatusData.unset() : StatusData.error())
         .hasAttributesSatisfyingExactly(
             equalTo(MESSAGING_SYSTEM, "kafka"),
             equalTo(MESSAGING_DESTINATION_NAME, "orders"),
-            equalTo(
-                MESSAGING_DESTINATION_PARTITION_ID,
-                emitStableMessagingSemconv() ? partition : null),
-            equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-            equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null),
-            equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null),
+            equalTo(MESSAGING_DESTINATION_PARTITION_ID, partition),
+            equalTo(MESSAGING_OPERATION, null),
+            equalTo(MESSAGING_OPERATION_NAME, "process"),
+            equalTo(MESSAGING_OPERATION_TYPE, "process"),
             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, count),
-            equalTo(
-                ERROR_TYPE,
-                emitStableMessagingSemconv() && error != null ? error.getClass().getName() : null));
+            equalTo(ERROR_TYPE, error != null ? error.getClass().getName() : null));
   }
 
   private static LinkData[] batchLinks() {
     return new LinkData[] {
       LinkData.create(
           FIRST_CREATION,
-          emitStableMessagingSemconv()
-              ? Attributes.of(
-                  MESSAGING_DESTINATION_PARTITION_ID, "0",
-                  MESSAGING_KAFKA_OFFSET, 1L,
-                  MESSAGING_KAFKA_MESSAGE_KEY, "first")
-              : Attributes.empty()),
+          Attributes.of(
+              MESSAGING_DESTINATION_PARTITION_ID, "0",
+              MESSAGING_KAFKA_OFFSET, 1L,
+              MESSAGING_KAFKA_MESSAGE_KEY, "first")),
       LinkData.create(
           SECOND_CREATION,
-          emitStableMessagingSemconv()
-              ? Attributes.of(
-                  MESSAGING_DESTINATION_PARTITION_ID, "1",
-                  MESSAGING_KAFKA_OFFSET, 2L,
-                  MESSAGING_KAFKA_MESSAGE_KEY, "second")
-              : Attributes.empty())
+          Attributes.of(
+              MESSAGING_DESTINATION_PARTITION_ID, "1",
+              MESSAGING_KAFKA_OFFSET, 2L,
+              MESSAGING_KAFKA_MESSAGE_KEY, "second"))
     };
   }
 

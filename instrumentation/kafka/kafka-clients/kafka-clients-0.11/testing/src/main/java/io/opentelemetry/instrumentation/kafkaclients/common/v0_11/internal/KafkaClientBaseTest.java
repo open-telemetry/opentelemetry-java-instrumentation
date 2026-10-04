@@ -7,8 +7,6 @@ package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -21,15 +19,12 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CLUSTER_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_TOMBSTONE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -193,17 +188,13 @@ public abstract class KafkaClientBaseTest {
             asList(
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
-                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
-                equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null),
+                equalTo(MESSAGING_OPERATION, null),
+                equalTo(MESSAGING_OPERATION_NAME, "send"),
+                equalTo(MESSAGING_OPERATION_TYPE, "send"),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty)));
     addClientIdAssertions(assertions, "producer");
-    if (emitOldMessagingSemconv()) {
-      assertions.add(satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative));
-    }
-    if (emitStableMessagingSemconv()) {
-      assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
-    }
+
+    assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
     if (messageKey != null) {
       assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
     }
@@ -230,22 +221,17 @@ public abstract class KafkaClientBaseTest {
             asList(
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null),
-                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "poll" : null),
-                equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "receive" : null),
+                equalTo(MESSAGING_OPERATION, null),
+                equalTo(MESSAGING_OPERATION_NAME, "poll"),
+                equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                 satisfies(MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isPositive)));
     addClientIdAssertions(assertions, "consumer");
     // consumer group is not available in version 0.11
     if (testLatestDeps()) {
-      assertions.add(
-          equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, emitOldMessagingSemconv() ? "test" : null));
-      assertions.add(
-          equalTo(MESSAGING_CONSUMER_GROUP_NAME, emitStableMessagingSemconv() ? "test" : null));
+      assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, null));
+      assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test"));
     }
-    if (emitStableMessagingSemconv()) {
-      assertions.add(
-          satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
-    }
+    assertions.add(satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
@@ -256,9 +242,7 @@ public abstract class KafkaClientBaseTest {
   // the offset and the message key stay on the link even when the batch carries a single record,
   // because they are only recommended on spans that describe an operation on a single message
   protected static LinkData receiveRecordLink(SpanData producerSpan) {
-    if (!emitStableMessagingSemconv()) {
-      return LinkData.create(producerSpan.getSpanContext());
-    }
+
     return LinkData.create(
         producerSpan.getSpanContext(),
         Attributes.builder()
@@ -277,9 +261,9 @@ public abstract class KafkaClientBaseTest {
             asList(
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null),
-                equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null),
+                equalTo(MESSAGING_OPERATION, null),
+                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                equalTo(MESSAGING_OPERATION_TYPE, "process"),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty)));
     addClientIdAssertions(assertions, "consumer");
     assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
@@ -287,28 +271,19 @@ public abstract class KafkaClientBaseTest {
       assertions.add(
           satisfies(longKey("kafka.record.queue_time_ms"), AbstractLongAssert::isNotNegative));
     }
-    if (emitOldMessagingSemconv()) {
-      assertions.add(satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative));
-    }
-    if (emitStableMessagingSemconv()) {
-      assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
-    }
+
+    assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
     // consumer group is not available in version 0.11
     if (testLatestDeps()) {
-      assertions.add(
-          equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, emitOldMessagingSemconv() ? "test" : null));
-      assertions.add(
-          equalTo(MESSAGING_CONSUMER_GROUP_NAME, emitStableMessagingSemconv() ? "test" : null));
+      assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, null));
+      assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test"));
     }
     if (messageKey != null) {
       assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
     }
     if (messageValue == null) {
       assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true));
-    } else if (emitOldMessagingSemconv()) {
-      assertions.add(equalTo(MESSAGING_MESSAGE_BODY_SIZE, messageValue.getBytes(UTF_8).length));
-    }
-    if (testHeaders) {
+    } else if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
 
@@ -321,11 +296,7 @@ public abstract class KafkaClientBaseTest {
 
   private static void addClientIdAssertions(
       List<AttributeAssertion> assertions, String clientIdPrefix) {
-    if (emitOldMessagingSemconv()) {
-      assertions.add(satisfies(MESSAGING_CLIENT_ID_OLD, val -> val.startsWith(clientIdPrefix)));
-    }
-    if (emitStableMessagingSemconv()) {
-      assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith(clientIdPrefix)));
-    }
+
+    assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith(clientIdPrefix)));
   }
 }

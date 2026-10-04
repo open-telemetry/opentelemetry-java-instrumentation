@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.v2_2;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -26,17 +25,6 @@ public class AwsLambdaSqsMetricsAssertions {
       long processCount,
       long consumedMessageCount,
       String errorType) {
-    if (!emitStableMessagingSemconv()) {
-      assertMetricNamesAbsent(
-          testing,
-          "messaging.process.duration",
-          "messaging.client.consumed.messages",
-          "messaging.publish.duration",
-          "messaging.publish.messages",
-          "messaging.receive.duration",
-          "messaging.receive.messages");
-      return;
-    }
 
     testing.waitAndAssertMetrics(
         instrumentationName,

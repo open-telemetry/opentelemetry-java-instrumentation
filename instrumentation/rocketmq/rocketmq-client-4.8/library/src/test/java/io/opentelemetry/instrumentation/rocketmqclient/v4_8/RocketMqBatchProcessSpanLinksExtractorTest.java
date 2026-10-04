@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG;
@@ -13,7 +12,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -39,7 +37,7 @@ class RocketMqBatchProcessSpanLinksExtractorTest {
 
   @Test
   void keepsCommonAttributesOnBatchSpan() {
-    assumeTrue(emitStableMessagingSemconv());
+
     RocketMqConsumerRequest request =
         new RocketMqConsumerRequest(
             asList(
@@ -64,7 +62,7 @@ class RocketMqBatchProcessSpanLinksExtractorTest {
 
   @Test
   void movesDifferentAttributesToMessageLinks() {
-    assumeTrue(emitStableMessagingSemconv());
+
     RocketMqConsumerRequest request =
         new RocketMqConsumerRequest(
             asList(

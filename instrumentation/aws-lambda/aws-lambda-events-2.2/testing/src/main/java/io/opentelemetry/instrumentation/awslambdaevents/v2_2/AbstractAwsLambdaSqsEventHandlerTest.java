@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.v2_2;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.awslambdaevents.v2_2.AwsLambdaSqsMetricsAssertions.assertMetrics;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -102,37 +100,24 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(FAAS_INVOCATION_ID, "1-22-333")),
                     span ->
-                        span.hasName(
-                                emitStableMessagingSemconv() ? "process queue1" : "aws:sqs process")
+                        span.hasName("process queue1")
                             .hasKind(SpanKind.CONSUMER)
                             .hasParentSpanId(trace.getSpan(0).getSpanId())
                             .hasAttributesSatisfyingExactly(
                                 equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                                equalTo(
-                                    MESSAGING_OPERATION,
-                                    emitOldMessagingSemconv() ? "process" : null),
-                                equalTo(
-                                    MESSAGING_DESTINATION_NAME,
-                                    emitStableMessagingSemconv() ? "queue1" : null),
-                                equalTo(
-                                    MESSAGING_OPERATION_NAME,
-                                    emitStableMessagingSemconv() ? "process" : null),
-                                equalTo(
-                                    MESSAGING_OPERATION_TYPE,
-                                    emitStableMessagingSemconv() ? "process" : null),
-                                equalTo(
-                                    MESSAGING_BATCH_MESSAGE_COUNT,
-                                    emitStableMessagingSemconv() ? Long.valueOf(2) : null))
+                                equalTo(MESSAGING_OPERATION, null),
+                                equalTo(MESSAGING_DESTINATION_NAME, "queue1"),
+                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                                equalTo(MESSAGING_BATCH_MESSAGE_COUNT, Long.valueOf(2)))
                             .hasLinksSatisfying(
                                 links ->
                                     assertThat(links)
                                         .satisfiesExactly(
                                             link(
                                                 "53995c3f42cd8ad8",
-                                                emitStableMessagingSemconv()
-                                                    ? Attributes.of(
-                                                        MESSAGING_MESSAGE_ID, "message1")
-                                                    : Attributes.empty())))));
+                                                Attributes.of(
+                                                    MESSAGING_MESSAGE_ID, "message1"))))));
     assertMetrics(testing(), instrumentationName(), "queue1", 1, 2, null);
   }
 
@@ -165,46 +150,34 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(FAAS_INVOCATION_ID, "1-22-333")),
                     span ->
-                        span.hasName(emitStableMessagingSemconv() ? "process" : "aws:sqs process")
+                        span.hasName("process")
                             .hasKind(SpanKind.CONSUMER)
                             .hasParentSpanId(trace.getSpan(0).getSpanId())
                             .hasAttributesSatisfyingExactly(
                                 equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                                equalTo(
-                                    MESSAGING_OPERATION,
-                                    emitOldMessagingSemconv() ? "process" : null),
+                                equalTo(MESSAGING_OPERATION, null),
                                 equalTo(MESSAGING_DESTINATION_NAME, null),
-                                equalTo(
-                                    MESSAGING_OPERATION_NAME,
-                                    emitStableMessagingSemconv() ? "process" : null),
-                                equalTo(
-                                    MESSAGING_OPERATION_TYPE,
-                                    emitStableMessagingSemconv() ? "process" : null),
-                                equalTo(
-                                    MESSAGING_BATCH_MESSAGE_COUNT,
-                                    emitStableMessagingSemconv() ? Long.valueOf(2) : null))
+                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                                equalTo(MESSAGING_BATCH_MESSAGE_COUNT, Long.valueOf(2)))
                             .hasLinksSatisfying(
                                 links ->
                                     assertThat(links)
                                         .satisfiesExactly(
                                             link(
                                                 "53995c3f42cd8ad8",
-                                                emitStableMessagingSemconv()
-                                                    ? Attributes.of(
-                                                        MESSAGING_MESSAGE_ID,
-                                                        "message1",
-                                                        MESSAGING_DESTINATION_NAME,
-                                                        "queue1")
-                                                    : Attributes.empty()),
+                                                Attributes.of(
+                                                    MESSAGING_MESSAGE_ID,
+                                                    "message1",
+                                                    MESSAGING_DESTINATION_NAME,
+                                                    "queue1")),
                                             link(
                                                 "53995c3f42cd8ad9",
-                                                emitStableMessagingSemconv()
-                                                    ? Attributes.of(
-                                                        MESSAGING_MESSAGE_ID,
-                                                        "message2",
-                                                        MESSAGING_DESTINATION_NAME,
-                                                        "queue2")
-                                                    : Attributes.empty())))));
+                                                Attributes.of(
+                                                    MESSAGING_MESSAGE_ID,
+                                                    "message2",
+                                                    MESSAGING_DESTINATION_NAME,
+                                                    "queue2"))))));
   }
 
   private static Consumer<LinkData> link(String spanId, Attributes attributes) {

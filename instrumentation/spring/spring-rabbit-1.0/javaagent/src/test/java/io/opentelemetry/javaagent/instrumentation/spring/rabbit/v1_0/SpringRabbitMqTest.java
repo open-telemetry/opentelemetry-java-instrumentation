@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
@@ -145,34 +143,16 @@ class SpringRabbitMqTest {
       boolean serverAttributes,
       boolean routingKey,
       boolean testHeaders,
-      boolean messageBodySizePresent,
-      Long expectedMessageBodySize,
       Long expectedBatchMessageCount) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
                 equalTo(MESSAGING_SYSTEM, "rabbitmq"),
                 equalTo(MESSAGING_DESTINATION_NAME, destination),
-                satisfies(
-                    MESSAGING_MESSAGE_BODY_SIZE,
-                    val -> {
-                      if (emitOldMessagingSemconv() && messageBodySizePresent) {
-                        if (expectedMessageBodySize == null) {
-                          val.isNotNegative();
-                        } else {
-                          val.isEqualTo(expectedMessageBodySize);
-                        }
-                      } else {
-                        val.isNull();
-                      }
-                    }),
-                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? operation : null),
-                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? operation : null),
-                equalTo(
-                    MESSAGING_OPERATION_TYPE,
-                    emitStableMessagingSemconv()
-                        ? "publish".equals(operation) ? "send" : operation
-                        : null),
+                equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
+                equalTo(MESSAGING_OPERATION, null),
+                equalTo(MESSAGING_OPERATION_NAME, operation),
+                equalTo(MESSAGING_OPERATION_TYPE, "publish".equals(operation) ? "send" : operation),
                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, expectedBatchMessageCount)));
     if (peerAddress != null) {
       assertions.add(equalTo(NETWORK_TYPE, "ipv4"));
@@ -180,16 +160,12 @@ class SpringRabbitMqTest {
       assertions.add(satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative));
     }
     if (serverAttributes) {
-      assertions.add(equalTo(SERVER_ADDRESS, emitStableMessagingSemconv() ? ip : null));
+      assertions.add(equalTo(SERVER_ADDRESS, ip));
       assertions.add(
           satisfies(
               SERVER_PORT,
               val -> {
-                if (emitStableMessagingSemconv()) {
-                  val.isNotNegative();
-                } else {
-                  val.isNull();
-                }
+                val.isNotNegative();
               }));
     }
     if (routingKey) {
@@ -200,7 +176,7 @@ class SpringRabbitMqTest {
         satisfies(
             MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG,
             val -> {
-              if (emitStableMessagingSemconv() && "process".equals(operation)) {
+              if ("process".equals(operation)) {
                 val.isNotNegative();
               } else {
                 val.isNull();
@@ -215,18 +191,8 @@ class SpringRabbitMqTest {
   private static List<AttributeAssertion> getAnonymousQueueAssertions(
       String queueName, String operation) {
     List<AttributeAssertion> assertions =
-        getAssertions(
-            emitStableMessagingSemconv() ? queueName : "<default>",
-            operation,
-            ip,
-            true,
-            true,
-            false,
-            true,
-            null,
-            null);
-    assertions.add(
-        equalTo(MESSAGING_DESTINATION_ANONYMOUS, emitStableMessagingSemconv() ? true : null));
+        getAssertions(queueName, operation, ip, true, true, false, null);
+    assertions.add(equalTo(MESSAGING_DESTINATION_ANONYMOUS, true));
     return assertions;
   }
 
@@ -298,10 +264,7 @@ class SpringRabbitMqTest {
                 span -> span.hasName("parent"),
                 span -> span.hasKind(SpanKind.PRODUCER),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process " + outerQueue
-                                : outerQueue + " process")
+                    span.hasName("process " + outerQueue)
                         .satisfies(
                             spanData ->
                                 assertThat(spanData.getInstrumentationScopeInfo().getName())
@@ -309,10 +272,7 @@ class SpringRabbitMqTest {
                 span -> span.hasName("basic.consume"),
                 span -> span.hasKind(SpanKind.PRODUCER),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process " + nestedQueue
-                                : nestedQueue + " process")
+                    span.hasName("process " + nestedQueue)
                         .satisfies(
                             spanData ->
                                 assertThat(spanData.getInstrumentationScopeInfo().getName())
@@ -371,8 +331,7 @@ class SpringRabbitMqTest {
               span -> span.hasName("parent"),
               span -> span.hasKind(SpanKind.PRODUCER).hasParent(trace.getSpan(0)),
               span ->
-                  span.hasName(
-                          emitStableMessagingSemconv() ? "process " + queue : queue + " process")
+                  span.hasName("process " + queue)
                       .hasKind(SpanKind.CONSUMER)
                       .hasParent(producerSpan)
                       .satisfies(
@@ -438,28 +397,15 @@ class SpringRabbitMqTest {
               span -> span.hasName("parent"),
               span -> span.hasKind(SpanKind.PRODUCER).hasParent(trace.getSpan(0)),
               span -> {
-                span.hasName(emitStableMessagingSemconv() ? "process " + queue : queue + " process")
+                span.hasName("process " + queue)
                     .hasKind(SpanKind.CONSUMER)
                     .hasParent(producerSpan)
                     .satisfies(hasScopeName("io.opentelemetry.spring-rabbit-1.0"))
                     .hasAttributesSatisfyingExactly(
-                        getAssertions(
-                            queue,
-                            "process",
-                            ip,
-                            true,
-                            emitStableMessagingSemconv(),
-                            false,
-                            false,
-                            null,
-                            2L));
-                if (emitStableMessagingSemconv()) {
-                  span.hasLinks(
-                      LinkData.create(producerSpan.getSpanContext()),
-                      LinkData.create(producerSpan.getSpanContext()));
-                } else {
-                  span.hasTotalRecordedLinks(0);
-                }
+                        getAssertions(queue, "process", ip, true, true, false, 2L));
+                span.hasLinks(
+                    LinkData.create(producerSpan.getSpanContext()),
+                    LinkData.create(producerSpan.getSpanContext()));
               });
         },
         trace -> trace.hasSpansSatisfyingExactly(SpringRabbitMqTest::verifyAckSpan));
@@ -517,38 +463,19 @@ class SpringRabbitMqTest {
           trace.hasSpansSatisfyingExactlyInAnyOrder(
               span -> span.hasName("parent"),
               span ->
-                  span.hasName(
-                          emitStableMessagingSemconv() ? "publish " + queue : "<default> publish")
+                  span.hasName("publish " + queue)
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
-                          getAssertions(
-                              emitStableMessagingSemconv() ? queue : "<default>",
-                              "publish",
-                              ip,
-                              true,
-                              true,
-                              testHeaders,
-                              true,
-                              null,
-                              null)),
+                          getAssertions(queue, "publish", ip, true, true, testHeaders, null)),
               // created by spring-rabbit instrumentation
               span -> {
-                span.hasName(emitStableMessagingSemconv() ? "process " + queue : queue + " process")
+                span.hasName("process " + queue)
                     .hasKind(SpanKind.CONSUMER)
                     .hasParent(producerSpan)
                     .hasAttributesSatisfyingExactly(
-                        getAssertions(
-                            queue,
-                            "process",
-                            ip,
-                            true,
-                            emitStableMessagingSemconv(),
-                            testHeaders,
-                            true,
-                            4L,
-                            null));
-                verifyLink(span, emitStableMessagingSemconv() ? producerSpan : null);
+                        getAssertions(queue, "process", ip, true, true, testHeaders, null));
+                verifyLink(span, producerSpan);
               },
               span -> span.hasName("consumer").hasParent(springProcessSpan));
         },
@@ -664,18 +591,13 @@ class SpringRabbitMqTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableMessagingSemconv() ? "publish" : "<default> publish")
+                    span.hasName("publish")
                         .hasAttributesSatisfyingExactly(
                             getAnonymousQueueAssertions(anonymousQueueName, "publish")),
                 // Verify that a constant span name is used instead of the randomly generated
                 // anonymous queue name
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process"
-                                : queueBeanName.equals("anonymousQueue")
-                                    ? "<generated> process"
-                                    : anonymousQueueName + " process")
+                    span.hasName("process")
                         .hasAttributesSatisfyingExactly(
                             getAnonymousQueueAssertions(anonymousQueueName, "process"))),
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("basic.qos")),
@@ -694,7 +616,7 @@ class SpringRabbitMqTest {
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   private static void verifySettleSpan(SpanDataAssert span, String operation) {
-    boolean stable = emitStableMessagingSemconv();
+
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
@@ -702,20 +624,13 @@ class SpringRabbitMqTest {
                 equalTo(NETWORK_PEER_ADDRESS, ip),
                 satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative),
                 equalTo(MESSAGING_SYSTEM, "rabbitmq")));
-    if (stable) {
-      assertions.add(equalTo(SERVER_ADDRESS, ip));
-      assertions.add(satisfies(SERVER_PORT, AbstractLongAssert::isNotNegative));
-      assertions.add(equalTo(MESSAGING_OPERATION_NAME, operation));
-      assertions.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
-      assertions.add(
-          satisfies(MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG, AbstractLongAssert::isPositive));
-      if (emitOldMessagingSemconv()) {
-        assertions.add(equalTo(MESSAGING_OPERATION, "settle"));
-      }
-    }
-    span.hasName(stable ? operation : "basic." + operation)
-        .hasKind(SpanKind.CLIENT)
-        .hasAttributesSatisfyingExactly(assertions);
+    assertions.add(equalTo(SERVER_ADDRESS, ip));
+    assertions.add(satisfies(SERVER_PORT, AbstractLongAssert::isNotNegative));
+    assertions.add(equalTo(MESSAGING_OPERATION_NAME, operation));
+    assertions.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
+    assertions.add(
+        satisfies(MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG, AbstractLongAssert::isPositive));
+    span.hasName(operation).hasKind(SpanKind.CLIENT).hasAttributesSatisfyingExactly(assertions);
   }
 
   private static void verifyLink(SpanDataAssert span, SpanData linkSpan) {

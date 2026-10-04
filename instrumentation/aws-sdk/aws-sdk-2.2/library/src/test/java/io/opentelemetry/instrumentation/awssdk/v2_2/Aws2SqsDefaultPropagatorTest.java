@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -52,7 +51,7 @@ class Aws2SqsDefaultPropagatorTest extends Aws2SqsTracingTest {
 
   @Test
   void testDisableSqsMessageCreateSpans() {
-    assumeTrue(emitStableMessagingSemconv());
+
     AwsSdkTelemetryBuilder telemetryBuilder =
         AwsSdkTelemetry.builder(getTesting().getOpenTelemetry())
             .setCaptureExperimentalSpanAttributes(true);
@@ -86,7 +85,7 @@ class Aws2SqsDefaultPropagatorTest extends Aws2SqsTracingTest {
 
   @Test
   void testNoopTelemetryDoesNotInjectInvalidCreationContext() {
-    assumeTrue(emitStableMessagingSemconv());
+
     assumeTrue(supportsMessageSystemAttributes());
     AwsSdkTelemetry noopTelemetry = AwsSdkTelemetry.builder(OpenTelemetry.noop()).build();
     SqsClientBuilder builder = SqsClient.builder();
