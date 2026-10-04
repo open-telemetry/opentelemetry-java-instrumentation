@@ -76,23 +76,19 @@ public final class MessagingProducerMetrics implements OperationListener {
   }
 
   /**
-   * Returns metrics for extractors configured with {@link MessageOperation}.
-   *
-   * <p>In 3.0 this method name will be reused for {@link #getForOperationType()}, which emits
-   * different instruments, so callers must migrate rather than rely on this name continuing to
-   * behave the same way.
+   * Returns the {@code messaging.client.*} metrics for extractors configured with {@link
+   * MessageOperation} or {@link MessagingOperationType}.
    *
    * @deprecated Use {@link #getForOperationType()}. May be removed in the next minor release.
    */
   @Deprecated // may be removed in the next minor release
   public static OperationMetrics get() {
-    return OperationMetricsUtil.create(
-        "messaging producer", meter -> new MessagingProducerMetrics(meter, Variant.LEGACY));
+    return getForOperationType();
   }
 
   /**
    * Returns metrics for extractors configured with {@link MessagingOperationType}, emitting only
-   * the stable {@code messaging.client.*} instruments.
+   * the v1.43 {@code messaging.client.*} instruments.
    */
   // will be renamed in 3.0 to get()
   public static OperationMetrics getForOperationType() {
@@ -101,16 +97,11 @@ public final class MessagingProducerMetrics implements OperationListener {
   }
 
   /**
-   * Returns metrics for extractors configured with {@link MessagingOperationType} that additionally
-   * emit the deprecated {@code messaging.publish.duration} instrument.
-   *
-   * <p>Intended only for instrumentations that already emitted the pre-1.43 metrics before
-   * migrating to {@link MessagingOperationType}, so that they keep emitting them until 3.0. New
-   * instrumentations should use {@link #getForOperationType()} instead.
+   * Returns the same v1.43 instruments as {@link #getForOperationType()}. Does not emit {@code
+   * messaging.publish.duration}.
    */
   public static OperationMetrics getForOperationTypeWithOldMetrics() { // to be removed in 3.0
-    return OperationMetricsUtil.create(
-        "messaging producer", meter -> new MessagingProducerMetrics(meter, Variant.STABLE_AND_OLD));
+    return getForOperationType();
   }
 
   /** Returns only the stable sent-messages metric. */

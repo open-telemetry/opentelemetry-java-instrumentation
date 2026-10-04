@@ -415,7 +415,7 @@ class MessagingProducerMetricsTest {
   }
 
   @Test
-  void legacyEntryPointAlwaysCollectsLegacyMetrics() {
+  void deprecatedEntryPointCollectsOnlyAdoptedMetrics() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
@@ -425,12 +425,17 @@ class MessagingProducerMetricsTest {
     Context context =
         listener.onStart(
             Context.root(),
-            Attributes.of(MESSAGING_SYSTEM, "pulsar", MESSAGING_OPERATION, "publish"),
+            Attributes.of(
+                MESSAGING_SYSTEM, "pulsar",
+                MESSAGING_OPERATION_NAME, "send",
+                MESSAGING_OPERATION_TYPE, "send"),
             nanos(100));
     listener.onEnd(context, Attributes.empty(), nanos(250));
 
     assertThat(metricReader.collectAllMetrics())
-        .satisfiesExactly(metric -> assertThat(metric).hasName("messaging.publish.duration"));
+        .hasSize(2)
+        .anySatisfy(metric -> assertThat(metric).hasName("messaging.client.operation.duration"))
+        .anySatisfy(metric -> assertThat(metric).hasName("messaging.client.sent.messages"));
   }
 
   private static long nanos(int millis) {

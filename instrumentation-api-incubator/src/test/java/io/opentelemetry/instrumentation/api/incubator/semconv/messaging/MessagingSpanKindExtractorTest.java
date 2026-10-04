@@ -15,6 +15,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class MessagingSpanKindExtractorTest {
@@ -53,12 +54,16 @@ class MessagingSpanKindExtractorTest {
   }
 
   @SuppressWarnings("deprecation")
-  @Test
-  void messageOperationUsesLegacySpanKind() {
-    SpanKind receiveKind =
-        MessagingSpanKindExtractor.create(MessageOperation.RECEIVE).extract(new Object());
+  @ParameterizedTest
+  @EnumSource(MessageOperation.class)
+  void messageOperationUsesAdoptedSpanKind(MessageOperation operation) {
+    SpanKind spanKind = MessagingSpanKindExtractor.create(operation).extract(new Object());
 
-    assertThat(receiveKind).isEqualTo(SpanKind.CONSUMER);
+    assertThat(spanKind)
+        .isEqualTo(
+            operation == MessageOperation.PUBLISH
+                ? SpanKind.PRODUCER
+                : operation == MessageOperation.RECEIVE ? SpanKind.CLIENT : SpanKind.CONSUMER);
   }
 
   private static Stream<Arguments> spanKinds() {
