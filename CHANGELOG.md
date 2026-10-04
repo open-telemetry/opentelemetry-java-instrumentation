@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+### ⚠️ Breaking Changes
+
+- The Java agent and standalone libraries now emit only the messaging telemetry previously selected
+  by `otel.semconv-stability.opt-in=messaging`, using the existing v1.43.0 implementation. These
+  upstream conventions are not all stable. The `messaging` and `messaging/dup` values in
+  `otel.semconv-stability.opt-in` and `otel.semconv-stability.preview`, the
+  `general.messaging.semconv` YAML settings, and v3-preview cannot restore old or dual output.
+  Update span-name queries, for example `orders publish` becomes `send orders`, and replace
+  `messaging.operation` with `messaging.operation.name` and `messaging.operation.type`.
+  Replace `messaging.publish.duration` and `messaging.receive.duration` with
+  `messaging.client.operation.duration`, and `messaging.receive.messages` with
+  `messaging.client.consumed.messages`; producers also emit `messaging.client.sent.messages`, and
+  processing duration uses `messaging.process.duration`. Receive spans use `CLIENT` instead of
+  `CONSUMER`. Deprecated messaging Java entry points remain callable and emit the same new telemetry.
+  Other semantic convention domains and unrelated feature defaults are unchanged.
+
 ## Version 2.32.0 (2026-10-03)
 
 This release targets the OpenTelemetry SDK 1.66.0.

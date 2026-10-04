@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
@@ -13,6 +15,7 @@ import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.common.ComponentLoader;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -192,7 +195,7 @@ class SemconvStabilityTest {
     SemconvMode messaging = resolver.messaging();
 
     assertThat(rpc).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
-    assertThat(messaging).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
+    assertThat(messaging).isEqualTo(SemconvMode.V0_STABLE);
   }
 
   @Test
@@ -332,7 +335,7 @@ class SemconvStabilityTest {
 
     assertThat(rpc).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
     assertThat(servicePeer).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
-    assertThat(messaging).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
+    assertThat(messaging).isEqualTo(SemconvMode.V0_STABLE);
   }
 
   @Test
@@ -356,7 +359,7 @@ class SemconvStabilityTest {
 
     assertThat(rpc).isEqualTo(SemconvMode.V0_STABLE);
     assertThat(servicePeer).isEqualTo(SemconvMode.V0_STABLE);
-    assertThat(messaging).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
+    assertThat(messaging).isEqualTo(SemconvMode.V0_STABLE);
   }
 
   @ParameterizedTest
@@ -379,76 +382,73 @@ class SemconvStabilityTest {
 
     assertThat(rpc).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
     assertThat(servicePeer).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
-    assertThat(messaging).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
+    assertThat(messaging).isEqualTo(SemconvMode.V0_STABLE);
+  }
+
+  @Test
+  void messagingEmitsOnlyAdoptedConventions() {
+    assertThat(emitOldMessagingSemconv()).isFalse();
+    assertThat(emitStableMessagingSemconv()).isTrue();
+    assertThat(SemconvStability.messagingSchemaUrl()).isEqualTo(SchemaUrls.V1_43_0);
   }
 
   @ParameterizedTest
   @MethodSource("messagingSelectionModes")
-  void messagingSelectionMatrix(
-      boolean v3Preview, Set<String> stableOptIn, Set<String> preview, SemconvMode expectedMode) {
+  void messagingSelectionMatrix(boolean v3Preview, Set<String> stableOptIn, Set<String> preview) {
     SemconvMode messaging =
         new SemconvSelectionResolver(general(), v3Preview, stableOptIn, preview).messaging();
 
-    assertThat(messaging).isEqualTo(expectedMode);
+    assertThat(messaging).isEqualTo(SemconvMode.V0_STABLE);
   }
 
   private static List<Arguments> messagingSelectionModes() {
     return asList(
-        argumentSet("legacy default", false, noStableOptIn(), noPreview(), SemconvMode.V0_STABLE),
+        argumentSet("default", false, noStableOptIn(), noPreview()),
+        argumentSet("legacy opt-in property", false, stableOptIn("messaging"), noPreview()),
+        argumentSet("preview property", false, noStableOptIn(), preview("messaging")),
+        argumentSet("legacy opt-in dual emit", false, stableOptIn("messaging/dup"), noPreview()),
+        argumentSet("preview dual emit", false, noStableOptIn(), preview("messaging/dup")),
+        argumentSet("v3 default", true, noStableOptIn(), noPreview()),
         argumentSet(
-            "legacy opt-in property",
-            false,
-            stableOptIn("messaging"),
-            noPreview(),
-            SemconvMode.V1_EXPERIMENTAL),
+            "v3 ignores legacy opt-in property", true, stableOptIn("messaging"), noPreview()),
         argumentSet(
-            "preview property",
-            false,
-            noStableOptIn(),
-            preview("messaging"),
-            SemconvMode.V1_EXPERIMENTAL),
-        argumentSet(
-            "legacy opt-in dual emit",
-            false,
-            stableOptIn("messaging/dup"),
-            noPreview(),
-            SemconvMode.V1_EXPERIMENTAL.withDualEmit()),
-        argumentSet(
-            "preview dual emit",
-            false,
-            noStableOptIn(),
-            preview("messaging/dup"),
-            SemconvMode.V1_EXPERIMENTAL.withDualEmit()),
-        argumentSet(
-            "v3 activates messaging preview",
-            true,
-            noStableOptIn(),
-            noPreview(),
-            SemconvMode.V1_EXPERIMENTAL),
-        argumentSet(
-            "v3 ignores legacy opt-in property",
-            true,
-            stableOptIn("messaging"),
-            noPreview(),
-            SemconvMode.V1_EXPERIMENTAL),
-        argumentSet(
-            "v3 ignores legacy opt-in dual emit",
-            true,
-            stableOptIn("messaging/dup"),
-            noPreview(),
-            SemconvMode.V1_EXPERIMENTAL),
-        argumentSet(
-            "v3 with explicit preview",
-            true,
-            noStableOptIn(),
-            preview("messaging"),
-            SemconvMode.V1_EXPERIMENTAL),
+            "v3 ignores legacy opt-in dual emit", true, stableOptIn("messaging/dup"), noPreview()),
+        argumentSet("v3 with explicit preview", true, noStableOptIn(), preview("messaging")),
         argumentSet(
             "v3 ignores explicit preview dual emit",
             true,
             noStableOptIn(),
-            preview("messaging/dup"),
-            SemconvMode.V1_EXPERIMENTAL));
+            preview("messaging/dup")));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void messagingSelectorsCannotRestoreOldOrDualEmission(boolean v3Preview) {
+    for (int version : asList(-1, 0, 1, 2)) {
+      for (boolean experimental : asList(false, true)) {
+        for (boolean dualEmit : asList(false, true)) {
+          for (String flag : asList("messaging", "messaging/dup")) {
+            DeclarativeConfigProperties general =
+                general(domainSemconv("messaging", version, experimental, dualEmit));
+            SemconvSelectionResolver resolver =
+                new SemconvSelectionResolver(
+                    general,
+                    v3Preview,
+                    stableOptIn("database/dup", "code", "rpc", "service.peer", flag),
+                    preview("rpc/dup", "service.peer/dup", flag));
+
+            assertThat(resolver.messaging()).isEqualTo(SemconvMode.V0_STABLE);
+            assertThat(resolver.database())
+                .isEqualTo(
+                    v3Preview ? SemconvMode.V1_STABLE : SemconvMode.V1_STABLE.withDualEmit());
+            assertThat(resolver.code()).isEqualTo(SemconvMode.V1_STABLE);
+            assertThat(resolver.rpc()).isEqualTo(SemconvMode.V1_EXPERIMENTAL.withDualEmit());
+            assertThat(resolver.servicePeer())
+                .isEqualTo(SemconvMode.V1_EXPERIMENTAL.withDualEmit());
+          }
+        }
+      }
+    }
   }
 
   @SafeVarargs
