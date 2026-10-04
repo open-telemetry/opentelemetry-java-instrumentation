@@ -116,25 +116,25 @@ class SemconvStabilityTest {
   @Test
   void explicitDomainConfigTakesPrecedenceWhenV3PreviewIsDisabled() {
     // general:
-    //   stability_opt_in_list: "database"
-    //   db:
+    //   stability_opt_in_list: "rpc"
+    //   rpc:
     //     semconv:
     //       version: 1
+    //       experimental: true
     //       dual_emit: true
     DeclarativeConfigProperties general =
-        general(stabilityOptInList("database"), domainSemconv("db", 1, true));
+        general(stabilityOptInList("rpc"), domainSemconv("rpc", 1, true, true));
     boolean v3Preview = false;
 
-    // otel.semconv-stability.opt-in=database
-    SemconvMode database =
-        new SemconvSelectionResolver(general, v3Preview, stableOptIn("database"), noPreview())
-            .database();
+    // otel.semconv-stability.opt-in=rpc
+    SemconvMode rpc =
+        new SemconvSelectionResolver(general, v3Preview, stableOptIn("rpc"), noPreview()).rpc();
 
-    assertThat(database).isEqualTo(SemconvMode.V1_STABLE.withDualEmit());
+    assertThat(rpc).isEqualTo(SemconvMode.V1_EXPERIMENTAL.withDualEmit());
   }
 
   @Test
-  void experimentalIsTreatedAsStableForSupportedDomainVersion() {
+  void databaseIgnoresExperimentalDomainVersion() {
     // general:
     //   db:
     //     semconv:
@@ -236,17 +236,17 @@ class SemconvStabilityTest {
   @Test
   void explicitDomainVersionZeroMeansOldOnlyEvenWithDualEmit() {
     // general:
-    //   db:
+    //   rpc:
     //     semconv:
     //       version: 0
     //       dual_emit: true
-    DeclarativeConfigProperties general = general(domainSemconv("db", 0, true));
+    DeclarativeConfigProperties general = general(domainSemconv("rpc", 0, true));
     boolean v3Preview = false;
 
-    SemconvMode database =
-        new SemconvSelectionResolver(general, v3Preview, noStableOptIn(), noPreview()).database();
+    SemconvMode rpc =
+        new SemconvSelectionResolver(general, v3Preview, noStableOptIn(), noPreview()).rpc();
 
-    assertThat(database).isEqualTo(SemconvMode.V0_STABLE);
+    assertThat(rpc).isEqualTo(SemconvMode.V0_STABLE);
   }
 
   @Test
@@ -268,7 +268,7 @@ class SemconvStabilityTest {
   }
 
   @Test
-  void stableOptInDupDualEmitsDatabaseWhenV3PreviewIsDisabled() {
+  void stableOptInDupEmitsStableDatabaseWhenV3PreviewIsDisabled() {
     // general:
     //   stability_opt_in_list: "database/dup, code/dup"
     // java:
@@ -283,7 +283,7 @@ class SemconvStabilityTest {
         new SemconvSelectionResolver(general, v3Preview, stableOptIn, noPreview());
     SemconvMode database = resolver.database();
 
-    assertThat(database).isEqualTo(SemconvMode.V1_STABLE.withDualEmit());
+    assertThat(database).isEqualTo(SemconvMode.V1_STABLE);
   }
 
   @Test
@@ -303,6 +303,47 @@ class SemconvStabilityTest {
     SemconvMode database = resolver.database();
 
     assertThat(database).isEqualTo(SemconvMode.V1_STABLE);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void databaseAlwaysUsesStableOnlySemconv(boolean v3Preview) {
+    for (String flags : asList("", "database", "database/dup", "database/dup,code/dup")) {
+      for (DeclarativeConfigProperties config :
+          asList(
+              general(),
+              general(domainSemconv("db", 0)),
+              general(domainSemconv("db", 0, true)),
+              general(domainSemconv("db", 1, true)),
+              general(domainSemconv("db", 1, true, true)),
+              general(domainSemconv("db", 99, true)))) {
+        SemconvSelectionResolver resolver =
+            new SemconvSelectionResolver(
+                config,
+                v3Preview,
+                SemconvSelectionResolver.parseCommaSeparatedSet(flags),
+                noPreview());
+
+        assertThat(resolver.database()).isEqualTo(SemconvMode.V1_STABLE);
+      }
+      for (DeclarativeConfigProperties config :
+          asList(
+              general(stabilityOptInList(flags)),
+              general(
+                  structured("semconv_stability", property("opt_in", asList(flags.split(","))))))) {
+        Set<String> fallback =
+            SemconvSelectionResolver.resolveStringListWithFallbackValue(
+                config.get("semconv_stability"), "opt_in", null);
+        SemconvSelectionResolver resolver =
+            new SemconvSelectionResolver(
+                config,
+                v3Preview,
+                SemconvSelectionResolver.resolveStableOptInValues(config, fallback),
+                noPreview());
+
+        assertThat(resolver.database()).isEqualTo(SemconvMode.V1_STABLE);
+      }
+    }
   }
 
   @Test
