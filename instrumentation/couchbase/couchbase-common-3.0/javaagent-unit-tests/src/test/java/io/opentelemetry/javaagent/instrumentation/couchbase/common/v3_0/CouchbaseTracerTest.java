@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_0;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
@@ -102,7 +102,7 @@ class CouchbaseTracerTest {
     SpanData spanData = findSpan("get");
     assertThat(spanData.getKind()).isEqualTo(CLIENT);
     assertThat(spanData.getStatus().getStatusCode()).isEqualTo(StatusCode.ERROR);
-    assertThat(spanData.getAttributes().asMap()).containsOnly(entry(DB_SYSTEM_NAME, "couchbase"));
+    assertThat(spanData).hasAttributesSatisfyingExactly(equalTo(DB_SYSTEM_NAME, "couchbase"));
     assertThat(spanData.getEvents()).extracting(event -> event.getName()).contains("dispatched");
     assertThat(spanData.getEvents()).extracting(event -> event.getName()).contains("exception");
   }

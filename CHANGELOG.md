@@ -21,7 +21,6 @@
   singular count units such as `{connection}`, and seconds instead of milliseconds for durations.
   Pool attributes use `db.client.connection.pool.name` and `db.client.connection.state`; unnamed
   pools use stable database-derived names, and DBCP retains the first registered pool name.
-  See [database migration guidance](docs/database-semconv-migration.md).
 
 ### ⚠️ Breaking changes to non-stable APIs
 

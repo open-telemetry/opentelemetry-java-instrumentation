@@ -87,7 +87,7 @@ class DbConnectionPoolMetricsTest {
                                 point ->
                                     point
                                         .hasValue(1)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(DB_CLIENT_CONNECTION_POOL_NAME, "test-pool"),
                                             equalTo(DB_NAMESPACE, "potatoes")))),
             metric ->
@@ -101,7 +101,7 @@ class DbConnectionPoolMetricsTest {
                                 point ->
                                     point
                                         .hasSum(0.025)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(DB_CLIENT_CONNECTION_POOL_NAME, "test-pool"),
                                             equalTo(DB_NAMESPACE, "potatoes")))));
   }
