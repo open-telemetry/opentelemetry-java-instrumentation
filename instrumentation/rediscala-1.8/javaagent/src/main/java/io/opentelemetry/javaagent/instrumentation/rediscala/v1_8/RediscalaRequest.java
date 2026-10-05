@@ -106,10 +106,10 @@ class RediscalaRequest {
 
   private static String operationName(RedisCommand<?, ?> command) {
     String name = command.getClass().getSimpleName().toUpperCase(Locale.ROOT);
-    return stableOperationName(name);
+    return normalizeOperationName(name);
   }
 
-  private static String stableOperationName(String className) {
+  private static String normalizeOperationName(String className) {
     // commands without arguments are scala objects, whose class name ends with $
     String name =
         className.endsWith("$") ? className.substring(0, className.length() - 1) : className;
