@@ -401,7 +401,10 @@ Each file has a `when` value along with the list of metrics that indicates wheth
 emitted by default or via a configuration option.
 
 Spans and metrics are collected inside the `waitAndAssertTraces` / `waitAndAssertMetrics` assertion
-helpers, so they are only captured when a test asserts on them. Events are instead swept up after
+helpers. A successful metric assertion collects all currently exported metrics, accumulating the
+union of attribute names and types across every data point and collected snapshot for each scope
+and metric name. Tests should wait for operations with distinct attribute sets before completing
+their assertions so that those attributes are observed. Events are instead swept up after
 every test, so they are captured regardless of how the test asserted on them. A log record counts as
 an event when it carries an event name, set either via `LogRecordBuilder.setEventName(...)` or via an
 `event.name` attribute; ordinary log records, such as those produced by the logging library bridges,
