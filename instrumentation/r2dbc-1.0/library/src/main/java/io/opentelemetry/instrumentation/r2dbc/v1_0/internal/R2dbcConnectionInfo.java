@@ -38,7 +38,7 @@ final class R2dbcConnectionInfo {
   // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String OTHER_SQL = "other_sql";
 
-  // R2DBC driver identifier -> stable semconv db.system.name value
+  // R2DBC driver identifier -> db.system.name value
   private static final Map<String, String> DRIVER_TO_SYSTEM_NAME = buildDriverToSystemName();
   private static final Map<String, Integer> DRIVER_TO_DEFAULT_PORT = buildDriverToDefaultPort();
 

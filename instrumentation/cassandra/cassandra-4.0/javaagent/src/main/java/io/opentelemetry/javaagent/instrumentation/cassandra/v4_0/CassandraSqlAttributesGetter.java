@@ -78,11 +78,11 @@ final class CassandraSqlAttributesGetter
     if (peer != null) {
       return peer;
     }
-    return getStableNetworkPeerFallback(executionInfo);
+    return getNetworkPeerFallback(executionInfo);
   }
 
   @Nullable
-  private static InetSocketAddress getStableNetworkPeerFallback(ExecutionInfo executionInfo) {
+  private static InetSocketAddress getNetworkPeerFallback(ExecutionInfo executionInfo) {
     Node coordinator = executionInfo.getCoordinator();
     if (coordinator == null) {
       return null;
