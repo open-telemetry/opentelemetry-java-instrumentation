@@ -3,10 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.v2_0;
+package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.v2_0.CouchbaseNetworkVirtualFields.COUCHBASE_REQUEST_INFO;
+import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.CouchbaseNetworkVirtualFields.COUCHBASE_REQUEST_INFO;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -21,7 +20,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-class CouchbaseCoreNetworkInstrumentation implements TypeInstrumentation {
+class CouchbaseCoreInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -41,11 +40,7 @@ class CouchbaseCoreNetworkInstrumentation implements TypeInstrumentation {
   public static class CouchbaseCoreAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void bridgeRequestInfoToRequest(@Advice.Argument(0) CouchbaseRequest request) {
-      if (!emitStableDatabaseSemconv()) {
-        return;
-      }
-
+    public static void addOperationIdToSpan(@Advice.Argument(0) CouchbaseRequest request) {
       CouchbaseRequestInfo requestInfo = COUCHBASE_REQUEST_INFO.get(request);
       if (requestInfo != null) {
         return;
@@ -54,10 +49,11 @@ class CouchbaseCoreNetworkInstrumentation implements TypeInstrumentation {
       Context currentContext = Java8BytecodeBridge.currentContext();
       requestInfo = CouchbaseRequestInfo.get(currentContext);
       if (requestInfo != null) {
-        // The scope from the initial RxJava subscribe is not available to the networking layer.
-        // To transfer the request info, it is added to the context store. The core-io versions
-        // before 1.6.0 have no CouchbaseRequest.operationId() to record here.
+        // The scope from the initial rxJava subscribe is not available to the networking layer
+        // To transfer the request info it is added to the context store
         COUCHBASE_REQUEST_INFO.set(request, requestInfo);
+
+        requestInfo.setOperationId(request.operationId());
       }
     }
   }

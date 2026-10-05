@@ -3,11 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.v2_0;
+package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
@@ -16,29 +15,25 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
-/**
- * Network capture is isolated from the high-level Couchbase instrumentation so Muzzle can disable
- * it independently when the pre-2.6 core networking classes are not present.
- */
 @AutoService(InstrumentationModule.class)
-public class CouchbaseNetworkInstrumentationModule extends InstrumentationModule {
+public class Couchbase26NetworkInstrumentationModule extends InstrumentationModule {
 
-  public CouchbaseNetworkInstrumentationModule() {
+  public Couchbase26NetworkInstrumentationModule() {
     super(
         AgentCommonConfig.get().isV3Preview() ? "couchbase-2.0" : "couchbase",
         AgentCommonConfig.get().isV3Preview()
             ? new String[] {"couchbase"}
-            : new String[] {"couchbase-2.0", "couchbase-network-2.0", "couchbase-2.0-network"});
+            : new String[] {"couchbase-2.6"});
   }
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // added in 2.6.0 (via com.couchbase.client:core-io 1.6.0)
-    return not(hasClassesNamed("com.couchbase.client.core.env.NetworkResolution"));
+    // added in 2.6.0, removed in 3.0.0
+    return hasClassesNamed("com.couchbase.client.java.auth.CertAuthenticator");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new CouchbaseCoreNetworkInstrumentation(), new CouchbaseNetworkInstrumentation());
+    return asList(new CouchbaseCoreInstrumentation(), new Couchbase26NetworkInstrumentation());
   }
 }
