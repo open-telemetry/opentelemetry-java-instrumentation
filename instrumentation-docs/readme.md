@@ -28,7 +28,7 @@ differentiate between these configurations by using the `metadataConfig` system 
 telemetry is written to a file, the value of this property will be included, or it will default to
 a `default` attribution.
 
-For example, to collect and write metadata for the `otel.semconv-stability.opt-in=rpc` option
+For example, to collect and write metadata for the `otel.semconv-stability.preview=rpc` option
 set for an instrumentation:
 
 ```kotlin
@@ -38,10 +38,10 @@ tasks {
   }
 
   val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=rpc")
+    jvmArgs("-Dotel.semconv-stability.preview=rpc")
 
     systemProperty("collectMetadata", otelProps.collectMetadata)
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc")
   }
 
   check {
