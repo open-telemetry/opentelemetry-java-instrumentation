@@ -24,17 +24,37 @@ dependencies {
 }
 
 tasks {
-  val testJvmMetricsOwnership = register<Test>("testJvmMetricsOwnership") {
+  val ownershipTests = listOf("testJvmMetricsOwnership", "testJvmMetricsOwnershipV3Preview").map { taskName ->
+    register<Test>(taskName) {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+      filter {
+        includeTestsMatching("*JvmMetricsOwnershipEnabledTest")
+      }
+      include("**/*JvmMetricsOwnershipEnabledTest.*")
+      jvmArgs(
+        "-Dotel.instrumentation.micrometer.experimental.jvm-metrics-ownership.enabled=true",
+        "-Dotel.instrumentation.micrometer.experimental.jvm-metrics-ownership.kept=jvm.classes.unloaded",
+        "-Dotel.instrumentation.micrometer.experimental.histogram-gauges.enabled=true",
+      )
+      if (taskName.endsWith("V3Preview")) {
+        jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+      }
+    }
+  }
+
+  val testJvmMetricsOwnershipJfr = register<Test>("testJvmMetricsOwnershipJfr") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
-      includeTestsMatching("*JvmMetricsOwnershipEnabledTest")
+      includeTestsMatching("*JvmMetricsOwnershipJfrTest")
     }
-    include("**/*JvmMetricsOwnershipEnabledTest.*")
+    include("**/*JvmMetricsOwnershipJfrTest.*")
     jvmArgs(
       "-Dotel.instrumentation.micrometer.experimental.jvm-metrics-ownership.enabled=true",
-      "-Dotel.instrumentation.micrometer.experimental.jvm-metrics-ownership.kept=jvm.classes.unloaded",
+      "-Dotel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included=jvm.class.*",
     )
+    enabled = (otelProps.testJavaVersion ?: JavaVersion.current()).isCompatibleWith(JavaVersion.VERSION_17)
   }
 
   val testPrometheusMode = register<Test>("testPrometheusMode") {
@@ -99,6 +119,7 @@ tasks {
       excludeTestsMatching("*PrometheusModeTest")
       excludeTestsMatching("*HistogramGaugesTest")
       excludeTestsMatching("*JvmMetricsOwnershipEnabledTest")
+      excludeTestsMatching("*JvmMetricsOwnershipJfrTest")
     }
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
   }
@@ -109,12 +130,14 @@ tasks {
       excludeTestsMatching("*PrometheusModeTest")
       excludeTestsMatching("*HistogramGaugesTest")
       excludeTestsMatching("*JvmMetricsOwnershipEnabledTest")
+      excludeTestsMatching("*JvmMetricsOwnershipJfrTest")
     }
   }
 
   check {
     dependsOn(
-      testJvmMetricsOwnership,
+      ownershipTests,
+      testJvmMetricsOwnershipJfr,
       testBaseTimeUnit,
       testPrometheusMode,
       testHistogramGauges,

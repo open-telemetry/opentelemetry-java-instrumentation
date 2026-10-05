@@ -6,12 +6,18 @@
 package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
+import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.binder.jvm.ClassLoaderMetrics;
+import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics;
 import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics;
 import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics;
 import io.micrometer.core.instrument.binder.system.ProcessorMetrics;
+import io.micrometer.core.instrument.config.MeterFilter;
+import io.micrometer.core.instrument.distribution.DistributionStatisticConfig;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
@@ -76,5 +82,61 @@ class JvmMetricsOwnershipEnabledTest {
             "jvm.threads.daemon",
             "jvm.threads.states",
             "system.cpu.count");
+  }
+
+  @Test
+  void gcTimersAreSuppressedOnlyInTheBridge() {
+    // Exercise companion creation as well as the timer itself if suppression stops working.
+    Metrics.globalRegistry
+        .config()
+        .meterFilter(
+            new MeterFilter() {
+              @Override
+              public DistributionStatisticConfig configure(
+                  Meter.Id id, DistributionStatisticConfig config) {
+                if (id.getName().equals("jvm.gc.pause")
+                    || id.getName().equals("jvm.gc.concurrent.phase.time")) {
+                  return DistributionStatisticConfig.builder()
+                      .percentiles(0.5)
+                      .percentilesHistogram(true)
+                      .build()
+                      .merge(config);
+                }
+                return config;
+              }
+            });
+    SimpleMeterRegistry otherRegistry = new SimpleMeterRegistry();
+    try (JvmGcMetrics gcMetrics = new JvmGcMetrics()) {
+      Metrics.addRegistry(otherRegistry);
+      try {
+        gcMetrics.bindTo(Metrics.globalRegistry);
+        System.gc();
+        // An empty bridge export is meaningful only after Micrometer received a GC notification.
+        await()
+            .untilAsserted(
+                () ->
+                    assertThat(otherRegistry.find("jvm.gc.pause").timers())
+                        .anySatisfy(timer -> assertThat(timer.count()).isPositive()));
+        testing.waitAndAssertMetrics(
+            RUNTIME_TELEMETRY_SCOPE,
+            "jvm.gc.duration",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric.getHistogramData().getPoints())
+                            .anySatisfy(point -> assertThat(point.getCount()).isPositive())));
+        assertThat(testing.metrics())
+            .filteredOn(
+                metric -> metric.getInstrumentationScopeInfo().getName().equals(MICROMETER_SCOPE))
+            .extracting(MetricData::getName)
+            .noneMatch(
+                name ->
+                    name.startsWith("jvm.gc.pause")
+                        || name.startsWith("jvm.gc.concurrent.phase.time"));
+      } finally {
+        Metrics.removeRegistry(otherRegistry);
+        otherRegistry.close();
+      }
+    }
   }
 }
