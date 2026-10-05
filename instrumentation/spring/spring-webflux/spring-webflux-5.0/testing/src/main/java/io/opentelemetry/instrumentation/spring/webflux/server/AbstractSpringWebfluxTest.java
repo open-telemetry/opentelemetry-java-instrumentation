@@ -130,15 +130,15 @@ public abstract class AbstractSpringWebfluxTest {
                       .hasAttributesSatisfyingExactly(
                           satisfies(
                               CODE_FUNCTION_NAME,
-                              val ->
-                                  val.startsWith(
-                                          parameter.annotatedMethod == null
-                                              ? INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX
-                                              : TestController.class.getName())
-                                      .endsWith(
-                                          parameter.annotatedMethod == null
-                                              ? "handle"
-                                              : parameter.annotatedMethod)));
+                              val -> {
+                                if (parameter.annotatedMethod == null) {
+                                  val.startsWith(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
+                                      .endsWith("handle");
+                                } else {
+                                  val.startsWith(TestController.class.getName())
+                                      .endsWith(parameter.annotatedMethod);
+                                }
+                              }));
                 }));
   }
 
@@ -255,15 +255,15 @@ public abstract class AbstractSpringWebfluxTest {
                       .hasAttributesSatisfyingExactly(
                           satisfies(
                               CODE_FUNCTION_NAME,
-                              val ->
-                                  val.startsWith(
-                                          parameter.annotatedMethod == null
-                                              ? INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX
-                                              : TestController.class.getName())
-                                      .endsWith(
-                                          parameter.annotatedMethod == null
-                                              ? "handle"
-                                              : parameter.annotatedMethod)));
+                              val -> {
+                                if (parameter.annotatedMethod == null) {
+                                  val.startsWith(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
+                                      .endsWith("handle");
+                                } else {
+                                  val.startsWith(TestController.class.getName())
+                                      .endsWith(parameter.annotatedMethod);
+                                }
+                              }));
                 },
                 span ->
                     span.hasName("tracedMethod")
@@ -367,15 +367,15 @@ public abstract class AbstractSpringWebfluxTest {
                       .hasAttributesSatisfyingExactly(
                           satisfies(
                               CODE_FUNCTION_NAME,
-                              val ->
-                                  val.startsWith(
-                                          parameter.annotatedMethod == null
-                                              ? INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX
-                                              : TestController.class.getName())
-                                      .endsWith(
-                                          parameter.annotatedMethod == null
-                                              ? "handle"
-                                              : parameter.annotatedMethod)));
+                              val -> {
+                                if (parameter.annotatedMethod == null) {
+                                  val.startsWith(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
+                                      .endsWith("handle");
+                                } else {
+                                  val.startsWith(TestController.class.getName())
+                                      .endsWith(parameter.annotatedMethod);
+                                }
+                              }));
                 },
                 span ->
                     span.hasName("tracedMethod")
@@ -590,15 +590,15 @@ public abstract class AbstractSpringWebfluxTest {
                   span.hasAttributesSatisfyingExactly(
                       satisfies(
                           CODE_FUNCTION_NAME,
-                          val ->
-                              val.startsWith(
-                                      parameter.annotatedMethod == null
-                                          ? INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX
-                                          : TestController.class.getName())
-                                  .endsWith(
-                                      parameter.annotatedMethod == null
-                                          ? "handle"
-                                          : parameter.annotatedMethod)));
+                          val -> {
+                            if (parameter.annotatedMethod == null) {
+                              val.startsWith(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
+                                  .endsWith("handle");
+                            } else {
+                              val.startsWith(TestController.class.getName())
+                                  .endsWith(parameter.annotatedMethod);
+                            }
+                          }));
                 }));
     if (emitExceptionAsLogs()) {
       assertHandlerExceptionLog(
@@ -774,15 +774,15 @@ public abstract class AbstractSpringWebfluxTest {
                       .hasAttributesSatisfyingExactly(
                           satisfies(
                               CODE_FUNCTION_NAME,
-                              val ->
-                                  val.startsWith(
-                                          parameter.annotatedMethod == null
-                                              ? INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX
-                                              : TestController.class.getName())
-                                      .endsWith(
-                                          parameter.annotatedMethod == null
-                                              ? "handle"
-                                              : parameter.annotatedMethod)));
+                              val -> {
+                                if (parameter.annotatedMethod == null) {
+                                  val.startsWith(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
+                                      .endsWith("handle");
+                                } else {
+                                  val.startsWith(TestController.class.getName())
+                                      .endsWith(parameter.annotatedMethod);
+                                }
+                              }));
                 });
 
     testing.waitAndAssertTraces(Collections.nCopies(requestsCount, traceAssertion));
