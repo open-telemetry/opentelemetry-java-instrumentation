@@ -30,7 +30,7 @@ implementation("io.opentelemetry.instrumentation:instrumentation:opentelemetry-m
 
 The instrumentation is initialized by passing a command listener from
 `MongoTelemetry` to the `MongoClientSettings` builder. Pass the configured seed
-list to `createCommandListener`. Stable telemetry then reports those seeds as
+list to `createCommandListener`. Telemetry then reports those seeds as
 the logical server target.
 
 ```java

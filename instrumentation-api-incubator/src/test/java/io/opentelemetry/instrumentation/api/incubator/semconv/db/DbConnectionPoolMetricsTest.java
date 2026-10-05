@@ -60,7 +60,7 @@ class DbConnectionPoolMetricsTest {
   }
 
   @Test
-  void shouldAlwaysExportStablePoolMetrics() {
+  void shouldExportPoolMetrics() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.create();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();

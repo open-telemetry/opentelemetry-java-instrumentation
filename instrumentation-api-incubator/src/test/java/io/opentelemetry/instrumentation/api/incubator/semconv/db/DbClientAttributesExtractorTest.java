@@ -38,7 +38,7 @@ import org.junit.jupiter.api.Test;
 class DbClientAttributesExtractorTest {
 
   @Test
-  void shouldAlwaysEmitStableOnlyDatabaseAttributes() {
+  void shouldEmitDatabaseAttributes() {
     assertThat(emitOldDatabaseSemconv()).isFalse();
     assertThat(emitStableDatabaseSemconv()).isTrue();
 

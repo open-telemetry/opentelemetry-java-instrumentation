@@ -26,7 +26,7 @@ endpoint. Without an operation or target, the database system name is the final 
 SQL batch summaries can include a `BATCH` prefix.
 
 Instrumentations using the shared database client operation metrics now record
-`db.client.operation.duration` in seconds by default, with stable database attributes.
+`db.client.operation.duration` in seconds by default, with database attributes.
 Instrumentation scope names do not change.
 
 ## Connection pool metrics

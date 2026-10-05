@@ -53,7 +53,7 @@ CqlSession tracedSession = telemetry.wrap(session);
 
 ### Configured server target
 
-To record `server.address` and `server.port` with stable database semantic conventions,
+To record `server.address` and `server.port`,
 pass the complete original contact-point list when wrapping the session:
 
 ```java
