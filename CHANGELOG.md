@@ -2,12 +2,40 @@
 
 ## Unreleased
 
+### ⚠️ Breaking changes
+
+- Change the Java agent's `telemetry.distro.name` resource attribute from
+  `opentelemetry-java-instrumentation` to `opentelemetry-javaagent`.
+
 ### ⚠️ Breaking changes to non-stable APIs
 
 - Remove `otel.javaagent.experimental.indy` and `distribution.javaagent.indy/development`.
   The javaagent now always uses non-inline advice for compatible instrumentation.
   Instrumentation that intentionally uses inline advice remains supported.
   ([#20377](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20377))
+- Remove deprecated `setCapturedRequestHeaders` and `setCapturedResponseHeaders` methods from
+  HTTP library telemetry builders. Use `setRequestHeaders` and `setResponseHeaders`
+  with `IncludeExclude` selectors instead. Selector patterns interpret `*` and `?` as wildcards
+  rather than literal header-name characters.
+- Remove the deprecated Elasticsearch REST library instrumentation. Use the Elasticsearch
+  Java API Client's native OpenTelemetry support, or the Java agent for direct RestClient usage.
+  Java agent instrumentation is unaffected.
+- Remove deprecated `setCapturedRequestHeaders` and `setCapturedResponseHeaders` methods from
+  Ktor 1.0 configuration, and the `capturedRequestHeaders` and `capturedResponseHeaders`
+  overloads from Ktor 2.0/3.0 builders. Use `requestHeaders` and `responseHeaders` with
+  `IncludeExclude` selectors instead. Selector patterns interpret `*` and `?` as wildcards
+  rather than literal header-name characters.
+- Rename Ktor 1.0 configuration methods to match Ktor 2.0/3.0:
+  `setRequestHeaders` to `requestHeaders`, `setResponseHeaders` to `responseHeaders`,
+  `setKnownMethods` to `knownMethods`, `addAttributesExtractor` to `attributesExtractor`,
+  `setSpanNameExtractorCustomizer` to `spanNameExtractor`, `setStatusExtractor` to
+  `spanStatusExtractor`, and `setSpanKindExtractor` to `spanKindExtractor`.
+  Parameter types and behavior are unchanged.
+- Rename `setOpenTelemetry` to `openTelemetry` in Ktor 1.0 configuration and Ktor 2.0/3.0
+  client and server builders. The parameter type and initialization behavior are unchanged.
+- Remove the deprecated `OpenTelemetryMeterRegistryBuilder#setMicrometerHistogramGaugesEnabled(boolean)`.
+  Use `Experimental#setMicrometerHistogramGaugesEnabled(OpenTelemetryMeterRegistryBuilder, boolean)`
+  instead.
 
 ## Version 2.32.0 (2026-10-03)
 
