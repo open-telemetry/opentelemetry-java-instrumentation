@@ -30,6 +30,7 @@ import org.restlet.util.RouteList;
 
 abstract class AbstractSpringServerLibraryTest extends AbstractSpringServerTest {
 
+  // org.restlet.routing.Route is deprecated in 2.0 but not deprecated in later versions
   @SuppressWarnings("deprecation")
   private static final Class<?> ROUTE_CLASS = Route.class;
 
@@ -53,6 +54,7 @@ abstract class AbstractSpringServerLibraryTest extends AbstractSpringServerTest 
     return tracingFilter;
   }
 
+  // org.restlet.routing.Route is deprecated in 2.0 but not deprecated in later versions
   @SuppressWarnings("deprecation")
   @Override
   protected void setupRouting() {
