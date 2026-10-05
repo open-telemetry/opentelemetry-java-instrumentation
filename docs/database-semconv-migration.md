@@ -1,32 +1,6 @@
 # Database semantic convention migration
 
-Database instrumentation always emits the existing stable database semantic conventions with schema
-URL `https://opentelemetry.io/schemas/1.44.0`. This applies to both library instrumentation and the
-Java agent, whether or not v3 preview is enabled. There is no legacy or duplicate-emission fallback.
-
-## Configuration
-
-Remove `database` and `database/dup` from semantic convention opt-in lists. Keep tokens for other
-domains. For example:
-
-```properties
-# Before
-otel.semconv-stability.opt-in=database/dup,code/dup
-# After
-otel.semconv-stability.opt-in=code/dup
-```
-
-The same change applies to `OTEL_SEMCONV_STABILITY_OPT_IN` and declarative configuration:
-
-```yaml
-instrumentation/development:
-  general:
-    stability_opt_in_list: code/dup
-```
-
-For the older `general.semconv_stability.opt_in` list, remove only its database entries as well.
-Remove `general.db.semconv.version` and `general.db.semconv.dual_emit`. These settings and the retired
-database tokens have no effect, including `version: 0` and `dual_emit: true`.
+Database telemetry uses schema URL `https://opentelemetry.io/schemas/1.44.0`.
 
 ## Spans and operation metrics
 

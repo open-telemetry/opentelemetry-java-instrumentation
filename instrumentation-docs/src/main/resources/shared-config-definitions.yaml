@@ -268,14 +268,14 @@ global_configurations:
   common.v3-preview:
     name: otel.instrumentation.common.v3-preview
     declarative_name: java.common.v3_preview
-    description: "Enables a preview of the behavior planned for version 3.0 of the agent, such as emitting the new messaging semantic conventions by default, and ignoring deprecated settings. Database semantic conventions are always stable. The set of changes it enables can grow in any release."
+    description: "Enables a preview of the behavior planned for version 3.0 of the agent, such as emitting the new messaging semantic conventions by default, and ignoring deprecated settings. The set of changes it enables can grow in any release."
     type: boolean
     default: false
 
   semconv-stability.opt-in:
     name: otel.semconv-stability.opt-in
     declarative_name: general.stability_opt_in_list
-    description: "A comma-separated list of semantic convention groups to opt into, such as `rpc`, `messaging`, and `service.peer`. Use `<group>/dup` to emit both old and new conventions. Database conventions are always stable; `database` and `database/dup` are ignored. Under v3 preview the preview groups use `otel.semconv-stability.preview` instead."
+    description: "A comma-separated list of semantic convention groups to opt into, such as `rpc`, `messaging`, and `service.peer`. Use `<group>/dup` to emit both old and new conventions. Under v3 preview the preview groups use `otel.semconv-stability.preview` instead."
     type: list
     declarative_type: string
     default: ""
