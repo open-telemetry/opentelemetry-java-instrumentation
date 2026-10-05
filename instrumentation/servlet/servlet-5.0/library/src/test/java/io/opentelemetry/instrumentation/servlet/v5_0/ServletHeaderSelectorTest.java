@@ -109,21 +109,14 @@ class ServletHeaderSelectorTest {
     assertThat(secondPass).isEqualTo(firstPass);
   }
 
-  @SuppressWarnings("deprecation") // testing deprecated API
   @Test
-  void deprecatedSettersMatchHeaderNamesLiterally() throws Exception {
-    Filter filter =
-        ServletTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedRequestHeaders(singletonList("*"))
-            .setCapturedResponseHeaders(singletonList("*"))
-            .build()
-            .createFilter();
+  void doesNotCaptureHeadersByDefault() throws Exception {
+    Filter filter = ServletTelemetry.builder(testing.getOpenTelemetry()).build().createFilter();
 
     HttpServletRequest request = mock(HttpServletRequest.class);
     when(request.getMethod()).thenReturn("GET");
     when(request.getHeaderNames())
         .thenAnswer(invocation -> enumeration(asList("X-Test-Request", "Authorization")));
-    // Authorization is present so that treating "*" as a glob would capture it
     when(request.getHeaders("x-test-request"))
         .thenAnswer(invocation -> enumeration(singletonList("request-value")));
     when(request.getHeaders("authorization"))
