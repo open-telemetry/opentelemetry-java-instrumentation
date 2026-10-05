@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.extensionannotations.v1_0;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -16,7 +17,13 @@ import java.util.List;
 public class WithSpanInstrumentationModule extends InstrumentationModule {
 
   public WithSpanInstrumentationModule() {
-    super("opentelemetry-extension-annotations", "opentelemetry-extension-annotations-1.0");
+    super(
+        AgentCommonConfig.get().isV3Preview()
+            ? "opentelemetry-extension-annotations-1.0"
+            : "opentelemetry-extension-annotations",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"opentelemetry-extension-annotations"}
+            : new String[] {"opentelemetry-extension-annotations-1.0"});
   }
 
   @Override

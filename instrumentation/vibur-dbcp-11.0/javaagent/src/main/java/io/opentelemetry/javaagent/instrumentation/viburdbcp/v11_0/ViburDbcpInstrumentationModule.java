@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -17,7 +18,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class ViburDbcpInstrumentationModule extends InstrumentationModule {
   public ViburDbcpInstrumentationModule() {
-    super("vibur-dbcp", "vibur-dbcp-11.0");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "vibur-dbcp-11.0" : "vibur-dbcp",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"vibur-dbcp"}
+            : new String[] {"vibur-dbcp-11.0"});
   }
 
   @Override

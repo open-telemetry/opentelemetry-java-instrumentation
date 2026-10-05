@@ -12,7 +12,7 @@ muzzle {
     assertInverse.set(true)
     extraDependency("io.opentelemetry:opentelemetry-api:1.0.0")
     excludeInstrumentationName("opentelemetry-api")
-    excludeInstrumentationName("reactor-3.4")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.reactor.v3_1.operator.ContextPropagationOperatorContextViewInstrumentationModule")
   }
   pass {
     // instrumentation-docs:ignore - verification only, the directive above is the range we document
@@ -23,7 +23,8 @@ muzzle {
     assertInverse.set(true)
     extraDependency("io.opentelemetry:opentelemetry-api:1.0.0")
     excludeInstrumentationName("opentelemetry-api")
-    excludeInstrumentationName("reactor-3.1")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.reactor.v3_1.ReactorInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.reactor.v3_1.operator.ContextPropagationOperatorInstrumentationModule")
   }
 }
 

@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jms.v1_1;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -15,7 +16,9 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class JmsInstrumentationModule extends InstrumentationModule {
   public JmsInstrumentationModule() {
-    super("jms", "jms-1.1");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "jms-1.1" : "jms",
+        AgentCommonConfig.get().isV3Preview() ? new String[] {"jms"} : new String[] {"jms-1.1"});
   }
 
   @Override

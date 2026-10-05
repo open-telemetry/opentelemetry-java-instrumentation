@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  groovy
 }
 
 muzzle {

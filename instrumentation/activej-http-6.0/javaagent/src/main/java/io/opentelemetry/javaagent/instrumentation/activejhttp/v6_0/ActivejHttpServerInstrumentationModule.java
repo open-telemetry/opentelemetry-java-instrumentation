@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -18,7 +19,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class ActivejHttpServerInstrumentationModule extends InstrumentationModule {
 
   public ActivejHttpServerInstrumentationModule() {
-    super("activej-http", "activej-http-6.0");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "activej-http-6.0" : "activej-http",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"activej-http"}
+            : new String[] {"activej-http-6.0"});
   }
 
   @Override

@@ -9,7 +9,7 @@ muzzle {
     versions.set("[4.0.0,)")
     assertInverse.set(true)
 
-    excludeInstrumentationName("vertx-redis-client-4.4.5")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_4_5.VertxRedisClientInstrumentationModule")
   }
   pass {
     // instrumentation-docs:ignore - verification only, the directive above is the range we document
@@ -19,7 +19,7 @@ muzzle {
     versions.set("[4.4.5,)")
     assertInverse.set(true)
 
-    excludeInstrumentationName("vertx-redis-client-4.0-core")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0.VertxRedisClientInstrumentationModule")
   }
 }
 

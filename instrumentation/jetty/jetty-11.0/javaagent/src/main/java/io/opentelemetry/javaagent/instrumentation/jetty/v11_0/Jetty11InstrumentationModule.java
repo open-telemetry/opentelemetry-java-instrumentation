@@ -14,6 +14,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestContext;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.jetty.common.v8_0.JettyHandlerInstrumentation;
@@ -28,7 +29,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class Jetty11InstrumentationModule extends InstrumentationModule {
 
   public Jetty11InstrumentationModule() {
-    super("jetty", "jetty-11.0");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "jetty-11.0" : "jetty",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"jetty"}
+            : new String[] {"jetty-11.0"});
   }
 
   @Override

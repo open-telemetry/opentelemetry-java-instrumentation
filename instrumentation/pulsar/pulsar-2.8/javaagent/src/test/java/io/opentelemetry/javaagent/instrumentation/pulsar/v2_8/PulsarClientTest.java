@@ -23,7 +23,6 @@ import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -141,7 +140,6 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                                   equalTo(MESSAGING_DESTINATION_NAME, topic),
                                                   equalTo(SERVER_ADDRESS, brokerHost),
                                                   equalTo(SERVER_PORT, brokerPort))))));
-      // the consumer records this instrument as well, so only the publish point is checked here
       testing.waitAndAssertMetrics(
           INSTRUMENTATION_NAME,
           "messaging.client.operation.duration",
@@ -152,21 +150,32 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                           .hasUnit("s")
                           .hasDescription(
                               "Duration of messaging operation initiated by a producer or consumer client.")
-                          .satisfies(
-                              data ->
-                                  assertThat(data.getHistogramData().getPoints())
-                                      .anySatisfy(
-                                          point ->
-                                              assertThat(point.getAttributes())
-                                                  .isEqualTo(
-                                                      Attributes.builder()
-                                                          .put(MESSAGING_OPERATION_NAME, "send")
-                                                          .put(MESSAGING_SYSTEM, "pulsar")
-                                                          .put(MESSAGING_DESTINATION_NAME, topic)
-                                                          .put(MESSAGING_OPERATION_TYPE, "send")
-                                                          .put(SERVER_ADDRESS, brokerHost)
-                                                          .put(SERVER_PORT, brokerPort)
-                                                          .build())))));
+                          .hasHistogramSatisfying(
+                              histogram ->
+                                  histogram.hasPointsSatisfying(
+                                      point ->
+                                          point
+                                              .hasSumGreaterThan(0.0)
+                                              .hasAttributesSatisfyingExactly(
+                                                  equalTo(MESSAGING_OPERATION_NAME, "send"),
+                                                  equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                                  equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                                  equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                                                  equalTo(SERVER_ADDRESS, brokerHost),
+                                                  equalTo(SERVER_PORT, brokerPort)),
+                                      point ->
+                                          point
+                                              .hasSumGreaterThan(0.0)
+                                              .hasAttributesSatisfyingExactly(
+                                                  equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                                  equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                                  equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                                  equalTo(
+                                                      MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                                      "test_sub"),
+                                                  equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                                                  equalTo(SERVER_ADDRESS, brokerHost),
+                                                  equalTo(SERVER_PORT, brokerPort))))));
     }
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();

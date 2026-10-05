@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.redissonmetrics.common.v2_3.RedisClientInstrumentation;
@@ -19,7 +20,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class RedissonMetricsInstrumentationModule extends InstrumentationModule {
 
   public RedissonMetricsInstrumentationModule() {
-    super("redisson-metrics", "redisson-metrics-2.3");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "redisson-metrics-2.3" : "redisson-metrics",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"redisson-metrics", "redisson"}
+            : new String[] {"redisson-metrics-2.3"});
   }
 
   @Override

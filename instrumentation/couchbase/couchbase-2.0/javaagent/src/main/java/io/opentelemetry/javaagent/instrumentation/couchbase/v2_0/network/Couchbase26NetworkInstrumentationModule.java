@@ -20,9 +20,9 @@ public class Couchbase26NetworkInstrumentationModule extends InstrumentationModu
 
   public Couchbase26NetworkInstrumentationModule() {
     super(
-        "couchbase",
+        AgentCommonConfig.get().isV3Preview() ? "couchbase-2.0" : "couchbase",
         AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"couchbase-2.0", "couchbase-2.0-network-2.6"}
+            ? new String[] {"couchbase"}
             : new String[] {"couchbase-2.6"});
   }
 

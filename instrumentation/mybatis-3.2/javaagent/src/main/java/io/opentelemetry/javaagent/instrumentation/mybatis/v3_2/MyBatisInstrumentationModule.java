@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.mybatis.v3_2;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -16,7 +17,11 @@ import java.util.List;
 public class MyBatisInstrumentationModule extends InstrumentationModule {
 
   public MyBatisInstrumentationModule() {
-    super("mybatis", "mybatis-3.2");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "mybatis-3.2" : "mybatis",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"mybatis"}
+            : new String[] {"mybatis-3.2"});
   }
 
   @Override

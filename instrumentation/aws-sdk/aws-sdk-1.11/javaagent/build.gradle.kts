@@ -16,7 +16,7 @@ muzzle {
     versions.set("[1.10.33,)")
     assertInverse.set(true)
 
-    excludeInstrumentationName("aws-sdk-1.11-sqs")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.SqsInstrumentationModule")
   }
 
   fail {
@@ -24,7 +24,7 @@ muzzle {
     module.set("aws-java-sdk-core")
     versions.set("[1.10.33,)")
 
-    excludeInstrumentationName("aws-sdk-1.11-core")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.AwsSdkInstrumentationModule")
   }
 
   pass {
