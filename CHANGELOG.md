@@ -4,6 +4,9 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Remove the deprecated Elasticsearch REST library instrumentation. Use the Elasticsearch
+  Java API Client's native OpenTelemetry support, or the Java agent for direct RestClient usage.
+  Java agent instrumentation is unaffected.
 - Remove deprecated `setCapturedRequestHeaders` and `setCapturedResponseHeaders` methods from
   Ktor 1.0 configuration, and the `capturedRequestHeaders` and `capturedResponseHeaders`
   overloads from Ktor 2.0/3.0 builders. Use `requestHeaders` and `responseHeaders` with
