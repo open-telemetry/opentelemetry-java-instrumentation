@@ -15,17 +15,6 @@ public class RuntimeHints implements RuntimeHintsRegistrar {
   @Override
   public void registerHints(
       org.springframework.aot.hint.RuntimeHints hints, ClassLoader classLoader) {
-    hints.resources().registerResourceBundle("org.apache.commons.dbcp2.LocalStrings");
-
-    // To avoid Spring native issue with MongoDB: java.lang.ClassNotFoundException:
-    // org.springframework.data.mongodb.core.aggregation.AggregationOperation
-    hints
-        .reflection()
-        .registerType(
-            TypeReference.of(
-                "org.springframework.data.mongodb.core.aggregation.AggregationOperation"),
-            hint -> hint.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS));
-
     hints
         .reflection()
         .registerType(
@@ -36,12 +25,5 @@ public class RuntimeHints implements RuntimeHintsRegistrar {
         .registerType(
             TypeReference.of("org.apache.coyote.http11.AbstractHttp11Protocol"),
             hint -> hint.withMembers(MemberCategory.INVOKE_PUBLIC_METHODS));
-
-    hints
-        .reflection()
-        .registerType(
-            TypeReference.of(
-                "org.springframework.transaction.support.AbstractPlatformTransactionManager"),
-            hint -> hint.withMembers(MemberCategory.DECLARED_FIELDS));
   }
 }
