@@ -23,11 +23,6 @@ class AgentDistributionConfigTest {
   }
 
   @Test
-  void testIndyDevelopmentProperty() {
-    assertThat(AgentDistributionConfig.get().isIndyEnabled()).isTrue();
-  }
-
-  @Test
   void testForceSynchronousAgentListeners() {
     assertThat(AgentDistributionConfig.get().isForceSynchronousAgentListeners()).isFalse();
   }

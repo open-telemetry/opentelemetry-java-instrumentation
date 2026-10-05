@@ -18,6 +18,10 @@
   `opentelemetry-instrumentation-api-incubator` to `io.opentelemetry.instrumentation.api.semconv.code`
   in `opentelemetry-instrumentation-api`.
   Rename `CodeAttributesGetter#getMethodName` to `getCodeMethodName`.
+- Remove `otel.javaagent.experimental.indy` and `distribution.javaagent.indy/development`.
+  The javaagent now always uses non-inline advice for compatible instrumentation.
+  Instrumentation that intentionally uses inline advice remains supported.
+  ([#20377](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20377))
 - Remove deprecated `setCapturedRequestHeaders` and `setCapturedResponseHeaders` methods from
   HTTP library telemetry builders. Use `setRequestHeaders` and `setResponseHeaders`
   with `IncludeExclude` selectors instead. Selector patterns interpret `*` and `?` as wildcards

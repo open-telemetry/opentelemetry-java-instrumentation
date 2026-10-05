@@ -13,11 +13,9 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 @SuppressWarnings({"unused", "MethodCanBeStatic"})
-@EnabledIfSystemProperty(named = "otel.javaagent.experimental.indy", matches = "true")
 class IndyInstrumentationTest {
 
   @RegisterExtension
