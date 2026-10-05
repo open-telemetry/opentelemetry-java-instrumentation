@@ -4,11 +4,8 @@
 
 ### ⚠️ Breaking changes
 
-- The Java agent and standalone libraries now emit only the messaging telemetry previously selected
-  by `otel.semconv-stability.opt-in=messaging`, using the existing v1.43.0 implementation. These
-  upstream conventions are not all stable. The `messaging` and `messaging/dup` values in
-  `otel.semconv-stability.opt-in` and `otel.semconv-stability.preview`, the
-  `general.messaging.semconv` YAML settings, and v3-preview cannot restore old or dual output.
+- The Java agent and standalone libraries now use the existing v1.43.0 messaging implementation.
+  These upstream conventions are not all stable.
   Update span-name queries, for example `orders publish` becomes `send orders`, and replace
   `messaging.operation` with `messaging.operation.name` and `messaging.operation.type`.
   Replace `messaging.publish.duration` and `messaging.receive.duration` with
