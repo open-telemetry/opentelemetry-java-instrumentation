@@ -36,5 +36,12 @@ public class RuntimeHints implements RuntimeHintsRegistrar {
         .registerType(
             TypeReference.of("org.apache.coyote.http11.AbstractHttp11Protocol"),
             hint -> hint.withMembers(MemberCategory.INVOKE_PUBLIC_METHODS));
+
+    hints
+        .reflection()
+        .registerType(
+            TypeReference.of(
+                "org.springframework.transaction.support.AbstractPlatformTransactionManager"),
+            hint -> hint.withMembers(MemberCategory.DECLARED_FIELDS));
   }
 }
