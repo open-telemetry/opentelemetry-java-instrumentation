@@ -10,12 +10,10 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class LambdaInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class LambdaInstrumentationModule extends InstrumentationModule {
   public LambdaInstrumentationModule() {
     super("internal-lambda");
   }
@@ -27,23 +25,10 @@ public class LambdaInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public HelperClassStrategy helperClassStrategy() {
-    // Early Java 8 method-handle compilation cannot inspect nested advice split across class
-    // loaders.
-    return HelperClassStrategy.INJECTED;
-  }
-
-  @Override
-  public List<String> injectedClassNames() {
+  public List<String> getAdditionalHelperClassNames() {
+    // The ASM-inserted call is not visible to Muzzle's advice scanning.
     return singletonList(
         "io.opentelemetry.javaagent.instrumentation.internal.lambda.LambdaTransformerHelper");
-  }
-
-  @Override
-  public List<String> getAdditionalHelperClassNames() {
-    // this instrumentation uses ASM not ByteBuddy so muzzle doesn't automatically add helper
-    // classes
-    return injectedClassNames();
   }
 
   @Override
