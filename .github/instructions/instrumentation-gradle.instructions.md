@@ -16,7 +16,9 @@ or test failure that CI will report.
   instrumentation. In shared modules, use a `-common`
   suffix qualified by the minimum version or API variant only when needed. For new javaagent
   modules, check that Muzzle covers their supported ranges and that the main enablement name
-  matches the module directory without its version suffix. Include new test variants in
+  in v3 preview matches the full module directory, including versions, except where a default-off
+  feature needs a separate identity within that module. Default-off registrations must not share
+  names with default-on instrumentation. Include new test variants in
   `.github/scripts/instrumentations.sh`, keep `settings.gradle.kts` entries alphabetical,
   add the supported-library entry, and regenerate `.fossa.yml` with
   `generateFossaConfiguration` when adding a module. For a new javaagent module with user-facing
@@ -26,8 +28,11 @@ or test failure that CI will report.
 - Muzzle `pass` blocks need the target group, artifact, version range and inverse assertion
   where an inverse exists. A pass covering all versions has no meaningful inverse. If
   multiple `InstrumentationModule`s share a project, separate their ranges and exclude
-  unrelated instrumentation names in each pass. Muzzle checks referenced symbols, not whether
-  a Byte Buddy method matcher will ever match.
+  unrelated modules in each pass. Prefer `excludeInstrumentationName(...)` when the name selects
+  the intended classes both outside v3 preview and in preview; otherwise use
+  `excludeInstrumentationModule(...)` with fully qualified class names. Public enablement names
+  need not distinguish compatibility implementations. Muzzle checks referenced symbols, not
+  whether a Byte Buddy method matcher will ever match.
 - Versioned javaagent modules for the same component must load their sibling `:javaagent`
   modules via `testInstrumentation` so tests exercise Muzzle selection together. Match the
   component prefix before the trailing version, not just the grouping directory. Omit

@@ -15,8 +15,8 @@ plugins {
   id("com.gradleup.shadow") version "9.6.1"
   id("com.diffplug.spotless") version "8.10.3"
 
-  id("io.opentelemetry.instrumentation.muzzle-generation") version "2.32.0-alpha-SNAPSHOT"
-  id("io.opentelemetry.instrumentation.muzzle-check") version "2.32.0-alpha-SNAPSHOT"
+  id("io.opentelemetry.instrumentation.muzzle-generation") version "3.0.0-alpha-SNAPSHOT"
+  id("io.opentelemetry.instrumentation.muzzle-check") version "3.0.0-alpha-SNAPSHOT"
 }
 
 group = "io.opentelemetry.example"
@@ -27,8 +27,8 @@ val versions = mapOf(
   "opentelemetrySdk" to "1.66.0",
 
   // these lines are managed by .github/scripts/update-version.sh
-  "opentelemetryJavaagent" to "2.32.0-SNAPSHOT",
-  "opentelemetryJavaagentAlpha" to "2.32.0-alpha-SNAPSHOT"
+  "opentelemetryJavaagent" to "3.0.0-SNAPSHOT",
+  "opentelemetryJavaagentAlpha" to "3.0.0-alpha-SNAPSHOT"
 )
 
 val deps = mapOf(

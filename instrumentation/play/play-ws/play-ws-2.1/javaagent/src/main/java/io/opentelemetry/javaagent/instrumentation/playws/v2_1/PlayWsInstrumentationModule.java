@@ -11,6 +11,7 @@ import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.playws.common.v1_0.AbstractBootstrapInstrumentation;
@@ -29,7 +30,11 @@ import play.shaded.ahc.org.asynchttpclient.ws.WebSocketUpgradeHandler;
 @AutoService(InstrumentationModule.class)
 public class PlayWsInstrumentationModule extends InstrumentationModule {
   public PlayWsInstrumentationModule() {
-    super("play-ws", "play-ws-2.1");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "play-ws-2.1" : "play-ws",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"play-ws", "play"}
+            : new String[] {"play-ws-2.1"});
   }
 
   @Override

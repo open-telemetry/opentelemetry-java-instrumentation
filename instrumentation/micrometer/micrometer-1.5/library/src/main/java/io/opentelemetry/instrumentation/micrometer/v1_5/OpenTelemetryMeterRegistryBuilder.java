@@ -9,11 +9,8 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.micrometer.core.instrument.Clock;
-import io.micrometer.core.instrument.DistributionSummary;
-import io.micrometer.core.instrument.LongTaskTimer;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.config.NamingConvention;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.MeterBuilder;
@@ -75,32 +72,6 @@ public final class OpenTelemetryMeterRegistryBuilder {
   @CanIgnoreReturnValue
   public OpenTelemetryMeterRegistryBuilder setPrometheusMode(boolean prometheusMode) {
     this.prometheusMode = prometheusMode;
-    return this;
-  }
-
-  /**
-   * Enables the generation of gauge-based Micrometer histograms. While the Micrometer bridge is
-   * able to map Micrometer's {@link DistributionSummary} and {@link Timer} service level objectives
-   * to OpenTelemetry histogram buckets, it might not cover all cases that are normally supported by
-   * Micrometer (e.g. the bridge is not able to translate percentiles). With this setting enabled,
-   * the Micrometer bridge will additionally emit Micrometer service level objectives and
-   * percentiles as separate gauges.
-   *
-   * <p>Note that this setting does not concern the {@link LongTaskTimer}, as it is not bridged to
-   * an OpenTelemetry histogram.
-   *
-   * <p>This is disabled by default, set this to {@code true} to enable gauge-based Micrometer
-   * histograms.
-   *
-   * @deprecated Use {@link
-   *     io.opentelemetry.instrumentation.micrometer.v1_5.internal.Experimental#setMicrometerHistogramGaugesEnabled(OpenTelemetryMeterRegistryBuilder,
-   *     boolean)} instead. This method may be removed in the next minor release.
-   */
-  @Deprecated // may be removed in the next minor release
-  @CanIgnoreReturnValue
-  public OpenTelemetryMeterRegistryBuilder setMicrometerHistogramGaugesEnabled(
-      boolean histogramGaugesEnabled) {
-    this.histogramGaugesEnabled = histogramGaugesEnabled;
     return this;
   }
 

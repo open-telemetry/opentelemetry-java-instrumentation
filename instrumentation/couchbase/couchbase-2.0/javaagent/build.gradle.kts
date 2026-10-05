@@ -11,8 +11,8 @@ muzzle {
     skip("2.7.5", "2.7.8")
     assertInverse.set(true)
 
-    excludeInstrumentationName("couchbase-2.0-network")
-    excludeInstrumentationName("couchbase-2.6")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.Couchbase20NetworkInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.Couchbase26NetworkInstrumentationModule")
   }
   pass {
     // instrumentation-docs:ignore - verification only, the directive above is the range we document
@@ -22,8 +22,8 @@ muzzle {
     versions.set("[2,2.6)")
     assertInverse.set(true)
 
-    excludeInstrumentationName("couchbase-2.0-core")
-    excludeInstrumentationName("couchbase-2.6")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.Couchbase26NetworkInstrumentationModule")
   }
   pass {
     // instrumentation-docs:ignore - verification only, the first directive is the range we document
@@ -35,8 +35,8 @@ muzzle {
     skip("2.7.5", "2.7.8")
     assertInverse.set(true)
 
-    excludeInstrumentationName("couchbase-2.0-core")
-    excludeInstrumentationName("couchbase-2.0-network")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.Couchbase20NetworkInstrumentationModule")
   }
   fail {
     group.set("com.couchbase.client")

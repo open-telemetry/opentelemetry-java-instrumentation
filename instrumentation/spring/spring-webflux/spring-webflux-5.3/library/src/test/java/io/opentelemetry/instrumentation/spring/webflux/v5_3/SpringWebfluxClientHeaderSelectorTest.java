@@ -6,8 +6,6 @@
 package io.opentelemetry.instrumentation.spring.webflux.v5_3;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
@@ -46,12 +44,12 @@ class SpringWebfluxClientHeaderSelectorTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // testing deprecated API
   void capturesHeadersConfiguredByName() {
     SpringWebfluxClientTelemetry telemetry =
         SpringWebfluxClientTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedRequestHeaders(asList("X-Test-Request", "Authorization"))
-            .setCapturedResponseHeaders(singletonList("X-Test-Response"))
+            .setRequestHeaders(
+                IncludeExclude.builder().setIncluded("X-Test-Request", "Authorization").build())
+            .setResponseHeaders(IncludeExclude.builder().setIncluded("X-Test-Response").build())
             .build();
 
     sendRequest(telemetry);
@@ -59,8 +57,6 @@ class SpringWebfluxClientHeaderSelectorTest {
     Attributes attributes = testing.waitForTraces(1).get(0).get(0).getAttributes();
     assertThat(attributes.get(stringArrayKey("http.request.header.x-test-request")))
         .containsExactly("request-value");
-    // capturing Authorization here is what makes the assertion that it is absent in
-    // deprecatedSettersMatchHeaderNamesLiterally meaningful
     assertThat(attributes.get(stringArrayKey("http.request.header.authorization")))
         .containsExactly("secret-value");
     assertThat(attributes.get(stringArrayKey("http.request.header.x-secret-token"))).isNull();
@@ -70,19 +66,13 @@ class SpringWebfluxClientHeaderSelectorTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // testing deprecated API
-  void deprecatedSettersMatchHeaderNamesLiterally() {
+  void doesNotCaptureHeadersByDefault() {
     SpringWebfluxClientTelemetry telemetry =
-        SpringWebfluxClientTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedRequestHeaders(singletonList("*"))
-            .setCapturedResponseHeaders(singletonList("*"))
-            .build();
+        SpringWebfluxClientTelemetry.builder(testing.getOpenTelemetry()).build();
 
     sendRequest(telemetry);
 
     Attributes attributes = testing.waitForTraces(1).get(0).get(0).getAttributes();
-    // "*" is matched as a literal header name, so it captures nothing because neither the request
-    // nor the response contains it; Authorization ensures treating "*" as a glob would capture it
     assertThat(attributes.get(stringArrayKey("http.request.header.authorization"))).isNull();
     assertThat(attributes.asMap().keySet())
         .noneMatch(key -> key.getKey().startsWith("http.request.header."))

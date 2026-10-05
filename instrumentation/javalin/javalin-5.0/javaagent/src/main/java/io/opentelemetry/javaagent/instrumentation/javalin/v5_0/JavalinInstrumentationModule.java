@@ -10,6 +10,7 @@ import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -20,7 +21,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class JavalinInstrumentationModule extends InstrumentationModule {
 
   public JavalinInstrumentationModule() {
-    super("javalin", "javalin-5.0");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "javalin-5.0" : "javalin",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"javalin"}
+            : new String[] {"javalin-5.0"});
   }
 
   @Override

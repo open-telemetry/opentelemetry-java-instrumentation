@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -23,7 +24,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class ApacheCamelKafkaInstrumentationModule extends InstrumentationModule {
 
   public ApacheCamelKafkaInstrumentationModule() {
-    super("camel", "camel-2.20", "camel-kafka");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "camel-2.20" : "camel",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"camel-kafka", "camel"}
+            : new String[] {"camel-2.20", "camel-kafka"});
   }
 
   @Override

@@ -19,7 +19,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class HibernateInstrumentationModule extends InstrumentationModule {
 
   public HibernateInstrumentationModule() {
-    super("hibernate", "hibernate-3.3");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "hibernate-3.3" : "hibernate",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"hibernate"}
+            : new String[] {"hibernate-3.3"});
   }
 
   @Override

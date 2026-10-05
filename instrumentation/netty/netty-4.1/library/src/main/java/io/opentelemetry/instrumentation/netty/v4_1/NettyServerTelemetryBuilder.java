@@ -67,24 +67,6 @@ public final class NettyServerTelemetryBuilder {
   }
 
   /**
-   * Configures HTTP request headers to capture as span attributes.
-   *
-   * <p>The header names are matched literally, so {@code *} and {@code ?} are not treated as glob
-   * patterns.
-   *
-   * @param capturedRequestHeaders HTTP header names to capture.
-   * @deprecated Use {@link #setRequestHeaders(IncludeExclude)} instead, which matches glob patterns
-   *     rather than literal header names. May be removed in the next minor release.
-   */
-  @Deprecated // may be removed in the next minor release
-  @CanIgnoreReturnValue
-  public NettyServerTelemetryBuilder setCapturedRequestHeaders(
-      Collection<String> capturedRequestHeaders) {
-    builder.setCapturedRequestHeaders(capturedRequestHeaders);
-    return this;
-  }
-
-  /**
    * Configures which HTTP response headers are captured as span attributes.
    *
    * <p>Header values are captured under the {@code http.response.header.<key>} attribute key. The
@@ -99,24 +81,6 @@ public final class NettyServerTelemetryBuilder {
   @CanIgnoreReturnValue
   public NettyServerTelemetryBuilder setResponseHeaders(IncludeExclude responseHeaders) {
     builder.setResponseHeaders(responseHeaders);
-    return this;
-  }
-
-  /**
-   * Configures HTTP response headers to capture as span attributes.
-   *
-   * <p>The header names are matched literally, so {@code *} and {@code ?} are not treated as glob
-   * patterns.
-   *
-   * @param capturedResponseHeaders HTTP header names to capture.
-   * @deprecated Use {@link #setResponseHeaders(IncludeExclude)} instead, which matches glob
-   *     patterns rather than literal header names. May be removed in the next minor release.
-   */
-  @Deprecated // may be removed in the next minor release
-  @CanIgnoreReturnValue
-  public NettyServerTelemetryBuilder setCapturedResponseHeaders(
-      Collection<String> capturedResponseHeaders) {
-    builder.setCapturedResponseHeaders(capturedResponseHeaders);
     return this;
   }
 

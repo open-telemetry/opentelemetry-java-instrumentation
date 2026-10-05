@@ -22,6 +22,11 @@ val extraTag = findProperty("extraTag")
 
 val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
 
+java {
+  sourceCompatibility = JavaVersion.VERSION_11
+  targetCompatibility = JavaVersion.VERSION_11
+}
+
 jib {
   from {
     image = "eclipse-temurin:21-jre"

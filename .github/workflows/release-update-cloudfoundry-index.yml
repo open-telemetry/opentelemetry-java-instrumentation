@@ -72,6 +72,6 @@ jobs:
     needs:
       - update-cloudfoundry-index-yml
     if: always()
-    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@03559ef555db0eae5d85c3c6347d1530243e7aa7 # v0.13.0
+    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@6839dcd6ea227c18b59d11da34499746634728ad # v0.17.0
     with:
       success: ${{ needs.update-cloudfoundry-index-yml.result == 'success' }}

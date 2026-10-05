@@ -17,6 +17,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.event.CommandListener;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -29,7 +30,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class Mongo31InstrumentationModule extends InstrumentationModule {
 
   public Mongo31InstrumentationModule() {
-    super("mongo", "mongo-3.1", "mongo-3.1-client-options");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "mongo-3.1" : "mongo",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"mongo"}
+            : new String[] {"mongo-3.1", "mongo-3.1-client-options"});
   }
 
   @Override

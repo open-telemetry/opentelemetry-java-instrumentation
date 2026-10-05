@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.avaje.jex.v3_0;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -16,7 +17,11 @@ import java.util.List;
 public class JexInstrumentationModule extends InstrumentationModule {
 
   public JexInstrumentationModule() {
-    super("avaje-jex", "avaje-jex-3.0");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "avaje-jex-3.0" : "avaje-jex",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"avaje-jex"}
+            : new String[] {"avaje-jex-3.0"});
   }
 
   @Override

@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.liberty.dispatcher.v20_0;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -16,7 +17,11 @@ import java.util.List;
 public class LibertyDispatcherInstrumentationModule extends InstrumentationModule {
 
   public LibertyDispatcherInstrumentationModule() {
-    super("liberty-dispatcher", "liberty-dispatcher-20.0", "liberty");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "liberty-dispatcher-20.0" : "liberty-dispatcher",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"liberty"}
+            : new String[] {"liberty-dispatcher-20.0", "liberty"});
   }
 
   @Override
