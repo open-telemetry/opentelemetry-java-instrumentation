@@ -1,21 +1,19 @@
 # Debugging
 
-Debugging advice methods depends on whether the instrumentation uses invokedynamic
-or inlined advice.
+Debugging advice methods depends on whether the advice is inline or non-inline.
 
-## Indy compatible instrumentation
+## Non-inline advice methods
 
-The javaagent uses the
-[invokedynamic based instrumentation mechanism](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/8999)
-for compatible instrumentation. Breakpoints work in these advice methods when running tests:
+Non-inline advice methods are annotated with `@Advice.OnMethodEnter(inline = false)` or
+`@Advice.OnMethodExit(inline = false)`. Breakpoints work in these methods when running tests:
 
 ```
 ./gradlew :instrumentation:<INSTRUMENTATION_NAME>:test
 ```
 
-## Inlined advice methods
+## Inline advice methods
 
-Some instrumentation intentionally uses inlined advice. Breakpoints do not work in these methods,
+Some instrumentation intentionally uses inline advice. Breakpoints do not work in these methods,
 because ByteBuddy copies their code into the target class. Keep these methods as small as possible.
 The advice methods are annotated with:
 
@@ -32,7 +30,7 @@ first try debugging the methods that advice is calling rather than the advice me
 @Advice.OnMethodEnter(inline = false)
 ```
 
-When inlined, the best approach to debug advice methods and agent initialization is to use the
+When advice is inline, the best approach to debug advice methods and agent initialization is to use the
 following statements:
 
 ```java
@@ -57,7 +55,7 @@ before the `-javaagent:` JVM arg and use `suspend=y` (see full example below).
 ## Enabling debugging
 
 The following example shows remote debugger configuration. The breakpoints
-should work in any code except inlined advice methods.
+should work in any code except inline advice methods.
 
 ```bash
 java -agentlib:jdwp="transport=dt_socket,server=y,suspend=y,address=5000" -javaagent:opentelemetry-javaagent-<version>.jar -jar app.jar

@@ -593,8 +593,8 @@ public class AgentInstaller {
           otherClasses.add(c);
         }
       }
-      // Indy initialization may load injected helpers during retransformation. Class loader
-      // instrumentation must be applied in an earlier batch so those helpers can be defined.
+      // Initializing non-inline advice may load injected helpers during retransformation.
+      // Instrument class loaders in an earlier batch so those helpers can be defined.
       return Stream.of(classLoaders, otherClasses);
     }
 
