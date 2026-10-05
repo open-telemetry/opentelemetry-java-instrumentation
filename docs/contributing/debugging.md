@@ -22,13 +22,8 @@ The advice methods are annotated with:
 @net.bytebuddy.asm.Advice.OnMethodExit
 ```
 
-These annotations have an option to disable inlining which can allow breakpoints to work within
-advice methods. This should only be used for debugging and may break things. As such, it is best to
-first try debugging the methods that advice is calling rather than the advice method itself.
-
-```java
-@Advice.OnMethodEnter(inline = false)
-```
+Debug the helper methods called by inline advice instead. Changing `inline` can change the
+module's helper-loading strategy and is not a safe debugging-only toggle.
 
 When advice is inline, the best approach to debug advice methods and agent initialization is to use the
 following statements:
