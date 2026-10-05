@@ -17,6 +17,9 @@
   Parameter types and behavior are unchanged.
 - Rename `setOpenTelemetry` to `openTelemetry` in Ktor 1.0 configuration and Ktor 2.0/3.0
   client and server builders. The parameter type and initialization behavior are unchanged.
+- Remove the deprecated `OpenTelemetryMeterRegistryBuilder#setMicrometerHistogramGaugesEnabled(boolean)`.
+  Use `Experimental#setMicrometerHistogramGaugesEnabled(OpenTelemetryMeterRegistryBuilder, boolean)`
+  instead.
 
 ## Version 2.32.0 (2026-10-03)
 
