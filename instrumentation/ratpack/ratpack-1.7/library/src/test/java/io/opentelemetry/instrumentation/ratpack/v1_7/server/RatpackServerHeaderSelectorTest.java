@@ -71,13 +71,12 @@ class RatpackServerHeaderSelectorTest {
     assertThat(attributes.get(stringArrayKey("http.response.header.content-type"))).isNull();
   }
 
-  @SuppressWarnings("deprecation") // testing deprecated API
   @Test
   void capturesHeadersConfiguredByName() throws Exception {
     RatpackServerTelemetry telemetry =
         RatpackServerTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedRequestHeaders(singletonList("X-Test-Request"))
-            .setCapturedResponseHeaders(singletonList("X-Test-Response"))
+            .setRequestHeaders(IncludeExclude.builder().setIncluded("X-Test-Request").build())
+            .setResponseHeaders(IncludeExclude.builder().setIncluded("X-Test-Response").build())
             .build();
 
     Attributes attributes = handleRequest(telemetry);
@@ -89,20 +88,13 @@ class RatpackServerHeaderSelectorTest {
         .isEqualTo(singletonList("test"));
   }
 
-  @SuppressWarnings("deprecation") // testing deprecated API
   @Test
-  void deprecatedSettersMatchHeaderNamesLiterally() throws Exception {
+  void doesNotCaptureHeadersByDefault() throws Exception {
     RatpackServerTelemetry telemetry =
-        RatpackServerTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedRequestHeaders(singletonList("*"))
-            .setCapturedResponseHeaders(singletonList("*"))
-            .build();
+        RatpackServerTelemetry.builder(testing.getOpenTelemetry()).build();
 
     Attributes attributes = handleRequest(telemetry);
 
-    // implementing header name enumeration must not turn the deprecated exact-name setters into
-    // wildcard matching, since "*" is a legal header name character and capturing every header
-    // would expose credentials
     assertThat(attributes.get(stringArrayKey("http.request.header.x-test-request"))).isNull();
     assertThat(attributes.get(stringArrayKey("http.request.header.authorization"))).isNull();
     assertThat(attributes.get(stringArrayKey("http.request.header.host"))).isNull();
