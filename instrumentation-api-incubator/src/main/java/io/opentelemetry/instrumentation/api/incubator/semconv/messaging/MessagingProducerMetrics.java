@@ -86,25 +86,19 @@ public final class MessagingProducerMetrics implements OperationListener {
     return getForOperationType();
   }
 
-  /**
-   * Returns metrics for extractors configured with {@link MessagingOperationType}, emitting only
-   * the v1.43 {@code messaging.client.*} instruments.
-   */
+  /** Returns metrics for extractors configured with {@link MessagingOperationType}. */
   // will be renamed in 3.0 to get()
   public static OperationMetrics getForOperationType() {
     return OperationMetricsUtil.create(
         "messaging producer", meter -> new MessagingProducerMetrics(meter, Variant.STABLE));
   }
 
-  /**
-   * Returns the same v1.43 instruments as {@link #getForOperationType()}. Does not emit {@code
-   * messaging.publish.duration}.
-   */
+  /** Returns the same metrics as {@link #getForOperationType()}. */
   public static OperationMetrics getForOperationTypeWithOldMetrics() { // to be removed in 3.0
     return getForOperationType();
   }
 
-  /** Returns only the stable sent-messages metric. */
+  /** Returns only the sent-messages metric. */
   public static OperationMetrics getSentMessages() {
     return OperationMetricsUtil.create(
         "messaging sent messages",
@@ -219,16 +213,13 @@ public final class MessagingProducerMetrics implements OperationListener {
   }
 
   private enum Variant {
-    /** Extractors configured with {@link MessageOperation}; old instruments only. */
+    /** Only the publish-duration histogram. */
     LEGACY,
-    /** Extractors configured with {@link MessagingOperationType}; stable instruments only. */
+    /** The client-operation-duration histogram and sent-messages counter. */
     STABLE,
-    /**
-     * Extractors configured with {@link MessagingOperationType} that also keep emitting the
-     * deprecated instruments.
-     */
+    /** The client metrics and optional publish-duration histogram. */
     STABLE_AND_OLD,
-    /** Only the stable sent-messages counter. */
+    /** Only the sent-messages counter. */
     SENT_MESSAGES_ONLY
   }
 }

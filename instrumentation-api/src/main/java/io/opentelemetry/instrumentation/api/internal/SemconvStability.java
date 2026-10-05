@@ -162,9 +162,6 @@ public final class SemconvStability {
     return false;
   }
 
-  // Returns whether the v1.43 messaging semantic conventions should be emitted.
-  // The method name follows the existing pattern; it does not indicate that the messaging
-  // conventions are stable.
   public static boolean emitStableMessagingSemconv() { // to be removed in 3.0
     return true;
   }

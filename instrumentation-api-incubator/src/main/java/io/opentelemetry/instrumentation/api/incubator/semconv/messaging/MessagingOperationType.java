@@ -45,12 +45,7 @@ public enum MessagingOperationType {
     return null;
   }
 
-  /**
-   * Returns the operation name used by the old messaging semantic conventions, i.e. the value of
-   * the {@code messaging.operation} attribute and the operation part of the old span name. The
-   * v1.43 conventions require a system-specific operation name, which callers have to provide
-   * explicitly.
-   */
+  /** Returns the operation name for the {@code messaging.operation} attribute and span names. */
   String legacyOperationName() {
     return legacyOperationName;
   }

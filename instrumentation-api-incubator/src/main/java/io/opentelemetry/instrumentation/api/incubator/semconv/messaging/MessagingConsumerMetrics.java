@@ -102,32 +102,26 @@ public final class MessagingConsumerMetrics implements OperationListener {
     return getForOperationType();
   }
 
-  /**
-   * Returns metrics for extractors configured with {@link MessagingOperationType}, emitting only
-   * the v1.43 {@code messaging.client.*} instruments.
-   */
+  /** Returns metrics for extractors configured with {@link MessagingOperationType}. */
   // will be renamed in 3.0 to get()
   public static OperationMetrics getForOperationType() {
     return OperationMetricsUtil.create(
         "messaging consumer", meter -> new MessagingConsumerMetrics(meter, Variant.STABLE));
   }
 
-  /**
-   * Returns the same v1.43 instruments as {@link #getForOperationType()}. Does not emit {@code
-   * messaging.receive.duration} or {@code messaging.receive.messages}.
-   */
+  /** Returns the same metrics as {@link #getForOperationType()}. */
   public static OperationMetrics getForOperationTypeWithOldMetrics() { // to be removed in 3.0
     return getForOperationType();
   }
 
-  /** Returns only the stable client-operation-duration metric. */
+  /** Returns only the client-operation-duration metric. */
   public static OperationMetrics getClientOperationDuration() {
     return OperationMetricsUtil.create(
         "messaging client operation duration",
         meter -> new MessagingConsumerMetrics(meter, Variant.CLIENT_OPERATION_DURATION_ONLY));
   }
 
-  /** Returns only the stable consumed-messages metric for a delivered message. */
+  /** Returns only the consumed-messages metric for a delivered message. */
   public static OperationMetrics getConsumedMessages() {
     return OperationMetricsUtil.create(
         "messaging consumed messages",
@@ -271,18 +265,15 @@ public final class MessagingConsumerMetrics implements OperationListener {
   }
 
   private enum Variant {
-    /** Extractors configured with {@link MessageOperation}; old instruments only. */
+    /** The receive-duration histogram and received-messages counter. */
     LEGACY,
-    /** Extractors configured with {@link MessagingOperationType}; stable instruments only. */
+    /** The client-operation-duration histogram and consumed-messages counter. */
     STABLE,
-    /**
-     * Extractors configured with {@link MessagingOperationType} that also keep emitting the
-     * deprecated instruments.
-     */
+    /** The client metrics and optional receive-duration and received-messages instruments. */
     STABLE_AND_OLD,
-    /** Only the stable client-operation-duration histogram. */
+    /** Only the client-operation-duration histogram. */
     CLIENT_OPERATION_DURATION_ONLY,
-    /** Only the stable consumed-messages counter, for a delivered message. */
+    /** Only the consumed-messages counter, for a delivered message. */
     CONSUMED_MESSAGES_ONLY
   }
 }

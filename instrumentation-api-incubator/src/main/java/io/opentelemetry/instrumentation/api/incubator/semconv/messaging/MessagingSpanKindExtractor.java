@@ -11,12 +11,12 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import java.util.function.Predicate;
 
-/** Selects messaging span kinds according to the v1.43 semantic conventions. */
+/** Selects messaging span kinds. */
 public final class MessagingSpanKindExtractor {
 
   /**
    * Returns a span kind extractor following the <a
-   * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/messaging/messaging-spans.md#span-kind">v1.43
+   * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/messaging/messaging-spans.md#span-kind">
    * messaging span kind conventions</a>.
    *
    * <p>{@link MessagingOperationType#SEND} spans are treated as propagating their span context as
@@ -29,7 +29,7 @@ public final class MessagingSpanKindExtractor {
 
   /**
    * Returns a span kind extractor following the <a
-   * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/messaging/messaging-spans.md#span-kind">v1.43
+   * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/messaging/messaging-spans.md#span-kind">
    * messaging span kind conventions</a>.
    *
    * @param spanContextPropagated tells whether the context of a {@link MessagingOperationType#SEND}

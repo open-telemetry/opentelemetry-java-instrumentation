@@ -206,15 +206,13 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
     }
     attributes.put(MESSAGING_MESSAGE_CONVERSATION_ID, getter.getConversationId(request));
     if (emitOldSemconv) {
-      // the message size attributes are opt-in in the v1.43 messaging semantic conventions
+      // The message size attributes are opt-in.
       attributes.put(MESSAGING_MESSAGE_BODY_SIZE, getter.getMessageBodySize(request));
       attributes.put(MESSAGING_MESSAGE_ENVELOPE_SIZE, getter.getMessageEnvelopeSize(request));
       attributes.put(MESSAGING_CLIENT_ID_OLD, getter.getClientId(request));
     }
     if (emitStableSemconv) {
       attributes.put(MESSAGING_CLIENT_ID, getter.getClientId(request));
-      // messaging.destination.subscription.name only exists in the v1.43 messaging semantic
-      // conventions
       attributes.put(
           MESSAGING_DESTINATION_SUBSCRIPTION_NAME, getter.getDestinationSubscriptionName(request));
     }
