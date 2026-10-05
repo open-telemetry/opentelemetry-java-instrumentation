@@ -12,7 +12,6 @@ import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -75,7 +74,6 @@ class AwsLambdaSqsMessageHandlerTest {
     assertThat(testing.forceFlushCalled()).isTrue();
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void processSpans() {
     SQSEvent.SQSMessage message1 = newMessage();
@@ -111,7 +109,6 @@ class AwsLambdaSqsMessageHandlerTest {
                         .hasParentSpanId(trace.getSpan(0).getSpanId())
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                            equalTo(MESSAGING_OPERATION, null),
                             equalTo(MESSAGING_DESTINATION_NAME, "queue1"),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -137,7 +134,6 @@ class AwsLambdaSqsMessageHandlerTest {
                         .hasParentSpanId(trace.getSpan(1).getSpanId())
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                            equalTo(MESSAGING_OPERATION, null),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             equalTo(MESSAGING_MESSAGE_ID, "message1"),
@@ -155,7 +151,6 @@ class AwsLambdaSqsMessageHandlerTest {
                         .hasParentSpanId(trace.getSpan(1).getSpanId())
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                            equalTo(MESSAGING_OPERATION, null),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             equalTo(MESSAGING_MESSAGE_ID, "message2"),

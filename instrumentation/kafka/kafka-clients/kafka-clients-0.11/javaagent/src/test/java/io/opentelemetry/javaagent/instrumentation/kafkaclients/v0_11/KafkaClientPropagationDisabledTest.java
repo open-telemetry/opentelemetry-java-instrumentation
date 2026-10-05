@@ -58,8 +58,8 @@ class KafkaClientPropagationDisabledTest extends KafkaClientPropagationBaseTest 
                 span -> span.hasName("processing").hasParent(trace.getSpan(0))));
   }
 
-  // when propagation is disabled the span context is not sent as the message creation context, so
-  // under the stable semantic conventions the send span is CLIENT instead of PRODUCER
+  // when propagation is disabled the span context is not sent as the message creation context,
+  // so the send span is CLIENT
   private static void assertSendSpan(SpanDataAssert span, String message) {
     span.hasName("send " + SHARED_TOPIC)
         .hasKind(SpanKind.CLIENT)

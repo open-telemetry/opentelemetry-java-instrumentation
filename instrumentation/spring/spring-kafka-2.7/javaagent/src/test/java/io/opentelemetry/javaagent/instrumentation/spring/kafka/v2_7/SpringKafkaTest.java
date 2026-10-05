@@ -22,7 +22,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CLUSTER_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -61,7 +60,6 @@ import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class SpringKafkaTest extends AbstractSpringKafkaTest {
 
   private static final boolean EXPERIMENTAL_ATTRIBUTES =
@@ -259,7 +257,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
-                      assertStableReceiveSpan(
+                      assertReceiveSpan(
                           span, producer.get(), "testSingleTopic", "testSingleListener")));
     }
     testing.waitAndAssertSortedTraces(
@@ -383,9 +381,9 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                       .hasAttributesSatisfyingExactly(producerAttributes("testBatchTopic", "10")));
           producer.set(trace.getSpan(1));
         });
-    assertions.add(trace -> assertStableBatchProcessTrace(trace, producer.get(), true));
-    assertions.add(trace -> assertStableBatchProcessTrace(trace, producer.get(), true));
-    assertions.add(trace -> assertStableBatchProcessTrace(trace, producer.get(), false));
+    assertions.add(trace -> assertBatchProcessTrace(trace, producer.get(), true));
+    assertions.add(trace -> assertBatchProcessTrace(trace, producer.get(), true));
+    assertions.add(trace -> assertBatchProcessTrace(trace, producer.get(), false));
     // latest dep tests call receive once and only retry the failed process step
     int receiveCount = testLatestDeps() ? 1 : 3;
     for (int i = 0; i < receiveCount; i++) {
@@ -393,7 +391,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
-                      assertStableReceiveSpan(
+                      assertReceiveSpan(
                           span, producer.get(), "testBatchTopic", "testBatchListener")));
     }
     testing.waitAndAssertSortedTraces(
@@ -485,7 +483,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
     }
   }
 
-  private static void assertStableBatchProcessTrace(
+  private static void assertBatchProcessTrace(
       TraceAssert trace, SpanData producer, boolean failed) {
     trace.hasSpansSatisfyingExactly(
         span -> {
@@ -503,7 +501,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
         span -> span.hasName("consumer").hasParent(trace.getSpan(0)));
   }
 
-  private static void assertStableReceiveSpan(
+  private static void assertReceiveSpan(
       SpanDataAssert span, SpanData producer, String topic, String group) {
     span.hasName("poll " + topic)
         .hasKind(SpanKind.CLIENT)
@@ -579,7 +577,6 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
             asList(
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
-                equalTo(MESSAGING_OPERATION, null),
                 equalTo(MESSAGING_OPERATION_NAME, operationName),
                 equalTo(MESSAGING_OPERATION_TYPE, operationType)));
 

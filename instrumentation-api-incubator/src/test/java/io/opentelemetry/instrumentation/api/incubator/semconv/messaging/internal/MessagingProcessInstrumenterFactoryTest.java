@@ -52,7 +52,7 @@ class MessagingProcessInstrumenterFactoryTest {
   static final OpenTelemetryExtension otelTesting = OpenTelemetryExtension.create();
 
   @Test
-  void stableUsesProducerAsParentAndLinksIt() {
+  void usesProducerAsParentAndLinksIt() {
 
     Instrumenter<Map<String, String>, Void> instrumenter =
         MessagingProcessInstrumenterFactory.create(
@@ -81,7 +81,7 @@ class MessagingProcessInstrumenterFactoryTest {
   }
 
   @Test
-  void stableLinksCreationContextEvenWhenItIsTheAmbientParent() {
+  void linksCreationContextEvenWhenItIsTheAmbientParent() {
 
     SpanContext localProducer =
         SpanContext.create(
@@ -116,7 +116,7 @@ class MessagingProcessInstrumenterFactoryTest {
   }
 
   @Test
-  void stableDoesNotLinkWhenCarrierHasNoCreationContext() {
+  void doesNotLinkWhenCarrierHasNoCreationContext() {
 
     Instrumenter<Map<String, String>, Void> instrumenter =
         MessagingProcessInstrumenterFactory.create(
@@ -145,7 +145,7 @@ class MessagingProcessInstrumenterFactoryTest {
 
   @ParameterizedTest
   @MethodSource("receiveInstrumentationSettings")
-  void usesExpectedParentAndLink(boolean receiveInstrumentationEnabled, boolean producerIsParent) {
+  void usesExpectedParentAndLink(boolean receiveInstrumentationEnabled) {
     Instrumenter<Map<String, String>, Void> instrumenter =
         MessagingProcessInstrumenterFactory.create(
             Instrumenter.<Map<String, String>, Void>builder(
@@ -159,31 +159,22 @@ class MessagingProcessInstrumenterFactoryTest {
     Context context = instrumenter.start(Context.root().with(Span.wrap(ambientParent)), carrier);
     instrumenter.end(context, carrier, null, null);
 
-    SpanContext expectedParent = producerIsParent ? producer : ambientParent;
     otelTesting
         .assertTraces()
         .hasTracesSatisfyingExactly(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      span.hasName("process")
-                          .hasKind(SpanKind.CONSUMER)
-                          .hasTraceId(expectedParent.getTraceId())
-                          .hasParentSpanId(expectedParent.getSpanId());
-                      if (producerIsParent) {
-                        span.hasLinks();
-                      } else {
-                        span.hasLinks(LinkData.create(producer));
-                      }
-                    }));
+                    span ->
+                        span.hasName("process")
+                            .hasKind(SpanKind.CONSUMER)
+                            .hasTraceId(ambientParent.getTraceId())
+                            .hasParentSpanId(ambientParent.getSpanId())
+                            .hasLinks(LinkData.create(producer))));
   }
 
   private static Stream<Arguments> receiveInstrumentationSettings() {
 
-    String semconv = "stable";
-    return Stream.of(
-        argumentSet(semconv + " receive disabled", false, false),
-        argumentSet(semconv + " receive enabled", true, false));
+    return Stream.of(argumentSet("receive disabled", false), argumentSet("receive enabled", true));
   }
 
   private static SpanContext spanContext(String traceId, String spanId) {

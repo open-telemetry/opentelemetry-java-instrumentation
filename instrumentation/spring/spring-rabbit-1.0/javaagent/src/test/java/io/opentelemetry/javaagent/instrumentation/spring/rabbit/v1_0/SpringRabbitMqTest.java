@@ -21,7 +21,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_ANONYMOUS;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY;
@@ -135,7 +134,6 @@ class SpringRabbitMqTest {
     ip = InetAddress.getByName(rabbitMqContainer.getHost()).getHostAddress();
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   private static List<AttributeAssertion> getAssertions(
       String destination,
       String operation,
@@ -150,7 +148,6 @@ class SpringRabbitMqTest {
                 equalTo(MESSAGING_SYSTEM, "rabbitmq"),
                 equalTo(MESSAGING_DESTINATION_NAME, destination),
                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
-                equalTo(MESSAGING_OPERATION, null),
                 equalTo(MESSAGING_OPERATION_NAME, operation),
                 equalTo(MESSAGING_OPERATION_TYPE, "publish".equals(operation) ? "send" : operation),
                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, expectedBatchMessageCount)));
@@ -614,7 +611,6 @@ class SpringRabbitMqTest {
     verifySettleSpan(span, "nack");
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   private static void verifySettleSpan(SpanDataAssert span, String operation) {
 
     List<AttributeAssertion> assertions =

@@ -63,7 +63,7 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
         KafkaProducerRecord.create("testBatchTopic", "20", "testSpan2");
     sendBatchMessages(record1, record2);
 
-    assertStableBatchSuccess(record1, record2);
+    assertBatchSuccess(record1, record2);
     assertBatchMetrics(2, null);
   }
 
@@ -78,7 +78,7 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
     // make sure that the consumer eats up any leftover records
     kafkaConsumer.resume();
 
-    assertStableBatchFailure(record);
+    assertBatchFailure(record);
     assertBatchMetrics(1, IllegalArgumentException.class.getName());
   }
 
@@ -130,7 +130,7 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
     assertProcessMetricPointCounts(testing(), "io.opentelemetry.vertx-kafka-client-3.6", 2);
   }
 
-  private void assertStableBatchSuccess(
+  private void assertBatchSuccess(
       KafkaProducerRecord<String, String> record1, KafkaProducerRecord<String, String> record2) {
     AtomicReference<SpanData> producer1 = new AtomicReference<>();
     AtomicReference<SpanData> producer2 = new AtomicReference<>();
@@ -191,7 +191,7 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
                             .hasAttributesSatisfyingExactly(receiveAttributes("testBatchTopic"))));
   }
 
-  private void assertStableBatchFailure(KafkaProducerRecord<String, String> record) {
+  private void assertBatchFailure(KafkaProducerRecord<String, String> record) {
     AtomicReference<SpanData> producer = new AtomicReference<>();
 
     testing()

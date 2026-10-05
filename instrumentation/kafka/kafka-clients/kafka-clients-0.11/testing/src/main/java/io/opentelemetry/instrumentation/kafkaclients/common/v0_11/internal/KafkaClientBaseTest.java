@@ -17,11 +17,9 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CLUSTER_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_TOMBSTONE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -30,7 +28,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -77,8 +74,6 @@ public abstract class KafkaClientBaseTest {
   @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   protected static final String SHARED_TOPIC = "shared.topic";
-  protected static final AttributeKey<String> MESSAGING_CLIENT_ID_OLD =
-      AttributeKey.stringKey("messaging.client_id");
 
   private KafkaContainer kafka;
   protected Producer<Integer, String> producer;
@@ -180,7 +175,6 @@ public abstract class KafkaClientBaseTest {
     return KafkaTestUtil.poll(consumer, duration);
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> sendAttributes(
       String messageKey, String messageValue, boolean testHeaders) {
     List<AttributeAssertion> assertions =
@@ -188,11 +182,10 @@ public abstract class KafkaClientBaseTest {
             asList(
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                equalTo(MESSAGING_OPERATION, null),
                 equalTo(MESSAGING_OPERATION_NAME, "send"),
                 equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty)));
-    addClientIdAssertions(assertions, "producer");
 
     assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
     if (messageKey != null) {
@@ -214,21 +207,18 @@ public abstract class KafkaClientBaseTest {
     return assertions;
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> receiveAttributes(boolean testHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                equalTo(MESSAGING_OPERATION, null),
                 equalTo(MESSAGING_OPERATION_NAME, "poll"),
                 equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
                 satisfies(MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isPositive)));
-    addClientIdAssertions(assertions, "consumer");
     // consumer group is not available in version 0.11
     if (testLatestDeps()) {
-      assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, null));
       assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test"));
     }
     assertions.add(satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
@@ -253,7 +243,6 @@ public abstract class KafkaClientBaseTest {
             .build());
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> processAttributes(
       String messageKey, String messageValue, boolean testHeaders, boolean testMultiBaggage) {
     List<AttributeAssertion> assertions =
@@ -261,11 +250,10 @@ public abstract class KafkaClientBaseTest {
             asList(
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                equalTo(MESSAGING_OPERATION, null),
                 equalTo(MESSAGING_OPERATION_NAME, "process"),
                 equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty)));
-    addClientIdAssertions(assertions, "consumer");
     assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(
@@ -275,7 +263,6 @@ public abstract class KafkaClientBaseTest {
     assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
     // consumer group is not available in version 0.11
     if (testLatestDeps()) {
-      assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, null));
       assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test"));
     }
     if (messageKey != null) {
@@ -292,11 +279,5 @@ public abstract class KafkaClientBaseTest {
       assertions.add(equalTo(stringKey("test-baggage-key-2"), "test-baggage-value-2"));
     }
     return assertions;
-  }
-
-  private static void addClientIdAssertions(
-      List<AttributeAssertion> assertions, String clientIdPrefix) {
-
-    assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith(clientIdPrefix)));
   }
 }

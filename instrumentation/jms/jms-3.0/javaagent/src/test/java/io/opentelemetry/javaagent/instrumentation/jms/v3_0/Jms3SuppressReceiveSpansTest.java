@@ -10,7 +10,6 @@ import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -30,7 +29,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class Jms3SuppressReceiveSpansTest extends AbstractJms3Test {
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest
   @MethodSource("destinationArguments")
   void testMessageConsumer(DestinationFactory destinationFactory, boolean isTemporary)
@@ -74,7 +72,6 @@ class Jms3SuppressReceiveSpansTest extends AbstractJms3Test {
                       .hasAttributesSatisfyingExactly(
                           equalTo(MESSAGING_SYSTEM, "jms"),
                           equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
-                          equalTo(MESSAGING_OPERATION, null),
                           equalTo(MESSAGING_OPERATION_NAME, "send"),
                           equalTo(MESSAGING_OPERATION_TYPE, "send"),
                           equalTo(MESSAGING_MESSAGE_ID, messageId),
@@ -95,7 +92,6 @@ class Jms3SuppressReceiveSpansTest extends AbstractJms3Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
-                            equalTo(MESSAGING_OPERATION, null),
                             equalTo(MESSAGING_OPERATION_NAME, "receive"),
                             equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId))));

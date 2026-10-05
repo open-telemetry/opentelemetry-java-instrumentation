@@ -17,7 +17,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -59,7 +58,6 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractJms1Test {
   private static final Logger logger = LoggerFactory.getLogger(AbstractJms1Test.class);
@@ -137,7 +135,6 @@ abstract class AbstractJms1Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName(destinationName, isTemporary),
-                            equalTo(MESSAGING_OPERATION, null),
                             equalTo(MESSAGING_OPERATION_NAME, "send"),
                             equalTo(MESSAGING_OPERATION_TYPE, "send"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
@@ -152,7 +149,6 @@ abstract class AbstractJms1Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName(destinationName, isTemporary),
-                            equalTo(MESSAGING_OPERATION, null),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
@@ -227,7 +223,6 @@ abstract class AbstractJms1Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName(destinationName, isTemporary),
-                            equalTo(MESSAGING_OPERATION, null),
                             equalTo(MESSAGING_OPERATION_NAME, "send"),
                             equalTo(MESSAGING_OPERATION_TYPE, "send"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
@@ -248,7 +243,6 @@ abstract class AbstractJms1Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName(destinationName, isTemporary),
-                            equalTo(MESSAGING_OPERATION, null),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
@@ -307,7 +301,6 @@ abstract class AbstractJms1Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName(destinationName, isTemporary),
-                            equalTo(MESSAGING_OPERATION, null),
                             equalTo(MESSAGING_OPERATION_NAME, "send"),
                             equalTo(MESSAGING_OPERATION_TYPE, "send"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
@@ -325,7 +318,6 @@ abstract class AbstractJms1Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName(destinationName, isTemporary),
-                            equalTo(MESSAGING_OPERATION, null),
                             equalTo(MESSAGING_OPERATION_NAME, "receive"),
                             equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
@@ -438,9 +430,9 @@ abstract class AbstractJms1Test {
   }
 
   @Test
-  void shouldUseReceivedMessageAsStableProcessParent() throws Exception {
+  void shouldUseReceivedMessageAsProcessParent() throws Exception {
 
-    Destination destination = session.createQueue("stableProcessParentQueue");
+    Destination destination = session.createQueue("processParentQueue");
     MessageProducer producer = session.createProducer(destination);
     cleanup.deferCleanup(producer::close);
     MessageConsumer consumer = session.createConsumer(destination);
@@ -455,11 +447,11 @@ abstract class AbstractJms1Test {
     assertThat(testing.spans()).hasSize(3);
     SpanData receiveSpan =
         testing.spans().stream()
-            .filter(span -> span.getName().equals("receive stableProcessParentQueue"))
+            .filter(span -> span.getName().equals("receive processParentQueue"))
             .findFirst()
             .orElseThrow(IllegalStateException::new);
     assertThat(testing.spans())
-        .filteredOn(span -> span.getName().equals("process stableProcessParentQueue"))
+        .filteredOn(span -> span.getName().equals("process processParentQueue"))
         .singleElement()
         .satisfies(span -> assertThat(span.getParentSpanId()).isEqualTo(receiveSpan.getSpanId()));
   }

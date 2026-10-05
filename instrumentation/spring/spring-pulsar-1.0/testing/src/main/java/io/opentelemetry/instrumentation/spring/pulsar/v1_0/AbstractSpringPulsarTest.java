@@ -16,7 +16,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -49,7 +48,6 @@ import org.springframework.pulsar.core.PulsarTemplate;
 import org.testcontainers.pulsar.PulsarContainer;
 import org.testcontainers.utility.DockerImageName;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractSpringPulsarTest {
 
   @RegisterExtension
@@ -112,7 +110,7 @@ public abstract class AbstractSpringPulsarTest {
 
   protected abstract void assertSpringPulsar();
 
-  protected void assertStableProcessMetrics() {
+  protected void assertProcessMetrics() {
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.spring-pulsar-1.0",
@@ -183,11 +181,11 @@ public abstract class AbstractSpringPulsarTest {
   protected List<AttributeAssertion> publishAttributes() {
     return asList(
         equalTo(MESSAGING_SYSTEM, "pulsar"),
-        equalTo(MESSAGING_OPERATION, null),
         equalTo(MESSAGING_OPERATION_NAME, "send"),
         equalTo(MESSAGING_OPERATION_TYPE, "send"),
         equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC),
-        bodySize(),
+        // messaging.message.body.size requires opt-in
+        equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
         satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotEmpty),
         equalTo(SERVER_ADDRESS, brokerHost),
         equalTo(SERVER_PORT, brokerPort),
@@ -201,23 +199,16 @@ public abstract class AbstractSpringPulsarTest {
   protected List<AttributeAssertion> processAttributes() {
     return asList(
         equalTo(MESSAGING_SYSTEM, "pulsar"),
-        equalTo(MESSAGING_OPERATION, null),
         equalTo(MESSAGING_OPERATION_NAME, "process"),
         equalTo(MESSAGING_OPERATION_TYPE, "process"),
-        bodySize(),
+        equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
         satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotEmpty),
         equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC));
-  }
-
-  // messaging.message.body.size is opt-in in the v1.43 messaging semantic conventions
-  private static AttributeAssertion bodySize() {
-    return equalTo(MESSAGING_MESSAGE_BODY_SIZE, null);
   }
 
   protected List<AttributeAssertion> receiveAttributes() {
     return asList(
         equalTo(MESSAGING_SYSTEM, "pulsar"),
-        equalTo(MESSAGING_OPERATION, null),
         equalTo(MESSAGING_OPERATION_NAME, "receive"),
         equalTo(MESSAGING_OPERATION_TYPE, "receive"),
         equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC),
@@ -225,7 +216,7 @@ public abstract class AbstractSpringPulsarTest {
         equalTo(SERVER_ADDRESS, brokerHost),
         equalTo(SERVER_PORT, brokerPort),
         equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, OTEL_SUBSCRIPTION),
-        bodySize());
+        equalTo(MESSAGING_MESSAGE_BODY_SIZE, null));
   }
 
   @SpringBootConfiguration

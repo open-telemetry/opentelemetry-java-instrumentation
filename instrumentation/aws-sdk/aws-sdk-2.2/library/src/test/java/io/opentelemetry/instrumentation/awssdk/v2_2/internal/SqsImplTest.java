@@ -27,7 +27,7 @@ class SqsImplTest {
   private static final String SEND_SPAN_ID = "2222222222222222";
 
   @Test
-  void injectsSendContextIntoContextFreeStableBatchEntries() {
+  void injectsSendContextIntoContextFreeBatchEntries() {
 
     SendMessageBatchRequest request =
         SendMessageBatchRequest.builder()

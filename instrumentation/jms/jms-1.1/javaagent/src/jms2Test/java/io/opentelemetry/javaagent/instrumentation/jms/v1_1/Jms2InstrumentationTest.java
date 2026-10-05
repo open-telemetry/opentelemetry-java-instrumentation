@@ -14,7 +14,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -69,7 +68,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class Jms2InstrumentationTest {
 
   @RegisterExtension
@@ -127,7 +125,6 @@ class Jms2InstrumentationTest {
     cleanup.deferAfterAll(session);
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void capturesDurableConsumerName() throws JMSException {
     Topic topic = session.createTopic("someTopic");
@@ -157,7 +154,6 @@ class Jms2InstrumentationTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(MESSAGING_SYSTEM, "jms"),
                           messagingDestinationName("someTopic", false),
-                          equalTo(MESSAGING_OPERATION, null),
                           equalTo(MESSAGING_OPERATION_NAME, "send"),
                           equalTo(MESSAGING_OPERATION_TYPE, "send"),
                           equalTo(MESSAGING_MESSAGE_ID, messageId),
@@ -174,7 +170,6 @@ class Jms2InstrumentationTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName("someTopic", false),
-                            equalTo(MESSAGING_OPERATION, null),
                             equalTo(MESSAGING_OPERATION_NAME, "receive"),
                             equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
@@ -209,7 +204,6 @@ class Jms2InstrumentationTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(MESSAGING_SYSTEM, "jms"),
                           messagingDestinationName("someTopic", false),
-                          equalTo(MESSAGING_OPERATION, null),
                           equalTo(MESSAGING_OPERATION_NAME, "send"),
                           equalTo(MESSAGING_OPERATION_TYPE, "send"),
                           equalTo(MESSAGING_MESSAGE_ID, messageId),
@@ -226,7 +220,6 @@ class Jms2InstrumentationTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName("someTopic", false),
-                            equalTo(MESSAGING_OPERATION, null),
                             equalTo(MESSAGING_OPERATION_NAME, "receive"),
                             equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
@@ -259,7 +252,6 @@ class Jms2InstrumentationTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName("someTopic", false),
-                            equalTo(MESSAGING_OPERATION, null),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             messagingTempDestination(false),
@@ -293,7 +285,6 @@ class Jms2InstrumentationTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName("someTopic", false),
-                            equalTo(MESSAGING_OPERATION, null),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             messagingTempDestination(false),
@@ -343,7 +334,6 @@ class Jms2InstrumentationTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(MESSAGING_SYSTEM, "jms"),
                           messagingDestinationName(destinationName, isTemporary),
-                          equalTo(MESSAGING_OPERATION, null),
                           equalTo(MESSAGING_OPERATION_NAME, "send"),
                           equalTo(MESSAGING_OPERATION_TYPE, "send"),
                           equalTo(MESSAGING_MESSAGE_ID, messageId),
@@ -365,7 +355,6 @@ class Jms2InstrumentationTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName(destinationName, isTemporary),
-                            equalTo(MESSAGING_OPERATION, null),
                             equalTo(MESSAGING_OPERATION_NAME, "receive"),
                             equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
@@ -416,7 +405,6 @@ class Jms2InstrumentationTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName(destinationName, isTemporary),
-                            equalTo(MESSAGING_OPERATION, null),
                             equalTo(MESSAGING_OPERATION_NAME, "send"),
                             equalTo(MESSAGING_OPERATION_TYPE, "send"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
@@ -431,7 +419,6 @@ class Jms2InstrumentationTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName(destinationName, isTemporary),
-                            equalTo(MESSAGING_OPERATION, null),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),

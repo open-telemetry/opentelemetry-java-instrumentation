@@ -43,7 +43,7 @@ class SpringIntegrationMetricsTest {
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Test
-  void shouldRecordSendMetricsOnlyForStableSemconv() {
+  void shouldRecordSendMetrics() {
     DirectWithAttributesChannel channel = new DirectWithAttributesChannel();
     channel.setBeanName("output");
     channel.setAttribute("type", "output");

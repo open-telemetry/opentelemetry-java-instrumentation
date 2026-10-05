@@ -15,7 +15,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -26,7 +25,6 @@ import org.assertj.core.api.AbstractStringAssert;
 
 class SpringListenerSuppressReceiveSpansTest extends AbstractSpringJmsListenerTest {
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   void assertSpringJmsListener() {
     testing.waitAndAssertTraces(
@@ -40,7 +38,6 @@ class SpringListenerSuppressReceiveSpansTest extends AbstractSpringJmsListenerTe
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, "spring-jms-listener"),
-                            equalTo(MESSAGING_OPERATION, null),
                             equalTo(MESSAGING_OPERATION_NAME, "send"),
                             equalTo(MESSAGING_OPERATION_TYPE, "send"),
                             satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank)),
@@ -51,7 +48,6 @@ class SpringListenerSuppressReceiveSpansTest extends AbstractSpringJmsListenerTe
                       .hasAttributesSatisfyingExactly(
                           equalTo(MESSAGING_SYSTEM, "jms"),
                           equalTo(MESSAGING_DESTINATION_NAME, "spring-jms-listener"),
-                          equalTo(MESSAGING_OPERATION, null),
                           equalTo(MESSAGING_OPERATION_NAME, "process"),
                           equalTo(MESSAGING_OPERATION_TYPE, "process"),
                           satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),

@@ -14,9 +14,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -475,9 +473,7 @@ class SpringKafkaInterceptorTest {
             equalTo(MESSAGING_DESTINATION_NAME, "orders"),
             equalTo(MESSAGING_DESTINATION_PARTITION_ID, Integer.toString(record.partition())),
             equalTo(MESSAGING_KAFKA_MESSAGE_KEY, record.key()),
-            equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, null),
             equalTo(MESSAGING_KAFKA_OFFSET, record.offset()),
-            equalTo(MESSAGING_OPERATION, null),
             equalTo(MESSAGING_OPERATION_NAME, "process"),
             equalTo(MESSAGING_OPERATION_TYPE, "process"),
             equalTo(ERROR_TYPE, error != null ? error.getClass().getName() : null));
@@ -492,7 +488,6 @@ class SpringKafkaInterceptorTest {
             equalTo(MESSAGING_SYSTEM, "kafka"),
             equalTo(MESSAGING_DESTINATION_NAME, "orders"),
             equalTo(MESSAGING_DESTINATION_PARTITION_ID, partition),
-            equalTo(MESSAGING_OPERATION, null),
             equalTo(MESSAGING_OPERATION_NAME, "process"),
             equalTo(MESSAGING_OPERATION_TYPE, "process"),
             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, count),

@@ -15,7 +15,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -29,7 +28,6 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.ArrayList;
 import java.util.List;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractJmsTest {
 
   protected void assertProducerSpan(
@@ -49,7 +47,6 @@ public abstract class AbstractJmsTest {
             asList(
                 equalTo(MESSAGING_SYSTEM, "jms"),
                 messagingDestinationName(destinationName),
-                equalTo(MESSAGING_OPERATION, null),
                 equalTo(MESSAGING_OPERATION_NAME, "send"),
                 equalTo(MESSAGING_OPERATION_TYPE, "send"),
                 satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class))));
@@ -119,7 +116,6 @@ public abstract class AbstractJmsTest {
             asList(
                 equalTo(MESSAGING_SYSTEM, "jms"),
                 messagingDestinationName(destinationName),
-                equalTo(MESSAGING_OPERATION, null),
                 equalTo(MESSAGING_OPERATION_NAME, operation),
                 equalTo(MESSAGING_OPERATION_TYPE, operation)));
     if (msgId != null) {

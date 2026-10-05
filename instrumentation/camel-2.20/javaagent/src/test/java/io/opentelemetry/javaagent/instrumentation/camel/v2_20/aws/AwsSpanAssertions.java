@@ -20,7 +20,6 @@ import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SN
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SQS_QUEUE_URL;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -119,20 +118,16 @@ class AwsSpanAssertions {
           asList(
               equalTo(MESSAGING_DESTINATION_NAME, queueName), equalTo(MESSAGING_SYSTEM, AWS_SQS)));
       if (deleteMessage) {
-        attributeAssertions.add(equalTo(MESSAGING_OPERATION, null));
         attributeAssertions.add(equalTo(MESSAGING_OPERATION_NAME, "delete"));
         attributeAssertions.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
       } else if (spanName.endsWith("receive")) {
-        attributeAssertions.add(equalTo(MESSAGING_OPERATION, null));
         attributeAssertions.add(equalTo(MESSAGING_OPERATION_NAME, "receive"));
         attributeAssertions.add(equalTo(MESSAGING_OPERATION_TYPE, "receive"));
       } else if (spanName.endsWith("process")) {
-        attributeAssertions.add(equalTo(MESSAGING_OPERATION, null));
         attributeAssertions.add(equalTo(MESSAGING_OPERATION_NAME, "process"));
         attributeAssertions.add(equalTo(MESSAGING_OPERATION_TYPE, "process"));
         attributeAssertions.add(satisfies(MESSAGING_MESSAGE_ID, val -> val.isNotNull()));
       } else if (spanName.endsWith("publish")) {
-        attributeAssertions.add(equalTo(MESSAGING_OPERATION, null));
         attributeAssertions.add(equalTo(MESSAGING_OPERATION_NAME, "send"));
         attributeAssertions.add(equalTo(MESSAGING_OPERATION_TYPE, "send"));
         attributeAssertions.add(satisfies(MESSAGING_MESSAGE_ID, val -> val.isNotNull()));

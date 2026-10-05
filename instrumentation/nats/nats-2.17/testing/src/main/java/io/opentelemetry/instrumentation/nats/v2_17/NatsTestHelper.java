@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.nats.v2_17;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CLIENT_ID;
@@ -13,7 +12,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPLATE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -21,24 +19,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.nats.client.Message;
 import io.nats.client.Subscription;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class NatsTestHelper {
-
-  private static final AttributeKey<String> MESSAGING_CLIENT_ID_OLD =
-      stringKey("messaging.client_id");
 
   static AttributeAssertion[] messagingAttributes(
       String operation, String subject, int clientId, AttributeAssertion... other) {
     boolean send = operation.equals("publish") || operation.equals("request");
     boolean settlement = isSettlementOperation(operation);
     List<AttributeAssertion> assertions = new ArrayList<>();
-    assertions.add(equalTo(MESSAGING_OPERATION, null));
     assertions.add(equalTo(MESSAGING_OPERATION_NAME, operation));
     assertions.add(
         equalTo(
@@ -56,7 +48,6 @@ class NatsTestHelper {
       assertions.add(equalTo(MESSAGING_DESTINATION_NAME, subject));
     }
     assertions.add(equalTo(MESSAGING_MESSAGE_BODY_SIZE, null));
-    assertions.add(equalTo(MESSAGING_CLIENT_ID_OLD, null));
     assertions.add(equalTo(MESSAGING_CLIENT_ID, String.valueOf(clientId)));
     AttributeAssertion[] standard = assertions.toArray(new AttributeAssertion[0]);
     AttributeAssertion[] result = new AttributeAssertion[standard.length + other.length];

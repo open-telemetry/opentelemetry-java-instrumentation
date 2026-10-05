@@ -16,10 +16,8 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_CLIENT_GROUP;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_GROUP;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_KEYS;
@@ -70,7 +68,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractRocketMqClientTest {
 
@@ -507,7 +504,6 @@ abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
-                equalTo(MESSAGING_OPERATION, null),
                 equalTo(MESSAGING_OPERATION_NAME, "send"),
                 equalTo(MESSAGING_OPERATION_TYPE, "send")));
     attributeAssertions.addAll(asList(extraAttributes));
@@ -538,7 +534,6 @@ abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
-                equalTo(MESSAGING_OPERATION, null),
                 equalTo(MESSAGING_OPERATION_NAME, "send"),
                 equalTo(MESSAGING_OPERATION_TYPE, "send")));
     attributeAssertions.addAll(asList(extraAttributes));
@@ -569,7 +564,6 @@ abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
-                equalTo(MESSAGING_OPERATION, null),
                 equalTo(MESSAGING_OPERATION_NAME, "send"),
                 equalTo(MESSAGING_OPERATION_TYPE, "send")));
     attributeAssertions.addAll(asList(extraAttributes));
@@ -590,11 +584,9 @@ abstract class AbstractRocketMqClientTest {
             .hasStatus(StatusData.unset())
             .hasAttributesSatisfyingExactly(
                 equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
-                equalTo(MESSAGING_ROCKETMQ_CLIENT_GROUP, null),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                 equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
-                equalTo(MESSAGING_OPERATION, null),
                 equalTo(MESSAGING_OPERATION_NAME, "receive"),
                 equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1),
@@ -677,7 +669,6 @@ abstract class AbstractRocketMqClientTest {
         new ArrayList<>(
             asList(
                 equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
-                equalTo(MESSAGING_ROCKETMQ_CLIENT_GROUP, null),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(keys)),
                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
@@ -685,7 +676,6 @@ abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
-                equalTo(MESSAGING_OPERATION, null),
                 equalTo(MESSAGING_OPERATION_NAME, "process"),
                 equalTo(MESSAGING_OPERATION_TYPE, "process")));
     attributeAssertions.addAll(asList(extraAttributes));
@@ -712,7 +702,6 @@ abstract class AbstractRocketMqClientTest {
         new ArrayList<>(
             asList(
                 equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
-                equalTo(MESSAGING_ROCKETMQ_CLIENT_GROUP, null),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(keys)),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_GROUP, messageGroup),
@@ -721,7 +710,6 @@ abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
-                equalTo(MESSAGING_OPERATION, null),
                 equalTo(MESSAGING_OPERATION_NAME, "process"),
                 equalTo(MESSAGING_OPERATION_TYPE, "process")));
     attributeAssertions.addAll(asList(extraAttributes));
@@ -748,7 +736,6 @@ abstract class AbstractRocketMqClientTest {
         new ArrayList<>(
             asList(
                 equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
-                equalTo(MESSAGING_ROCKETMQ_CLIENT_GROUP, null),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(keys)),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP, deliveryTimestamp),
@@ -757,7 +744,6 @@ abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
-                equalTo(MESSAGING_OPERATION, null),
                 equalTo(MESSAGING_OPERATION_NAME, "process"),
                 equalTo(MESSAGING_OPERATION_TYPE, "process")));
     attributeAssertions.addAll(asList(extraAttributes));
@@ -814,10 +800,8 @@ abstract class AbstractRocketMqClientTest {
                                     .toString()
                                     .equals(span.getAttributes().get(MESSAGING_MESSAGE_ID))
                                 && span.getStatus().equals(StatusData.unset())
-                                && ("process"
-                                        .equals(span.getAttributes().get(MESSAGING_OPERATION_NAME))
-                                    || "process"
-                                        .equals(span.getAttributes().get(MESSAGING_OPERATION))))
+                                && "process"
+                                    .equals(span.getAttributes().get(MESSAGING_OPERATION_NAME)))
                     .hasSize(1));
   }
 

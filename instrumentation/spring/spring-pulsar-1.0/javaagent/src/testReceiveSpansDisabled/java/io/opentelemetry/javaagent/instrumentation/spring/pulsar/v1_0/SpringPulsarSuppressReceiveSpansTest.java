@@ -36,6 +36,6 @@ class SpringPulsarSuppressReceiveSpansTest extends AbstractSpringPulsarTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("receive " + OTEL_TOPIC).hasKind(CLIENT)));
-    assertStableProcessMetrics();
+    assertProcessMetrics();
   }
 }

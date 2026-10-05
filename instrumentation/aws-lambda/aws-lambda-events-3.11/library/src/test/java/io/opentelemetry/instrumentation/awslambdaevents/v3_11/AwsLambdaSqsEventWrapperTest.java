@@ -13,7 +13,6 @@ import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOU
 import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -65,7 +64,6 @@ class AwsLambdaSqsEventWrapperTest {
     assertThat(testing.forceFlushCalled()).isTrue();
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void eventTraced() {
     SQSEvent event = new SQSEvent();
@@ -97,7 +95,6 @@ class AwsLambdaSqsEventWrapperTest {
                         .hasKind(SpanKind.CONSUMER)
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                            equalTo(MESSAGING_OPERATION, null),
                             equalTo(MESSAGING_DESTINATION_NAME, "otel"),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),

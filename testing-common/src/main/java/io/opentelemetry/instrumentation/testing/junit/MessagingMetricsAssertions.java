@@ -5,26 +5,13 @@
 
 package io.opentelemetry.instrumentation.testing.junit;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.unmodifiableSet;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.metrics.data.MetricData;
-import java.util.HashSet;
-import java.util.Set;
 
-/** Assertions for the messaging metrics defined by the v1.43 semantic conventions. */
+/** Assertions for messaging metrics. */
 public final class MessagingMetricsAssertions {
-
-  private static final Set<String> METRIC_NAMES =
-      unmodifiableSet(
-          new HashSet<>(
-              asList(
-                  "messaging.client.operation.duration",
-                  "messaging.client.sent.messages",
-                  "messaging.client.consumed.messages",
-                  "messaging.process.duration")));
 
   /** Asserts that the named counter has a single point with the given value and attributes. */
   public static void assertCounter(
@@ -51,16 +38,6 @@ public final class MessagingMetricsAssertions {
         metricName,
         metrics ->
             metrics.singleElement().satisfies(metric -> verifyHistogram(metric, attributes)));
-  }
-
-  /** Asserts that the given instrumentation recorded none of the defined messaging metrics. */
-  public static void assertNoStableMetrics(
-      InstrumentationExtension testing, String instrumentationName) {
-    assertThat(testing.metrics())
-        .noneMatch(
-            metric ->
-                metric.getInstrumentationScopeInfo().getName().equals(instrumentationName)
-                    && METRIC_NAMES.contains(metric.getName()));
   }
 
   /** Asserts that the given instrumentation did not record the named metric. */

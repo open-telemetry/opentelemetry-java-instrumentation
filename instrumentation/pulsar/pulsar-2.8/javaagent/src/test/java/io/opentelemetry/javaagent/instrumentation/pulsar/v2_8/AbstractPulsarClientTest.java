@@ -19,7 +19,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -140,7 +139,6 @@ abstract class AbstractPulsarClientTest {
     pulsar.close();
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testConsumeNonPartitionedTopicUsingBatchReceive() throws Exception {
     String topic = "persistent://public/default/testConsumeNonPartitionedTopicCallBatchReceive";
@@ -190,7 +188,6 @@ abstract class AbstractPulsarClientTest {
                             batchReceiveAttributes(topic, null, false))));
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testConsumeNonPartitionedTopicUsingBatchReceiveAsync() throws Exception {
     String topic =
@@ -292,7 +289,6 @@ abstract class AbstractPulsarClientTest {
                 span -> span.hasName("receive-parent").hasKind(SpanKind.INTERNAL).hasNoParent()));
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   static List<AttributeAssertion> sendAttributes(
       String destination, String messageId, boolean testHeaders) {
     List<AttributeAssertion> assertions =
@@ -302,11 +298,11 @@ abstract class AbstractPulsarClientTest {
                 equalTo(SERVER_ADDRESS, brokerHost),
                 equalTo(SERVER_PORT, brokerPort),
                 equalTo(MESSAGING_DESTINATION_NAME, destinationName(destination)),
-                equalTo(MESSAGING_OPERATION, null),
                 equalTo(MESSAGING_OPERATION_NAME, "send"),
                 equalTo(MESSAGING_OPERATION_TYPE, "send"),
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
-                bodySize(),
+                // messaging.message.body.size requires opt-in
+                equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
                 equalTo(stringKey("messaging.pulsar.message.type"), experimental("normal"))));
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
@@ -331,7 +327,6 @@ abstract class AbstractPulsarClientTest {
     return receiveAttributes(destination, messageId, testHeaders, false);
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   static List<AttributeAssertion> receiveAttributes(
       String destination, String messageId, boolean testHeaders, boolean isBatch) {
     List<AttributeAssertion> assertions =
@@ -341,12 +336,11 @@ abstract class AbstractPulsarClientTest {
                 equalTo(SERVER_ADDRESS, brokerHost),
                 equalTo(SERVER_PORT, brokerPort),
                 equalTo(MESSAGING_DESTINATION_NAME, destinationName(destination)),
-                equalTo(MESSAGING_OPERATION, null),
                 equalTo(MESSAGING_OPERATION_NAME, "receive"),
                 equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
                 equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "test_sub"),
-                bodySize()));
+                equalTo(MESSAGING_MESSAGE_BODY_SIZE, null)));
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
@@ -358,7 +352,6 @@ abstract class AbstractPulsarClientTest {
     return assertions;
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   static List<AttributeAssertion> processAttributes(
       String destination, String messageId, boolean testHeaders) {
     List<AttributeAssertion> assertions =
@@ -366,12 +359,11 @@ abstract class AbstractPulsarClientTest {
             asList(
                 equalTo(MESSAGING_SYSTEM, "pulsar"),
                 equalTo(MESSAGING_DESTINATION_NAME, destinationName(destination)),
-                equalTo(MESSAGING_OPERATION, null),
                 equalTo(MESSAGING_OPERATION_NAME, "process"),
                 equalTo(MESSAGING_OPERATION_TYPE, "process"),
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
                 equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "test_sub"),
-                bodySize()));
+                equalTo(MESSAGING_MESSAGE_BODY_SIZE, null)));
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
@@ -380,9 +372,8 @@ abstract class AbstractPulsarClientTest {
     return assertions;
   }
 
-  // the stable semantic conventions use the fully qualified topic name and record the partition in
-  // messaging.destination.partition.id, so the destination name does not include the
-  // "-partition-N" suffix there
+  // the destination name is fully qualified and excludes the "-partition-N" suffix;
+  // the partition is recorded in messaging.destination.partition.id
   static String destinationName(String topic) {
 
     int suffixIndex = partitionSuffixIndex(topic);
@@ -410,11 +401,6 @@ abstract class AbstractPulsarClientTest {
       return -1;
     }
     return suffixIndex;
-  }
-
-  // messaging.message.body.size is opt-in in the v1.43 messaging semantic conventions
-  private static AttributeAssertion bodySize() {
-    return equalTo(MESSAGING_MESSAGE_BODY_SIZE, null);
   }
 
   static void acknowledgeMessage(Consumer<String> consumer, Message<String> message) {

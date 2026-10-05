@@ -168,11 +168,11 @@ class PulsarBatchRequestSpanLinksExtractorTest {
     return Attributes.builder().put(MESSAGING_MESSAGE_ID, messageId);
   }
 
-  private static LinkData linkData(String spanId, Attributes stableAttributes) {
+  private static LinkData linkData(String spanId, Attributes attributes) {
     SpanContext spanContext =
         SpanContext.createFromRemoteParent(
             TRACE_ID, spanId, TraceFlags.getSampled(), TraceState.getDefault());
-    return LinkData.create(spanContext, stableAttributes);
+    return LinkData.create(spanContext, attributes);
   }
 
   private static Attributes batchSpanAttributes(PulsarBatchRequest request) {

@@ -26,7 +26,7 @@ class MessagingDestinationTest {
 
   @ParameterizedTest
   @MethodSource("destinations")
-  void stableDestination(
+  void destination(
       String component, String endpointUri, String expectedDestination, boolean expectedTemporary) {
     Endpoint endpoint = mock(Endpoint.class);
     when(endpoint.getEndpointUri()).thenReturn(endpointUri);
@@ -61,7 +61,7 @@ class MessagingDestinationTest {
 
   @ParameterizedTest
   @MethodSource("rabbitMqDestinations")
-  void stableRabbitMqDestination(
+  void rabbitMqDestination(
       CamelDirection camelDirection,
       String endpointUri,
       String headerExchange,

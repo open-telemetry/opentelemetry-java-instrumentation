@@ -15,7 +15,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -174,7 +173,7 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
         .untilAsserted(
             () -> {
               List<List<SpanData>> traces = groupTraces(testing.spans());
-              // Stable receive spans are separate traces, and Kafka Connect writes status records
+              // Receive spans are separate traces, and Kafka Connect writes status records
               // on its own schedule. Neither is relevant to the sink-task assertions.
               traces.removeIf(
                   trace ->
@@ -547,13 +546,11 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
     }
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static AttributeAssertion[] processAttributes(String destination, long batchSize) {
     return new AttributeAssertion[] {
       equalTo(MESSAGING_BATCH_MESSAGE_COUNT, batchSize),
       equalTo(MESSAGING_DESTINATION_NAME, destination),
       equalTo(MESSAGING_DESTINATION_PARTITION_ID, "0"),
-      equalTo(MESSAGING_OPERATION, null),
       equalTo(MESSAGING_OPERATION_NAME, PROCESS),
       equalTo(MESSAGING_OPERATION_TYPE, PROCESS),
       equalTo(MESSAGING_SYSTEM, KAFKA),

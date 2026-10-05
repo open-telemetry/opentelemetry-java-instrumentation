@@ -18,7 +18,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY;
@@ -47,7 +46,6 @@ class SpringIntegrationAndRabbitTest {
     rabbit = new RabbitExtension(null);
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void shouldCooperateWithExistingRabbitMqInstrumentation() {
     testing.waitForTraces(13); // from rabbitmq instrumentation of startup
@@ -89,7 +87,6 @@ class SpringIntegrationAndRabbitTest {
                             serverPort(),
                             equalTo(MESSAGING_SYSTEM, "rabbitmq"),
                             equalTo(MESSAGING_DESTINATION_NAME, "testTopic:testTopic"),
-                            equalTo(MESSAGING_OPERATION, null),
                             equalTo(MESSAGING_OPERATION_NAME, "publish"),
                             equalTo(MESSAGING_OPERATION_TYPE, "send"),
                             bodySize(),
@@ -112,7 +109,6 @@ class SpringIntegrationAndRabbitTest {
                             equalTo(MESSAGING_SYSTEM, "rabbitmq"),
                             consumerDestinationName(),
                             equalTo(MESSAGING_DESTINATION_ANONYMOUS, true),
-                            equalTo(MESSAGING_OPERATION, null),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
@@ -133,7 +129,6 @@ class SpringIntegrationAndRabbitTest {
     assertNoMetrics(testing);
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   private static List<AttributeAssertion> ackAssertions() {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
@@ -167,7 +162,6 @@ class SpringIntegrationAndRabbitTest {
         });
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   private static AttributeAssertion bodySize() {
     return satisfies(
         MESSAGING_MESSAGE_BODY_SIZE,

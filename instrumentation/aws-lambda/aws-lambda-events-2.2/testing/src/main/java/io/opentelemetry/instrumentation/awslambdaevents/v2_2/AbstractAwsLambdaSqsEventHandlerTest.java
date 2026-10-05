@@ -12,7 +12,6 @@ import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -38,7 +37,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 @ExtendWith(MockitoExtension.class)
 public abstract class AbstractAwsLambdaSqsEventHandlerTest {
 
@@ -105,7 +103,6 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
                             .hasParentSpanId(trace.getSpan(0).getSpanId())
                             .hasAttributesSatisfyingExactly(
                                 equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                                equalTo(MESSAGING_OPERATION, null),
                                 equalTo(MESSAGING_DESTINATION_NAME, "queue1"),
                                 equalTo(MESSAGING_OPERATION_NAME, "process"),
                                 equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -155,7 +152,6 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
                             .hasParentSpanId(trace.getSpan(0).getSpanId())
                             .hasAttributesSatisfyingExactly(
                                 equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                                equalTo(MESSAGING_OPERATION, null),
                                 equalTo(MESSAGING_DESTINATION_NAME, null),
                                 equalTo(MESSAGING_OPERATION_NAME, "process"),
                                 equalTo(MESSAGING_OPERATION_TYPE, "process"),

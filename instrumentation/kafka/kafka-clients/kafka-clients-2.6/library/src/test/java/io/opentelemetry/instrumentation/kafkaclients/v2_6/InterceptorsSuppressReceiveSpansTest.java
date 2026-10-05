@@ -13,10 +13,8 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CLUSTER_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -29,7 +27,6 @@ import java.util.List;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
 
   private static final KafkaTelemetry kafkaTelemetry =
@@ -86,7 +83,6 @@ class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
             asList(
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                equalTo(MESSAGING_OPERATION, null),
                 equalTo(MESSAGING_OPERATION_NAME, "send"),
                 equalTo(MESSAGING_OPERATION_TYPE, "send")));
     addClientIdAssertion(assertions, "producer");
@@ -100,12 +96,10 @@ class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
             asList(
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                equalTo(MESSAGING_OPERATION, null),
                 equalTo(MESSAGING_OPERATION_NAME, "process"),
                 equalTo(MESSAGING_OPERATION_TYPE, "process"),
                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
-                equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, null),
                 equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test"),
                 equalTo(stringKey("test-baggage-key-1"), "test-baggage-value-1"),
                 equalTo(stringKey("test-baggage-key-2"), "test-baggage-value-2")));

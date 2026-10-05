@@ -33,8 +33,8 @@ class PulsarRequestDestinationTest {
     String partitionTopic = TOPIC + "-partition-1";
     PulsarRequest request = request(message(partitionTopic));
 
-    // the stable semantic conventions record the partition in messaging.destination.partition.id,
-    // which is only unique within the destination name, so the destination name must not embed it
+    // the partition is recorded in messaging.destination.partition.id and is only unique within
+    // the destination name, so the destination name must not embed it
     assertThat(request.getDestination()).isEqualTo(TOPIC);
     assertThat(request.getDestinationPartitionId()).isEqualTo("1");
   }

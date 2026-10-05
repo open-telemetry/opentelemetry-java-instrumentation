@@ -22,7 +22,6 @@ import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SQ
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -534,7 +533,6 @@ public abstract class AbstractSqsTracingTest {
                               equalTo(MESSAGING_SYSTEM, AWS_SQS),
                               equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
                               equalTo(MESSAGING_OPERATION_NAME, "create"),
-                              equalTo(MESSAGING_OPERATION, null),
                               equalTo(MESSAGING_OPERATION_TYPE, "create")));
             },
             trace -> {
@@ -548,7 +546,6 @@ public abstract class AbstractSqsTracingTest {
                               equalTo(MESSAGING_SYSTEM, AWS_SQS),
                               equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
                               equalTo(MESSAGING_OPERATION_NAME, "create"),
-                              equalTo(MESSAGING_OPERATION, null),
                               equalTo(MESSAGING_OPERATION_TYPE, "create")));
             },
             trace -> {
@@ -562,7 +559,6 @@ public abstract class AbstractSqsTracingTest {
                               equalTo(MESSAGING_SYSTEM, AWS_SQS),
                               equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
                               equalTo(MESSAGING_OPERATION_NAME, "create"),
-                              equalTo(MESSAGING_OPERATION, null),
                               equalTo(MESSAGING_OPERATION_TYPE, "create")));
             },
             trace ->
@@ -588,7 +584,6 @@ public abstract class AbstractSqsTracingTest {
                                 equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
                                 equalTo(MESSAGING_OPERATION_NAME, "send"),
                                 equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                                equalTo(MESSAGING_OPERATION, null),
                                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 3),
                                 equalTo(NETWORK_PROTOCOL_VERSION, "1.1"))
                             .hasLinksSatisfying(
@@ -642,7 +637,6 @@ public abstract class AbstractSqsTracingTest {
                       attributes.add(equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"));
                       attributes.add(equalTo(MESSAGING_OPERATION_NAME, "delete"));
                       attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
-                      attributes.add(equalTo(MESSAGING_OPERATION, null));
 
                       span.hasName("delete testSdkSqs")
                           .hasKind(SpanKind.CLIENT)
@@ -688,7 +682,6 @@ public abstract class AbstractSqsTracingTest {
                       attributes.add(equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"));
                       attributes.add(equalTo(MESSAGING_OPERATION_NAME, "delete"));
                       attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
-                      attributes.add(equalTo(MESSAGING_OPERATION, null));
                       attributes.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2));
 
                       span.hasName("delete testSdkSqs")
@@ -818,7 +811,6 @@ public abstract class AbstractSqsTracingTest {
                                 equalTo(MESSAGING_DESTINATION_NAME, "missing"),
                                 equalTo(MESSAGING_OPERATION_NAME, "delete"),
                                 equalTo(MESSAGING_OPERATION_TYPE, "settle"),
-                                equalTo(MESSAGING_OPERATION, null),
                                 equalTo(ERROR_TYPE, QueueDoesNotExistException.class.getName()))));
   }
 

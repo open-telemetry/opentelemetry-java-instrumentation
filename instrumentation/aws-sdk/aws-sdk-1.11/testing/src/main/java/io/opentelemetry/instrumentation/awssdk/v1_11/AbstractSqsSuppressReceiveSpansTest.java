@@ -18,7 +18,6 @@ import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_RE
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SQS_QUEUE_URL;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -371,7 +370,6 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
             equalTo(SERVER_PORT, sqsPort),
             equalTo(MESSAGING_SYSTEM, AWS_SQS),
             equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-            equalTo(MESSAGING_OPERATION, null),
             equalTo(MESSAGING_OPERATION_NAME, "send"),
             equalTo(MESSAGING_OPERATION_TYPE, "send"),
             satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
@@ -396,7 +394,6 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
             equalTo(SERVER_PORT, sqsPort),
             equalTo(MESSAGING_SYSTEM, AWS_SQS),
             equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-            equalTo(MESSAGING_OPERATION, null),
             equalTo(MESSAGING_OPERATION_NAME, "process"),
             equalTo(MESSAGING_OPERATION_TYPE, "process"),
             satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),

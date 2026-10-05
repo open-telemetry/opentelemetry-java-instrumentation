@@ -18,7 +18,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG;
@@ -69,7 +68,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** TODO add tests for propagationEnabled flag */
-@SuppressWarnings("deprecation") // using deprecated semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractRocketMqClientTest {
 
@@ -195,7 +193,6 @@ abstract class AbstractRocketMqClientTest {
                                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                                 equalTo(MESSAGING_ROCKETMQ_NAMESPACE, NAMESPACE),
                                 equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
-                                equalTo(MESSAGING_OPERATION, null),
                                 equalTo(MESSAGING_OPERATION_NAME, "send"),
                                 equalTo(MESSAGING_OPERATION_TYPE, "send"),
                                 satisfies(
@@ -216,7 +213,6 @@ abstract class AbstractRocketMqClientTest {
                                 equalTo(MESSAGING_ROCKETMQ_NAMESPACE, NAMESPACE),
                                 consumerGroup(),
                                 equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
-                                equalTo(MESSAGING_OPERATION, null),
                                 equalTo(MESSAGING_OPERATION_NAME, "process"),
                                 equalTo(MESSAGING_OPERATION_TYPE, "process"),
                                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
@@ -263,7 +259,6 @@ abstract class AbstractRocketMqClientTest {
                                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                                 equalTo(MESSAGING_ROCKETMQ_NAMESPACE, NAMESPACE),
                                 equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
-                                equalTo(MESSAGING_OPERATION, null),
                                 equalTo(MESSAGING_OPERATION_NAME, "send"),
                                 equalTo(MESSAGING_OPERATION_TYPE, "send"),
                                 satisfies(
@@ -284,7 +279,6 @@ abstract class AbstractRocketMqClientTest {
                                 equalTo(MESSAGING_ROCKETMQ_NAMESPACE, NAMESPACE),
                                 consumerGroup(),
                                 equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
-                                equalTo(MESSAGING_OPERATION, null),
                                 equalTo(MESSAGING_OPERATION_NAME, "process"),
                                 equalTo(MESSAGING_OPERATION_TYPE, "process"),
                                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
@@ -442,7 +436,6 @@ abstract class AbstractRocketMqClientTest {
                                   equalTo(MESSAGING_SYSTEM, "rocketmq"),
                                   equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
                                   equalTo(MESSAGING_ROCKETMQ_NAMESPACE, NAMESPACE),
-                                  equalTo(MESSAGING_OPERATION, null),
                                   equalTo(MESSAGING_OPERATION_NAME, "create"),
                                   equalTo(MESSAGING_OPERATION_TYPE, "create"),
                                   satisfies(
@@ -460,7 +453,6 @@ abstract class AbstractRocketMqClientTest {
                             equalTo(MESSAGING_ROCKETMQ_NAMESPACE, NAMESPACE),
                             equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
                             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, Long.valueOf(2)),
-                            equalTo(MESSAGING_OPERATION, null),
                             equalTo(MESSAGING_OPERATION_NAME, "send"),
                             equalTo(MESSAGING_OPERATION_TYPE, "send"),
                             equalTo(MESSAGING_MESSAGE_ID, null),
@@ -493,7 +485,6 @@ abstract class AbstractRocketMqClientTest {
                             consumerGroup(),
                             equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
                             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2L),
-                            equalTo(MESSAGING_OPERATION, null),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             equalTo(
@@ -545,7 +536,6 @@ abstract class AbstractRocketMqClientTest {
                                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                                 equalTo(MESSAGING_ROCKETMQ_NAMESPACE, NAMESPACE),
                                 equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
-                                equalTo(MESSAGING_OPERATION, null),
                                 equalTo(MESSAGING_OPERATION_NAME, "send"),
                                 equalTo(MESSAGING_OPERATION_TYPE, "send"),
                                 satisfies(
@@ -569,7 +559,6 @@ abstract class AbstractRocketMqClientTest {
                                 equalTo(MESSAGING_ROCKETMQ_NAMESPACE, NAMESPACE),
                                 consumerGroup(),
                                 equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
-                                equalTo(MESSAGING_OPERATION, null),
                                 equalTo(MESSAGING_OPERATION_NAME, "process"),
                                 equalTo(MESSAGING_OPERATION_TYPE, "process"),
                                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
@@ -613,7 +602,6 @@ abstract class AbstractRocketMqClientTest {
                                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                                 equalTo(MESSAGING_ROCKETMQ_NAMESPACE, NAMESPACE),
                                 equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
-                                equalTo(MESSAGING_OPERATION, null),
                                 equalTo(MESSAGING_OPERATION_NAME, "send"),
                                 equalTo(MESSAGING_OPERATION_TYPE, "send"),
                                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental("TagA")),
@@ -629,7 +617,6 @@ abstract class AbstractRocketMqClientTest {
                                 equalTo(MESSAGING_ROCKETMQ_NAMESPACE, NAMESPACE),
                                 consumerGroup(),
                                 equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
-                                equalTo(MESSAGING_OPERATION, null),
                                 equalTo(MESSAGING_OPERATION_NAME, "process"),
                                 equalTo(MESSAGING_OPERATION_TYPE, "process"),
                                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),

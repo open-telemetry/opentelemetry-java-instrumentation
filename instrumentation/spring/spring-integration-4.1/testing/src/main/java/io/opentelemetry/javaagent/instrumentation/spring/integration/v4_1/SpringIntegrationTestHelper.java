@@ -10,7 +10,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -28,14 +27,12 @@ final class SpringIntegrationTestHelper {
     return messagingAttributes(operationName, destinationName, new AttributeAssertion[0]);
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   static AttributeAssertion[] messagingAttributes(
       String operationName, String destinationName, AttributeAssertion... additionalAssertions) {
     AttributeAssertion[] standard =
         new AttributeAssertion[] {
           equalTo(MESSAGING_SYSTEM, "spring_integration"),
           equalTo(MESSAGING_DESTINATION_NAME, destinationName),
-          equalTo(MESSAGING_OPERATION, null),
           equalTo(MESSAGING_OPERATION_NAME, operationName),
           equalTo(MESSAGING_OPERATION_TYPE, operationName)
         };

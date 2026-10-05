@@ -908,7 +908,6 @@ class RabbitMqTest extends AbstractRabbitMqTest {
             equalTo(MESSAGING_SYSTEM, "rabbitmq"),
             equalTo(MESSAGING_OPERATION_NAME, operation),
             equalTo(MESSAGING_OPERATION_TYPE, "settle"),
-            equalTo(MESSAGING_OPERATION, null),
             equalTo(MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG, deliveryTag),
             satisfies(NETWORK_PEER_ADDRESS, val -> val.isIn(rabbitMqIp, null)),
             satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6", null)),
