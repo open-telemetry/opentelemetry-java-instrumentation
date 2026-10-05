@@ -15,7 +15,7 @@ class SpringWsCodeAttributesGetter implements CodeAttributesGetter<SpringWsReque
   }
 
   @Override
-  public String getMethodName(SpringWsRequest request) {
+  public String getCodeMethodName(SpringWsRequest request) {
     return request.getMethodName();
   }
 }

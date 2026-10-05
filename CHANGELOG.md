@@ -16,7 +16,8 @@
 - Move `CodeAttributesGetter`, `CodeAttributesExtractor`, and `CodeSpanNameExtractor` from
   `io.opentelemetry.instrumentation.api.incubator.semconv.code` in
   `opentelemetry-instrumentation-api-incubator` to `io.opentelemetry.instrumentation.api.semconv.code`
-  in `opentelemetry-instrumentation-api`. Update imports and dependencies to the stable API.
+  in `opentelemetry-instrumentation-api`. Update imports and dependencies to the stable API,
+  and rename `CodeAttributesGetter#getMethodName` implementations to `getCodeMethodName`.
 - Remove the testing helper `SemconvCodeStabilityUtil`.
   Assert stable source code attributes directly.
 - Remove deprecated `setCapturedRequestHeaders` and `setCapturedResponseHeaders` methods from

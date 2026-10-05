@@ -66,7 +66,7 @@ public class SpringSchedulingCodeAttributesGetter implements CodeAttributesGette
   }
 
   @Override
-  public String getMethodName(Runnable runnable) {
+  public String getCodeMethodName(Runnable runnable) {
     runnable = unwrap(runnable);
     if (runnable instanceof ScheduledMethodRunnable) {
       ScheduledMethodRunnable scheduledMethodRunnable = (ScheduledMethodRunnable) runnable;

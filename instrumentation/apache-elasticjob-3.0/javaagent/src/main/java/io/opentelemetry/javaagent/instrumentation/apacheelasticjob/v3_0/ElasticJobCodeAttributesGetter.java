@@ -14,7 +14,7 @@ class ElasticJobCodeAttributesGetter implements CodeAttributesGetter<ElasticJobP
   }
 
   @Override
-  public String getMethodName(ElasticJobProcessRequest request) {
+  public String getCodeMethodName(ElasticJobProcessRequest request) {
     return request.getUserMethodName();
   }
 }

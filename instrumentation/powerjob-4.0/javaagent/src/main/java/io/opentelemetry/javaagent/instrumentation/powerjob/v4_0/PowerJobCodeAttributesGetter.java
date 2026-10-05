@@ -15,7 +15,7 @@ class PowerJobCodeAttributesGetter implements CodeAttributesGetter<PowerJobProce
   }
 
   @Override
-  public String getMethodName(PowerJobProcessRequest powerJobProcessRequest) {
+  public String getCodeMethodName(PowerJobProcessRequest powerJobProcessRequest) {
     return powerJobProcessRequest.getMethodName();
   }
 }

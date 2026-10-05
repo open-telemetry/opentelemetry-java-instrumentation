@@ -23,7 +23,7 @@ class XxlJobCodeAttributesGetter implements CodeAttributesGetter<XxlJobProcessRe
 
   @Nullable
   @Override
-  public String getMethodName(XxlJobProcessRequest xxlJobProcessRequest) {
+  public String getCodeMethodName(XxlJobProcessRequest xxlJobProcessRequest) {
     GlueTypeEnum glueType = xxlJobProcessRequest.getGlueType();
     if (!glueType.isScript()) {
       return xxlJobProcessRequest.getMethodName();

@@ -19,7 +19,7 @@ enum ClassAndMethodAttributesGetter implements CodeAttributesGetter<ClassAndMeth
 
   @Nullable
   @Override
-  public String getMethodName(ClassAndMethod classAndMethod) {
+  public String getCodeMethodName(ClassAndMethod classAndMethod) {
     return classAndMethod.methodName();
   }
 }

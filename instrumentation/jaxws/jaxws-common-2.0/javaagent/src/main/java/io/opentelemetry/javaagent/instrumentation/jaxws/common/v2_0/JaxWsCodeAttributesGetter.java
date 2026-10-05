@@ -15,7 +15,7 @@ class JaxWsCodeAttributesGetter implements CodeAttributesGetter<JaxWsRequest> {
   }
 
   @Override
-  public String getMethodName(JaxWsRequest request) {
+  public String getCodeMethodName(JaxWsRequest request) {
     return request.methodName();
   }
 }

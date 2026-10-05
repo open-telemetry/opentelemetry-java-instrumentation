@@ -17,7 +17,7 @@ class FinatraCodeAttributesGetter implements CodeAttributesGetter<FinatraRequest
 
   @Nullable
   @Override
-  public String getMethodName(FinatraRequest request) {
+  public String getCodeMethodName(FinatraRequest request) {
     return request.methodName();
   }
 }

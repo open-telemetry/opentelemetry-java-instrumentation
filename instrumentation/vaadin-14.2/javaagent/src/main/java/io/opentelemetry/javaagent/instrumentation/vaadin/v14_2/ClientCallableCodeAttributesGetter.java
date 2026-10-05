@@ -16,7 +16,7 @@ class ClientCallableCodeAttributesGetter
   }
 
   @Override
-  public String getMethodName(VaadinClientCallableRequest request) {
+  public String getCodeMethodName(VaadinClientCallableRequest request) {
     return request.getMethodName();
   }
 }

@@ -15,7 +15,7 @@ class JaxrsCodeAttributesGetter implements CodeAttributesGetter<HandlerData> {
   }
 
   @Override
-  public String getMethodName(HandlerData handlerData) {
+  public String getCodeMethodName(HandlerData handlerData) {
     return handlerData.methodName();
   }
 }

@@ -20,5 +20,5 @@ public interface CodeAttributesGetter<REQUEST> {
   Class<?> getCodeClass(REQUEST request);
 
   @Nullable
-  String getMethodName(REQUEST request);
+  String getCodeMethodName(REQUEST request);
 }

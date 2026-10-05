@@ -32,7 +32,7 @@ class CodeAttributesExtractorTest {
     }
 
     @Override
-    public String getMethodName(Map<String, String> request) {
+    public String getCodeMethodName(Map<String, String> request) {
       return request.get("methodName");
     }
   }

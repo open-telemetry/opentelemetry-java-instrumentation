@@ -21,7 +21,7 @@ class HandlerCodeAttributesGetter implements CodeAttributesGetter<Object> {
   }
 
   @Override
-  public String getMethodName(Object handler) {
+  public String getCodeMethodName(Object handler) {
     if (handler instanceof HandlerMethod) {
       HandlerMethod handlerMethod = (HandlerMethod) handler;
       return handlerMethod.getMethod().getName();

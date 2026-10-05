@@ -16,7 +16,7 @@ class StrutsCodeAttributesGetter implements CodeAttributesGetter<ActionInvocatio
   }
 
   @Override
-  public String getMethodName(ActionInvocation actionInvocation) {
+  public String getCodeMethodName(ActionInvocation actionInvocation) {
     return actionInvocation.getProxy().getMethod();
   }
 }

@@ -39,7 +39,7 @@ public final class CodeAttributesExtractor<REQUEST, RESPONSE>
     if (cls != null) {
       sb.append(cls.getName());
     }
-    String methodName = getter.getMethodName(request);
+    String methodName = getter.getCodeMethodName(request);
     if (methodName != null) {
       if (sb.length() > 0) {
         sb.append(".");

@@ -26,7 +26,7 @@ class MethodSingletons {
           }
 
           @Override
-          public String getMethodName(MethodAndType methodAndType) {
+          public String getCodeMethodName(MethodAndType methodAndType) {
             return methodAndType.getClassAndMethod().methodName();
           }
         };

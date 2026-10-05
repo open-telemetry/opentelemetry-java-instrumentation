@@ -15,7 +15,7 @@ class MethodRequestCodeAttributesGetter implements CodeAttributesGetter<MethodRe
   }
 
   @Override
-  public String getMethodName(MethodRequest methodRequest) {
+  public String getCodeMethodName(MethodRequest methodRequest) {
     return methodRequest.getMethodName();
   }
 }

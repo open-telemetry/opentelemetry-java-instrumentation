@@ -15,7 +15,7 @@ class RpcCodeAttributesGetter implements CodeAttributesGetter<VaadinRpcRequest> 
   }
 
   @Override
-  public String getMethodName(VaadinRpcRequest request) {
+  public String getCodeMethodName(VaadinRpcRequest request) {
     return request.getMethodName();
   }
 }

@@ -24,7 +24,7 @@ class CodeSpanNameExtractorTest {
     Object request = new Object();
 
     when(getter.getCodeClass(request)).thenAnswer(invocation -> TestClass.class);
-    when(getter.getMethodName(request)).thenReturn("doSomething");
+    when(getter.getCodeMethodName(request)).thenReturn("doSomething");
 
     SpanNameExtractor<Object> underTest = CodeSpanNameExtractor.create(getter);
 
@@ -42,7 +42,7 @@ class CodeSpanNameExtractorTest {
     Object request = new Object();
 
     when(getter.getCodeClass(request)).thenAnswer(invocation -> anon.getClass());
-    when(getter.getMethodName(request)).thenReturn("doSomething");
+    when(getter.getCodeMethodName(request)).thenReturn("doSomething");
 
     SpanNameExtractor<Object> underTest = CodeSpanNameExtractor.create(getter);
 
@@ -60,7 +60,7 @@ class CodeSpanNameExtractorTest {
     Object request = new Object();
 
     when(getter.getCodeClass(request)).thenAnswer(invocation -> lambda.getClass());
-    when(getter.getMethodName(request)).thenReturn("doSomething");
+    when(getter.getCodeMethodName(request)).thenReturn("doSomething");
 
     SpanNameExtractor<Object> underTest = CodeSpanNameExtractor.create(getter);
 
@@ -82,7 +82,7 @@ class CodeSpanNameExtractorTest {
   @Test
   void shouldExtractMethodWithoutClass() {
     Object request = new Object();
-    when(getter.getMethodName(request)).thenReturn("doSomething");
+    when(getter.getCodeMethodName(request)).thenReturn("doSomething");
 
     assertThat(CodeSpanNameExtractor.create(getter).extract(request))
         .isEqualTo("<unknown>.doSomething");

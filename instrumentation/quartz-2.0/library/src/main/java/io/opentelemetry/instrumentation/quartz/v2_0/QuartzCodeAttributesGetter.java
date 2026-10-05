@@ -16,7 +16,7 @@ final class QuartzCodeAttributesGetter implements CodeAttributesGetter<JobExecut
   }
 
   @Override
-  public String getMethodName(JobExecutionContext jobExecutionContext) {
+  public String getCodeMethodName(JobExecutionContext jobExecutionContext) {
     return "execute";
   }
 }

@@ -16,7 +16,7 @@ final class DataSourceCodeAttributesGetter implements CodeAttributesGetter<DataS
   }
 
   @Override
-  public String getMethodName(DataSource dataSource) {
+  public String getCodeMethodName(DataSource dataSource) {
     return "getConnection";
   }
 }

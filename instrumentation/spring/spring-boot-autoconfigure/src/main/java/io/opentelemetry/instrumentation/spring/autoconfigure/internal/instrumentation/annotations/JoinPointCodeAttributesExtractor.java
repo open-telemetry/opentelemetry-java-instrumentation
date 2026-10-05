@@ -14,7 +14,7 @@ final class JoinPointCodeAttributesExtractor implements CodeAttributesGetter<Joi
   }
 
   @Override
-  public String getMethodName(JoinPointRequest joinPointRequest) {
+  public String getCodeMethodName(JoinPointRequest joinPointRequest) {
     return joinPointRequest.method().getName();
   }
 }
