@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
@@ -24,7 +25,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions;
 import io.opentelemetry.javaagent.instrumentation.spring.data.v3_0.repository.CustomerRepository;
 import io.opentelemetry.javaagent.instrumentation.spring.data.v3_0.repository.PersistenceConfig;
 import java.time.Duration;
@@ -72,8 +72,9 @@ class ReactiveSpringDataTest {
                     span.hasName("CustomerRepository.findAll")
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            CodeAssertions.codeFunctionAssertions(
-                                CustomerRepository.class, "findAll")),
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                CustomerRepository.class.getName() + ".findAll")),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv() ? "SELECT CUSTOMER" : "SELECT db.CUSTOMER")

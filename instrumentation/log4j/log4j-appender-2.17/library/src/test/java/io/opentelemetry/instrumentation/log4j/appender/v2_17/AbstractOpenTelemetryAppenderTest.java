@@ -5,9 +5,12 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
-import static io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions.codeFileAndLineAssertions;
-import static io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions.codeFunctionAssertions;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
 import static java.util.Arrays.asList;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -68,8 +71,9 @@ abstract class AbstractOpenTelemetryAppenderTest {
     }
 
     List<AttributeAssertion> result = new ArrayList<>(asList(assertions));
-    result.addAll(codeFunctionAssertions(testClass, methodName));
-    result.addAll(codeFileAndLineAssertions(testClass.getSimpleName() + ".java"));
+    result.add(equalTo(CODE_FUNCTION_NAME, testClass.getName() + "." + methodName));
+    result.add(equalTo(CODE_FILE_PATH, testClass.getSimpleName() + ".java"));
+    result.add(satisfies(CODE_LINE_NUMBER, val -> val.isPositive()));
     return result;
   }
 }

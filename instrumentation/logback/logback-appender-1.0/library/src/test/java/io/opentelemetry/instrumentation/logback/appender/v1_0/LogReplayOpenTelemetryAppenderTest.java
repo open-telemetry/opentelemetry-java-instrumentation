@@ -5,8 +5,11 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
-import static io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions.codeFileAndLineAssertions;
-import static io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions.codeFunctionAssertions;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.util.ContextInitializer;
@@ -14,10 +17,7 @@ import ch.qos.logback.core.spi.ContextAware;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -71,12 +71,6 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
 
   @Test
   void twoLogs() {
-    List<AttributeAssertion> assertions = new ArrayList<>();
-    assertions.addAll(codeFunctionAssertions(LogReplayOpenTelemetryAppenderTest.class, "twoLogs"));
-    assertions.addAll(
-        codeFileAndLineAssertions(
-            LogReplayOpenTelemetryAppenderTest.class.getSimpleName() + ".java"));
-
     logger.info("log message 1");
     logger.info(
         "log message 2"); // Won't be instrumented because cache size is 1 (see logback-test.xml
@@ -91,6 +85,13 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
                 .hasResource(RESOURCE)
                 .hasInstrumentationScope(INSTRUMENTATION_SCOPE_INFO)
                 .hasBody("log message 1")
-                .hasAttributesSatisfyingExactly(assertions));
+                .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        CODE_FUNCTION_NAME,
+                        LogReplayOpenTelemetryAppenderTest.class.getName() + ".twoLogs"),
+                    equalTo(
+                        CODE_FILE_PATH,
+                        LogReplayOpenTelemetryAppenderTest.class.getSimpleName() + ".java"),
+                    satisfies(CODE_LINE_NUMBER, val -> val.isPositive())));
   }
 }

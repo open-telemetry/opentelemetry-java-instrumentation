@@ -6,11 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions.codeFunctionAssertions;
-import static io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions.codeFunctionPrefixAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
@@ -31,9 +30,7 @@ import io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.
 import io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.config.TaskWithErrorConfig;
 import io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.config.TriggerTaskConfig;
 import io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.service.LambdaTaskConfigurer;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -72,9 +69,6 @@ class SpringSchedulingTest {
     TriggerTask task = context.getBean(TriggerTask.class);
     task.blockUntilExecute();
 
-    List<AttributeAssertion> assertions = codeFunctionAssertions(TriggerTask.class, "run");
-    assertions.add(equalTo(stringKey("job.system"), experimental("spring_scheduling")));
-
     assertThat(task).isNotNull();
     testing.waitAndAssertTraces(
         trace ->
@@ -82,7 +76,9 @@ class SpringSchedulingTest {
                 span ->
                     span.hasName("TriggerTask.run")
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(assertions)));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_FUNCTION_NAME, TriggerTask.class.getName() + ".run"),
+                            equalTo(stringKey("job.system"), experimental("spring_scheduling")))));
   }
 
   @Test
@@ -94,9 +90,6 @@ class SpringSchedulingTest {
     IntervalTask task = context.getBean(IntervalTask.class);
     task.blockUntilExecute();
 
-    List<AttributeAssertion> assertions = codeFunctionAssertions(IntervalTask.class, "run");
-    assertions.add(equalTo(stringKey("job.system"), experimental("spring_scheduling")));
-
     assertThat(task).isNotNull();
     testing.waitAndAssertTraces(
         trace ->
@@ -104,7 +97,9 @@ class SpringSchedulingTest {
                 span ->
                     span.hasName("IntervalTask.run")
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(assertions)));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_FUNCTION_NAME, IntervalTask.class.getName() + ".run"),
+                            equalTo(stringKey("job.system"), experimental("spring_scheduling")))));
   }
 
   @Test
@@ -116,10 +111,6 @@ class SpringSchedulingTest {
     LambdaTaskConfigurer configurer = context.getBean(LambdaTaskConfigurer.class);
     assertThat(configurer.singleUseLatch.await(2000, MILLISECONDS)).isTrue();
 
-    List<AttributeAssertion> assertions =
-        codeFunctionPrefixAssertions(LambdaTaskConfigurer.class.getName() + "$$Lambda", "run");
-    assertions.add(equalTo(stringKey("job.system"), experimental("spring_scheduling")));
-
     assertThat(configurer).isNotNull();
     testing.waitAndAssertTraces(
         trace ->
@@ -127,7 +118,14 @@ class SpringSchedulingTest {
                 span ->
                     span.hasName("LambdaTaskConfigurer$$Lambda.run")
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(assertions)));
+                        .hasAttributesSatisfyingExactly(
+                            satisfies(
+                                CODE_FUNCTION_NAME,
+                                val ->
+                                    val.startsWith(
+                                            LambdaTaskConfigurer.class.getName() + "$$Lambda")
+                                        .endsWith("run")),
+                            equalTo(stringKey("job.system"), experimental("spring_scheduling")))));
   }
 
   @Test
@@ -139,10 +137,6 @@ class SpringSchedulingTest {
     CountDownLatch latch = context.getBean(CountDownLatch.class);
     assertThat(latch.await(5, SECONDS)).isTrue();
 
-    List<AttributeAssertion> assertions =
-        codeFunctionAssertions(EnhancedClassTaskConfig.class, "run");
-    assertions.add(equalTo(stringKey("job.system"), experimental("spring_scheduling")));
-
     assertThat(latch).isNotNull();
     testing.waitAndAssertTraces(
         trace ->
@@ -150,7 +144,11 @@ class SpringSchedulingTest {
                 span ->
                     span.hasName("EnhancedClassTaskConfig.run")
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(assertions)));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                EnhancedClassTaskConfig.class.getName() + ".run"),
+                            equalTo(stringKey("job.system"), experimental("spring_scheduling")))));
   }
 
   @Test
@@ -162,9 +160,6 @@ class SpringSchedulingTest {
     TaskWithError task = context.getBean(TaskWithError.class);
     task.blockUntilExecute();
 
-    List<AttributeAssertion> assertions = codeFunctionAssertions(TaskWithError.class, "run");
-    assertions.add(equalTo(stringKey("job.system"), experimental("spring_scheduling")));
-
     assertThat(task).isNotNull();
     testing.waitAndAssertTraces(
         trace ->
@@ -173,7 +168,9 @@ class SpringSchedulingTest {
                     span.hasName("TaskWithError.run")
                         .hasNoParent()
                         .hasStatus(StatusData.error())
-                        .hasAttributesSatisfyingExactly(assertions)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_FUNCTION_NAME, TaskWithError.class.getName() + ".run"),
+                            equalTo(stringKey("job.system"), experimental("spring_scheduling")))
                         .hasEventsSatisfyingExactly(
                             event ->
                                 event

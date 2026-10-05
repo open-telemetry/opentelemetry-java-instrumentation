@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.external.annotations;
 
-import static io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions.codeFunctionAssertions;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -34,7 +35,9 @@ class ConfiguredTraceAnnotationsTest {
                 span ->
                     span.hasName("AnnotationTracedCallable.call")
                         .hasAttributesSatisfyingExactly(
-                            codeFunctionAssertions(AnnotationTracedCallable.class, "call"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                AnnotationTracedCallable.class.getName() + ".call"))));
   }
 
   static class AnnotationTracedCallable implements Callable<String> {

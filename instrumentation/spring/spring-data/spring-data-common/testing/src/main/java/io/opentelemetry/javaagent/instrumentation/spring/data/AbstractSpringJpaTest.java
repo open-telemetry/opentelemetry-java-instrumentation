@@ -6,10 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.spring.data;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions.codeFunctionAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
@@ -80,7 +80,8 @@ public abstract class AbstractSpringJpaTest<
         span ->
             span.hasName("JpaCustomerRepository.save")
                 .hasKind(SpanKind.INTERNAL)
-                .hasAttributesSatisfyingExactly(codeFunctionAssertions(repoClassName, "save")),
+                .hasAttributesSatisfyingExactly(
+                    equalTo(CODE_FUNCTION_NAME, repoClassName + ".save")),
         span ->
             span.hasName(
                     emitStableDatabaseSemconv() ? "insert JpaCustomer" : "INSERT test.JpaCustomer")
@@ -108,7 +109,8 @@ public abstract class AbstractSpringJpaTest<
         span ->
             span.hasName("JpaCustomerRepository.save")
                 .hasKind(SpanKind.INTERNAL)
-                .hasAttributesSatisfyingExactly(codeFunctionAssertions(repoClassName, "save")),
+                .hasAttributesSatisfyingExactly(
+                    equalTo(CODE_FUNCTION_NAME, repoClassName + ".save")),
         span ->
             span.hasKind(SpanKind.CLIENT)
                 .satisfies(
@@ -180,7 +182,7 @@ public abstract class AbstractSpringJpaTest<
                     span.hasName("JpaCustomerRepository.findAll")
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            codeFunctionAssertions(repoClassName, "findAll")),
+                            equalTo(CODE_FUNCTION_NAME, repoClassName + ".findAll")),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -227,7 +229,7 @@ public abstract class AbstractSpringJpaTest<
                     span.hasName("JpaCustomerRepository.save")
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            codeFunctionAssertions(repoClassName, "save")),
+                            equalTo(CODE_FUNCTION_NAME, repoClassName + ".save")),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -286,7 +288,7 @@ public abstract class AbstractSpringJpaTest<
                     span.hasName("JpaCustomerRepository.findByLastName")
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            codeFunctionAssertions(repoClassName, "findByLastName")),
+                            equalTo(CODE_FUNCTION_NAME, repoClassName + ".findByLastName")),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -321,7 +323,7 @@ public abstract class AbstractSpringJpaTest<
                     span.hasName("JpaCustomerRepository.delete")
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            codeFunctionAssertions(repoClassName, "delete")),
+                            equalTo(CODE_FUNCTION_NAME, repoClassName + ".delete")),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -387,7 +389,7 @@ public abstract class AbstractSpringJpaTest<
                     span.hasName("JpaCustomerRepository.findSpecialCustomers")
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            codeFunctionAssertions(repoClassName, "findSpecialCustomers")),
+                            equalTo(CODE_FUNCTION_NAME, repoClassName + ".findSpecialCustomers")),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -442,7 +444,7 @@ public abstract class AbstractSpringJpaTest<
                         .hasStatus(StatusData.error())
                         .hasException(expectedException)
                         .hasAttributesSatisfyingExactly(
-                            codeFunctionAssertions(repoClassName, "findOneByLastName")),
+                            equalTo(CODE_FUNCTION_NAME, repoClassName + ".findOneByLastName")),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()

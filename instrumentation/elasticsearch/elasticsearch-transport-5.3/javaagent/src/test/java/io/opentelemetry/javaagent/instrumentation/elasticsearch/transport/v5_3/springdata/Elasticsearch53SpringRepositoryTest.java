@@ -8,11 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_3.
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions.codeFunctionAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ELASTICSEARCH;
@@ -86,7 +86,9 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
                     span.hasName("DocRepository.findAll")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(assertFunctionName("findAll")),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME, DocRepository.class.getName() + ".findAll")),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -127,7 +129,8 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
                     span.hasName("DocRepository.index")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(assertFunctionName("index")),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_FUNCTION_NAME, DocRepository.class.getName() + ".index")),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -153,7 +156,9 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
                     span.hasName("DocRepository.findById")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(assertFunctionName("findById")),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME, DocRepository.class.getName() + ".findById")),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv() ? "indices:data/read/get" : "GetAction")
@@ -174,7 +179,8 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
                     span.hasName("DocRepository.index")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(assertFunctionName("index")),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_FUNCTION_NAME, DocRepository.class.getName() + ".index")),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -195,7 +201,9 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
                     span.hasName("DocRepository.findById")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(assertFunctionName("findById")),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME, DocRepository.class.getName() + ".findById")),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv() ? "indices:data/read/get" : "GetAction")
@@ -214,7 +222,9 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
                     span.hasName("DocRepository.deleteById")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(assertFunctionName("deleteById")),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME, DocRepository.class.getName() + ".deleteById")),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -259,7 +269,9 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
                     span.hasName("DocRepository.findAll")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(assertFunctionName("findAll")),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME, DocRepository.class.getName() + ".findAll")),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -332,9 +344,5 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
             equalTo(stringKey("elasticsearch.type"), experimental("doc")),
             equalTo(stringKey("elasticsearch.id"), experimental("1")),
             equalTo(longKey("elasticsearch.version"), experimental(version))));
-  }
-
-  private static List<AttributeAssertion> assertFunctionName(String methodName) {
-    return codeFunctionAssertions(DocRepository.class, methodName);
   }
 }

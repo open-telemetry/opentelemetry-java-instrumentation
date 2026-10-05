@@ -17,8 +17,8 @@
   `io.opentelemetry.instrumentation.api.incubator.semconv.code` in
   `opentelemetry-instrumentation-api-incubator` to `io.opentelemetry.instrumentation.api.semconv.code`
   in `opentelemetry-instrumentation-api`. Update imports and dependencies to the stable API.
-- Replace the testing helper `SemconvCodeStabilityUtil` with `CodeAssertions`, which always assert
-  stable source code attributes.
+- Remove the testing helper `SemconvCodeStabilityUtil`.
+  Assert stable source code attributes directly.
 - Remove deprecated `setCapturedRequestHeaders` and `setCapturedResponseHeaders` methods from
   HTTP library telemetry builders. Use `setRequestHeaders` and `setResponseHeaders`
   with `IncludeExclude` selectors instead. Selector patterns interpret `*` and `?` as wildcards

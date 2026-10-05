@@ -6,8 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.v2_2;
 
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
-import static io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static java.util.Collections.emptyEnumeration;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.mock;
@@ -80,19 +81,23 @@ class HttpServletResponseTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            codeFunctionAssertions(TestResponse.class, "sendError")),
+                            equalTo(
+                                CODE_FUNCTION_NAME, TestResponse.class.getName() + ".sendError")),
                 span ->
                     span.hasName("TestResponse.sendError")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            codeFunctionAssertions(TestResponse.class, "sendError")),
+                            equalTo(
+                                CODE_FUNCTION_NAME, TestResponse.class.getName() + ".sendError")),
                 span ->
                     span.hasName("TestResponse.sendRedirect")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            codeFunctionAssertions(TestResponse.class, "sendRedirect"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                TestResponse.class.getName() + ".sendRedirect"))));
   }
 
   @Test

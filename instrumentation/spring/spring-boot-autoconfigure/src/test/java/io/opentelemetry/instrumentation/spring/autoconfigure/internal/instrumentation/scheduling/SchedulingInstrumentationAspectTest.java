@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.scheduling;
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -14,10 +16,7 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -55,10 +54,6 @@ class SchedulingInstrumentationAspectTest {
     schedulingTester = factory.getProxy();
   }
 
-  private List<AttributeAssertion> assertCodeFunction(String method) {
-    return CodeAssertions.codeFunctionAssertions(unproxiedTesterClassName, method);
-  }
-
   @Test
   @DisplayName("when method is annotated with @Scheduled should start a new span.")
   void scheduled() {
@@ -72,7 +67,9 @@ class SchedulingInstrumentationAspectTest {
                 span ->
                     span.hasName(unproxiedTesterSimpleClassName + ".testScheduled")
                         .hasKind(INTERNAL)
-                        .hasAttributesSatisfyingExactly(assertCodeFunction("testScheduled"))));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME, unproxiedTesterClassName + ".testScheduled"))));
   }
 
   @Test
@@ -88,7 +85,10 @@ class SchedulingInstrumentationAspectTest {
                 span ->
                     span.hasName(unproxiedTesterSimpleClassName + ".testMultiScheduled")
                         .hasKind(INTERNAL)
-                        .hasAttributesSatisfyingExactly(assertCodeFunction("testMultiScheduled"))));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                unproxiedTesterClassName + ".testMultiScheduled"))));
   }
 
   @Test
@@ -104,7 +104,9 @@ class SchedulingInstrumentationAspectTest {
                 span ->
                     span.hasName(unproxiedTesterSimpleClassName + ".testSchedules")
                         .hasKind(INTERNAL)
-                        .hasAttributesSatisfyingExactly(assertCodeFunction("testSchedules"))));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME, unproxiedTesterClassName + ".testSchedules"))));
   }
 
   @Test
@@ -121,7 +123,9 @@ class SchedulingInstrumentationAspectTest {
                 span ->
                     span.hasName(unproxiedTesterSimpleClassName + ".testNestedSpan")
                         .hasKind(INTERNAL)
-                        .hasAttributesSatisfyingExactly(assertCodeFunction("testNestedSpan")),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME, unproxiedTesterClassName + ".testNestedSpan")),
                 nestedSpan ->
                     nestedSpan.hasParent(trace.getSpan(0)).hasKind(INTERNAL).hasName("test")));
   }
@@ -141,7 +145,9 @@ class SchedulingInstrumentationAspectTest {
                         .hasKind(INTERNAL)
                         .hasStatus(StatusData.error())
                         .hasAttributesSatisfyingExactly(
-                            assertCodeFunction("testScheduledWithException"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                unproxiedTesterClassName + ".testScheduledWithException"))));
   }
 
   static class InstrumentationSchedulingTester {

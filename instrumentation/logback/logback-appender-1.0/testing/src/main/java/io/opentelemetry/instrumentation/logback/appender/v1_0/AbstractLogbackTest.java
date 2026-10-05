@@ -7,11 +7,12 @@ package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions.codeFileAndLineAssertions;
-import static io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
@@ -163,10 +164,13 @@ public abstract class AbstractLogbackTest {
                 if (expectThreadAttributes()) {
                   attributeAsserts.addAll(threadAssertions());
                 }
-                attributeAsserts.addAll(
-                    codeFunctionAssertions(AbstractLogbackTest.class, "performLogging"));
-                attributeAsserts.addAll(
-                    codeFileAndLineAssertions(AbstractLogbackTest.class.getSimpleName() + ".java"));
+                attributeAsserts.add(
+                    equalTo(
+                        CODE_FUNCTION_NAME,
+                        AbstractLogbackTest.class.getName() + ".performLogging"));
+                attributeAsserts.add(
+                    equalTo(CODE_FILE_PATH, AbstractLogbackTest.class.getSimpleName() + ".java"));
+                attributeAsserts.add(satisfies(CODE_LINE_NUMBER, val -> val.isPositive()));
                 if (logException) {
                   attributeAsserts.addAll(
                       asList(
@@ -198,9 +202,9 @@ public abstract class AbstractLogbackTest {
     if (expectThreadAttributes()) {
       assertions.addAll(threadAssertions());
     }
-    assertions.addAll(
-        codeFileAndLineAssertions(AbstractLogbackTest.class.getSimpleName() + ".java"));
-    assertions.addAll(codeFunctionAssertions(AbstractLogbackTest.class, "testMdc"));
+    assertions.add(equalTo(CODE_FILE_PATH, AbstractLogbackTest.class.getSimpleName() + ".java"));
+    assertions.add(satisfies(CODE_LINE_NUMBER, val -> val.isPositive()));
+    assertions.add(equalTo(CODE_FUNCTION_NAME, AbstractLogbackTest.class.getName() + ".testMdc"));
     assertions.add(equalTo(stringKey("key1"), "val1"));
     assertions.add(equalTo(stringKey("key2"), "val2"));
 
@@ -229,9 +233,10 @@ public abstract class AbstractLogbackTest {
     if (expectThreadAttributes()) {
       assertions.addAll(threadAssertions());
     }
-    assertions.addAll(
-        codeFileAndLineAssertions(AbstractLogbackTest.class.getSimpleName() + ".java"));
-    assertions.addAll(codeFunctionAssertions(AbstractLogbackTest.class, "testEventNameMdc"));
+    assertions.add(equalTo(CODE_FILE_PATH, AbstractLogbackTest.class.getSimpleName() + ".java"));
+    assertions.add(satisfies(CODE_LINE_NUMBER, val -> val.isPositive()));
+    assertions.add(
+        equalTo(CODE_FUNCTION_NAME, AbstractLogbackTest.class.getName() + ".testEventNameMdc"));
     assertions.add(equalTo(stringKey("key1"), "val1"));
 
     testing()
@@ -254,13 +259,14 @@ public abstract class AbstractLogbackTest {
 
     abcLogger.info(marker, "Message");
 
-    List<AttributeAssertion> assertions =
-        codeFunctionAssertions(AbstractLogbackTest.class, "testMarker");
+    List<AttributeAssertion> assertions = new ArrayList<>();
+    assertions.add(
+        equalTo(CODE_FUNCTION_NAME, AbstractLogbackTest.class.getName() + ".testMarker"));
     if (expectThreadAttributes()) {
       assertions.addAll(threadAssertions());
     }
-    assertions.addAll(
-        codeFileAndLineAssertions(AbstractLogbackTest.class.getSimpleName() + ".java"));
+    assertions.add(equalTo(CODE_FILE_PATH, AbstractLogbackTest.class.getSimpleName() + ".java"));
+    assertions.add(satisfies(CODE_LINE_NUMBER, val -> val.isPositive()));
     assertions.add(equalTo(stringArrayKey("logback.marker"), singletonList(markerName)));
 
     testing()

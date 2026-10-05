@@ -5,8 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.methods;
 
-import static io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -40,7 +41,9 @@ class MethodTest {
                     span.hasName("ConfigTracedCallable.call")
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            codeFunctionAssertions(ConfigTracedCallable.class, "call"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                ConfigTracedCallable.class.getName() + ".call"))));
   }
 
   @Test
@@ -66,7 +69,9 @@ class MethodTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasException(throwableReference.get())
                         .hasAttributesSatisfyingExactly(
-                            codeFunctionAssertions(InitialDirContext.class, "search"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                InitialDirContext.class.getName() + ".search"))));
   }
 
   static class ConfigTracedCallable implements Callable<String> {
@@ -96,8 +101,9 @@ class MethodTest {
                     span.hasName("ConfigTracedCompletableFuture.getResult")
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            codeFunctionAssertions(
-                                ConfigTracedCompletableFuture.class, "getResult"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                ConfigTracedCompletableFuture.class.getName() + ".getResult"))));
   }
 
   static class ConfigTracedCompletableFuture {

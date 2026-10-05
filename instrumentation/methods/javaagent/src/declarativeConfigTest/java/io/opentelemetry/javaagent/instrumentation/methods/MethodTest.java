@@ -5,8 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.methods;
 
-import static io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -31,7 +32,9 @@ class MethodTest {
                     span.hasName("ConfigTracedCallable.call")
                         .hasKind(SpanKind.SERVER)
                         .hasAttributesSatisfyingExactly(
-                            codeFunctionAssertions(ConfigTracedCallable.class, "call"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                ConfigTracedCallable.class.getName() + ".call"))));
   }
 
   static class ConfigTracedCallable implements Callable<String> {

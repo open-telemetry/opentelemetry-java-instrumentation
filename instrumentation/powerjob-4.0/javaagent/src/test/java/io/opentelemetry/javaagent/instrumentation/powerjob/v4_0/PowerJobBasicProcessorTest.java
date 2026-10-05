@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.powerjob.v4_0;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static java.util.Arrays.asList;
 
 import com.alibaba.fastjson.JSONArray;
@@ -350,7 +350,7 @@ class PowerJobBasicProcessorTest {
               equalTo(stringKey("scheduling.powerjob.job.type"), jobType)));
     }
 
-    attributeAssertions.addAll(codeFunctionAssertions(codeNamespace, "process"));
+    attributeAssertions.add(equalTo(CODE_FUNCTION_NAME, codeNamespace + ".process"));
 
     if (!StringUtils.isNullOrEmpty(jobParam) && EXPERIMENTAL_ATTRIBUTES) {
       attributeAssertions.add(equalTo(stringKey("scheduling.powerjob.job.param"), jobParam));

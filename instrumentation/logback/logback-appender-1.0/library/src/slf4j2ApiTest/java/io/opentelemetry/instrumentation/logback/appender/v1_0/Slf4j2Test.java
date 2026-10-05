@@ -10,9 +10,11 @@ import static io.opentelemetry.api.common.AttributeKey.doubleKey;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions.codeFileAndLineAssertions;
-import static io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
 import static java.util.Arrays.asList;
 
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -181,8 +183,9 @@ class Slf4j2Test {
 
   private static List<AttributeAssertion> codeAssertions(String methodName) {
     List<AttributeAssertion> assertions = new ArrayList<>();
-    assertions.addAll(codeFileAndLineAssertions(Slf4j2Test.class.getSimpleName() + ".java"));
-    assertions.addAll(codeFunctionAssertions(Slf4j2Test.class, methodName));
+    assertions.add(equalTo(CODE_FILE_PATH, Slf4j2Test.class.getSimpleName() + ".java"));
+    assertions.add(satisfies(CODE_LINE_NUMBER, val -> val.isPositive()));
+    assertions.add(equalTo(CODE_FUNCTION_NAME, Slf4j2Test.class.getName() + "." + methodName));
     return assertions;
   }
 }

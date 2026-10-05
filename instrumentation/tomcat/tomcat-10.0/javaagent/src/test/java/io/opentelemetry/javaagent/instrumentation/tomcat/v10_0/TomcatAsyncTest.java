@@ -14,12 +14,13 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
@@ -125,7 +126,8 @@ class TomcatAsyncTest extends AbstractHttpServerTest<Tomcat> {
     }
     span.hasKind(SpanKind.INTERNAL)
         .satisfies(spanData -> assertThat(spanData.getName()).endsWith("." + methodName))
-        .hasAttributesSatisfyingExactly(CodeAssertions.codeFunctionSuffixAssertions(methodName));
+        .hasAttributesSatisfyingExactly(
+            satisfies(CODE_FUNCTION_NAME, val -> val.endsWith("." + methodName)));
     return span;
   }
 }

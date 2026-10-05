@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.mybatis.v3_2;
 
-import static io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions.codeFunctionAssertions;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -57,6 +58,6 @@ class MyBatisTest {
                     span.hasKind(SpanKind.INTERNAL)
                         .hasName("TestMapper.select")
                         .hasAttributesSatisfyingExactly(
-                            codeFunctionAssertions(TestMapper.class, "select"))));
+                            equalTo(CODE_FUNCTION_NAME, TestMapper.class.getName() + ".select"))));
   }
 }

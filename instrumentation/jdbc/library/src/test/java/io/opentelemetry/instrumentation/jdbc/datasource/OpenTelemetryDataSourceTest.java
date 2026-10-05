@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.jdbc.datasource;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.POSTGRESQL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
@@ -20,11 +21,8 @@ import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.stream.Stream;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -49,15 +47,6 @@ class OpenTelemetryDataSourceTest {
 
     Connection connection = testing.runWithSpan("parent", () -> getConnection.call(dataSource));
 
-    List<AttributeAssertion> assertions =
-        CodeAssertions.codeFunctionAssertions(TestDataSource.class, "getConnection");
-    assertions.add(equalTo(maybeStable(DB_SYSTEM), POSTGRESQL));
-    assertions.add(equalTo(maybeStable(DB_NAME), "dbname"));
-    assertions.add(
-        equalTo(
-            DB_CONNECTION_STRING,
-            emitStableDatabaseSemconv() ? null : "postgresql://127.0.0.1:5432"));
-
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -66,7 +55,17 @@ class OpenTelemetryDataSourceTest {
                     span.hasName("TestDataSource.getConnection")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(assertions)));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                TestDataSource.class.getName() + ".getConnection"),
+                            equalTo(maybeStable(DB_SYSTEM), POSTGRESQL),
+                            equalTo(maybeStable(DB_NAME), "dbname"),
+                            equalTo(
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv()
+                                    ? null
+                                    : "postgresql://127.0.0.1:5432"))));
 
     assertThat(connection).isInstanceOf(OpenTelemetryConnection.class);
     DbInfo dbInfo = ((OpenTelemetryConnection) connection).getDbInfo();

@@ -6,17 +6,16 @@
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions.codeFileAndLineAssertions;
-import static io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
 
 import ch.qos.logback.classic.LoggerContext;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import java.util.ArrayList;
-import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -44,14 +43,6 @@ abstract class AbstractOpenTelemetryAppenderTest {
   void logLoggerContext() {
     LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
     loggerContext.putProperty("test-property", "test-value");
-    List<AttributeAssertion> assertions = new ArrayList<>();
-    assertions.addAll(
-        codeFileAndLineAssertions(
-            AbstractOpenTelemetryAppenderTest.class.getSimpleName() + ".java"));
-    assertions.addAll(
-        codeFunctionAssertions(AbstractOpenTelemetryAppenderTest.class, "logLoggerContext"));
-    assertions.add(equalTo(stringKey("test-property"), "test-value"));
-
     try {
       logger.info("log message 1");
       executeAfterLogsExecution();
@@ -66,6 +57,15 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasResource(RESOURCE)
                     .hasInstrumentationScope(INSTRUMENTATION_SCOPE_INFO)
                     .hasBody("log message 1")
-                    .hasAttributesSatisfyingExactly(assertions));
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            CODE_FILE_PATH,
+                            AbstractOpenTelemetryAppenderTest.class.getSimpleName() + ".java"),
+                        satisfies(CODE_LINE_NUMBER, val -> val.isPositive()),
+                        equalTo(
+                            CODE_FUNCTION_NAME,
+                            AbstractOpenTelemetryAppenderTest.class.getName()
+                                + ".logLoggerContext"),
+                        equalTo(stringKey("test-property"), "test-value")));
   }
 }

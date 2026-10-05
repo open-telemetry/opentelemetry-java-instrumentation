@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.testing.util.InstrumentationScope
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
@@ -26,7 +27,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.sun.jersey.spi.container.servlet.ServletContainer;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.code.CodeAssertions;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
@@ -147,7 +147,8 @@ class JerseyTest extends AbstractHttpServerUsingTest<Server> {
                                     : "io.opentelemetry.jaxrs-1.0"))
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            CodeAssertions.codeFunctionAssertions(
-                                Resource.class.getName() + "$" + className, methodName))));
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                Resource.class.getName() + "$" + className + "." + methodName))));
   }
 }
