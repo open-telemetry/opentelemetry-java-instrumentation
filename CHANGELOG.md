@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### ⚠️ Breaking changes
+
+- Change the Java agent's `telemetry.distro.name` resource attribute from
+  `opentelemetry-java-instrumentation` to `opentelemetry-javaagent`.
+
 ### ⚠️ Breaking changes to non-stable APIs
 
 - Remove deprecated `setCapturedRequestHeaders` and `setCapturedResponseHeaders` methods from
