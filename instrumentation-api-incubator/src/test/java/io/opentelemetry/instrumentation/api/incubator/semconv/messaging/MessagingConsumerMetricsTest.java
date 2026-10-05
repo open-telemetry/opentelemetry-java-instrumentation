@@ -359,7 +359,7 @@ class MessagingConsumerMetricsTest {
 
   @ParameterizedTest
   @MethodSource("nonReceiveOperations")
-  void selectsStableMetricsByOperationType(String operationType, boolean recordsClientDuration) {
+  void selectsMetricsByOperationType(String operationType, boolean recordsClientDuration) {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();

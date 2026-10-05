@@ -152,8 +152,7 @@ abstract class AbstractJms3Test {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
-                            messagingDestinationName(
-                                producerDestinationName, actualDestinationName),
+                            equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
                             equalTo(MESSAGING_OPERATION, null),
                             equalTo(MESSAGING_OPERATION_NAME, "send"),
                             equalTo(MESSAGING_OPERATION_TYPE, "send"),
@@ -412,8 +411,7 @@ abstract class AbstractJms3Test {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
-                            messagingDestinationName(
-                                producerDestinationName, actualDestinationName),
+                            equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
                             equalTo(MESSAGING_OPERATION, null),
                             equalTo(MESSAGING_OPERATION_NAME, "send"),
                             equalTo(MESSAGING_OPERATION_TYPE, "send"),
@@ -452,11 +450,6 @@ abstract class AbstractJms3Test {
     return isTemporary
         ? equalTo(MESSAGING_DESTINATION_TEMPORARY, true)
         : satisfies(MESSAGING_DESTINATION_TEMPORARY, AbstractAssert::isNull);
-  }
-
-  static AttributeAssertion messagingDestinationName(
-      String oldDestinationName, String stableDestinationName) {
-    return equalTo(MESSAGING_DESTINATION_NAME, stableDestinationName);
   }
 
   private static Stream<Arguments> emptyReceiveArguments() {

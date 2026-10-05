@@ -239,7 +239,7 @@ class RocketMqSimpleConsumerTest {
   }
 
   @Test
-  void shouldInstrumentSynchronousReceiveErrorOnlyInStableMode() {
+  void shouldInstrumentSynchronousReceiveError() {
     assertThatThrownBy(
             () ->
                 testing.runWithSpan(
@@ -250,7 +250,7 @@ class RocketMqSimpleConsumerTest {
   }
 
   @Test
-  void shouldInstrumentAsynchronousReceiveErrorOnlyInStableMode() {
+  void shouldInstrumentAsynchronousReceiveError() {
     assertThatThrownBy(
             () ->
                 testing.runWithSpan(

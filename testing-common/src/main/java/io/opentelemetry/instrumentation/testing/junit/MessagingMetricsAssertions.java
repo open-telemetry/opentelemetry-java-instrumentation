@@ -17,7 +17,7 @@ import java.util.Set;
 /** Assertions for the messaging metrics defined by the v1.43 semantic conventions. */
 public final class MessagingMetricsAssertions {
 
-  private static final Set<String> STABLE_METRICS =
+  private static final Set<String> METRIC_NAMES =
       unmodifiableSet(
           new HashSet<>(
               asList(
@@ -53,14 +53,14 @@ public final class MessagingMetricsAssertions {
             metrics.singleElement().satisfies(metric -> verifyHistogram(metric, attributes)));
   }
 
-  /** Asserts that the given instrumentation recorded none of the stable messaging metrics. */
+  /** Asserts that the given instrumentation recorded none of the defined messaging metrics. */
   public static void assertNoStableMetrics(
       InstrumentationExtension testing, String instrumentationName) {
     assertThat(testing.metrics())
         .noneMatch(
             metric ->
                 metric.getInstrumentationScopeInfo().getName().equals(instrumentationName)
-                    && STABLE_METRICS.contains(metric.getName()));
+                    && METRIC_NAMES.contains(metric.getName()));
   }
 
   /** Asserts that the given instrumentation did not record the named metric. */
