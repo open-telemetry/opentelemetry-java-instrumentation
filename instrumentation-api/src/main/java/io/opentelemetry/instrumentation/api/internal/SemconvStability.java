@@ -100,9 +100,9 @@ public final class SemconvStability {
     dbSystemNameMap.put("spanner", "gcp.spanner");
   }
 
-  public static String stableDbSystemName(String oldDbSystem) {
-    String dbSystemName = dbSystemNameMap.get(oldDbSystem);
-    return dbSystemName != null ? dbSystemName : oldDbSystem;
+  public static String normalizeDbSystemName(String dbSystemName) {
+    String normalizedDbSystemName = dbSystemNameMap.get(dbSystemName);
+    return normalizedDbSystemName != null ? normalizedDbSystemName : dbSystemName;
   }
 
   public static boolean emitOldRpcSemconv() {

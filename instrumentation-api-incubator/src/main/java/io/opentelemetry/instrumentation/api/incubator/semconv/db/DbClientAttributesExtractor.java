@@ -87,7 +87,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
     boolean isBatch = batchSize != null && batchSize != 1;
 
     attributes.put(
-        DB_SYSTEM_NAME, SemconvStability.stableDbSystemName(getter.getDbSystemName(request)));
+        DB_SYSTEM_NAME, SemconvStability.normalizeDbSystemName(getter.getDbSystemName(request)));
     attributes.put(DB_NAMESPACE, getter.getDbNamespace(request));
     attributes.put(DB_COLLECTION_NAME, getter.getDbCollectionName(request));
     attributes.put(DB_QUERY_TEXT, getter.getDbQueryText(request));

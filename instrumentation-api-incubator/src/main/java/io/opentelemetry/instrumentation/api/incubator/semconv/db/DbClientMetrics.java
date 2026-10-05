@@ -50,14 +50,14 @@ public final class DbClientMetrics implements OperationListener {
   private final DoubleHistogram duration;
 
   private DbClientMetrics(Meter meter) {
-    DoubleHistogramBuilder stableDurationBuilder =
+    DoubleHistogramBuilder durationBuilder =
         meter
             .histogramBuilder("db.client.operation.duration")
             .setUnit("s")
             .setDescription("Duration of database client operations.")
             .setExplicitBucketBoundariesAdvice(DbClientMetricsAdvice.DURATION_SECONDS_BUCKETS);
-    DbClientMetricsAdvice.applyClientDurationAdvice(stableDurationBuilder);
-    duration = stableDurationBuilder.build();
+    DbClientMetricsAdvice.applyClientDurationAdvice(durationBuilder);
+    duration = durationBuilder.build();
   }
 
   @Override

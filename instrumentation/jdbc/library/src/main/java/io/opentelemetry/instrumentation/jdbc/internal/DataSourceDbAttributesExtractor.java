@@ -32,6 +32,7 @@ final class DataSourceDbAttributesExtractor implements AttributesExtractor<DataS
       return;
     }
     attributes.put(DB_NAMESPACE, dbInfo.getDbNamespace());
-    attributes.put(DB_SYSTEM_NAME, SemconvStability.stableDbSystemName(dbInfo.getDbSystemName()));
+    attributes.put(
+        DB_SYSTEM_NAME, SemconvStability.normalizeDbSystemName(dbInfo.getDbSystemName()));
   }
 }
