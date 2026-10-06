@@ -368,8 +368,7 @@ class SemconvStabilityTest {
             stableOptIn("database/dup", "rpc", "service.peer"),
             preview("rpc/dup", "service.peer/dup"));
 
-    assertThat(resolver.database())
-        .isEqualTo(v3Preview ? SemconvMode.V1_STABLE : SemconvMode.V1_STABLE.withDualEmit());
+    assertThat(resolver.database()).isEqualTo(SemconvMode.V1_STABLE);
     assertThat(resolver.rpc()).isEqualTo(SemconvMode.V1_EXPERIMENTAL.withDualEmit());
     assertThat(resolver.servicePeer()).isEqualTo(SemconvMode.V1_EXPERIMENTAL.withDualEmit());
   }
