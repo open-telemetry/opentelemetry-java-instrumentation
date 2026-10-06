@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Arrays.asList;
@@ -92,45 +91,27 @@ class JedisSentinel30ClientTest {
                   .filteredOn(span -> span.getName().startsWith("SET"))
                   .anySatisfy(
                       span -> {
-                        if (emitStableDatabaseSemconv()) {
-                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                              .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
-                          assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
-                        } else {
-                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                              .isNotEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
-                          assertThat(span.getAttributes().get(SERVER_PORT)).isNotNull();
-                        }
+                        assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                            .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
+                        assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
                       });
               assertThat(testing.spans())
                   .filteredOn(span -> span.getName().startsWith("SENTINEL"))
                   .isNotEmpty()
                   .allSatisfy(
                       span -> {
-                        if (emitStableDatabaseSemconv()) {
-                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                              .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
-                          assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
-                        } else {
-                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                              .isNotEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
-                          assertThat(span.getAttributes().get(SERVER_PORT)).isNotNull();
-                        }
+                        assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                            .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
+                        assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
                       });
               assertThat(testing.spans())
                   .filteredOn(span -> span.getName().startsWith("SUBSCRIBE"))
                   .isNotEmpty()
                   .allSatisfy(
                       span -> {
-                        if (emitStableDatabaseSemconv()) {
-                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                              .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
-                          assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
-                        } else {
-                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                              .isNotEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
-                          assertThat(span.getAttributes().get(SERVER_PORT)).isNotNull();
-                        }
+                        assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                            .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
+                        assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
                       });
             });
   }
@@ -158,30 +139,18 @@ class JedisSentinel30ClientTest {
                   .isNotEmpty()
                   .allSatisfy(
                       span -> {
-                        if (emitStableDatabaseSemconv()) {
-                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                              .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
-                          assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
-                        } else {
-                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                              .isNotEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
-                          assertThat(span.getAttributes().get(SERVER_PORT)).isNotNull();
-                        }
+                        assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                            .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
+                        assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
                       });
               assertThat(testing.spans())
                   .filteredOn(span -> span.getName().startsWith("SET"))
                   .singleElement()
                   .satisfies(
                       span -> {
-                        if (emitStableDatabaseSemconv()) {
-                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                              .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
-                          assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
-                        } else {
-                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                              .isNotEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
-                          assertThat(span.getAttributes().get(SERVER_PORT)).isNotNull();
-                        }
+                        assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                            .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
+                        assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
                       });
             });
   }

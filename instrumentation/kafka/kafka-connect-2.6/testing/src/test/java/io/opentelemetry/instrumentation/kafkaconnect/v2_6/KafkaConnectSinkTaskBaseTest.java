@@ -491,9 +491,7 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
             .withEnv("OTEL_METRIC_EXPORT_INTERVAL", "1000")
             .withEnv(
                 "OTEL_SEMCONV_STABILITY_OPT_IN",
-                emitStableMessagingSemconv()
-                    ? "messaging"
-                    : System.getProperty("otel.semconv-stability.opt-in"))
+                System.getProperty("otel.semconv-stability.opt-in"))
             .withEnv("CONNECT_BOOTSTRAP_SERVERS", getInternalKafkaBootstrapServers())
             .withEnv("CONNECT_REST_ADVERTISED_HOST_NAME", KAFKA_CONNECT_NETWORK_ALIAS)
             .withEnv("CONNECT_PLUGIN_PATH", PLUGIN_PATH_CONTAINER)

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.lambdaworks.redis.codec.Utf8StringCodec;
@@ -25,24 +24,22 @@ class LettuceDbAttributesGetterTest {
   private final LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
 
   @Test
-  void commandUsesConfiguredTargetOnlyForStableSemconv() {
+  void commandUsesConfiguredTarget() {
     RedisCommand<String, String, String> command = command();
     LettuceSingletons.COMMAND_ADDRESS.set(command, SELECTED_ADDRESS);
     LettuceServerTargets.capture(command, RedisServerTarget.ofEndpoint("configured-node:6379"));
 
-    assertThat(getter.getServerAddress(command))
-        .isEqualTo(emitStableDatabaseSemconv() ? "configured-node" : "selected-node");
-    assertThat(getter.getServerPort(command)).isEqualTo(emitStableDatabaseSemconv() ? null : 6380);
+    assertThat(getter.getServerAddress(command)).isEqualTo("configured-node");
+    assertThat(getter.getServerPort(command)).isEqualTo(null);
   }
 
   @Test
-  void commandWithoutConfiguredTargetOmitsStableServerAttributes() {
+  void commandWithoutConfiguredTargetOmitsServerAttributes() {
     RedisCommand<String, String, String> command = command();
     LettuceSingletons.COMMAND_ADDRESS.set(command, SELECTED_ADDRESS);
 
-    assertThat(getter.getServerAddress(command))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : "selected-node");
-    assertThat(getter.getServerPort(command)).isEqualTo(emitStableDatabaseSemconv() ? null : 6380);
+    assertThat(getter.getServerAddress(command)).isEqualTo(null);
+    assertThat(getter.getServerPort(command)).isEqualTo(null);
   }
 
   private static RedisCommand<String, String, String> command() {

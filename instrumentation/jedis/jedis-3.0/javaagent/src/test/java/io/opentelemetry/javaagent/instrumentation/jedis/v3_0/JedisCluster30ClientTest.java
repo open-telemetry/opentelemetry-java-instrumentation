@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Arrays.asList;
@@ -75,29 +74,19 @@ class JedisCluster30ClientTest {
                   .singleElement()
                   .satisfies(
                       span -> {
-                        assertThat(span.getName())
-                            .isEqualTo(
-                                emitStableDatabaseSemconv() ? "SET " + clusterTarget : "SET");
+                        assertThat(span.getName()).isEqualTo("SET " + clusterTarget);
                         assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                            .isEqualTo(
-                                emitStableDatabaseSemconv() ? clusterTarget : CLUSTER_NODE_HOST);
-                        assertThat(span.getAttributes().get(SERVER_PORT))
-                            .isEqualTo(emitStableDatabaseSemconv() ? null : (long) clusterPort);
+                            .isEqualTo(clusterTarget);
+                        assertThat(span.getAttributes().get(SERVER_PORT)).isEqualTo(null);
                       });
               assertThat(testing.spans())
                   .filteredOn(span -> span.getName().startsWith("CLUSTER"))
                   .isNotEmpty()
                   .allSatisfy(
                       span -> {
-                        if (emitStableDatabaseSemconv()) {
-                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                              .isEqualTo(clusterTarget);
-                          assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
-                        } else {
-                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                              .isNotEqualTo(clusterTarget);
-                          assertThat(span.getAttributes().get(SERVER_PORT)).isNotNull();
-                        }
+                        assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                            .isEqualTo(clusterTarget);
+                        assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
                       });
             });
   }
@@ -120,14 +109,10 @@ class JedisCluster30ClientTest {
                     .singleElement()
                     .satisfies(
                         span -> {
-                          assertThat(span.getName())
-                              .isEqualTo(
-                                  emitStableDatabaseSemconv() ? "SET " + clusterTarget : "SET");
+                          assertThat(span.getName()).isEqualTo("SET " + clusterTarget);
                           assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                              .isEqualTo(
-                                  emitStableDatabaseSemconv() ? clusterTarget : CLUSTER_NODE_HOST);
-                          assertThat(span.getAttributes().get(SERVER_PORT))
-                              .isEqualTo(emitStableDatabaseSemconv() ? null : (long) clusterPort);
+                              .isEqualTo(clusterTarget);
+                          assertThat(span.getAttributes().get(SERVER_PORT)).isEqualTo(null);
                         }));
   }
 

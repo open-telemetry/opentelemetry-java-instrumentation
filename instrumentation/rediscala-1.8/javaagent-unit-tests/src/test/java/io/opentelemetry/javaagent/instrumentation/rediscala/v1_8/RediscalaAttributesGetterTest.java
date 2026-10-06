@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -23,27 +22,23 @@ class RediscalaAttributesGetterTest {
   private final RediscalaAttributesGetter getter = new RediscalaAttributesGetter();
 
   @Test
-  void requestWithoutTargetUsesSelectedAddressOnlyForLegacySemconv() {
+  void requestWithoutTargetDoesNotUseSelectedAddressAsServer() {
     RediscalaRequest request = request(null, SELECTED_PORT);
 
-    assertThat(getter.getServerAddress(request))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : SELECTED_HOST);
-    assertThat(getter.getServerPort(request))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : SELECTED_PORT);
+    assertThat(getter.getServerAddress(request)).isEqualTo(null);
+    assertThat(getter.getServerPort(request)).isEqualTo(null);
     assertThat(getter.getNetworkPeerAddress(request, null)).isNull();
     assertThat(getter.getNetworkPeerPort(request, null)).isNull();
   }
 
   @ParameterizedTest
   @ValueSource(ints = {6379, 6381})
-  void requestWithTargetUsesConfiguredAddressForStableSemconv(int selectedPort) {
+  void requestWithTargetUsesConfiguredAddress(int selectedPort) {
     RedisServerTarget target = RedisServerTarget.ofHostAndPort("configured-node", 6380);
     RediscalaRequest request = request(target, selectedPort);
 
-    assertThat(getter.getServerAddress(request))
-        .isEqualTo(emitStableDatabaseSemconv() ? "configured-node" : SELECTED_HOST);
-    assertThat(getter.getServerPort(request))
-        .isEqualTo(emitStableDatabaseSemconv() ? 6380 : selectedPort);
+    assertThat(getter.getServerAddress(request)).isEqualTo("configured-node");
+    assertThat(getter.getServerPort(request)).isEqualTo(6380);
     assertThat(getter.getNetworkPeerAddress(request, null)).isNull();
     assertThat(getter.getNetworkPeerPort(request, null)).isNull();
   }

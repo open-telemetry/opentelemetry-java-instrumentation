@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.kafkaconnect.v2_6;
 
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.restassured.RestAssured.given;
 import static java.lang.String.format;
@@ -141,10 +140,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                         .hasLinks(recordLink(producerSpanContext.get(), "test-key"))
                         .hasAttributesSatisfyingExactly(processAttributes(testTopicName, 1)),
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "update " + COLLECTION_NAME
-                                : "update " + DATABASE_NAME + "." + COLLECTION_NAME)
+                    span.hasName("update " + COLLECTION_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))));
 
@@ -203,11 +199,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
             SpanData process = trace.get(0);
             assertThat(trace).hasSize(process.getLinks().size() + 1);
             for (SpanData update : trace.subList(1, trace.size())) {
-              assertThat(update.getName())
-                  .isEqualTo(
-                      emitStableDatabaseSemconv()
-                          ? "update " + COLLECTION_NAME
-                          : "update " + DATABASE_NAME + "." + COLLECTION_NAME);
+              assertThat(update.getName()).isEqualTo("update " + COLLECTION_NAME);
               assertThat(update.getKind()).isEqualTo(SpanKind.CLIENT);
               assertThat(update.getParentSpanId()).isEqualTo(process.getSpanId());
               updateSpans.add(update);
