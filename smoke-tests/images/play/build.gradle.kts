@@ -29,7 +29,9 @@ dependencies {
 }
 
 val targetJDK = (project.findProperty("targetJDK") as String?) ?: "17"
-// Compile against at most Play's Java 17 baseline; targetJDK selects the container runtime.
+// Gradle derives Scala's -release target from the toolchain. Scala 2.13.18's backend
+// supports bytecode targets only through Java 26, so cap compilation at Play's Java 17
+// baseline. targetJDK independently selects the container runtime, including Java 27.
 val javaLanguageVersion = (targetJDK.toIntOrNull() ?: 17).coerceAtMost(17)
 
 val tag = findProperty("tag")
