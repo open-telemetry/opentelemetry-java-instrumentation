@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.util;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesGetter;
 import javax.annotation.Nullable;
 
 enum ClassAndMethodAttributesGetter implements CodeAttributesGetter<ClassAndMethod> {
@@ -19,7 +19,7 @@ enum ClassAndMethodAttributesGetter implements CodeAttributesGetter<ClassAndMeth
 
   @Nullable
   @Override
-  public String getMethodName(ClassAndMethod classAndMethod) {
+  public String getCodeMethodName(ClassAndMethod classAndMethod) {
     return classAndMethod.methodName();
   }
 }

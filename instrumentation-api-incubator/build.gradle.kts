@@ -92,7 +92,7 @@ tasks {
   val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database,code,service.peer,rpc")
+    jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer,rpc")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
     inputs.dir(jflexOutputDir)
   }
@@ -100,7 +100,7 @@ tasks {
   val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database/dup,code/dup,service.peer/dup,rpc/dup")
+    jvmArgs("-Dotel.semconv-stability.opt-in=database/dup,service.peer/dup,rpc/dup")
     jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
     inputs.dir(jflexOutputDir)
   }

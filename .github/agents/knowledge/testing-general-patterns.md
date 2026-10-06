@@ -345,7 +345,7 @@ site.
 | Flag                                           | Shared accessor                                                                                                    | Where it lives                                                                  |
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
 | `-PtestLatestDeps=true`                        | `testLatestDeps()`                                                                                                 | `io.opentelemetry.instrumentation.testing.util.TestLatestDeps` (testing-common) |
-| `otel.semconv-stability.opt-in=…`              | `emitStableDatabaseSemconv()`, `emitOldDatabaseSemconv()`, `emitStableCodeSemconv()`, etc.                         | `io.opentelemetry.instrumentation.api.internal.SemconvStability`                |
+| `otel.semconv-stability.opt-in=…`              | `emitStableDatabaseSemconv()`, `emitOldDatabaseSemconv()`, `emitStableRpcSemconv()`, etc.                          | `io.opentelemetry.instrumentation.api.internal.SemconvStability`                |
 | `otel.instrumentation.<module>.experimental-*` | per-module `EXPERIMENTAL_ATTRIBUTES` constant — see [testing-experimental-flags.md](testing-experimental-flags.md) | within the test class                                                           |
 
 ### Mode-dependent expected values

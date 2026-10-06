@@ -42,17 +42,6 @@ tasks {
     )
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs(
-      "-Dotel.semconv-stability.opt-in=code",
-      "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.included=key1,key2,exact,prefix.*,single?,excluded*,otel.event.name",
-      "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded=prefix.secret,excluded*",
-    )
-  }
-
   val testLegacyMdcAttributes = register<Test>("testLegacyMdcAttributes") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -87,7 +76,6 @@ tasks {
 
   check {
     dependsOn(
-      testStableSemconv,
       testLegacyMdcAttributes,
       testMdcAttributeExclusionsOnly,
       testMdcAttributePrecedence,

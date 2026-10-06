@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.xxljob.common.v1_9_2;
 
 import com.xxl.job.core.glue.GlueTypeEnum;
-import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.code.CodeSpanNameExtractor;
 
 class XxlJobSpanNameExtractor implements SpanNameExtractor<XxlJobProcessRequest> {
   private final SpanNameExtractor<XxlJobProcessRequest> codeSpanNameExtractor;

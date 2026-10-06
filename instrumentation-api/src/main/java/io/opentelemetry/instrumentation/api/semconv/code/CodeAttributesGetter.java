@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.incubator.semconv.code;
+package io.opentelemetry.instrumentation.api.semconv.code;
 
 import javax.annotation.Nullable;
 
@@ -20,5 +20,5 @@ public interface CodeAttributesGetter<REQUEST> {
   Class<?> getCodeClass(REQUEST request);
 
   @Nullable
-  String getMethodName(REQUEST request);
+  String getCodeMethodName(REQUEST request);
 }

@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.util;
 
 import com.google.auto.value.AutoValue;
-import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesGetter;
 
 @AutoValue
 public abstract class ClassAndMethod {

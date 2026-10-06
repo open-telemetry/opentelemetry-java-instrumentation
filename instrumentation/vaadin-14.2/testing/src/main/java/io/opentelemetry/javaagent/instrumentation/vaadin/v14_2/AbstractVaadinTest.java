@@ -5,8 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.vaadin.v14_2;
 
-import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static java.util.Objects.requireNonNull;
 import static org.awaitility.Awaitility.await;
 
@@ -174,9 +175,9 @@ public abstract class AbstractVaadinTest
                             .hasParent(spans.get(spans.size() - 2))
                             .hasKind(SpanKind.INTERNAL)
                             .hasAttributesSatisfyingExactly(
-                                codeFunctionAssertions(
-                                    "com.vaadin.flow.server.communication.rpc.EventRpcHandler",
-                                    "handle"));
+                                equalTo(
+                                    CODE_FUNCTION_NAME,
+                                    "com.vaadin.flow.server.communication.rpc.EventRpcHandler.handle"));
                       });
             });
   }

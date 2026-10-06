@@ -4,11 +4,20 @@
 
 ### ⚠️ Breaking changes
 
+- Emit only stable source code attributes: `code.function.name` replaces `code.namespace` and
+  `code.function`, and log records use `code.file.path` and `code.line.number` instead of
+  `code.filepath` and `code.lineno`. The `code` and `code/dup` opt-ins and
+  `general.code.semconv` declarative settings no longer select legacy emission.
 - Change the Java agent's `telemetry.distro.name` resource attribute from
   `opentelemetry-java-instrumentation` to `opentelemetry-javaagent`.
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Move `CodeAttributesGetter`, `CodeAttributesExtractor`, and `CodeSpanNameExtractor` from
+  `io.opentelemetry.instrumentation.api.incubator.semconv.code` in
+  `opentelemetry-instrumentation-api-incubator` to `io.opentelemetry.instrumentation.api.semconv.code`
+  in `opentelemetry-instrumentation-api`.
+  Rename `CodeAttributesGetter#getMethodName` to `getCodeMethodName`.
 - Remove `otel.javaagent.experimental.indy` and `distribution.javaagent.indy/development`.
   The javaagent now always uses non-inline advice for compatible instrumentation.
   Instrumentation that intentionally uses inline advice remains supported.

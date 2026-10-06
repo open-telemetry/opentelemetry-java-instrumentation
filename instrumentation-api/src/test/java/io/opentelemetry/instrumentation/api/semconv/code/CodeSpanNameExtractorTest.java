@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.incubator.semconv.code;
+package io.opentelemetry.instrumentation.api.semconv.code;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -24,7 +24,7 @@ class CodeSpanNameExtractorTest {
     Object request = new Object();
 
     when(getter.getCodeClass(request)).thenAnswer(invocation -> TestClass.class);
-    when(getter.getMethodName(request)).thenReturn("doSomething");
+    when(getter.getCodeMethodName(request)).thenReturn("doSomething");
 
     SpanNameExtractor<Object> underTest = CodeSpanNameExtractor.create(getter);
 
@@ -42,7 +42,7 @@ class CodeSpanNameExtractorTest {
     Object request = new Object();
 
     when(getter.getCodeClass(request)).thenAnswer(invocation -> anon.getClass());
-    when(getter.getMethodName(request)).thenReturn("doSomething");
+    when(getter.getCodeMethodName(request)).thenReturn("doSomething");
 
     SpanNameExtractor<Object> underTest = CodeSpanNameExtractor.create(getter);
 
@@ -60,7 +60,7 @@ class CodeSpanNameExtractorTest {
     Object request = new Object();
 
     when(getter.getCodeClass(request)).thenAnswer(invocation -> lambda.getClass());
-    when(getter.getMethodName(request)).thenReturn("doSomething");
+    when(getter.getCodeMethodName(request)).thenReturn("doSomething");
 
     SpanNameExtractor<Object> underTest = CodeSpanNameExtractor.create(getter);
 
@@ -69,6 +69,28 @@ class CodeSpanNameExtractorTest {
 
     // then
     assertThat(spanName).isEqualTo(getClass().getSimpleName() + "$$Lambda.doSomething");
+  }
+
+  @Test
+  void shouldExtractClassWithoutMethod() {
+    Object request = new Object();
+    when(getter.getCodeClass(request)).thenAnswer(invocation -> TestClass.class);
+
+    assertThat(CodeSpanNameExtractor.create(getter).extract(request)).isEqualTo("TestClass");
+  }
+
+  @Test
+  void shouldExtractMethodWithoutClass() {
+    Object request = new Object();
+    when(getter.getCodeMethodName(request)).thenReturn("doSomething");
+
+    assertThat(CodeSpanNameExtractor.create(getter).extract(request))
+        .isEqualTo("<unknown>.doSomething");
+  }
+
+  @Test
+  void shouldExtractUnknownNameIfNoneAreAvailable() {
+    assertThat(CodeSpanNameExtractor.create(getter).extract(new Object())).isEqualTo("<unknown>");
   }
 
   static class TestClass {}

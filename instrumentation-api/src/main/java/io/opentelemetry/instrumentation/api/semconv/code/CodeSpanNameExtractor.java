@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.incubator.semconv.code;
+package io.opentelemetry.instrumentation.api.semconv.code;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.internal.ClassNames;
@@ -37,7 +37,7 @@ public final class CodeSpanNameExtractor<REQUEST> implements SpanNameExtractor<R
       // need to produce low-cardinality name, since lambda class names change with each restart
       className = className.substring(0, lambdaIdx + "$$Lambda".length());
     }
-    String methodName = getter.getMethodName(request);
+    String methodName = getter.getCodeMethodName(request);
     if (methodName == null) {
       return className;
     }
