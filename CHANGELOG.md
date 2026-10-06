@@ -5,15 +5,6 @@
 ### ⚠️ Breaking changes
 
 - The Java agent and standalone libraries now use the existing v1.43.0 messaging implementation.
-  These upstream conventions are not all stable.
-  Update span-name queries, for example `orders publish` becomes `send orders`, and replace
-  `messaging.operation` with `messaging.operation.name` and `messaging.operation.type`.
-  Replace `messaging.publish.duration` and `messaging.receive.duration` with
-  `messaging.client.operation.duration`, and `messaging.receive.messages` with
-  `messaging.client.consumed.messages`; producers also emit `messaging.client.sent.messages`, and
-  processing duration uses `messaging.process.duration`. Receive spans use `CLIENT` instead of
-  `CONSUMER`. Deprecated messaging Java entry points remain callable and emit the same new telemetry.
-  Other semantic convention domains and unrelated feature defaults are unchanged.
 - Emit only stable source code attributes: `code.function.name` replaces `code.namespace` and
   `code.function`, and log records use `code.file.path` and `code.line.number` instead of
   `code.filepath` and `code.lineno`. The `code` and `code/dup` opt-ins and
