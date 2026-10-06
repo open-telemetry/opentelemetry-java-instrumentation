@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.POSTGRESQL;
@@ -43,15 +42,9 @@ class JdbcServicePeerTest {
                 .configuredServerTarget(DbServerTarget.create(GROUP_TARGET, null))
                 .build());
 
-    if (emitStableDatabaseSemconv()) {
-      assertThat(resolve(request, "localhost")).isEmpty();
-      assertThat(resolve(request, GROUP_TARGET))
-          .containsOnly(entry(maybeStablePeerService(), "myService"));
-    } else {
-      assertThat(resolve(request, "localhost"))
-          .containsOnly(entry(maybeStablePeerService(), "myService"));
-      assertThat(resolve(request, GROUP_TARGET)).isEmpty();
-    }
+    assertThat(resolve(request, "localhost")).isEmpty();
+    assertThat(resolve(request, GROUP_TARGET))
+        .containsOnly(entry(maybeStablePeerService(), "myService"));
   }
 
   @Test
@@ -80,12 +73,8 @@ class JdbcServicePeerTest {
                 .configuredServerTarget(DbServerTarget.create(DEFAULT_PORT_GROUP_TARGET, null))
                 .build());
 
-    if (emitStableDatabaseSemconv()) {
-      assertThat(resolve(request, DEFAULT_PORT_GROUP_TARGET))
-          .containsOnly(entry(maybeStablePeerService(), "myService"));
-    } else {
-      assertThat(resolve(request, DEFAULT_PORT_GROUP_TARGET)).isEmpty();
-    }
+    assertThat(resolve(request, DEFAULT_PORT_GROUP_TARGET))
+        .containsOnly(entry(maybeStablePeerService(), "myService"));
   }
 
   private static DbRequest request(DbInfo dbInfo) {

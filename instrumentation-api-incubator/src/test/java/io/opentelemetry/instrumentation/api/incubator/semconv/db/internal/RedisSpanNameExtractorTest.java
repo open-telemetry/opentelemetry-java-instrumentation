@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
@@ -21,11 +20,11 @@ class RedisSpanNameExtractorTest {
 
     assertThat(getter.getDbNamespace(request)).isEqualTo("3");
     assertThat(RedisSpanNameExtractor.create(getter).extract(request))
-        .isEqualTo(emitStableDatabaseSemconv() ? "GET localhost:6379" : "GET");
+        .isEqualTo("GET localhost:6379");
   }
 
   @Test
-  void usesQuerySummaryInStableSemconv() {
+  void usesQuerySummary() {
     TestGetter getter =
         new TestGetter() {
           @Override
@@ -34,8 +33,7 @@ class RedisSpanNameExtractorTest {
           }
         };
 
-    assertThat(RedisSpanNameExtractor.create(getter).extract(request))
-        .isEqualTo(emitStableDatabaseSemconv() ? "GET key" : "GET");
+    assertThat(RedisSpanNameExtractor.create(getter).extract(request)).isEqualTo("GET key");
   }
 
   @Test
@@ -50,7 +48,7 @@ class RedisSpanNameExtractorTest {
         };
 
     assertThat(RedisSpanNameExtractor.create(getter).extract(request))
-        .isEqualTo(emitStableDatabaseSemconv() ? "GET localhost:6379" : "LEGACY GET");
+        .isEqualTo("GET localhost:6379");
   }
 
   private static class TestGetter implements DbClientAttributesGetter<Object, Void> {

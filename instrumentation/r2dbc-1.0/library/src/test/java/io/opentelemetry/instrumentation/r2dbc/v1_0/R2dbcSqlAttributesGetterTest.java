@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.r2dbc.v1_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
@@ -110,7 +109,7 @@ class R2dbcSqlAttributesGetterTest {
   }
 
   @Test
-  void multiHostOptionsOmitTheKnownDefaultPortInStableSemconv() {
+  void multiHostOptionsOmitTheKnownDefaultPort() {
     DbExecution dbExecution =
         new DbExecution(
             queryExecutionInfo(),
@@ -121,12 +120,11 @@ class R2dbcSqlAttributesGetterTest {
                 .build());
 
     assertThat(getter.getServerAddress(dbExecution)).isEqualTo("host1,host2");
-    assertThat(getter.getServerPort(dbExecution))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : 3306);
+    assertThat(getter.getServerPort(dbExecution)).isEqualTo(null);
   }
 
   @Test
-  void multiHostOptionsInlineASharedNonDefaultPortInStableSemconv() {
+  void multiHostOptionsInlineASharedNonDefaultPort() {
     DbExecution dbExecution =
         new DbExecution(
             queryExecutionInfo(),
@@ -136,14 +134,12 @@ class R2dbcSqlAttributesGetterTest {
                 .option(ConnectionFactoryOptions.PORT, 3307)
                 .build());
 
-    assertThat(getter.getServerAddress(dbExecution))
-        .isEqualTo(emitStableDatabaseSemconv() ? "host1:3307,host2:3307" : "host1,host2");
-    assertThat(getter.getServerPort(dbExecution))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : 3307);
+    assertThat(getter.getServerAddress(dbExecution)).isEqualTo("host1:3307,host2:3307");
+    assertThat(getter.getServerPort(dbExecution)).isEqualTo(null);
   }
 
   @Test
-  void multiHostOptionsRemoveUserInfoFromTheStableTarget() {
+  void multiHostOptionsRemoveUserInfoFromTheConfiguredTarget() {
     DbExecution dbExecution =
         new DbExecution(
             queryExecutionInfo(),
@@ -152,12 +148,11 @@ class R2dbcSqlAttributesGetterTest {
                 .option(ConnectionFactoryOptions.HOST, "user:secret@host1,host2")
                 .build());
 
-    assertThat(getter.getServerAddress(dbExecution))
-        .isEqualTo(emitStableDatabaseSemconv() ? "host1,host2" : "user:secret@host1,host2");
+    assertThat(getter.getServerAddress(dbExecution)).isEqualTo("host1,host2");
   }
 
   @Test
-  void malformedMultiHostOptionsOmitTheStableTarget() {
+  void malformedMultiHostOptionsOmitTheConfiguredTarget() {
     DbExecution dbExecution =
         new DbExecution(
             queryExecutionInfo(),
@@ -166,13 +161,12 @@ class R2dbcSqlAttributesGetterTest {
                 .option(ConnectionFactoryOptions.HOST, "host1:invalid,host2")
                 .build());
 
-    assertThat(getter.getServerAddress(dbExecution))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : "host1:invalid,host2");
+    assertThat(getter.getServerAddress(dbExecution)).isEqualTo(null);
   }
 
   @ParameterizedTest
   @ValueSource(strings = {"[host1]:5432", "[host1]:5432,host2"})
-  void bracketedNonIpv6OptionsOmitTheStableTarget(String host) {
+  void bracketedNonIpv6OptionsOmitTheConfiguredTarget(String host) {
     DbExecution dbExecution =
         new DbExecution(
             queryExecutionInfo(),
@@ -181,13 +175,12 @@ class R2dbcSqlAttributesGetterTest {
                 .option(ConnectionFactoryOptions.HOST, host)
                 .build());
 
-    assertThat(getter.getServerAddress(dbExecution))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : host);
+    assertThat(getter.getServerAddress(dbExecution)).isEqualTo(null);
     assertThat(getter.getServerPort(dbExecution)).isNull();
   }
 
   @Test
-  void singleHostOptionsRemoveUserInfoFromTheStableTarget() {
+  void singleHostOptionsRemoveUserInfoFromTheConfiguredTarget() {
     DbExecution dbExecution =
         new DbExecution(
             queryExecutionInfo(),
@@ -197,14 +190,12 @@ class R2dbcSqlAttributesGetterTest {
                 .option(ConnectionFactoryOptions.PORT, 5432)
                 .build());
 
-    assertThat(getter.getServerAddress(dbExecution))
-        .isEqualTo(emitStableDatabaseSemconv() ? "host1" : "user:secret@host1");
-    assertThat(getter.getServerPort(dbExecution))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : 5432);
+    assertThat(getter.getServerAddress(dbExecution)).isEqualTo("host1");
+    assertThat(getter.getServerPort(dbExecution)).isEqualTo(null);
   }
 
   @Test
-  void malformedSingleHostOptionsOmitTheStableTarget() {
+  void malformedSingleHostOptionsOmitTheConfiguredTarget() {
     DbExecution dbExecution =
         new DbExecution(
             queryExecutionInfo(),
@@ -214,26 +205,23 @@ class R2dbcSqlAttributesGetterTest {
                 .option(ConnectionFactoryOptions.PORT, 5432)
                 .build());
 
-    assertThat(getter.getServerAddress(dbExecution))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : "host1:invalid");
-    assertThat(getter.getServerPort(dbExecution))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : 5432);
+    assertThat(getter.getServerAddress(dbExecution)).isEqualTo(null);
+    assertThat(getter.getServerPort(dbExecution)).isEqualTo(null);
   }
 
   @Test
-  void singleHostOmitsKnownDefaultPortInStableMode() {
+  void singleHostOmitsKnownDefaultPort() {
     DbExecution dbExecution =
         new DbExecution(
             queryExecutionInfo(),
             ConnectionFactoryOptions.parse("r2dbc:postgresql://host1:5432/db"));
 
     assertThat(getter.getServerAddress(dbExecution)).isEqualTo("host1");
-    assertThat(getter.getServerPort(dbExecution))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : 5432);
+    assertThat(getter.getServerPort(dbExecution)).isEqualTo(null);
   }
 
   @Test
-  void unixDomainSocketOmitsPortFromStableTarget() {
+  void unixDomainSocketOmitsPortFromConfiguredTarget() {
     DbExecution dbExecution =
         new DbExecution(
             queryExecutionInfo(),
@@ -244,8 +232,7 @@ class R2dbcSqlAttributesGetterTest {
                 .build());
 
     assertThat(getter.getServerAddress(dbExecution)).isEqualTo("/var/run/postgresql/.s.PGSQL.5432");
-    assertThat(getter.getServerPort(dbExecution))
-        .isEqualTo(emitStableDatabaseSemconv() ? null : 5432);
+    assertThat(getter.getServerPort(dbExecution)).isEqualTo(null);
   }
 
   private static QueryExecutionInfo queryExecutionInfo() {
