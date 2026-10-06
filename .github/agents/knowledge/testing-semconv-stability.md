@@ -6,11 +6,24 @@ expected attributes without hiding mode differences.
 
 ## Selectable domains
 
-Code and database conventions are stable-only. Use `otel.semconv-stability.preview`
-or `OTEL_SEMCONV_STABILITY_PREVIEW`
-for RPC and service-peer preview conventions. Tests must run in all applicable modes.
+Use the property that matches the selected conventions' stability:
 
-RPC preview selection:
+- `otel.semconv-stability.opt-in=<domain>` or `OTEL_SEMCONV_STABILITY_OPT_IN` for
+  selectable stable conventions.
+- `otel.semconv-stability.preview=<domain>` or `OTEL_SEMCONV_STABILITY_PREVIEW` for
+  preview conventions.
+
+`<domain>` is a documentation placeholder, not a literal configuration value. Replace it
+with a supported selector before using an example; unrecognized selectors leave the mode
+unchanged. Multiple domains can be comma-separated, for example
+`otel.semconv-stability.preview=<domain>,<other-domain>`.
+
+Test all modes the domain supports. A domain that always emits the same conventions needs
+no semconv selection task. Code and database conventions are stable-only.
+
+### RPC and service-peer preview selection
+
+RPC and service-peer use `otel.semconv-stability.preview`. For RPC:
 
 | `otel.semconv-stability.preview` value | Old attrs emitted | Preview attrs emitted | Purpose                     |
 | -------------------------------------- | :---------------: | :-------------------: | --------------------------- |
@@ -18,13 +31,13 @@ RPC preview selection:
 | `rpc`                                  |        ❌         |          ✅           | Preview-only                |
 | `rpc/dup`                              |        ✅         |          ✅           | Legacy and preview together |
 
-Multiple preview domains can be comma-separated: `otel.semconv-stability.preview=rpc,service.peer`.
+To select both domains, use `otel.semconv-stability.preview=rpc,service.peer`.
 
 Legacy `opt-in` values for RPC and service-peer, including `/dup`, remain accepted and combine with
 preview values outside v3-preview. V3-preview ignores those legacy tokens for preview domains.
 Preserve tests that explicitly cover this compatibility behavior.
 
-Available domains and their `SemconvStability` methods:
+Their `SemconvStability` methods:
 
 | Domain       | Property                         | Values                              | Methods                                                         |
 | ------------ | -------------------------------- | ----------------------------------- | --------------------------------------------------------------- |
@@ -39,12 +52,11 @@ indicate convention stability.
 
 Every Gradle project whose tests exercise selectable semconv modes **must** define its own
 `testStableSemconv` task. This includes `javaagent-unit-tests` projects whose tests branch on an
-`emitOld*()` or `emitStable*()` accessor. The conventional task name covers RPC or service-peer
-preview selection.
+`emitOld*()` or `emitStable*()` accessor. The conventional task name covers both stable and
+preview selection. Keep the default `test` task for the default mode.
 
-A `testBothSemconv` task (testing the `/dup` mode) is **only required for the RPC domain**.
-The service-peer domain does not need a `testBothSemconv` task, only
-`testStableSemconv` (and the default `test` task for the legacy/unset mode).
+RPC requires a `testBothSemconv` task for the `/dup` mode. Service-peer does not need
+that task; its default `test` and `testStableSemconv` tasks cover the required modes.
 
 Preserve mixed variants that exercise selectable domains and variants for experimental telemetry,
 disabled adapters, connection telemetry, exception signals, and dependency versions.
@@ -57,26 +69,42 @@ is relevant and shares the same configuration. Otherwise keep the task bound to
 `sourceSets.test`, or select the relevant suites explicitly when the added coverage justifies
 the extra build-script complexity.
 
-RPC preview selection requires preview-only and duplicate-mode tasks:
+For a domain with selectable stable conventions:
 
 ```kotlin
 val testStableSemconv by registering(Test::class) {
   testClassesDirs = sourceSets.test.get().output.classesDirs
   classpath = sourceSets.test.get().runtimeClasspath
-  jvmArgs("-Dotel.semconv-stability.preview=rpc")
-  systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc")
+  jvmArgs("-Dotel.semconv-stability.opt-in=<domain>")
+  systemProperty("metadataConfig", "otel.semconv-stability.opt-in=<domain>")
+}
+```
+
+For a preview domain, use the preview property instead. Add the second task only when the
+domain requires duplicate-mode coverage:
+
+```kotlin
+val testStableSemconv by registering(Test::class) {
+  testClassesDirs = sourceSets.test.get().output.classesDirs
+  classpath = sourceSets.test.get().runtimeClasspath
+  jvmArgs("-Dotel.semconv-stability.preview=<domain>")
+  systemProperty("metadataConfig", "otel.semconv-stability.preview=<domain>")
 }
 
 val testBothSemconv by registering(Test::class) {
   testClassesDirs = sourceSets.test.get().output.classesDirs
   classpath = sourceSets.test.get().runtimeClasspath
-  jvmArgs("-Dotel.semconv-stability.preview=rpc/dup")
-  systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc/dup")
+  jvmArgs("-Dotel.semconv-stability.preview=<domain>/dup")
+  systemProperty("metadataConfig", "otel.semconv-stability.preview=<domain>/dup")
 }
 ```
 
-Wire into `check`: for RPC modules `check { dependsOn(testStableSemconv, testBothSemconv) }`;
-for other domains `check { dependsOn(testStableSemconv) }`.
+For a selectable stable domain requiring duplicate-mode coverage, use
+`otel.semconv-stability.opt-in=<domain>/dup` in the second task.
+
+Wire registered variants into `check`: use
+`check { dependsOn(testStableSemconv, testBothSemconv) }` when both tasks are required,
+otherwise `check { dependsOn(testStableSemconv) }`.
 
 ## Asserting Attributes in Tests
 

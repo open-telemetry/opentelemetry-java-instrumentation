@@ -302,6 +302,11 @@ Put the tests under `src/unitTests`. Declare test-only dependencies inside the s
 with `register<JvmTestSuite>(...)`. A variant task bound to `sourceSets.test` covers only the
 default source set.
 
+The semconv examples use `<domain>` as a placeholder for a supported selector.
+Use `otel.semconv-stability.opt-in=<domain>` for selectable stable conventions or
+`otel.semconv-stability.preview=<domain>` for preview conventions. Replace the placeholder
+before using the example in a build script; an unrecognized selector does not change the mode.
+
 Derive one variant task per suite only when every suite exercises behavior affected by the
 variant and the same task configuration applies to all of them:
 
@@ -312,8 +317,8 @@ val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
       testClassesDirs = suite.sources.output.classesDirs
       classpath = suite.sources.runtimeClasspath
 
-      jvmArgs("-Dotel.semconv-stability.preview=rpc")
-      systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc")
+      jvmArgs("-Dotel.semconv-stability.opt-in=<domain>")
+      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=<domain>")
     }
   }
 
@@ -324,8 +329,9 @@ check {
 
 The map produces `testStableSemconv` for the built-in suite, so the conventional task name is
 preserved. Declare a separate map per variant when a module has more than one, for example
-`${suite.name}StableSemconv` and `${suite.name}BothSemconv` for RPC modules.
-The conventional `StableSemconv` task names also cover RPC preview selection.
+`${suite.name}StableSemconv` and `${suite.name}BothSemconv` when duplicate-mode coverage is required.
+The conventional `StableSemconv` task names cover both stable and preview selection.
+See [testing-semconv-stability.md](testing-semconv-stability.md) for domain-specific modes.
 
 Preserve mixed variants for selectable domains, along with experimental and library-version suites.
 
@@ -450,8 +456,8 @@ tasks {
 
   val testStableSemconv by registering(Test::class) {
     // only task-specific config here
-    jvmArgs("-Dotel.semconv-stability.preview=rpc")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc")
+    jvmArgs("-Dotel.semconv-stability.preview=<domain>")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=<domain>")
   }
 }
 ```

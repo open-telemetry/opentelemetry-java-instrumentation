@@ -331,8 +331,8 @@ expected:
 
 - Experimental attributes (`-Dotel.instrumentation.<module>.experimental-*=true`) — see
   [testing-experimental-flags.md](testing-experimental-flags.md).
-- Semconv selection (`-Dotel.semconv-stability.preview=rpc,service.peer` for preview
-  conventions), see
+- Semconv selection (`-Dotel.semconv-stability.opt-in=<domain>` for selectable stable
+  conventions or `-Dotel.semconv-stability.preview=<domain>` for preview conventions), see
   [testing-semconv-stability.md](testing-semconv-stability.md).
 - `testLatestDeps` Gradle property — runs against the newest supported library versions
   instead of the pinned earliest-supported ones.
@@ -346,8 +346,12 @@ site.
 | Flag                                           | Shared accessor                                                                                                    | Where it lives                                                                  |
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
 | `-PtestLatestDeps=true`                        | `testLatestDeps()`                                                                                                 | `io.opentelemetry.instrumentation.testing.util.TestLatestDeps` (testing-common) |
-| `otel.semconv-stability.preview=…`             | `emitStableRpcSemconv()`, `emitOldRpcSemconv()`, `emitStableServicePeerSemconv()`, `emitOldServicePeerSemconv()`   | `io.opentelemetry.instrumentation.api.internal.SemconvStability`                |
+| `otel.semconv-stability.opt-in=<domain>`       | the domain's `emitOld*Semconv()` / `emitStable*Semconv()` accessors                                                | `io.opentelemetry.instrumentation.api.internal.SemconvStability`                |
+| `otel.semconv-stability.preview=<domain>`      | the domain's `emitOld*Semconv()` / `emitStable*Semconv()` accessors                                                | `io.opentelemetry.instrumentation.api.internal.SemconvStability`                |
 | `otel.instrumentation.<module>.experimental-*` | per-module `EXPERIMENTAL_ATTRIBUTES` constant — see [testing-experimental-flags.md](testing-experimental-flags.md) | within the test class                                                           |
+
+Replace `<domain>` with a supported selector. Choose the property according to the selected
+conventions' stability, not the accessor's name; `emitStable*Semconv()` can select preview conventions.
 
 ### Mode-dependent expected values
 

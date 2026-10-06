@@ -60,11 +60,13 @@ or test failure that CI will report.
   the default test task and run the flag-on assertions through a wired `testExperimental` task
   or an existing equivalent variant. Do not request a task for flags unrelated to the tests or
   another task when the default test and an existing wired variant already cover both modes.
-  Semconv selection assertions need a task for the relevant preview mode. Use
-  `otel.semconv-stability.preview` for RPC and
-  service-peer; preserve explicit legacy opt-in compatibility tests. `/dup` coverage is required
-  for RPC, not service-peer. Code and database conventions are stable-only. Keep mixed variants that exercise
-  selectable domains. For default enablement under
+  Semconv selection assertions need a task for the relevant stable or preview mode. Use
+  `otel.semconv-stability.opt-in=<domain>` for selectable stable conventions and
+  `otel.semconv-stability.preview=<domain>` for preview conventions, replacing `<domain>` with a
+  supported selector. The conventional `testStableSemconv` name covers both. Preserve explicit
+  legacy opt-in compatibility tests. `/dup` coverage is required for RPC, not service-peer.
+  Code and database conventions are stable-only and need no selection task. Keep mixed variants
+  that exercise selectable domains. For default enablement under
   v3-preview, use a separate `testDisabled` JVM rather than setting a property after agent
   startup. Because `testDisabled` intentionally emits no target instrumentation telemetry, do
   not add it to `.github/scripts/instrumentations.sh` or give it `collectMetadata` /
