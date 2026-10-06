@@ -29,7 +29,8 @@ dependencies {
 }
 
 val targetJDK = (project.findProperty("targetJDK") as String?) ?: "17"
-val javaLanguageVersion = targetJDK.toIntOrNull() ?: 17
+// Compile against at most Play's Java 17 baseline; targetJDK selects the container runtime.
+val javaLanguageVersion = (targetJDK.toIntOrNull() ?: 17).coerceAtMost(17)
 
 val tag = findProperty("tag")
   ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
