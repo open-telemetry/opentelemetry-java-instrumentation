@@ -128,8 +128,8 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.experimental.span-suppression-strategy=semconv")
-    jvmArgs("-Dotel.semconv-stability.opt-in=database,messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,messaging")
+    jvmArgs("-Dotel.semconv-stability.opt-in=messaging")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging")
   }
 
   val testStableSemconvWithReceiveTelemetry =
@@ -138,9 +138,9 @@ tasks {
       classpath = sourceSets.test.get().runtimeClasspath
 
       jvmArgs("-Dotel.instrumentation.experimental.span-suppression-strategy=semconv")
-      jvmArgs("-Dotel.semconv-stability.opt-in=database,messaging")
+      jvmArgs("-Dotel.semconv-stability.opt-in=messaging")
       jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,messaging")
+      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging")
       filter {
         includeTestsMatching("*KafkaCamelTest")
       }
@@ -160,9 +160,9 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.experimental.span-suppression-strategy=semconv")
-    jvmArgs("-Dotel.semconv-stability.opt-in=database,messaging")
+    jvmArgs("-Dotel.semconv-stability.opt-in=messaging")
     jvmArgs("-Dotel.instrumentation.jms.enabled=false")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,messaging")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging")
     systemProperty("testNoLowerMessaging", "true")
     filter {
       includeTestsMatching("*JmsCamelStandaloneTest")
@@ -180,8 +180,8 @@ tasks {
         }
 
       jvmArgs("-Dotel.instrumentation.experimental.span-suppression-strategy=semconv")
-      jvmArgs("-Dotel.semconv-stability.opt-in=database,messaging")
-      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,messaging")
+      jvmArgs("-Dotel.semconv-stability.opt-in=messaging")
+      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging")
       filter {
         includeTestsMatching("*SjmsCamelTest")
         includeTestsMatching("*SjmsRegisteredListenerTest")
@@ -193,9 +193,9 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.experimental.span-suppression-strategy=semconv")
-    jvmArgs("-Dotel.semconv-stability.opt-in=database,messaging")
+    jvmArgs("-Dotel.semconv-stability.opt-in=messaging")
     jvmArgs("-Dotel.instrumentation.camel.enabled=false")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,messaging")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging")
     systemProperty("testCamelDisabled", "true")
     filter {
       includeTestsMatching("*SqsCamelTest.awsSdkSqsProducerToCamelSqsConsumer")
@@ -210,7 +210,7 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.experimental.span-suppression-strategy=semconv")
-    jvmArgs("-Dotel.semconv-stability.opt-in=database,messaging")
+    jvmArgs("-Dotel.semconv-stability.opt-in=messaging")
     jvmArgs("-Dotel.instrumentation.camel-kafka.enabled=false")
     jvmArgs("-Dotel.instrumentation.camel-rabbitmq.enabled=false")
     jvmArgs("-Dotel.instrumentation.camel-aws-sqs.enabled=false")

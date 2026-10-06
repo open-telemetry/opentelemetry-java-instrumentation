@@ -82,16 +82,6 @@ tasks {
 
   val testSuites = testing.suites.withType(JvmTestSuite::class)
 
-  val stableSemconvSuites = testSuites.map { suite ->
-    register<Test>("${suite.name}StableSemconv") {
-      testClassesDirs = suite.sources.output.classesDirs
-      classpath = suite.sources.runtimeClasspath
-
-      jvmArgs("-Dotel.semconv-stability.opt-in=database")
-      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-    }
-  }
-
   val experimentalSuites = testSuites.map { suite ->
     register<Test>("${suite.name}Experimental") {
       testClassesDirs = suite.sources.output.classesDirs
@@ -103,7 +93,7 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, stableSemconvSuites, experimentalSuites)
+    dependsOn(testing.suites, experimentalSuites)
   }
 
   if (otelProps.denyUnsafe) {
