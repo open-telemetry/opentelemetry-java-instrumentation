@@ -6,10 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
@@ -32,9 +29,6 @@ import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DY
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_TABLE_COUNT;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_TABLE_NAMES;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.DYNAMODB;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
@@ -273,8 +267,8 @@ public abstract class AbstractAws2ClientCoreTest {
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
             equalTo(AWS_REQUEST_ID, "UNKNOWN"),
             equalTo(AWS_DYNAMODB_TABLE_COUNT, 1),
-            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(DYNAMODB)),
-            equalTo(maybeStable(DB_OPERATION), "ListTables"));
+            equalTo(DB_SYSTEM_NAME, "aws.dynamodb"),
+            equalTo(DB_OPERATION_NAME, "ListTables"));
   }
 
   @SuppressWarnings("deprecation") // uses deprecated semconv
@@ -294,11 +288,9 @@ public abstract class AbstractAws2ClientCoreTest {
                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                 equalTo(AWS_REQUEST_ID, "UNKNOWN"),
                 equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")),
-                equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(DYNAMODB)),
-                equalTo(maybeStable(DB_OPERATION), operation)));
-    if (emitStableDatabaseSemconv()) {
-      assertions.add(equalTo(DB_COLLECTION_NAME, "sometable"));
-    }
+                equalTo(DB_SYSTEM_NAME, "aws.dynamodb"),
+                equalTo(DB_OPERATION_NAME, operation)));
+    assertions.add(equalTo(DB_COLLECTION_NAME, "sometable"));
     assertions.addAll(extraAttributes);
     span.hasName("DynamoDb." + operation)
         .hasKind(SpanKind.CLIENT)
@@ -527,19 +519,12 @@ public abstract class AbstractAws2ClientCoreTest {
                                   equalTo(RPC_METHOD, scenario.awsOperation),
                                   equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                   equalTo(AWS_REQUEST_ID, "UNKNOWN"),
-                                  equalTo(
-                                      maybeStable(DB_SYSTEM), maybeStableDbSystemName(DYNAMODB)),
-                                  equalTo(
-                                      maybeStable(DB_OPERATION),
-                                      emitStableDatabaseSemconv()
-                                          ? scenario.stableOperation
-                                          : scenario.awsOperation)));
+                                  equalTo(DB_SYSTEM_NAME, "aws.dynamodb"),
+                                  equalTo(DB_OPERATION_NAME, scenario.operationName)));
                       if (scenario.hasCollection) {
                         attributes.add(
                             equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")));
-                        if (emitStableDatabaseSemconv()) {
-                          attributes.add(equalTo(DB_COLLECTION_NAME, "sometable"));
-                        }
+                        attributes.add(equalTo(DB_COLLECTION_NAME, "sometable"));
                       }
                       attributes.addAll(scenario.extraAttributes());
                       span.hasName("DynamoDb." + scenario.awsOperation)
@@ -561,13 +546,13 @@ public abstract class AbstractAws2ClientCoreTest {
   @SuppressWarnings("deprecation") // uses deprecated semconv
   private static Stream<BatchScenario> batchScenarios() {
     return Stream.of(
-        // BatchGetItem entries are keys, not explicit operations, so the stable operation name
+        // BatchGetItem entries are keys, not explicit operations, so the operation name
         // remains the raw batch operation and db.operation.batch.size is not emitted.
         BatchScenario.builder("getItemEmpty")
             .awsOperation("BatchGetItem")
             .responseContent("{\"ConsumedCapacity\":[]}")
             .execute(c -> c.batchGetItem(b -> b.requestItems(ImmutableMap.of())))
-            .stableOperation("BatchGetItem")
+            .operationName("BatchGetItem")
             .build(),
         BatchScenario.builder("getItemSingle")
             .awsOperation("BatchGetItem")
@@ -586,7 +571,7 @@ public abstract class AbstractAws2ClientCoreTest {
                                                     "key",
                                                     AttributeValue.builder().s("value").build())))
                                         .build()))))
-            .stableOperation("BatchGetItem")
+            .operationName("BatchGetItem")
             .hasCollection()
             .consumedCapacity("{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")
             .assertMetric()
@@ -613,7 +598,7 @@ public abstract class AbstractAws2ClientCoreTest {
                                                         .s("anotherValue")
                                                         .build())))
                                         .build()))))
-            .stableOperation("BatchGetItem")
+            .operationName("BatchGetItem")
             .hasCollection()
             .consumedCapacity("{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")
             .assertMetric()
@@ -622,7 +607,7 @@ public abstract class AbstractAws2ClientCoreTest {
             .awsOperation("BatchWriteItem")
             .responseContent("{\"ConsumedCapacity\":[]}")
             .execute(c -> c.batchWriteItem(b -> b.requestItems(ImmutableMap.of())))
-            .stableOperation("BatchWriteItem")
+            .operationName("BatchWriteItem")
             .batchSize(0)
             .build(),
         // a single-item batch is not a batch, so it uses the singular item operation and emits
@@ -649,7 +634,7 @@ public abstract class AbstractAws2ClientCoreTest {
                                                                 .build()))
                                                     .build())
                                             .build())))))
-            .stableOperation("PutItem")
+            .operationName("PutItem")
             .hasCollection()
             .consumedCapacity("{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")
             .itemCollectionMetrics("[somekey1:[{\"ItemCollectionKey\":{\"somekey2\":{}}}]]")
@@ -678,7 +663,7 @@ public abstract class AbstractAws2ClientCoreTest {
                                                                 .build()))
                                                     .build())
                                             .build())))))
-            .stableOperation("DeleteItem")
+            .operationName("DeleteItem")
             .hasCollection()
             .consumedCapacity("{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")
             .itemCollectionMetrics("[somekey1:[{\"ItemCollectionKey\":{\"somekey2\":{}}}]]")
@@ -718,7 +703,7 @@ public abstract class AbstractAws2ClientCoreTest {
                                                                 .build()))
                                                     .build())
                                             .build())))))
-            .stableOperation("BATCH PutItem")
+            .operationName("BATCH PutItem")
             .hasCollection()
             .batchSize(2)
             .consumedCapacity("{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")
@@ -759,7 +744,7 @@ public abstract class AbstractAws2ClientCoreTest {
                                                                 .build()))
                                                     .build())
                                             .build())))))
-            .stableOperation("BATCH DeleteItem")
+            .operationName("BATCH DeleteItem")
             .hasCollection()
             .batchSize(2)
             .consumedCapacity("{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")
@@ -801,7 +786,7 @@ public abstract class AbstractAws2ClientCoreTest {
                                                                 .build()))
                                                     .build())
                                             .build())))))
-            .stableOperation("BATCH")
+            .operationName("BATCH")
             .hasCollection()
             .batchSize(2)
             .consumedCapacity("{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")
@@ -839,7 +824,7 @@ public abstract class AbstractAws2ClientCoreTest {
     final String awsOperation;
     final String responseContent;
     final Function<DynamoDbClient, Object> execute;
-    final String stableOperation;
+    final String operationName;
     final boolean hasCollection;
     final Long batchSize;
     final String consumedCapacity;
@@ -851,7 +836,7 @@ public abstract class AbstractAws2ClientCoreTest {
       this.awsOperation = builder.awsOperation;
       this.responseContent = builder.responseContent;
       this.execute = builder.execute;
-      this.stableOperation = builder.stableOperation;
+      this.operationName = builder.operationName;
       this.hasCollection = builder.hasCollection;
       this.batchSize = builder.batchSize;
       this.consumedCapacity = builder.consumedCapacity;
@@ -869,8 +854,7 @@ public abstract class AbstractAws2ClientCoreTest {
         attributes.add(equalTo(AWS_DYNAMODB_ITEM_COLLECTION_METRICS, itemCollectionMetrics));
       }
       if (batchSize != null) {
-        attributes.add(
-            equalTo(DB_OPERATION_BATCH_SIZE, emitStableDatabaseSemconv() ? batchSize : null));
+        attributes.add(equalTo(DB_OPERATION_BATCH_SIZE, batchSize));
       }
       return attributes;
     }
@@ -890,7 +874,7 @@ public abstract class AbstractAws2ClientCoreTest {
       private String awsOperation;
       private String responseContent;
       private Function<DynamoDbClient, Object> execute;
-      private String stableOperation;
+      private String operationName;
       private boolean hasCollection;
       private Long batchSize;
       private String consumedCapacity;
@@ -916,8 +900,8 @@ public abstract class AbstractAws2ClientCoreTest {
         return this;
       }
 
-      Builder stableOperation(String stableOperation) {
-        this.stableOperation = stableOperation;
+      Builder operationName(String operationName) {
+        this.operationName = operationName;
         return this;
       }
 

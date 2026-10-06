@@ -5,26 +5,17 @@
 
 package io.opentelemetry.instrumentation.r2dbc.v1_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
-import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static io.r2dbc.spi.ConnectionFactoryOptions.CONNECT_TIMEOUT;
 import static io.r2dbc.spi.ConnectionFactoryOptions.DATABASE;
 import static io.r2dbc.spi.ConnectionFactoryOptions.DRIVER;
@@ -188,26 +179,10 @@ public abstract class AbstractR2dbcStatementTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(
-                                    DB_CONNECTION_STRING,
-                                    emitStableDatabaseSemconv()
-                                        ? null
-                                        : parameter.system + "://localhost:" + port),
-                                equalTo(maybeStable(DB_SYSTEM), parameter.system),
-                                equalTo(maybeStable(DB_NAME), DB),
-                                equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
-                                equalTo(maybeStable(DB_STATEMENT), parameter.expectedQueryText),
-                                equalTo(
-                                    DB_QUERY_SUMMARY,
-                                    emitStableDatabaseSemconv()
-                                        ? parameter.getQuerySummary()
-                                        : null),
-                                equalTo(
-                                    maybeStable(DB_OPERATION),
-                                    emitStableDatabaseSemconv() ? null : parameter.operation),
-                                equalTo(
-                                    maybeStable(DB_SQL_TABLE),
-                                    emitStableDatabaseSemconv() ? null : parameter.table),
+                                equalTo(DB_SYSTEM_NAME, parameter.system),
+                                equalTo(DB_NAMESPACE, DB),
+                                equalTo(DB_QUERY_TEXT, parameter.expectedQueryText),
+                                equalTo(DB_QUERY_SUMMARY, parameter.getQuerySummary()),
                                 equalTo(maybeStablePeerService(), "test-peer-service"),
                                 equalTo(SERVER_ADDRESS, container.getHost()),
                                 equalTo(SERVER_PORT, port)),
@@ -225,13 +200,7 @@ public abstract class AbstractR2dbcStatementTest {
                     Arguments.of(
                         named(
                             system.system + " Simple Select",
-                            new Parameter(
-                                system.system,
-                                "SELECT 3",
-                                "SELECT ?",
-                                emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DB,
-                                null,
-                                "SELECT"))),
+                            new Parameter(system.system, "SELECT 3", "SELECT ?", "SELECT"))),
                     Arguments.of(
                         named(
                             system.system + " Create Table",
@@ -239,11 +208,7 @@ public abstract class AbstractR2dbcStatementTest {
                                 system.system,
                                 "CREATE TABLE person (id SERIAL PRIMARY KEY, first_name VARCHAR(255), last_name VARCHAR(255))",
                                 "CREATE TABLE person (id SERIAL PRIMARY KEY, first_name VARCHAR(?), last_name VARCHAR(?))",
-                                emitStableDatabaseSemconv()
-                                    ? "CREATE TABLE person"
-                                    : "CREATE TABLE " + DB + ".person",
-                                "person",
-                                "CREATE TABLE"))),
+                                "CREATE TABLE person"))),
                     Arguments.of(
                         named(
                             system.system + " Insert",
@@ -251,11 +216,7 @@ public abstract class AbstractR2dbcStatementTest {
                                 system.system,
                                 "INSERT INTO person (id, first_name, last_name) values (1, 'tom', 'johnson')",
                                 "INSERT INTO person (id, first_name, last_name) values (?, ?, ?)",
-                                emitStableDatabaseSemconv()
-                                    ? "INSERT person"
-                                    : "INSERT " + DB + ".person",
-                                "person",
-                                "INSERT"))),
+                                "INSERT person"))),
                     Arguments.of(
                         named(
                             system.system + " Select from Table",
@@ -263,11 +224,7 @@ public abstract class AbstractR2dbcStatementTest {
                                 system.system,
                                 "SELECT * FROM person where first_name = 'tom'",
                                 "SELECT * FROM person where first_name = ?",
-                                emitStableDatabaseSemconv()
-                                    ? "SELECT person"
-                                    : "SELECT " + DB + ".person",
-                                "person",
-                                "SELECT")))));
+                                "SELECT person")))));
   }
 
   @Test
@@ -299,7 +256,7 @@ public abstract class AbstractR2dbcStatementTest {
         "io.opentelemetry.r2dbc-1.0",
         DB_SYSTEM_NAME,
         DB_NAMESPACE,
-        emitStableDatabaseSemconv() ? DB_QUERY_SUMMARY : DB_OPERATION_NAME,
+        DB_QUERY_SUMMARY,
         SERVER_ADDRESS,
         SERVER_PORT);
   }
@@ -324,7 +281,7 @@ public abstract class AbstractR2dbcStatementTest {
 
     // recreate a fresh batch_test table for each scenario so that batch row ids can be reused
     // without worrying about collisions from previous scenarios; the table also lets the collection
-    // name be captured (in db.query.summary and, under old semconv, db.sql.table)
+    // name be captured in db.query.summary
     recreateBatchTestTable(connectionFactory);
     getTesting().waitForTraces(2);
     getTesting().clearData();
@@ -351,8 +308,6 @@ public abstract class AbstractR2dbcStatementTest {
                               .blockLast(Duration.ofMinutes(1));
                         }));
 
-    String connectionString = MARIADB.system + "://localhost:" + port;
-
     if (scenario.queries.isEmpty()) {
       // an empty batch fails to execute but still produces a client span
       assertThat(thrown).isInstanceOf(NoSuchElementException.class);
@@ -362,33 +317,18 @@ public abstract class AbstractR2dbcStatementTest {
                   trace.hasSpansSatisfyingExactly(
                       span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                       span ->
-                          span.hasName(emitStableDatabaseSemconv() ? "BATCH" : DB)
+                          span.hasName("BATCH")
                               .hasKind(SpanKind.CLIENT)
                               .hasParent(trace.getSpan(0))
                               .hasAttributesSatisfyingExactly(
-                                  equalTo(
-                                      DB_CONNECTION_STRING,
-                                      emitStableDatabaseSemconv() ? null : connectionString),
-                                  equalTo(maybeStable(DB_SYSTEM), MARIADB.system),
-                                  equalTo(maybeStable(DB_NAME), DB),
-                                  equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
-                                  equalTo(
-                                      maybeStable(DB_STATEMENT),
-                                      emitStableDatabaseSemconv() ? null : ""),
-                                  equalTo(
-                                      DB_QUERY_SUMMARY,
-                                      emitStableDatabaseSemconv() ? "BATCH" : null),
-                                  equalTo(
-                                      DB_OPERATION_BATCH_SIZE,
-                                      emitStableDatabaseSemconv() ? 0L : null),
+                                  equalTo(DB_SYSTEM_NAME, MARIADB.system),
+                                  equalTo(DB_NAMESPACE, DB),
+                                  equalTo(DB_QUERY_SUMMARY, "BATCH"),
+                                  equalTo(DB_OPERATION_BATCH_SIZE, 0L),
                                   equalTo(maybeStablePeerService(), "test-peer-service"),
                                   equalTo(SERVER_ADDRESS, container.getHost()),
                                   equalTo(SERVER_PORT, port),
-                                  equalTo(
-                                      ERROR_TYPE,
-                                      emitStableDatabaseSemconv()
-                                          ? "java.util.NoSuchElementException"
-                                          : null))));
+                                  equalTo(ERROR_TYPE, "java.util.NoSuchElementException"))));
       return;
     }
 
@@ -399,36 +339,15 @@ public abstract class AbstractR2dbcStatementTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                     span ->
-                        span.hasName(
-                                emitStableDatabaseSemconv()
-                                    ? scenario.spanName
-                                    : scenario.oldSpanName)
+                        span.hasName(scenario.spanName)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(
-                                    DB_CONNECTION_STRING,
-                                    emitStableDatabaseSemconv() ? null : connectionString),
-                                equalTo(maybeStable(DB_SYSTEM), MARIADB.system),
-                                equalTo(maybeStable(DB_NAME), DB),
-                                equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
-                                equalTo(
-                                    maybeStable(DB_STATEMENT),
-                                    emitStableDatabaseSemconv()
-                                        ? scenario.queryText
-                                        : scenario.oldStatement),
-                                equalTo(
-                                    DB_QUERY_SUMMARY,
-                                    emitStableDatabaseSemconv() ? scenario.summary : null),
-                                equalTo(
-                                    maybeStable(DB_OPERATION),
-                                    emitStableDatabaseSemconv() ? null : scenario.oldOperation),
-                                equalTo(
-                                    maybeStable(DB_SQL_TABLE),
-                                    emitStableDatabaseSemconv() ? null : scenario.oldCollection),
-                                equalTo(
-                                    DB_OPERATION_BATCH_SIZE,
-                                    emitStableDatabaseSemconv() ? scenario.batchSize : null),
+                                equalTo(DB_SYSTEM_NAME, MARIADB.system),
+                                equalTo(DB_NAMESPACE, DB),
+                                equalTo(DB_QUERY_TEXT, scenario.queryText),
+                                equalTo(DB_QUERY_SUMMARY, scenario.summary),
+                                equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
                                 equalTo(maybeStablePeerService(), "test-peer-service"),
                                 equalTo(SERVER_ADDRESS, container.getHost()),
                                 equalTo(SERVER_PORT, port))));
@@ -442,12 +361,8 @@ public abstract class AbstractR2dbcStatementTest {
             BatchScenario.builder()
                 .addQuery("INSERT INTO batch_test (id, num) VALUES (1, 1)")
                 .spanName("INSERT batch_test")
-                .oldSpanName("INSERT " + DB + ".batch_test")
                 .summary("INSERT batch_test")
                 .queryText("INSERT INTO batch_test (id, num) VALUES (?, ?)")
-                .oldStatement("INSERT INTO batch_test (id, num) VALUES (?, ?)")
-                .oldOperation("INSERT")
-                .oldCollection("batch_test")
                 .build()),
         argumentSet(
             "twoSameOperation",
@@ -455,13 +370,8 @@ public abstract class AbstractR2dbcStatementTest {
                 .addQuery("INSERT INTO batch_test (id, num) VALUES (1, 1)")
                 .addQuery("INSERT INTO batch_test (id, num) VALUES (2, 2)")
                 .spanName("BATCH INSERT batch_test")
-                .oldSpanName("INSERT " + DB + ".batch_test")
                 .summary("BATCH INSERT batch_test")
                 .queryText("INSERT INTO batch_test (id, num) VALUES (?, ?)")
-                .oldStatement(
-                    "INSERT INTO batch_test (id, num) VALUES (?, ?); INSERT INTO batch_test (id, num) VALUES (?, ?)")
-                .oldOperation("INSERT")
-                .oldCollection("batch_test")
                 .batchSize(2)
                 .build()),
         argumentSet(
@@ -470,14 +380,9 @@ public abstract class AbstractR2dbcStatementTest {
                 .addQuery("INSERT INTO batch_test (id, num) VALUES (1, 1)")
                 .addQuery("UPDATE batch_test SET num = 5 WHERE id = 1")
                 .spanName("BATCH")
-                .oldSpanName("INSERT " + DB + ".batch_test")
                 .summary("BATCH")
                 .queryText(
                     "INSERT INTO batch_test (id, num) VALUES (?, ?); UPDATE batch_test SET num = ? WHERE id = ?")
-                .oldStatement(
-                    "INSERT INTO batch_test (id, num) VALUES (?, ?); UPDATE batch_test SET num = ? WHERE id = ?")
-                .oldOperation("INSERT")
-                .oldCollection("batch_test")
                 .batchSize(2)
                 .build()));
   }
@@ -505,29 +410,15 @@ public abstract class AbstractR2dbcStatementTest {
     private final String queryText;
     private final String expectedQueryText;
     private final String spanName;
-    private final String table;
-    private final String operation;
 
-    private Parameter(
-        String system,
-        String queryText,
-        String expectedQueryText,
-        String spanName,
-        String table,
-        String operation) {
+    private Parameter(String system, String queryText, String expectedQueryText, String spanName) {
       this.system = system;
       this.queryText = queryText;
       this.expectedQueryText = expectedQueryText;
       this.spanName = spanName;
-      this.table = table;
-      this.operation = operation;
     }
 
     private String getQuerySummary() {
-      if (!emitStableDatabaseSemconv()) {
-        return null;
-      }
-      // spanName contains the expected query summary for stable semconv
       return spanName;
     }
   }
@@ -556,23 +447,15 @@ public abstract class AbstractR2dbcStatementTest {
   private static final class BatchScenario {
     final List<String> queries;
     final String spanName;
-    final String oldSpanName;
     final String summary;
     final String queryText;
-    final String oldStatement;
-    final String oldOperation;
-    final String oldCollection;
     final Long batchSize;
 
     BatchScenario(Builder builder) {
       this.queries = builder.queries;
       this.spanName = builder.spanName;
-      this.oldSpanName = builder.oldSpanName;
       this.summary = builder.summary;
       this.queryText = builder.queryText;
-      this.oldStatement = builder.oldStatement;
-      this.oldOperation = builder.oldOperation;
-      this.oldCollection = builder.oldCollection;
       this.batchSize = builder.batchSize;
     }
 
@@ -583,12 +466,8 @@ public abstract class AbstractR2dbcStatementTest {
     static final class Builder {
       private final List<String> queries = new ArrayList<>();
       private String spanName;
-      private String oldSpanName;
       private String summary;
       private String queryText;
-      private String oldStatement;
-      private String oldOperation;
-      private String oldCollection;
       private Long batchSize;
 
       Builder addQuery(String query) {
@@ -601,11 +480,6 @@ public abstract class AbstractR2dbcStatementTest {
         return this;
       }
 
-      Builder oldSpanName(String oldSpanName) {
-        this.oldSpanName = oldSpanName;
-        return this;
-      }
-
       Builder summary(String summary) {
         this.summary = summary;
         return this;
@@ -613,21 +487,6 @@ public abstract class AbstractR2dbcStatementTest {
 
       Builder queryText(String queryText) {
         this.queryText = queryText;
-        return this;
-      }
-
-      Builder oldStatement(String oldStatement) {
-        this.oldStatement = oldStatement;
-        return this;
-      }
-
-      Builder oldOperation(String oldOperation) {
-        this.oldOperation = oldOperation;
-        return this;
-      }
-
-      Builder oldCollection(String oldCollection) {
-        this.oldCollection = oldCollection;
         return this;
       }
 
