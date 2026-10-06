@@ -365,19 +365,7 @@ tasks {
     from(sourceSets["javaSpring4"].java)
   }
 
-  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .matching { it.name == "test" || it.name == "testSpring2" || it.name == "testSpring4" }
-    .map { suite ->
-      register<Test>("${suite.name}StableSemconv") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        jvmArgs("-Dotel.semconv-stability.opt-in=database")
-        isEnabled = project.tasks.named(suite.name).get().enabled
-      }
-    }
-
   check {
-    dependsOn(testing.suites, stableSemconvSuites)
+    dependsOn(testing.suites)
   }
 }

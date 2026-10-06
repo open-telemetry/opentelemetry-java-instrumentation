@@ -48,14 +48,6 @@ testing {
         implementation(project(":instrumentation-api-incubator"))
         implementation("redis.clients:jedis:2.0.0")
       }
-
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=database")
-          }
-        }
-      }
     }
 
     register<JvmTestSuite>("version23Test") {
@@ -80,8 +72,8 @@ tasks {
         testClassesDirs = suite.sources.output.classesDirs
         classpath = suite.sources.runtimeClasspath
 
-        jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
-        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
+        jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
       }
     }
 
