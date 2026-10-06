@@ -93,9 +93,6 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
   }
 
   /**
-   * Creates an extractor using the operation type's name, such as {@code send} for {@link
-   * MessageOperation#PUBLISH}. A null operation omits the operation attributes.
-   *
    * @deprecated Use {@link #create(MessagingAttributesGetter, MessagingOperationType, String)}. May
    *     be removed in the next minor release.
    */
@@ -121,9 +118,6 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
   }
 
   /**
-   * Creates a builder using the operation type's name, such as {@code send} for {@link
-   * MessageOperation#PUBLISH}. A null operation omits the operation attributes.
-   *
    * @deprecated Use {@link #builder(MessagingAttributesGetter, MessagingOperationType, String)}.
    *     May be removed in the next minor release.
    */
