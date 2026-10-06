@@ -5,48 +5,19 @@
 
 package io.opentelemetry.instrumentation.cassandra.v4_4;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static java.util.logging.Level.FINE;
-
 import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
 import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.cql.Statement;
-import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.metadata.Node;
-import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
-import com.datastax.oss.driver.internal.core.metadata.SniEndPoint;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import java.lang.reflect.Field;
-import java.net.InetSocketAddress;
-import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 final class CassandraAttributesExtractor
     implements AttributesExtractor<CassandraRequest, ExecutionInfo> {
-
-  private static final Logger logger =
-      Logger.getLogger(CassandraAttributesExtractor.class.getName());
-
-  // copied from DbIncubatingAttributes
-  private static final AttributeKey<String> DB_CASSANDRA_CONSISTENCY_LEVEL =
-      AttributeKey.stringKey("db.cassandra.consistency_level");
-  private static final AttributeKey<String> DB_CASSANDRA_COORDINATOR_DC =
-      AttributeKey.stringKey("db.cassandra.coordinator.dc");
-  private static final AttributeKey<String> DB_CASSANDRA_COORDINATOR_ID =
-      AttributeKey.stringKey("db.cassandra.coordinator.id");
-  private static final AttributeKey<Boolean> DB_CASSANDRA_IDEMPOTENCE =
-      AttributeKey.booleanKey("db.cassandra.idempotence");
-  private static final AttributeKey<Long> DB_CASSANDRA_PAGE_SIZE =
-      AttributeKey.longKey("db.cassandra.page_size");
-  private static final AttributeKey<Long> DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT =
-      AttributeKey.longKey("db.cassandra.speculative_execution_count");
 
   // copied from CassandraIncubatingAttributes
   private static final AttributeKey<String> CASSANDRA_CONSISTENCY_LEVEL =
@@ -61,8 +32,6 @@ final class CassandraAttributesExtractor
       AttributeKey.booleanKey("cassandra.query.idempotent");
   private static final AttributeKey<Long> CASSANDRA_SPECULATIVE_EXECUTION_COUNT =
       AttributeKey.longKey("cassandra.speculative_execution.count");
-
-  private static final Field PROXY_ADDRESS_FIELD = getProxyAddressField();
 
   @Override
   public void onStart(
@@ -81,32 +50,14 @@ final class CassandraAttributesExtractor
 
     Node coordinator = executionInfo.getCoordinator();
     if (coordinator != null) {
-      updateServerAddressAndPort(attributes, coordinator);
-
       String datacenter = coordinator.getDatacenter();
-      if (emitStableDatabaseSemconv()) {
-        attributes.put(CASSANDRA_COORDINATOR_DC, datacenter);
-      }
-      if (emitOldDatabaseSemconv()) {
-        attributes.put(DB_CASSANDRA_COORDINATOR_DC, datacenter);
-      }
+      attributes.put(CASSANDRA_COORDINATOR_DC, datacenter);
       if (coordinator.getHostId() != null) {
-        if (emitStableDatabaseSemconv()) {
-          attributes.put(CASSANDRA_COORDINATOR_ID, coordinator.getHostId().toString());
-        }
-        if (emitOldDatabaseSemconv()) {
-          attributes.put(DB_CASSANDRA_COORDINATOR_ID, coordinator.getHostId().toString());
-        }
+        attributes.put(CASSANDRA_COORDINATOR_ID, coordinator.getHostId().toString());
       }
     }
-    if (emitStableDatabaseSemconv()) {
-      attributes.put(
-          CASSANDRA_SPECULATIVE_EXECUTION_COUNT, executionInfo.getSpeculativeExecutionCount());
-    }
-    if (emitOldDatabaseSemconv()) {
-      attributes.put(
-          DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT, executionInfo.getSpeculativeExecutionCount());
-    }
+    attributes.put(
+        CASSANDRA_SPECULATIVE_EXECUTION_COUNT, executionInfo.getSpeculativeExecutionCount());
 
     Statement<?> statement = (Statement<?>) executionInfo.getRequest();
     String consistencyLevel;
@@ -117,29 +68,14 @@ final class CassandraAttributesExtractor
     } else {
       consistencyLevel = config.getString(DefaultDriverOption.REQUEST_CONSISTENCY);
     }
-    if (emitStableDatabaseSemconv()) {
-      attributes.put(CASSANDRA_CONSISTENCY_LEVEL, consistencyLevel);
-    }
-    if (emitOldDatabaseSemconv()) {
-      attributes.put(DB_CASSANDRA_CONSISTENCY_LEVEL, consistencyLevel);
-    }
+    attributes.put(CASSANDRA_CONSISTENCY_LEVEL, consistencyLevel);
 
     if (statement.getPageSize() > 0) {
-      if (emitStableDatabaseSemconv()) {
-        attributes.put(CASSANDRA_PAGE_SIZE, statement.getPageSize());
-      }
-      if (emitOldDatabaseSemconv()) {
-        attributes.put(DB_CASSANDRA_PAGE_SIZE, statement.getPageSize());
-      }
+      attributes.put(CASSANDRA_PAGE_SIZE, statement.getPageSize());
     } else {
       int pageSize = config.getInt(DefaultDriverOption.REQUEST_PAGE_SIZE);
       if (pageSize > 0) {
-        if (emitStableDatabaseSemconv()) {
-          attributes.put(CASSANDRA_PAGE_SIZE, pageSize);
-        }
-        if (emitOldDatabaseSemconv()) {
-          attributes.put(DB_CASSANDRA_PAGE_SIZE, pageSize);
-        }
+        attributes.put(CASSANDRA_PAGE_SIZE, pageSize);
       }
     }
 
@@ -147,62 +83,6 @@ final class CassandraAttributesExtractor
     if (idempotent == null) {
       idempotent = config.getBoolean(DefaultDriverOption.REQUEST_DEFAULT_IDEMPOTENCE);
     }
-    if (emitStableDatabaseSemconv()) {
-      attributes.put(CASSANDRA_QUERY_IDEMPOTENT, idempotent);
-    }
-    if (emitOldDatabaseSemconv()) {
-      attributes.put(DB_CASSANDRA_IDEMPOTENCE, idempotent);
-    }
-  }
-
-  static void updateServerAddressAndPort(AttributesBuilder attributes, Node coordinator) {
-    // Stable server attributes come only from the configured target recorded on span start.
-    // In duplicate mode this also prevents legacy coordinator data from replacing that target.
-    if (emitStableDatabaseSemconv()) {
-      return;
-    }
-    EndPoint endPoint = coordinator.getEndPoint();
-    if (endPoint instanceof SniEndPoint) {
-      // Legacy semconv keeps recording the proxy as the server.
-      updateLegacySniServerAddressAndPort(attributes, (SniEndPoint) endPoint);
-      return;
-    }
-    if (endPoint instanceof DefaultEndPoint) {
-      InetSocketAddress address = ((DefaultEndPoint) endPoint).resolve();
-      attributes.put(SERVER_ADDRESS, address.getHostString());
-      attributes.put(SERVER_PORT, address.getPort());
-    }
-  }
-
-  private static void updateLegacySniServerAddressAndPort(
-      AttributesBuilder attributes, SniEndPoint sniEndPoint) {
-    if (PROXY_ADDRESS_FIELD == null) {
-      return;
-    }
-    Object object = null;
-    try {
-      object = PROXY_ADDRESS_FIELD.get(sniEndPoint);
-    } catch (Exception e) {
-      logger.log(
-          FINE,
-          "Error when accessing the private field proxyAddress of SniEndPoint using reflection.",
-          e);
-    }
-    if (object instanceof InetSocketAddress) {
-      InetSocketAddress address = (InetSocketAddress) object;
-      attributes.put(SERVER_ADDRESS, address.getHostString());
-      attributes.put(SERVER_PORT, address.getPort());
-    }
-  }
-
-  @Nullable
-  private static Field getProxyAddressField() {
-    try {
-      Field field = SniEndPoint.class.getDeclaredField("proxyAddress");
-      field.setAccessible(true);
-      return field;
-    } catch (Exception ignored) {
-      return null;
-    }
+    attributes.put(CASSANDRA_QUERY_IDEMPOTENT, idempotent);
   }
 }

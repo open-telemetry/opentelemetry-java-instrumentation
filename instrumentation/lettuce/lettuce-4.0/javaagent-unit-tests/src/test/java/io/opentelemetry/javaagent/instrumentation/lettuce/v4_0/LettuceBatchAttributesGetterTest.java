@@ -14,13 +14,9 @@ import com.lambdaworks.redis.protocol.Command;
 import com.lambdaworks.redis.protocol.CommandType;
 import com.lambdaworks.redis.protocol.RedisCommand;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
-import java.net.InetSocketAddress;
 import org.junit.jupiter.api.Test;
 
 class LettuceBatchAttributesGetterTest {
-
-  private static final InetSocketAddress SELECTED_ADDRESS =
-      InetSocketAddress.createUnresolved("selected-node", 6380);
 
   private final LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
 
@@ -28,10 +24,7 @@ class LettuceBatchAttributesGetterTest {
   void batchUsesConfiguredTarget() {
     LettuceBatchRequest request =
         LettuceBatchRequest.create(
-            singletonList(command()),
-            SELECTED_ADDRESS,
-            null,
-            RedisServerTarget.ofEndpoint("configured-node:6379"));
+            singletonList(command()), null, RedisServerTarget.ofEndpoint("configured-node:6379"));
 
     assertThat(getter.getServerAddress(request)).isEqualTo("configured-node");
     assertThat(getter.getServerPort(request)).isEqualTo(null);

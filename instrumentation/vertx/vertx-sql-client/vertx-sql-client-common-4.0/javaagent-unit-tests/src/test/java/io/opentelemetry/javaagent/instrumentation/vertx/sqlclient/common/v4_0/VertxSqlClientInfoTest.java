@@ -23,13 +23,10 @@ class VertxSqlClientInfoTest {
 
     options.setHost("mutated.example").setPort(15432).setDatabase("other").setUser("other");
 
-    assertInfo(info, "postgresql", "database", "user", "db.example", 5432);
+    assertInfo(info, "postgresql", "database");
     assertThat(info.getServerTarget().getAddress()).isEqualTo("db.example");
     assertThat(info.getServerTarget().getPort()).isNull();
     assertThat(request.getDatabase()).isEqualTo("database");
-    assertThat(request.getUser()).isEqualTo("user");
-    assertThat(request.getHost()).isEqualTo("db.example");
-    assertThat(request.getPort()).isEqualTo(5432);
     assertThat(request.getConfiguredServerAddress()).isEqualTo("db.example");
     assertThat(request.getConfiguredServerPort()).isNull();
   }
@@ -45,12 +42,12 @@ class VertxSqlClientInfoTest {
     second.setHost("mutated-too.example");
     options.clear();
 
-    assertInfo(info, "postgresql", "database", "user", "db-a.example", 5432);
+    assertInfo(info, "postgresql", "database");
     assertThat(info.getServerTarget().getAddress()).isEqualTo("db-a.example,db-b.example");
   }
 
   @Test
-  void omitsNonConsensusNamespaceAndUser() {
+  void omitsNonConsensusNamespace() {
     VertxSqlClientInfo info =
         VertxSqlClientInfo.create(
             asList(
@@ -59,7 +56,6 @@ class VertxSqlClientInfoTest {
             "postgresql");
 
     assertThat(info.getNamespace()).isNull();
-    assertThat(info.getUser()).isNull();
   }
 
   @Test
@@ -70,8 +66,6 @@ class VertxSqlClientInfoTest {
     assertThat(unrepresentable.getServerTarget()).isNull();
     VertxSqlClientRequest request =
         new VertxSqlClientRequest("select 1", unrepresentable, false, null);
-    assertThat(request.getHost()).isEqualTo("invalid host");
-    assertThat(request.getPort()).isEqualTo(5432);
     assertThat(request.getConfiguredServerAddress()).isNull();
     assertThat(request.getConfiguredServerPort()).isNull();
     VertxSqlClientAttributesGetter getter = new VertxSqlClientAttributesGetter();
@@ -85,9 +79,6 @@ class VertxSqlClientInfoTest {
 
     assertThat(info.getDbSystemName()).isEqualTo("postgresql");
     assertThat(info.getNamespace()).isNull();
-    assertThat(info.getUser()).isNull();
-    assertThat(info.getLegacyServerAddress()).isNull();
-    assertThat(info.getLegacyServerPort()).isNull();
     assertThat(info.getServerTarget()).isNull();
     assertThat(VertxSqlClientInfo.createUnknown(null).getDbSystemName()).isEqualTo("other_sql");
   }
@@ -135,17 +126,8 @@ class VertxSqlClientInfoTest {
     return new SqlConnectOptions().setHost(host).setPort(port).setDatabase(database).setUser(user);
   }
 
-  private static void assertInfo(
-      VertxSqlClientInfo info,
-      String dbSystemName,
-      String namespace,
-      String user,
-      String address,
-      int port) {
+  private static void assertInfo(VertxSqlClientInfo info, String dbSystemName, String namespace) {
     assertThat(info.getDbSystemName()).isEqualTo(dbSystemName);
     assertThat(info.getNamespace()).isEqualTo(namespace);
-    assertThat(info.getUser()).isEqualTo(user);
-    assertThat(info.getLegacyServerAddress()).isEqualTo(address);
-    assertThat(info.getLegacyServerPort()).isEqualTo(port);
   }
 }

@@ -128,10 +128,7 @@ class LettuceNetworkAttributesGetterTest {
     DefaultEndpoint endpoint = new DefaultEndpoint(ClientOptions.create());
     try {
       LettuceConnectionState.captureEndpoint(
-          endpoint,
-          InetSocketAddress.createUnresolved("redis.example", PORT),
-          null,
-          RedisServerTarget.ofHostAndPort("redis.example", PORT));
+          endpoint, null, RedisServerTarget.ofHostAndPort("redis.example", PORT));
       LettuceConnectionState.copy(endpoint, command, null);
 
       LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();

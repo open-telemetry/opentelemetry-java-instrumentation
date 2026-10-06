@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.COMMAND_ADDRESS;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -107,7 +106,6 @@ class LettuceNetworkAttributesGetterTest {
   @Test
   void commandKeepsConfiguredServerAddressWhenPeerIsUnknown() {
     RedisCommand<?, ?, ?> command = command();
-    COMMAND_ADDRESS.set(command, InetSocketAddress.createUnresolved("redis.example", PORT));
     LettuceServerTargets.capture(command, RedisServerTarget.ofHostAndPort("redis.example", PORT));
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
@@ -205,7 +203,7 @@ class LettuceNetworkAttributesGetterTest {
     RedisCommand<?, ?, ?> firstCommand = commandWithPeer(address);
     RedisCommand<?, ?, ?> secondCommand = commandWithPeer(address);
     LettuceBatchRequest request =
-        LettuceBatchRequest.create(asList(firstCommand, secondCommand), null, null, null);
+        LettuceBatchRequest.create(asList(firstCommand, secondCommand), null, null);
 
     LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
 
@@ -222,7 +220,7 @@ class LettuceNetworkAttributesGetterTest {
         commandWithPeer(
             new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 4}), PORT));
     LettuceBatchRequest request =
-        LettuceBatchRequest.create(asList(firstCommand, secondCommand), null, null, null);
+        LettuceBatchRequest.create(asList(firstCommand, secondCommand), null, null);
 
     LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
 
@@ -238,7 +236,7 @@ class LettuceNetworkAttributesGetterTest {
     RedisCommand<?, ?, ?> secondCommand = command();
     LettuceSingletons.initializeCommandPeer(secondCommand);
     LettuceBatchRequest request =
-        LettuceBatchRequest.create(asList(firstCommand, secondCommand), null, null, null);
+        LettuceBatchRequest.create(asList(firstCommand, secondCommand), null, null);
 
     LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
 
@@ -253,7 +251,7 @@ class LettuceNetworkAttributesGetterTest {
     RedisCommand<?, ?, ?> firstCommand = commandWithPeer(address);
     RedisCommand<?, ?, ?> secondCommand = command();
     LettuceBatchRequest request =
-        LettuceBatchRequest.create(asList(firstCommand, secondCommand), null, null, null);
+        LettuceBatchRequest.create(asList(firstCommand, secondCommand), null, null);
 
     LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
 

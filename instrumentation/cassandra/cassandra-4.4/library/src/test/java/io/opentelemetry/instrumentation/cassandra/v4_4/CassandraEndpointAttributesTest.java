@@ -19,6 +19,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
+import com.datastax.oss.driver.api.core.cql.Statement;
 import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.metadata.Node;
 import com.datastax.oss.driver.api.core.session.Session;
@@ -36,6 +37,7 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -49,7 +51,11 @@ class CassandraEndpointAttributesTest {
   @Mock private ExecutionInfo executionInfo;
   @Mock private Node coordinator;
   @Mock private EndPoint customEndPoint;
-  @Mock private Session session;
+
+  @Mock(answer = Answers.RETURNS_DEEP_STUBS)
+  private Session session;
+
+  @Mock private Statement<?> statement;
 
   @Test
   void unconfiguredSessionDoesNotUseTheCoordinatorAsServer() {
@@ -232,7 +238,10 @@ class CassandraEndpointAttributesTest {
     ServerAttributesExtractor.create(new CassandraSqlAttributesGetter())
         .onStart(startAttributes, Context.root(), request);
     AttributesBuilder endAttributes = Attributes.builder();
-    CassandraAttributesExtractor.updateServerAddressAndPort(endAttributes, coordinator);
+    when(executionInfo.getCoordinator()).thenReturn(coordinator);
+    when(executionInfo.getRequest()).thenReturn(statement);
+    new CassandraAttributesExtractor()
+        .onEnd(endAttributes, Context.root(), request, executionInfo, null);
     return Attributes.builder()
         .putAll(startAttributes.build())
         .putAll(endAttributes.build())
