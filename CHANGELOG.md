@@ -57,19 +57,10 @@
 - Remove the deprecated `OpenTelemetryMeterRegistryBuilder#setMicrometerHistogramGaugesEnabled(boolean)`.
   Use `Experimental#setMicrometerHistogramGaugesEnabled(OpenTelemetryMeterRegistryBuilder, boolean)`
   instead.
-- Remove the unused `KafkaMessagingMetricsAssertions.assertNoNewMetrics` helper from
-  `io.opentelemetry.javaagent:opentelemetry-testing-common`.
 - Remove `MessageOperation` and its overloads in the messaging attribute, span-name and span-kind
-  extractors from `opentelemetry-instrumentation-api-incubator`. Use `MessagingOperationType` and
-  supply a system-specific operation name, for example
-  `MessagingAttributesExtractor.create(getter, MessagingOperationType.SEND, "send")` instead of
-  `MessagingAttributesExtractor.create(getter, MessageOperation.PUBLISH)`.
-  Replace producer and consumer metric factories `getForOperationType()` and
-  `getForOperationTypeWithOldMetrics()` with `get()`.
+  extractors from `opentelemetry-instrumentation-api-incubator`.
   `MessagingAttributesGetter` no longer requires or exposes `getMessageBodySize()` or
-  `getMessageEnvelopeSize()`; remove their overrides. The internal
-  `MessagingProcessInstrumenterFactory.create()` no longer takes a receive-enabled argument.
-  These API removals do not change the adopted v1.43.0 messaging telemetry.
+  `getMessageEnvelopeSize()`.
 
 ## Version 2.32.0 (2026-10-03)
 
