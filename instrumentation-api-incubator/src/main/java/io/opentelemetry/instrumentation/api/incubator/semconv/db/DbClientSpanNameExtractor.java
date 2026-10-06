@@ -147,7 +147,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
 
       if (rawQueryTexts.size() == 1) {
         String rawQueryText = rawQueryTexts.iterator().next();
-        SqlQuery analyzedQuery = SqlQueryAnalyzerUtil.analyzeWithSummary(rawQueryText, dialect);
+        SqlQuery analyzedQuery = SqlQueryAnalyzerUtil.analyze(rawQueryText, dialect);
         boolean batch = isBatch(request);
         String querySummary = analyzedQuery.getQuerySummary();
         if (querySummary != null) {
@@ -161,7 +161,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
             analyzedQuery.getStoredProcedureName());
       }
 
-      MultiQuery multiQuery = MultiQuery.analyzeWithSummary(rawQueryTexts, dialect);
+      MultiQuery multiQuery = MultiQuery.analyze(rawQueryTexts, dialect);
       String querySummary = multiQuery.getQuerySummary();
       if (querySummary != null) {
         return querySummary;

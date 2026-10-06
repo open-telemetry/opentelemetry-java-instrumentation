@@ -97,7 +97,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     }
     if (rawQueryTexts.size() == 1) {
       String rawQueryText = rawQueryTexts.iterator().next();
-      SqlQuery analyzedQuery = SqlQueryAnalyzerUtil.analyzeWithSummary(rawQueryText, dialect);
+      SqlQuery analyzedQuery = SqlQueryAnalyzerUtil.analyze(rawQueryText, dialect);
       boolean shouldSanitize = querySanitizationEnabled && !getter.isParameterizedQuery(request, 0);
       attributes.put(DB_QUERY_TEXT, shouldSanitize ? analyzedQuery.getQueryText() : rawQueryText);
       String querySummary = analyzedQuery.getQuerySummary();
@@ -113,7 +113,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       MultiQuery.Builder builder = MultiQuery.builder();
       int queryIndex = 0;
       for (String rawQueryText : rawQueryTexts) {
-        SqlQuery analyzedQuery = SqlQueryAnalyzerUtil.analyzeWithSummary(rawQueryText, dialect);
+        SqlQuery analyzedQuery = SqlQueryAnalyzerUtil.analyze(rawQueryText, dialect);
         boolean shouldSanitize =
             querySanitizationEnabled && !getter.isParameterizedQuery(request, queryIndex);
         builder.add(analyzedQuery, shouldSanitize ? analyzedQuery.getQueryText() : rawQueryText);

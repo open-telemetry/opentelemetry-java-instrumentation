@@ -44,7 +44,6 @@ val generateJflex = tasks.register<JavaExec>("generateJflex") {
     val outputDir = outputDirProvider.get().asFile
     outputDir.mkdirs()
     val specFiles = listOf(
-      sourceDir.asFile.resolve("SqlSanitizer.jflex"),
       sourceDir.asFile.resolve("SqlSanitizerWithSummary.jflex"),
     )
     args(
@@ -66,7 +65,6 @@ tasks.compileJava {
 tasks {
   // exclude auto-generated code
   named<Checkstyle>("checkstyleMain") {
-    exclude("**/AutoSqlSanitizer.java")
     exclude("**/AutoSqlSanitizerWithSummary.java")
   }
 
