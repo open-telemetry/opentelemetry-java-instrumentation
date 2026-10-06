@@ -70,7 +70,7 @@
 - Remove `SqlQueryAnalyzer.analyzeWithSummary` from
   `io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-incubator` for 3.0.
   Use `SqlQueryAnalyzer.analyze`, which now always produces query summaries when sanitization is
-  enabled, independently of v3-preview. The public `SqlQuery` factory signatures are unchanged.
+  enabled. The public `SqlQuery` factory signatures are unchanged.
 
 ## Version 2.32.0 (2026-10-03)
 
