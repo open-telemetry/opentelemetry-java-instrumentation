@@ -119,7 +119,6 @@ tasks {
     dependsOn(testSlick)
     dependsOn(testSqlCommenter)
     dependsOn(testStableSemconv)
-
     dependsOn(testCaptureParameters)
     dependsOn(testExceptionSignalLogs)
   }
