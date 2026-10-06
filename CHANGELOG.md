@@ -57,8 +57,6 @@
 - Remove the deprecated `OpenTelemetryMeterRegistryBuilder#setMicrometerHistogramGaugesEnabled(boolean)`.
   Use `Experimental#setMicrometerHistogramGaugesEnabled(OpenTelemetryMeterRegistryBuilder, boolean)`
   instead.
-- Remove the unused `MessagingMetricsAssertions.assertNoStableMetrics` helper from
-  `io.opentelemetry.javaagent:opentelemetry-testing-common`.
 
 ## Version 2.32.0 (2026-10-03)
 
