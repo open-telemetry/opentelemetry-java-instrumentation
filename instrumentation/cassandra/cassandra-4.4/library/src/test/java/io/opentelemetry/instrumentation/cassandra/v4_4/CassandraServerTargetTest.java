@@ -274,7 +274,7 @@ class CassandraServerTargetTest {
   }
 
   @Test
-  void capturedSniContactPointHasNoStableTarget() {
+  void capturedSniContactPointHasNoServerTarget() {
     configureContactPoints(emptyList());
     when(session.getContext()).thenReturn(context);
 
@@ -284,7 +284,7 @@ class CassandraServerTargetTest {
   }
 
   @Test
-  void capturedCustomDiscoveryEndPointHasNoStableTarget() {
+  void capturedCustomDiscoveryEndPointHasNoServerTarget() {
     configureContactPoints(emptyList());
     when(session.getContext()).thenReturn(context);
 
