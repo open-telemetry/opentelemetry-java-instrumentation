@@ -57,6 +57,8 @@
 - Remove the deprecated `OpenTelemetryMeterRegistryBuilder#setMicrometerHistogramGaugesEnabled(boolean)`.
   Use `Experimental#setMicrometerHistogramGaugesEnabled(OpenTelemetryMeterRegistryBuilder, boolean)`
   instead.
+- Remove the unused `KafkaMessagingMetricsAssertions.assertNoNewMetrics` helper from
+  `io.opentelemetry.javaagent:opentelemetry-testing-common`.
 - Remove `MessageOperation` and its overloads in the messaging attribute, span-name and span-kind
   extractors from `opentelemetry-instrumentation-api-incubator`. Use `MessagingOperationType` and
   supply a system-specific operation name, for example

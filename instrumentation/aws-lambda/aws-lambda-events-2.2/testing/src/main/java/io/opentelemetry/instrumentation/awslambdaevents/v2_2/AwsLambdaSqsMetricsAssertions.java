@@ -70,17 +70,12 @@ public class AwsLambdaSqsMetricsAssertions {
                                                 equalTo(MESSAGING_SYSTEM, AWS_SQS),
                                                 equalTo(MESSAGING_DESTINATION_NAME, destination),
                                                 equalTo(ERROR_TYPE, errorType))))));
-    assertMetricNamesAbsent(
-        testing,
-        "messaging.publish.duration",
-        "messaging.publish.messages",
-        "messaging.receive.duration",
-        "messaging.receive.messages");
-  }
-
-  private static void assertMetricNamesAbsent(
-      InstrumentationExtension testing, String... metricNames) {
-    assertThat(testing.metrics()).extracting(MetricData::getName).doesNotContain(metricNames);
+    assertThat(testing.metrics())
+        .filteredOn(
+            metric -> metric.getInstrumentationScopeInfo().getName().equals(instrumentationName))
+        .extracting(MetricData::getName)
+        .containsExactlyInAnyOrder(
+            "messaging.process.duration", "messaging.client.consumed.messages");
   }
 
   private AwsLambdaSqsMetricsAssertions() {}

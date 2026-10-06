@@ -905,14 +905,17 @@ abstract class AbstractRocketMqClientTest {
                                                         MESSAGING_DESTINATION_NAME,
                                                         NORMAL_TOPIC))))));
     assertThat(testing().metrics())
-        .noneMatch(
+        .filteredOn(
             metric ->
                 metric
-                        .getInstrumentationScopeInfo()
-                        .getName()
-                        .equals("io.opentelemetry.rocketmq-client-5.0")
-                    && (metric.getName().equals("messaging.publish.duration")
-                        || metric.getName().equals("messaging.receive.duration")
-                        || metric.getName().equals("messaging.receive.messages")));
+                    .getInstrumentationScopeInfo()
+                    .getName()
+                    .equals("io.opentelemetry.rocketmq-client-5.0"))
+        .extracting(metric -> metric.getName())
+        .containsExactlyInAnyOrder(
+            "messaging.client.sent.messages",
+            "messaging.client.operation.duration",
+            "messaging.process.duration",
+            "messaging.client.consumed.messages");
   }
 }

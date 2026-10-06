@@ -13,23 +13,15 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toSet;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
-import java.util.HashSet;
 import java.util.Set;
 
 public class CamelMessagingMetricsAssertions {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.camel-2.20";
-  private static final Set<String> DEPRECATED_METRICS =
-      new HashSet<>(
-          asList(
-              "messaging.publish.duration",
-              "messaging.receive.duration",
-              "messaging.receive.messages"));
 
   public static void assertSendAndProcessMetrics(
       InstrumentationExtension testing, String system, String destination) {
@@ -93,7 +85,6 @@ public class CamelMessagingMetricsAssertions {
           processErrorType,
           processDestinationPartitionId);
     }
-    assertNoDeprecatedMetrics(testing);
     if (system.equals("jms") || system.equals("kafka")) {
       assertNoDuplicateMessagingMetrics(testing, system, destination);
     }
@@ -121,7 +112,6 @@ public class CamelMessagingMetricsAssertions {
         destination,
         errorType,
         null);
-    assertNoDeprecatedMetrics(testing);
     assertNoDuplicateMessagingMetric(
         testing, "messaging.client.sent.messages", "send", system, destination);
     assertNoDuplicateMessagingMetric(
@@ -160,7 +150,6 @@ public class CamelMessagingMetricsAssertions {
             metric ->
                 metric.getName().equals("messaging.client.operation.duration")
                     || metric.getName().equals("messaging.client.sent.messages"));
-    assertNoDeprecatedMetrics(testing);
   }
 
   private static void assertDuration(
@@ -322,11 +311,6 @@ public class CamelMessagingMetricsAssertions {
     assertThat(matchingMetrics)
         .noneMatch(
             metric -> !INSTRUMENTATION_NAME.equals(metric.getInstrumentationScopeInfo().getName()));
-  }
-
-  private static void assertNoDeprecatedMetrics(InstrumentationExtension testing) {
-    assertThat(camelMetrics(testing))
-        .noneMatch(metric -> DEPRECATED_METRICS.contains(metric.getName()));
   }
 
   private static Set<MetricData> camelMetrics(InstrumentationExtension testing) {

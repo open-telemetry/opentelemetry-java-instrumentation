@@ -94,7 +94,6 @@ abstract class AbstractNatsTest {
                                                     equalTo(
                                                         MESSAGING_DESTINATION_NAME,
                                                         destination))))));
-    assertNoDeprecatedMessagingMetrics();
   }
 
   void assertProcessMetrics(String destination, String errorType) {
@@ -146,18 +145,6 @@ abstract class AbstractNatsTest {
                                                     equalTo(
                                                         MESSAGING_DESTINATION_NAME,
                                                         destination))))));
-    assertNoDeprecatedMessagingMetrics();
-  }
-
-  private void assertNoDeprecatedMessagingMetrics() {
-    assertThat(testing().metrics())
-        .filteredOn(
-            metric -> metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
-        .extracting(metric -> metric.getName())
-        .doesNotContain(
-            "messaging.publish.duration",
-            "messaging.receive.duration",
-            "messaging.receive.messages");
   }
 
   @BeforeAll

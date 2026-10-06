@@ -26,15 +26,15 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_ANONYMOUS;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -1098,11 +1098,6 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                           v -> assertThat(v).isEqualTo("some-routing-key"),
                           v -> assertThat(v).isEqualTo("some-routing-queue"),
                           v -> assertThat(v).startsWith("amq.gen-"))),
-              satisfies(
-                  MESSAGING_MESSAGE_BODY_SIZE,
-                  val -> {
-                    val.isNull();
-                  }),
               satisfies(longKey("rabbitmq.delivery_mode"), val -> val.isIn(null, 2L)));
           break;
         case "basic.get":
@@ -1115,21 +1110,10 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                       val.satisfiesAnyOf(
                           v -> assertThat(v).isEqualTo("some-queue"),
                           v -> assertThat(v).isEqualTo("some-routing-queue"),
-                          v -> assertThat(v).startsWith("amq.gen-"))),
-              satisfies(
-                  MESSAGING_MESSAGE_BODY_SIZE,
-                  val ->
-                      val.satisfiesAnyOf(
-                          v -> assertThat(v).isNull(), v -> assertThat(v).isNotNegative())));
+                          v -> assertThat(v).startsWith("amq.gen-"))));
           break;
         case "basic.deliver":
-          span.hasAttributesSatisfying(
-              equalTo(stringKey("rabbitmq.command"), "basic.deliver"),
-              satisfies(
-                  MESSAGING_MESSAGE_BODY_SIZE,
-                  val -> {
-                    val.isNull();
-                  }));
+          span.hasAttributesSatisfying(equalTo(stringKey("rabbitmq.command"), "basic.deliver"));
           break;
         default:
           span.hasAttributesSatisfying(
@@ -1141,7 +1125,6 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     }
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   private static void verifyMessagingAttributes(
       SpanDataAssert span,
       String exchange,
@@ -1160,7 +1143,6 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                     v -> assertThat(v).isNull(),
                     v -> assertThat(v).isEqualTo(routingKey),
                     v -> assertThat(v).startsWith("amq.gen-"))),
-        equalTo(MESSAGING_OPERATION, null),
         equalTo(MESSAGING_OPERATION_NAME, operation),
         equalTo(MESSAGING_OPERATION_TYPE, "publish".equals(operation) ? "send" : operation),
         equalTo(MESSAGING_BATCH_MESSAGE_COUNT, null),
@@ -1176,6 +1158,26 @@ class RabbitMqTest extends AbstractRabbitMqTest {
             }),
         equalTo(stringKey("messaging.rabbitmq.vhost.name"), experimental("otel-test")),
         equalTo(stringKey("messaging.rabbitmq.cluster.name"), experimental("otel-test-cluster")));
+    span.satisfies(
+        spanData ->
+            assertThat(spanData.getAttributes().asMap().keySet())
+                .filteredOn(
+                    key ->
+                        key.getKey().startsWith("messaging.")
+                            && !key.getKey().startsWith("messaging.header."))
+                .containsExactlyInAnyOrderElementsOf(
+                    Stream.of(
+                            MESSAGING_SYSTEM,
+                            MESSAGING_DESTINATION_NAME,
+                            MESSAGING_DESTINATION_ANONYMOUS,
+                            MESSAGING_OPERATION_NAME,
+                            MESSAGING_OPERATION_TYPE,
+                            MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
+                            MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG,
+                            stringKey("messaging.rabbitmq.vhost.name"),
+                            stringKey("messaging.rabbitmq.cluster.name"))
+                        .filter(key -> spanData.getAttributes().get(key) != null)
+                        .collect(toList())));
   }
 
   private static SpanKind expectedSpanKind(String operation) {
