@@ -297,7 +297,6 @@ abstract class AbstractJms3Test {
 
   @Test
   void shouldUseReceivedMessageAsProcessParent() throws Exception {
-
     Destination destination = session.createQueue("processParentQueue");
     MessageProducer producer = session.createProducer(destination);
     cleanup.deferCleanup(producer);

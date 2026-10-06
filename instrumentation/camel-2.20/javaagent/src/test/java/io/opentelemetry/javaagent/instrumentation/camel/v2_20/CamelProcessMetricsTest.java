@@ -43,7 +43,6 @@ class CamelProcessMetricsTest {
 
   @BeforeEach
   void setUp() throws Exception {
-
     assumeFalse(v3Preview());
     DefaultCamelContext context = new DefaultCamelContext();
     try {

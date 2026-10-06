@@ -46,7 +46,6 @@ class KafkaBatchProcessSpanLinksExtractorTest {
 
   @Test
   void keepsCommonPartitionOnBatchSpan() {
-
     ConsumerRecord<String, String> first = record("topic", 1, 10, "key");
     ConsumerRecord<String, String> second = record("topic", 1, 10, "key");
     KafkaReceiveRequest request = request(first, second);
@@ -68,7 +67,6 @@ class KafkaBatchProcessSpanLinksExtractorTest {
 
   @Test
   void keepsOffsetAndKeyOnLinkOfSingleRecordBatch() {
-
     KafkaReceiveRequest request = request(record("topic", 1, 10, "key"));
 
     AttributesBuilder spanAttributes = Attributes.builder();
@@ -83,7 +81,6 @@ class KafkaBatchProcessSpanLinksExtractorTest {
 
   @Test
   void movesDifferingValuesToRecordLinks() {
-
     ConsumerRecord<String, String> first = record("topic-a", 1, 10, "key-a");
     ConsumerRecord<String, String> second = record("topic-b", 2, 20, "key-b");
     KafkaReceiveRequest request = request(first, second);
@@ -102,7 +99,6 @@ class KafkaBatchProcessSpanLinksExtractorTest {
 
   @Test
   void movesPartitionToRecordLinksWhenDestinationVaries() {
-
     ConsumerRecord<String, String> first = record("topic-a", 0, 5, "key");
     ConsumerRecord<String, String> second = record("topic-b", 0, 6, "key");
     KafkaReceiveRequest request = request(first, second);
@@ -123,7 +119,6 @@ class KafkaBatchProcessSpanLinksExtractorTest {
 
   @Test
   void keepsDestinationOnBatchSpanWhenOnlyPartitionVaries() {
-
     ConsumerRecord<String, String> first = record("topic", 0, 5, "key");
     ConsumerRecord<String, String> second = record("topic", 1, 5, "key");
     KafkaReceiveRequest request = request(first, second);
@@ -141,7 +136,6 @@ class KafkaBatchProcessSpanLinksExtractorTest {
 
   @Test
   void movesPartitionToRecordLinksWhenBatchHasEmptyPartitionOfAnotherTopic() {
-
     Map<TopicPartition, List<ConsumerRecord<String, String>>> recordsByPartition =
         new LinkedHashMap<>();
     recordsByPartition.put(

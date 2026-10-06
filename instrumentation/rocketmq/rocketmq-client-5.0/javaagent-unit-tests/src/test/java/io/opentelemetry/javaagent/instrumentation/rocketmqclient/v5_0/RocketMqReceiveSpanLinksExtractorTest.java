@@ -56,7 +56,6 @@ class RocketMqReceiveSpanLinksExtractorTest {
 
   @Test
   void keepsCommonAttributesOnReceiveSpan() {
-
     RocketMqReceiveRequest request =
         request(
             message("topic", "message-1", "tag", "group", 123L, "key", TRACEPARENT),
@@ -81,7 +80,6 @@ class RocketMqReceiveSpanLinksExtractorTest {
 
   @Test
   void movesDifferentAttributesToMessageLinks() {
-
     RocketMqReceiveRequest request =
         request(
             message("topic-1", "message-1", "tag-1", "group-1", 123L, "key-1", TRACEPARENT),
@@ -113,7 +111,6 @@ class RocketMqReceiveSpanLinksExtractorTest {
 
   @Test
   void keepsMessageIdOnLinkOfSingleMessageReceive() {
-
     RocketMqReceiveRequest request =
         request(message("topic", "message-1", "tag", "group", 123L, "key", TRACEPARENT));
 

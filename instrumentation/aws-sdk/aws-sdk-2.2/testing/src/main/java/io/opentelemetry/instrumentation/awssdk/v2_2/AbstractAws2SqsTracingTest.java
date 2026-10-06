@@ -359,7 +359,6 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
 
   @Test
   void testReceiveSpanLinksToProducer() {
-
     SqsClientBuilder builder = SqsClient.builder();
     configureSdkClient(builder);
     SqsClient client = configureSqsClient(builder.build());
@@ -413,7 +412,6 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
 
   @Test
   void testBatchSendMessageCount() {
-
     assumeTrue(canInjectBatchCreationContext());
     SqsClientBuilder builder = SqsClient.builder();
     configureSdkClient(builder);
@@ -696,7 +694,6 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
 
   @Test
   void testDeleteMessageError() {
-
     SqsClientBuilder builder = SqsClient.builder();
     configureSdkClient(builder);
     SqsClient client = configureSqsClient(builder.build());

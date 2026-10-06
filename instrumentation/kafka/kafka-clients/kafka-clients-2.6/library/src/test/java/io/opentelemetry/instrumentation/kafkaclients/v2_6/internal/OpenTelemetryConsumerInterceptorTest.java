@@ -84,7 +84,6 @@ class OpenTelemetryConsumerInterceptorTest {
 
   @Test
   void deduplicatesRecordsAcrossReceiveInstrumentations() {
-
     KafkaTelemetry telemetry =
         KafkaTelemetry.builder(testing.getOpenTelemetry())
             .setMessagingReceiveTelemetryEnabled(true)
@@ -111,7 +110,6 @@ class OpenTelemetryConsumerInterceptorTest {
 
   @Test
   void disabledReceiveClearsInheritedReceiveOperation() {
-
     KafkaTelemetry telemetry =
         KafkaTelemetry.builder(testing.getOpenTelemetry())
             .setMessagingReceiveTelemetryEnabled(false)

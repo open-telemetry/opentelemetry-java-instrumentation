@@ -47,7 +47,6 @@ class Aws2SqsW3cPropagatorTest extends Aws2SqsTracingTest {
 
   @Test
   void testDoesNotCreateContextWhenTraceFieldCannotBeInjected() {
-
     SqsClientBuilder builder = SqsClient.builder();
     configureSdkClient(builder);
     SqsClient client = configureSqsClient(builder.build());
@@ -88,7 +87,6 @@ class Aws2SqsW3cPropagatorTest extends Aws2SqsTracingTest {
 
   @Test
   void testInjectsMissingPropagationFieldAtAttributeLimit() {
-
     SqsClientBuilder builder = SqsClient.builder();
     configureSdkClient(builder);
     SqsClient client = configureSqsClient(builder.build());

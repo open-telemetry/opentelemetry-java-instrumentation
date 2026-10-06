@@ -111,7 +111,6 @@ class RocketMqSimpleConsumerTest {
 
   @Test
   void shouldInstrumentSynchronousReceive() throws ClientException {
-
     SpanData sendSpan = sendMessage();
 
     testing.runWithSpan(
@@ -128,7 +127,6 @@ class RocketMqSimpleConsumerTest {
 
   @Test
   void shouldInstrumentAsynchronousReceive() throws ClientException {
-
     SpanData sendSpan = sendMessage();
 
     List<MessageView> messages =
@@ -143,7 +141,6 @@ class RocketMqSimpleConsumerTest {
 
   @Test
   void shouldNotInstrumentEmptySynchronousAndAsynchronousReceive() throws ClientException {
-
     Map<String, FilterExpression> subscriptionExpressions = new HashMap<>();
     subscriptionExpressions.put(
         TOPIC, new FilterExpression("missing-tag", FilterExpressionType.TAG));
@@ -184,7 +181,6 @@ class RocketMqSimpleConsumerTest {
 
   @Test
   void shouldInstrumentReceiveWhenReceiveTelemetryDisabled() throws ClientException {
-
     assumeFalse(RECEIVE_TELEMETRY_ENABLED);
     SpanData sendSpan = sendMessage();
 

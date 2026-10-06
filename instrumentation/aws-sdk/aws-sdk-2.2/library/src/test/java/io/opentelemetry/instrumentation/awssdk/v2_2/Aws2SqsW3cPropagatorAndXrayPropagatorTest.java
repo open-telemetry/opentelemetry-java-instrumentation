@@ -41,7 +41,6 @@ class Aws2SqsW3cPropagatorAndXrayPropagatorTest extends Aws2SqsTracingTest {
 
   @Test
   void testPreservesCustomBatchCreationContexts() {
-
     SqsClientBuilder builder = SqsClient.builder();
     configureSdkClient(builder);
     SqsClient client = configureSqsClient(builder.build());
@@ -101,7 +100,6 @@ class Aws2SqsW3cPropagatorAndXrayPropagatorTest extends Aws2SqsTracingTest {
 
   @Test
   void testDisabledCreateSpansPreserveCustomBatchCreationContexts() {
-
     AwsSdkTelemetryBuilder telemetryBuilder =
         AwsSdkTelemetry.builder(getTesting().getOpenTelemetry())
             .setCaptureExperimentalSpanAttributes(true)
@@ -185,7 +183,6 @@ class Aws2SqsW3cPropagatorAndXrayPropagatorTest extends Aws2SqsTracingTest {
 
   @Test
   void testCreatesContextsWhenOnlyOnePropagatorIsOccupied() {
-
     assumeTrue(supportsMessageSystemAttributes());
     SqsClientBuilder builder = SqsClient.builder();
     configureSdkClient(builder);

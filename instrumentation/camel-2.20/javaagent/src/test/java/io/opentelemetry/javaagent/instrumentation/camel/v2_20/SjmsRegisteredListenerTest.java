@@ -93,7 +93,6 @@ class SjmsRegisteredListenerTest {
 
   @Test
   void completesTwoCallbacksForReusedRawMessage() throws Exception {
-
     MessageListener listener = registeredListener.get();
     assertThat(listener).isNotNull();
 

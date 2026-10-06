@@ -69,7 +69,6 @@ class KafkaConsumerContextUtilTest {
 
   @Test
   void preservesInheritedReceiveOperationWhenThereIsNoLeakedProcessSpan() {
-
     Context context = KafkaConsumerContextUtil.withReceiveOperation(Context.current(), true);
 
     assertThat(

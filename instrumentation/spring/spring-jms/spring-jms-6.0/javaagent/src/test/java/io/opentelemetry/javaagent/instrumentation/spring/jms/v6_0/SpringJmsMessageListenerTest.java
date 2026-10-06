@@ -38,7 +38,6 @@ class SpringJmsMessageListenerTest {
 
   @Test
   void sameMessageDelegationProducesOneProcessOperation() throws Exception {
-
     Message message = message("same");
     SessionAwareMessageListener<Message> inner = new TestMessageListener(ignored -> {});
     SessionAwareMessageListener<Message> outer =

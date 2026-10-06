@@ -70,7 +70,6 @@ class RocketMqInstrumenterFactoryTest {
 
   @Test
   void marksProcessSpanAsErroredWhenConsumeTimedOut() {
-
     MessageExt message = new MessageExt();
     message.setTopic("topic");
     message.putUserProperty("test-header", "test-value");

@@ -187,7 +187,6 @@ abstract class AbstractSpringIntegrationTracingTest {
 
   @Test
   void shouldRecordFailedProcessMetrics() {
-
     SubscribableChannel channel =
         applicationContext.getBean("directChannel", SubscribableChannel.class);
     channel.subscribe(

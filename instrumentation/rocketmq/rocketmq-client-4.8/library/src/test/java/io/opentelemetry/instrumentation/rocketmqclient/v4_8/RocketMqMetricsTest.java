@@ -53,7 +53,6 @@ class RocketMqMetricsTest {
   @MethodSource("producerCases")
   void recordsProducerMetrics(
       Message message, long expectedCount, Throwable error, String errorType) {
-
     SendMessageContext request = mock(SendMessageContext.class);
     when(request.getMessage()).thenReturn(message);
     Instrumenter<SendMessageContext, Void> instrumenter =
@@ -103,7 +102,6 @@ class RocketMqMetricsTest {
   @MethodSource("consumerCases")
   void recordsProcessMetrics(
       List<MessageExt> messages, String consumeErrorType, long expectedCount) {
-
     ConsumeMessageContext response = new ConsumeMessageContext();
     response.setSuccess(consumeErrorType == null);
     response.setProps(

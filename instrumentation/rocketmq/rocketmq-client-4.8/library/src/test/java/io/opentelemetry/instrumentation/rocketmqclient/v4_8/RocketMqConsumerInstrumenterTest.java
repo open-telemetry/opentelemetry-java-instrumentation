@@ -45,7 +45,6 @@ class RocketMqConsumerInstrumenterTest {
 
   @Test
   void startsSingleProcessSpanForWholeBatch() {
-
     RocketMqConsumerInstrumenter instrumenter =
         new RocketMqConsumerInstrumenter(
             singleProcessInstrumenter, batchProcessInstrumenter, batchReceiveInstrumenter);

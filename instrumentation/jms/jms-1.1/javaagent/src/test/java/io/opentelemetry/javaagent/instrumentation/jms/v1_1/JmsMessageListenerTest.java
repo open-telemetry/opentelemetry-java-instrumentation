@@ -37,7 +37,6 @@ class JmsMessageListenerTest {
 
   @Test
   void sameMessageDelegationProducesOneProcessOperation() throws Exception {
-
     Message message = message("same");
     MessageListener inner = new TestMessageListener(ignored -> {});
     MessageListener outer = new TestMessageListener(inner::onMessage);

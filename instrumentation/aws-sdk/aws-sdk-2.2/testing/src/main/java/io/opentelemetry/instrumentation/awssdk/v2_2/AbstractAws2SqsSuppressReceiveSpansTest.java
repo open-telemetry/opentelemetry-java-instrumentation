@@ -129,7 +129,6 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
 
   @Test
   void testAbandonedIteratorDoesNotParentNextProcessSpan() {
-
     SqsClientBuilder builder = SqsClient.builder();
     configureSdkClient(builder);
     SqsClient client = configureSqsClient(builder.build());

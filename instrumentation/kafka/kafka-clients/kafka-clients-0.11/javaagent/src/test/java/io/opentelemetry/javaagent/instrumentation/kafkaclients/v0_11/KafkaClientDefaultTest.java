@@ -131,7 +131,6 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
 
   @Test
   void testReceiveDoesNotParentProcessSpan() throws Exception {
-
     producer.send(new ProducerRecord<>(SHARED_TOPIC, 10, "Hello Kafka!")).get(5, SECONDS);
 
     awaitUntilConsumerIsReady();
@@ -164,7 +163,6 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
 
   @Test
   void testAbandonedIteratorDoesNotParentNextProcessSpan() throws Exception {
-
     producer.send(new ProducerRecord<>(SHARED_TOPIC, "first")).get(5, SECONDS);
     awaitUntilConsumerIsReady();
     testing.runWithSpan(

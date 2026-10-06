@@ -82,7 +82,6 @@ class SpringPulsarAdviceTest {
 
   @Test
   void processingPreservesParentAndProducerLinkAfterFailure() {
-
     Message<?> message = message("test-topic");
     Span parent = openTelemetry.getTracer("test").spanBuilder("delivery-parent").startSpan();
     Context parentContext = Context.root().with(parent);
@@ -114,7 +113,6 @@ class SpringPulsarAdviceTest {
 
   @Test
   void completionKeepsCapturedProcessParent() {
-
     Message<?> message = message("test-topic");
     Span firstParent = openTelemetry.getTracer("test").spanBuilder("first-parent").startSpan();
     Span secondParent = openTelemetry.getTracer("test").spanBuilder("second-parent").startSpan();
@@ -145,7 +143,6 @@ class SpringPulsarAdviceTest {
 
   @Test
   void nestedProcessingKeepsIndependentParentsAndRestoresScopes() {
-
     Context previous = Context.current();
     Message<?> outerMessage = message("outer-topic");
     Message<?> innerMessage = message("inner-topic");

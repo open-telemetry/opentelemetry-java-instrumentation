@@ -74,7 +74,6 @@ class RocketMqClientTest extends AbstractRocketMqClientTest {
 
   @Test
   void testNestedBatchSendRestoresOuterState() throws Exception {
-
     String topic = BaseConf.initTopic();
     List<Message> inner =
         asList(
@@ -119,7 +118,6 @@ class RocketMqClientTest extends AbstractRocketMqClientTest {
 
   @Test
   void testBatchSendStateCleanupOnException() {
-
     List<Message> messages =
         asList(
             new Message("unused", "one".getBytes(UTF_8)),
@@ -163,7 +161,6 @@ class RocketMqClientTest extends AbstractRocketMqClientTest {
   @SuppressWarnings("deprecation")
   @Test
   void testAsyncBatchQueueTimeout() throws Exception {
-
     String topic = BaseConf.initTopic();
     CapturingExecutor executor = new CapturingExecutor();
     ExecutorService originalExecutor =

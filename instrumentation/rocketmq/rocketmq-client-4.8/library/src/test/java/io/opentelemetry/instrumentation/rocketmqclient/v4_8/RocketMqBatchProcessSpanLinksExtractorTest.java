@@ -37,7 +37,6 @@ class RocketMqBatchProcessSpanLinksExtractorTest {
 
   @Test
   void keepsCommonAttributesOnBatchSpan() {
-
     RocketMqConsumerRequest request =
         new RocketMqConsumerRequest(
             asList(
@@ -62,7 +61,6 @@ class RocketMqBatchProcessSpanLinksExtractorTest {
 
   @Test
   void movesDifferentAttributesToMessageLinks() {
-
     RocketMqConsumerRequest request =
         new RocketMqConsumerRequest(
             asList(
