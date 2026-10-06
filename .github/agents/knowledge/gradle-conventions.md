@@ -312,8 +312,8 @@ val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
       testClassesDirs = suite.sources.output.classesDirs
       classpath = suite.sources.runtimeClasspath
 
-      jvmArgs("-Dotel.semconv-stability.opt-in=database")
-      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+      jvmArgs("-Dotel.semconv-stability.preview=rpc")
+      systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc")
     }
   }
 
@@ -325,6 +325,9 @@ check {
 The map produces `testStableSemconv` for the built-in suite, so the conventional task name is
 preserved. Declare a separate map per variant when a module has more than one, for example
 `${suite.name}StableSemconv` and `${suite.name}BothSemconv` for RPC modules.
+The conventional `StableSemconv` task names also cover RPC preview selection.
+
+Preserve mixed variants for selectable domains, along with experimental and library-version suites.
 
 #### Preserving source suite JVM settings
 
@@ -447,7 +450,8 @@ tasks {
 
   val testStableSemconv by registering(Test::class) {
     // only task-specific config here
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+    jvmArgs("-Dotel.semconv-stability.preview=rpc")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc")
   }
 }
 ```

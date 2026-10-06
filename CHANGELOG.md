@@ -56,6 +56,9 @@
 - Remove the deprecated `OpenTelemetryMeterRegistryBuilder#setMicrometerHistogramGaugesEnabled(boolean)`.
   Use `Experimental#setMicrometerHistogramGaugesEnabled(OpenTelemetryMeterRegistryBuilder, boolean)`
   instead.
+- Remove `io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil` from
+  `io.opentelemetry.javaagent:opentelemetry-testing-common`. Database instrumentation tests should
+  assert stable semantic-convention keys and values directly.
 
 ## Version 2.32.0 (2026-10-03)
 
