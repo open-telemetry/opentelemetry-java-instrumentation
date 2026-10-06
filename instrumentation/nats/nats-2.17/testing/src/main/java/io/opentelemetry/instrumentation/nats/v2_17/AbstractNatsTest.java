@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.nats.v2_17;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -43,10 +42,6 @@ abstract class AbstractNatsTest {
   protected abstract InstrumentationExtension testing();
 
   void assertProducerMetrics(String operationName, String destination, String errorType) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoMessagingMetrics();
-      return;
-    }
 
     testing()
         .waitAndAssertMetrics(
@@ -103,10 +98,6 @@ abstract class AbstractNatsTest {
   }
 
   void assertProcessMetrics(String destination, String errorType) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoMessagingMetrics();
-      return;
-    }
 
     testing()
         .waitAndAssertMetrics(
@@ -156,15 +147,6 @@ abstract class AbstractNatsTest {
                                                         MESSAGING_DESTINATION_NAME,
                                                         destination))))));
     assertNoDeprecatedMessagingMetrics();
-  }
-
-  private void assertNoMessagingMetrics() {
-    assertThat(testing().metrics())
-        .filteredOn(
-            metric ->
-                metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME)
-                    && metric.getName().startsWith("messaging."))
-        .isEmpty();
   }
 
   private void assertNoDeprecatedMessagingMetrics() {

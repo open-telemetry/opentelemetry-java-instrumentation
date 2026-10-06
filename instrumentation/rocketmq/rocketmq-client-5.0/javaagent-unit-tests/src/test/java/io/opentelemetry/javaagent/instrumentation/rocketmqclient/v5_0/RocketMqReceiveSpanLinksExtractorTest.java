@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP;
@@ -17,7 +16,6 @@ import static java.util.Collections.singleton;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -58,7 +56,6 @@ class RocketMqReceiveSpanLinksExtractorTest {
 
   @Test
   void keepsCommonAttributesOnReceiveSpan() {
-    assumeTrue(emitStableMessagingSemconv());
     RocketMqReceiveRequest request =
         request(
             message("topic", "message-1", "tag", "group", 123L, "key", TRACEPARENT),
@@ -83,7 +80,6 @@ class RocketMqReceiveSpanLinksExtractorTest {
 
   @Test
   void movesDifferentAttributesToMessageLinks() {
-    assumeTrue(emitStableMessagingSemconv());
     RocketMqReceiveRequest request =
         request(
             message("topic-1", "message-1", "tag-1", "group-1", 123L, "key-1", TRACEPARENT),
@@ -115,7 +111,6 @@ class RocketMqReceiveSpanLinksExtractorTest {
 
   @Test
   void keepsMessageIdOnLinkOfSingleMessageReceive() {
-    assumeTrue(emitStableMessagingSemconv());
     RocketMqReceiveRequest request =
         request(message("topic", "message-1", "tag", "group", 123L, "key", TRACEPARENT));
 

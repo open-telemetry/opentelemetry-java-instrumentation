@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -29,10 +28,6 @@ final class SqsMetricsAssertions {
 
   static void assertProducerMetrics(
       InstrumentationExtension testing, int serverPort, long operationCount, long messageCount) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoMessagingMetrics(testing);
-      return;
-    }
 
     assertClientOperationDuration(testing, serverPort, operationCount, "send", "send");
     assertMessageCounter(
@@ -45,10 +40,6 @@ final class SqsMetricsAssertions {
       int serverPort,
       long receiveOperationCount,
       long messageCount) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoMessagingMetrics(testing);
-      return;
-    }
 
     assertClientOperationDuration(testing, serverPort, receiveOperationCount, "receive", "receive");
     assertMessageCounter(
@@ -59,10 +50,6 @@ final class SqsMetricsAssertions {
 
   static void assertProcessMetrics(
       InstrumentationExtension testing, int serverPort, long messageCount) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoMessagingMetrics(testing);
-      return;
-    }
 
     assertMessageCounter(
         testing, "messaging.client.consumed.messages", "process", messageCount, serverPort);
@@ -72,10 +59,6 @@ final class SqsMetricsAssertions {
 
   static void assertSettleMetrics(
       InstrumentationExtension testing, int serverPort, long operationCount) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoMessagingMetrics(testing);
-      return;
-    }
 
     assertClientOperationDuration(testing, serverPort, operationCount, "delete", "settle");
     // settling messages does not deliver anything to the application
@@ -186,15 +169,6 @@ final class SqsMetricsAssertions {
                                                 equalTo(SERVER_ADDRESS, "localhost"),
                                                 equalTo(SERVER_PORT, serverPort))
                                             .hasValue(messageCount)))));
-  }
-
-  private static void assertNoMessagingMetrics(InstrumentationExtension testing) {
-    assertThat(testing.metrics())
-        .filteredOn(
-            metric ->
-                metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME)
-                    && metric.getName().startsWith("messaging."))
-        .isEmpty();
   }
 
   private static void assertNoDeprecatedMessagingMetrics(InstrumentationExtension testing) {

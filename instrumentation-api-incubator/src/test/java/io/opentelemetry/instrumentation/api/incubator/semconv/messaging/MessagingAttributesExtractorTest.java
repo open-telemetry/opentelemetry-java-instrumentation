@@ -5,9 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
@@ -16,11 +13,8 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPLATE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_CONVERSATION_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ENVELOPE_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -60,7 +54,7 @@ class MessagingAttributesExtractorTest {
             TestGetter.INSTANCE, MessagingOperationType.SEND, "send");
 
     assertThat(((SchemaUrlProvider) extractor).internalGetSchemaUrl())
-        .isEqualTo(emitStableMessagingSemconv() ? SchemaUrls.V1_43_0 : SchemaUrls.V1_24_0);
+        .isEqualTo(SchemaUrls.V1_43_0);
   }
 
   @SuppressWarnings("deprecation")
@@ -119,12 +113,8 @@ class MessagingAttributesExtractorTest {
     expectedEntries.add(entry(MESSAGING_SYSTEM, "myQueue"));
     if (temporary) {
       expectedEntries.add(entry(MESSAGING_DESTINATION_TEMPORARY, true));
-      if (emitStableMessagingSemconv()) {
-        expectedEntries.add(entry(MESSAGING_DESTINATION_NAME, destination));
-        expectedEntries.add(entry(MESSAGING_DESTINATION_TEMPLATE, destination));
-      } else {
-        expectedEntries.add(entry(MESSAGING_DESTINATION_NAME, "(temporary)"));
-      }
+      expectedEntries.add(entry(MESSAGING_DESTINATION_NAME, destination));
+      expectedEntries.add(entry(MESSAGING_DESTINATION_TEMPLATE, destination));
     } else {
       expectedEntries.add(entry(MESSAGING_DESTINATION_NAME, destination));
       expectedEntries.add(entry(MESSAGING_DESTINATION_TEMPLATE, destination));
@@ -133,34 +123,20 @@ class MessagingAttributesExtractorTest {
       expectedEntries.add(entry(MESSAGING_DESTINATION_ANONYMOUS, true));
     }
     expectedEntries.add(entry(MESSAGING_MESSAGE_CONVERSATION_ID, "42"));
-    if (emitOldMessagingSemconv()) {
-      expectedEntries.add(entry(MESSAGING_MESSAGE_BODY_SIZE, 100L));
-      expectedEntries.add(entry(MESSAGING_MESSAGE_ENVELOPE_SIZE, 120L));
-      expectedEntries.add(entry(stringKey("messaging.client_id"), "43"));
-      expectedEntries.add(entry(MESSAGING_OPERATION, operationType.legacyOperationName()));
-    }
-    if (emitStableMessagingSemconv()) {
-      expectedEntries.add(entry(MESSAGING_CLIENT_ID, "43"));
-      expectedEntries.add(entry(MESSAGING_OPERATION_NAME, operationName));
-      expectedEntries.add(entry(MESSAGING_OPERATION_TYPE, operationType.value()));
-    }
+    expectedEntries.add(entry(MESSAGING_CLIENT_ID, "43"));
+    expectedEntries.add(entry(MESSAGING_OPERATION_NAME, operationName));
+    expectedEntries.add(entry(MESSAGING_OPERATION_TYPE, operationType.value()));
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     MapEntry<? extends AttributeKey<?>, ?>[] expectedEntriesArr =
         expectedEntries.toArray(new MapEntry[0]);
     assertThat(startAttributes.build()).containsOnly(expectedEntriesArr);
 
-    if (emitStableMessagingSemconv()) {
-      assertThat(endAttributes.build())
-          .containsOnly(
-              entry(MESSAGING_MESSAGE_ID, "42"),
-              entry(MESSAGING_BATCH_MESSAGE_COUNT, 2L),
-              entry(ERROR_TYPE, IllegalStateException.class.getName()));
-    } else {
-      assertThat(endAttributes.build())
-          .containsOnly(
-              entry(MESSAGING_MESSAGE_ID, "42"), entry(MESSAGING_BATCH_MESSAGE_COUNT, 2L));
-    }
+    assertThat(endAttributes.build())
+        .containsOnly(
+            entry(MESSAGING_MESSAGE_ID, "42"),
+            entry(MESSAGING_BATCH_MESSAGE_COUNT, 2L),
+            entry(ERROR_TYPE, IllegalStateException.class.getName()));
   }
 
   static Stream<Arguments> destinations() {
@@ -269,15 +245,11 @@ class MessagingAttributesExtractorTest {
     AttributesBuilder attributes = Attributes.builder();
     underTest.onStart(attributes, Context.root(), emptyMap());
 
-    Attributes expected =
-        emitStableMessagingSemconv()
-            ? Attributes.of(MESSAGING_OPERATION_NAME, "ack")
-            : Attributes.empty();
-    assertThat(attributes.build()).isEqualTo(expected);
+    assertThat(attributes.build()).isEqualTo(Attributes.of(MESSAGING_OPERATION_NAME, "ack"));
   }
 
   @Test
-  void shouldRequireOperationNameForStableSemconv() {
+  void shouldRequireOperationName() {
     assertThatThrownBy(
             () ->
                 MessagingAttributesExtractor.builder(
@@ -295,9 +267,7 @@ class MessagingAttributesExtractorTest {
     AttributesBuilder attributes = Attributes.builder();
     underTest.onEnd(attributes, Context.root(), emptyMap(), "failure", null);
 
-    Attributes expected =
-        emitStableMessagingSemconv() ? Attributes.of(ERROR_TYPE, "failure") : Attributes.empty();
-    assertThat(attributes.build()).isEqualTo(expected);
+    assertThat(attributes.build()).isEqualTo(Attributes.of(ERROR_TYPE, "failure"));
   }
 
   @SuppressWarnings("deprecation")

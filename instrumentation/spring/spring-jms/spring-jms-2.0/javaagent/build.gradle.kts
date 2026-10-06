@@ -77,23 +77,6 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testMessagingPreviewReceiveSpansDisabled =
-    register<Test>("testMessagingPreviewReceiveSpansDisabled") {
-      testClassesDirs = sourceSets["testReceiveSpansDisabled"].output.classesDirs
-      classpath = sourceSets["testReceiveSpansDisabled"].runtimeClasspath
-      jvmArgs("-Dotel.semconv-stability.preview=messaging")
-      systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-    }
-
-  val testBothSemconvReceiveSpansDisabled =
-    register<Test>("testBothSemconvReceiveSpansDisabled") {
-      testClassesDirs = sourceSets["testReceiveSpansDisabled"].output.classesDirs
-      classpath = sourceSets["testReceiveSpansDisabled"].runtimeClasspath
-      isEnabled = project.tasks.named("testReceiveSpansDisabled").get().enabled
-      jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-      systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
-    }
-
   // this does not apply to testReceiveSpansDisabled
   test {
     jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
@@ -101,14 +84,6 @@ tasks {
       "metadataConfig",
       "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
     )
-  }
-
-  val testMessagingPreview = register<Test>("testMessagingPreview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
 
   val testJmsDisabled = register<Test>("testJmsDisabled") {
@@ -123,26 +98,19 @@ tasks {
     // receive telemetry is enabled here because the jms instrumentation that would create the
     // receive operation is disabled, so the process operation owns the messaging telemetry
     jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("testJmsDisabled", "true")
-  }
 
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
+    systemProperty("testJmsDisabled", "true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.jms.enabled=false," +
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
+    )
   }
 
   check {
     dependsOn(
       testing.suites,
-      testMessagingPreview,
-      testMessagingPreviewReceiveSpansDisabled,
-      testBothSemconvReceiveSpansDisabled,
       testJmsDisabled,
-      testBothSemconv,
     )
   }
 }

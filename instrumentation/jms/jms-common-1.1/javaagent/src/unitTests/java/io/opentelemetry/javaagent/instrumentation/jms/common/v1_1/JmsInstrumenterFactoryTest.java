@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.jms.common.v1_1;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.PROCESS_DURATION;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SpanKey.CONSUMER_PROCESS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -32,8 +31,6 @@ class JmsInstrumenterFactoryTest {
 
   @Test
   void recordsIndependentProcessDurationWithoutProcessSpanKey() {
-    assertThat(emitStableMessagingSemconv()).isTrue();
-
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     InMemorySpanExporter spanExporter = InMemorySpanExporter.create();
     SdkMeterProvider meterProvider =
@@ -81,8 +78,6 @@ class JmsInstrumenterFactoryTest {
 
   @Test
   void recordsConsumedMessagesOnlyWhenProcessOwnsTheCount() {
-    assertThat(emitStableMessagingSemconv()).isTrue();
-
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();

@@ -93,7 +93,6 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer,rpc")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
     inputs.dir(jflexOutputDir)
   }
 
@@ -101,7 +100,6 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer/dup,rpc/dup")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
     inputs.dir(jflexOutputDir)
   }
 

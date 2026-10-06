@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -51,10 +50,6 @@ public class CamelMessagingMetricsAssertions {
       String destination,
       String processErrorType,
       String processDestinationPartitionId) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoCamelMessagingMetrics(testing);
-      return;
-    }
 
     assertDuration(
         testing,
@@ -106,10 +101,6 @@ public class CamelMessagingMetricsAssertions {
 
   public static void assertSendMetrics(
       InstrumentationExtension testing, String system, String destination, String errorType) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoCamelMessagingMetrics(testing);
-      return;
-    }
 
     assertDuration(
         testing,
@@ -144,10 +135,6 @@ public class CamelMessagingMetricsAssertions {
 
   public static void assertProcessMetrics(
       InstrumentationExtension testing, String system, String destination, String errorType) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoCamelMessagingMetrics(testing);
-      return;
-    }
 
     assertDuration(
         testing,
@@ -174,11 +161,6 @@ public class CamelMessagingMetricsAssertions {
                 metric.getName().equals("messaging.client.operation.duration")
                     || metric.getName().equals("messaging.client.sent.messages"));
     assertNoDeprecatedMetrics(testing);
-  }
-
-  private static void assertNoCamelMessagingMetrics(InstrumentationExtension testing) {
-    assertThat(camelMetrics(testing))
-        .noneMatch(metric -> metric.getName().startsWith("messaging."));
   }
 
   private static void assertDuration(
