@@ -328,9 +328,11 @@ check {
 ```
 
 The map produces `testStableSemconv` for the built-in suite, so the conventional task name is
-preserved. Declare a separate map per variant when a module has more than one, for example
-`${suite.name}StableSemconv` and `${suite.name}BothSemconv` when duplicate-mode coverage is required.
-The conventional `StableSemconv` task names cover both stable and preview selection.
+preserved. For preview selection, use a `previewSemconvSuites` map that registers
+`${suite.name}PreviewSemconv` tasks and sets `otel.semconv-stability.preview=<domain>`.
+Declare a separate map per variant when a module has more than one. Use the `StableSemconv`
+suffix for stable selection, `PreviewSemconv` for preview selection, and `BothSemconv`
+when duplicate-mode coverage is required.
 See [testing-semconv-stability.md](testing-semconv-stability.md) for domain-specific modes.
 
 Preserve mixed variants for selectable domains, along with experimental and library-version suites.
@@ -454,7 +456,7 @@ tasks {
     // ... other properties common to all test tasks
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testPreviewSemconv by registering(Test::class) {
     // only task-specific config here
     jvmArgs("-Dotel.semconv-stability.preview=<domain>")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=<domain>")

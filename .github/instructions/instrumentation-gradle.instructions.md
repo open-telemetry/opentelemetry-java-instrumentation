@@ -63,7 +63,8 @@ or test failure that CI will report.
   Semconv selection assertions need a task for the relevant stable or preview mode. Use
   `otel.semconv-stability.opt-in=<domain>` for selectable stable conventions and
   `otel.semconv-stability.preview=<domain>` for preview conventions, replacing `<domain>` with a
-  supported selector. The conventional `testStableSemconv` name covers both. Preserve explicit
+  supported selector. Name the tasks `testStableSemconv` for stable selection and
+  `testPreviewSemconv` for preview selection; define both when both are exercised. Preserve explicit
   legacy opt-in compatibility tests. `/dup` coverage is required for RPC, not service-peer.
   Code and database conventions are stable-only and need no selection task. Keep mixed variants
   that exercise selectable domains. For default enablement under

@@ -51,12 +51,13 @@ indicate convention stability.
 ## Gradle Test Task Setup
 
 Every Gradle project whose tests exercise selectable semconv modes **must** define its own
-`testStableSemconv` task. This includes `javaagent-unit-tests` projects whose tests branch on an
-`emitOld*()` or `emitStable*()` accessor. The conventional task name covers both stable and
-preview selection. Keep the default `test` task for the default mode.
+`testStableSemconv` task for stable selection or `testPreviewSemconv` task for preview selection.
+Define both when the tests exercise both kinds of selection. This includes `javaagent-unit-tests`
+projects whose tests branch on an `emitOld*()` or `emitStable*()` accessor.
+Keep the default `test` task for the default mode.
 
 RPC requires a `testBothSemconv` task for the `/dup` mode. Service-peer does not need
-that task; its default `test` and `testStableSemconv` tasks cover the required modes.
+that task; its default `test` and `testPreviewSemconv` tasks cover the required modes.
 
 Preserve mixed variants that exercise selectable domains and variants for experimental telemetry,
 disabled adapters, connection telemetry, exception signals, and dependency versions.
@@ -80,11 +81,11 @@ val testStableSemconv by registering(Test::class) {
 }
 ```
 
-For a preview domain, use the preview property instead. Add the second task only when the
-domain requires duplicate-mode coverage:
+For a preview domain, use `testPreviewSemconv` and the preview property. Add the second
+task only when the domain requires duplicate-mode coverage:
 
 ```kotlin
-val testStableSemconv by registering(Test::class) {
+val testPreviewSemconv by registering(Test::class) {
   testClassesDirs = sourceSets.test.get().output.classesDirs
   classpath = sourceSets.test.get().runtimeClasspath
   jvmArgs("-Dotel.semconv-stability.preview=<domain>")
@@ -102,9 +103,10 @@ val testBothSemconv by registering(Test::class) {
 For a selectable stable domain requiring duplicate-mode coverage, use
 `otel.semconv-stability.opt-in=<domain>/dup` in the second task.
 
-Wire registered variants into `check`: use
-`check { dependsOn(testStableSemconv, testBothSemconv) }` when both tasks are required,
-otherwise `check { dependsOn(testStableSemconv) }`.
+Wire every registered variant into `check`. For stable selection, use
+`check { dependsOn(testStableSemconv) }`; for preview selection, use
+`check { dependsOn(testPreviewSemconv) }`. Include both selection tasks when both are
+needed, and add `testBothSemconv` when duplicate-mode coverage is required.
 
 ## Asserting Attributes in Tests
 
