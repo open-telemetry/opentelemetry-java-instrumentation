@@ -26,7 +26,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -50,14 +49,8 @@ public class LettuceSingletons {
       REACTIVE_DISPATCHER_CONTEXT =
           VirtualField.find(ReactiveCommandDispatcher.class, Context.class);
 
-  public static final VirtualField<RedisChannelHandler<?, ?>, InetSocketAddress>
-      CONNECTION_ADDRESS = VirtualField.find(RedisChannelHandler.class, InetSocketAddress.class);
-
   private static final VirtualField<RedisCommand<?, ?, ?>, LettuceCommandPeer> COMMAND_PEER =
       VirtualField.find(RedisCommand.class, LettuceCommandPeer.class);
-
-  public static final VirtualField<RedisCommand<?, ?, ?>, InetSocketAddress> COMMAND_ADDRESS =
-      VirtualField.find(RedisCommand.class, InetSocketAddress.class);
 
   public static final VirtualField<RedisChannelHandler<?, ?>, Integer> CONNECTION_DATABASE_INDEX =
       VirtualField.find(RedisChannelHandler.class, Integer.class);
@@ -123,18 +116,10 @@ public class LettuceSingletons {
 
   public static void attachAddress(
       RedisCommand<?, ?, ?> command, StatefulConnection<?, ?> connection) {
-    COMMAND_ADDRESS.set(command, serverAddress(connection));
     COMMAND_PEER.set(command, null);
     COMMAND_DATABASE_INDEX.set(command, databaseIndex(connection));
     // Always overwrite the command target so reused command objects cannot retain stale state.
     LettuceServerTargets.copy(connection, command);
-  }
-
-  @Nullable
-  static InetSocketAddress serverAddress(StatefulConnection<?, ?> connection) {
-    return connection instanceof RedisChannelHandler
-        ? CONNECTION_ADDRESS.get((RedisChannelHandler<?, ?>) connection)
-        : null;
   }
 
   public static void initializeCommandPeer(RedisCommand<?, ?, ?> command) {

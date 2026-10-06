@@ -88,19 +88,6 @@ tasks {
       )
     }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      excludeTestsMatching("OpenSearchDisabledCaptureSearchQueryTest")
-      excludeTestsMatching("OpenSearchQuerySanitizationDisabledTest")
-      excludeTestsMatching("OpenSearchQuerySanitizationDisabledJsonbTest")
-    }
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
   val testQuerySanitizationDisabled = register<Test>("testQuerySanitizationDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -131,8 +118,8 @@ tasks {
     )
   }
 
-  val testQuerySanitizationDisabledStableSemconv =
-    register<Test>("testQuerySanitizationDisabledStableSemconv") {
+  val testCommonQuerySanitizationDisabled =
+    register<Test>("testCommonQuerySanitizationDisabled") {
       testClassesDirs = sourceSets.test.get().output.classesDirs
       classpath = sourceSets.test.get().runtimeClasspath
 
@@ -140,20 +127,18 @@ tasks {
         includeTestsMatching("OpenSearchQuerySanitizationDisabledTest")
       }
       jvmArgs("-Dotel.instrumentation.common.db.query-sanitization.enabled=false")
-      jvmArgs("-Dotel.semconv-stability.opt-in=database")
       systemProperty(
         "metadataConfig",
-        "otel.instrumentation.common.db.query-sanitization.enabled=false,otel.semconv-stability.opt-in=database",
+        "otel.instrumentation.common.db.query-sanitization.enabled=false",
       )
     }
 
   check {
     dependsOn(
-      testStableSemconv,
       testDisabledCaptureSearchQuery,
       testDeprecatedCaptureSearchQueryV3Preview,
       testQuerySanitizationDisabled,
-      testQuerySanitizationDisabledStableSemconv,
+      testCommonQuerySanitizationDisabled,
       testQuerySanitizationEnabledOverride,
     )
   }

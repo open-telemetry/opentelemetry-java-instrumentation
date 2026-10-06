@@ -5,12 +5,9 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -21,17 +18,9 @@ import javax.sql.DataSource;
 
 final class DataSourceDbAttributesExtractor implements AttributesExtractor<DataSource, DbInfo> {
 
-  // copied from DbIncubatingAttributes
-  private static final AttributeKey<String> DB_NAME = AttributeKey.stringKey("db.name");
-  private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
-  private static final AttributeKey<String> DB_USER = AttributeKey.stringKey("db.user");
-  private static final AttributeKey<String> DB_CONNECTION_STRING =
-      AttributeKey.stringKey("db.connection_string");
-
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, DataSource dataSource) {}
 
-  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @Override
   public void onEnd(
       AttributesBuilder attributes,
@@ -42,15 +31,7 @@ final class DataSourceDbAttributesExtractor implements AttributesExtractor<DataS
     if (dbInfo == null) {
       return;
     }
-    if (emitStableDatabaseSemconv()) {
-      attributes.put(DB_NAMESPACE, dbInfo.getDbNamespace());
-      attributes.put(DB_SYSTEM_NAME, SemconvStability.stableDbSystemName(dbInfo.getDbSystemName()));
-    }
-    if (emitOldDatabaseSemconv()) {
-      attributes.put(DB_USER, dbInfo.getDbUser());
-      attributes.put(DB_NAME, dbInfo.getDbName());
-      attributes.put(DB_CONNECTION_STRING, dbInfo.getDbConnectionString());
-      attributes.put(DB_SYSTEM, dbInfo.getDbSystem());
-    }
+    attributes.put(DB_NAMESPACE, dbInfo.getDbNamespace());
+    attributes.put(DB_SYSTEM_NAME, SemconvStability.stableDbSystemName(dbInfo.getDbSystemName()));
   }
 }

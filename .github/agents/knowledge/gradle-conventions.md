@@ -302,6 +302,11 @@ Put the tests under `src/unitTests`. Declare test-only dependencies inside the s
 with `register<JvmTestSuite>(...)`. A variant task bound to `sourceSets.test` covers only the
 default source set.
 
+The semconv examples use `<domain>` as a placeholder for a supported selector.
+Use `otel.semconv-stability.opt-in=<domain>` for selectable stable conventions or
+`otel.semconv-stability.preview=<domain>` for preview conventions. Replace the placeholder
+before using the example in a build script; an unrecognized selector does not change the mode.
+
 Derive one variant task per suite only when every suite exercises behavior affected by the
 variant and the same task configuration applies to all of them:
 
@@ -312,8 +317,8 @@ val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
       testClassesDirs = suite.sources.output.classesDirs
       classpath = suite.sources.runtimeClasspath
 
-      jvmArgs("-Dotel.semconv-stability.opt-in=database")
-      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+      jvmArgs("-Dotel.semconv-stability.opt-in=<domain>")
+      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=<domain>")
     }
   }
 
@@ -323,8 +328,14 @@ check {
 ```
 
 The map produces `testStableSemconv` for the built-in suite, so the conventional task name is
-preserved. Declare a separate map per variant when a module has more than one, for example
-`${suite.name}StableSemconv` and `${suite.name}BothSemconv` for RPC modules.
+preserved. For preview selection, use a `previewSemconvSuites` map that registers
+`${suite.name}PreviewSemconv` tasks and sets `otel.semconv-stability.preview=<domain>`.
+Declare a separate map per variant when a module has more than one. Use the `StableSemconv`
+suffix for stable selection, `PreviewSemconv` for preview selection, and `BothSemconv`
+when duplicate-mode coverage is required.
+See [testing-semconv-stability.md](testing-semconv-stability.md) for domain-specific modes.
+
+Preserve mixed variants for selectable domains, along with experimental and library-version suites.
 
 #### Preserving source suite JVM settings
 
@@ -445,9 +456,10 @@ tasks {
     // ... other properties common to all test tasks
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testPreviewSemconv by registering(Test::class) {
     // only task-specific config here
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+    jvmArgs("-Dotel.semconv-stability.preview=<domain>")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=<domain>")
   }
 }
 ```

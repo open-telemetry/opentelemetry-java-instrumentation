@@ -88,10 +88,7 @@ class OpenSearchTransportInstrumentation implements TypeInstrumentation {
 
       OpenSearchRequest otelRequest =
           OpenSearchRequest.create(
-              endpoint.method(request),
-              endpoint.requestUrl(request),
-              queryBody,
-              OpenSearchServerTargets.get(transport));
+              endpoint.method(request), queryBody, OpenSearchServerTargets.get(transport));
 
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {
         return null;

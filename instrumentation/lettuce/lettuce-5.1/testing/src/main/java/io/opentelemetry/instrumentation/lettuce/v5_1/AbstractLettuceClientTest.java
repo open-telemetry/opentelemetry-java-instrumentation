@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -113,10 +112,6 @@ public abstract class AbstractLettuceClientTest {
   }
 
   protected void assertCommandErrorMetric(String errorType) {
-    if (!emitStableDatabaseSemconv()) {
-      return;
-    }
-
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.lettuce-5.1",
@@ -138,9 +133,6 @@ public abstract class AbstractLettuceClientTest {
   }
 
   protected static String spanName(String operation, String serverAddress, long serverPort) {
-    if (emitStableDatabaseSemconv()) {
-      return operation + " " + serverAddress + ":" + serverPort;
-    }
-    return operation;
+    return operation + " " + serverAddress + ":" + serverPort;
   }
 }

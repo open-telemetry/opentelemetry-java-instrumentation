@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlDialectUtil.fromDbSystemName;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Collections.singleton;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
@@ -28,24 +27,9 @@ class VertxSqlClientAttributesGetter
     return request.getDbSystemName();
   }
 
-  @Deprecated // to be removed in 3.0
-  @Override
-  @Nullable
-  public String getDbSystem(VertxSqlClientRequest request) {
-    // preserving old behavior: db.system was never set for vertx sql client
-    return null;
-  }
-
   @Override
   public SqlDialect getSqlDialect(VertxSqlClientRequest request) {
     return fromDbSystemName(request.getDbSystemName());
-  }
-
-  @Deprecated // to be removed in 3.0
-  @Override
-  @Nullable
-  public String getUser(VertxSqlClientRequest request) {
-    return request.getUser();
   }
 
   @Override
@@ -57,19 +41,13 @@ class VertxSqlClientAttributesGetter
   @Nullable
   @Override
   public String getServerAddress(VertxSqlClientRequest request) {
-    if (emitStableDatabaseSemconv()) {
-      return request.getConfiguredServerAddress();
-    }
-    return request.getHost();
+    return request.getConfiguredServerAddress();
   }
 
   @Nullable
   @Override
   public Integer getServerPort(VertxSqlClientRequest request) {
-    if (emitStableDatabaseSemconv()) {
-      return request.getConfiguredServerPort();
-    }
-    return request.getPort();
+    return request.getConfiguredServerPort();
   }
 
   @Override

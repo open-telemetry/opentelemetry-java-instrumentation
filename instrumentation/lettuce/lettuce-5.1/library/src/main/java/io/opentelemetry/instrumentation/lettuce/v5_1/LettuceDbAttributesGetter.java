@@ -13,7 +13,7 @@ import javax.annotation.Nullable;
 final class LettuceDbAttributesGetter
     implements DbClientAttributesGetter<LettuceRequest, LettuceResponse> {
 
-  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
+  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String REDIS = "redis";
 
   @Override

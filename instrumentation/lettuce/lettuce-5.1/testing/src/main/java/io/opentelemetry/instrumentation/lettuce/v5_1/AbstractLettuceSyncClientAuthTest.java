@@ -5,22 +5,17 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
-import static io.opentelemetry.semconv.NetworkAttributes.NetworkTypeValues.IPV4;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -79,19 +74,14 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraAttributes(
-                                      equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                                       equalTo(NETWORK_PEER_ADDRESS, ip),
                                       equalTo(NETWORK_PEER_PORT, port),
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, port),
-                                      equalTo(maybeStable(DB_SYSTEM), REDIS),
-                                      equalTo(
-                                          maybeStable(DB_STATEMENT),
-                                          "CLIENT SETINFO lib-name Lettuce"),
-                                      equalTo(maybeStable(DB_OPERATION), "CLIENT"),
-                                      equalTo(
-                                          ERROR_TYPE,
-                                          emitStableDatabaseSemconv() ? "NOAUTH" : null)))),
+                                      equalTo(DB_SYSTEM_NAME, REDIS),
+                                      equalTo(DB_QUERY_TEXT, "CLIENT SETINFO lib-name Lettuce"),
+                                      equalTo(DB_OPERATION_NAME, "CLIENT"),
+                                      equalTo(ERROR_TYPE, "NOAUTH")))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
@@ -99,19 +89,16 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraAttributes(
-                                      equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                                       equalTo(NETWORK_PEER_ADDRESS, ip),
                                       equalTo(NETWORK_PEER_PORT, port),
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, port),
-                                      equalTo(maybeStable(DB_SYSTEM), REDIS),
+                                      equalTo(DB_SYSTEM_NAME, REDIS),
                                       satisfies(
-                                          maybeStable(DB_STATEMENT),
+                                          DB_QUERY_TEXT,
                                           val -> val.startsWith("CLIENT SETINFO lib-ver")),
-                                      equalTo(maybeStable(DB_OPERATION), "CLIENT"),
-                                      equalTo(
-                                          ERROR_TYPE,
-                                          emitStableDatabaseSemconv() ? "NOAUTH" : null)))),
+                                      equalTo(DB_OPERATION_NAME, "CLIENT"),
+                                      equalTo(ERROR_TYPE, "NOAUTH")))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
@@ -119,19 +106,16 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraAttributes(
-                                      equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                                       equalTo(NETWORK_PEER_ADDRESS, ip),
                                       equalTo(NETWORK_PEER_PORT, port),
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, port),
-                                      equalTo(maybeStable(DB_SYSTEM), REDIS),
+                                      equalTo(DB_SYSTEM_NAME, REDIS),
                                       satisfies(
-                                          maybeStable(DB_STATEMENT),
+                                          DB_QUERY_TEXT,
                                           val -> val.startsWith("CLIENT MAINT_NOTIFICATIONS")),
-                                      equalTo(maybeStable(DB_OPERATION), "CLIENT"),
-                                      equalTo(
-                                          ERROR_TYPE,
-                                          emitStableDatabaseSemconv() ? "NOAUTH" : null)))),
+                                      equalTo(DB_OPERATION_NAME, "CLIENT"),
+                                      equalTo(ERROR_TYPE, "NOAUTH")))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
@@ -139,14 +123,13 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraAttributes(
-                                      equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                                       equalTo(NETWORK_PEER_ADDRESS, ip),
                                       equalTo(NETWORK_PEER_PORT, port),
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, port),
-                                      equalTo(maybeStable(DB_SYSTEM), REDIS),
-                                      equalTo(maybeStable(DB_STATEMENT), "AUTH ?"),
-                                      equalTo(maybeStable(DB_OPERATION), "AUTH")))
+                                      equalTo(DB_SYSTEM_NAME, REDIS),
+                                      equalTo(DB_QUERY_TEXT, "AUTH ?"),
+                                      equalTo(DB_OPERATION_NAME, "AUTH")))
                               .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
 
     } else {
@@ -159,14 +142,13 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraAttributes(
-                                      equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                                       equalTo(NETWORK_PEER_ADDRESS, ip),
                                       equalTo(NETWORK_PEER_PORT, port),
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, port),
-                                      equalTo(maybeStable(DB_SYSTEM), REDIS),
-                                      equalTo(maybeStable(DB_STATEMENT), "AUTH ?"),
-                                      equalTo(maybeStable(DB_OPERATION), "AUTH")))
+                                      equalTo(DB_SYSTEM_NAME, REDIS),
+                                      equalTo(DB_QUERY_TEXT, "AUTH ?"),
+                                      equalTo(DB_OPERATION_NAME, "AUTH")))
                               .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
     }
   }

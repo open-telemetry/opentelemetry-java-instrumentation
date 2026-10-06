@@ -14,7 +14,6 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.i
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSettleExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcExceptionEventExtractors.setRpcClientExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.databaseSchemaUrl;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.messagingSchemaUrl;
 import static java.util.Arrays.asList;
@@ -452,9 +451,7 @@ public final class AwsSdkInstrumenterFactory {
   public Instrumenter<ExecutionAttributes, Response> rdsDataInstrumenter() {
     RdsDataSqlAttributesGetter getter = new RdsDataSqlAttributesGetter();
     SpanNameExtractor<ExecutionAttributes> spanNameExtractor =
-        emitStableDatabaseSemconv()
-            ? DbClientSpanNameExtractor.create(getter)
-            : AwsSdkInstrumenterFactory::spanName;
+        DbClientSpanNameExtractor.create(getter);
     return createInstrumenter(
         openTelemetry,
         spanNameExtractor,

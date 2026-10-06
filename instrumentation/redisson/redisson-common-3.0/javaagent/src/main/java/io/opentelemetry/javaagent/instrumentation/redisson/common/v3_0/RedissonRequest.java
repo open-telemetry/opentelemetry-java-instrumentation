@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.logging.Level.FINE;
@@ -109,7 +108,7 @@ public abstract class RedissonRequest {
       if (commands.size() == 1) {
         return commands.get(0).getCommand().getName();
       }
-      return emitStableDatabaseSemconv() ? getBatchOperationName(commands) : null;
+      return getBatchOperationName(commands);
     }
     return null;
   }
@@ -157,12 +156,8 @@ public abstract class RedissonRequest {
       case 1:
         return sanitizedQueries.get(0);
       default:
-        return String.join(batchQuerySeparator(), sanitizedQueries);
+        return String.join("; ", sanitizedQueries);
     }
-  }
-
-  private static String batchQuerySeparator() {
-    return emitStableDatabaseSemconv() ? "; " : ";";
   }
 
   private List<String> sanitizeQuery() {

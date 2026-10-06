@@ -5,15 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.geode.v1_4;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.GEODE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyMap;
@@ -74,18 +70,10 @@ class CacheXmlTargetTest {
                       span.hasName("putAll xml-region")
                           .hasKind(SpanKind.CLIENT)
                           .hasAttributesSatisfyingExactly(
-                              equalTo(maybeStable(DB_SYSTEM), GEODE),
-                              equalTo(
-                                  DB_COLLECTION_NAME,
-                                  emitStableDatabaseSemconv() ? "xml-region" : null),
-                              equalTo(DB_NAME, emitStableDatabaseSemconv() ? null : "xml-region"),
-                              equalTo(maybeStable(DB_OPERATION), "putAll"),
-                              equalTo(
-                                  SERVER_ADDRESS,
-                                  emitStableDatabaseSemconv()
-                                      ? "192.0.2.1:10334,192.0.2.2:10335/orders"
-                                      : null),
-                              equalTo(SERVER_PORT, null))));
+                              equalTo(DB_SYSTEM_NAME, GEODE),
+                              equalTo(DB_COLLECTION_NAME, "xml-region"),
+                              equalTo(DB_OPERATION_NAME, "putAll"),
+                              equalTo(SERVER_ADDRESS, "192.0.2.1:10334,192.0.2.2:10335/orders"))));
     }
   }
 }

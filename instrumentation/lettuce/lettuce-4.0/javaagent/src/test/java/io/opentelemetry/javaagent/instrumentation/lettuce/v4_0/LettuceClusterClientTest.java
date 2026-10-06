@@ -5,19 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -171,55 +168,27 @@ class LettuceClusterClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv() ? "AUTH " + authenticatedTarget : "AUTH")
+                    span.hasName("AUTH " + authenticatedTarget)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, null),
-                            equalTo(maybeStable(DB_OPERATION), "AUTH"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv()
-                                    ? authenticatedTarget
-                                    : authenticatedHost),
-                            equalTo(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : (long) authenticatedPort),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                emitStableDatabaseSemconv() ? authenticatedIp : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv() ? (long) authenticatedPort : null))));
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_OPERATION_NAME, "AUTH"),
+                            equalTo(SERVER_ADDRESS, authenticatedTarget),
+                            equalTo(NETWORK_PEER_ADDRESS, authenticatedIp),
+                            equalTo(NETWORK_PEER_PORT, (long) authenticatedPort))));
     if (testLatestDeps()) {
       traceAsserts.add(
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
-                      span.hasName(
-                              emitStableDatabaseSemconv()
-                                  ? "COMMAND " + authenticatedTarget
-                                  : "COMMAND")
+                      span.hasName("COMMAND " + authenticatedTarget)
                           .hasKind(SpanKind.CLIENT)
                           .hasAttributesSatisfyingExactly(
-                              equalTo(maybeStable(DB_SYSTEM), REDIS),
-                              equalTo(DB_NAMESPACE, null),
-                              equalTo(maybeStable(DB_OPERATION), "COMMAND"),
-                              equalTo(
-                                  SERVER_ADDRESS,
-                                  emitStableDatabaseSemconv()
-                                      ? authenticatedTarget
-                                      : authenticatedHost),
-                              equalTo(
-                                  SERVER_PORT,
-                                  emitStableDatabaseSemconv() ? null : (long) authenticatedPort),
-                              equalTo(
-                                  NETWORK_PEER_ADDRESS,
-                                  emitStableDatabaseSemconv() ? authenticatedIp : null),
-                              equalTo(
-                                  NETWORK_PEER_PORT,
-                                  emitStableDatabaseSemconv() ? (long) authenticatedPort : null))));
+                              equalTo(DB_SYSTEM_NAME, REDIS),
+                              equalTo(DB_OPERATION_NAME, "COMMAND"),
+                              equalTo(SERVER_ADDRESS, authenticatedTarget),
+                              equalTo(NETWORK_PEER_ADDRESS, authenticatedIp),
+                              equalTo(NETWORK_PEER_PORT, (long) authenticatedPort))));
     }
     testing.waitAndAssertTraces(traceAsserts);
   }
@@ -233,20 +202,14 @@ class LettuceClusterClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
+                    span.hasName("SET " + configuredTarget)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, null),
-                            equalTo(maybeStable(DB_OPERATION), "SET"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? configuredTarget : host),
-                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv() ? (long) port : null))));
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_OPERATION_NAME, "SET"),
+                            equalTo(SERVER_ADDRESS, configuredTarget),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, (long) port))));
   }
 
   @Test
@@ -264,26 +227,15 @@ class LettuceClusterClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "PIPELINE SET " + configuredTarget
-                                : "PIPELINE SET")
+                    span.hasName("PIPELINE SET " + configuredTarget)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, null),
-                            equalTo(maybeStable(DB_OPERATION), "PIPELINE SET"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? configuredTarget : host),
-                            equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv() ? (long) port : null),
-                            equalTo(
-                                DB_OPERATION_BATCH_SIZE,
-                                emitStableDatabaseSemconv() ? 2L : null))));
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_OPERATION_NAME, "PIPELINE SET"),
+                            equalTo(SERVER_ADDRESS, configuredTarget),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, (long) port),
+                            equalTo(DB_OPERATION_BATCH_SIZE, 2L))));
   }
 
   @Test
@@ -306,70 +258,34 @@ class LettuceClusterClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv() ? "SET " + peerConfiguredTarget : "SET")
+                    span.hasName("SET " + peerConfiguredTarget)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, null),
-                            equalTo(maybeStable(DB_OPERATION), "SET"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv()
-                                    ? peerConfiguredTarget
-                                    : firstRedisServer.getHost()),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_OPERATION_NAME, "SET"),
+                            equalTo(SERVER_ADDRESS, peerConfiguredTarget),
                             satisfies(
                                 SERVER_PORT,
                                 val -> {
-                                  if (emitStableDatabaseSemconv()) {
-                                    val.isNull();
-                                  } else {
-                                    val.isIn(
-                                        (long) firstRedisServer.getPort(),
-                                        (long) secondRedisServer.getPort());
-                                  }
+                                  val.isNull();
                                 }),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                emitStableDatabaseSemconv() ? secondRedisServer.getHost() : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? (long) secondRedisServer.getPort()
-                                    : null))),
+                            equalTo(NETWORK_PEER_ADDRESS, secondRedisServer.getHost()),
+                            equalTo(NETWORK_PEER_PORT, (long) secondRedisServer.getPort()))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "PIPELINE SET " + peerConfiguredTarget
-                                : "PIPELINE SET")
+                    span.hasName("PIPELINE SET " + peerConfiguredTarget)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, null),
-                            equalTo(maybeStable(DB_OPERATION), "PIPELINE SET"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv()
-                                    ? peerConfiguredTarget
-                                    : firstRedisServer.getHost()),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_OPERATION_NAME, "PIPELINE SET"),
+                            equalTo(SERVER_ADDRESS, peerConfiguredTarget),
                             satisfies(
                                 SERVER_PORT,
                                 val -> {
-                                  if (emitStableDatabaseSemconv()) {
-                                    val.isNull();
-                                  } else {
-                                    val.isIn(
-                                        (long) firstRedisServer.getPort(),
-                                        (long) secondRedisServer.getPort());
-                                  }
+                                  val.isNull();
                                 }),
-                            equalTo(NETWORK_PEER_ADDRESS, null),
-                            equalTo(NETWORK_PEER_PORT, null),
-                            equalTo(
-                                DB_OPERATION_BATCH_SIZE,
-                                emitStableDatabaseSemconv() ? 2L : null))));
+                            equalTo(DB_OPERATION_BATCH_SIZE, 2L))));
 
     firstRedisServer.assertReceivedSet(firstBatchKey);
     secondRedisServer.assertReceivedSet(routedKey, secondBatchKey);
@@ -392,31 +308,15 @@ class LettuceClusterClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv() ? "SET " + peerConfiguredTarget : "SET")
+                    span.hasName("SET " + peerConfiguredTarget)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, null),
-                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_OPERATION_NAME, "SET"),
+                            equalTo(SERVER_ADDRESS, peerConfiguredTarget),
+                            equalTo(NETWORK_PEER_ADDRESS, secondRedisServer.getHost()),
                             equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv()
-                                    ? peerConfiguredTarget
-                                    : firstRedisServer.getHost()),
-                            equalTo(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? null
-                                    : Long.valueOf(secondRedisServer.getPort())),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                emitStableDatabaseSemconv() ? secondRedisServer.getHost() : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? Long.valueOf(secondRedisServer.getPort())
-                                    : null))));
+                                NETWORK_PEER_PORT, Long.valueOf(secondRedisServer.getPort())))));
 
     firstRedisServer.assertReceivedSet(redirectedKey);
     secondRedisServer.assertReceivedSet(redirectedKey);
