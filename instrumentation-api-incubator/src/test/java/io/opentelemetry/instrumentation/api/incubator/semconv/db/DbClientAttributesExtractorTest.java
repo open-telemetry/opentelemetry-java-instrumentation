@@ -27,6 +27,8 @@ import io.opentelemetry.semconv.SchemaUrls;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class DbClientAttributesExtractorTest {
 
@@ -58,10 +60,20 @@ class DbClientAttributesExtractorTest {
         .containsOnly(entry(NETWORK_PEER_ADDRESS, "192.0.2.1"), entry(NETWORK_PEER_PORT, 5432L));
   }
 
-  @Test
-  void shouldEmitDatabaseAttributes() {
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "h2database",
+        "oracle.db",
+        "ibm.db2",
+        "ibm.informix",
+        "microsoft.sql_server",
+        "sap.hana",
+        "myDb"
+      })
+  void shouldEmitDatabaseAttributes(String dbSystemName) {
     Map<String, String> request = new HashMap<>();
-    request.put("db.system.name", "myDb");
+    request.put("db.system.name", dbSystemName);
     request.put("db.namespace", "potatoes");
     request.put("db.collection.name", "potato");
     request.put("db.query.text", "SELECT * FROM potato");
@@ -75,7 +87,7 @@ class DbClientAttributesExtractorTest {
 
     assertThat(attributes.build())
         .containsOnly(
-            entry(DB_SYSTEM_NAME, "myDb"),
+            entry(DB_SYSTEM_NAME, dbSystemName),
             entry(DB_NAMESPACE, "potatoes"),
             entry(DB_COLLECTION_NAME, "potato"),
             entry(DB_QUERY_TEXT, "SELECT * FROM potato"),

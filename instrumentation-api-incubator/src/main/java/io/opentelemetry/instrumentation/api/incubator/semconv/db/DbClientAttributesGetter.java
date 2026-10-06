@@ -39,6 +39,9 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
   String getDbOperationName(REQUEST request);
 
   // TODO: make this required to implement
+  /**
+   * Returns the database system name as defined by the {@code db.system.name} semantic convention.
+   */
   String getDbSystemName(REQUEST request);
 
   @Nullable

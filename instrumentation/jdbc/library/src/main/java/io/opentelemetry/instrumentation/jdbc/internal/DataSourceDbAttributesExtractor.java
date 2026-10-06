@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSystemNameUtil.normalizeDbSystemName;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 
@@ -32,6 +31,6 @@ final class DataSourceDbAttributesExtractor implements AttributesExtractor<DataS
       return;
     }
     attributes.put(DB_NAMESPACE, dbInfo.getDbNamespace());
-    attributes.put(DB_SYSTEM_NAME, normalizeDbSystemName(dbInfo.getDbSystemName()));
+    attributes.put(DB_SYSTEM_NAME, dbInfo.getDbSystemName());
   }
 }

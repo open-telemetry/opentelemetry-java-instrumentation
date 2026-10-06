@@ -35,6 +35,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class SqlClientAttributesExtractorTest {
 
@@ -141,11 +143,21 @@ class SqlClientAttributesExtractorTest {
     }
   }
 
-  @Test
-  void shouldExtractAllAttributes() {
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "h2database",
+        "oracle.db",
+        "ibm.db2",
+        "ibm.informix",
+        "microsoft.sql_server",
+        "sap.hana",
+        "myDb"
+      })
+  void shouldExtractAllAttributes(String dbSystemName) {
     // given
     Map<String, Object> request = new HashMap<>();
-    request.put("db.system.name", "myDb");
+    request.put("db.system.name", dbSystemName);
     request.put("db.namespace", "potatoes");
     request.put("db.query.text", "SELECT * FROM potato WHERE id=12345");
 
@@ -164,7 +176,7 @@ class SqlClientAttributesExtractorTest {
     // then
     assertThat(startAttributes.build())
         .containsOnly(
-            entry(DB_SYSTEM_NAME, "myDb"),
+            entry(DB_SYSTEM_NAME, dbSystemName),
             entry(DB_NAMESPACE, "potatoes"),
             entry(DB_QUERY_TEXT, "SELECT * FROM potato WHERE id=?"),
             entry(DB_QUERY_SUMMARY, "SELECT potato"));
