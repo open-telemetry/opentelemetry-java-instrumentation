@@ -158,7 +158,7 @@ class TomcatDbcpInstrumentationTest {
   }
 
   @Test
-  void shouldUpdateDataSourceNameWhenMBeanIsRegisteredAfterPoolStart() throws Exception {
+  void shouldUpdateDataSourceNameOnLateMBeanRegistrationOnlyWithLegacySemconv() throws Exception {
     BasicDataSource dataSource = createDataSource();
     dataSource.setUrl("jdbc:postgresql://db.example:5432/orders");
 
@@ -172,7 +172,8 @@ class TomcatDbcpInstrumentationTest {
       assertDataSourceMetrics(emitStableDatabaseSemconv() ? "orders" : "db.example:5432/orders");
 
       objectName = mbeanServer.registerMBean(dataSource, objectName).getObjectName();
-      assertDataSourceMetrics("lateRegisteredPool");
+      testing.clearData();
+      assertDataSourceMetrics(emitStableDatabaseSemconv() ? "orders" : "lateRegisteredPool");
     } finally {
       dataSource.close();
       if (mbeanServer.isRegistered(objectName)) {

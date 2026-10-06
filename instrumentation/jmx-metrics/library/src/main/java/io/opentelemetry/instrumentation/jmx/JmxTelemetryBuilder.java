@@ -7,11 +7,14 @@ package io.opentelemetry.instrumentation.jmx;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINE;
+import static java.util.stream.Collectors.toList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.jmx.internal.ExperimentalJmxMetricHandler;
+import io.opentelemetry.instrumentation.jmx.internal.InternalMetricsDefinitions;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricConfiguration;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricDef;
 import io.opentelemetry.instrumentation.jmx.internal.handler.HandlerRegistry;
@@ -21,7 +24,12 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.function.Predicate;
 import java.util.logging.Logger;
 
 /** Builder for {@link JmxTelemetry} */
@@ -30,16 +38,24 @@ public final class JmxTelemetryBuilder {
   private static final Logger logger = Logger.getLogger(JmxTelemetryBuilder.class.getName());
 
   private final OpenTelemetry openTelemetry;
-  private final MetricConfiguration metricConfiguration;
+  private final List<MetricDef> userMetricDefs = new ArrayList<>();
   private long discoveryDelayMs;
   private ComponentLoader componentLoader =
       ComponentLoader.forClassLoader(JmxTelemetryBuilder.class.getClassLoader());
+  private final Set<String> registeredMetrics = new HashSet<>();
+  private final Set<String> registeredHandlers = new HashSet<>();
   private IncludeExclude metrics = IncludeExclude.builder().build();
+
+  // exclude all systems by default
+  private IncludeExclude internalMetricsSystemFilter =
+      IncludeExclude.builder().setExcluded("*").build();
+  // exclude all unstable metrics by default
+  private IncludeExclude internalMetricsUnstableMetricsFilter =
+      IncludeExclude.builder().setExcluded("*").build();
 
   JmxTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
     this.discoveryDelayMs = 0;
-    this.metricConfiguration = new MetricConfiguration();
   }
 
   /**
@@ -69,11 +85,12 @@ public final class JmxTelemetryBuilder {
     if (input == null) {
       throw new IllegalArgumentException("missing JMX rules");
     }
-    RuleParser parserInstance = RuleParser.get();
-    List<MetricDef> metricDefs = parserInstance.parseMetricDefs(input);
+    List<MetricDef> metricDefs = RuleParser.get().parseMetricDefs(input);
 
     for (MetricDef metricDef : metricDefs) {
-      metricConfiguration.addMetricDef(metricDef);
+      userMetricDefs.add(metricDef);
+      registeredMetrics.addAll(metricDef.getMetricNames());
+      registeredHandlers.addAll(metricDef.getHandlerNames());
     }
     return this;
   }
@@ -112,7 +129,32 @@ public final class JmxTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public JmxTelemetryBuilder setMetrics(IncludeExclude metrics) {
-    this.metrics = metrics;
+    this.metrics = requireNonNull(metrics, "metrics");
+    return this;
+  }
+
+  /**
+   * Configure which systems should have their internal metrics automatically registered.
+   *
+   * @param systemFilter system filter
+   * @return this
+   */
+  @CanIgnoreReturnValue
+  public JmxTelemetryBuilder setInternalMetricsSystemFilter(IncludeExclude systemFilter) {
+    internalMetricsSystemFilter = requireNonNull(systemFilter, "systemFilter");
+    return this;
+  }
+
+  /**
+   * Configure which unstable internal metrics should be enabled, unless enabled they are
+   * filtered-out.
+   *
+   * @param metricsFilter metric filter
+   * @return this
+   */
+  @CanIgnoreReturnValue
+  public JmxTelemetryBuilder setInternalMetricsUnstableMetricsFilter(IncludeExclude metricsFilter) {
+    internalMetricsUnstableMetricsFilter = requireNonNull(metricsFilter, "metricsFilter");
     return this;
   }
 
@@ -124,11 +166,71 @@ public final class JmxTelemetryBuilder {
     return this;
   }
 
-  public JmxTelemetry build() {
+  // package private for testing
+  JmxTelemetry build(InternalMetricsDefinitions metricsDefinitions) {
     HandlerRegistry handlerRegistry = new HandlerRegistry();
     handlerRegistry.load(componentLoader);
 
+    // metric names from handlers are only available after handlers have been resolved
+    // also, we should only include handlers that have been explicitly registered in the rules.
+    registeredHandlers.forEach(
+        h -> {
+          ExperimentalJmxMetricHandler handler = handlerRegistry.getHandler(h);
+          if (handler != null) {
+            registeredMetrics.addAll(handler.getMetricNames());
+          }
+        });
+    Set<String> userMetrics = new HashSet<>(registeredMetrics);
+
+    MetricConfiguration metricConfiguration = new MetricConfiguration();
+    userMetricDefs.forEach(metricConfiguration::addMetricDef);
+
+    metricsDefinitions.loadInternalRules(internalMetricsSystemFilter, handlerRegistry);
+    metricsDefinitions.getMetricDefs(true).forEach(metricConfiguration::addMetricDef);
+    metricsDefinitions.getMetricDefs(false).forEach(metricConfiguration::addUnstableMetricDef);
+
+    Set<String> stableMetrics = metricsDefinitions.getMetricNames(true);
+    Set<String> unstableMetrics = metricsDefinitions.getMetricNames(false);
+
+    // make all internal metrics as registered, but they can be filtered out
+    registeredMetrics.addAll(stableMetrics);
+    registeredMetrics.addAll(unstableMetrics);
+
+    if (logger.isLoggable(FINE)) {
+      logMetricSelection(userMetrics, "custom", metrics::matches);
+      logMetricSelection(stableMetrics, "embedded stable", metrics::matches);
+      logMetricSelection(
+          unstableMetrics,
+          "embedded unstable",
+          metric ->
+              metrics.matches(metric) && internalMetricsUnstableMetricsFilter.matches(metric));
+    }
+
     return new JmxTelemetry(
-        openTelemetry, discoveryDelayMs, metricConfiguration, handlerRegistry, metrics);
+        openTelemetry,
+        discoveryDelayMs,
+        metricConfiguration,
+        handlerRegistry,
+        metrics,
+        internalMetricsUnstableMetricsFilter);
+  }
+
+  public JmxTelemetry build() {
+    return build(new InternalMetricsDefinitions(JmxTelemetryBuilder.class.getClassLoader()));
+  }
+
+  private static void logMetricSelection(
+      Set<String> metricNames, String source, Predicate<String> included) {
+    for (String metric : metricNames.stream().sorted().collect(toList())) {
+      logger.log(
+          FINE,
+          "JMX {0} metric '{1}' {2} by configuration",
+          new Object[] {source, metric, included.test(metric) ? "included" : "excluded"});
+    }
+  }
+
+  // package-private for testing
+  Set<String> getRegisteredMetrics() {
+    return Collections.unmodifiableSet(registeredMetrics);
   }
 }

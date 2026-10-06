@@ -8,13 +8,13 @@ package io.opentelemetry.instrumentation.jdbc.testing;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
@@ -50,7 +50,6 @@ import io.opentelemetry.instrumentation.jdbc.TestDriver;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -1493,14 +1492,6 @@ public abstract class AbstractJdbcInstrumentationTest {
 
     testing().clearData();
 
-    List<AttributeAssertion> attributesAssertions =
-        codeFunctionAssertions(originalDatasourceClass, "getConnection");
-    attributesAssertions.add(equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)));
-    attributesAssertions.add(equalTo(DB_USER, emitStableDatabaseSemconv() ? null : user));
-    attributesAssertions.add(equalTo(maybeStable(DB_NAME), "jdbcunittest"));
-    attributesAssertions.add(
-        equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : connectionString));
-
     testing().runWithSpan("parent", () -> datasource.getConnection().close());
     testing()
         .waitAndAssertTraces(
@@ -1514,7 +1505,17 @@ public abstract class AbstractJdbcInstrumentationTest {
                                       originalDatasourceClass.getSimpleName() + ".getConnection")
                                   .hasKind(SpanKind.INTERNAL)
                                   .hasParent(trace.getSpan(0))
-                                  .hasAttributesSatisfyingExactly(attributesAssertions)));
+                                  .hasAttributesSatisfyingExactly(
+                                      equalTo(
+                                          CODE_FUNCTION_NAME,
+                                          originalDatasourceClass.getName() + ".getConnection"),
+                                      equalTo(
+                                          maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
+                                      equalTo(DB_USER, emitStableDatabaseSemconv() ? null : user),
+                                      equalTo(maybeStable(DB_NAME), "jdbcunittest"),
+                                      equalTo(
+                                          DB_CONNECTION_STRING,
+                                          emitStableDatabaseSemconv() ? null : connectionString))));
               // sqlite-jdbc executes extra statements during connection init
               if (ds instanceof SQLiteDataSource
                   && testing() instanceof AgentInstrumentationExtension) {

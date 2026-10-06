@@ -1,7 +1,7 @@
 {
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   extends: [
-    "github>grafana/flint#v0.22.12",
+    "github>grafana/flint#v0.22.14",
     'config:best-practices',
     'workarounds:javaLTSVersions',
     'helpers:pinGitHubActionDigestsToSemver',
@@ -528,8 +528,9 @@
         '**/*.java',
       ],
       matchStrings: [
-        '"(?<depName>otel/weaver):(?<currentValue>[^"]+)"',
+        '"(?<depName>otel/weaver):(?<currentValue>[^"@]+)(?:@(?<currentDigest>sha256:[0-9a-f]+))?"',
       ],
+      autoReplaceStringTemplate: '"{{{depName}}}:{{{newValue}}}{{#if newDigest}}@{{{newDigest}}}{{/if}}"',
     },
     {
       customType: 'regex',

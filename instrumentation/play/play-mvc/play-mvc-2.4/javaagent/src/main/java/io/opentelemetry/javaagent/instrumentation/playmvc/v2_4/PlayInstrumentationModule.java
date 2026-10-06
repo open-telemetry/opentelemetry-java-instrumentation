@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -18,7 +19,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class PlayInstrumentationModule extends InstrumentationModule {
 
   public PlayInstrumentationModule() {
-    super("play-mvc", "play-mvc-2.4", "play");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "play-mvc-2.4" : "play-mvc",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"play-mvc", "play"}
+            : new String[] {"play-mvc-2.4", "play"});
   }
 
   @Override

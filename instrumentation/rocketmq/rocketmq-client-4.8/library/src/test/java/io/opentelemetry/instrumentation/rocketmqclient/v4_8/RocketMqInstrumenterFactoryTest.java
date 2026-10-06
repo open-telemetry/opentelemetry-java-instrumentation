@@ -9,6 +9,7 @@ import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.SchemaUrls.V1_24_0;
@@ -111,9 +112,7 @@ class RocketMqInstrumenterFactoryTest {
     assertThat(testing.spans())
         .filteredOn(span -> span.getName().equals("multiple_sources receive"))
         .singleElement()
-        .satisfies(
-            span ->
-                assertThat(span.getInstrumentationScopeInfo().getSchemaUrl()).isEqualTo(V1_24_0));
+        .satisfies(hasScopeSchemaUrl(V1_24_0));
   }
 
   @Test

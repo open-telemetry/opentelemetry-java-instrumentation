@@ -7,12 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.external.annotations;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import java.util.List;
 import java.util.Locale;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -29,17 +27,16 @@ class TraceProvidersTest {
   void testShouldSupportProvider(TraceProvider provider) {
     provider.test();
 
-    List<AttributeAssertion> attributeAssertions =
-        SemconvCodeStabilityUtil.codeFunctionAssertions(
-            SayTracedHello.class, provider.testMethodName());
-    attributeAssertions.add(equalTo(stringKey("providerAttr"), provider.name()));
-
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("SayTracedHello." + provider.testMethodName())
-                        .hasAttributesSatisfyingExactly(attributeAssertions)));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                SayTracedHello.class.getName() + "." + provider.testMethodName()),
+                            equalTo(stringKey("providerAttr"), provider.name()))));
   }
 
   @SuppressWarnings("ImmutableEnumChecker")

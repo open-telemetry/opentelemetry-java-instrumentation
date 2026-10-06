@@ -6,12 +6,12 @@
 package io.opentelemetry.instrumentation.oshi.v5_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 @SuppressWarnings("deprecation") // uses the deprecated scopeName() bridge
 public abstract class AbstractProcessMetricsTest {
@@ -28,7 +28,6 @@ public abstract class AbstractProcessMetricsTest {
   protected abstract String scopeName();
 
   @Test
-  @EnabledIfSystemProperty(named = "testExperimental", matches = "true")
   void test() {
     // when
     registerMetrics();
@@ -78,5 +77,14 @@ public abstract class AbstractProcessMetricsTest {
                                                 .hasAttributesSatisfyingExactly(
                                                     equalTo(stringKey("type"), "system"))
                                                 .hasValueSatisfying(v -> v.isNotNegative())))));
+  }
+
+  @Test
+  void processMetricsHaveNoSchema() {
+    testing()
+        .waitAndAssertMetrics(
+            scopeName(),
+            "runtime.java.memory",
+            metrics -> metrics.anySatisfy(hasScopeSchemaUrl(null)));
   }
 }

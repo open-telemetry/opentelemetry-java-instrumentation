@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_0;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.FilterClientInstrumentation;
@@ -16,7 +17,13 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class Elasticsearch5TransportClientInstrumentationModule extends InstrumentationModule {
   public Elasticsearch5TransportClientInstrumentationModule() {
-    super("elasticsearch-transport", "elasticsearch-transport-5.0", "elasticsearch");
+    super(
+        AgentCommonConfig.get().isV3Preview()
+            ? "elasticsearch-transport-5.0"
+            : "elasticsearch-transport",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"elasticsearch-transport", "elasticsearch"}
+            : new String[] {"elasticsearch-transport-5.0", "elasticsearch"});
   }
 
   @Override

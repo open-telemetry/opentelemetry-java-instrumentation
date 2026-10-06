@@ -91,14 +91,9 @@ class VertxRedisClientTargetTest {
               for (SpanData span : spans) {
                 assertThat(span.getAttributes().get(SERVER_ADDRESS))
                     .isEqualTo(
-                        emitStableDatabaseSemconv() && !isVertx445OrLater()
-                            ? host + ":" + port + "/themaster"
-                            : host);
+                        emitStableDatabaseSemconv() ? host + ":" + port + "/themaster" : host);
                 assertThat(span.getAttributes().get(SERVER_PORT))
-                    .isEqualTo(
-                        emitStableDatabaseSemconv() && !isVertx445OrLater()
-                            ? null
-                            : Long.valueOf(port));
+                    .isEqualTo(emitStableDatabaseSemconv() ? null : Long.valueOf(port));
                 assertThat(span.getAttributes().get(NETWORK_PEER_ADDRESS)).isEqualTo(ip);
                 assertThat(span.getAttributes().get(NETWORK_PEER_PORT))
                     .isEqualTo(Long.valueOf(port));
@@ -168,22 +163,11 @@ class VertxRedisClientTargetTest {
             () -> {
               List<SpanData> spans =
                   testing.spans().stream()
-                      .filter(
-                          span ->
-                              span.getName()
-                                  .equals(
-                                      isVertx445OrLater()
-                                          ? "SET "
-                                              + redisCluster.getHost()
-                                              + ":"
-                                              + redisCluster.getPort()
-                                          : "SET"))
+                      .filter(span -> span.getName().equals("SET"))
                       .collect(toList());
               assertThat(spans).hasSize(1);
-              assertThat(spans.get(0).getAttributes().get(SERVER_ADDRESS))
-                  .isEqualTo(isVertx445OrLater() ? redisCluster.getHost() : null);
-              assertThat(spans.get(0).getAttributes().get(SERVER_PORT))
-                  .isEqualTo(isVertx445OrLater() ? Long.valueOf(redisCluster.getPort()) : null);
+              assertThat(spans.get(0).getAttributes().get(SERVER_ADDRESS)).isNull();
+              assertThat(spans.get(0).getAttributes().get(SERVER_PORT)).isNull();
               assertThat(spans.get(0).getAttributes().get(NETWORK_PEER_ADDRESS))
                   .isEqualTo(redisCluster.getHost());
               assertThat(spans.get(0).getAttributes().get(NETWORK_PEER_PORT))
@@ -192,12 +176,47 @@ class VertxRedisClientTargetTest {
     redisCluster.assertNoFailure();
   }
 
-  private static boolean isVertx445OrLater() {
-    try {
-      Class.forName("io.vertx.redis.client.RedisConnectOptions");
-      return true;
-    } catch (ClassNotFoundException ignored) {
-      return false;
-    }
+  @Test
+  void clusterClientUsesAllConfiguredSeeds() {
+    assumeTrue(emitStableDatabaseSemconv());
+
+    TestRedisCluster redisCluster = new TestRedisCluster();
+    cleanup.deferCleanup(redisCluster);
+    Redis clusterClient =
+        Redis.createClient(
+            vertx,
+            new RedisOptions()
+                .setType(RedisClientType.CLUSTER)
+                .addConnectionString(
+                    "redis://" + redisCluster.getHost() + ":" + redisCluster.getPort())
+                .addConnectionString("redis://zz-unused-cluster-seed:7001"));
+    cleanup.deferCleanup(clusterClient::close);
+
+    clusterClient
+        .send(Request.cmd(Command.SET).arg("cluster-target").arg("value"))
+        .toCompletionStage()
+        .toCompletableFuture()
+        .join();
+
+    String configuredTarget =
+        redisCluster.getHost() + ":" + redisCluster.getPort() + ",zz-unused-cluster-seed:7001";
+    await()
+        .atMost(Duration.ofSeconds(30))
+        .untilAsserted(
+            () -> {
+              List<SpanData> spans =
+                  testing.spans().stream()
+                      .filter(span -> span.getName().equals("SET " + configuredTarget))
+                      .collect(toList());
+              assertThat(spans).hasSize(1);
+              assertThat(spans.get(0).getAttributes().get(SERVER_ADDRESS))
+                  .isEqualTo(configuredTarget);
+              assertThat(spans.get(0).getAttributes().get(SERVER_PORT)).isNull();
+              assertThat(spans.get(0).getAttributes().get(NETWORK_PEER_ADDRESS))
+                  .isEqualTo(redisCluster.getHost());
+              assertThat(spans.get(0).getAttributes().get(NETWORK_PEER_PORT))
+                  .isEqualTo(Long.valueOf(redisCluster.getPort()));
+            });
+    redisCluster.assertNoFailure();
   }
 }

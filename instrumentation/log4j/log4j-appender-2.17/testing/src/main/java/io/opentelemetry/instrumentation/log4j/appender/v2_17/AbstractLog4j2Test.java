@@ -6,11 +6,12 @@
 package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFileAndLineAssertions;
-import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
@@ -326,8 +327,9 @@ public abstract class AbstractLog4j2Test {
 
   protected List<AttributeAssertion> addCodeLocationAttributes(String methodName) {
     List<AttributeAssertion> result = new ArrayList<>();
-    result.addAll(codeFunctionAssertions(AbstractLog4j2Test.class, methodName));
-    result.addAll(codeFileAndLineAssertions("AbstractLog4j2Test.java"));
+    result.add(equalTo(CODE_FUNCTION_NAME, AbstractLog4j2Test.class.getName() + "." + methodName));
+    result.add(equalTo(CODE_FILE_PATH, "AbstractLog4j2Test.java"));
+    result.add(satisfies(CODE_LINE_NUMBER, val -> val.isPositive()));
     return result;
   }
 

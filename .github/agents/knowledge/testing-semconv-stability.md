@@ -1,9 +1,8 @@
 # [Semconv] Dual Semconv Testing
 
-## Quick Reference
-
-- Use when: reviewing semconv dual-mode assertions or `testStableSemconv` / `testBothSemconv` tasks
-- Review focus: mode-specific assertions, `maybeStable()` usage boundaries
+Use this article when changing semconv opt-in tests or their Gradle tasks.
+It shows which modes each domain requires and how to express their
+expected attributes without hiding mode differences.
 
 ## Background: The Three Modes
 
@@ -16,14 +15,13 @@ controls which attributes are emitted at runtime. Tests must run in all applicab
 | `database`     |        ❌         |          ✅          | Stable-only — users who have opted in             |
 | `database/dup` |        ✅         |          ✅          | Both — migration period support                   |
 
-Multiple domains can be comma-separated: `database,code,service.peer`.
+Multiple domains can be comma-separated: `database,service.peer`.
 
 Available domains and their `SemconvStability` methods:
 
 | Domain       | `opt-in` value                      | Methods                                                         |
 | ------------ | ----------------------------------- | --------------------------------------------------------------- |
 | Database     | `database` / `database/dup`         | `emitOldDatabaseSemconv()`, `emitStableDatabaseSemconv()`       |
-| Code         | `code` / `code/dup`                 | `emitOldCodeSemconv()`, `emitStableCodeSemconv()`               |
 | RPC          | `rpc` / `rpc/dup`                   | `emitOldRpcSemconv()`, `emitStableRpcSemconv()`                 |
 | Service peer | `service.peer` / `service.peer/dup` | `emitOldServicePeerSemconv()`, `emitStableServicePeerSemconv()` |
 
@@ -36,7 +34,7 @@ Every Gradle project whose tests exercise semconv attributes **must** define its
 `emitOld*()` or `emitStable*()` accessor.
 
 A `testBothSemconv` task (testing the `/dup` mode) is **only required for the RPC domain**.
-Database, code, and service-peer domains do not need a `testBothSemconv` task — only
+Database and service-peer domains do not need a `testBothSemconv` task — only
 `testStableSemconv` (and the default `test` task for the legacy/unset mode).
 
 See [gradle-conventions.md](gradle-conventions.md) for `testClassesDirs`, `classpath`,

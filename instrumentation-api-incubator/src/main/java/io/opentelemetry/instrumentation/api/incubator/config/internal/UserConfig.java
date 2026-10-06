@@ -25,7 +25,6 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
  * <p>Given the sensitive nature of this information, SDKs and exporters SHOULD drop these
  * attributes by default and then provide a configuration parameter to turn on retention for use
  * cases where the information is required and would not violate any policies or regulations.
- *
  * </blockquote>
  *
  * <p>Capturing of the {@code enduser.*} semantic attributes can be individually enabled by

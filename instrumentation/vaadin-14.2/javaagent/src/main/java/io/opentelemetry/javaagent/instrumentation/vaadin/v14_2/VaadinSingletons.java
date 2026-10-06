@@ -8,9 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.vaadin.v14_2;
 import com.vaadin.flow.server.communication.rpc.RpcInvocationHandler;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesExtractor;
+import io.opentelemetry.instrumentation.api.semconv.code.CodeSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.util.SpanNames;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 

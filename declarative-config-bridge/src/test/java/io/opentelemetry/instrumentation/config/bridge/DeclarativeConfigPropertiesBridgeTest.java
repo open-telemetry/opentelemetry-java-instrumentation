@@ -124,7 +124,7 @@ class DeclarativeConfigPropertiesBridgeTest {
                 .addOverride("otel.javaagent.logging", "application"));
 
     assertThat(bridge.getBoolean("otel.javaagent.debug")).isTrue();
-    assertThat(bridge.getBoolean("otel.javaagent.experimental.indy")).isTrue();
+    assertThat(bridge.getBoolean("otel.javaagent.enabled")).isFalse();
     assertThat(bridge.getString("otel.javaagent.logging")).isEqualTo("application");
   }
 }

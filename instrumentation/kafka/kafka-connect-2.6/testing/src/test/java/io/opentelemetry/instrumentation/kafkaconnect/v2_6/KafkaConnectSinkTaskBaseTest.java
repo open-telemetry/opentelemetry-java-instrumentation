@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.kafkaconnect.v2_6;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveMetrics;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.groupTraces;
@@ -541,22 +540,15 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
     }
   }
 
-  // whether the kafka-clients receive operation is enabled for the consumer that Kafka Connect
-  // uses internally: when it is, that receive operation owns the consumed-messages count for
-  // each delivery, and the Connect process operation must not count it again.
   protected static boolean isReceiveTelemetryEnabled() {
     return Boolean.getBoolean(
         "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled");
   }
 
-  // asserts the messaging metrics for a single-message delivery through the given destination,
-  // covering both the default configuration, where the Connect process operation is the only
-  // operation that observes the delivery, and the receive-telemetry-enabled configuration, where
-  // the kafka-clients receive operation on the sink connector's own consumer owns the count.
   protected void assertConnectMessagingMetrics(String destination) {
+    assertProcessMetricsWithConsumedMessages(
+        testing, "io.opentelemetry.kafka-connect-2.6", destination, null, "0", 1, 1, null);
     if (isReceiveTelemetryEnabled()) {
-      assertProcessMetrics(
-          testing, "io.opentelemetry.kafka-connect-2.6", destination, null, "0", 1, null);
       assertReceiveMetrics(
           testing,
           "io.opentelemetry.kafka-clients-0.11",
@@ -566,9 +558,6 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
           1,
           1,
           null);
-    } else {
-      assertProcessMetricsWithConsumedMessages(
-          testing, "io.opentelemetry.kafka-connect-2.6", destination, null, "0", 1, 1, null);
     }
   }
 

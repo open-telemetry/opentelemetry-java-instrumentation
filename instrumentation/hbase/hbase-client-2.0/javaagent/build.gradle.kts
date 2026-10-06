@@ -3,8 +3,9 @@ plugins {
 }
 
 otelJava {
-  // HBase 2.0.x test stack is not reliable on JDK 25+.
-  maxJavaVersionForTests.set(JavaVersion.VERSION_24)
+  // HBase 2.0.x test stack uses Subject.getSubject(), which is unsupported on JDK 23+.
+  // Cap tests at latest LTS release before JDK 23
+  maxJavaVersionForTests.set(JavaVersion.VERSION_21)
 }
 
 muzzle {

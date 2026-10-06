@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.grails.v3_0;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -15,7 +16,11 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class GrailsInstrumentationModule extends InstrumentationModule {
   public GrailsInstrumentationModule() {
-    super("grails", "grails-3.0");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "grails-3.0" : "grails",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"grails"}
+            : new String[] {"grails-3.0"});
   }
 
   @Override

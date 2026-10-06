@@ -1,11 +1,7 @@
 display_name: Elasticsearch REST Client
 description: >
   This instrumentation enables database client spans and database client metrics for Elasticsearch
-  REST clients. The library artifacts are deprecated and will be removed in 3.0.
-  Elasticsearch Java API Client users should use its native OpenTelemetry support
-  (https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/8.10/opentelemetry.html),
-  available in 7.17.20+ on the 7.x line and 8.10+. Applications that use the REST Client directly
-  have no drop-in library replacement; they can use the javaagent or migrate to the Java API Client.
+  REST clients through the Java agent.
 semantic_conventions:
   - DATABASE_CLIENT_SPANS
   - DATABASE_CLIENT_METRICS
@@ -20,12 +16,21 @@ configurations:
       otel.instrumentation.elasticsearch.query-sanitization.enabled.
     type: boolean
     default: false
+    deprecated: true
   - name: otel.instrumentation.elasticsearch.query-sanitization.enabled
     declarative_name: java.elasticsearch.query_sanitization.enabled
     description: >
-      Enables sanitization of the captured search query bodies. Takes precedence over
-      otel.instrumentation.common.db.query-sanitization.enabled.
+      Enables sanitization of the captured search query bodies. Overrides
+      `otel.instrumentation.common.db.query-sanitization.enabled` for this instrumentation; when
+      unset, that setting applies.
     type: boolean
-    default: true
   - ref: common.db.query-sanitization.enabled
+  - ref: common.db-statement-sanitizer.enabled
+  - ref: common.database.statement_sanitizer.enabled
+  - name: otel.instrumentation.elasticsearch.statement-sanitizer.enabled
+    declarative_name: java.elasticsearch.statement_sanitizer.enabled
+    description: "Deprecated: use `otel.instrumentation.elasticsearch.query-sanitization.enabled` instead. It is ignored under v3 preview and will be removed in 3.0. When unset, this setting falls back to `otel.instrumentation.common.db.query-sanitization.enabled` (including its deprecated aliases)."
+    type: boolean
+    deprecated: true
+    replaced_by: otel.instrumentation.elasticsearch.query-sanitization.enabled
   - ref: http.known-methods

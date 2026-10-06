@@ -54,4 +54,14 @@ class RocketMqClientTest extends AbstractRocketMqClientTest {
                 .build()
                 .createConsumeMessageHook());
   }
+
+  @Override
+  boolean hasBatchCreateSpans() {
+    return false;
+  }
+
+  @Override
+  boolean isJavaagent() {
+    return false;
+  }
 }

@@ -6,10 +6,12 @@
 package io.opentelemetry.spring.smoketest;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CLUSTER_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET;
@@ -36,8 +38,7 @@ abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarter
 
   @Autowired protected KafkaTemplate<String, String> kafkaTemplate;
 
-  private static final AttributeKey<String> MESSAGING_CLIENT_ID =
-      AttributeKey.stringKey("messaging.client_id");
+  private static final AttributeKey<String> MESSAGING_CLIENT_ID = stringKey("messaging.client_id");
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
@@ -80,7 +81,10 @@ abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarter
                                   satisfies(
                                       MESSAGING_KAFKA_MESSAGE_OFFSET,
                                       AbstractLongAssert::isNotNegative),
-                                  equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10")),
+                                  equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
+                                  satisfies(
+                                      MESSAGING_KAFKA_CLUSTER_ID,
+                                      AbstractStringAssert::isNotEmpty)),
                       span ->
                           span.hasName("testTopic process")
                               .hasKind(SpanKind.CONSUMER)

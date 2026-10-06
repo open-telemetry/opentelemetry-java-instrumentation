@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -91,18 +92,12 @@ class SpringRabbit20DirectMessageListenerContainerTest {
               span ->
                   span.hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
-                      .satisfies(
-                          spanData ->
-                              assertThat(spanData.getInstrumentationScopeInfo().getName())
-                                  .isEqualTo(RABBIT_INSTRUMENTATION_NAME)),
+                      .satisfies(hasScopeName(RABBIT_INSTRUMENTATION_NAME)),
               span ->
                   span.hasName("process " + QUEUE)
                       .hasKind(SpanKind.CONSUMER)
                       .hasParent(producerSpan)
-                      .satisfies(
-                          spanData ->
-                              assertThat(spanData.getInstrumentationScopeInfo().getName())
-                                  .isEqualTo(SPRING_INSTRUMENTATION_NAME)),
+                      .satisfies(hasScopeName(SPRING_INSTRUMENTATION_NAME)),
               span -> span.hasName("consumer").hasParent(processSpan));
         });
 

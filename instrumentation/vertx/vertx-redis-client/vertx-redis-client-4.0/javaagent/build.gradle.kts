@@ -8,12 +8,25 @@ muzzle {
     module.set("vertx-redis-client")
     versions.set("[4.0.0,)")
     assertInverse.set(true)
+
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_4_5.VertxRedisClientInstrumentationModule")
+  }
+  pass {
+    // instrumentation-docs:ignore - verification only, the directive above is the range we document
+    name.set("Vert.x Redis 4.4.5 target instrumentation")
+    group.set("io.vertx")
+    module.set("vertx-redis-client")
+    versions.set("[4.4.5,)")
+    assertInverse.set(true)
+
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0.VertxRedisClientInstrumentationModule")
   }
 }
 
 dependencies {
   library("io.vertx:vertx-redis-client:4.0.0")
-  compileOnly("io.vertx:vertx-codegen:4.0.0")
+  compileOnly("io.vertx:vertx-redis-client:4.4.5") // For RedisConnectOptions added in 4.4.5
+  compileOnly("io.vertx:vertx-codegen:4.4.5")
 
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
 

@@ -13,10 +13,10 @@ plugins {
   See https://imperceptiblethoughts.com/shadow/ for more details about Shadow plugin.
    */
   id("com.gradleup.shadow") version "9.6.1"
-  id("com.diffplug.spotless") version "8.10.2"
+  id("com.diffplug.spotless") version "8.10.3"
 
-  id("io.opentelemetry.instrumentation.muzzle-generation") version "2.32.0-alpha-SNAPSHOT"
-  id("io.opentelemetry.instrumentation.muzzle-check") version "2.32.0-alpha-SNAPSHOT"
+  id("io.opentelemetry.instrumentation.muzzle-generation") version "3.0.0-alpha-SNAPSHOT"
+  id("io.opentelemetry.instrumentation.muzzle-check") version "3.0.0-alpha-SNAPSHOT"
 }
 
 group = "io.opentelemetry.example"
@@ -27,8 +27,8 @@ val versions = mapOf(
   "opentelemetrySdk" to "1.66.0",
 
   // these lines are managed by .github/scripts/update-version.sh
-  "opentelemetryJavaagent" to "2.32.0-SNAPSHOT",
-  "opentelemetryJavaagentAlpha" to "2.32.0-alpha-SNAPSHOT"
+  "opentelemetryJavaagent" to "3.0.0-SNAPSHOT",
+  "opentelemetryJavaagentAlpha" to "3.0.0-alpha-SNAPSHOT"
 )
 
 val deps = mapOf(
@@ -97,7 +97,7 @@ dependencies {
   Only dependencies added to `implementation` configuration will be picked up by Shadow plugin
   and added to the resulting jar for our extension's distribution.
    */
-  implementation("org.apache.commons:commons-lang3:3.20.0")
+  implementation("org.apache.commons:commons-lang3:3.21.0")
 
   //All dependencies below are only for tests
   testImplementation("org.testcontainers:testcontainers:2.0.5")
@@ -105,7 +105,7 @@ dependencies {
   testImplementation("com.google.protobuf:protobuf-java-util:4.36.2")
   testImplementation("com.squareup.okhttp3:okhttp:5.5.0")
   testImplementation("io.opentelemetry:opentelemetry-api")
-  testImplementation("io.opentelemetry.proto:opentelemetry-proto:1.11.0-alpha")
+  testImplementation("io.opentelemetry.proto:opentelemetry-proto:1.11.1-alpha")
   testImplementation("org.assertj:assertj-core:3.27.7")
 
   testImplementation(enforcedPlatform("org.junit:junit-bom:5.14.4"))
@@ -113,7 +113,7 @@ dependencies {
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-  testRuntimeOnly("ch.qos.logback:logback-classic:1.6.3")
+  testRuntimeOnly("ch.qos.logback:logback-classic:1.6.5")
 
   //Otel Java instrumentation that we use and extend during integration tests
   add("otel", "io.opentelemetry.javaagent:opentelemetry-javaagent:${versions["opentelemetryJavaagent"]}")

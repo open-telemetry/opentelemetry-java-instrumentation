@@ -1,9 +1,8 @@
 # [Testing] General Test Patterns
 
-## Quick Reference
-
-- Use when: test files (`**/src/test/**`) are in scope
-- Review focus: assertion style, test class visibility, test method signatures and throws clauses, resource cleanup patterns, attribute assertion patterns
+Consult this article when changing test structure, assertions, resource
+cleanup, or mode-dependent expectations. It gives the setup and API details
+behind the shorter Java test instructions.
 
 ## Javaagent integration coverage versus unit coverage
 
@@ -16,6 +15,34 @@ When a change must support multiple runtime versions, retain real agent-backed i
 for each required version. Keep tests that run on the baseline in the default `test` suite and
 place only newer-version-specific tests in a dedicated `JvmTestSuite`; do not count a unit suite
 as coverage for the missing integration runtime.
+
+## Instrumentation enablement selectors
+
+Javaagent selectors such as `otel.instrumentation.<name>.enabled` are escape
+hatches for disabling buggy instrumentation until a fix is available, not a
+recommended way to tune telemetry.
+
+Do not add per-instrumentation selector tests, including for new modules,
+renames, aliases, or consolidations:
+
+- No `instrumentationNames()` or name-order assertions.
+- No enable/disable matrices, precedence, fallback, legacy/v3-preview, flat/YAML
+  parity, or deprecation-warning checks.
+- No test projects, source sets, JVM variants, fixtures, or dependencies solely
+  for those checks.
+
+This applies to unit tests and installed-agent tests alike. Test shared
+enablement and alias-helper changes centrally, not in every caller. Existing
+coverage includes `InstrumentationModuleInstallerTest` for flat resolution and
+`AgentDistributionConfigTest` for declarative resolution.
+
+Keep instrumentation behavior and compatibility coverage, including propagation,
+scopes, runtime versions, and Muzzle. Tests may use selectors to disable unrelated
+instrumentation without testing the selectors themselves.
+
+Changes to [default enablement](testing-default-enablement.md), feature settings,
+and experimental telemetry still need behavior coverage. An `.enabled` suffix
+alone does not make a setting an instrumentation selector.
 
 ## Assertion Framework
 
@@ -318,7 +345,7 @@ site.
 | Flag                                           | Shared accessor                                                                                                    | Where it lives                                                                  |
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
 | `-PtestLatestDeps=true`                        | `testLatestDeps()`                                                                                                 | `io.opentelemetry.instrumentation.testing.util.TestLatestDeps` (testing-common) |
-| `otel.semconv-stability.opt-in=…`              | `emitStableDatabaseSemconv()`, `emitOldDatabaseSemconv()`, `emitStableCodeSemconv()`, etc.                         | `io.opentelemetry.instrumentation.api.internal.SemconvStability`                |
+| `otel.semconv-stability.opt-in=…`              | `emitStableDatabaseSemconv()`, `emitOldDatabaseSemconv()`, `emitStableRpcSemconv()`, etc.                          | `io.opentelemetry.instrumentation.api.internal.SemconvStability`                |
 | `otel.instrumentation.<module>.experimental-*` | per-module `EXPERIMENTAL_ATTRIBUTES` constant — see [testing-experimental-flags.md](testing-experimental-flags.md) | within the test class                                                           |
 
 ### Mode-dependent expected values

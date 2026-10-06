@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -17,7 +18,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class MojarraInstrumentationModule extends InstrumentationModule {
   public MojarraInstrumentationModule() {
-    super("jsf-mojarra", "jsf-mojarra-3.0");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "jsf-mojarra-3.0" : "jsf-mojarra",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"jsf-mojarra", "jsf"}
+            : new String[] {"jsf-mojarra-3.0"});
   }
 
   @Override

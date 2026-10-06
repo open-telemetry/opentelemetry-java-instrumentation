@@ -68,6 +68,9 @@ jobs:
     needs: analyze
     if: needs.analyze.outputs.has_candidate == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      copilot-requests: write
     environment: protected
     env:
       SELECTED_JSON: ${{ needs.analyze.outputs.selected_json }}
@@ -91,7 +94,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
         with:
           cache-read-only: true
 
@@ -132,7 +135,7 @@ jobs:
 
       - name: Run Copilot fix
         env:
-          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MODEL: ${{ steps.model.outputs.model }}
         run: python .github/scripts/flaky-test-remediation/2-fix-flaky-test.py
 

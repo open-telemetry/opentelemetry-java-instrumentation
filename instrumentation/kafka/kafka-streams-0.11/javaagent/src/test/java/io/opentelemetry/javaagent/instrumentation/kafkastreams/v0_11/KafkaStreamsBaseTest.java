@@ -86,7 +86,6 @@ abstract class KafkaStreamsBaseTest {
 
     producer = new KafkaProducer<>(producerProps(kafka.getBootstrapServers()));
     cleanup.deferAfterAll(producer);
-
     Map<String, Object> consumerProps =
         ImmutableMap.of(
             "bootstrap.servers",
