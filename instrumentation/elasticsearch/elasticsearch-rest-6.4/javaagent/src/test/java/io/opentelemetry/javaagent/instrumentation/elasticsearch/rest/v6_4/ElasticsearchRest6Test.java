@@ -285,7 +285,7 @@ class ElasticsearchRest6Test {
   }
 
   private static void assertConfiguredTarget(String hostList) {
-    boolean stableHostList = hostList != null;
+    boolean hasHostList = hostList != null;
     testing.waitAndAssertTraces(
         trace ->
             assertThat(trace.getSpan(0))
@@ -297,8 +297,8 @@ class ElasticsearchRest6Test {
                 .hasAttributesSatisfyingExactly(
                     equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
                     equalTo(HTTP_REQUEST_METHOD, "GET"),
-                    equalTo(SERVER_ADDRESS, stableHostList ? hostList : httpHost.getHostName()),
-                    equalTo(SERVER_PORT, stableHostList ? null : Long.valueOf(httpHost.getPort())),
+                    equalTo(SERVER_ADDRESS, hasHostList ? hostList : httpHost.getHostName()),
+                    equalTo(SERVER_PORT, hasHostList ? null : Long.valueOf(httpHost.getPort())),
                     equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")));
   }
 }

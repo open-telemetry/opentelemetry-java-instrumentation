@@ -301,7 +301,6 @@ class VertxRedisClientTest {
 
   @Test
   void concurrentClientsKeepDistinctConfiguredTargets() throws Exception {
-
     String secondHost = host.toUpperCase(Locale.ROOT);
     assumeTrue(!secondHost.equals(host));
 
