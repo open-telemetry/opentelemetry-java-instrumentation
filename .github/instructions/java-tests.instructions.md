@@ -139,12 +139,18 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
 ## [Testing] Mode-Dependent Expected Values
 
 - Use the shared static `TestLatestDeps.testLatestDeps()` and
-  `SemconvStability.emitOld*Semconv()` / `emitStable*Semconv()` accessors,
+  `SemconvStability.emitOld*Semconv()`, `emitStable*Semconv()`, or `emitPreview*Semconv()` accessors,
   preferably via static imports, rather than repeating inline
   `Boolean.getBoolean(...)` calls with the mode property names. A
   module-specific experimental flag may use a per-class constant such as
   `EXPERIMENTAL_ATTRIBUTES`; keep the conventional `experimental(value)`
   helper for attribute values absent when the flag is off.
+- Name stable-selection accessors `emitStable*Semconv()` and preview-selection
+  accessors `emitPreview*Semconv()`. Preview accessor names in the examples describe
+  the intended API; the implementation and caller rename is tracked in
+  [#20410](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20410).
+  Until that rename lands, use existing accessors at code call sites rather than
+  requiring methods that are not yet available.
 - Assert keys and values directly when expectations do not depend on a mode:
 
   ```java
@@ -157,8 +163,8 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
   expected values differ by mode or an attribute exists in only one mode:
 
   ```java
-  span.hasName(emitStableMessagingSemconv() ? "send orders" : "orders publish");
-  equalTo(RPC_RESPONSE_STATUS_CODE, emitStableRpcSemconv() ? "OK" : null);
+  span.hasName(emitPreviewMessagingSemconv() ? "send orders" : "orders publish");
+  equalTo(RPC_RESPONSE_STATUS_CODE, emitPreviewRpcSemconv() ? "OK" : null);
   ```
 
 - Do not extract the ternary into a helper such as `spanName(...)`,
@@ -177,7 +183,7 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
     if (emitOldRpcSemconv()) {
       attributes.add(equalTo(RPC_GRPC_STATUS_CODE, 0L));
     }
-    if (emitStableRpcSemconv()) {
+    if (emitPreviewRpcSemconv()) {
       attributes.add(equalTo(RPC_RESPONSE_STATUS_CODE, "OK"));
     }
     return attributes;
@@ -187,7 +193,7 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
   // Good: pass each assertion directly and keep its mode check visible.
   span.hasAttributesSatisfyingExactly(
       equalTo(RPC_GRPC_STATUS_CODE, emitOldRpcSemconv() ? 0L : null),
-      equalTo(RPC_RESPONSE_STATUS_CODE, emitStableRpcSemconv() ? "OK" : null));
+      equalTo(RPC_RESPONSE_STATUS_CODE, emitPreviewRpcSemconv() ? "OK" : null));
   ```
 
 - The conventional `experimental(value)` helper is the one exception: keep it.

@@ -347,11 +347,16 @@ site.
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
 | `-PtestLatestDeps=true`                        | `testLatestDeps()`                                                                                                 | `io.opentelemetry.instrumentation.testing.util.TestLatestDeps` (testing-common) |
 | `otel.semconv-stability.opt-in=<domain>`       | the domain's `emitOld*Semconv()` / `emitStable*Semconv()` accessors                                                | `io.opentelemetry.instrumentation.api.internal.SemconvStability`                |
-| `otel.semconv-stability.preview=<domain>`      | the domain's `emitOld*Semconv()` / `emitStable*Semconv()` accessors                                                | `io.opentelemetry.instrumentation.api.internal.SemconvStability`                |
+| `otel.semconv-stability.preview=<domain>`      | the domain's `emitOld*Semconv()` / `emitPreview*Semconv()` accessors                                               | `io.opentelemetry.instrumentation.api.internal.SemconvStability`                |
 | `otel.instrumentation.<module>.experimental-*` | per-module `EXPERIMENTAL_ATTRIBUTES` constant — see [testing-experimental-flags.md](testing-experimental-flags.md) | within the test class                                                           |
 
-Replace `<domain>` with a supported selector. Choose the property according to the selected
-conventions' stability, not the accessor's name; `emitStable*Semconv()` can select preview conventions.
+Replace `<domain>` with a supported selector. Use `emitStable*Semconv()` for stable selection
+and `emitPreview*Semconv()` for preview selection.
+
+The preview accessor names in this article describe the intended API. Their implementation
+and caller migration are tracked in
+[#20410](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20410).
+Until that rename lands, use the existing accessors when editing code.
 
 ### Mode-dependent expected values
 
@@ -372,7 +377,7 @@ absent":
 
 ```java
 equalTo(RPC_GRPC_STATUS_CODE, emitOldRpcSemconv() ? 0L : null)
-equalTo(RPC_RESPONSE_STATUS_CODE, emitStableRpcSemconv() ? "OK" : null)
+equalTo(RPC_RESPONSE_STATUS_CODE, emitPreviewRpcSemconv() ? "OK" : null)
 equalTo(SOME_KEY, experimental("value"))
 span.hasName(testLatestDeps() ? "GET" : "HTTP GET")
 .hasParent(trace.getSpan(testLatestDeps() ? 0 : 1))
@@ -401,7 +406,7 @@ private static List<AttributeAssertion> rpcAttributes() {
   if (emitOldRpcSemconv()) {
     attributes.add(equalTo(RPC_GRPC_STATUS_CODE, 0L));
   }
-  if (emitStableRpcSemconv()) {
+  if (emitPreviewRpcSemconv()) {
     attributes.add(equalTo(RPC_RESPONSE_STATUS_CODE, "OK"));
   }
   return attributes;
@@ -411,5 +416,5 @@ span.hasAttributesSatisfyingExactly(rpcAttributes());
 // Good: pass each assertion directly and keep its mode check visible.
 span.hasAttributesSatisfyingExactly(
     equalTo(RPC_GRPC_STATUS_CODE, emitOldRpcSemconv() ? 0L : null),
-    equalTo(RPC_RESPONSE_STATUS_CODE, emitStableRpcSemconv() ? "OK" : null));
+    equalTo(RPC_RESPONSE_STATUS_CODE, emitPreviewRpcSemconv() ? "OK" : null));
 ```

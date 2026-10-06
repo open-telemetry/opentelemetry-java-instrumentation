@@ -37,23 +37,27 @@ Legacy `opt-in` values for RPC and service-peer, including `/dup`, remain accept
 preview values outside v3-preview. V3-preview ignores those legacy tokens for preview domains.
 Preserve tests that explicitly cover this compatibility behavior.
 
-Their `SemconvStability` methods:
+The naming convention is `emitStable*Semconv()` for stable selection and
+`emitPreview*Semconv()` for preview selection. The preview accessor names below describe
+the intended API; their implementation and caller migration are tracked in
+[#20410](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20410).
+Until that rename lands, use the existing accessors when editing code.
 
-| Domain       | Property                         | Values                              | Methods                                                         |
-| ------------ | -------------------------------- | ----------------------------------- | --------------------------------------------------------------- |
-| RPC          | `otel.semconv-stability.preview` | `rpc` / `rpc/dup`                   | `emitOldRpcSemconv()`, `emitStableRpcSemconv()`                 |
-| Service peer | `otel.semconv-stability.preview` | `service.peer` / `service.peer/dup` | `emitOldServicePeerSemconv()`, `emitStableServicePeerSemconv()` |
+Target `SemconvStability` method names:
 
-All methods are in `io.opentelemetry.instrumentation.api.internal.SemconvStability`.
-The RPC and service-peer `emitStable*()` names select preview conventions; the method names do not
-indicate convention stability.
+| Domain       | Property                         | Values                              | Methods                                                          |
+| ------------ | -------------------------------- | ----------------------------------- | ---------------------------------------------------------------- |
+| RPC          | `otel.semconv-stability.preview` | `rpc` / `rpc/dup`                   | `emitOldRpcSemconv()`, `emitPreviewRpcSemconv()`                 |
+| Service peer | `otel.semconv-stability.preview` | `service.peer` / `service.peer/dup` | `emitOldServicePeerSemconv()`, `emitPreviewServicePeerSemconv()` |
+
+The accessor class is `io.opentelemetry.instrumentation.api.internal.SemconvStability`.
 
 ## Gradle Test Task Setup
 
 Every Gradle project whose tests exercise selectable semconv modes **must** define its own
 `testStableSemconv` task for stable selection or `testPreviewSemconv` task for preview selection.
 Define both when the tests exercise both kinds of selection. This includes `javaagent-unit-tests`
-projects whose tests branch on an `emitOld*()` or `emitStable*()` accessor.
+projects whose tests branch on an `emitOld*()`, `emitStable*()`, or `emitPreview*()` accessor.
 Keep the default `test` task for the default mode.
 
 RPC requires a `testBothSemconv` task for the `/dup` mode. Service-peer does not need
@@ -131,8 +135,8 @@ parameterization, sanitization, batches, namespaces, server targets, peers, and 
 ### Inline mode-dependent expectations
 
 When no established semconv utility applies, keep each mode-dependent expectation at the
-assertion site. Gate the expected value with the matching `emitOld*()` or `emitStable*()`
-accessor and use `null` to expect the attribute to be absent:
+assertion site. Gate the expected value with the matching `emitOld*()`, `emitStable*()`,
+or `emitPreview*()` accessor and use `null` to expect the attribute to be absent:
 
 ```java
 equalTo(
@@ -140,7 +144,7 @@ equalTo(
     emitOldRpcSemconv() ? (long) Status.Code.OK.value() : null)
 equalTo(
     RPC_RESPONSE_STATUS_CODE,
-    emitStableRpcSemconv() ? Status.Code.OK.name() : null)
+    emitPreviewRpcSemconv() ? Status.Code.OK.name() : null)
 ```
 
 This paired form also covers `/dup` mode because both accessors return true. Do not hide
