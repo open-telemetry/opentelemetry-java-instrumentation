@@ -72,18 +72,6 @@ final class RocketMqProducerAttributeGetter
 
   @Nullable
   @Override
-  public Long getMessageBodySize(SendMessageContext request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(SendMessageContext request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getMessageId(SendMessageContext request, @Nullable Void unused) {
     if (messageCreation) {
       return MessageClientIDSetter.getUniqID(request.getMessage());

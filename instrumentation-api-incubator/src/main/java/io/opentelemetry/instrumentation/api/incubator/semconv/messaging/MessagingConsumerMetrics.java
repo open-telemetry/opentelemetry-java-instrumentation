@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.logging.Level.FINE;
@@ -16,7 +14,6 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
-import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.LongCounterBuilder;
 import io.opentelemetry.api.metrics.Meter;
@@ -41,8 +38,6 @@ public final class MessagingConsumerMetrics implements OperationListener {
   // copied from MessagingIncubatingAttributes
   private static final AttributeKey<Long> MESSAGING_BATCH_MESSAGE_COUNT =
       AttributeKey.longKey("messaging.batch.message_count");
-  private static final AttributeKey<String> MESSAGING_OPERATION =
-      AttributeKey.stringKey("messaging.operation");
   private static final AttributeKey<String> MESSAGING_OPERATION_TYPE =
       AttributeKey.stringKey("messaging.operation.type");
   // Use RECEIVE as the coordination key because the counter records each delivered message once,
@@ -53,65 +48,22 @@ public final class MessagingConsumerMetrics implements OperationListener {
 
   private final ContextKey<MessagingConsumerMetrics.State> messagingConsumerMetricsState =
       ContextKey.named("messaging-consumer-metrics-state");
-  private final boolean supportsStableSemconv;
-  private final boolean clientOperationDurationOnly;
   private final boolean consumedMessagesOnly;
-  private final boolean enabled;
-  @Nullable private final DoubleHistogram receiveDurationHistogram;
-  @Nullable private final LongCounter receiveMessageCount;
   @Nullable private final DoubleHistogram clientOperationDurationHistogram;
   @Nullable private final LongCounter consumedMessagesCounter;
 
   private MessagingConsumerMetrics(Meter meter, Variant variant) {
-    supportsStableSemconv = variant != Variant.LEGACY;
-    clientOperationDurationOnly = variant == Variant.CLIENT_OPERATION_DURATION_ONLY;
     consumedMessagesOnly = variant == Variant.CONSUMED_MESSAGES_ONLY;
-    boolean emitOldSemconv =
-        variant == Variant.LEGACY
-            || (variant == Variant.STABLE_AND_OLD && emitOldMessagingSemconv());
-    boolean emitStableSemconv = supportsStableSemconv && emitStableMessagingSemconv();
-    receiveDurationHistogram =
-        !clientOperationDurationOnly && !consumedMessagesOnly && emitOldSemconv
-            ? buildReceiveDuration(meter)
-            : null;
-    receiveMessageCount =
-        !clientOperationDurationOnly && !consumedMessagesOnly && emitOldSemconv
-            ? buildReceiveMessages(meter)
-            : null;
     clientOperationDurationHistogram =
-        !consumedMessagesOnly && emitStableSemconv
-            ? MessagingMetricsAdvice.buildClientOperationDuration(meter)
-            : null;
+        consumedMessagesOnly ? null : MessagingMetricsAdvice.buildClientOperationDuration(meter);
     consumedMessagesCounter =
-        !clientOperationDurationOnly && emitStableSemconv ? buildConsumedMessages(meter) : null;
-    enabled =
-        receiveDurationHistogram != null
-            || receiveMessageCount != null
-            || clientOperationDurationHistogram != null
-            || consumedMessagesCounter != null;
-  }
-
-  /**
-   * Returns the {@code messaging.client.*} metrics for extractors configured with {@link
-   * MessageOperation} or {@link MessagingOperationType}.
-   *
-   * @deprecated Use {@link #getForOperationType()}. May be removed in the next minor release.
-   */
-  @Deprecated // may be removed in the next minor release
-  public static OperationMetrics get() {
-    return getForOperationType();
+        variant == Variant.CLIENT_OPERATION_DURATION_ONLY ? null : buildConsumedMessages(meter);
   }
 
   /** Returns metrics for extractors configured with {@link MessagingOperationType}. */
-  // will be renamed in 3.0 to get()
-  public static OperationMetrics getForOperationType() {
+  public static OperationMetrics get() {
     return OperationMetricsUtil.create(
-        "messaging consumer", meter -> new MessagingConsumerMetrics(meter, Variant.STABLE));
-  }
-
-  /** Returns the same metrics as {@link #getForOperationType()}. */
-  public static OperationMetrics getForOperationTypeWithOldMetrics() { // to be removed in 3.0
-    return getForOperationType();
+        "messaging consumer", meter -> new MessagingConsumerMetrics(meter, Variant.ALL));
   }
 
   /** Returns only the client-operation-duration metric. */
@@ -131,9 +83,6 @@ public final class MessagingConsumerMetrics implements OperationListener {
   @Override
   @CanIgnoreReturnValue
   public Context onStart(Context context, Attributes startAttributes, long startNanos) {
-    if (!enabled) {
-      return context;
-    }
     MessagingOperationType operationType =
         MessagingOperationType.fromValue(startAttributes.get(MESSAGING_OPERATION_TYPE));
     boolean recordClientOperationDuration =
@@ -164,46 +113,26 @@ public final class MessagingConsumerMetrics implements OperationListener {
 
   @Override
   public void onEnd(Context context, Attributes endAttributes, long endNanos) {
-    if (!enabled) {
-      return;
-    }
     MessagingConsumerMetrics.State state = context.get(messagingConsumerMetricsState);
     if (state == null) {
       logger.log(
           FINE,
-          "No state present when ending context {0}. Cannot record consumer receive metrics.",
+          "No state present when ending context {0}. Cannot record messaging consumer metrics.",
           context);
       return;
     }
 
     Attributes attributes = state.startAttributes().toBuilder().putAll(endAttributes).build();
     double duration = (endNanos - state.startTimeNanos()) / NANOS_PER_S;
-    String operationType = attributes.get(MESSAGING_OPERATION_TYPE);
-    boolean recordsLegacyReceive =
-        !supportsStableSemconv
-            || "receive".equals(attributes.get(MESSAGING_OPERATION))
-            || MessagingOperationType.RECEIVE.value().equals(operationType);
-    if (receiveDurationHistogram != null && recordsLegacyReceive) {
-      receiveDurationHistogram.record(duration, attributes, context);
-    }
     // Metric view attribute advice can only select keys statically. The concrete destination name
     // must be omitted when a template is available or the destination is temporary or anonymous,
     // so this conditional requirement must be enforced before recording.
-    Attributes filteredAttributes =
-        clientOperationDurationHistogram != null || consumedMessagesCounter != null
-            ? MessagingMetricsAdvice.filterAttributes(attributes)
-            : attributes;
+    Attributes filteredAttributes = MessagingMetricsAdvice.filterAttributes(attributes);
     if (clientOperationDurationHistogram != null && state.recordClientOperationDuration()) {
       clientOperationDurationHistogram.record(duration, filteredAttributes, context);
     }
 
     Long batchMessageCount = attributes.get(MESSAGING_BATCH_MESSAGE_COUNT);
-    if (receiveMessageCount != null && recordsLegacyReceive) {
-      long receiveMessagesCount = batchMessageCount == null ? 1 : batchMessageCount;
-      if (!supportsStableSemconv || receiveMessagesCount > 0) {
-        receiveMessageCount.add(receiveMessagesCount, attributes, context);
-      }
-    }
     if (consumedMessagesCounter != null && state.recordConsumedMessages()) {
       long consumedMessagesCount =
           getConsumedMessagesCount(attributes, batchMessageCount, consumedMessagesOnly);
@@ -219,27 +148,6 @@ public final class MessagingConsumerMetrics implements OperationListener {
       return batchMessageCount;
     }
     return consumedMessagesOnly || attributes.get(ERROR_TYPE) == null ? 1 : 0;
-  }
-
-  private static DoubleHistogram buildReceiveDuration(Meter meter) {
-    DoubleHistogramBuilder builder =
-        meter
-            .histogramBuilder("messaging.receive.duration")
-            .setDescription("Measures the duration of receive operation.")
-            .setExplicitBucketBoundariesAdvice(MessagingMetricsAdvice.DURATION_SECONDS_BUCKETS)
-            .setUnit("s");
-    MessagingMetricsAdvice.applyOldDurationAdvice(builder);
-    return builder.build();
-  }
-
-  private static LongCounter buildReceiveMessages(Meter meter) {
-    LongCounterBuilder builder =
-        meter
-            .counterBuilder("messaging.receive.messages")
-            .setDescription("Measures the number of received messages.")
-            .setUnit("{message}");
-    MessagingMetricsAdvice.applyOldMessagesAdvice(builder);
-    return builder.build();
   }
 
   private static LongCounter buildConsumedMessages(Meter meter) {
@@ -265,12 +173,7 @@ public final class MessagingConsumerMetrics implements OperationListener {
   }
 
   private enum Variant {
-    /** The receive-duration histogram and received-messages counter. */
-    LEGACY,
-    /** The client-operation-duration histogram and consumed-messages counter. */
-    STABLE,
-    /** The client metrics and optional receive-duration and received-messages instruments. */
-    STABLE_AND_OLD,
+    ALL,
     /** Only the client-operation-duration histogram. */
     CLIENT_OPERATION_DURATION_ONLY,
     /** Only the consumed-messages counter, for a delivered message. */

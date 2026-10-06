@@ -120,7 +120,7 @@ public final class KafkaInstrumenterFactory {
 
   public Instrumenter<KafkaProducerRequest, RecordMetadata> createProducerInstrumenter(
       Iterable<AttributesExtractor<KafkaProducerRequest, RecordMetadata>> extractors) {
-    return createProducerInstrumenter(extractors, MessagingProducerMetrics.getForOperationType());
+    return createProducerInstrumenter(extractors, MessagingProducerMetrics.get());
   }
 
   private Instrumenter<KafkaProducerRequest, RecordMetadata> createProducerInstrumenter(
@@ -236,8 +236,7 @@ public final class KafkaInstrumenterFactory {
     return MessagingProcessInstrumenterFactory.create(
         builder,
         openTelemetry.getPropagators().getTextMapPropagator(),
-        new KafkaConsumerRecordGetter(),
-        receiveInstrumentationEnabled());
+        new KafkaConsumerRecordGetter());
   }
 
   private boolean receiveInstrumentationEnabled() {

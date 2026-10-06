@@ -19,7 +19,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Collections.emptyMap;
-import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.entry;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -42,7 +41,6 @@ import org.assertj.core.data.MapEntry;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class MessagingAttributesExtractorTest {
@@ -57,17 +55,6 @@ class MessagingAttributesExtractorTest {
         .isEqualTo(SchemaUrls.V1_43_0);
   }
 
-  @SuppressWarnings("deprecation")
-  @Test
-  void deprecatedExtractorShouldProvideAdoptedSchemaUrl() {
-    AttributesExtractor<Map<String, String>, String> extractor =
-        MessagingAttributesExtractor.create(TestGetter.INSTANCE, MessageOperation.PUBLISH);
-
-    assertThat(((SchemaUrlProvider) extractor).internalGetSchemaUrl())
-        .isEqualTo(SchemaUrls.V1_43_0);
-  }
-
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest
   @MethodSource("destinations")
   void shouldExtractAllAvailableAttributes(
@@ -91,8 +78,6 @@ class MessagingAttributesExtractorTest {
     request.put("url", "http://broker/topic");
     request.put("conversationId", "42");
     request.put("messageId", "42");
-    request.put("bodySize", "100");
-    request.put("envelopeSize", "120");
     request.put("clientId", "43");
     request.put("batchMessageCount", "2");
 
@@ -176,7 +161,7 @@ class MessagingAttributesExtractorTest {
   void shouldReturnSpanKey(MessagingOperationType operationType, SpanKey spanKey) {
     MessagingAttributesExtractor<Map<String, String>, String> underTest =
         new MessagingAttributesExtractor<>(
-            TestGetter.INSTANCE, operationType, operationType.legacyOperationName(), true, null);
+            TestGetter.INSTANCE, operationType, operationType.value(), null);
 
     assertThat(underTest.internalGetSpanKey()).isSameAs(spanKey);
   }
@@ -190,62 +175,11 @@ class MessagingAttributesExtractorTest {
         argumentSet("settle", MessagingOperationType.SETTLE, SpanKey.CONSUMER_SETTLE));
   }
 
-  @SuppressWarnings("deprecation") // testing deprecated API
-  @ParameterizedTest
-  @EnumSource(MessageOperation.class)
-  void shouldSupportDeprecatedMessageOperation(MessageOperation operation) {
-    AttributesExtractor<Map<String, String>, String> underTest =
-        MessagingAttributesExtractor.create(TestGetter.INSTANCE, operation);
-
-    AttributesBuilder attributes = Attributes.builder();
-    underTest.onStart(attributes, Context.root(), singletonMap("anonymousDestination", "y"));
-
-    assertThat(attributes.build())
-        .containsOnly(
-            entry(MESSAGING_DESTINATION_ANONYMOUS, true),
-            entry(MESSAGING_OPERATION_NAME, operation.type().value()),
-            entry(MESSAGING_OPERATION_TYPE, operation.type().value()));
-  }
-
-  @SuppressWarnings("deprecation")
   @Test
-  void deprecatedBuilderUsesAdoptedAttributesWithNullableOperation() {
-    Map<String, String> request = new HashMap<>();
-    request.put("system", "myQueue");
-    request.put("clientId", "43");
-    request.put("bodySize", "100");
-    request.put("envelopeSize", "120");
-    request.put("destination", "generated");
-    request.put("temporaryDestination", "y");
-
-    AttributesExtractor<Map<String, String>, String> extractor =
-        MessagingAttributesExtractor.builder(TestGetter.INSTANCE, (MessageOperation) null).build();
-    AttributesBuilder attributes = Attributes.builder();
-    extractor.onStart(attributes, Context.root(), request);
-    extractor.onEnd(attributes, Context.root(), request, null, new IllegalStateException());
-
-    assertThat(attributes.build())
-        .containsOnly(
-            entry(MESSAGING_SYSTEM, "myQueue"),
-            entry(MESSAGING_CLIENT_ID, "43"),
-            entry(MESSAGING_DESTINATION_NAME, "generated"),
-            entry(MESSAGING_DESTINATION_TEMPORARY, true),
-            entry(ERROR_TYPE, IllegalStateException.class.getName()));
-    assertThat(((SchemaUrlProvider) extractor).internalGetSchemaUrl())
-        .isEqualTo(SchemaUrls.V1_43_0);
-  }
-
-  @Test
-  void shouldExtractOperationNameWithoutOperationType() {
-    AttributesExtractor<Map<String, String>, String> underTest =
-        new MessagingAttributesExtractorBuilder<Map<String, String>, String>(
-                TestGetter.INSTANCE, null, "ack", true)
-            .build();
-
-    AttributesBuilder attributes = Attributes.builder();
-    underTest.onStart(attributes, Context.root(), emptyMap());
-
-    assertThat(attributes.build()).isEqualTo(Attributes.of(MESSAGING_OPERATION_NAME, "ack"));
+  void shouldRequireOperationType() {
+    assertThatThrownBy(() -> MessagingAttributesExtractor.builder(TestGetter.INSTANCE, null, "ack"))
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage("operationType");
   }
 
   @Test
@@ -270,14 +204,16 @@ class MessagingAttributesExtractorTest {
     assertThat(attributes.build()).isEqualTo(Attributes.of(ERROR_TYPE, "failure"));
   }
 
-  @SuppressWarnings("deprecation")
   @Test
-  void shouldExtractNoAttributesIfNoneAreAvailable() {
+  void shouldExtractOnlyOperationAttributesIfNoneAreAvailable() {
     // given
     AttributesExtractor<Map<String, String>, String> underTest =
-        MessagingAttributesExtractor.create(TestGetter.INSTANCE, (MessageOperation) null);
+        MessagingAttributesExtractor.create(
+            TestGetter.INSTANCE, MessagingOperationType.SEND, "send");
     AttributesExtractor<Map<String, String>, String> builtUnderTest =
-        MessagingAttributesExtractor.builder(TestGetter.INSTANCE, (MessageOperation) null).build();
+        MessagingAttributesExtractor.builder(
+                TestGetter.INSTANCE, MessagingOperationType.SEND, "send")
+            .build();
 
     Context context = Context.root();
 
@@ -291,8 +227,10 @@ class MessagingAttributesExtractorTest {
     underTest.onEnd(endAttributes, context, emptyMap(), null, null);
 
     // then
-    assertThat(startAttributes.build()).isEmpty();
-    assertThat(builtStartAttributes.build()).isEmpty();
+    assertThat(startAttributes.build())
+        .containsOnly(
+            entry(MESSAGING_OPERATION_NAME, "send"), entry(MESSAGING_OPERATION_TYPE, "send"));
+    assertThat(builtStartAttributes.build()).isEqualTo(startAttributes.build());
     assertThat(endAttributes.build()).isEmpty();
   }
 
@@ -328,20 +266,6 @@ class MessagingAttributesExtractorTest {
     @Override
     public String getConversationId(Map<String, String> request) {
       return request.get("conversationId");
-    }
-
-    @Nullable
-    @Override
-    public Long getMessageBodySize(Map<String, String> request) {
-      String payloadSize = request.get("bodySize");
-      return payloadSize == null ? null : Long.valueOf(payloadSize);
-    }
-
-    @Nullable
-    @Override
-    public Long getMessageEnvelopeSize(Map<String, String> request) {
-      String payloadSize = request.get("envelopeSize");
-      return payloadSize == null ? null : Long.valueOf(payloadSize);
     }
 
     @Override

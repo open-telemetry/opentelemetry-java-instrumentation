@@ -131,8 +131,7 @@ public final class SpringIntegrationTelemetryBuilder {
         MessagingProcessInstrumenterFactory.create(
             consumerBuilder,
             openTelemetry.getPropagators().getTextMapPropagator(),
-            MessageHeadersGetter.INSTANCE,
-            false);
+            MessageHeadersGetter.INSTANCE);
 
     SpringMessagingAttributesGetter producerGetter = new SpringMessagingAttributesGetter();
     InstrumenterBuilder<MessageWithChannel, Void> producerBuilder =
@@ -145,7 +144,7 @@ public final class SpringIntegrationTelemetryBuilder {
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
                     producerGetter, MessagingOperationType.SEND, SEND_OPERATION_NAME, headers))
-            .addOperationMetrics(MessagingProducerMetrics.getForOperationType());
+            .addOperationMetrics(MessagingProducerMetrics.get());
     setMessagingSendExceptionEventExtractor(producerBuilder);
     Instrumenter<MessageWithChannel, Void> producerInstrumenter =
         producerBuilder.buildInstrumenter(SpanKindExtractor.alwaysProducer());

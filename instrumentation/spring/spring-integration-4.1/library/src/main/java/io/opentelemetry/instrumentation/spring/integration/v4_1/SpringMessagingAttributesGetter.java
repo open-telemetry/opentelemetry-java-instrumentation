@@ -50,18 +50,6 @@ final class SpringMessagingAttributesGetter
     return null;
   }
 
-  @Nullable
-  @Override
-  public Long getMessageBodySize(MessageWithChannel messageWithChannel) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(MessageWithChannel messageWithChannel) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String getMessageId(MessageWithChannel messageWithChannel, @Nullable Void unused) {

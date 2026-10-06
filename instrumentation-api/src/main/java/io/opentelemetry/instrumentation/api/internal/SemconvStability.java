@@ -21,8 +21,6 @@ import java.util.Map;
  */
 public final class SemconvStability {
 
-  public static final String LEGACY_MESSAGING_SCHEMA_URL = SchemaUrls.V1_24_0;
-
   private static final boolean v3Preview;
 
   private static final boolean emitOldDatabaseSemconv;
@@ -156,14 +154,6 @@ public final class SemconvStability {
 
   private static boolean emitStable(SemconvMode mode) {
     return mode.version() >= 1;
-  }
-
-  public static boolean emitOldMessagingSemconv() { // to be removed in 3.0
-    return false;
-  }
-
-  public static boolean emitStableMessagingSemconv() { // to be removed in 3.0
-    return true;
   }
 
   public static String messagingSchemaUrl() {

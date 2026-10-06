@@ -134,7 +134,7 @@ public class RabbitSingletons {
                 buildMessagingAttributesExtractor(
                     getter, MessagingOperationType.SEND, PUBLISH_OPERATION_NAME))
             .addAttributesExtractor(new RabbitChannelExtraAttributesExtractor())
-            .addOperationMetrics(MessagingProducerMetrics.getForOperationType());
+            .addOperationMetrics(MessagingProducerMetrics.get());
     setMessagingSendExceptionEventExtractor(builder);
     return builder.buildInstrumenter(channelAndMethod -> PRODUCER);
   }
@@ -163,7 +163,7 @@ public class RabbitSingletons {
                 buildMessagingAttributesExtractor(
                     getter, MessagingOperationType.SETTLE, operationName))
             .addAttributesExtractor(new RabbitChannelSettleAttributesExtractor())
-            .addOperationMetrics(MessagingConsumerMetrics.getForOperationType());
+            .addOperationMetrics(MessagingConsumerMetrics.get());
     setMessagingSettleExceptionEventExtractor(builder);
     return builder.buildInstrumenter(
         MessagingSpanKindExtractor.create(MessagingOperationType.SETTLE));
@@ -191,7 +191,7 @@ public class RabbitSingletons {
         Instrumenter.<ReceiveRequest, GetResponse>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractors(extractors)
-            .addOperationMetrics(MessagingConsumerMetrics.getForOperationType())
+            .addOperationMetrics(MessagingConsumerMetrics.get())
             .addSpanLinksExtractor(
                 new PropagatorBasedSpanLinksExtractor<>(
                     GlobalOpenTelemetry.getPropagators().getTextMapPropagator(),
@@ -229,8 +229,7 @@ public class RabbitSingletons {
     return MessagingProcessInstrumenterFactory.create(
         builder,
         GlobalOpenTelemetry.getPropagators().getTextMapPropagator(),
-        new DeliveryRequestGetter(),
-        false);
+        new DeliveryRequestGetter());
   }
 
   private static <T, V> AttributesExtractor<T, V> buildMessagingAttributesExtractor(

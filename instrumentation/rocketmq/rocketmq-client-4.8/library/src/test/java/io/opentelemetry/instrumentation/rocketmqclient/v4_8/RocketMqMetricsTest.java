@@ -26,6 +26,7 @@ import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.sdk.metrics.data.MetricData;
 import java.util.List;
 import java.util.stream.Stream;
 import org.apache.rocketmq.client.consumer.listener.ConsumeReturnType;
@@ -71,7 +72,12 @@ class RocketMqMetricsTest {
         errorType);
     assertDuration(
         "messaging.client.operation.duration", "send", message.getTopic(), null, "send", errorType);
-    assertNoDeprecatedMetrics();
+    assertThat(testing.metrics())
+        .filteredOn(
+            metric -> metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
+        .extracting(MetricData::getName)
+        .containsExactlyInAnyOrder(
+            "messaging.client.sent.messages", "messaging.client.operation.duration");
   }
 
   private static Stream<Arguments> producerCases() {
@@ -131,7 +137,12 @@ class RocketMqMetricsTest {
         "consumer-group",
         null,
         consumeErrorType);
-    assertNoDeprecatedMetrics();
+    assertThat(testing.metrics())
+        .filteredOn(
+            metric -> metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
+        .extracting(MetricData::getName)
+        .containsExactlyInAnyOrder(
+            "messaging.client.consumed.messages", "messaging.process.duration");
   }
 
   private static Stream<Arguments> consumerCases() {
@@ -226,15 +237,5 @@ class RocketMqMetricsTest {
                                                 equalTo(MESSAGING_DESTINATION_NAME, destination),
                                                 equalTo(
                                                     MESSAGING_OPERATION_TYPE, operationType))))));
-  }
-
-  private static void assertNoDeprecatedMetrics() {
-    assertThat(testing.metrics())
-        .noneMatch(
-            metric ->
-                metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME)
-                    && (metric.getName().equals("messaging.publish.duration")
-                        || metric.getName().equals("messaging.receive.duration")
-                        || metric.getName().equals("messaging.receive.messages")));
   }
 }

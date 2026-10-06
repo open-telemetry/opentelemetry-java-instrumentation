@@ -16,7 +16,6 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -25,19 +24,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class MessagingSpanNameExtractorTest {
 
   @Mock MessagingAttributesGetter<Message, Void> getter;
-
-  @SuppressWarnings("deprecation")
-  @ParameterizedTest
-  @EnumSource(MessageOperation.class)
-  void shouldUseOperationTypeNameForMessageOperation(MessageOperation operation) {
-    Message message = new Message();
-    when(getter.isTemporaryDestination(message)).thenReturn(false);
-    when(getter.getDestination(message)).thenReturn("destination");
-
-    SpanNameExtractor<Message> underTest = MessagingSpanNameExtractor.create(getter, operation);
-
-    assertThat(underTest.extract(message)).isEqualTo(operation.type().value() + " destination");
-  }
 
   @ParameterizedTest
   @MethodSource("spanNameParams")
@@ -97,6 +83,24 @@ class MessagingSpanNameExtractorTest {
             MessagingOperationType.PROCESS,
             "process",
             "process generated-{id}"),
+        argumentSet(
+            "temporary destination without template",
+            true,
+            false,
+            "generated",
+            null,
+            MessagingOperationType.PROCESS,
+            "process",
+            "process"),
+        argumentSet(
+            "anonymous destination without template",
+            false,
+            true,
+            "generated",
+            null,
+            MessagingOperationType.PROCESS,
+            "process",
+            "process"),
         argumentSet(
             "missing destination",
             false,

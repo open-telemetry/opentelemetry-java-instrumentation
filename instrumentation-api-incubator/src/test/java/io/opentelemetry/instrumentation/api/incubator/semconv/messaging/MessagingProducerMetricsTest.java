@@ -19,7 +19,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPLATE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -40,7 +39,6 @@ import java.util.Collection;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class MessagingProducerMetricsTest {
 
   private static final double[] DURATION_BUCKETS =
@@ -54,16 +52,13 @@ class MessagingProducerMetricsTest {
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
     cleanup.deferCleanup(meterProvider);
-    OperationListener listener =
-        MessagingProducerMetrics.getForOperationTypeWithOldMetrics()
-            .create(meterProvider.get("test"));
+    OperationListener listener = MessagingProducerMetrics.get().create(meterProvider.get("test"));
 
     Attributes requestAttributes =
         Attributes.builder()
             .put(MESSAGING_SYSTEM, "pulsar")
             .put(MESSAGING_DESTINATION_NAME, "topic")
             .put(MESSAGING_DESTINATION_TEMPLATE, "topic-{id}")
-            .put(MESSAGING_OPERATION, null)
             .put(MESSAGING_OPERATION_NAME, "send")
             .put(MESSAGING_OPERATION_TYPE, "send")
             .put(SERVER_ADDRESS, "localhost")
@@ -148,15 +143,13 @@ class MessagingProducerMetricsTest {
   }
 
   @Test
-  void outerOperationPreventsDuplicateNestedStableMetrics() {
+  void outerOperationPreventsDuplicateNestedMetrics() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
     cleanup.deferCleanup(meterProvider);
-    OperationListener outer =
-        MessagingProducerMetrics.getForOperationType().create(meterProvider.get("outer"));
-    OperationListener inner =
-        MessagingProducerMetrics.getForOperationType().create(meterProvider.get("inner"));
+    OperationListener outer = MessagingProducerMetrics.get().create(meterProvider.get("outer"));
+    OperationListener inner = MessagingProducerMetrics.get().create(meterProvider.get("inner"));
     Attributes attributes =
         Attributes.builder()
             .put(MESSAGING_SYSTEM, "kafka")
@@ -183,10 +176,8 @@ class MessagingProducerMetricsTest {
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
     cleanup.deferCleanup(meterProvider);
-    OperationListener outer =
-        MessagingProducerMetrics.getForOperationType().create(meterProvider.get("outer"));
-    OperationListener inner =
-        MessagingProducerMetrics.getForOperationType().create(meterProvider.get("inner"));
+    OperationListener outer = MessagingProducerMetrics.get().create(meterProvider.get("outer"));
+    OperationListener inner = MessagingProducerMetrics.get().create(meterProvider.get("inner"));
     Attributes attributes =
         Attributes.builder()
             .put(MESSAGING_OPERATION_NAME, "send")
@@ -210,8 +201,7 @@ class MessagingProducerMetricsTest {
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
     cleanup.deferCleanup(meterProvider);
-    OperationListener listener =
-        MessagingProducerMetrics.getForOperationType().create(meterProvider.get("test"));
+    OperationListener listener = MessagingProducerMetrics.get().create(meterProvider.get("test"));
     Attributes attributes =
         Attributes.builder()
             .put(MESSAGING_SYSTEM, "kafka")
@@ -241,13 +231,10 @@ class MessagingProducerMetricsTest {
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
     cleanup.deferCleanup(meterProvider);
-    OperationListener listener =
-        MessagingProducerMetrics.getForOperationTypeWithOldMetrics()
-            .create(meterProvider.get("test"));
+    OperationListener listener = MessagingProducerMetrics.get().create(meterProvider.get("test"));
 
     Attributes attributes =
         Attributes.builder()
-            .put(MESSAGING_OPERATION, null)
             .put(MESSAGING_OPERATION_NAME, "create")
             .put(MESSAGING_OPERATION_TYPE, "create")
             .build();
@@ -255,21 +242,9 @@ class MessagingProducerMetricsTest {
     listener.onEnd(context, Attributes.empty(), nanos(250));
 
     Collection<MetricData> metrics = metricReader.collectAllMetrics();
-    assertThat(
-            metrics.stream()
-                .filter(metric -> metric.getName().equals("messaging.client.operation.duration"))
-                .count())
-        .isEqualTo(1);
-    assertThat(
-            metrics.stream()
-                .filter(metric -> metric.getName().equals("messaging.client.sent.messages"))
-                .count())
-        .isZero();
-    assertThat(
-            metrics.stream()
-                .filter(metric -> metric.getName().equals("messaging.publish.duration"))
-                .count())
-        .isZero();
+    assertThat(metrics)
+        .extracting(MetricData::getName)
+        .containsExactly("messaging.client.operation.duration");
   }
 
   @Test
@@ -278,12 +253,10 @@ class MessagingProducerMetricsTest {
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
     cleanup.deferCleanup(meterProvider);
-    OperationListener listener =
-        MessagingProducerMetrics.getForOperationType().create(meterProvider.get("test"));
+    OperationListener listener = MessagingProducerMetrics.get().create(meterProvider.get("test"));
 
     Attributes attributes =
         Attributes.builder()
-            .put(MESSAGING_OPERATION, null)
             .put(MESSAGING_OPERATION_NAME, "send")
             .put(MESSAGING_OPERATION_TYPE, "send")
             .put(MESSAGING_BATCH_MESSAGE_COUNT, 0)
@@ -315,58 +288,12 @@ class MessagingProducerMetricsTest {
 
     Collection<MetricData> metrics = metricReader.collectAllMetrics();
     assertThat(metrics)
-        .satisfiesExactly(metric -> assertThat(metric).hasName("messaging.client.sent.messages"));
-  }
-
-  @Test
-  void operationTypeEntryPointNeverCollectsLegacyMetrics() {
-    InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
-    SdkMeterProvider meterProvider =
-        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
-    cleanup.deferCleanup(meterProvider);
-    OperationListener listener =
-        MessagingProducerMetrics.getForOperationType().create(meterProvider.get("test"));
-
-    Attributes attributes =
-        Attributes.builder()
-            .put(MESSAGING_SYSTEM, "pulsar")
-            .put(MESSAGING_DESTINATION_NAME, "topic")
-            .put(MESSAGING_OPERATION, null)
-            .put(MESSAGING_OPERATION_NAME, "send")
-            .put(MESSAGING_OPERATION_TYPE, "send")
-            .build();
-    Context context = listener.onStart(Context.root(), attributes, nanos(100));
-    listener.onEnd(context, Attributes.empty(), nanos(250));
-
-    Collection<MetricData> metrics = metricReader.collectAllMetrics();
-    assertThat(metrics)
-        .anySatisfy(metric -> assertThat(metric).hasName("messaging.client.operation.duration"))
-        .anySatisfy(metric -> assertThat(metric).hasName("messaging.client.sent.messages"))
-        .noneSatisfy(metric -> assertThat(metric).hasName("messaging.publish.duration"));
-  }
-
-  @Test
-  void deprecatedEntryPointCollectsOnlyAdoptedMetrics() {
-    InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
-    SdkMeterProvider meterProvider =
-        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
-    cleanup.deferCleanup(meterProvider);
-    OperationListener listener = MessagingProducerMetrics.get().create(meterProvider.get("test"));
-
-    Context context =
-        listener.onStart(
-            Context.root(),
-            Attributes.of(
-                MESSAGING_SYSTEM, "pulsar",
-                MESSAGING_OPERATION_NAME, "send",
-                MESSAGING_OPERATION_TYPE, "send"),
-            nanos(100));
-    listener.onEnd(context, Attributes.empty(), nanos(250));
-
-    assertThat(metricReader.collectAllMetrics())
-        .hasSize(2)
-        .anySatisfy(metric -> assertThat(metric).hasName("messaging.client.operation.duration"))
-        .anySatisfy(metric -> assertThat(metric).hasName("messaging.client.sent.messages"));
+        .satisfiesExactly(
+            metric ->
+                assertThat(metric)
+                    .hasName("messaging.client.sent.messages")
+                    .hasLongSumSatisfying(
+                        sum -> sum.hasPointsSatisfying(point -> point.hasValue(1))));
   }
 
   private static long nanos(int millis) {

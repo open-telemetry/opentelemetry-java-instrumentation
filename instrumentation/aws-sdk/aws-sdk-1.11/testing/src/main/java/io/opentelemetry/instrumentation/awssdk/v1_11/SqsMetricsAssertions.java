@@ -32,7 +32,6 @@ final class SqsMetricsAssertions {
     assertClientOperationDuration(testing, serverPort, operationCount, "send", "send");
     assertMessageCounter(
         testing, "messaging.client.sent.messages", "send", messageCount, serverPort);
-    assertNoDeprecatedMessagingMetrics(testing);
   }
 
   static void assertReceiveAndProcessMetrics(
@@ -45,7 +44,6 @@ final class SqsMetricsAssertions {
     assertMessageCounter(
         testing, "messaging.client.consumed.messages", "receive", messageCount, serverPort);
     assertProcessDuration(testing, serverPort, messageCount);
-    assertNoDeprecatedMessagingMetrics(testing);
   }
 
   static void assertProcessMetrics(
@@ -54,7 +52,6 @@ final class SqsMetricsAssertions {
     assertMessageCounter(
         testing, "messaging.client.consumed.messages", "process", messageCount, serverPort);
     assertProcessDuration(testing, serverPort, messageCount);
-    assertNoDeprecatedMessagingMetrics(testing);
   }
 
   static void assertSettleMetrics(
@@ -67,7 +64,6 @@ final class SqsMetricsAssertions {
             metric -> metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
         .extracting(MetricData::getName)
         .doesNotContain("messaging.client.consumed.messages");
-    assertNoDeprecatedMessagingMetrics(testing);
   }
 
   private static void assertClientOperationDuration(
@@ -169,18 +165,6 @@ final class SqsMetricsAssertions {
                                                 equalTo(SERVER_ADDRESS, "localhost"),
                                                 equalTo(SERVER_PORT, serverPort))
                                             .hasValue(messageCount)))));
-  }
-
-  private static void assertNoDeprecatedMessagingMetrics(InstrumentationExtension testing) {
-    assertThat(testing.metrics())
-        .filteredOn(
-            metric -> metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
-        .extracting(MetricData::getName)
-        .doesNotContain(
-            "messaging.publish.duration",
-            "messaging.publish.messages",
-            "messaging.receive.duration",
-            "messaging.receive.messages");
   }
 
   private SqsMetricsAssertions() {}

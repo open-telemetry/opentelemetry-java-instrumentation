@@ -46,7 +46,7 @@ class JmsInstrumenterFactoryTest {
             .build()) {
       Instrumenter<MessageWithDestination, Void> instrumenter =
           new JmsInstrumenterFactory(openTelemetry, INSTRUMENTATION_NAME)
-              .createConsumerProcessInstrumenter(false, true);
+              .createConsumerProcessInstrumenter(true);
       MessageWithDestination request = MessageWithDestination.create(messageAdapter(), null);
       Span parent = openTelemetry.getTracer("test").spanBuilder("parent").startSpan();
       Context parentContext =
@@ -86,9 +86,9 @@ class JmsInstrumenterFactoryTest {
       JmsInstrumenterFactory factory =
           new JmsInstrumenterFactory(openTelemetry, INSTRUMENTATION_NAME);
       Instrumenter<MessageWithDestination, Void> withoutCount =
-          factory.createConsumerProcessInstrumenter(false, false);
+          factory.createConsumerProcessInstrumenter(false);
       Instrumenter<MessageWithDestination, Void> withCount =
-          factory.createConsumerProcessInstrumenter(false, true);
+          factory.createConsumerProcessInstrumenter(true);
       MessageWithDestination request = MessageWithDestination.create(messageAdapter(), null);
 
       Context context = withoutCount.start(Context.root(), request);

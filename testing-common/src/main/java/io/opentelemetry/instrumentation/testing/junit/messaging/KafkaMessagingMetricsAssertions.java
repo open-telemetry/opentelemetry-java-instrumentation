@@ -52,7 +52,6 @@ public final class KafkaMessagingMetricsAssertions {
       long count,
       String errorType) {
 
-    assertDeprecatedMetricsAbsent(testing);
     assertCounter(
         testing,
         instrumentationName,
@@ -102,7 +101,6 @@ public final class KafkaMessagingMetricsAssertions {
         partition,
         messageCount,
         errorType);
-    assertDeprecatedMetricsAbsent(testing);
   }
 
   public static void assertReceiveDurationMetrics(
@@ -126,7 +124,6 @@ public final class KafkaMessagingMetricsAssertions {
         partition,
         operationCount,
         errorType);
-    assertDeprecatedMetricsAbsent(testing);
   }
 
   /**
@@ -198,15 +195,6 @@ public final class KafkaMessagingMetricsAssertions {
         partition,
         operationCount,
         errorType);
-  }
-
-  public static void assertNoNewMetrics(
-      InstrumentationExtension testing, String instrumentationName) {
-    assertMetricAbsent(testing, instrumentationName, CLIENT_OPERATION_DURATION);
-    assertMetricAbsent(testing, instrumentationName, SENT_MESSAGES);
-    assertMetricAbsent(testing, instrumentationName, CONSUMED_MESSAGES);
-    assertMetricAbsent(testing, instrumentationName, PROCESS_DURATION);
-    assertDeprecatedMetricsAbsent(testing);
   }
 
   public static void assertClientOperationDurationMetricAbsent(
@@ -371,15 +359,6 @@ public final class KafkaMessagingMetricsAssertions {
             point ->
                 assertThat(point.getAttributes().get(stringKey("messaging.operation.name")))
                     .isNotEqualTo("process"));
-  }
-
-  private static void assertDeprecatedMetricsAbsent(InstrumentationExtension testing) {
-    assertThat(testing.metrics())
-        .extracting(MetricData::getName)
-        .doesNotContain(
-            "messaging.publish.duration",
-            "messaging.receive.duration",
-            "messaging.receive.messages");
   }
 
   private KafkaMessagingMetricsAssertions() {}

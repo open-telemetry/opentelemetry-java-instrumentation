@@ -17,7 +17,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.metrics.data.MetricData;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 
@@ -56,7 +55,6 @@ class RabbitMqMetricsAssertions {
                                                 satisfies(
                                                     SERVER_PORT,
                                                     AbstractLongAssert::isPositive))))));
-    assertNoDeprecatedMessagingMetrics(testing);
   }
 
   static void assertReceiveMetrics(
@@ -71,7 +69,6 @@ class RabbitMqMetricsAssertions {
     } else {
       assertConsumedMessages(testing, "receive", destination, errorType, consumedMessages);
     }
-    assertNoDeprecatedMessagingMetrics(testing);
   }
 
   static void assertProcessMetrics(
@@ -110,7 +107,6 @@ class RabbitMqMetricsAssertions {
                                                         SERVER_PORT,
                                                         AbstractLongAssert::isPositive))))));
     assertConsumedMessages(testing, "process", destination, errorType, consumedMessages);
-    assertNoDeprecatedMessagingMetrics(testing);
   }
 
   static void assertSettleMetrics(
@@ -118,7 +114,6 @@ class RabbitMqMetricsAssertions {
 
     assertClientOperationDuration(testing, operationName, "settle", null, errorType);
     assertNoMetric(testing, "messaging.client.consumed.messages");
-    assertNoDeprecatedMessagingMetrics(testing);
   }
 
   static void assertNoMessagingMetrics(InstrumentationExtension testing) {
@@ -216,17 +211,6 @@ class RabbitMqMetricsAssertions {
                 metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME)
                     && metric.getName().equals(metricName))
         .isEmpty();
-  }
-
-  private static void assertNoDeprecatedMessagingMetrics(InstrumentationExtension testing) {
-    assertThat(testing.metrics())
-        .filteredOn(
-            metric -> metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
-        .extracting(MetricData::getName)
-        .doesNotContain(
-            "messaging.publish.duration",
-            "messaging.receive.duration",
-            "messaging.receive.messages");
   }
 
   private RabbitMqMetricsAssertions() {}

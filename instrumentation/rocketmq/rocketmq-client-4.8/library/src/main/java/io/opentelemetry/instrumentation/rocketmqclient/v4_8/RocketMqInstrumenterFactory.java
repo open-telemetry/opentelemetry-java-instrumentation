@@ -63,7 +63,7 @@ class RocketMqInstrumenterFactory {
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
                     getter, operationType, SEND_OPERATION_NAME, headers))
-            .addOperationMetrics(MessagingProducerMetrics.getForOperationType());
+            .addOperationMetrics(MessagingProducerMetrics.get());
     instrumenterBuilder.addAttributesExtractor(producerAttributesExtractor());
     if (captureExperimentalSpanAttributes) {
       instrumenterBuilder.addAttributesExtractor(
@@ -90,7 +90,7 @@ class RocketMqInstrumenterFactory {
                     getter, operationType, SEND_OPERATION_NAME, headers))
             .addSpanLinksExtractor(new RocketMqBatchSendSpanLinksExtractor())
             .addAttributesExtractor(producerAttributesExtractor())
-            .addOperationMetrics(MessagingProducerMetrics.getForOperationType());
+            .addOperationMetrics(MessagingProducerMetrics.get());
     if (captureExperimentalSpanAttributes) {
       builder.addAttributesExtractor(new RocketMqProducerExperimentalAttributeExtractor());
     }
@@ -215,8 +215,7 @@ class RocketMqInstrumenterFactory {
     return MessagingProcessInstrumenterFactory.create(
         builder,
         openTelemetry.getPropagators().getTextMapPropagator(),
-        new TextMapExtractAdapter(),
-        false);
+        new TextMapExtractAdapter());
   }
 
   private static AttributesExtractor<RocketMqConsumerRequest, ConsumeMessageContext>

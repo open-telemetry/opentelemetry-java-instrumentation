@@ -68,10 +68,6 @@ class SemconvSelectionResolver {
             .build());
   }
 
-  SemconvMode messaging() {
-    return SemconvMode.V0_STABLE;
-  }
-
   SemconvMode servicePeer() {
     return resolveSemconvSelection(
         SemconvDomain.builder("service.peer")

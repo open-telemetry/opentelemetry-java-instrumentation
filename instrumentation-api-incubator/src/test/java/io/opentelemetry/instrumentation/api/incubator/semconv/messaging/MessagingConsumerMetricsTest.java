@@ -18,7 +18,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPLATE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -40,7 +39,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class MessagingConsumerMetricsTest {
 
   private static final double[] DURATION_BUCKETS =
@@ -54,16 +52,13 @@ class MessagingConsumerMetricsTest {
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
     cleanup.deferCleanup(meterProvider);
-    OperationListener listener =
-        MessagingConsumerMetrics.getForOperationTypeWithOldMetrics()
-            .create(meterProvider.get("test"));
+    OperationListener listener = MessagingConsumerMetrics.get().create(meterProvider.get("test"));
 
     Attributes requestAttributes =
         Attributes.builder()
             .put(MESSAGING_SYSTEM, "pulsar")
             .put(MESSAGING_DESTINATION_NAME, "topic")
             .put(MESSAGING_DESTINATION_TEMPLATE, "topic-{id}")
-            .put(MESSAGING_OPERATION, null)
             .put(MESSAGING_OPERATION_NAME, "receive")
             .put(MESSAGING_OPERATION_TYPE, "receive")
             .put(MESSAGING_CONSUMER_GROUP_NAME, "group")
@@ -133,15 +128,13 @@ class MessagingConsumerMetricsTest {
   }
 
   @Test
-  void outerReceivePreventsDuplicateNestedStableMetrics() {
+  void outerReceivePreventsDuplicateNestedMetrics() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
     cleanup.deferCleanup(meterProvider);
-    OperationListener outer =
-        MessagingConsumerMetrics.getForOperationType().create(meterProvider.get("outer"));
-    OperationListener inner =
-        MessagingConsumerMetrics.getForOperationType().create(meterProvider.get("inner"));
+    OperationListener outer = MessagingConsumerMetrics.get().create(meterProvider.get("outer"));
+    OperationListener inner = MessagingConsumerMetrics.get().create(meterProvider.get("inner"));
     Attributes attributes =
         Attributes.builder()
             .put(MESSAGING_SYSTEM, "kafka")
@@ -177,10 +170,8 @@ class MessagingConsumerMetricsTest {
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
     cleanup.deferCleanup(meterProvider);
-    OperationListener outer =
-        MessagingConsumerMetrics.getForOperationType().create(meterProvider.get("outer"));
-    OperationListener inner =
-        MessagingConsumerMetrics.getForOperationType().create(meterProvider.get("inner"));
+    OperationListener outer = MessagingConsumerMetrics.get().create(meterProvider.get("outer"));
+    OperationListener inner = MessagingConsumerMetrics.get().create(meterProvider.get("inner"));
     Attributes attributes =
         Attributes.builder()
             .put(MESSAGING_OPERATION_NAME, "receive")
@@ -264,14 +255,11 @@ class MessagingConsumerMetricsTest {
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
     cleanup.deferCleanup(meterProvider);
-    OperationListener listener =
-        MessagingConsumerMetrics.getForOperationTypeWithOldMetrics()
-            .create(meterProvider.get("test"));
+    OperationListener listener = MessagingConsumerMetrics.get().create(meterProvider.get("test"));
 
     Attributes requestAttributes =
         Attributes.builder()
             .put(MESSAGING_SYSTEM, "pulsar")
-            .put(MESSAGING_OPERATION, null)
             .put(MESSAGING_OPERATION_NAME, "receive")
             .put(MESSAGING_OPERATION_TYPE, "receive")
             .build();
@@ -300,7 +288,6 @@ class MessagingConsumerMetricsTest {
         Attributes.builder()
             .put(MESSAGING_SYSTEM, "pulsar")
             .put(MESSAGING_DESTINATION_NAME, "topic")
-            .put(MESSAGING_OPERATION, null)
             .put(MESSAGING_OPERATION_NAME, "process")
             .put(MESSAGING_OPERATION_TYPE, "process")
             .build();
@@ -361,13 +348,10 @@ class MessagingConsumerMetricsTest {
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
     cleanup.deferCleanup(meterProvider);
-    OperationListener listener =
-        MessagingConsumerMetrics.getForOperationTypeWithOldMetrics()
-            .create(meterProvider.get("test"));
+    OperationListener listener = MessagingConsumerMetrics.get().create(meterProvider.get("test"));
 
     Attributes attributes =
         Attributes.builder()
-            .put(MESSAGING_OPERATION, null)
             .put(MESSAGING_OPERATION_NAME, operationType)
             .put(MESSAGING_OPERATION_TYPE, operationType)
             .build();
@@ -376,41 +360,24 @@ class MessagingConsumerMetricsTest {
     listener.onEnd(context, Attributes.empty(), nanos(300));
 
     Collection<MetricData> metrics = metricReader.collectAllMetrics();
-    assertThat(
-            metrics.stream()
-                .filter(metric -> metric.getName().equals("messaging.client.operation.duration"))
-                .count())
-        .isEqualTo(recordsClientDuration ? 1 : 0);
-    assertThat(
-            metrics.stream()
-                .filter(metric -> metric.getName().equals("messaging.client.consumed.messages"))
-                .count())
-        .isZero();
-    assertThat(
-            metrics.stream()
-                .filter(metric -> metric.getName().equals("messaging.receive.duration"))
-                .count())
-        .isZero();
-    assertThat(
-            metrics.stream()
-                .filter(metric -> metric.getName().equals("messaging.receive.messages"))
-                .count())
-        .isZero();
+    assertThat(metrics)
+        .extracting(MetricData::getName)
+        .containsExactly(
+            recordsClientDuration
+                ? new String[] {"messaging.client.operation.duration"}
+                : new String[0]);
   }
 
   @Test
-  void zeroBatchDoesNotCountReceivedMessages() {
+  void zeroBatchDoesNotCountConsumedMessages() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
     cleanup.deferCleanup(meterProvider);
-    OperationListener listener =
-        MessagingConsumerMetrics.getForOperationTypeWithOldMetrics()
-            .create(meterProvider.get("test"));
+    OperationListener listener = MessagingConsumerMetrics.get().create(meterProvider.get("test"));
 
     Attributes attributes =
         Attributes.builder()
-            .put(MESSAGING_OPERATION, null)
             .put(MESSAGING_OPERATION_NAME, "receive")
             .put(MESSAGING_OPERATION_TYPE, "receive")
             .put(MESSAGING_BATCH_MESSAGE_COUNT, 0)
@@ -419,7 +386,8 @@ class MessagingConsumerMetricsTest {
     listener.onEnd(context, Attributes.empty(), nanos(300));
 
     assertThat(metricReader.collectAllMetrics())
-        .noneSatisfy(metric -> assertThat(metric).hasName("messaging.receive.messages"));
+        .extracting(MetricData::getName)
+        .containsExactly("messaging.client.operation.duration");
   }
 
   private static Stream<Arguments> nonReceiveOperations() {
@@ -433,13 +401,10 @@ class MessagingConsumerMetricsTest {
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
     cleanup.deferCleanup(meterProvider);
-    OperationListener listener =
-        MessagingConsumerMetrics.getForOperationTypeWithOldMetrics()
-            .create(meterProvider.get("test"));
+    OperationListener listener = MessagingConsumerMetrics.get().create(meterProvider.get("test"));
 
     Attributes startAttributes =
         Attributes.builder()
-            .put(MESSAGING_OPERATION, null)
             .put(MESSAGING_OPERATION_NAME, "receive")
             .put(MESSAGING_OPERATION_TYPE, "receive")
             .put(MESSAGING_BATCH_MESSAGE_COUNT, 3)
@@ -462,18 +427,16 @@ class MessagingConsumerMetricsTest {
   }
 
   @Test
-  void operationTypeEntryPointNeverCollectsLegacyMetrics() {
+  void successfulReceiveWithoutBatchCountCountsOneConsumedMessage() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
     cleanup.deferCleanup(meterProvider);
-    OperationListener listener =
-        MessagingConsumerMetrics.getForOperationType().create(meterProvider.get("test"));
+    OperationListener listener = MessagingConsumerMetrics.get().create(meterProvider.get("test"));
 
     Attributes attributes =
         Attributes.builder()
             .put(MESSAGING_SYSTEM, "pulsar")
-            .put(MESSAGING_OPERATION, null)
             .put(MESSAGING_OPERATION_NAME, "receive")
             .put(MESSAGING_OPERATION_TYPE, "receive")
             .build();
@@ -482,34 +445,17 @@ class MessagingConsumerMetricsTest {
 
     Collection<MetricData> metrics = metricReader.collectAllMetrics();
     assertThat(metrics)
-        .anySatisfy(metric -> assertThat(metric).hasName("messaging.client.operation.duration"))
-        .anySatisfy(metric -> assertThat(metric).hasName("messaging.client.consumed.messages"))
-        .noneSatisfy(metric -> assertThat(metric).hasName("messaging.receive.duration"))
-        .noneSatisfy(metric -> assertThat(metric).hasName("messaging.receive.messages"));
-  }
-
-  @Test
-  void deprecatedEntryPointCollectsOnlyAdoptedMetrics() {
-    InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
-    SdkMeterProvider meterProvider =
-        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
-    cleanup.deferCleanup(meterProvider);
-    OperationListener listener = MessagingConsumerMetrics.get().create(meterProvider.get("test"));
-
-    Context context =
-        listener.onStart(
-            Context.root(),
-            Attributes.of(
-                MESSAGING_SYSTEM, "pulsar",
-                MESSAGING_OPERATION_NAME, "receive",
-                MESSAGING_OPERATION_TYPE, "receive"),
-            nanos(100));
-    listener.onEnd(context, Attributes.empty(), nanos(300));
-
-    assertThat(metricReader.collectAllMetrics())
-        .hasSize(2)
-        .anySatisfy(metric -> assertThat(metric).hasName("messaging.client.operation.duration"))
-        .anySatisfy(metric -> assertThat(metric).hasName("messaging.client.consumed.messages"));
+        .extracting(MetricData::getName)
+        .containsExactlyInAnyOrder(
+            "messaging.client.operation.duration", "messaging.client.consumed.messages");
+    assertThat(metrics)
+        .filteredOn(metric -> metric.getName().equals("messaging.client.consumed.messages"))
+        .singleElement()
+        .satisfies(
+            metric ->
+                assertThat(metric)
+                    .hasLongSumSatisfying(
+                        sum -> sum.hasPointsSatisfying(point -> point.hasValue(1))));
   }
 
   private static long nanos(int millis) {

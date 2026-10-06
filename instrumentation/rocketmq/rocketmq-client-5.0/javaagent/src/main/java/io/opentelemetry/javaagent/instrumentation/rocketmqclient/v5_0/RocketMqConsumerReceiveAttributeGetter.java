@@ -51,18 +51,6 @@ class RocketMqConsumerReceiveAttributeGetter
 
   @Nullable
   @Override
-  public Long getMessageBodySize(RocketMqReceiveRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(RocketMqReceiveRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getMessageId(RocketMqReceiveRequest request, @Nullable List<MessageView> unused) {
     // receiving is a batching operation, so the message id always goes on the links describing the
     // individual messages
