@@ -23,7 +23,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelSingletons.getSpanDecorator;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelSingletons.instrumenter;
 import static java.util.logging.Level.FINE;
@@ -66,9 +65,7 @@ final class CamelEventNotifier extends EventNotifierSupport {
     Context context = startOnExchangeSending(request);
 
     ActiveContextManager.activate(context, request);
-    if (!emitStableMessagingSemconv()
-        || !request.isMessaging()
-        || request.isMessagingSpanContextPropagated()) {
+    if (!request.isMessaging() || request.isMessagingSpanContextPropagated()) {
       CamelPropagationUtil.injectParent(
           context != null ? context : Context.current(), ese.getExchange().getIn().getHeaders());
     } else {

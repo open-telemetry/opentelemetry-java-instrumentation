@@ -94,8 +94,7 @@ public final class AwsSdkTelemetryBuilder {
    * An entry is eligible when it does not already contain a creation context and the AWS SDK
    * version supports the per-entry {@code AWSTraceHeader} system attribute.
    *
-   * <p>This option only applies when the stable messaging semantic conventions are enabled. It is
-   * enabled by default.
+   * <p>This option is enabled by default.
    */
   @CanIgnoreReturnValue
   public AwsSdkTelemetryBuilder setBatchSendMessageCreationSpansEnabled(

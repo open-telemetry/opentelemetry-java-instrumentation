@@ -27,10 +27,7 @@ final class PulsarBatchMessagingAttributesGetter
   @Nullable
   @Override
   public String getDestination(PulsarBatchRequest request) {
-    PulsarBatchRecordAttributes batchRecordAttributes = request.getBatchRecordAttributes();
-    return batchRecordAttributes != null
-        ? batchRecordAttributes.getCommonDestination()
-        : request.getDestination();
+    return request.getBatchRecordAttributes().getCommonDestination();
   }
 
   @Nullable
@@ -93,10 +90,7 @@ final class PulsarBatchMessagingAttributesGetter
   @Nullable
   @Override
   public String getDestinationPartitionId(PulsarBatchRequest request) {
-    PulsarBatchRecordAttributes batchRecordAttributes = request.getBatchRecordAttributes();
-    return batchRecordAttributes != null
-        ? batchRecordAttributes.getCommonPartitionId()
-        : request.getDestinationPartitionId();
+    return request.getBatchRecordAttributes().getCommonPartitionId();
   }
 
   @Nullable

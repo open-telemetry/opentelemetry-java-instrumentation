@@ -33,8 +33,6 @@ class RocketMqConsumerInstrumenterTest {
   @Mock
   private Instrumenter<RocketMqConsumerRequest, ConsumeMessageContext> batchProcessInstrumenter;
 
-  @Mock private Instrumenter<RocketMqConsumerRequest, Void> batchReceiveInstrumenter;
-
   @Test
   void usesEmptyNamespaceByDefault() {
     RocketMqConsumerRequest request =
@@ -46,8 +44,7 @@ class RocketMqConsumerInstrumenterTest {
   @Test
   void startsSingleProcessSpanForWholeBatch() {
     RocketMqConsumerInstrumenter instrumenter =
-        new RocketMqConsumerInstrumenter(
-            singleProcessInstrumenter, batchProcessInstrumenter, batchReceiveInstrumenter);
+        new RocketMqConsumerInstrumenter(singleProcessInstrumenter, batchProcessInstrumenter);
     Context parentContext = Context.root();
     Context processContext = mock(Context.class);
     when(batchProcessInstrumenter.shouldStart(same(parentContext), any())).thenReturn(true);
@@ -68,6 +65,6 @@ class RocketMqConsumerInstrumenterTest {
     verify(batchProcessInstrumenter).start(same(parentContext), same(consumerContext.getRequest()));
     verify(batchProcessInstrumenter)
         .end(same(processContext), same(consumerContext.getRequest()), same(response), same(null));
-    verifyNoInteractions(batchReceiveInstrumenter, singleProcessInstrumenter);
+    verifyNoInteractions(singleProcessInstrumenter);
   }
 }

@@ -111,14 +111,13 @@ public final class SpringIntegrationTelemetryBuilder {
    * SpringIntegrationTelemetryBuilder}.
    */
   public SpringIntegrationTelemetry build() {
-    SpringMessagingAttributesGetter consumerGetter = new SpringMessagingAttributesGetter(false);
-    SpringMessagingAttributesGetter consumerNameGetter = new SpringMessagingAttributesGetter(true);
+    SpringMessagingAttributesGetter consumerGetter = new SpringMessagingAttributesGetter();
     InstrumenterBuilder<MessageWithChannel, Void> consumerBuilder =
         Instrumenter.<MessageWithChannel, Void>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(
-                    consumerNameGetter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME))
+                    consumerGetter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME))
             .addAttributesExtractors(additionalAttributeExtractors)
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
@@ -135,14 +134,13 @@ public final class SpringIntegrationTelemetryBuilder {
             MessageHeadersGetter.INSTANCE,
             false);
 
-    SpringMessagingAttributesGetter producerGetter = new SpringMessagingAttributesGetter(false);
-    SpringMessagingAttributesGetter producerNameGetter = new SpringMessagingAttributesGetter(true);
+    SpringMessagingAttributesGetter producerGetter = new SpringMessagingAttributesGetter();
     InstrumenterBuilder<MessageWithChannel, Void> producerBuilder =
         Instrumenter.<MessageWithChannel, Void>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(
-                    producerNameGetter, MessagingOperationType.SEND, SEND_OPERATION_NAME))
+                    producerGetter, MessagingOperationType.SEND, SEND_OPERATION_NAME))
             .addAttributesExtractors(additionalAttributeExtractors)
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(

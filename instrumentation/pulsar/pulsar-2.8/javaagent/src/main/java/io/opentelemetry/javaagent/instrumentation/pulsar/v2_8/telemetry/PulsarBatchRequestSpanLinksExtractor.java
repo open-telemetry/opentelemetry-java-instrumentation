@@ -10,18 +10,14 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
-import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import org.apache.pulsar.client.api.Message;
 
 final class PulsarBatchRequestSpanLinksExtractor implements SpanLinksExtractor<PulsarBatchRequest> {
 
   private final TextMapPropagator propagator;
-  private final SpanLinksExtractor<PulsarRequest> singleRecordLinkExtractor;
 
   PulsarBatchRequestSpanLinksExtractor(TextMapPropagator propagator) {
     this.propagator = propagator;
-    this.singleRecordLinkExtractor =
-        new PropagatorBasedSpanLinksExtractor<>(propagator, MessageTextMapGetter.INSTANCE);
   }
 
   @Override
@@ -32,11 +28,6 @@ final class PulsarBatchRequestSpanLinksExtractor implements SpanLinksExtractor<P
     for (Message<?> message : request.getMessages()) {
       PulsarRequest messageRequest =
           PulsarRequest.create(message, request.getUrlData(), request.getSubscription());
-      if (batchRecordAttributes == null) {
-        singleRecordLinkExtractor.extract(spanLinks, parentContext, messageRequest);
-        continue;
-      }
-
       Context extracted =
           propagator.extract(Context.root(), messageRequest, MessageTextMapGetter.INSTANCE);
       spanLinks.addLink(

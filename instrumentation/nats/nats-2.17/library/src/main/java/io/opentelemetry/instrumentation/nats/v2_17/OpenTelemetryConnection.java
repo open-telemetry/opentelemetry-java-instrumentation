@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.nats.v2_17;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-
 import io.nats.client.Connection;
 import io.nats.client.Dispatcher;
 import io.nats.client.Message;
@@ -348,9 +346,7 @@ final class OpenTelemetryConnection implements InvocationHandler {
 
   private Instrumenter<NatsRequest, NatsRequest> instrumenterFor(
       NatsRequest request, Instrumenter<NatsRequest, NatsRequest> defaultInstrumenter) {
-    return emitStableMessagingSemconv() && request.isJetStreamSettlement()
-        ? settleInstrumenter
-        : defaultInstrumenter;
+    return request.isJetStreamSettlement() ? settleInstrumenter : defaultInstrumenter;
   }
 
   // public Dispatcher createDispatcher()
