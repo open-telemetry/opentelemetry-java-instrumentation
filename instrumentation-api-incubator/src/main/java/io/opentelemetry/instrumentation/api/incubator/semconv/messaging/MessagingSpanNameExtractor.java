@@ -34,15 +34,16 @@ public final class MessagingSpanNameExtractor<REQUEST> implements SpanNameExtrac
   }
 
   /**
+   * Constructs the span name using the operation type's name, such as {@code send} for {@link
+   * MessageOperation#PUBLISH}.
+   *
    * @deprecated Use {@link #create(MessagingAttributesGetter, MessagingOperationType, String)}. May
    *     be removed in the next minor release.
    */
   @Deprecated // may be removed in the next minor release
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
       MessagingAttributesGetter<REQUEST, ?> getter, MessageOperation operation) {
-    MessagingOperationType operationType = operation.type();
-    return new MessagingSpanNameExtractor<>(
-        getter, operationType, operationType.legacyOperationName(), false);
+    return create(getter, operation.type(), operation.type().value());
   }
 
   private final MessagingAttributesGetter<REQUEST, ?> getter;

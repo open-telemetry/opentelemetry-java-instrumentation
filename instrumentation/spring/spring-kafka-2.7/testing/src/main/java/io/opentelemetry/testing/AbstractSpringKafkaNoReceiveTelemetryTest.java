@@ -34,6 +34,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
 
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -87,7 +88,16 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                               singleProcessAttributes(
                                   "testSingleTopic", "testSingleListener", "10"));
                       if (emitStableMessagingSemconv()) {
-                        span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
+                        SpanContext producerContext = trace.getSpan(1).getSpanContext();
+                        span.hasLinks(
+                            LinkData.create(
+                                isLibraryInstrumentationTest()
+                                    ? SpanContext.createFromRemoteParent(
+                                        producerContext.getTraceId(),
+                                        producerContext.getSpanId(),
+                                        producerContext.getTraceFlags(),
+                                        producerContext.getTraceState())
+                                    : producerContext));
                       }
                     },
                     span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
@@ -121,6 +131,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
     testing()
         .waitAndAssertTraces(
             trace -> {
+              SpanContext producerContext = trace.getSpan(1).getSpanContext();
               List<Consumer<SpanDataAssert>> assertions =
                   new ArrayList<>(
                       asList(
@@ -140,7 +151,15 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                 .hasAttributesSatisfyingExactly(
                                     withErrorType(processAttributes, true));
                             if (emitStableMessagingSemconv()) {
-                              span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
+                              span.hasLinks(
+                                  LinkData.create(
+                                      isLibraryInstrumentationTest()
+                                          ? SpanContext.createFromRemoteParent(
+                                              producerContext.getTraceId(),
+                                              producerContext.getSpanId(),
+                                              producerContext.getTraceFlags(),
+                                              producerContext.getTraceState())
+                                          : producerContext));
                             }
                           },
                           span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
@@ -158,7 +177,15 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                             .hasException(new IllegalArgumentException("boom"))
                             .hasAttributesSatisfyingExactly(withErrorType(processAttributes, true));
                         if (emitStableMessagingSemconv()) {
-                          span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
+                          span.hasLinks(
+                              LinkData.create(
+                                  isLibraryInstrumentationTest()
+                                      ? SpanContext.createFromRemoteParent(
+                                          producerContext.getTraceId(),
+                                          producerContext.getSpanId(),
+                                          producerContext.getTraceFlags(),
+                                          producerContext.getTraceState())
+                                      : producerContext));
                         }
                       },
                       span ->
@@ -177,7 +204,15 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                             .hasStatus(StatusData.unset())
                             .hasAttributesSatisfyingExactly(processAttributes);
                         if (emitStableMessagingSemconv()) {
-                          span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
+                          span.hasLinks(
+                              LinkData.create(
+                                  isLibraryInstrumentationTest()
+                                      ? SpanContext.createFromRemoteParent(
+                                          producerContext.getTraceId(),
+                                          producerContext.getSpanId(),
+                                          producerContext.getTraceFlags(),
+                                          producerContext.getTraceState())
+                                      : producerContext));
                         }
                       },
                       span ->

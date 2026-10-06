@@ -58,8 +58,6 @@ public interface MessagingAttributesGetter<REQUEST, RESPONSE> {
   /**
    * Returns the name of the destination subscription from which a message is consumed, or {@code
    * null} if there is none.
-   *
-   * <p>This attribute only exists in the v1.43 messaging semantic conventions.
    */
   @Nullable
   default String getDestinationSubscriptionName(REQUEST request) {
