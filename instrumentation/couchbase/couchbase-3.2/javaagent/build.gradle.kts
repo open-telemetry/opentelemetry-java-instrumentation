@@ -88,7 +88,6 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs(
-
       "-Dotel.instrumentation.couchbase.emit-experimental-telemetry=true",
     )
     systemProperty(
