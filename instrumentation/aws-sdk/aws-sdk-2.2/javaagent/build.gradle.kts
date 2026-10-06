@@ -187,7 +187,8 @@ tasks {
     systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging=true",
+      "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging=true," +
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
     )
   }
 

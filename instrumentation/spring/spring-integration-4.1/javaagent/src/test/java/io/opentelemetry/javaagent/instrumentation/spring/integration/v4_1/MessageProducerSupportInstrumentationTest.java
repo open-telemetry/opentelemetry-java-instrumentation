@@ -94,7 +94,7 @@ class MessageProducerSupportInstrumentationTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName(lowerProcessSpanName()).hasKind(SpanKind.CONSUMER)));
+                span -> span.hasName("process input").hasKind(SpanKind.CONSUMER)));
     assertNoMetrics(testing);
   }
 
@@ -113,7 +113,7 @@ class MessageProducerSupportInstrumentationTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName(lowerProcessSpanName()).hasKind(SpanKind.CONSUMER)));
+                span -> span.hasName("process input").hasKind(SpanKind.CONSUMER)));
     assertNoMetrics(testing);
   }
 
@@ -149,7 +149,7 @@ class MessageProducerSupportInstrumentationTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName(lowerProcessSpanName()).hasKind(SpanKind.CONSUMER)));
+                span -> span.hasName("process input").hasKind(SpanKind.CONSUMER)));
     assertNoMetrics(testing);
   }
 
@@ -171,7 +171,7 @@ class MessageProducerSupportInstrumentationTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName(lowerProcessSpanName()).hasKind(SpanKind.CONSUMER)));
+                span -> span.hasName("process input").hasKind(SpanKind.CONSUMER)));
     assertNoMetrics(testing);
   }
 
@@ -204,7 +204,7 @@ class MessageProducerSupportInstrumentationTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName(lowerProcessSpanName()).hasKind(SpanKind.CONSUMER)),
+                span -> span.hasName("process input").hasKind(SpanKind.CONSUMER)),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("process input").hasKind(SpanKind.CONSUMER)));
@@ -255,7 +255,7 @@ class MessageProducerSupportInstrumentationTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName(lowerProcessSpanName()).hasKind(SpanKind.CONSUMER)));
+                span -> span.hasName("process input").hasKind(SpanKind.CONSUMER)));
     assertNoMetrics(testing);
   }
 
@@ -281,7 +281,7 @@ class MessageProducerSupportInstrumentationTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName(lowerProcessSpanName()).hasKind(SpanKind.CONSUMER)));
+                span -> span.hasName("process input").hasKind(SpanKind.CONSUMER)));
     assertNoMetrics(testing);
     assertSpringRabbitProcessMetrics();
   }
@@ -352,10 +352,6 @@ class MessageProducerSupportInstrumentationTest {
     messageProperties.setConsumerQueue("input");
     messageProperties.setReceivedRoutingKey("input");
     return new Message("test".getBytes(UTF_8), messageProperties);
-  }
-
-  private static String lowerProcessSpanName() {
-    return "process input";
   }
 
   private static void assumeRabbitInstrumentationEnabled() {

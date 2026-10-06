@@ -183,26 +183,19 @@ public abstract class AbstractSqsTracingTest {
             trace -> {
               publishSpan.set(trace.getSpan(0));
 
-              List<Consumer<SpanDataAssert>> spanAsserts = new ArrayList<>();
-              spanAsserts.add(span -> assertPublishSpan(span, testCaptureHeaders));
-              spanAsserts.add(
+              trace.hasSpansSatisfyingExactly(
+                  span -> assertPublishSpan(span, testCaptureHeaders),
                   span ->
                       assertProcessSpan(
-                          span, trace.getSpan(0), publishSpan.get(), testCaptureHeaders));
-              spanAsserts.add(
+                          span, trace.getSpan(0), publishSpan.get(), testCaptureHeaders),
                   span ->
                       span.hasName("process child")
                           .hasParent(trace.getSpan(1))
                           .hasTotalAttributeCount(0));
-              trace.hasSpansSatisfyingExactly(spanAsserts);
             },
-            trace -> {
-              List<Consumer<SpanDataAssert>> spanAsserts = new ArrayList<>();
-              spanAsserts.add(
-                  span -> assertReceiveSpan(span, publishSpan.get(), testCaptureHeaders));
-
-              trace.hasSpansSatisfyingExactly(spanAsserts);
-            });
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> assertReceiveSpan(span, publishSpan.get(), testCaptureHeaders)));
   }
 
   private static void assertPublishSpan(SpanDataAssert span, boolean captureHeaders) {
@@ -344,7 +337,6 @@ public abstract class AbstractSqsTracingTest {
 
   @Test
   void testReceiveSpanLinksToProducer() {
-
     String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
     sqsClient.createQueue("testSdkSqs");
     sqsClient.sendMessage(new SendMessageRequest(queueUrl, "hello"));
@@ -395,7 +387,6 @@ public abstract class AbstractSqsTracingTest {
 
   @Test
   void testBatchReceiveLinkAttributes() {
-
     assumeTrue(supportsMessageSystemAttributes());
     String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
     sqsClient.createQueue("testSdkSqs");
@@ -479,7 +470,6 @@ public abstract class AbstractSqsTracingTest {
 
   @Test
   void testBatchSendMessageCount() {
-
     String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
     sqsClient.createQueue("testSdkSqs");
     Map<String, MessageAttributeValue> fullMessageAttributes = new HashMap<>();
@@ -616,33 +606,28 @@ public abstract class AbstractSqsTracingTest {
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      List<AttributeAssertion> attributes =
-                          new ArrayList<>(
-                              asList(
-                                  equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                                  equalTo(AWS_SQS_QUEUE_URL, queueUrl),
-                                  satisfies(
-                                      AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
-                                  equalTo(RPC_SYSTEM, "aws-api"),
-                                  equalTo(RPC_SERVICE, "AmazonSQS"),
-                                  equalTo(RPC_METHOD, "DeleteMessage"),
-                                  equalTo(HTTP_REQUEST_METHOD, "POST"),
-                                  equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                  equalTo(URL_FULL, "http://localhost:" + sqsPort),
-                                  equalTo(SERVER_ADDRESS, "localhost"),
-                                  equalTo(SERVER_PORT, sqsPort),
-                                  equalTo(NETWORK_PROTOCOL_VERSION, "1.1")));
-                      attributes.add(equalTo(MESSAGING_SYSTEM, AWS_SQS));
-                      attributes.add(equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"));
-                      attributes.add(equalTo(MESSAGING_OPERATION_NAME, "delete"));
-                      attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
-
-                      span.hasName("delete testSdkSqs")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasNoParent()
-                          .hasAttributesSatisfyingExactly(attributes);
-                    }));
+                    span ->
+                        span.hasName("delete testSdkSqs")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasNoParent()
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                                equalTo(AWS_SQS_QUEUE_URL, queueUrl),
+                                satisfies(
+                                    AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
+                                equalTo(RPC_SYSTEM, "aws-api"),
+                                equalTo(RPC_SERVICE, "AmazonSQS"),
+                                equalTo(RPC_METHOD, "DeleteMessage"),
+                                equalTo(HTTP_REQUEST_METHOD, "POST"),
+                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                equalTo(URL_FULL, "http://localhost:" + sqsPort),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, sqsPort),
+                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                                equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+                                equalTo(MESSAGING_OPERATION_NAME, "delete"),
+                                equalTo(MESSAGING_OPERATION_TYPE, "settle"))));
   }
 
   @Test
@@ -780,7 +765,6 @@ public abstract class AbstractSqsTracingTest {
 
   @Test
   void testDeleteMessageError() {
-
     String queueUrl = "http://localhost:" + sqsPort + "/000000000000/missing";
 
     Throwable error =
@@ -856,12 +840,29 @@ public abstract class AbstractSqsTracingTest {
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("SQS.CreateQueue").hasKind(SpanKind.CLIENT)),
+                    span ->
+                        span.hasName("SQS.CreateQueue")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasNoParent()
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                                equalTo(stringKey("aws.queue.name"), "testSdkSqs"),
+                                satisfies(
+                                    AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
+                                equalTo(RPC_SYSTEM, "aws-api"),
+                                equalTo(RPC_SERVICE, "AmazonSQS"),
+                                equalTo(RPC_METHOD, "CreateQueue"),
+                                equalTo(HTTP_REQUEST_METHOD, "POST"),
+                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                equalTo(URL_FULL, "http://localhost:" + sqsPort),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, sqsPort),
+                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"))),
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> {
                       producerSpan.set(trace.getSpan(0));
-                      span.hasName("send testSdkSqs").hasKind(SpanKind.PRODUCER);
+                      assertPublishSpan(span, false);
                     }),
             trace -> {
               Consumer<SpanDataAssert> receiveSpanAssertion =
@@ -877,11 +878,14 @@ public abstract class AbstractSqsTracingTest {
               List<Consumer<SpanDataAssert>> assertions =
                   new ArrayList<>(
                       asList(
-                          span -> span.hasName("parent").hasNoParent(),
+                          span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                           receiveSpanAssertion,
                           sdkSpanAssertion,
                           processSpanAssertion,
-                          span -> span.hasName("process child")));
+                          span ->
+                              span.hasName("process child")
+                                  .hasParent(trace.getSpan(3))
+                                  .hasTotalAttributeCount(0)));
               // on jdk8 the order of the "SQS.ReceiveMessage" and "receive testSdkSqs"
               // spans can vary
               if ("SQS.ReceiveMessage".equals(trace.getSpan(1).getName())) {

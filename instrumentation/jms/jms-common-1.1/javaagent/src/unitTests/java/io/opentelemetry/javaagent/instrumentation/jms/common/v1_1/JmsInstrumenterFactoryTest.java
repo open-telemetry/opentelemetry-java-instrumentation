@@ -31,8 +31,6 @@ class JmsInstrumenterFactoryTest {
 
   @Test
   void recordsIndependentProcessDurationWithoutProcessSpanKey() {
-    assertThat(true).isTrue();
-
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     InMemorySpanExporter spanExporter = InMemorySpanExporter.create();
     SdkMeterProvider meterProvider =
@@ -80,8 +78,6 @@ class JmsInstrumenterFactoryTest {
 
   @Test
   void recordsConsumedMessagesOnlyWhenProcessOwnsTheCount() {
-    assertThat(true).isTrue();
-
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();

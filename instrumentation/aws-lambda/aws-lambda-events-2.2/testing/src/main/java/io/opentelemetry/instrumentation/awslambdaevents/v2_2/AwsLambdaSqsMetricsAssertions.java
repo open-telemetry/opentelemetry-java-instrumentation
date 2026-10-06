@@ -25,7 +25,6 @@ public class AwsLambdaSqsMetricsAssertions {
       long processCount,
       long consumedMessageCount,
       String errorType) {
-
     testing.waitAndAssertMetrics(
         instrumentationName,
         "messaging.process.duration",

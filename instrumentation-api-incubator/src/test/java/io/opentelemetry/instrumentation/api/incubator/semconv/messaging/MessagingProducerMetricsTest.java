@@ -94,7 +94,6 @@ class MessagingProducerMetricsTest {
 
     Collection<MetricData> metrics = metricReader.collectAllMetrics();
     assertThat(metrics).hasSize(2);
-
     assertThat(metrics)
         .anySatisfy(
             metric ->

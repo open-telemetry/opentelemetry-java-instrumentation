@@ -175,7 +175,7 @@ public abstract class AbstractVertxKafkaTest {
     List<AttributeAssertion> assertions =
         messagingAttributes(record.topic(), "send", "send", "producer");
     assertions.add(satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
-    addOffsetAssertion(assertions);
+    assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
     assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(
@@ -208,7 +208,7 @@ public abstract class AbstractVertxKafkaTest {
     assertions.add(satisfies(MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isPositive));
     assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     if (hasConsumerGroup()) {
-      addGroupAssertions(assertions);
+      assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test"));
     }
     assertions.add(satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
     return assertions;
@@ -232,7 +232,7 @@ public abstract class AbstractVertxKafkaTest {
     List<AttributeAssertion> assertions =
         messagingAttributes(record.topic(), "process", "process", "consumer");
     assertions.add(satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
-    addOffsetAssertion(assertions);
+    assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
     assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(
@@ -240,7 +240,7 @@ public abstract class AbstractVertxKafkaTest {
     }
     // consumer group is not available in version 0.11
     if (hasConsumerGroup()) {
-      addGroupAssertions(assertions);
+      assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test"));
     }
     String messageKey = record.key();
     if (messageKey != null) {
@@ -262,16 +262,6 @@ public abstract class AbstractVertxKafkaTest {
 
     assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith(clientIdPrefix)));
     return assertions;
-  }
-
-  private static void addOffsetAssertion(List<AttributeAssertion> assertions) {
-
-    assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
-  }
-
-  private static void addGroupAssertions(List<AttributeAssertion> assertions) {
-
-    assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test"));
   }
 
   protected static String spanName(String topic, String operationName) {

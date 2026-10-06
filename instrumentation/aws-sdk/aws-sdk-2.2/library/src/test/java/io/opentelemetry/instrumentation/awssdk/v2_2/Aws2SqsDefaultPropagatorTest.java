@@ -51,7 +51,6 @@ class Aws2SqsDefaultPropagatorTest extends Aws2SqsTracingTest {
 
   @Test
   void testDisableSqsMessageCreateSpans() {
-
     AwsSdkTelemetryBuilder telemetryBuilder =
         AwsSdkTelemetry.builder(getTesting().getOpenTelemetry())
             .setCaptureExperimentalSpanAttributes(true);
@@ -85,7 +84,6 @@ class Aws2SqsDefaultPropagatorTest extends Aws2SqsTracingTest {
 
   @Test
   void testNoopTelemetryDoesNotInjectInvalidCreationContext() {
-
     assumeTrue(supportsMessageSystemAttributes());
     AwsSdkTelemetry noopTelemetry = AwsSdkTelemetry.builder(OpenTelemetry.noop()).build();
     SqsClientBuilder builder = SqsClient.builder();

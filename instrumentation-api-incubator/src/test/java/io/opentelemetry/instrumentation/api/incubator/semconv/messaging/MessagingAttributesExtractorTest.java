@@ -123,7 +123,6 @@ class MessagingAttributesExtractorTest {
       expectedEntries.add(entry(MESSAGING_DESTINATION_ANONYMOUS, true));
     }
     expectedEntries.add(entry(MESSAGING_MESSAGE_CONVERSATION_ID, "42"));
-
     expectedEntries.add(entry(MESSAGING_CLIENT_ID, "43"));
     expectedEntries.add(entry(MESSAGING_OPERATION_NAME, operationName));
     expectedEntries.add(entry(MESSAGING_OPERATION_TYPE, operationType.value()));

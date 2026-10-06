@@ -204,9 +204,14 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
   }
 
   @DisplayName("test pass through tombstone")
-  @Test
-  void testPassThroughTombstone() throws Exception {
-    producer.send(new ProducerRecord<>(SHARED_TOPIC, null)).get(5, SECONDS);
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void testPassThroughTombstone(boolean testHeaders) throws Exception {
+    ProducerRecord<Integer, String> producerRecord = new ProducerRecord<>(SHARED_TOPIC, null);
+    if (testHeaders) {
+      producerRecord.headers().add("Test-Message-Header", "test".getBytes(UTF_8));
+    }
+    producer.send(producerRecord).get(5, SECONDS);
     awaitUntilConsumerIsReady();
     ConsumerRecords<?, ?> records = poll(Duration.ofSeconds(5));
     assertThat(records.count()).isEqualTo(1);
@@ -226,7 +231,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                   span.hasName("send " + SHARED_TOPIC)
                       .hasKind(SpanKind.PRODUCER)
                       .hasNoParent()
-                      .hasAttributesSatisfyingExactly(sendAttributes(null, null, false));
+                      .hasAttributesSatisfyingExactly(sendAttributes(null, null, testHeaders));
                   producerSpan.set(span.actual());
                 },
                 span ->
@@ -234,14 +239,14 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            processAttributes(null, null, false, false))),
+                            processAttributes(null, null, testHeaders, false))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("poll " + SHARED_TOPIC)
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(receiveAttributes(false))));
+                        .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders))));
   }
 
   @ParameterizedTest

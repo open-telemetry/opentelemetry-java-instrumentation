@@ -184,8 +184,6 @@ public abstract class AbstractSpringPulsarTest {
         equalTo(MESSAGING_OPERATION_NAME, "send"),
         equalTo(MESSAGING_OPERATION_TYPE, "send"),
         equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC),
-        // messaging.message.body.size requires opt-in
-        equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
         satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotEmpty),
         equalTo(SERVER_ADDRESS, brokerHost),
         equalTo(SERVER_PORT, brokerPort),

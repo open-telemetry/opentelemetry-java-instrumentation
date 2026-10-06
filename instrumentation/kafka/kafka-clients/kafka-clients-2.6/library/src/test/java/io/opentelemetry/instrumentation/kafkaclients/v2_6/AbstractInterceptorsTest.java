@@ -208,7 +208,7 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
                         val.matches("^localhost:\\d+(,localhost:\\d+)*$");
                       }
                     })));
-    addClientIdAssertions(assertions, "producer");
+    assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")));
     assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     return assertions;
   }
@@ -224,7 +224,7 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
                 equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                 equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test"),
                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
-    addClientIdAssertions(assertions, "consumer");
+    assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")));
     assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     assertions.add(satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
     return assertions;
@@ -253,14 +253,8 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
     assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
     assertions.add(equalTo(stringKey("test-baggage-key-1"), "test-baggage-value-1"));
     assertions.add(equalTo(stringKey("test-baggage-key-2"), "test-baggage-value-2"));
-    addClientIdAssertions(assertions, "consumer");
+    assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")));
     assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     return assertions;
-  }
-
-  private static void addClientIdAssertions(
-      List<AttributeAssertion> assertions, String clientIdPrefix) {
-
-    assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith(clientIdPrefix)));
   }
 }

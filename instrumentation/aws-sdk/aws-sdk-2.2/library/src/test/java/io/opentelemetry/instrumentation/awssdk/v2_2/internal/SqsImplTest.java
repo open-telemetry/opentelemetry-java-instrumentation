@@ -28,7 +28,6 @@ class SqsImplTest {
 
   @Test
   void injectsSendContextIntoContextFreeBatchEntries() {
-
     SendMessageBatchRequest request =
         SendMessageBatchRequest.builder()
             .queueUrl("https://sqs.us-east-1.amazonaws.com/123456789012/test")

@@ -16,7 +16,6 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_ANONYMOUS;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
@@ -89,7 +88,6 @@ class SpringIntegrationAndRabbitTest {
                             equalTo(MESSAGING_DESTINATION_NAME, "testTopic:testTopic"),
                             equalTo(MESSAGING_OPERATION_NAME, "publish"),
                             equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                            bodySize(),
                             satisfies(
                                 MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
                                 val -> val.isInstanceOf(String.class))),
@@ -112,7 +110,6 @@ class SpringIntegrationAndRabbitTest {
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
-                            bodySize(),
                             equalTo(MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, "testTopic"),
                             deliveryTag()),
                 span ->
@@ -159,14 +156,6 @@ class SpringIntegrationAndRabbitTest {
         SERVER_PORT,
         val -> {
           val.isInstanceOf(Long.class);
-        });
-  }
-
-  private static AttributeAssertion bodySize() {
-    return satisfies(
-        MESSAGING_MESSAGE_BODY_SIZE,
-        val -> {
-          val.isNull();
         });
   }
 

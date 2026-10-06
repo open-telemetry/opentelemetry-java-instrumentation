@@ -373,7 +373,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
   private static List<AttributeAssertion> sendAttributes(String topic, String messageKey) {
     List<AttributeAssertion> assertions = messagingAttributes(topic, "send", "send", "producer");
     assertions.add(satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
-    addOffsetAssertion(assertions);
+    assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
     assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
     return assertions;
@@ -385,9 +385,9 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
         messagingAttributes(topic, "process", "process", "consumer");
 
     assertions.add(satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
-    addOffsetAssertion(assertions);
+    assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
     assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
-    addGroupAssertions(assertions, group);
+    assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, group));
     assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     return assertions;
   }
@@ -396,7 +396,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
       String topic, String group, int batchSize) {
     List<AttributeAssertion> assertions =
         messagingAttributes(topic, "process", "process", "consumer");
-    addGroupAssertions(assertions, group);
+    assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, group));
     assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, batchSize));
     assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     assertions.add(satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
@@ -415,16 +415,6 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
 
     assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith(clientIdPrefix)));
     return assertions;
-  }
-
-  private static void addOffsetAssertion(List<AttributeAssertion> assertions) {
-
-    assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
-  }
-
-  private static void addGroupAssertions(List<AttributeAssertion> assertions, String group) {
-
-    assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, group));
   }
 
   private static List<AttributeAssertion> withErrorType(

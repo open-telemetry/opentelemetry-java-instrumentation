@@ -125,7 +125,6 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
 
   @Test
   void testAbandonedIteratorDoesNotParentNextProcessSpan() {
-
     String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
     sqsClient.createQueue("testSdkSqs");
 
@@ -221,7 +220,6 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
 
   @Test
   void testSublistTraversalDoesNotTraceOrDisableResponse() {
-
     String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
     sqsClient.createQueue("testSdkSqs");
     sqsClient.sendMessage(new SendMessageRequest(queueUrl, "message"));
@@ -243,7 +241,6 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
 
   @Test
   void testNestedTraversalRestoresOuterProcessScope() {
-
     String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
     sqsClient.createQueue("testSdkSqs");
     sqsClient.sendMessage(new SendMessageRequest(queueUrl, "outer"));

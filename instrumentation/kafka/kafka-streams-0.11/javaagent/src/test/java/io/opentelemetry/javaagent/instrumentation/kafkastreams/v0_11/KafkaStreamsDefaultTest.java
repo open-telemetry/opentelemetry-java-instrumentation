@@ -134,7 +134,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                         MESSAGING_DESTINATION_PARTITION_ID, val -> val.isInstanceOf(String.class)));
                 assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"));
                 assertions.add(equalTo(stringKey("asdf"), "testing"));
-                addOffsetAssertions(assertions, 0);
+                assertions.add(equalTo(MESSAGING_KAFKA_OFFSET, 0));
                 assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
                 if (EXPERIMENTAL_ATTRIBUTES) {
                   assertions.add(
@@ -143,7 +143,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                           val -> val.isGreaterThanOrEqualTo(0)));
                 }
                 if (testLatestDeps()) {
-                  addGroupAssertions(assertions, "test-application");
+                  assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test-application"));
                 }
                 span.hasName("process " + STREAM_PENDING)
                     .hasKind(SpanKind.CONSUMER)
@@ -176,7 +176,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                         MESSAGING_DESTINATION_PARTITION_ID, val -> val.isInstanceOf(String.class)));
                 assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"));
                 assertions.add(equalTo(longKey("testing"), 123));
-                addOffsetAssertions(assertions, 0);
+                assertions.add(equalTo(MESSAGING_KAFKA_OFFSET, 0));
                 assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
                 if (EXPERIMENTAL_ATTRIBUTES) {
                   assertions.add(
@@ -185,7 +185,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                           val -> val.isGreaterThanOrEqualTo(0)));
                 }
                 if (testLatestDeps()) {
-                  addGroupAssertions(assertions, "test");
+                  assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test"));
                 }
                 span.hasName("process " + STREAM_PROCESSED)
                     .hasKind(SpanKind.CONSUMER)
@@ -202,9 +202,10 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                   messagingAttributes(STREAM_PENDING, "poll", "receive", "consumer", false));
           assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
           assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
-          addBatchRecordAttributes(assertions);
+          assertions.add(
+              satisfies(MESSAGING_DESTINATION_PARTITION_ID, val -> val.isInstanceOf(String.class)));
           if (testLatestDeps()) {
-            addGroupAssertions(assertions, "test-application");
+            assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test-application"));
           }
           trace.hasSpansSatisfyingExactly(
               // kafka-clients CONSUMER receive
@@ -221,9 +222,10 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                   messagingAttributes(STREAM_PROCESSED, "poll", "receive", "consumer", true));
           assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
           assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
-          addBatchRecordAttributes(assertions);
+          assertions.add(
+              satisfies(MESSAGING_DESTINATION_PARTITION_ID, val -> val.isInstanceOf(String.class)));
           if (testLatestDeps()) {
-            addGroupAssertions(assertions, "test");
+            assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test"));
           }
           trace.hasSpansSatisfyingExactly(
               // kafka-clients CONSUMER receive
@@ -264,7 +266,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
         equalTo(
             stringKey("messaging.kafka.bootstrap.servers"),
             EXPERIMENTAL_ATTRIBUTES ? kafka.getBootstrapServers() : null));
-    addOffsetAssertions(assertions, 0);
+    assertions.add(equalTo(MESSAGING_KAFKA_OFFSET, 0));
     return assertions;
   }
 
@@ -274,36 +276,21 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
       String operationType,
       String clientIdSuffix,
       boolean startsWith) {
-    List<AttributeAssertion> assertions =
-        new ArrayList<>(
-            asList(
-                equalTo(MESSAGING_SYSTEM, KAFKA),
-                equalTo(MESSAGING_DESTINATION_NAME, topic),
-                equalTo(MESSAGING_OPERATION_NAME, operationName),
-                equalTo(MESSAGING_OPERATION_TYPE, operationType)));
-
-    assertions.add(
-        satisfies(
-            MESSAGING_CLIENT_ID,
-            val -> {
-              if (startsWith) {
-                val.startsWith(clientIdSuffix);
-              } else {
-                val.endsWith(clientIdSuffix);
-              }
-            }));
-    return assertions;
-  }
-
-  private static void addOffsetAssertions(List<AttributeAssertion> assertions, long offset) {
-
-    assertions.add(equalTo(MESSAGING_KAFKA_OFFSET, offset));
-  }
-
-  private static void addBatchRecordAttributes(List<AttributeAssertion> assertions) {
-
-    assertions.add(
-        satisfies(MESSAGING_DESTINATION_PARTITION_ID, val -> val.isInstanceOf(String.class)));
+    return new ArrayList<>(
+        asList(
+            equalTo(MESSAGING_SYSTEM, KAFKA),
+            equalTo(MESSAGING_DESTINATION_NAME, topic),
+            equalTo(MESSAGING_OPERATION_NAME, operationName),
+            equalTo(MESSAGING_OPERATION_TYPE, operationType),
+            satisfies(
+                MESSAGING_CLIENT_ID,
+                val -> {
+                  if (startsWith) {
+                    val.startsWith(clientIdSuffix);
+                  } else {
+                    val.endsWith(clientIdSuffix);
+                  }
+                })));
   }
 
   // the offset and the message key stay on the link even when the batch carries a single record,
@@ -316,10 +303,5 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
             .put(MESSAGING_KAFKA_OFFSET, 0)
             .put(MESSAGING_KAFKA_MESSAGE_KEY, messageKey)
             .build());
-  }
-
-  private static void addGroupAssertions(List<AttributeAssertion> assertions, String group) {
-
-    assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, group));
   }
 }

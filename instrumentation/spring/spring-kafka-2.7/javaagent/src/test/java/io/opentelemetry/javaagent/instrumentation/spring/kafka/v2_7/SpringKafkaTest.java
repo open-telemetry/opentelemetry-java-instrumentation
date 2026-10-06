@@ -513,7 +513,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
   private static List<AttributeAssertion> producerAttributes(String topic, String messageKey) {
     List<AttributeAssertion> assertions = messagingAttributes(topic, "send", "send", "producer");
     assertions.add(satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
-    addOffsetAssertion(assertions);
+    assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
     assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
     assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     assertions.add(
@@ -526,7 +526,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
   private static List<AttributeAssertion> receiveAttributes(
       String topic, String group, int batchSize) {
     List<AttributeAssertion> assertions = messagingAttributes(topic, "poll", "receive", "consumer");
-    addGroupAssertions(assertions, group);
+    assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, group));
     assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, batchSize));
     assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     addCommonBatchRecordAttributes(assertions);
@@ -539,9 +539,9 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
         messagingAttributes(topic, "process", "process", "consumer");
 
     assertions.add(satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
-    addOffsetAssertion(assertions);
+    assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
     assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
-    addGroupAssertions(assertions, group);
+    assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, group));
     assertions.add(
         satisfies(
             longKey("kafka.record.queue_time_ms"),
@@ -558,7 +558,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
       String topic, String group, int batchSize) {
     List<AttributeAssertion> assertions =
         messagingAttributes(topic, "process", "process", "consumer");
-    addGroupAssertions(assertions, group);
+    assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, group));
     assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, batchSize));
     assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     addCommonBatchRecordAttributes(assertions);
@@ -582,16 +582,6 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
 
     assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith(clientIdPrefix)));
     return assertions;
-  }
-
-  private static void addOffsetAssertion(List<AttributeAssertion> assertions) {
-
-    assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
-  }
-
-  private static void addGroupAssertions(List<AttributeAssertion> assertions, String group) {
-
-    assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, group));
   }
 
   private static List<AttributeAssertion> withErrorType(

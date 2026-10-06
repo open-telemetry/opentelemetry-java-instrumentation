@@ -270,7 +270,8 @@ public abstract class KafkaClientBaseTest {
     }
     if (messageValue == null) {
       assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true));
-    } else if (testHeaders) {
+    }
+    if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
 

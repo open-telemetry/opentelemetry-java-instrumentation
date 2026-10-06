@@ -470,10 +470,9 @@ abstract class AbstractRocketMqClientTest {
               trace.hasSpansSatisfyingExactlyInAnyOrder(assertions);
             },
             trace -> {
-              List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
               // a single process span accounts for the whole batch and links to the creation
               // context of every message it accounts for
-              assertions.add(
+              trace.hasSpansSatisfyingExactly(
                   span -> {
                     span.hasName("process " + sharedTopic)
                         .hasKind(SpanKind.CONSUMER)
@@ -495,13 +494,11 @@ abstract class AbstractRocketMqClientTest {
                         hasBatchCreateSpans()
                             ? links(messageCreationContexts.toArray(new SpanContext[0]))
                             : links(producerSpanContext.get(), producerSpanContext.get()));
-                  });
-              assertions.add(
+                  },
                   span ->
                       span.hasName("messageListener")
                           .hasParent(trace.getSpan(0))
                           .hasKind(SpanKind.INTERNAL));
-              trace.hasSpansSatisfyingExactly(assertions);
             });
   }
 

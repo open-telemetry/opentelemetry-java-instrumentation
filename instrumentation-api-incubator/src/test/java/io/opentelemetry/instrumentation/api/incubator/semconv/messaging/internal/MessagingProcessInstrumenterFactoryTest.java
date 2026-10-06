@@ -53,7 +53,6 @@ class MessagingProcessInstrumenterFactoryTest {
 
   @Test
   void usesProducerAsParentAndLinksIt() {
-
     Instrumenter<Map<String, String>, Void> instrumenter =
         MessagingProcessInstrumenterFactory.create(
             Instrumenter.<Map<String, String>, Void>builder(
@@ -82,7 +81,6 @@ class MessagingProcessInstrumenterFactoryTest {
 
   @Test
   void linksCreationContextEvenWhenItIsTheAmbientParent() {
-
     SpanContext localProducer =
         SpanContext.create(
             producer.getTraceId(),
@@ -117,7 +115,6 @@ class MessagingProcessInstrumenterFactoryTest {
 
   @Test
   void doesNotLinkWhenCarrierHasNoCreationContext() {
-
     Instrumenter<Map<String, String>, Void> instrumenter =
         MessagingProcessInstrumenterFactory.create(
             Instrumenter.<Map<String, String>, Void>builder(
@@ -173,7 +170,6 @@ class MessagingProcessInstrumenterFactoryTest {
   }
 
   private static Stream<Arguments> receiveInstrumentationSettings() {
-
     return Stream.of(argumentSet("receive disabled", false), argumentSet("receive enabled", true));
   }
 

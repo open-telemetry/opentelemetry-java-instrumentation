@@ -67,7 +67,6 @@ class SqsProcessMetricsIsolationTest {
 
   @Test
   void overlappingProcessOperationsCountDeliveryOnce() {
-
     Instrumenter<SqsProcessRequest, Response> instrumenter =
         new AwsSdkInstrumenterFactory(
                 testing.getOpenTelemetry(),
@@ -113,7 +112,6 @@ class SqsProcessMetricsIsolationTest {
   }
 
   private static void assertProcessDurationIsolated(boolean receiveTelemetryEnabled) {
-
     Instrumenter<String, Void> outerInstrumenter = newOuterProcessInstrumenter();
     Context callerContext = Context.current();
     assertThat(outerInstrumenter.shouldStart(callerContext, "outer")).isTrue();

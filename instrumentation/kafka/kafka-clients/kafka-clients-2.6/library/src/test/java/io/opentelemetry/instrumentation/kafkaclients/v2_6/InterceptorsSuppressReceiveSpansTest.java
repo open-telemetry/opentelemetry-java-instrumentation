@@ -14,7 +14,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CLUSTER_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -85,7 +84,7 @@ class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MESSAGING_OPERATION_NAME, "send"),
                 equalTo(MESSAGING_OPERATION_TYPE, "send")));
-    addClientIdAssertion(assertions, "producer");
+    assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")));
     assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     return assertions;
   }
@@ -98,21 +97,14 @@ class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MESSAGING_OPERATION_NAME, "process"),
                 equalTo(MESSAGING_OPERATION_TYPE, "process"),
-                equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test"),
                 equalTo(stringKey("test-baggage-key-1"), "test-baggage-value-1"),
                 equalTo(stringKey("test-baggage-key-2"), "test-baggage-value-2")));
 
     assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
-    addClientIdAssertion(assertions, "consumer");
+    assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")));
     assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     return assertions;
-  }
-
-  private static void addClientIdAssertion(
-      List<AttributeAssertion> assertions, String clientIdPrefix) {
-
-    assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith(clientIdPrefix)));
   }
 }

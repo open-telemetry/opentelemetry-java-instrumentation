@@ -166,10 +166,10 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
   private static List<AttributeAssertion> producerAttributes(
       String topic, StringAssertConsumer clientIdAssertion, boolean includeKey) {
     List<AttributeAssertion> assertions = commonAttributes(topic, "send", "send");
-    addClientIdAssertions(assertions, clientIdAssertion);
+    assertions.add(satisfies(MESSAGING_CLIENT_ID, clientIdAssertion));
     assertions.add(
         satisfies(MESSAGING_DESTINATION_PARTITION_ID, val -> val.isInstanceOf(String.class)));
-    addOffsetAssertions(assertions, 0);
+    assertions.add(equalTo(MESSAGING_KAFKA_OFFSET, 0));
     if (includeKey) {
       assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"));
     }
@@ -186,11 +186,10 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
       StringAssertConsumer clientIdAssertion,
       AttributeAssertion extra) {
     List<AttributeAssertion> assertions = commonAttributes(topic, "process", "process");
-    addClientIdAssertions(assertions, clientIdAssertion);
-
+    assertions.add(satisfies(MESSAGING_CLIENT_ID, clientIdAssertion));
     assertions.add(
         satisfies(MESSAGING_DESTINATION_PARTITION_ID, val -> val.isInstanceOf(String.class)));
-    addOffsetAssertions(assertions, 0);
+    assertions.add(equalTo(MESSAGING_KAFKA_OFFSET, 0));
     assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"));
     assertions.add(extra);
     assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
@@ -199,7 +198,6 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
           satisfies(longKey("kafka.record.queue_time_ms"), val -> val.isGreaterThanOrEqualTo(0)));
     }
     if (testLatestDeps()) {
-
       assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup));
     }
     return assertions;
@@ -213,16 +211,5 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
             equalTo(MESSAGING_DESTINATION_NAME, topic),
             equalTo(MESSAGING_OPERATION_NAME, operationName),
             equalTo(MESSAGING_OPERATION_TYPE, operationType)));
-  }
-
-  private static void addClientIdAssertions(
-      List<AttributeAssertion> assertions, StringAssertConsumer assertion) {
-
-    assertions.add(satisfies(MESSAGING_CLIENT_ID, assertion));
-  }
-
-  private static void addOffsetAssertions(List<AttributeAssertion> assertions, long offset) {
-
-    assertions.add(equalTo(MESSAGING_KAFKA_OFFSET, offset));
   }
 }

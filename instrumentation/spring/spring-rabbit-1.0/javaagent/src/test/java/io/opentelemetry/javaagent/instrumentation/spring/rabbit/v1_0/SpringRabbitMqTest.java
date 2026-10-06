@@ -612,21 +612,18 @@ class SpringRabbitMqTest {
   }
 
   private static void verifySettleSpan(SpanDataAssert span, String operation) {
-
-    List<AttributeAssertion> assertions =
-        new ArrayList<>(
-            asList(
-                equalTo(NETWORK_TYPE, "ipv4"),
-                equalTo(NETWORK_PEER_ADDRESS, ip),
-                satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative),
-                equalTo(MESSAGING_SYSTEM, "rabbitmq")));
-    assertions.add(equalTo(SERVER_ADDRESS, ip));
-    assertions.add(satisfies(SERVER_PORT, AbstractLongAssert::isNotNegative));
-    assertions.add(equalTo(MESSAGING_OPERATION_NAME, operation));
-    assertions.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
-    assertions.add(
-        satisfies(MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG, AbstractLongAssert::isPositive));
-    span.hasName(operation).hasKind(SpanKind.CLIENT).hasAttributesSatisfyingExactly(assertions);
+    span.hasName(operation)
+        .hasKind(SpanKind.CLIENT)
+        .hasAttributesSatisfyingExactly(
+            equalTo(NETWORK_TYPE, "ipv4"),
+            equalTo(NETWORK_PEER_ADDRESS, ip),
+            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative),
+            equalTo(MESSAGING_SYSTEM, "rabbitmq"),
+            equalTo(SERVER_ADDRESS, ip),
+            satisfies(SERVER_PORT, AbstractLongAssert::isNotNegative),
+            equalTo(MESSAGING_OPERATION_NAME, operation),
+            equalTo(MESSAGING_OPERATION_TYPE, "settle"),
+            satisfies(MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG, AbstractLongAssert::isPositive));
   }
 
   private static void verifyLink(SpanDataAssert span, SpanData linkSpan) {

@@ -129,8 +129,8 @@ class WrapperTest extends AbstractWrapperTest {
                 equalTo(MESSAGING_OPERATION_NAME, "send"),
                 equalTo(MESSAGING_OPERATION_TYPE, "send"),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty)));
-    addClientIdAssertions(assertions, "producer");
-    addOffsetAssertions(assertions);
+    assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")));
+    assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
     if (testHeaders) {
       assertions.add(
           equalTo(
@@ -158,8 +158,8 @@ class WrapperTest extends AbstractWrapperTest {
                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test")));
-    addClientIdAssertions(assertions, "consumer");
-    addOffsetAssertions(assertions);
+    assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")));
+    assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
     assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     if (testHeaders) {
       assertions.add(
@@ -183,7 +183,7 @@ class WrapperTest extends AbstractWrapperTest {
                 equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                 equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test"),
                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
-    addClientIdAssertions(assertions, "consumer");
+    assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")));
     assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     assertions.add(satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
     if (testHeaders) {
@@ -192,17 +192,6 @@ class WrapperTest extends AbstractWrapperTest {
               MessageHeaderUtil.headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
     return assertions;
-  }
-
-  private static void addClientIdAssertions(
-      List<AttributeAssertion> assertions, String clientIdPrefix) {
-
-    assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith(clientIdPrefix)));
-  }
-
-  private static void addOffsetAssertions(List<AttributeAssertion> assertions) {
-
-    assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
   }
 
   @Test

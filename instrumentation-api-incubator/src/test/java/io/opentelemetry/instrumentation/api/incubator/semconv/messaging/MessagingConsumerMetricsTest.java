@@ -82,7 +82,6 @@ class MessagingConsumerMetricsTest {
 
     Collection<MetricData> metrics = metricReader.collectAllMetrics();
     assertThat(metrics).hasSize(2);
-
     assertThat(metrics)
         .anySatisfy(
             metric ->
@@ -283,7 +282,6 @@ class MessagingConsumerMetricsTest {
     listener.onEnd(context, responseAttributes, nanos(300));
 
     Collection<MetricData> metrics = metricReader.collectAllMetrics();
-
     assertThat(metrics)
         .anySatisfy(metric -> assertThat(metric).hasName("messaging.client.operation.duration"))
         .noneSatisfy(metric -> assertThat(metric).hasName("messaging.client.consumed.messages"));
@@ -311,7 +309,6 @@ class MessagingConsumerMetricsTest {
         context, Attributes.of(ERROR_TYPE, IllegalStateException.class.getName()), nanos(300));
 
     Collection<MetricData> metrics = metricReader.collectAllMetrics();
-
     assertThat(metrics)
         .satisfiesExactly(
             metric ->
