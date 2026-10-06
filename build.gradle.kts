@@ -30,7 +30,7 @@ plugins {
 buildscript {
   dependencies {
     classpath("com.squareup.okhttp3:okhttp:5.5.0")
-    classpath("org.apache.commons:commons-lang3:3.20.0")
+    classpath("org.apache.commons:commons-lang3:3.21.0")
   }
 }
 
