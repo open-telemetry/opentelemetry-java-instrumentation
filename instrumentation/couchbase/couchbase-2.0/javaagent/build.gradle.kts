@@ -11,8 +11,8 @@ muzzle {
     skip("2.7.5", "2.7.8")
     assertInverse.set(true)
 
-    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.v2_0.CouchbaseNetworkInstrumentationModule")
-    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.v2_6.CouchbaseNetwork26InstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.Couchbase20NetworkInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.Couchbase26NetworkInstrumentationModule")
   }
   pass {
     // instrumentation-docs:ignore - verification only, the directive above is the range we document
@@ -23,7 +23,7 @@ muzzle {
     assertInverse.set(true)
 
     excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseInstrumentationModule")
-    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.v2_6.CouchbaseNetwork26InstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.Couchbase26NetworkInstrumentationModule")
   }
   pass {
     // instrumentation-docs:ignore - verification only, the first directive is the range we document
@@ -36,7 +36,7 @@ muzzle {
     assertInverse.set(true)
 
     excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseInstrumentationModule")
-    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.v2_0.CouchbaseNetworkInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.Couchbase20NetworkInstrumentationModule")
   }
   fail {
     group.set("com.couchbase.client")

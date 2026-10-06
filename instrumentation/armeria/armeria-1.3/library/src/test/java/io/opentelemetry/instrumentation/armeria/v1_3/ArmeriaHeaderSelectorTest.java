@@ -75,7 +75,6 @@ class ArmeriaHeaderSelectorTest {
                                         stringArrayKey("http.request.header.:method")))));
   }
 
-  @SuppressWarnings("deprecation") // testing deprecated API
   @Test
   void clientCapturesHeadersConfiguredByName() {
     int port = startServer(UnaryOperator.identity());
@@ -84,8 +83,10 @@ class ArmeriaHeaderSelectorTest {
         WebClient.builder("http://localhost:" + port)
             .decorator(
                 ArmeriaClientTelemetry.builder(testing.getOpenTelemetry())
-                    .setCapturedRequestHeaders(singletonList("x-test-request"))
-                    .setCapturedResponseHeaders(singletonList("x-test-response"))
+                    .setRequestHeaders(
+                        IncludeExclude.builder().setIncluded("x-test-request").build())
+                    .setResponseHeaders(
+                        IncludeExclude.builder().setIncluded("x-test-response").build())
                     .build()
                     .createDecorator())
             .build();
@@ -113,7 +114,6 @@ class ArmeriaHeaderSelectorTest {
     assertCapturedHeaders();
   }
 
-  @SuppressWarnings("deprecation") // testing deprecated API
   @Test
   void serverCapturesHeadersConfiguredByName() {
     int port =
@@ -121,8 +121,10 @@ class ArmeriaHeaderSelectorTest {
             sb ->
                 sb.decorator(
                     ArmeriaServerTelemetry.builder(testing.getOpenTelemetry())
-                        .setCapturedRequestHeaders(singletonList("x-test-request"))
-                        .setCapturedResponseHeaders(singletonList("x-test-response"))
+                        .setRequestHeaders(
+                            IncludeExclude.builder().setIncluded("x-test-request").build())
+                        .setResponseHeaders(
+                            IncludeExclude.builder().setIncluded("x-test-response").build())
                         .build()
                         .createDecorator()));
 
@@ -131,17 +133,14 @@ class ArmeriaHeaderSelectorTest {
     assertCapturedHeaders();
   }
 
-  @SuppressWarnings("deprecation") // testing deprecated API
   @Test
-  void clientDeprecatedSettersMatchHeaderNamesLiterally() {
+  void clientDoesNotCaptureHeadersByDefault() {
     int port = startServer(UnaryOperator.identity());
 
     WebClient client =
         WebClient.builder("http://localhost:" + port)
             .decorator(
                 ArmeriaClientTelemetry.builder(testing.getOpenTelemetry())
-                    .setCapturedRequestHeaders(singletonList("*"))
-                    .setCapturedResponseHeaders(singletonList("*"))
                     .build()
                     .createDecorator())
             .build();
@@ -151,16 +150,13 @@ class ArmeriaHeaderSelectorTest {
     assertNoCapturedHeaders();
   }
 
-  @SuppressWarnings("deprecation") // testing deprecated API
   @Test
-  void serverDeprecatedSettersMatchHeaderNamesLiterally() {
+  void serverDoesNotCaptureHeadersByDefault() {
     int port =
         startServer(
             sb ->
                 sb.decorator(
                     ArmeriaServerTelemetry.builder(testing.getOpenTelemetry())
-                        .setCapturedRequestHeaders(singletonList("*"))
-                        .setCapturedResponseHeaders(singletonList("*"))
                         .build()
                         .createDecorator()));
 
@@ -238,8 +234,6 @@ class ArmeriaHeaderSelectorTest {
                                         assertThat(key.getKey())
                                             .doesNotStartWith("http.request.header.")
                                             .doesNotStartWith("http.response.header.")))
-                        // "*" is a legal header name character, so the deprecated exact-name
-                        // setters must not capture every header and expose credentials
                         .satisfies(
                             spanData ->
                                 assertThat(spanData.getAttributes().asMap())

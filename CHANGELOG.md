@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-### ⚠️ Breaking Changes
+### ⚠️ Breaking changes
 
 - Runtime telemetry metrics and package-emitter events now always use the
   `io.opentelemetry.runtime-telemetry` instrumentation scope. Update views, dashboards, and filters
@@ -28,12 +28,50 @@
     selections in `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included`, or
     declarative `java.runtime_telemetry.jfr_metrics/development.included`.
 - Remove the legacy JFR metric name `jvm.cpu.limit`. Use `jvm.cpu.count` instead.
+- Emit only stable source code attributes: `code.function.name` replaces `code.namespace` and
+  `code.function`, and log records use `code.file.path` and `code.line.number` instead of
+  `code.filepath` and `code.lineno`. The `code` and `code/dup` opt-ins and
+  `general.code.semconv` declarative settings no longer select legacy emission.
+- Change the Java agent's `telemetry.distro.name` resource attribute from
+  `opentelemetry-java-instrumentation` to `opentelemetry-javaagent`.
 
 ### ⚠️ Breaking changes to non-stable APIs
 
 - Remove `Experimental.setPreferJfrMetrics` and `Experimental.JMX_OVERLAPPING_JFR_METRICS` from the
   runtime telemetry library. Use `Experimental.setJfrMetrics` with an `IncludeExclude` selector
   specifying the metrics to source from JFR.
+- Move `CodeAttributesGetter`, `CodeAttributesExtractor`, and `CodeSpanNameExtractor` from
+  `io.opentelemetry.instrumentation.api.incubator.semconv.code` in
+  `opentelemetry-instrumentation-api-incubator` to `io.opentelemetry.instrumentation.api.semconv.code`
+  in `opentelemetry-instrumentation-api`.
+  Rename `CodeAttributesGetter#getMethodName` to `getCodeMethodName`.
+- Remove `otel.javaagent.experimental.indy` and `distribution.javaagent.indy/development`.
+  The javaagent now always uses non-inline advice for compatible instrumentation.
+  Instrumentation that intentionally uses inline advice remains supported.
+  ([#20377](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20377))
+- Remove deprecated `setCapturedRequestHeaders` and `setCapturedResponseHeaders` methods from
+  HTTP library telemetry builders. Use `setRequestHeaders` and `setResponseHeaders`
+  with `IncludeExclude` selectors instead. Selector patterns interpret `*` and `?` as wildcards
+  rather than literal header-name characters.
+- Remove the deprecated Elasticsearch REST library instrumentation. Use the Elasticsearch
+  Java API Client's native OpenTelemetry support, or the Java agent for direct RestClient usage.
+  Java agent instrumentation is unaffected.
+- Remove deprecated `setCapturedRequestHeaders` and `setCapturedResponseHeaders` methods from
+  Ktor 1.0 configuration, and the `capturedRequestHeaders` and `capturedResponseHeaders`
+  overloads from Ktor 2.0/3.0 builders. Use `requestHeaders` and `responseHeaders` with
+  `IncludeExclude` selectors instead. Selector patterns interpret `*` and `?` as wildcards
+  rather than literal header-name characters.
+- Rename Ktor 1.0 configuration methods to match Ktor 2.0/3.0:
+  `setRequestHeaders` to `requestHeaders`, `setResponseHeaders` to `responseHeaders`,
+  `setKnownMethods` to `knownMethods`, `addAttributesExtractor` to `attributesExtractor`,
+  `setSpanNameExtractorCustomizer` to `spanNameExtractor`, `setStatusExtractor` to
+  `spanStatusExtractor`, and `setSpanKindExtractor` to `spanKindExtractor`.
+  Parameter types and behavior are unchanged.
+- Rename `setOpenTelemetry` to `openTelemetry` in Ktor 1.0 configuration and Ktor 2.0/3.0
+  client and server builders. The parameter type and initialization behavior are unchanged.
+- Remove the deprecated `OpenTelemetryMeterRegistryBuilder#setMicrometerHistogramGaugesEnabled(boolean)`.
+  Use `Experimental#setMicrometerHistogramGaugesEnabled(OpenTelemetryMeterRegistryBuilder, boolean)`
+  instead.
 
 ## Version 2.32.0 (2026-10-03)
 

@@ -250,7 +250,7 @@ class SemconvStabilityTest {
   }
 
   @Test
-  void stableOptInAppliesToDatabaseAndCode() {
+  void stableOptInAppliesToDatabase() {
     // general:
     //   stability_opt_in_list: "database, code"
     //
@@ -263,14 +263,12 @@ class SemconvStabilityTest {
     SemconvSelectionResolver resolver =
         new SemconvSelectionResolver(general, v3Preview, stableOptIn, noPreview());
     SemconvMode database = resolver.database();
-    SemconvMode code = resolver.code();
 
     assertThat(database).isEqualTo(SemconvMode.V1_STABLE);
-    assertThat(code).isEqualTo(SemconvMode.V1_STABLE);
   }
 
   @Test
-  void stableOptInDupDualEmitsDatabaseAndCodeWhenV3PreviewIsDisabled() {
+  void stableOptInDupDualEmitsDatabaseWhenV3PreviewIsDisabled() {
     // general:
     //   stability_opt_in_list: "database/dup, code/dup"
     // java:
@@ -284,14 +282,12 @@ class SemconvStabilityTest {
     SemconvSelectionResolver resolver =
         new SemconvSelectionResolver(general, v3Preview, stableOptIn, noPreview());
     SemconvMode database = resolver.database();
-    SemconvMode code = resolver.code();
 
     assertThat(database).isEqualTo(SemconvMode.V1_STABLE.withDualEmit());
-    assertThat(code).isEqualTo(SemconvMode.V1_STABLE.withDualEmit());
   }
 
   @Test
-  void stableOptInDupEmitsStableDatabaseAndCodeWhenV3PreviewIsEnabled() {
+  void stableOptInDupEmitsStableDatabaseWhenV3PreviewIsEnabled() {
     // general:
     //   stability_opt_in_list: "database/dup, code/dup"
     // java:
@@ -305,10 +301,8 @@ class SemconvStabilityTest {
     SemconvSelectionResolver resolver =
         new SemconvSelectionResolver(general, v3Preview, stableOptIn, noPreview());
     SemconvMode database = resolver.database();
-    SemconvMode code = resolver.code();
 
     assertThat(database).isEqualTo(SemconvMode.V1_STABLE);
-    assertThat(code).isEqualTo(SemconvMode.V1_STABLE);
   }
 
   @Test

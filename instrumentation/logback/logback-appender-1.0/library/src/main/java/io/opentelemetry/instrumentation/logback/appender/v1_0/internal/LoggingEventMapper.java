@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldCodeSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableCodeSemconv;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
@@ -49,12 +47,6 @@ import org.slf4j.event.KeyValuePair;
  * any time.
  */
 public final class LoggingEventMapper {
-  // copied from CodeIncubatingAttributes
-  private static final AttributeKey<String> CODE_FILEPATH = AttributeKey.stringKey("code.filepath");
-  private static final AttributeKey<String> CODE_NAMESPACE =
-      AttributeKey.stringKey("code.namespace");
-  private static final AttributeKey<String> CODE_FUNCTION = AttributeKey.stringKey("code.function");
-  private static final AttributeKey<Long> CODE_LINENO = AttributeKey.longKey("code.lineno");
   // copied from ThreadIncubatingAttributes
   private static final AttributeKey<Long> THREAD_ID = AttributeKey.longKey("thread.id");
   private static final AttributeKey<String> THREAD_NAME = AttributeKey.stringKey("thread.name");
@@ -163,22 +155,12 @@ public final class LoggingEventMapper {
         String fileName = firstStackElement.getFileName();
         int lineNumber = firstStackElement.getLineNumber();
 
-        if (emitOldCodeSemconv()) {
-          builder.setAttribute(CODE_FILEPATH, fileName);
-          builder.setAttribute(CODE_NAMESPACE, firstStackElement.getClassName());
-          builder.setAttribute(CODE_FUNCTION, firstStackElement.getMethodName());
-          if (lineNumber > 0) {
-            builder.setAttribute(CODE_LINENO, (long) lineNumber);
-          }
-        }
-        if (emitStableCodeSemconv()) {
-          builder.setAttribute(CODE_FILE_PATH, fileName);
-          builder.setAttribute(
-              CODE_FUNCTION_NAME,
-              firstStackElement.getClassName() + "." + firstStackElement.getMethodName());
-          if (lineNumber > 0) {
-            builder.setAttribute(CODE_LINE_NUMBER, (long) lineNumber);
-          }
+        builder.setAttribute(CODE_FILE_PATH, fileName);
+        builder.setAttribute(
+            CODE_FUNCTION_NAME,
+            firstStackElement.getClassName() + "." + firstStackElement.getMethodName());
+        if (lineNumber > 0) {
+          builder.setAttribute(CODE_LINE_NUMBER, (long) lineNumber);
         }
       }
     }
