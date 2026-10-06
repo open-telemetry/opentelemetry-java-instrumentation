@@ -12,6 +12,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveMetrics;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanEnabledSupplier;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -217,7 +218,7 @@ public abstract class AbstractReactorKafkaTest {
                                 : "testTopic process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
-                        .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
+                        .hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())))
                         .hasAttributesSatisfyingExactly(processAttributes(record)),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2)));
 
@@ -266,7 +267,7 @@ public abstract class AbstractReactorKafkaTest {
                                 : "testTopic process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(0))
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
                         .hasAttributesSatisfyingExactly(processAttributes(record)),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
     assertReceiveAndProcessMetrics();
@@ -290,7 +291,7 @@ public abstract class AbstractReactorKafkaTest {
                       .hasParent(trace.getSpan(1))
                       .hasAttributesSatisfyingExactly(processAttributes(record));
                   if (emitStableMessagingSemconv()) {
-                    span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
+                    span.hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())));
                   }
                 },
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
@@ -349,10 +350,10 @@ public abstract class AbstractReactorKafkaTest {
   // because they are only recommended on spans that describe an operation on a single message
   private static LinkData receiveRecordLink(SpanData producerSpan) {
     if (!emitStableMessagingSemconv()) {
-      return LinkData.create(producerSpan.getSpanContext());
+      return LinkData.create(asRemote(producerSpan.getSpanContext()));
     }
     return LinkData.create(
-        producerSpan.getSpanContext(),
+        asRemote(producerSpan.getSpanContext()),
         Attributes.builder()
             .put(MESSAGING_KAFKA_OFFSET, producerSpan.getAttributes().get(MESSAGING_KAFKA_OFFSET))
             .put(

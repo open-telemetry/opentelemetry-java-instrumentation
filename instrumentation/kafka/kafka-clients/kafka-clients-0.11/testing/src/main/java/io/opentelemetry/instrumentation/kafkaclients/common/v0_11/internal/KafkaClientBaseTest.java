@@ -10,6 +10,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -257,10 +258,10 @@ public abstract class KafkaClientBaseTest {
   // because they are only recommended on spans that describe an operation on a single message
   protected static LinkData receiveRecordLink(SpanData producerSpan) {
     if (!emitStableMessagingSemconv()) {
-      return LinkData.create(producerSpan.getSpanContext());
+      return LinkData.create(asRemote(producerSpan.getSpanContext()));
     }
     return LinkData.create(
-        producerSpan.getSpanContext(),
+        asRemote(producerSpan.getSpanContext()),
         Attributes.builder()
             .put(MESSAGING_KAFKA_OFFSET, producerSpan.getAttributes().get(MESSAGING_KAFKA_OFFSET))
             .put(

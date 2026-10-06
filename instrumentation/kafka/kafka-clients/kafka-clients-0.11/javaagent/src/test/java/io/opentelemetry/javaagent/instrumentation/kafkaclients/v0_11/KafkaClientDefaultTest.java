@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMess
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertSendMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -151,7 +152,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                 span ->
                     span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             processAttributes("10", greeting, testHeaders, false)),
@@ -342,7 +343,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                 span ->
                     span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             processAttributes(null, null, false, false))));
@@ -428,7 +429,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                 span ->
                     span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             processAttributes(null, greeting, false, false))));
@@ -531,7 +532,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                 span ->
                     span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             processAttributes("10", greeting, false, false)),

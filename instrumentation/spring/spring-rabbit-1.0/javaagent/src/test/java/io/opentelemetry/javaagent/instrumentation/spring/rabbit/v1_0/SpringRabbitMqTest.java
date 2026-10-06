@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0.SpringRabbitMetricsAssertions.assertProcessMetrics;
 import static io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0.SpringRabbitMetricsAssertions.assertRabbitProcessDuration;
@@ -455,8 +456,8 @@ class SpringRabbitMqTest {
                             2L));
                 if (emitStableMessagingSemconv()) {
                   span.hasLinks(
-                      LinkData.create(producerSpan.getSpanContext()),
-                      LinkData.create(producerSpan.getSpanContext()));
+                      LinkData.create(asRemote(producerSpan.getSpanContext())),
+                      LinkData.create(asRemote(producerSpan.getSpanContext())));
                 } else {
                   span.hasTotalRecordedLinks(0);
                 }
@@ -722,7 +723,7 @@ class SpringRabbitMqTest {
     if (linkSpan == null) {
       span.hasTotalRecordedLinks(0);
     } else {
-      span.hasLinks(LinkData.create(linkSpan.getSpanContext()));
+      span.hasLinks(LinkData.create(asRemote(linkSpan.getSpanContext())));
     }
   }
 

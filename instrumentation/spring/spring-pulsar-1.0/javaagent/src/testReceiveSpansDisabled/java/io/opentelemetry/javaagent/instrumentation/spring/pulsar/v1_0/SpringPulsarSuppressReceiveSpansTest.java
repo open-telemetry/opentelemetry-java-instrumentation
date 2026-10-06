@@ -9,6 +9,7 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 
 import io.opentelemetry.instrumentation.spring.pulsar.v1_0.AbstractSpringPulsarTest;
 import io.opentelemetry.sdk.trace.data.LinkData;
@@ -38,7 +39,7 @@ class SpringPulsarSuppressReceiveSpansTest extends AbstractSpringPulsarTest {
                       .hasParent(trace.getSpan(1))
                       .hasAttributesSatisfyingExactly(processAttributes());
                   if (emitStableMessagingSemconv()) {
-                    span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
+                    span.hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())));
                   } else {
                     span.hasTotalRecordedLinks(0);
                   }

@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.kafka;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveMetrics;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanEnabledSupplier;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -76,7 +77,7 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
                         span.hasName(spanName("testSingleTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(1))
-                            .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
+                            .hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())))
                             .hasAttributesSatisfyingExactly(processAttributes(record)),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(2)));
                 producer.set(trace.getSpan(1));
@@ -119,7 +120,7 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
                         span.hasName(spanName("testSingleTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(0))
-                            .hasLinks(LinkData.create(producer.get().getSpanContext()))
+                            .hasLinks(LinkData.create(asRemote(producer.get().getSpanContext())))
                             .hasAttributesSatisfyingExactly(processAttributes(record)),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
     assertSingleMetrics(null);
@@ -151,7 +152,7 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
                         span.hasName(spanName("testSingleTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(1))
-                            .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
+                            .hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())))
                             .hasStatus(StatusData.error())
                             .hasException(new IllegalArgumentException("boom"))
                             .hasAttributesSatisfyingExactly(
@@ -197,7 +198,7 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
                         span.hasName(spanName("testSingleTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(0))
-                            .hasLinks(LinkData.create(producer.get().getSpanContext()))
+                            .hasLinks(LinkData.create(asRemote(producer.get().getSpanContext())))
                             .hasStatus(StatusData.error())
                             .hasException(new IllegalArgumentException("boom"))
                             .hasAttributesSatisfyingExactly(

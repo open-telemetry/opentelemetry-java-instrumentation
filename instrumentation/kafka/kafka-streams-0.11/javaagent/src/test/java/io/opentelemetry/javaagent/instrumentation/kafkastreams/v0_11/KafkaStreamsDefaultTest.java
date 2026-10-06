@@ -12,6 +12,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -161,7 +162,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                   span.hasName("process " + STREAM_PENDING)
                       .hasKind(SpanKind.CONSUMER)
                       .hasParent(trace.getSpan(0))
-                      .hasLinks(LinkData.create(trace.getSpan(0).getSpanContext()))
+                      .hasLinks(LinkData.create(asRemote(trace.getSpan(0).getSpanContext())))
                       .hasAttributesSatisfyingExactly(assertions);
                 },
                 // kafka-clients PRODUCER
@@ -208,7 +209,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                   span.hasName("process " + STREAM_PROCESSED)
                       .hasKind(SpanKind.CONSUMER)
                       .hasParent(trace.getSpan(2))
-                      .hasLinks(LinkData.create(trace.getSpan(2).getSpanContext()))
+                      .hasLinks(LinkData.create(asRemote(trace.getSpan(2).getSpanContext())))
                       .hasAttributesSatisfyingExactly(assertions);
                 });
             producerPendingRef.set(trace.getSpan(0));
@@ -341,7 +342,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                 span.hasName(STREAM_PENDING + " process")
                     .hasKind(SpanKind.CONSUMER)
                     .hasParent(trace.getSpan(0))
-                    .hasLinks(LinkData.create(producerPendingRef.get().getSpanContext()))
+                    .hasLinks(LinkData.create(asRemote(producerPendingRef.get().getSpanContext())))
                     .hasAttributesSatisfyingExactly(assertions);
               },
               // kafka-clients PRODUCER
@@ -407,7 +408,8 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                   span.hasName(STREAM_PROCESSED + " process")
                       .hasKind(SpanKind.CONSUMER)
                       .hasParent(trace.getSpan(0))
-                      .hasLinks(LinkData.create(producerProcessedRef.get().getSpanContext()))
+                      .hasLinks(
+                          LinkData.create(asRemote(producerProcessedRef.get().getSpanContext())))
                       .hasAttributesSatisfyingExactly(assertions);
                 }));
     assertProcessMetrics(
@@ -511,10 +513,10 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
   // because they are only recommended on spans that describe an operation on a single message
   private static LinkData receiveRecordLink(SpanData producerSpan, @Nullable String messageKey) {
     if (!emitStableMessagingSemconv()) {
-      return LinkData.create(producerSpan.getSpanContext());
+      return LinkData.create(asRemote(producerSpan.getSpanContext()));
     }
     return LinkData.create(
-        producerSpan.getSpanContext(),
+        asRemote(producerSpan.getSpanContext()),
         Attributes.builder()
             .put(MESSAGING_KAFKA_OFFSET, 0)
             .put(MESSAGING_KAFKA_MESSAGE_KEY, messageKey)

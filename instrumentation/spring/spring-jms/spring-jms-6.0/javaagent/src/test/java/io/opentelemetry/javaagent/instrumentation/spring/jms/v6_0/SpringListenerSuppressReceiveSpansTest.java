@@ -12,6 +12,7 @@ import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAss
 import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertHistogram;
 import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertNoMetric;
 import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertNoStableMetrics;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
@@ -78,7 +79,7 @@ class SpringListenerSuppressReceiveSpansTest extends AbstractSpringJmsListenerTe
                               MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
                               emitStableMessagingSemconv() ? "durable-subscription" : null));
                   if (emitStableMessagingSemconv()) {
-                    span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
+                    span.hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())));
                   } else {
                     span.hasTotalRecordedLinks(0);
                   }
