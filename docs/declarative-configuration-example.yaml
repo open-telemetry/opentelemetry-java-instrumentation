@@ -557,12 +557,13 @@ instrumentation/development:
         # Enables gauge-based Micrometer histograms for DistributionSummary and Timer instruments.
         enabled: false
       jvm_metrics_ownership/development:
-        # Stops bridging Micrometer JVM metrics (classes, memory, threads, CPU, file descriptors,
-        # GC) that duplicate metrics already emitted by the agent's runtime telemetry. A meter is
-        # only suppressed if its runtime telemetry replacement is active. Custom meters with the
-        # same names are also suppressed; use
-        # `otel.instrumentation.micrometer.experimental.jvm-metrics-ownership.kept` to keep specific
-        # meters.
+        # Stops bridging supported Micrometer JVM metrics only when the corresponding agent JMX
+        # observer or GC notification listener registered before bridge initialization. Disabled,
+        # unsupported, JFR-only, or late replacements retain the Micrometer copy. Registration does
+        # not guarantee export through SDK views, and decisions do not change when runtime telemetry
+        # later starts or stops. Custom meters with the same eligible names and types can also be
+        # suppressed; use `otel.instrumentation.micrometer.experimental.jvm-metrics-ownership.kept`
+        # to keep specific meters.
         enabled: false
 
         # Exact registered Micrometer meter names to keep bridged despite JVM ownership, including

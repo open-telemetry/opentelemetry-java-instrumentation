@@ -35,6 +35,7 @@ class JmxRegistrationTest {
   @ParameterizedTest
   @ValueSource(
       strings = {
+        "jvm.class.count", "jvm.class.loaded", "jvm.class.unloaded",
         "jvm.memory.used", "jvm.memory.committed", "jvm.memory.limit",
         "jvm.memory.used_after_last_gc", "jvm.buffer.count", "jvm.buffer.memory.used",
         "jvm.buffer.memory.limit", "jvm.cpu.count", "jvm.thread.count"
@@ -77,6 +78,21 @@ class JmxRegistrationTest {
             "jvm.system.cpu.utilization"::equals,
             registered::add)
         .forEach(cleanup::deferCleanup);
+    assertThat(registered).isEmpty();
+  }
+
+  @Test
+  void failedClassObserverIsNotReported() {
+    Meter failing = mock(Meter.class, RETURNS_DEEP_STUBS);
+    when(failing
+            .counterBuilder("jvm.class.loaded")
+            .setDescription(any())
+            .setUnit(any())
+            .buildWithCallback(any()))
+        .thenThrow(new IllegalStateException("registration failed"));
+    Set<String> registered = new HashSet<>();
+    assertThatThrownBy(() -> Classes.registerObservers(failing, unused -> true, registered::add))
+        .isInstanceOf(IllegalStateException.class);
     assertThat(registered).isEmpty();
   }
 

@@ -10,6 +10,7 @@ import static org.awaitility.Awaitility.await;
 
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.Metrics;
+import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.binder.jvm.ClassLoaderMetrics;
 import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics;
 import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics;
@@ -21,6 +22,7 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import java.time.Duration;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -110,6 +112,12 @@ class JvmMetricsOwnershipEnabledTest {
       Metrics.addRegistry(otherRegistry);
       try {
         gcMetrics.bindTo(Metrics.globalRegistry);
+        // Exercise concurrent-phase suppression independently of the JVM collector.
+        Timer concurrentPhase =
+            Timer.builder("jvm.gc.concurrent.phase.time").register(Metrics.globalRegistry);
+        concurrentPhase.record(Duration.ofMillis(7));
+        assertThat(concurrentPhase.count()).isEqualTo(1);
+        assertThat(otherRegistry.get("jvm.gc.concurrent.phase.time").timer().count()).isEqualTo(1);
         System.gc();
         // An empty bridge export is meaningful only after Micrometer received a GC notification.
         await()
@@ -117,6 +125,8 @@ class JvmMetricsOwnershipEnabledTest {
                 () ->
                     assertThat(otherRegistry.find("jvm.gc.pause").timers())
                         .anySatisfy(timer -> assertThat(timer.count()).isPositive()));
+        assertThat(Metrics.globalRegistry.find("jvm.gc.pause").timers())
+            .anySatisfy(timer -> assertThat(timer.count()).isPositive());
         testing.waitAndAssertMetrics(
             RUNTIME_TELEMETRY_SCOPE,
             "jvm.gc.duration",

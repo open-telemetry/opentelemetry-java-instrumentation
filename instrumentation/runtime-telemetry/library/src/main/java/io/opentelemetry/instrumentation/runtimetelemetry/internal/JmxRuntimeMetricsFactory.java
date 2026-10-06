@@ -27,7 +27,7 @@ public class JmxRuntimeMetricsFactory {
 
   /**
    * Like {@link #buildObservables(boolean, boolean, Predicate, Meter)}, and passes the name of each
-   * reviewed metric whose observer or GC listener registered successfully to {@code
+   * supported metric whose observer or GC listener registered successfully to {@code
    * registeredObserver}.
    */
   public static List<AutoCloseable> buildObservables(

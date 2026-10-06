@@ -9,7 +9,7 @@
 
 ## Prefer agent JVM metrics
 
-Enable the bridge and opt into the agent's representation of reviewed standard JVM observations:
+Enable the bridge and opt into the agent's representation of supported standard JVM observations:
 
 ```properties
 otel.instrumentation.micrometer.enabled=true
@@ -58,16 +58,5 @@ explicitly or leave ownership disabled. The setting affects only the agent's bri
 Micrometer registries continue recording. Observer registration does not guarantee export through
 SDK views, and startup decisions do not change when runtime telemetry later starts or stops.
 
-All unlisted names remain bridged, including these complementary observations:
-
-- `jvm.memory.usage.after.gc`: a long-lived heap utilization ratio, not the agent's post-GC byte count.
-- `jvm.gc.memory.allocated`, `jvm.gc.memory.promoted`, `jvm.gc.live.data.size`,
-  `jvm.gc.max.data.size`, `jvm.gc.overhead`, `jvm.gc.cpu.time`.
-- `jvm.threads.peak`, `jvm.threads.started`, `jvm.threads.deadlocked`,
-  `jvm.threads.deadlocked.monitor`, `jvm.threads.virtual.pinned`,
-  `jvm.threads.virtual.submit.failed`, `jvm.threads.virtual.parallelism`,
-  `jvm.threads.virtual.pool.size`, `jvm.threads.virtual.live`.
-- `jvm.compilation.time`, `jvm.info`, `process.uptime`, `process.start.time`.
-
-The policy does not use `jvm.*`, `process.*`, or `system.*` wildcard suppression. This experimental
-coverage expansion adds the reviewed families above to the earlier class-loading prototype.
+Metrics not listed in the table remain bridged. Matching uses exact names and types; wildcard
+suppression is not supported.

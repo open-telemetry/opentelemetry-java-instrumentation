@@ -98,13 +98,9 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
     return metersHiddenFromSearch ? emptyList() : super.getMeters();
   }
 
-  private boolean suppressed(Meter.Id id) {
-    return suppressionPredicate.test(id);
-  }
-
   @Override
   protected <T> Gauge newGauge(Meter.Id id, @Nullable T obj, ToDoubleFunction<T> valueFunction) {
-    if (suppressed(id)) {
+    if (suppressionPredicate.test(id)) {
       return SuppressedInstruments.gauge(id);
     }
     return new OpenTelemetryGauge<>(
@@ -113,7 +109,7 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
 
   @Override
   protected Counter newCounter(Meter.Id id) {
-    if (suppressed(id)) {
+    if (suppressionPredicate.test(id)) {
       return SuppressedInstruments.counter(id);
     }
     return new OpenTelemetryCounter(id, config().namingConvention(), otelMeter, bridging);
@@ -122,7 +118,7 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
   @Override
   protected LongTaskTimer newLongTaskTimer(
       Meter.Id id, DistributionStatisticConfig distributionStatisticConfig) {
-    if (suppressed(id)) {
+    if (suppressionPredicate.test(id)) {
       return SuppressedInstruments.longTaskTimer(id);
     }
     OpenTelemetryLongTaskTimer timer =
@@ -145,7 +141,7 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
       Meter.Id id,
       DistributionStatisticConfig distributionStatisticConfig,
       PauseDetector pauseDetector) {
-    if (suppressed(id)) {
+    if (suppressionPredicate.test(id)) {
       return SuppressedInstruments.timer(id);
     }
     OpenTelemetryTimer timer =
@@ -169,7 +165,7 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
   @Override
   protected DistributionSummary newDistributionSummary(
       Meter.Id id, DistributionStatisticConfig distributionStatisticConfig, double scale) {
-    if (suppressed(id)) {
+    if (suppressionPredicate.test(id)) {
       return SuppressedInstruments.distributionSummary(id);
     }
     OpenTelemetryDistributionSummary distributionSummary =
@@ -191,7 +187,7 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
 
   @Override
   protected Meter newMeter(Meter.Id id, Meter.Type type, Iterable<Measurement> measurements) {
-    if (suppressed(id)) {
+    if (suppressionPredicate.test(id)) {
       return SuppressedInstruments.meter(id);
     }
     return new OpenTelemetryMeter(
@@ -205,7 +201,7 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
       ToLongFunction<T> countFunction,
       ToDoubleFunction<T> totalTimeFunction,
       TimeUnit totalTimeFunctionUnit) {
-    if (suppressed(id)) {
+    if (suppressionPredicate.test(id)) {
       return SuppressedInstruments.functionTimer(id);
     }
     return new OpenTelemetryFunctionTimer<>(
@@ -223,7 +219,7 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
   @Override
   protected <T> FunctionCounter newFunctionCounter(
       Meter.Id id, T obj, ToDoubleFunction<T> countFunction) {
-    if (suppressed(id)) {
+    if (suppressionPredicate.test(id)) {
       return SuppressedInstruments.functionCounter(id);
     }
     return new OpenTelemetryFunctionCounter<>(

@@ -25,11 +25,7 @@ public final class SystemCpu {
 
   /** Register observers for java runtime experimental CPU metrics. */
   public static List<AutoCloseable> registerObservers(Meter meter) {
-    return registerObservers(meter, unused -> true);
-  }
-
-  static List<AutoCloseable> registerObservers(Meter meter, Predicate<String> metricNamePredicate) {
-    return registerObservers(meter, metricNamePredicate, unused -> {});
+    return registerObservers(meter, unused -> true, unused -> {});
   }
 
   static List<AutoCloseable> registerObservers(

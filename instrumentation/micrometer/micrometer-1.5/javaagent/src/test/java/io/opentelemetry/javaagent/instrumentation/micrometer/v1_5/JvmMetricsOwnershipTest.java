@@ -19,7 +19,6 @@ import java.lang.reflect.Constructor;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Predicate;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -29,12 +28,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 class JvmMetricsOwnershipTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
-
-  @BeforeAll
-  static void initializeBridgeHelpers() {
-    // Helpers live in the application loader only after Micrometer instrumentation applies.
-    assertThat(Metrics.globalRegistry.getRegistries()).isNotEmpty();
-  }
 
   @ParameterizedTest
   @CsvSource({
@@ -134,6 +127,7 @@ class JvmMetricsOwnershipTest {
     Set<String> observers =
         new HashSet<>(
             asList(
+                "jvm.memory.used",
                 "jvm.memory.used_after_last_gc",
                 "jvm.memory.allocation",
                 "jvm.memory.limit",

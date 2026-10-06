@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 /**
- * Selects reviewed standard JVM meters whose observations are owned by agent JMX telemetry.
+ * Selects supported standard JVM meters whose observations are owned by agent JMX telemetry.
  * Complementary metrics and unknown names remain bridged; this is not a namespace filter.
  */
 final class JvmMetricsOwnership implements Predicate<Meter.Id> {
@@ -37,7 +37,7 @@ final class JvmMetricsOwnership implements Predicate<Meter.Id> {
       logger.log(
           WARNING,
           "Micrometer JVM metrics ownership is enabled, but runtime telemetry has not registered"
-              + " any reviewed JMX metrics; all Micrometer meters will be bridged.");
+              + " any supported JMX metrics; all Micrometer meters will be bridged.");
     }
   }
 

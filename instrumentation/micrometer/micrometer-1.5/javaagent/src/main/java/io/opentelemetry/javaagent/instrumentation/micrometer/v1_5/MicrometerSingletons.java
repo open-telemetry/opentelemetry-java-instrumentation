@@ -44,12 +44,14 @@ public class MicrometerSingletons {
             .setBaseTimeUnit(TimeUnitParser.parseConfigValue(config.getString("base_time_unit")));
     Experimental.setMicrometerHistogramGaugesEnabled(builder, getHistogramGaugesEnabled(config));
     DeclarativeConfigProperties ownership = config.get("jvm_metrics_ownership/development");
-    Experimental.setSuppressionPredicate(
-        builder,
-        new JvmMetricsOwnership(
-            ownership.getBoolean("enabled", false),
-            new HashSet<>(ownership.getScalarList("kept", String.class, emptyList())),
-            registeredJmxObservers()));
+    if (ownership.getBoolean("enabled", false)) {
+      Experimental.setSuppressionPredicate(
+          builder,
+          new JvmMetricsOwnership(
+              true,
+              new HashSet<>(ownership.getScalarList("kept", String.class, emptyList())),
+              registeredJmxObservers()));
+    }
     meterRegistry = builder.build();
   }
 
