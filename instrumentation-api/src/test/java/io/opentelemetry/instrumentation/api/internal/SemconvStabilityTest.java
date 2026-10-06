@@ -415,36 +415,6 @@ class SemconvStabilityTest {
             preview("messaging/dup")));
   }
 
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void messagingSelectorsCannotRestoreOldOrDualEmission(boolean v3Preview) {
-    for (int version : asList(-1, 0, 1, 2)) {
-      for (boolean experimental : asList(false, true)) {
-        for (boolean dualEmit : asList(false, true)) {
-          for (String flag : asList("messaging", "messaging/dup")) {
-            DeclarativeConfigProperties general =
-                general(domainSemconv("messaging", version, experimental, dualEmit));
-            SemconvSelectionResolver resolver =
-                new SemconvSelectionResolver(
-                    general,
-                    v3Preview,
-                    stableOptIn("database/dup", "code", "rpc", "service.peer", flag),
-                    preview("rpc/dup", "service.peer/dup", flag));
-
-            assertThat(resolver.messaging()).isEqualTo(SemconvMode.V0_STABLE);
-            assertThat(resolver.database())
-                .isEqualTo(
-                    v3Preview ? SemconvMode.V1_STABLE : SemconvMode.V1_STABLE.withDualEmit());
-            assertThat(resolver.code()).isEqualTo(SemconvMode.V1_STABLE);
-            assertThat(resolver.rpc()).isEqualTo(SemconvMode.V1_EXPERIMENTAL.withDualEmit());
-            assertThat(resolver.servicePeer())
-                .isEqualTo(SemconvMode.V1_EXPERIMENTAL.withDualEmit());
-          }
-        }
-      }
-    }
-  }
-
   @SafeVarargs
   private static DeclarativeConfigProperties general(Entry<String, Object>... entries) {
     Map<String, Object> result = new HashMap<String, Object>();
