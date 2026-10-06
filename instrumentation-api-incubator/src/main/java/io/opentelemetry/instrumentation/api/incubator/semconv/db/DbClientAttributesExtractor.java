@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.databaseSchemaUrl;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSystemNameUtil.normalizeDbSystemName;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
@@ -19,12 +19,12 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.semconv.AttributeKeyTemplate;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -86,8 +86,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
     // size 0); it is only omitted for a single-statement batch, which is reported as a non-batch
     boolean isBatch = batchSize != null && batchSize != 1;
 
-    attributes.put(
-        DB_SYSTEM_NAME, SemconvStability.normalizeDbSystemName(getter.getDbSystemName(request)));
+    attributes.put(DB_SYSTEM_NAME, normalizeDbSystemName(getter.getDbSystemName(request)));
     attributes.put(DB_NAMESPACE, getter.getDbNamespace(request));
     attributes.put(DB_COLLECTION_NAME, getter.getDbCollectionName(request));
     attributes.put(DB_QUERY_TEXT, getter.getDbQueryText(request));
@@ -145,6 +144,6 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   public String internalGetSchemaUrl() {
-    return databaseSchemaUrl();
+    return SchemaUrls.V1_44_0;
   }
 }

@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.databaseSchemaUrl;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
@@ -20,6 +19,7 @@ import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.api.metrics.ObservableMeasurement;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
+import io.opentelemetry.semconv.SchemaUrls;
 
 /**
  * A helper class that models the <a
@@ -50,7 +50,7 @@ public final class DbConnectionPoolMetrics {
     if (version != null) {
       meterBuilder.setInstrumentationVersion(version);
     }
-    meterBuilder.setSchemaUrl(databaseSchemaUrl());
+    meterBuilder.setSchemaUrl(SchemaUrls.V1_44_0);
     return create(meterBuilder.build(), poolName, databaseAttributes);
   }
 

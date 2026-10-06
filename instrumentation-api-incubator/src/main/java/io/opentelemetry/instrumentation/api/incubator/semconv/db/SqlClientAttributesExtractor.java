@@ -5,8 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.databaseSchemaUrl;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.normalizeDbSystemName;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSystemNameUtil.normalizeDbSystemName;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
@@ -25,6 +24,7 @@ import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.semconv.AttributeKeyTemplate;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.Collection;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -179,6 +179,6 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   public String internalGetSchemaUrl() {
-    return databaseSchemaUrl();
+    return SchemaUrls.V1_44_0;
   }
 }

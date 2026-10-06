@@ -13,7 +13,6 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.i
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSettleExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcExceptionEventExtractors.setRpcClientExceptionEventExtractor;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.databaseSchemaUrl;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.messagingSchemaUrl;
 import static java.util.Arrays.asList;
@@ -56,6 +55,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -442,7 +442,7 @@ public final class AwsSdkInstrumenterFactory {
           builder
               .addAttributesExtractor(new DynamoDbAttributesExtractor())
               .addOperationMetrics(DbClientMetrics.get())
-              .setSchemaUrl(databaseSchemaUrl());
+              .setSchemaUrl(SchemaUrls.V1_44_0);
           setDbClientExceptionEventExtractor(builder);
         },
         true);
@@ -461,7 +461,7 @@ public final class AwsSdkInstrumenterFactory {
           builder
               .addAttributesExtractor(SqlClientAttributesExtractor.create(getter))
               .addOperationMetrics(DbClientMetrics.get())
-              .setSchemaUrl(databaseSchemaUrl());
+              .setSchemaUrl(SchemaUrls.V1_44_0);
           setDbClientExceptionEventExtractor(builder);
         },
         true);

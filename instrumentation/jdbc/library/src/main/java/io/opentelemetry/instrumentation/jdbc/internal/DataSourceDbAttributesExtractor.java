@@ -5,13 +5,13 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSystemNameUtil.normalizeDbSystemName;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import javax.annotation.Nullable;
 import javax.sql.DataSource;
@@ -32,7 +32,6 @@ final class DataSourceDbAttributesExtractor implements AttributesExtractor<DataS
       return;
     }
     attributes.put(DB_NAMESPACE, dbInfo.getDbNamespace());
-    attributes.put(
-        DB_SYSTEM_NAME, SemconvStability.normalizeDbSystemName(dbInfo.getDbSystemName()));
+    attributes.put(DB_SYSTEM_NAME, normalizeDbSystemName(dbInfo.getDbSystemName()));
   }
 }

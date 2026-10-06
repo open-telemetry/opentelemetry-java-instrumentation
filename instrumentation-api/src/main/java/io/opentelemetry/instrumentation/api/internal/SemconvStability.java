@@ -68,41 +68,12 @@ public final class SemconvStability {
     return v3Preview;
   }
 
-  public static String databaseSchemaUrl() {
-    return SchemaUrls.V1_44_0;
-  }
-
   public static boolean emitOldServicePeerSemconv() {
     return emitOldServicePeerSemconv;
   }
 
   public static boolean emitStableServicePeerSemconv() {
     return emitStableServicePeerSemconv;
-  }
-
-  private static final Map<String, String> dbSystemNameMap = new HashMap<>();
-
-  static {
-    dbSystemNameMap.put("adabas", "softwareag.adabas");
-    dbSystemNameMap.put("intersystems_cache", "intersystems.cache");
-    dbSystemNameMap.put("cosmosdb", "azure.cosmosdb");
-    dbSystemNameMap.put("db2", "ibm.db2");
-    dbSystemNameMap.put("dynamodb", "aws.dynamodb");
-    dbSystemNameMap.put("h2", "h2database");
-    dbSystemNameMap.put("hanadb", "sap.hana");
-    dbSystemNameMap.put("informix", "ibm.informix");
-    dbSystemNameMap.put("ingres", "actian.ingres");
-    dbSystemNameMap.put("maxdb", "sap.maxdb");
-    dbSystemNameMap.put("mssql", "microsoft.sql_server");
-    dbSystemNameMap.put("netezza", "ibm.netezza");
-    dbSystemNameMap.put("oracle", "oracle.db");
-    dbSystemNameMap.put("redshift", "aws.redshift");
-    dbSystemNameMap.put("spanner", "gcp.spanner");
-  }
-
-  public static String normalizeDbSystemName(String dbSystemName) {
-    String normalizedDbSystemName = dbSystemNameMap.get(dbSystemName);
-    return normalizedDbSystemName != null ? normalizedDbSystemName : dbSystemName;
   }
 
   public static boolean emitOldRpcSemconv() {
