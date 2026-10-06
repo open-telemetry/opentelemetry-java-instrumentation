@@ -31,7 +31,7 @@ class SemconvSelectionResolver {
   // otel.semconv-stability.preview in library instrumentation.
   private final Set<String> previewFlags;
 
-  // Forces database to stable-only emission. For preview domains, v3 preview uses only
+  // For preview domains, v3 preview uses only
   // preview flags; non-preview combines stable and preview flags for backward compatibility.
   private final boolean v3Preview;
 
@@ -56,15 +56,7 @@ class SemconvSelectionResolver {
   }
 
   SemconvMode database() {
-    SemconvDomain.Builder domain = SemconvDomain.builder("db").flagKey("database");
-    if (v3Preview) {
-      domain.defaultMode(SemconvMode.V1_STABLE);
-    } else {
-      domain
-          .defaultMode(SemconvMode.V0_STABLE)
-          .otherSupportedModes(SemconvMode.V1_STABLE, SemconvMode.V1_STABLE.withDualEmit());
-    }
-    return resolveSemconvSelection(domain.build());
+    return SemconvMode.V1_STABLE;
   }
 
   SemconvMode rpc() {

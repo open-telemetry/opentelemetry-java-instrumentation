@@ -38,6 +38,41 @@ import org.junit.jupiter.api.Test;
 class DbClientAttributesExtractorTest {
 
   @Test
+  void shouldEmitDatabaseAttributes() {
+    assertThat(emitOldDatabaseSemconv()).isFalse();
+    assertThat(emitStableDatabaseSemconv()).isTrue();
+
+    Map<String, String> request = new HashMap<>();
+    request.put("db.system", "myDb");
+    request.put("db.user", "username");
+    request.put("db.namespace", "potatoes");
+    request.put("db.collection.name", "potato");
+    request.put("db.connection_string", "mydb:///potatoes");
+    request.put("db.query.text", "SELECT * FROM potato");
+    request.put("db.query_summary", "SELECT potato");
+    request.put("db.operation", "old SELECT");
+    request.put("db.operation.name", "SELECT");
+
+    AttributesExtractor<Map<String, String>, Void> extractor =
+        DbClientAttributesExtractor.create(new TestAttributesGetter());
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+
+    assertThat(attributes.build())
+        .containsOnly(
+            entry(DB_SYSTEM_NAME, "myDb"),
+            entry(DB_NAMESPACE, "potatoes"),
+            entry(DB_COLLECTION_NAME, "potato"),
+            entry(DB_QUERY_TEXT, "SELECT * FROM potato"),
+            entry(DB_QUERY_SUMMARY, "SELECT potato"),
+            entry(DB_OPERATION_NAME, "SELECT"));
+    assertThat(((SchemaUrlProvider) extractor).internalGetSchemaUrl())
+        .isEqualTo(SchemaUrls.V1_44_0);
+    assertThat(DbClientSpanNameExtractor.create(new TestAttributesGetter()).extract(request))
+        .isEqualTo("SELECT potato");
+  }
+
+  @Test
   void shouldProvideSchemaUrl() {
     AttributesExtractor<Map<String, String>, Void> extractor =
         DbClientAttributesExtractor.create(new TestAttributesGetter());

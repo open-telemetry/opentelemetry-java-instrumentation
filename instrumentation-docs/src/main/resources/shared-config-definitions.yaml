@@ -268,9 +268,17 @@ global_configurations:
   common.v3-preview:
     name: otel.instrumentation.common.v3-preview
     declarative_name: java.common.v3_preview
-    description: "Enables a preview of the behavior planned for version 3.0 of the agent, such as emitting the stable database semantic conventions and the new messaging semantic conventions by default, and ignoring deprecated settings. The set of changes it enables can grow in any release."
+    description: "Enables a preview of the behavior planned for version 3.0 of the agent, such as emitting the new messaging semantic conventions by default, and ignoring deprecated settings. The set of changes it enables can grow in any release."
     type: boolean
     default: false
+
+  semconv-stability.opt-in:
+    name: otel.semconv-stability.opt-in
+    declarative_name: general.stability_opt_in_list
+    description: "A comma-separated list of semantic convention groups to opt into, such as `rpc`, `messaging`, and `service.peer`. Use `<group>/dup` to emit both old and new conventions. Under v3 preview the preview groups use `otel.semconv-stability.preview` instead."
+    type: list
+    declarative_type: string
+    default: ""
 
   semconv-stability.preview:
     name: otel.semconv-stability.preview
@@ -298,17 +306,6 @@ global_configurations:
     type: string
     deprecated: true
     replaced_by: otel.instrumentation.common.span-suppression-strategy
-
-  db.semconv.version:
-    declarative_name: general.db.semconv.version
-    description: "Database semantic convention version to emit: `0` for the old conventions or `1` for the stable conventions. Takes precedence over `stability_opt_in_list`; when unset, `stability_opt_in_list` selects the conventions. Under v3 preview only `1` is supported and it is the default."
-    type: int
-
-  db.semconv.dual_emit:
-    declarative_name: general.db.semconv.dual_emit
-    description: "With `version: 1`, emits both the old and the stable database semantic conventions. Not supported under v3 preview."
-    type: boolean
-    default: false
 
   rpc.semconv.version:
     declarative_name: general.rpc.semconv.version
