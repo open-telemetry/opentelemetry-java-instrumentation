@@ -4,14 +4,16 @@
 
 ### ⚠️ Breaking changes
 
-- Remove Log4j appender correlation reconstructed from trace-ID, span-ID, and trace-flags strings.
+- Remove Log4j appender correlation reconstructed from trace-ID, span-ID, and
+  trace-flags strings.
   For standalone asynchronous logging, configure
   `log4j2.ContextDataInjector=io.opentelemetry.instrumentation.log4j.appender.v2_17.OpenTelemetryAppenderContextDataInjector`
   to carry the full OpenTelemetry context; Java agent correlation remains supported.
-  Replace `otel.instrumentation.common.logging.trace-id`, `.span-id`, and `.trace-flags` with
-  `.trace-id-key`, `.span-id-key`, and `.trace-flags-key`, respectively.
-  In declarative configuration, replace `java.common.logging.trace_id`, `.span_id`, and `.trace_flags`
-  with `.trace_id_key`, `.span_id_key`, and `.trace_flags_key`.
+  Replace `otel.instrumentation.common.logging.trace-id`, `.span-id`, and
+  `.trace-flags` with `.trace-id-key`, `.span-id-key`, and `.trace-flags-key`,
+  respectively. In declarative configuration, replace
+  `java.common.logging.trace_id`, `.span_id`, and `.trace_flags` with
+  `.trace_id_key`, `.span_id_key`, and `.trace_flags_key`.
   These removals apply even when `otel.instrumentation.common.v3-preview=false`.
 - The Java agent and standalone libraries now use the existing v1.43.0 messaging implementation.
 - Emit only stable source code attributes: `code.function.name` replaces `code.namespace` and
