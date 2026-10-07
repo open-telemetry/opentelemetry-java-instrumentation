@@ -37,8 +37,6 @@ class JdbcServicePeerTest {
         request(
             DbInfo.builder()
                 .dbSystemName(POSTGRESQL)
-                .legacyServerAddress("localhost")
-                .legacyServerPort(5432)
                 .configuredServerTarget(DbServerTarget.create(GROUP_TARGET, null))
                 .build());
 
@@ -53,8 +51,6 @@ class JdbcServicePeerTest {
         request(
             DbInfo.builder()
                 .dbSystemName(POSTGRESQL)
-                .legacyServerAddress("localhost")
-                .legacyServerPort(5432)
                 .configuredServerTarget(DbServerTarget.create("localhost", 5432))
                 .build());
 
@@ -68,8 +64,6 @@ class JdbcServicePeerTest {
         request(
             DbInfo.builder()
                 .dbSystemName("oracle.db")
-                .legacyServerAddress("orcl.host1")
-                .legacyServerPort(1521)
                 .configuredServerTarget(DbServerTarget.create(DEFAULT_PORT_GROUP_TARGET, null))
                 .build());
 

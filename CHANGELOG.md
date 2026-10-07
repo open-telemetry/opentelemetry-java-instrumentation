@@ -15,7 +15,17 @@
   Replace `otel.instrumentation.common.logging.trace-id`, `.span-id`, and
   `.trace-flags` with `.trace-id-key`, `.span-id-key`, and `.trace-flags-key`,
   respectively.
+- Remove the deprecated GraphQL configuration properties
+  `otel.instrumentation.graphql.add-operation-name-to-span-name.enabled` and
+  `otel.instrumentation.graphql.query-sanitizer.enabled`. Use
+  `otel.instrumentation.graphql.operation-name-in-span-name.enabled` and
+  `otel.instrumentation.graphql.query-sanitization.enabled`, respectively.
 - The Java agent and standalone libraries now use the existing v1.43.0 messaging implementation.
+- Remove support for the deprecated controller and view telemetry aliases. Replace
+  `otel.instrumentation.common.experimental.controller-telemetry.enabled` and
+  `otel.instrumentation.common.experimental.view-telemetry.enabled` with
+  `otel.instrumentation.common.controller-telemetry.enabled` and
+  `otel.instrumentation.common.view-telemetry.enabled`.
 - Emit only stable source code attributes: `code.function.name` replaces `code.namespace` and
   `code.function`, and log records use `code.file.path` and `code.line.number` instead of
   `code.filepath` and `code.lineno`. The `code` and `code/dup` opt-ins and
@@ -68,6 +78,21 @@
 - Remove the deprecated `OpenTelemetryMeterRegistryBuilder#setMicrometerHistogramGaugesEnabled(boolean)`.
   Use `Experimental#setMicrometerHistogramGaugesEnabled(OpenTelemetryMeterRegistryBuilder, boolean)`
   instead.
+- Remove legacy database APIs from `io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-incubator`.
+  Replace `DbClientAttributesGetter.getDbSystem`, `getDbName`, and `getDbOperation` with
+  `getDbSystemName`, `getDbNamespace`, and `getDbOperationName`. Return canonical system names
+  such as `oracle.db` and `h2database` from `getDbSystemName`; extractors no longer translate
+  legacy system names. Remove overrides of `getUser` and `getConnectionString`, which have no
+  stable database attribute replacements. SQL getters use
+  `getRawQueryTexts` instead of `getRawQueryTextsForOldSemconv`; use
+  `DbClientSpanNameExtractor.create` instead of `createWithGenericOldSpanName`.
+  Remove `SqlClientAttributesExtractorBuilder.setTableAttribute`; enable
+  `setSingleOperationAndCollection(true)` to derive `db.collection.name` for systems that support
+  only one collection and operation per non-batch query.
+- Remove `SqlQueryAnalyzer.analyzeWithSummary` from
+  `io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-incubator` for 3.0.
+  Use `SqlQueryAnalyzer.analyze`, which now always produces query summaries when sanitization is
+  enabled. The public `SqlQuery` factory signatures are unchanged.
 - Remove `MessageOperation` and its overloads in the messaging attribute, span-name and span-kind
   extractors from `opentelemetry-instrumentation-api-incubator`.
   `MessagingAttributesGetter` no longer requires or exposes `getMessageBodySize()` or
