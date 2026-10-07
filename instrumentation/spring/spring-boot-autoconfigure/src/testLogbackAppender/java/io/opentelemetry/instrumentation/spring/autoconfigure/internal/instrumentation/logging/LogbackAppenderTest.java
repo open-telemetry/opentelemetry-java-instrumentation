@@ -1099,8 +1099,8 @@ class LogbackAppenderTest {
   }
 
   @ParameterizedTest
-  @CsvSource({"false, false", "false, true", "true, false", "true, true"})
-  void mdcAppender(boolean declarativeConfig, boolean replacementConfigured) {
+  @ValueSource(booleans = {false, true})
+  void mdcAppender(boolean declarativeConfig) {
     Map<String, Object> properties = new HashMap<>();
     properties.put("logging.config", "classpath:logback-test.xml");
     if (declarativeConfig) {
@@ -1108,34 +1108,17 @@ class LogbackAppenderTest {
       properties.put(
           "otel.distribution.spring_starter.instrumentation.disabled[0]", "logback_appender");
       properties.put("otel.instrumentation/development.java.logback_mdc.add_baggage", "true");
-      properties.put("otel.instrumentation/development.java.common.v3_preview", false);
       properties.put(
-          "otel.instrumentation/development.java.common.logging.trace_id", "deprecated_traceid");
+          "otel.instrumentation/development.java.common.logging.trace_id_key", "traceid");
+      properties.put("otel.instrumentation/development.java.common.logging.span_id_key", "spanid");
       properties.put(
-          "otel.instrumentation/development.java.common.logging.span_id", "deprecated_spanid");
-      properties.put(
-          "otel.instrumentation/development.java.common.logging.trace_flags",
-          "deprecated_traceflags");
-      if (replacementConfigured) {
-        properties.put(
-            "otel.instrumentation/development.java.common.logging.trace_id_key", "traceid");
-        properties.put(
-            "otel.instrumentation/development.java.common.logging.span_id_key", "spanid");
-        properties.put(
-            "otel.instrumentation/development.java.common.logging.trace_flags_key", "traceflags");
-      }
+          "otel.instrumentation/development.java.common.logging.trace_flags_key", "traceflags");
     } else {
       properties.put("otel.instrumentation.logback-appender.enabled", "false");
       properties.put("otel.instrumentation.logback-mdc.add-baggage", "true");
-      properties.put("otel.instrumentation.common.v3-preview", false);
-      properties.put("otel.instrumentation.common.logging.trace-id", "deprecated_traceid");
-      properties.put("otel.instrumentation.common.logging.span-id", "deprecated_spanid");
-      properties.put("otel.instrumentation.common.logging.trace-flags", "deprecated_traceflags");
-      if (replacementConfigured) {
-        properties.put("otel.instrumentation.common.logging.trace-id-key", "traceid");
-        properties.put("otel.instrumentation.common.logging.span-id-key", "spanid");
-        properties.put("otel.instrumentation.common.logging.trace-flags-key", "traceflags");
-      }
+      properties.put("otel.instrumentation.common.logging.trace-id-key", "traceid");
+      properties.put("otel.instrumentation.common.logging.span-id-key", "spanid");
+      properties.put("otel.instrumentation.common.logging.trace-flags-key", "traceflags");
     }
 
     SpringApplication app =
@@ -1165,10 +1148,7 @@ class LogbackAppenderTest {
                         e ->
                             assertThat(e.getMDCPropertyMap())
                                 .containsOnlyKeys(
-                                    replacementConfigured ? "traceid" : "trace_id",
-                                    replacementConfigured ? "spanid" : "span_id",
-                                    replacementConfigured ? "traceflags" : "trace_flags",
-                                    "baggage.key")));
+                                    "traceid", "spanid", "traceflags", "baggage.key")));
   }
 
   @Test

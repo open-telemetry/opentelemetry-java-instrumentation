@@ -50,11 +50,6 @@ These keys can be customized using the following system properties or environmen
 | `otel.instrumentation.common.logging.span-id-key`     | `OTEL_INSTRUMENTATION_COMMON_LOGGING_SPAN_ID_KEY`     |
 | `otel.instrumentation.common.logging.trace-flags-key` | `OTEL_INSTRUMENTATION_COMMON_LOGGING_TRACE_FLAGS_KEY` |
 
-The deprecated `otel.instrumentation.common.logging.trace-id`, `.span-id`, and
-`.trace-flags` settings are no longer read, even when
-`otel.instrumentation.common.v3-preview=false`. For example, replace
-`otel.instrumentation.common.logging.trace-id=custom_trace` with
-`otel.instrumentation.common.logging.trace-id-key=custom_trace`.
 These string values support layout output, not asynchronous OpenTelemetry
 appender correlation.
 For that, configure the [appender context data injector](../../../log4j-appender-2.17/library/README.md#async-loggers)
@@ -84,3 +79,11 @@ You can use these keys when defining an appender in your `log4j.xml` configurati
   </Loggers>
 </Configuration>
 ```
+
+## Migrating to 3.0
+
+The former `otel.instrumentation.common.logging.trace-id`, `.span-id`, and
+`.trace-flags` settings have been replaced by the `-key` settings above. For
+example, replace
+`otel.instrumentation.common.logging.trace-id=custom_trace` with
+`otel.instrumentation.common.logging.trace-id-key=custom_trace`.
