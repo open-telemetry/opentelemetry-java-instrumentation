@@ -50,3 +50,21 @@ observables.forEach(observable -> {
     }
 });
 ```
+
+## Migrating to 3.0
+
+The deprecated `SystemMetrics.registerObservers(Meter)` overload has been removed.
+Pass the owning `OpenTelemetry` instance instead so the instrumentation can set its
+scope, version, and schema:
+
+```java
+// Before
+SystemMetrics.registerObservers(openTelemetry.getMeter("application"));
+
+// After
+List<AutoCloseable> observables = SystemMetrics.registerObservers(openTelemetry);
+```
+
+Continue closing the returned observers when they are no longer needed.
+The deprecated `ProcessMetrics` class has also been removed. See the
+[system metric and process metric migration notes](../README.md#migrating-to-30).
