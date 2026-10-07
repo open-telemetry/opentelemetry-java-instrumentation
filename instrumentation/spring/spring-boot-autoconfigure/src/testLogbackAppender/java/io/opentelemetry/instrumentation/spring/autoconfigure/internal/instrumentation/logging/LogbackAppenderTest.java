@@ -1114,11 +1114,13 @@ class LogbackAppenderTest {
       properties.put(
           "otel.instrumentation/development.java.common.logging.span_id", "deprecated_spanid");
       properties.put(
-          "otel.instrumentation/development.java.common.logging.trace_flags", "deprecated_traceflags");
+          "otel.instrumentation/development.java.common.logging.trace_flags",
+          "deprecated_traceflags");
       if (replacementConfigured) {
         properties.put(
             "otel.instrumentation/development.java.common.logging.trace_id_key", "traceid");
-        properties.put("otel.instrumentation/development.java.common.logging.span_id_key", "spanid");
+        properties.put(
+            "otel.instrumentation/development.java.common.logging.span_id_key", "spanid");
         properties.put(
             "otel.instrumentation/development.java.common.logging.trace_flags_key", "traceflags");
       }
