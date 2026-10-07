@@ -24,7 +24,7 @@
 package io.opentelemetry.instrumentation.thrift.v0_13;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -287,10 +287,10 @@ public abstract class AbstractThriftTest {
         .hasAttributesSatisfyingExactly(
             equalTo(
                 RPC_METHOD,
-                emitStableRpcSemconv() ? CustomService.class.getName() + "/" + method : method),
+                emitPreviewRpcSemconv() ? CustomService.class.getName() + "/" + method : method),
             equalTo(RPC_SERVICE, emitOldRpcSemconv() ? CustomService.class.getName() : null),
             equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_thrift" : null),
-            equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "apache_thrift" : null),
+            equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "apache_thrift" : null),
             equalTo(SERVER_PORT, port),
             equalTo(SERVER_ADDRESS, "localhost"),
             equalTo(NETWORK_TYPE, "ipv4"),
@@ -298,7 +298,7 @@ public abstract class AbstractThriftTest {
             equalTo(NETWORK_PEER_PORT, port),
             equalTo(
                 ERROR_TYPE,
-                hasError && emitStableRpcSemconv() ? TApplicationException.class.getName() : null));
+                hasError && emitPreviewRpcSemconv() ? TApplicationException.class.getName() : null));
     if (hasError) {
       span.hasException(new TApplicationException());
     }
@@ -311,10 +311,10 @@ public abstract class AbstractThriftTest {
     return span.hasName(className + "/" + method)
         .hasKind(SpanKind.SERVER)
         .hasAttributesSatisfyingExactly(
-            equalTo(RPC_METHOD, emitStableRpcSemconv() ? className + "/" + method : method),
+            equalTo(RPC_METHOD, emitPreviewRpcSemconv() ? className + "/" + method : method),
             equalTo(RPC_SERVICE, emitOldRpcSemconv() ? className : null),
             equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_thrift" : null),
-            equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "apache_thrift" : null),
+            equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "apache_thrift" : null),
             equalTo(SERVER_PORT, port),
             equalTo(SERVER_ADDRESS, "127.0.0.1"),
             equalTo(NETWORK_TYPE, "ipv4"),
@@ -322,7 +322,7 @@ public abstract class AbstractThriftTest {
             satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative),
             equalTo(NETWORK_LOCAL_ADDRESS, "127.0.0.1"),
             equalTo(NETWORK_LOCAL_PORT, port),
-            equalTo(ERROR_TYPE, emitStableRpcSemconv() ? errorType : null));
+            equalTo(ERROR_TYPE, emitPreviewRpcSemconv() ? errorType : null));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
@@ -336,11 +336,11 @@ public abstract class AbstractThriftTest {
     return span.hasName(className + "/" + method)
         .hasKind(SpanKind.SERVER)
         .hasAttributesSatisfyingExactly(
-            equalTo(RPC_METHOD, emitStableRpcSemconv() ? className + "/" + method : method),
+            equalTo(RPC_METHOD, emitPreviewRpcSemconv() ? className + "/" + method : method),
             equalTo(RPC_SERVICE, emitOldRpcSemconv() ? className : null),
             equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_thrift" : null),
-            equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "apache_thrift" : null),
-            equalTo(ERROR_TYPE, emitStableRpcSemconv() ? errorType : null));
+            equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "apache_thrift" : null),
+            equalTo(ERROR_TYPE, emitPreviewRpcSemconv() ? errorType : null));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
@@ -388,7 +388,7 @@ public abstract class AbstractThriftTest {
                                           equalTo(RPC_SYSTEM, "apache_thrift"),
                                           equalTo(NETWORK_TYPE, "ipv4")))));
     }
-    if (emitStableRpcSemconv()) {
+    if (emitPreviewRpcSemconv()) {
       getTesting()
           .waitAndAssertMetrics(
               "io.opentelemetry.thrift-0.13",

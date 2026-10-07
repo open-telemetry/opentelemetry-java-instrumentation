@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
 import static io.opentelemetry.instrumentation.apachedubbo.v2_7.AbstractDubboTest.assertLatestDeps;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
@@ -167,7 +167,7 @@ public abstract class AbstractDubboRegistryTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_dubbo" : null),
-                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "dubbo" : null),
+                                equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "dubbo" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -175,18 +175,18 @@ public abstract class AbstractDubboRegistryTest {
                                         : null),
                                 equalTo(
                                     RPC_METHOD,
-                                    emitStableRpcSemconv()
+                                    emitPreviewRpcSemconv()
                                         ? "org.apache.dubbo.rpc.service.GenericService/$invoke"
                                         : "$invoke"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    testLatestDeps() && !emitStableRpcSemconv()
+                                    testLatestDeps() && !emitPreviewRpcSemconv()
                                         ? testing().expectedPeerService()
                                         : null),
                                 satisfies(
                                     SERVER_ADDRESS,
                                     val -> {
-                                      if (emitStableRpcSemconv()) {
+                                      if (emitPreviewRpcSemconv()) {
                                         val.isEqualTo(expectedServerAddress);
                                       } else {
                                         // registry override is gated behind the stable rpc semconv;
@@ -199,7 +199,7 @@ public abstract class AbstractDubboRegistryTest {
                                             .doesNotContain("/");
                                       }
                                     }),
-                                equalTo(SERVER_PORT, emitStableRpcSemconv() ? null : (long) port),
+                                equalTo(SERVER_PORT, emitPreviewRpcSemconv() ? null : (long) port),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS,
                                     val ->
@@ -215,7 +215,7 @@ public abstract class AbstractDubboRegistryTest {
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_dubbo" : null),
-                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "dubbo" : null),
+                                equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "dubbo" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -223,7 +223,7 @@ public abstract class AbstractDubboRegistryTest {
                                         : null),
                                 equalTo(
                                     RPC_METHOD,
-                                    emitStableRpcSemconv()
+                                    emitPreviewRpcSemconv()
                                         ? "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"
                                         : "hello"),
                                 equalTo(

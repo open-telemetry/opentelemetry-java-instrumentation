@@ -146,11 +146,7 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
   `EXPERIMENTAL_ATTRIBUTES`; keep the conventional `experimental(value)`
   helper for attribute values absent when the flag is off.
 - Name stable-selection accessors `emitStable*Semconv()` and preview-selection
-  accessors `emitPreview*Semconv()`. Preview accessor names in the examples describe
-  the intended API; the implementation and caller rename is tracked in
-  [#20410](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20410).
-  Until that rename lands, use existing accessors at code call sites rather than
-  requiring methods that are not yet available.
+  accessors `emitPreview*Semconv()`.
 - Assert keys and values directly when expectations do not depend on a mode:
 
   ```java
