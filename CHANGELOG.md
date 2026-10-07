@@ -9,7 +9,8 @@
   For standalone asynchronous logging, configure
   `log4j2.ContextDataInjector=io.opentelemetry.instrumentation.log4j.appender.v2_17.OpenTelemetryAppenderContextDataInjector`
   to carry the full OpenTelemetry context; Java agent correlation remains supported.
-  The appender no longer brings in `opentelemetry-log4j-context-data-2.17-autoconfigure`
+  The appender no longer brings in
+  `io.opentelemetry.instrumentation:opentelemetry-log4j-context-data-2.17-autoconfigure`
   transitively; add it separately if Log4j layouts need trace or span IDs.
   Replace `otel.instrumentation.common.logging.trace-id`, `.span-id`, and
   `.trace-flags` with `.trace-id-key`, `.span-id-key`, and `.trace-flags-key`,
