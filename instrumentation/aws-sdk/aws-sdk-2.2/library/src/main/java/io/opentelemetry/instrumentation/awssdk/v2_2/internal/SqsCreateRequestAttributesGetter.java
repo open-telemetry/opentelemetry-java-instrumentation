@@ -53,18 +53,6 @@ class SqsCreateRequestAttributesGetter
 
   @Nullable
   @Override
-  public Long getMessageBodySize(SqsCreateRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(SqsCreateRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getMessageId(SqsCreateRequest request, @Nullable Void response) {
     return null;
   }

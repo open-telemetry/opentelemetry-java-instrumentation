@@ -2,19 +2,6 @@ plugins {
   id("otel.java-conventions")
 }
 
-tasks {
-
-  val testStableMessagingSemconv = register<Test>("testStableMessagingSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=messaging")
-  }
-
-  check {
-    dependsOn(testStableMessagingSemconv)
-  }
-}
-
 dependencies {
   testImplementation(project(":instrumentation:camel-2.20:javaagent"))
   testImplementation(

@@ -150,8 +150,7 @@ public final class AwsSdkTelemetryBuilder {
    * configured messaging propagator; the {@code AWSTraceHeader} system attribute does not use those
    * slots.
    *
-   * <p>This option only applies when the stable messaging semantic conventions are enabled. It is
-   * enabled by default.
+   * <p>This option is enabled by default.
    */
   @CanIgnoreReturnValue
   public AwsSdkTelemetryBuilder setBatchSendMessageCreationSpansEnabled(

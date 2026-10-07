@@ -5,11 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
-import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.assertNoMetrics;
 import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.assertProcessMetrics;
 import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.messagingAttributes;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -109,10 +107,7 @@ abstract class AbstractSpringIntegrationTracingTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> {
-                  span.hasName(
-                          emitStableMessagingSemconv()
-                              ? "process " + destinationName
-                              : destinationName + " process")
+                  span.hasName("process " + destinationName)
                       .hasKind(SpanKind.CONSUMER)
                       .hasAttributesSatisfyingExactly(
                           messagingAttributes("process", destinationName));
@@ -120,11 +115,7 @@ abstract class AbstractSpringIntegrationTracingTest {
                 },
                 span -> span.hasName("handler").hasParent(trace.getSpan(0))));
 
-    if (emitStableMessagingSemconv()) {
-      assertProcessMetrics(testing, destinationName, false);
-    } else {
-      assertNoMetrics(testing);
-    }
+    assertProcessMetrics(testing, destinationName, false);
 
     channel.unsubscribe(messageHandler);
   }
@@ -146,21 +137,14 @@ abstract class AbstractSpringIntegrationTracingTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process publishSubscribeChannel"
-                                : "publishSubscribeChannel process")
+                    span.hasName("process publishSubscribeChannel")
                         .hasKind(SpanKind.CONSUMER)
                         .hasAttributesSatisfyingExactly(
                             messagingAttributes("process", "publishSubscribeChannel")),
                 span -> span.hasName("firstHandler").hasParent(trace.getSpan(0)),
                 span -> span.hasName("secondHandler").hasParent(trace.getSpan(0))));
 
-    if (emitStableMessagingSemconv()) {
-      assertProcessMetrics(testing, "publishSubscribeChannel", false);
-    } else {
-      assertNoMetrics(testing);
-    }
+    assertProcessMetrics(testing, "publishSubscribeChannel", false);
   }
 
   @Test
@@ -184,37 +168,25 @@ abstract class AbstractSpringIntegrationTracingTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process publishSubscribeChannel"
-                                : "publishSubscribeChannel process")
+                    span.hasName("process publishSubscribeChannel")
                         .hasParent(trace.getSpan(0))
                         .hasKind(SpanKind.CONSUMER)
                         .hasAttributesSatisfyingExactly(
                             messagingAttributes("process", "publishSubscribeChannel")),
                 span -> span.hasName("firstHandler").hasParent(trace.getSpan(1)),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process publishSubscribeChannel"
-                                : "publishSubscribeChannel process")
+                    span.hasName("process publishSubscribeChannel")
                         .hasParent(trace.getSpan(0))
                         .hasKind(SpanKind.CONSUMER)
                         .hasAttributesSatisfyingExactly(
                             messagingAttributes("process", "publishSubscribeChannel")),
                 span -> span.hasName("secondHandler").hasParent(trace.getSpan(3))));
 
-    if (emitStableMessagingSemconv()) {
-      assertProcessMetrics(testing, "publishSubscribeChannel", false, 2);
-    } else {
-      assertNoMetrics(testing);
-    }
+    assertProcessMetrics(testing, "publishSubscribeChannel", false, 2);
   }
 
   @Test
   void shouldRecordFailedProcessMetrics() {
-    assumeTrue(emitStableMessagingSemconv());
-
     SubscribableChannel channel =
         applicationContext.getBean("directChannel", SubscribableChannel.class);
     channel.subscribe(
@@ -244,10 +216,7 @@ abstract class AbstractSpringIntegrationTracingTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> {
-                  span.hasName(
-                          emitStableMessagingSemconv()
-                              ? "process application.directChannel2"
-                              : "application.directChannel2 process")
+                  span.hasName("process application.directChannel2")
                       .hasKind(SpanKind.CONSUMER)
                       .hasAttributesSatisfyingExactly(
                           messagingAttributes("process", "application.directChannel2"));
@@ -279,21 +248,14 @@ abstract class AbstractSpringIntegrationTracingTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process application.directChannel"
-                                : "application.directChannel process")
+                    span.hasName("process application.directChannel")
                         .hasParent(trace.getSpan(0))
                         .hasKind(SpanKind.CONSUMER)
                         .hasAttributesSatisfyingExactly(
                             messagingAttributes("process", "application.directChannel")),
                 span -> span.hasName("handler").hasParent(trace.getSpan(1))));
 
-    if (emitStableMessagingSemconv()) {
-      assertProcessMetrics(testing, "application.directChannel", false);
-    } else {
-      assertNoMetrics(testing);
-    }
+    assertProcessMetrics(testing, "application.directChannel", false);
 
     channel.unsubscribe(messageHandler);
   }
@@ -316,10 +278,7 @@ abstract class AbstractSpringIntegrationTracingTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> {
-                  span.hasName(
-                          emitStableMessagingSemconv()
-                              ? "process application.linkedChannel1"
-                              : "application.linkedChannel1 process")
+                  span.hasName("process application.linkedChannel1")
                       .hasKind(SpanKind.CONSUMER)
                       .hasAttributesSatisfyingExactly(
                           messagingAttributes("process", "application.linkedChannel1"));
@@ -351,10 +310,7 @@ abstract class AbstractSpringIntegrationTracingTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process application.directChannel"
-                                : "application.directChannel process")
+                    span.hasName("process application.directChannel")
                         .hasKind(SpanKind.CONSUMER)
                         .hasAttributesSatisfyingExactly(
                             messagingAttributes("process", "application.directChannel")),
@@ -387,21 +343,14 @@ abstract class AbstractSpringIntegrationTracingTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process application.directChannel2"
-                                : "application.directChannel2 process")
+                    span.hasName("process application.directChannel2")
                         .hasKind(SpanKind.CONSUMER)
                         .hasAttributesSatisfyingExactly(
                             messagingAttributes("process", "application.directChannel2")),
                 span -> span.hasName("nestedHandler").hasParent(trace.getSpan(0)),
                 span -> span.hasName("outerAfterNested").hasParent(trace.getSpan(0))));
 
-    if (emitStableMessagingSemconv()) {
-      assertProcessMetrics(testing, "application.directChannel2", false);
-    } else {
-      assertNoMetrics(testing);
-    }
+    assertProcessMetrics(testing, "application.directChannel2", false);
 
     channel.unsubscribe(messageHandler);
   }
@@ -437,21 +386,14 @@ abstract class AbstractSpringIntegrationTracingTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process duplicateExecutorChannel"
-                                : "duplicateExecutorChannel process")
+                    span.hasName("process duplicateExecutorChannel")
                         .hasKind(SpanKind.CONSUMER)
                         .hasAttributesSatisfyingExactly(
                             messagingAttributes("process", "duplicateExecutorChannel")),
                 span -> span.hasName("nestedHandler").hasParent(trace.getSpan(0)),
                 span -> span.hasName("outerAfterNested").hasParent(trace.getSpan(0))));
 
-    if (emitStableMessagingSemconv()) {
-      assertProcessMetrics(testing, "duplicateExecutorChannel", false);
-    } else {
-      assertNoMetrics(testing);
-    }
+    assertProcessMetrics(testing, "duplicateExecutorChannel", false);
 
     channel.unsubscribe(messageHandler);
   }
@@ -487,21 +429,14 @@ abstract class AbstractSpringIntegrationTracingTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process duplicateDirectChannel"
-                                : "duplicateDirectChannel process")
+                    span.hasName("process duplicateDirectChannel")
                         .hasKind(SpanKind.CONSUMER)
                         .hasAttributesSatisfyingExactly(
                             messagingAttributes("process", "duplicateDirectChannel")),
                 span -> span.hasName("nestedHandler").hasParent(trace.getSpan(0)),
                 span -> span.hasName("outerAfterNested").hasParent(trace.getSpan(0))));
 
-    if (emitStableMessagingSemconv()) {
-      assertProcessMetrics(testing, "duplicateDirectChannel", false);
-    } else {
-      assertNoMetrics(testing);
-    }
+    assertProcessMetrics(testing, "duplicateDirectChannel", false);
 
     channel.unsubscribe(messageHandler);
   }
@@ -532,19 +467,12 @@ abstract class AbstractSpringIntegrationTracingTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process application.directChannel2"
-                                : "application.directChannel2 process")
+                    span.hasName("process application.directChannel2")
                         .hasKind(SpanKind.CONSUMER)
                         .hasAttributesSatisfyingExactly(
                             messagingAttributes("process", "application.directChannel2")),
                 span -> span.hasName("outerAfterNested").hasParent(trace.getSpan(0))));
-    if (emitStableMessagingSemconv()) {
-      assertProcessMetrics(testing, "application.directChannel2", false);
-    } else {
-      assertNoMetrics(testing);
-    }
+    assertProcessMetrics(testing, "application.directChannel2", false);
 
     channel.unsubscribe(messageHandler);
   }
@@ -579,31 +507,21 @@ abstract class AbstractSpringIntegrationTracingTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process executorChannel"
-                                : "executorChannel process")
+                    span.hasName("process executorChannel")
                         .hasParent(trace.getSpan(0))
                         .hasKind(SpanKind.CONSUMER)
                         .hasAttributesSatisfyingExactly(
                             messagingAttributes("process", "executorChannel")),
                 span -> span.hasName("firstHandler").hasParent(trace.getSpan(1)),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process executorChannel"
-                                : "executorChannel process")
+                    span.hasName("process executorChannel")
                         .hasParent(trace.getSpan(0))
                         .hasKind(SpanKind.CONSUMER)
                         .hasAttributesSatisfyingExactly(
                             messagingAttributes("process", "executorChannel")),
                 span -> span.hasName("secondHandler").hasParent(trace.getSpan(3))));
 
-    if (emitStableMessagingSemconv()) {
-      assertProcessMetrics(testing, "executorChannel", false, 2);
-    } else {
-      assertNoMetrics(testing);
-    }
+    assertProcessMetrics(testing, "executorChannel", false, 2);
 
     channel.unsubscribe(firstHandler);
     channel.unsubscribe(secondHandler);
@@ -629,10 +547,7 @@ abstract class AbstractSpringIntegrationTracingTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> {
-                  span.hasName(
-                          emitStableMessagingSemconv()
-                              ? "process application.directChannel"
-                              : "application.directChannel process")
+                  span.hasName("process application.directChannel")
                       .hasKind(SpanKind.CONSUMER)
                       .hasAttributesSatisfyingExactly(
                           messagingAttributes(
@@ -687,10 +602,7 @@ abstract class AbstractSpringIntegrationTracingTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
                 span -> {
-                  span.hasName(
-                          emitStableMessagingSemconv()
-                              ? "process nativeHeadersChannel"
-                              : "nativeHeadersChannel process")
+                  span.hasName("process nativeHeadersChannel")
                       .hasParent(trace.getSpan(0))
                       .hasKind(SpanKind.CONSUMER)
                       .hasAttributesSatisfyingExactly(
@@ -699,10 +611,7 @@ abstract class AbstractSpringIntegrationTracingTest {
                 },
                 span -> span.hasName("firstHandler").hasParent(trace.getSpan(1)),
                 span -> {
-                  span.hasName(
-                          emitStableMessagingSemconv()
-                              ? "process nativeHeadersChannel"
-                              : "nativeHeadersChannel process")
+                  span.hasName("process nativeHeadersChannel")
                       .hasParent(trace.getSpan(0))
                       .hasKind(SpanKind.CONSUMER)
                       .hasAttributesSatisfyingExactly(
@@ -725,11 +634,7 @@ abstract class AbstractSpringIntegrationTracingTest {
     assertThat(secondNativeHeaders.get("traceparent"))
         .isEqualTo(singletonList(secondMessage.get().getHeaders().get("traceparent")));
 
-    if (emitStableMessagingSemconv()) {
-      assertProcessMetrics(testing, "nativeHeadersChannel", false, 2);
-    } else {
-      assertNoMetrics(testing);
-    }
+    assertProcessMetrics(testing, "nativeHeadersChannel", false, 2);
   }
 
   static void verifyCorrectSpanWasPropagated(Message<?> capturedMessage, SpanData parentSpan) {

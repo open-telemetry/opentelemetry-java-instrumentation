@@ -4,6 +4,7 @@
 
 ### ⚠️ Breaking changes
 
+- The Java agent and standalone libraries now use the existing v1.43.0 messaging implementation.
 - Emit only stable source code attributes: `code.function.name` replaces `code.namespace` and
   `code.function`, and log records use `code.file.path` and `code.line.number` instead of
   `code.filepath` and `code.lineno`. The `code` and `code/dup` opt-ins and
@@ -71,6 +72,10 @@
   `io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-incubator` for 3.0.
   Use `SqlQueryAnalyzer.analyze`, which now always produces query summaries when sanitization is
   enabled. The public `SqlQuery` factory signatures are unchanged.
+- Remove `MessageOperation` and its overloads in the messaging attribute, span-name and span-kind
+  extractors from `opentelemetry-instrumentation-api-incubator`.
+  `MessagingAttributesGetter` no longer requires or exposes `getMessageBodySize()` or
+  `getMessageEnvelopeSize()`.
 
 ## Version 2.32.0 (2026-10-03)
 

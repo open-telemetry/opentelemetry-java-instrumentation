@@ -5,7 +5,6 @@
 
 package org.apache.camel.component.rabbitmq;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -49,8 +48,7 @@ class RabbitCamelRegistrationInstrumentationTest {
             .getMethod("find", Class.class, Class.class)
             .invoke(null, Consumer.class, Boolean.class);
     assertThat(virtualField.getMethod("get", Object.class).invoke(selection, consumer))
-        .isEqualTo(
-            (emitStableMessagingSemconv() && !CAMEL_DISABLED && !ADAPTER_DISABLED) ? true : null);
+        .isEqualTo((!CAMEL_DISABLED && !ADAPTER_DISABLED) ? true : null);
     assertThat(virtualField.getMethod("get", Object.class).invoke(selection, mock(Consumer.class)))
         .isNull();
   }

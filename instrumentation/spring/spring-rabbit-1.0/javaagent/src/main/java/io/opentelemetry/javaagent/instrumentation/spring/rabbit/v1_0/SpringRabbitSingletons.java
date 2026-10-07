@@ -6,14 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
@@ -26,7 +24,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
-import javax.annotation.Nullable;
 import org.springframework.amqp.core.Message;
 
 public class SpringRabbitSingletons {
@@ -58,50 +55,31 @@ public class SpringRabbitSingletons {
             .addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages())
             .addContextCustomizer(
                 (context, request, startAttributes) -> SpringRabbitErrorHolder.init(context));
-    if (emitStableMessagingSemconv()) {
-      builder.addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter));
-    }
+    builder.addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter));
     setMessagingProcessExceptionEventExtractor(builder);
 
     MessageHeaderGetter headerGetter = new MessageHeaderGetter();
-    if (emitStableMessagingSemconv()) {
-      builder.addSpanLinksExtractor(
-          (links, parentContext, request) -> {
-            for (Message message : request.getMessages()) {
-              SpanContext creationContext =
-                  Span.fromContext(
-                          openTelemetry
-                              .getPropagators()
-                              .getTextMapPropagator()
-                              .extract(Context.root(), message, headerGetter))
-                      .getSpanContext();
-              links.addLink(creationContext);
-            }
-          });
-      builder.addContextCustomizer(
-          MessagingProcessContextCustomizer.create(
-              (parentContext, request) ->
-                  openTelemetry
-                      .getPropagators()
-                      .getTextMapPropagator()
-                      .extract(parentContext, request.getMessage(), headerGetter)));
-      instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
-    } else {
-      instrumenter =
-          builder.buildConsumerInstrumenter(
-              new TextMapGetter<SpringRabbitRequest>() {
-                @Override
-                public Iterable<String> keys(SpringRabbitRequest request) {
-                  return headerGetter.keys(request.getMessage());
-                }
-
-                @Override
-                @Nullable
-                public String get(@Nullable SpringRabbitRequest request, String key) {
-                  return request == null ? null : headerGetter.get(request.getMessage(), key);
-                }
-              });
-    }
+    builder.addSpanLinksExtractor(
+        (links, parentContext, request) -> {
+          for (Message message : request.getMessages()) {
+            SpanContext creationContext =
+                Span.fromContext(
+                        openTelemetry
+                            .getPropagators()
+                            .getTextMapPropagator()
+                            .extract(Context.root(), message, headerGetter))
+                    .getSpanContext();
+            links.addLink(creationContext);
+          }
+        });
+    builder.addContextCustomizer(
+        MessagingProcessContextCustomizer.create(
+            (parentContext, request) ->
+                openTelemetry
+                    .getPropagators()
+                    .getTextMapPropagator()
+                    .extract(parentContext, request.getMessage(), headerGetter)));
+    instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
   public static Instrumenter<SpringRabbitRequest, Void> instrumenter() {

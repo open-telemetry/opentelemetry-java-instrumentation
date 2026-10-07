@@ -59,18 +59,6 @@ final class JmsMessageAttributesGetter
 
   @Nullable
   @Override
-  public Long getMessageBodySize(MessageWithDestination messageWithDestination) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(MessageWithDestination messageWithDestination) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getMessageId(MessageWithDestination messageWithDestination, @Nullable Void unused) {
     try {
       return messageWithDestination.message().getJmsMessageId();

@@ -185,6 +185,11 @@ tasks {
     }
     systemProperty("otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", "true")
     systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging=true," +
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
+    )
   }
 
   val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {
@@ -195,47 +200,6 @@ tasks {
       includeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
     }
     include("**/Aws2SqsSuppressReceiveSpansTest.*")
-  }
-
-  val testMessagingPreview = register<Test>("testMessagingPreview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("*Sqs*")
-      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
-    }
-    systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
-  val testMessagingPreviewReceiveSpansDisabled = register<Test>("testMessagingPreviewReceiveSpansDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
-    }
-    include("**/Aws2SqsSuppressReceiveSpansTest.*")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("*Sqs*")
-      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
-    }
-    systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
   }
 
   test {
@@ -250,9 +214,6 @@ tasks {
       testing.suites,
       testExperimentalSqs,
       testReceiveSpansDisabled,
-      testMessagingPreview,
-      testMessagingPreviewReceiveSpansDisabled,
-      testBothSemconv
     )
   }
 

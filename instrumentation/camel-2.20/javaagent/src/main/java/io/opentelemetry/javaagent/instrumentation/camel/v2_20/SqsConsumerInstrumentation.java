@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -36,9 +35,7 @@ class SqsConsumerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) List<?> messages) {
-      if (emitStableMessagingSemconv()) {
-        SqsProcessTracing.markProcessingOwnedOutsideSqsSdk(messages);
-      }
+      SqsProcessTracing.markProcessingOwnedOutsideSqsSdk(messages);
     }
   }
 }
