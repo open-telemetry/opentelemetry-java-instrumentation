@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.http;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldServicePeerSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableServicePeerSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewServicePeerSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
@@ -102,7 +102,7 @@ class HttpClientServicePeerAttributesExtractorTest {
     // then
     assertThat(startAttributes.build()).isEmpty();
     Attributes attrs = endAttributes.build();
-    if (emitOldServicePeerSemconv() && emitStableServicePeerSemconv()) {
+    if (emitOldServicePeerSemconv() && emitPreviewServicePeerSemconv()) {
       assertThat(attrs)
           .containsOnly(entry(PEER_SERVICE, "myService"), entry(SERVICE_PEER_NAME, "myService"));
     } else {
@@ -134,7 +134,7 @@ class HttpClientServicePeerAttributesExtractorTest {
     // then
     assertThat(startAttributes.build()).isEmpty();
     Attributes attrs = endAttributes.build();
-    if (emitOldServicePeerSemconv() && emitStableServicePeerSemconv()) {
+    if (emitOldServicePeerSemconv() && emitPreviewServicePeerSemconv()) {
       assertThat(attrs)
           .containsOnly(entry(PEER_SERVICE, "myService"), entry(SERVICE_PEER_NAME, "myService"));
     } else {

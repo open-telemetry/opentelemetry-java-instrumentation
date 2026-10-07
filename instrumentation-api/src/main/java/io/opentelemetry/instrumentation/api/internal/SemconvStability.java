@@ -27,10 +27,10 @@ public final class SemconvStability {
   private static final boolean emitStableDatabaseSemconv;
 
   private static final boolean emitOldServicePeerSemconv;
-  private static final boolean emitStableServicePeerSemconv;
+  private static final boolean emitPreviewServicePeerSemconv;
 
   private static final boolean emitOldRpcSemconv;
-  private static final boolean emitStableRpcSemconv;
+  private static final boolean emitPreviewRpcSemconv;
 
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.getOrNoop();
@@ -45,11 +45,11 @@ public final class SemconvStability {
 
     SemconvMode servicePeerSelection = semconvSelection.servicePeer();
     emitOldServicePeerSemconv = emitOld(servicePeerSelection);
-    emitStableServicePeerSemconv = emitStable(servicePeerSelection);
+    emitPreviewServicePeerSemconv = emitStable(servicePeerSelection);
 
     SemconvMode rpcSelection = semconvSelection.rpc();
     emitOldRpcSemconv = emitOld(rpcSelection);
-    emitStableRpcSemconv = emitStable(rpcSelection);
+    emitPreviewRpcSemconv = emitStable(rpcSelection);
   }
 
   public static boolean v3Preview(OpenTelemetry openTelemetry) {
@@ -82,8 +82,8 @@ public final class SemconvStability {
     return emitOldServicePeerSemconv;
   }
 
-  public static boolean emitStableServicePeerSemconv() {
-    return emitStableServicePeerSemconv;
+  public static boolean emitPreviewServicePeerSemconv() {
+    return emitPreviewServicePeerSemconv;
   }
 
   private static final Map<String, String> dbSystemNameMap = new HashMap<>();
@@ -115,12 +115,12 @@ public final class SemconvStability {
     return emitOldRpcSemconv;
   }
 
-  public static boolean emitStableRpcSemconv() {
-    return emitStableRpcSemconv;
+  public static boolean emitPreviewRpcSemconv() {
+    return emitPreviewRpcSemconv;
   }
 
   public static String rpcSchemaUrl() {
-    return emitStableRpcSemconv ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0;
+    return emitPreviewRpcSemconv ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0;
   }
 
   private static final Map<String, String> rpcSystemNameMap = new HashMap<>();
