@@ -63,8 +63,7 @@ Experimental.setRequestParameters(
         .setIncluded("user-*", "search-?")
         .setExcluded("password", "*-token")
         .build());
-Experimental.setTraceIdRequestAttributeEnabled(builder, true);
 Filter filter = builder.build().createFilter();
 ```
 
-Matching is case-sensitive, and excluded patterns take precedence over included patterns. An absent or empty selector captures nothing; an exclude-only selector captures all available parameters except those excluded. Captured parameter names retain their original casing in `servlet.request.parameter.<name>` attribute keys.
+Matching is case-sensitive, and excluded patterns take precedence over included patterns. An absent or empty selector captures nothing; an exclude-only selector captures all available parameters except those excluded.
