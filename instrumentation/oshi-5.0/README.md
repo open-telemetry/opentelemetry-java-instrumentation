@@ -2,8 +2,7 @@
 
 ## Current metrics
 
-System metrics use schema 1.44.0 conventions. Both the library and agent use
-the instrumentation scope `io.opentelemetry.oshi-5.0`.
+System metrics use schema 1.44.0 conventions.
 
 Network packet counts use `system.network.packet.count`. Count units are `{packet}`,
 `{error}`, and `{operation}` for packets, errors, and disk operations, respectively.
