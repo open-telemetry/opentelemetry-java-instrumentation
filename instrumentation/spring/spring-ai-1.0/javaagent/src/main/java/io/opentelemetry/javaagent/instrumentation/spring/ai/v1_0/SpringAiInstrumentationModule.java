@@ -16,7 +16,7 @@ import java.util.List;
 public class SpringAiInstrumentationModule extends InstrumentationModule {
 
   public SpringAiInstrumentationModule() {
-    super("spring-ai", "spring-ai-1.0");
+    super("spring-ai-1.0", "spring-ai");
   }
 
   @Override
