@@ -241,9 +241,7 @@ Two types of instrumentation are currently supported:
 The choice between the two strategies is made by instrumentation author by using the `inline` property of the `@Advice.OnMethodEnter` and `@Advice.OnMethodExit` annotations.
 
 - if `inline` property is not set or set to `true` (default), the advice is inlined into the instrumented class files
-- if `inline` property is explicitly set to `false`
-  - before 3.0.0: the advice is inlined
-  - as of 3.0.0 and later: the advice is not inlined
+- if `inline` property is explicitly set to `false`, the advice is not inlined
 
 ## Inlined instrumentation
 
