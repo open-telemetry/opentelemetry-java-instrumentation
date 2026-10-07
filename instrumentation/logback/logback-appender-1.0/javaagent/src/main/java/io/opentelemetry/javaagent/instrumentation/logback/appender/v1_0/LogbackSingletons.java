@@ -43,12 +43,10 @@ public class LogbackSingletons {
             .setMdcAttributes(mdcAttributes)
             .setCaptureCodeAttributes(captureCodeAttributes)
             .setCaptureMarkerAttribute(captureMarkerAttribute)
-            .setKeyValuePairAttributes(structuredAttributes)
+            .setStructuredAttributes(structuredAttributes)
             .setLoggerContextAttributes(loggerContextAttributes)
             .setCaptureTemplate(captureTemplate)
             .setCaptureArguments(captureArguments)
-            .setLogstashMarkerAttributes(structuredAttributes)
-            .setLogstashStructuredArgumentAttributes(structuredAttributes)
             .build();
   }
 

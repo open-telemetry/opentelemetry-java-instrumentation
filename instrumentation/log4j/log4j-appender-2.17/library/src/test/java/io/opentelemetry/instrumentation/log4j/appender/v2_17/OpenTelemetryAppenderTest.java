@@ -363,7 +363,7 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
         OpenTelemetryAppender.builder()
             .setName("OpenTelemetryAppender")
             .setOpenTelemetry(testing.getOpenTelemetry())
-            .setMapMessageAttributes(
+            .setStructuredAttributes(
                 IncludeExclude.builder()
                     .setIncluded(singletonList("order-*"))
                     .setExcluded(singletonList("*-secret"))
@@ -394,8 +394,8 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
         OpenTelemetryAppender.builder()
             .setName("OpenTelemetryAppender")
             .setOpenTelemetry(testing.getOpenTelemetry())
-            .setMapMessageAttributes(IncludeExclude.builder().build())
-            .setMapMessageAttributesIncluded("order-*")
+            .setStructuredAttributes(IncludeExclude.builder().build())
+            .setStructuredAttributesIncluded("order-*")
             .build();
     appender.start();
 
@@ -421,10 +421,10 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
         OpenTelemetryAppender.builder()
             .setName("OpenTelemetryAppender")
             .setOpenTelemetry(testing.getOpenTelemetry())
-            .setMapMessageAttributes(
+            .setStructuredAttributes(
                 IncludeExclude.builder().setIncluded(singletonList("order-*")).build())
-            .setMapMessageAttributesIncluded("other-*")
-            .setMapMessageAttributesExcluded("*-secret")
+            .setStructuredAttributesIncluded("other-*")
+            .setStructuredAttributesExcluded("*-secret")
             .build();
     appender.start();
 
@@ -454,7 +454,7 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
         OpenTelemetryAppender.builder()
             .setName("OpenTelemetryAppender")
             .setOpenTelemetry(testing.getOpenTelemetry())
-            .setMapMessageAttributes(IncludeExclude.builder().setIncluded("*").build())
+            .setStructuredAttributes(IncludeExclude.builder().setIncluded("*").build())
             .build();
     appender.start();
 
@@ -476,17 +476,17 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
   }
 
   @Test
-  void emptyMapMessageSelectorCapturesNothing() {
+  void emptyStructuredSelectorCapturesEverything() {
     OpenTelemetryAppender appender =
         OpenTelemetryAppender.builder()
             .setName("OpenTelemetryAppender")
             .setOpenTelemetry(testing.getOpenTelemetry())
-            .setMapMessageAttributes(IncludeExclude.builder().build())
+            .setStructuredAttributes(IncludeExclude.builder().build())
             .build();
     appender.start();
 
     StringMapMessage message = new StringMapMessage();
-    message.put("order-id", "ignored");
+    message.put("order-id", "captured");
     appender.append(
         Log4jLogEvent.newBuilder()
             .setLoggerName("TestLogger")
@@ -494,7 +494,33 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
             .setMessage(message)
             .build());
 
-    testing.waitAndAssertLogRecords(logRecord -> logRecord.hasTotalAttributeCount(0));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("order-id"), "captured")));
+  }
+
+  @Test
+  void noStructuredSelectorCapturesEverything() {
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(testing.getOpenTelemetry())
+            .build();
+    appender.start();
+
+    appender.append(
+        Log4jLogEvent.newBuilder()
+            .setLoggerName("TestLogger")
+            .setLevel(Level.INFO)
+            .setMessage(
+                new StringMapMessage().with("order-id", "captured").with("other", "captured"))
+            .build());
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("order-id"), "captured"),
+                equalTo(stringKey("other"), "captured")));
   }
 
   @Test
@@ -562,6 +588,19 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
     LogManager.getLogger("MapMessageSelectorDisabledTestLogger").info(message);
 
     testing.waitAndAssertLogRecords(logRecord -> logRecord.hasAttributesSatisfyingExactly());
+  }
+
+  @Test
+  void emptyCommonStructuredSelectorCapturesEverything() {
+    OpenTelemetryAppender.install(testing.getOpenTelemetry(), IncludeExclude.builder().build());
+
+    LogManager.getLogger("CommonMapMessageSelectorTestLogger")
+        .info(new StringMapMessage().with("key1", "value1").with("key2", "value2"));
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("key1"), "value1"), equalTo(stringKey("key2"), "value2")));
   }
 
   @Test

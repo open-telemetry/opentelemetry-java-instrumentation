@@ -57,8 +57,8 @@ class OpenTelemetryAppenderLogstashMarkerSelectorTest {
 
   @Test
   void configurationFileSelectorMatchesGlobPatterns() {
-    appender.setLogstashMarkerAttributesIncluded("key*");
-    appender.setLogstashMarkerAttributesExcluded("*2");
+    appender.setStructuredAttributesIncluded("key*");
+    appender.setStructuredAttributesExcluded("*2");
 
     log();
 
@@ -69,7 +69,7 @@ class OpenTelemetryAppenderLogstashMarkerSelectorTest {
 
   @Test
   void configurationFileSelectorCapturesEverythingNotExcluded() {
-    appender.setLogstashMarkerAttributesExcluded("key2,other");
+    appender.setStructuredAttributesExcluded("key2,other");
 
     log();
 
@@ -79,18 +79,23 @@ class OpenTelemetryAppenderLogstashMarkerSelectorTest {
   }
 
   @Test
-  void noSelectorCapturesNothing() {
+  void noSelectorCapturesEverything() {
     log();
 
-    testing.waitAndAssertLogRecords(logRecord -> logRecord.hasAttributesSatisfyingExactly());
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("key1"), "value1"),
+                equalTo(stringKey("key2"), "value2"),
+                equalTo(stringKey("other"), "value3")));
     assertThat(warnings()).isEmpty();
   }
 
   @Test
   void selectorTakesPrecedenceOverConfigurationFileSelector() {
-    appender.setLogstashMarkerAttributes(
+    appender.setStructuredAttributes(
         IncludeExclude.builder().setIncluded(singletonList("key1")).build());
-    appender.setLogstashMarkerAttributesIncluded("key2");
+    appender.setStructuredAttributesIncluded("key2");
 
     log();
 
@@ -101,8 +106,8 @@ class OpenTelemetryAppenderLogstashMarkerSelectorTest {
 
   @Test
   void emptySelectorFallsBackToConfigurationFileSelector() {
-    appender.setLogstashMarkerAttributesIncluded("key1");
-    appender.setLogstashMarkerAttributes(IncludeExclude.builder().build());
+    appender.setStructuredAttributesIncluded("key1");
+    appender.setStructuredAttributes(IncludeExclude.builder().build());
 
     log();
 
@@ -114,7 +119,7 @@ class OpenTelemetryAppenderLogstashMarkerSelectorTest {
 
   @Test
   void selectorCapturesEverythingWhenIncluded() {
-    appender.setLogstashMarkerAttributes(IncludeExclude.builder().setIncluded("*").build());
+    appender.setStructuredAttributes(IncludeExclude.builder().setIncluded("*").build());
 
     log();
 
@@ -129,7 +134,7 @@ class OpenTelemetryAppenderLogstashMarkerSelectorTest {
 
   @Test
   void configurationFileSelectorCapturesNothingWhenEverythingExcluded() {
-    appender.setLogstashMarkerAttributesExcluded("*");
+    appender.setStructuredAttributesExcluded("*");
 
     log();
 
@@ -138,12 +143,17 @@ class OpenTelemetryAppenderLogstashMarkerSelectorTest {
   }
 
   @Test
-  void emptySelectorCapturesNothing() {
-    appender.setLogstashMarkerAttributes(IncludeExclude.builder().build());
+  void emptySelectorCapturesEverything() {
+    appender.setStructuredAttributes(IncludeExclude.builder().build());
 
     log();
 
-    testing.waitAndAssertLogRecords(logRecord -> logRecord.hasAttributesSatisfyingExactly());
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("key1"), "value1"),
+                equalTo(stringKey("key2"), "value2"),
+                equalTo(stringKey("other"), "value3")));
   }
 
   private void log() {

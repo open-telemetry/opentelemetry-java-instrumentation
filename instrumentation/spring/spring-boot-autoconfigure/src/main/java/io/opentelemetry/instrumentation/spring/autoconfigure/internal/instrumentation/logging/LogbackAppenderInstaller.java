@@ -167,9 +167,7 @@ class LogbackAppenderInstaller {
   static void initializeStructuredAttributesFromProperties(
       ConfigurableEnvironment environment, OpenTelemetryAppender openTelemetryAppender) {
     IncludeExclude selector = StructuredAttributesConfig.getSelector(environment);
-    openTelemetryAppender.setKeyValuePairAttributes(selector);
-    openTelemetryAppender.setLogstashMarkerAttributes(selector);
-    openTelemetryAppender.setLogstashStructuredArgumentAttributes(selector);
+    openTelemetryAppender.setStructuredAttributes(selector);
   }
 
   // the appender resolves the precedence between these settings, ignoring the deprecated one when

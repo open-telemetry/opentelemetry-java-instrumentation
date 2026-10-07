@@ -52,8 +52,8 @@ class OpenTelemetryAppenderKeyValuePairSelectorTest {
 
   @Test
   void configurationFileSelectorMatchesGlobPatterns() {
-    appender.setKeyValuePairAttributesIncluded("key*");
-    appender.setKeyValuePairAttributesExcluded("*2");
+    appender.setStructuredAttributesIncluded("key*");
+    appender.setStructuredAttributesExcluded("*2");
 
     log(keyValuePairs("key1", "value1", "key2", "value2", "other", "value3"));
 
@@ -64,7 +64,7 @@ class OpenTelemetryAppenderKeyValuePairSelectorTest {
 
   @Test
   void configurationFileSelectorCapturesEverythingNotExcluded() {
-    appender.setKeyValuePairAttributesExcluded("*-secret");
+    appender.setStructuredAttributesExcluded("*-secret");
 
     log(keyValuePairs("request-id", "123", "client-secret", "shh"));
 
@@ -74,18 +74,20 @@ class OpenTelemetryAppenderKeyValuePairSelectorTest {
   }
 
   @Test
-  void noSelectorCapturesNothing() {
+  void noSelectorCapturesEverything() {
     log(keyValuePairs("key1", "value1"));
 
-    testing.waitAndAssertLogRecords(logRecord -> logRecord.hasAttributesSatisfyingExactly());
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
     assertThat(warnings()).isEmpty();
   }
 
   @Test
   void selectorTakesPrecedenceOverConfigurationFileSelector() {
-    appender.setKeyValuePairAttributes(
+    appender.setStructuredAttributes(
         IncludeExclude.builder().setIncluded(singletonList("key1")).build());
-    appender.setKeyValuePairAttributesIncluded("key2");
+    appender.setStructuredAttributesIncluded("key2");
 
     log(keyValuePairs("key1", "value1", "key2", "value2"));
 
@@ -96,8 +98,8 @@ class OpenTelemetryAppenderKeyValuePairSelectorTest {
 
   @Test
   void emptySelectorFallsBackToConfigurationFileSelector() {
-    appender.setKeyValuePairAttributesIncluded("key1");
-    appender.setKeyValuePairAttributes(IncludeExclude.builder().build());
+    appender.setStructuredAttributesIncluded("key1");
+    appender.setStructuredAttributes(IncludeExclude.builder().build());
 
     log(keyValuePairs("key1", "value1", "key2", "value2"));
 
@@ -109,7 +111,7 @@ class OpenTelemetryAppenderKeyValuePairSelectorTest {
 
   @Test
   void selectorCapturesEverythingWhenIncluded() {
-    appender.setKeyValuePairAttributes(IncludeExclude.builder().setIncluded("*").build());
+    appender.setStructuredAttributes(IncludeExclude.builder().setIncluded("*").build());
 
     log(keyValuePairs("key1", "value1", "key2", "value2"));
 
@@ -122,7 +124,7 @@ class OpenTelemetryAppenderKeyValuePairSelectorTest {
 
   @Test
   void configurationFileSelectorCapturesNothingWhenEverythingExcluded() {
-    appender.setKeyValuePairAttributesExcluded("*");
+    appender.setStructuredAttributesExcluded("*");
 
     log(keyValuePairs("key1", "value1"));
 
@@ -131,17 +133,19 @@ class OpenTelemetryAppenderKeyValuePairSelectorTest {
   }
 
   @Test
-  void emptySelectorCapturesNothing() {
-    appender.setKeyValuePairAttributes(IncludeExclude.builder().build());
+  void emptySelectorCapturesEverything() {
+    appender.setStructuredAttributes(IncludeExclude.builder().build());
 
     log(keyValuePairs("key1", "value1"));
 
-    testing.waitAndAssertLogRecords(logRecord -> logRecord.hasAttributesSatisfyingExactly());
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
   }
 
   @Test
   void nullKeyIsIgnored() {
-    appender.setKeyValuePairAttributesIncluded("*");
+    appender.setStructuredAttributesIncluded("*");
 
     Map<String, String> keyValuePairs = new LinkedHashMap<>();
     keyValuePairs.put(null, "value1");

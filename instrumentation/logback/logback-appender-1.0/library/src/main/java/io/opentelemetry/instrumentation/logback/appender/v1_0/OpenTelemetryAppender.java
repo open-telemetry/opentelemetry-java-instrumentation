@@ -44,20 +44,14 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   @Nullable private String mdcAttributesExcluded;
   @Nullable private String captureMdcAttributes;
   private final AtomicBoolean deprecatedMdcAttributesWarningLogged = new AtomicBoolean();
-  @Nullable private IncludeExclude keyValuePairAttributes;
-  @Nullable private String keyValuePairAttributesIncluded;
-  @Nullable private String keyValuePairAttributesExcluded;
+  @Nullable private IncludeExclude structuredAttributes;
+  @Nullable private String structuredAttributesIncluded;
+  @Nullable private String structuredAttributesExcluded;
   @Nullable private IncludeExclude loggerContextAttributes;
   @Nullable private String loggerContextAttributesIncluded;
   @Nullable private String loggerContextAttributesExcluded;
   @Nullable private Boolean captureLoggerContext;
   private final AtomicBoolean deprecatedLoggerContextAttributesWarningLogged = new AtomicBoolean();
-  @Nullable private IncludeExclude logstashMarkerAttributes;
-  @Nullable private String logstashMarkerAttributesIncluded;
-  @Nullable private String logstashMarkerAttributesExcluded;
-  @Nullable private IncludeExclude logstashStructuredArgumentAttributes;
-  @Nullable private String logstashStructuredArgumentAttributesIncluded;
-  @Nullable private String logstashStructuredArgumentAttributesExcluded;
 
   private volatile OpenTelemetry openTelemetry;
   private LoggingEventMapper mapper;
@@ -115,12 +109,10 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
             .setMdcAttributes(resolveMdcAttributes())
             .setCaptureCodeAttributes(captureCodeAttributes)
             .setCaptureMarkerAttribute(captureMarkerAttribute)
-            .setKeyValuePairAttributes(resolveKeyValuePairAttributes())
+            .setStructuredAttributes(resolveStructuredAttributes())
             .setLoggerContextAttributes(resolveLoggerContextAttributes())
             .setCaptureTemplate(captureTemplate)
             .setCaptureArguments(captureArguments)
-            .setLogstashMarkerAttributes(resolveLogstashMarkerAttributes())
-            .setLogstashStructuredArgumentAttributes(resolveLogstashStructuredArgumentAttributes())
             .build();
     eventsToReplay = new ArrayBlockingQueue<>(numLogsCapturedBeforeOtelInstall);
     super.start();
@@ -155,18 +147,17 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     return deprecatedSelector;
   }
 
-  @Nullable
-  private Predicate<String> resolveKeyValuePairAttributes() {
-    Predicate<String> selector = AttributeSelectors.create(keyValuePairAttributes);
+  private Predicate<String> resolveStructuredAttributes() {
+    Predicate<String> selector = AttributeSelectors.create(structuredAttributes);
     if (selector == null) {
       selector =
           AttributeSelectors.create(
               IncludeExclude.builder()
-                  .setIncluded(split(keyValuePairAttributesIncluded))
-                  .setExcluded(split(keyValuePairAttributesExcluded))
+                  .setIncluded(split(structuredAttributesIncluded))
+                  .setExcluded(split(structuredAttributesExcluded))
                   .build());
     }
-    return selector;
+    return selector == null ? value -> true : selector;
   }
 
   @Nullable
@@ -194,34 +185,6 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
               + ".experimental.logger-context-attributes.included instead.");
     }
     return AttributeSelectors.createDeprecated(captureLoggerContext);
-  }
-
-  @Nullable
-  private Predicate<String> resolveLogstashMarkerAttributes() {
-    Predicate<String> selector = AttributeSelectors.create(logstashMarkerAttributes);
-    if (selector == null) {
-      selector =
-          AttributeSelectors.create(
-              IncludeExclude.builder()
-                  .setIncluded(split(logstashMarkerAttributesIncluded))
-                  .setExcluded(split(logstashMarkerAttributesExcluded))
-                  .build());
-    }
-    return selector;
-  }
-
-  @Nullable
-  private Predicate<String> resolveLogstashStructuredArgumentAttributes() {
-    Predicate<String> selector = AttributeSelectors.create(logstashStructuredArgumentAttributes);
-    if (selector == null) {
-      selector =
-          AttributeSelectors.create(
-              IncludeExclude.builder()
-                  .setIncluded(split(logstashStructuredArgumentAttributesIncluded))
-                  .setExcluded(split(logstashStructuredArgumentAttributesExcluded))
-                  .build());
-    }
-    return selector;
   }
 
   @SuppressWarnings("SystemOut")
@@ -287,57 +250,59 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   }
 
   /**
-   * Configures the key value pair attributes that will be copied to logs.
+   * Configures the structured attributes copied from SLF4J key value pairs, Logstash markers, and
+   * Logstash structured arguments.
    *
-   * <p>Key value pair keys and selector patterns are matched case-sensitively. {@code ?} matches
-   * any single character and {@code *} matches any number of characters, including none, so {@code
-   * *} captures all key value pair attributes. Excluded patterns take precedence over included
-   * patterns, so a selector with only excluded patterns captures every key value pair attribute
-   * that it does not exclude.
+   * <p>Keys and selector patterns are matched case-sensitively. {@code ?} matches any single
+   * character and {@code *} matches any number of characters, including none. Excluded patterns
+   * take precedence over included patterns. A selector with only excluded patterns captures every
+   * structured attribute that it does not exclude. Excluding {@code *} captures none.
    *
    * <p>A {@code null} or empty selector leaves this appender without a programmatic selector, in
-   * which case the key value pair attributes are selected by {@link
-   * #setKeyValuePairAttributesIncluded(String)} and {@link
-   * #setKeyValuePairAttributesExcluded(String)}. No key value pair attributes are captured when
-   * these are also absent or empty. Only a non-empty selector configured with this method takes
-   * precedence over the other settings.
+   * which case attributes are selected by {@link #setStructuredAttributesIncluded(String)} and
+   * {@link #setStructuredAttributesExcluded(String)}. When these are also absent or empty, all
+   * structured attributes are captured. Only a non-empty selector configured with this method takes
+   * precedence over the XML settings. MDC and logger context attributes are configured separately.
    *
-   * <p>Captured key value pair attributes may contain sensitive information. Configure included and
+   * <p>Captured structured attributes may contain sensitive information. Configure included and
    * excluded patterns to limit the data exported as log attributes.
    */
-  public void setKeyValuePairAttributes(@Nullable IncludeExclude keyValuePairAttributes) {
-    this.keyValuePairAttributes = keyValuePairAttributes;
+  public void setStructuredAttributes(@Nullable IncludeExclude structuredAttributes) {
+    this.structuredAttributes = structuredAttributes;
   }
 
   /**
-   * Configures the comma-separated key value pair key patterns that will be copied to logs.
+   * Configures the comma-separated structured attribute key patterns that will be copied to logs.
    *
-   * <p>This setter backs the {@code keyValuePairAttributesIncluded} element in {@code logback.xml}.
+   * <p>This setter backs the {@code structuredAttributesIncluded} element in {@code logback.xml}.
    * It is ignored when a non-empty selector is configured with {@link
-   * #setKeyValuePairAttributes(IncludeExclude)}.
+   * #setStructuredAttributes(IncludeExclude)}.
    *
-   * <p>Key value pair keys and patterns are matched case-sensitively. {@code ?} matches any single
-   * character and {@code *} matches any number of characters, including none, so {@code *} captures
-   * all key value pair attributes. Excluded patterns take precedence over included patterns.
+   * <p>Keys and patterns are matched case-sensitively. {@code ?} matches any single character and
+   * {@code *} matches any number of characters, including none, so {@code *} captures all
+   * structured attributes. Excluded patterns take precedence over included patterns. Absent or
+   * empty pattern settings capture all structured attributes.
    */
-  public void setKeyValuePairAttributesIncluded(@Nullable String keyValuePairAttributesIncluded) {
-    this.keyValuePairAttributesIncluded = keyValuePairAttributesIncluded;
+  public void setStructuredAttributesIncluded(@Nullable String structuredAttributesIncluded) {
+    this.structuredAttributesIncluded = structuredAttributesIncluded;
   }
 
   /**
-   * Configures the comma-separated key value pair key patterns that will not be copied to logs.
+   * Configures the comma-separated structured attribute key patterns that will not be copied to
+   * logs.
    *
-   * <p>This setter backs the {@code keyValuePairAttributesExcluded} element in {@code logback.xml}.
+   * <p>This setter backs the {@code structuredAttributesExcluded} element in {@code logback.xml}.
    * It is ignored when a non-empty selector is configured with {@link
-   * #setKeyValuePairAttributes(IncludeExclude)}.
+   * #setStructuredAttributes(IncludeExclude)}.
    *
-   * <p>Key value pair keys and patterns are matched case-sensitively. {@code ?} matches any single
-   * character and {@code *} matches any number of characters, including none. Excluded patterns
-   * take precedence over included patterns, so configuring only excluded patterns captures every
-   * key value pair attribute that they do not exclude.
+   * <p>Keys and patterns are matched case-sensitively. {@code ?} matches any single character and
+   * {@code *} matches any number of characters, including none. Excluded patterns take precedence
+   * over included patterns, so configuring only excluded patterns captures every structured
+   * attribute that they do not exclude. Excluding {@code *} captures none. Absent or empty pattern
+   * settings capture all structured attributes.
    */
-  public void setKeyValuePairAttributesExcluded(@Nullable String keyValuePairAttributesExcluded) {
-    this.keyValuePairAttributesExcluded = keyValuePairAttributesExcluded;
+  public void setStructuredAttributesExcluded(@Nullable String structuredAttributesExcluded) {
+    this.structuredAttributesExcluded = structuredAttributesExcluded;
   }
 
   /**
@@ -430,122 +395,6 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
    */
   public void setCaptureArguments(boolean captureArguments) {
     this.captureArguments = captureArguments;
-  }
-
-  /**
-   * Configures the Logstash marker attributes that will be copied to logs.
-   *
-   * <p>Logstash marker keys and selector patterns are matched case-sensitively. {@code ?} matches
-   * any single character and {@code *} matches any number of characters, including none, so {@code
-   * *} captures all Logstash marker attributes. Excluded patterns take precedence over included
-   * patterns, so a selector with only excluded patterns captures every Logstash marker attribute
-   * that it does not exclude.
-   *
-   * <p>A {@code null} or empty selector leaves this appender without a programmatic selector, in
-   * which case the Logstash marker attributes are selected by {@link
-   * #setLogstashMarkerAttributesIncluded(String)} and {@link
-   * #setLogstashMarkerAttributesExcluded(String)}. No Logstash marker attributes are captured when
-   * these are also absent or empty.
-   *
-   * <p>Captured Logstash marker attributes may contain sensitive information. Configure included
-   * and excluded patterns to limit the data exported as log attributes.
-   */
-  public void setLogstashMarkerAttributes(@Nullable IncludeExclude logstashMarkerAttributes) {
-    this.logstashMarkerAttributes = logstashMarkerAttributes;
-  }
-
-  /**
-   * Configures the comma-separated Logstash marker key patterns that will be copied to logs.
-   *
-   * <p>This setter backs the {@code logstashMarkerAttributesIncluded} element in {@code
-   * logback.xml}. It is ignored when a non-empty selector is configured with {@link
-   * #setLogstashMarkerAttributes(IncludeExclude)}.
-   *
-   * <p>Logstash marker keys and patterns are matched case-sensitively. {@code ?} matches any single
-   * character and {@code *} matches any number of characters, including none, so {@code *} captures
-   * all Logstash marker attributes. Excluded patterns take precedence over included patterns.
-   */
-  public void setLogstashMarkerAttributesIncluded(
-      @Nullable String logstashMarkerAttributesIncluded) {
-    this.logstashMarkerAttributesIncluded = logstashMarkerAttributesIncluded;
-  }
-
-  /**
-   * Configures the comma-separated Logstash marker key patterns that will not be copied to logs.
-   *
-   * <p>This setter backs the {@code logstashMarkerAttributesExcluded} element in {@code
-   * logback.xml}. It is ignored when a non-empty selector is configured with {@link
-   * #setLogstashMarkerAttributes(IncludeExclude)}.
-   *
-   * <p>Logstash marker keys and patterns are matched case-sensitively. {@code ?} matches any single
-   * character and {@code *} matches any number of characters, including none. Excluded patterns
-   * take precedence over included patterns, so configuring only excluded patterns captures every
-   * Logstash marker attribute that they do not exclude.
-   */
-  public void setLogstashMarkerAttributesExcluded(
-      @Nullable String logstashMarkerAttributesExcluded) {
-    this.logstashMarkerAttributesExcluded = logstashMarkerAttributesExcluded;
-  }
-
-  /**
-   * Configures the Logstash structured argument attributes that will be copied to logs.
-   *
-   * <p>Logstash structured argument keys and selector patterns are matched case-sensitively. {@code
-   * ?} matches any single character and {@code *} matches any number of characters, including none,
-   * so {@code *} captures all Logstash structured argument attributes. Excluded patterns take
-   * precedence over included patterns, so a selector with only excluded patterns captures every
-   * Logstash structured argument attribute that it does not exclude.
-   *
-   * <p>A {@code null} or empty selector leaves this appender without a programmatic selector, in
-   * which case the Logstash structured argument attributes are selected by {@link
-   * #setLogstashStructuredArgumentAttributesIncluded(String)} and {@link
-   * #setLogstashStructuredArgumentAttributesExcluded(String)}. No Logstash structured argument
-   * attributes are captured when these are also absent or empty.
-   *
-   * <p>Captured Logstash structured argument attributes may contain sensitive information.
-   * Configure included and excluded patterns to limit the data exported as log attributes.
-   */
-  public void setLogstashStructuredArgumentAttributes(
-      @Nullable IncludeExclude logstashStructuredArgumentAttributes) {
-    this.logstashStructuredArgumentAttributes = logstashStructuredArgumentAttributes;
-  }
-
-  /**
-   * Configures the comma-separated Logstash structured argument key patterns that will be copied to
-   * logs.
-   *
-   * <p>This setter backs the {@code logstashStructuredArgumentAttributesIncluded} element in {@code
-   * logback.xml}. It is ignored when a non-empty selector is configured with {@link
-   * #setLogstashStructuredArgumentAttributes(IncludeExclude)}.
-   *
-   * <p>Logstash structured argument keys and patterns are matched case-sensitively. {@code ?}
-   * matches any single character and {@code *} matches any number of characters, including none, so
-   * {@code *} captures all Logstash structured argument attributes. Excluded patterns take
-   * precedence over included patterns.
-   */
-  public void setLogstashStructuredArgumentAttributesIncluded(
-      @Nullable String logstashStructuredArgumentAttributesIncluded) {
-    this.logstashStructuredArgumentAttributesIncluded =
-        logstashStructuredArgumentAttributesIncluded;
-  }
-
-  /**
-   * Configures the comma-separated Logstash structured argument key patterns that will not be
-   * copied to logs.
-   *
-   * <p>This setter backs the {@code logstashStructuredArgumentAttributesExcluded} element in {@code
-   * logback.xml}. It is ignored when a non-empty selector is configured with {@link
-   * #setLogstashStructuredArgumentAttributes(IncludeExclude)}.
-   *
-   * <p>Logstash structured argument keys and patterns are matched case-sensitively. {@code ?}
-   * matches any single character and {@code *} matches any number of characters, including none.
-   * Excluded patterns take precedence over included patterns, so configuring only excluded patterns
-   * captures every Logstash structured argument attribute that they do not exclude.
-   */
-  public void setLogstashStructuredArgumentAttributesExcluded(
-      @Nullable String logstashStructuredArgumentAttributesExcluded) {
-    this.logstashStructuredArgumentAttributesExcluded =
-        logstashStructuredArgumentAttributesExcluded;
   }
 
   /**

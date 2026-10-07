@@ -68,7 +68,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
   static final String PLUGIN_NAME = "OpenTelemetry";
 
   private final LogEventMapper<ReadOnlyStringMap> mapper;
-  private final boolean mapMessageAttributesConfigured;
+  private final boolean structuredAttributesConfigured;
   @Nullable private volatile OpenTelemetry openTelemetry;
 
   private final BlockingQueue<LogEventToReplay> eventsToReplay;
@@ -87,15 +87,16 @@ public class OpenTelemetryAppender extends AbstractAppender {
   }
 
   /**
-   * Installs the {@code openTelemetry} instance and default {@link MapMessage} selector on {@link
+   * Installs the {@code openTelemetry} instance and default structured attribute selector on {@link
    * OpenTelemetryAppender}s identified in the {@link LoggerContext}. A selector configured directly
    * on an appender takes precedence.
    */
-  public static void install(OpenTelemetry openTelemetry, IncludeExclude mapMessageAttributes) {
-    Predicate<String> selector = mapMessageAttributes::matches;
+  public static void install(OpenTelemetry openTelemetry, IncludeExclude structuredAttributes) {
+    Predicate<String> selector =
+        structuredAttributes.isEmpty() ? value -> true : structuredAttributes::matches;
     forEachAppender(
         appender -> {
-          appender.setDefaultMapMessageAttributes(selector);
+          appender.setDefaultStructuredAttributes(selector);
           appender.setOpenTelemetry(openTelemetry);
         });
   }
@@ -132,9 +133,9 @@ public class OpenTelemetryAppender extends AbstractAppender {
 
     @PluginBuilderAttribute private boolean captureExperimentalAttributes;
     @PluginBuilderAttribute private boolean captureCodeAttributes;
-    @Nullable @PluginBuilderAttribute private String mapMessageAttributesIncluded;
-    @Nullable @PluginBuilderAttribute private String mapMessageAttributesExcluded;
-    @Nullable private IncludeExclude mapMessageAttributes;
+    @Nullable @PluginBuilderAttribute private String structuredAttributesIncluded;
+    @Nullable @PluginBuilderAttribute private String structuredAttributesExcluded;
+    @Nullable private IncludeExclude structuredAttributes;
     @PluginBuilderAttribute private boolean captureMarkerAttribute;
     @PluginBuilderAttribute private boolean captureTemplate;
     @PluginBuilderAttribute private boolean captureArguments;
@@ -172,60 +173,62 @@ public class OpenTelemetryAppender extends AbstractAppender {
     }
 
     /**
-     * Configures the log4j {@link MapMessage} attributes that will be copied to logs.
+     * Configures the structured attributes copied from log4j {@link MapMessage} entries.
      *
      * <p>{@code MapMessage} keys and selector patterns are matched case-sensitively. {@code ?}
      * matches any single character and {@code *} matches any number of characters, including none,
-     * so {@code included("*")} captures every {@code MapMessage} attribute. Excluded patterns take
+     * so {@code included("*")} captures every structured attribute. Excluded patterns take
      * precedence over included patterns. A selector with only excluded patterns captures every
-     * {@code MapMessage} attribute that it does not exclude.
+     * structured attribute that it does not exclude. Excluding {@code *} captures none.
      *
      * <p>Only a non-empty selector set here takes precedence over the {@code
-     * mapMessageAttributesIncluded} and {@code mapMessageAttributesExcluded} settings. A {@code
+     * structuredAttributesIncluded} and {@code structuredAttributesExcluded} settings. A {@code
      * null} or empty selector carries no configuration, so it does not disable capture and the next
-     * configured source is used instead. No {@code MapMessage} attributes are captured when the
-     * selector and the pattern settings are absent or empty.
+     * configured source is used instead. All structured attributes are captured when the selector
+     * and the pattern settings are absent or empty. Context data attributes are configured
+     * separately.
      *
      * <p>Captured {@code MapMessage} attributes may contain sensitive information. Configure
      * included and excluded patterns to limit the data exported as log attributes.
      */
     @CanIgnoreReturnValue
-    public B setMapMessageAttributes(@Nullable IncludeExclude mapMessageAttributes) {
-      this.mapMessageAttributes =
-          mapMessageAttributes == null || mapMessageAttributes.isEmpty()
+    public B setStructuredAttributes(@Nullable IncludeExclude structuredAttributes) {
+      this.structuredAttributes =
+          structuredAttributes == null || structuredAttributes.isEmpty()
               ? null
-              : mapMessageAttributes;
+              : structuredAttributes;
       return asBuilder();
     }
 
     /**
-     * Configures the comma-separated log4j {@link MapMessage} attribute key patterns that will be
-     * copied to logs.
+     * Configures the comma-separated structured attribute key patterns that will be copied to logs.
      *
-     * <p>This is the configuration-file form of {@link #setMapMessageAttributes(IncludeExclude)}
-     * and is ignored when a non-empty selector is set with that method. Patterns use the same
-     * case-sensitive glob syntax, where {@code ?} matches any single character and {@code *}
-     * matches any number of characters, including none.
-     */
-    @CanIgnoreReturnValue
-    public B setMapMessageAttributesIncluded(String mapMessageAttributesIncluded) {
-      this.mapMessageAttributesIncluded = mapMessageAttributesIncluded;
-      return asBuilder();
-    }
-
-    /**
-     * Configures the comma-separated log4j {@link MapMessage} attribute key patterns that will not
-     * be copied to logs.
-     *
-     * <p>This is the configuration-file form of {@link #setMapMessageAttributes(IncludeExclude)}
+     * <p>This is the configuration-file form of {@link #setStructuredAttributes(IncludeExclude)}
      * and is ignored when a non-empty selector is set with that method. Patterns use the same
      * case-sensitive glob syntax, where {@code ?} matches any single character and {@code *}
      * matches any number of characters, including none. Excluded patterns take precedence over
-     * included patterns.
+     * included patterns. Absent or empty pattern settings capture all structured attributes.
      */
     @CanIgnoreReturnValue
-    public B setMapMessageAttributesExcluded(String mapMessageAttributesExcluded) {
-      this.mapMessageAttributesExcluded = mapMessageAttributesExcluded;
+    public B setStructuredAttributesIncluded(String structuredAttributesIncluded) {
+      this.structuredAttributesIncluded = structuredAttributesIncluded;
+      return asBuilder();
+    }
+
+    /**
+     * Configures the comma-separated structured attribute key patterns that will not be copied to
+     * logs.
+     *
+     * <p>This is the configuration-file form of {@link #setStructuredAttributes(IncludeExclude)}
+     * and is ignored when a non-empty selector is set with that method. Patterns use the same
+     * case-sensitive glob syntax, where {@code ?} matches any single character and {@code *}
+     * matches any number of characters, including none. Excluded patterns take precedence over
+     * included patterns. Excluding {@code *} captures none. Absent or empty pattern settings
+     * capture all structured attributes.
+     */
+    @CanIgnoreReturnValue
+    public B setStructuredAttributesExcluded(String structuredAttributesExcluded) {
+      this.structuredAttributesExcluded = structuredAttributesExcluded;
       return asBuilder();
     }
 
@@ -373,8 +376,8 @@ public class OpenTelemetryAppender extends AbstractAppender {
           getPropertyArray(),
           captureExperimentalAttributes,
           captureCodeAttributes,
-          getEffectiveMapMessageAttributes(),
-          hasMapMessageAttributesConfigured(),
+          getEffectiveStructuredAttributes(),
+          hasStructuredAttributesConfigured(),
           captureMarkerAttribute,
           captureTemplate,
           captureArguments,
@@ -383,26 +386,25 @@ public class OpenTelemetryAppender extends AbstractAppender {
           openTelemetry);
     }
 
-    @Nullable
-    private Predicate<String> getEffectiveMapMessageAttributes() {
-      if (mapMessageAttributes != null) {
-        return mapMessageAttributes::matches;
+    private Predicate<String> getEffectiveStructuredAttributes() {
+      if (structuredAttributes != null) {
+        return structuredAttributes::matches;
       }
       IncludeExclude selector =
           IncludeExclude.builder()
-              .setIncluded(splitAndFilterBlanksAndNulls(mapMessageAttributesIncluded))
-              .setExcluded(splitAndFilterBlanksAndNulls(mapMessageAttributesExcluded))
+              .setIncluded(splitAndFilterBlanksAndNulls(structuredAttributesIncluded))
+              .setExcluded(splitAndFilterBlanksAndNulls(structuredAttributesExcluded))
               .build();
       if (!selector.isEmpty()) {
         return selector::matches;
       }
-      return null;
+      return value -> true;
     }
 
-    private boolean hasMapMessageAttributesConfigured() {
-      return mapMessageAttributes != null
-          || !splitAndFilterBlanksAndNulls(mapMessageAttributesIncluded).isEmpty()
-          || !splitAndFilterBlanksAndNulls(mapMessageAttributesExcluded).isEmpty();
+    private boolean hasStructuredAttributesConfigured() {
+      return structuredAttributes != null
+          || !splitAndFilterBlanksAndNulls(structuredAttributesIncluded).isEmpty()
+          || !splitAndFilterBlanksAndNulls(structuredAttributesExcluded).isEmpty();
     }
 
     @Nullable
@@ -431,8 +433,8 @@ public class OpenTelemetryAppender extends AbstractAppender {
       Property[] properties,
       boolean captureExperimentalAttributes,
       boolean captureCodeAttributes,
-      @Nullable Predicate<String> mapMessageAttributes,
-      boolean mapMessageAttributesConfigured,
+      Predicate<String> structuredAttributes,
+      boolean structuredAttributesConfigured,
       boolean captureMarkerAttribute,
       boolean captureTemplate,
       boolean captureArguments,
@@ -445,12 +447,12 @@ public class OpenTelemetryAppender extends AbstractAppender {
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
     boolean v3Preview = commonConfig.getBoolean("v3_preview", false);
 
-    this.mapMessageAttributesConfigured = mapMessageAttributesConfigured;
+    this.structuredAttributesConfigured = structuredAttributesConfigured;
     this.mapper =
         createMapper(
             captureExperimentalAttributes,
             captureCodeAttributes,
-            mapMessageAttributes,
+            structuredAttributes,
             captureMarkerAttribute,
             captureTemplate,
             captureArguments,
@@ -465,8 +467,8 @@ public class OpenTelemetryAppender extends AbstractAppender {
     }
   }
 
-  private void setDefaultMapMessageAttributes(Predicate<String> selector) {
-    if (!mapMessageAttributesConfigured) {
+  private void setDefaultStructuredAttributes(Predicate<String> selector) {
+    if (!structuredAttributesConfigured) {
       mapper.setMapMessageAttributes(selector);
     }
   }
@@ -526,8 +528,8 @@ public class OpenTelemetryAppender extends AbstractAppender {
     writeLock.lock();
     try {
       openTelemetry = null;
-      if (!mapMessageAttributesConfigured) {
-        mapper.setMapMessageAttributes(null);
+      if (!structuredAttributesConfigured) {
+        mapper.setMapMessageAttributes(value -> true);
       }
       eventsToReplay.clear();
       replayLimitWarningLogged.set(false);

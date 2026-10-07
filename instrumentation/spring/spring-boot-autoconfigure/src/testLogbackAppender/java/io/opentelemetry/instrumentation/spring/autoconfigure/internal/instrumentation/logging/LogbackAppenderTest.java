@@ -152,31 +152,16 @@ class LogbackAppenderTest {
 
   private static void assertStructuredSelector(
       CapturingOpenTelemetryAppender appender, Consumer<IncludeExclude> assertion) {
-    IncludeExclude selector = requireNonNull(appender.keyValuePairAttributes);
-    assertThat(appender.logstashMarkerAttributes).isSameAs(selector);
-    assertThat(appender.logstashStructuredArgumentAttributes).isSameAs(selector);
+    IncludeExclude selector = requireNonNull(appender.structuredAttributes);
     assertion.accept(selector);
   }
 
   private static final class CapturingOpenTelemetryAppender extends OpenTelemetryAppender {
-    @Nullable private IncludeExclude keyValuePairAttributes;
-    @Nullable private IncludeExclude logstashMarkerAttributes;
-    @Nullable private IncludeExclude logstashStructuredArgumentAttributes;
+    @Nullable private IncludeExclude structuredAttributes;
 
     @Override
-    public void setKeyValuePairAttributes(@Nullable IncludeExclude keyValuePairAttributes) {
-      this.keyValuePairAttributes = keyValuePairAttributes;
-    }
-
-    @Override
-    public void setLogstashMarkerAttributes(@Nullable IncludeExclude logstashMarkerAttributes) {
-      this.logstashMarkerAttributes = logstashMarkerAttributes;
-    }
-
-    @Override
-    public void setLogstashStructuredArgumentAttributes(
-        @Nullable IncludeExclude logstashStructuredArgumentAttributes) {
-      this.logstashStructuredArgumentAttributes = logstashStructuredArgumentAttributes;
+    public void setStructuredAttributes(@Nullable IncludeExclude structuredAttributes) {
+      this.structuredAttributes = structuredAttributes;
     }
   }
 

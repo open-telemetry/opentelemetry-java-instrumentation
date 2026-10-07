@@ -7,11 +7,11 @@
     </Console>
     <!-- TODO run tests both with and without experimental log attributes -->
     <!-- captureContextDataAttributes is retained for deprecated XML compatibility. -->
-    <OpenTelemetry name="OpenTelemetryAppender" numLogsCapturedBeforeOtelInstall="1" mapMessageAttributesIncluded="*" captureMarkerAttribute="true" captureContextDataAttributes="key1,key2" captureExperimentalAttributes="true" captureCodeAttributes="true"/>
+    <OpenTelemetry name="OpenTelemetryAppender" numLogsCapturedBeforeOtelInstall="1" captureMarkerAttribute="true" captureContextDataAttributes="key1,key2" captureExperimentalAttributes="true" captureCodeAttributes="true"/>
     <OpenTelemetry name="OpenTelemetryCommonMapMessageSelectorAppender" numLogsCapturedBeforeOtelInstall="1"/>
-    <OpenTelemetry name="OpenTelemetryMapMessageSelectorDisabledAppender" numLogsCapturedBeforeOtelInstall="1" mapMessageAttributesExcluded="*"/>
+    <OpenTelemetry name="OpenTelemetryMapMessageSelectorDisabledAppender" numLogsCapturedBeforeOtelInstall="1" structuredAttributesExcluded="*"/>
     <OpenTelemetry name="OpenTelemetryContextDataSelectorAppender" numLogsCapturedBeforeOtelInstall="1" contextDataAttributesIncluded="selector-*" contextDataAttributesExcluded="*-secret"/>
-    <OpenTelemetry name="OpenTelemetryMapMessageSelectorAppender" numLogsCapturedBeforeOtelInstall="1" mapMessageAttributesIncluded="selector-*" mapMessageAttributesExcluded="*-secret"/>
+    <OpenTelemetry name="OpenTelemetryMapMessageSelectorAppender" numLogsCapturedBeforeOtelInstall="1" structuredAttributesIncluded="selector-*" structuredAttributesExcluded="*-secret"/>
   </Appenders>
   <Loggers>
     <Logger name="TestLogger" level="All">

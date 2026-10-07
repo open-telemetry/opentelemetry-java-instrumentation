@@ -4,7 +4,7 @@
 
 ### ⚠️ Breaking changes
 
-- The Java agent and Spring Boot appender setup now capture structured log attributes from Log4j
+- The Java agent, Spring Boot setup, and standalone appenders now capture structured log attributes from Log4j
   `MapMessage` entries, SLF4J key-value pairs, Logback Logstash markers, and Logstash structured
   arguments by default. Replace the former flat settings for Log4j MapMessage
   (`otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes`), Logback
@@ -58,9 +58,12 @@
   `setCaptureKeyValuePairAttributes` / `captureKeyValuePairAttributes`,
   `setCaptureLogstashMarkerAttributes` / `captureLogstashMarkerAttributes`, and
   `setCaptureLogstashStructuredArguments` / `captureLogstashStructuredArguments`.
-  Use the corresponding `IncludeExclude` setters or XML included/excluded selectors.
-  An included `*` captures all attributes from that source, and an excluded `*` captures none.
-  Standalone capture remains opt-in.
+  Replace the source-specific `setMapMessageAttributes`, `setKeyValuePairAttributes`,
+  `setLogstashMarkerAttributes`, and `setLogstashStructuredArgumentAttributes` selectors and their
+  XML included/excluded settings with `setStructuredAttributes(IncludeExclude)` and
+  `structuredAttributesIncluded` / `structuredAttributesExcluded`. One selector filters all
+  supported structured sources. Absent or empty selectors capture all structured attributes;
+  an excluded `*` captures none. MDC and logger context capture remain separate and opt-in.
 - Move `CodeAttributesGetter`, `CodeAttributesExtractor`, and `CodeSpanNameExtractor` from
   `io.opentelemetry.instrumentation.api.incubator.semconv.code` in
   `opentelemetry-instrumentation-api-incubator` to `io.opentelemetry.instrumentation.api.semconv.code`
