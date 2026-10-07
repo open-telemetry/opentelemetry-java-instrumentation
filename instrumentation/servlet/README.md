@@ -11,7 +11,7 @@
 | `otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled` | Boolean | `false` | Enable adding `trace_id` and `span_id` as request attributes.                                                                                                                                                                                                                                                           |
 
 An absent or empty request parameter selector captures nothing. An exclude-only selector captures every available request parameter except those matching an excluded pattern, which may expose sensitive information. To capture all parameters explicitly, configure `otel.instrumentation.servlet.experimental.request-parameters.included=*`.
-Captured parameter names retain their original casing in `servlet.request.parameter.<name>` attribute keys. For example, `userId` now produces `servlet.request.parameter.userId` instead of `servlet.request.parameter.userid`.
+Captured parameter names retain their original casing in `servlet.request.parameter.<name>` attribute keys. For example, `userId` produces `servlet.request.parameter.userId`.
 
 The equivalent declarative configuration is:
 
@@ -25,9 +25,6 @@ instrumentation/development:
       trace_id_request_attribute/development:
         enabled: true
 ```
-
-Request attributes are disabled by default. To re-enable them, set
-`otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled=true`.
 
 ### A word about version
 
