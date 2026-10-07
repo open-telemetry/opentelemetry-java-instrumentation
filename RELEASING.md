@@ -26,14 +26,17 @@ the second Monday of the month (roughly a few days after the monthly minor relea
   have been merged.
 - Close the [release milestone](https://github.com/open-telemetry/opentelemetry-java-instrumentation/milestones)
   if there is one.
-- Merge a pull request to `main` updating the `CHANGELOG.md`.
-  - The heading for the unreleased entries should be `## Unreleased`.
-  - Use `python3 .github/scripts/draft-release-notes/draft-release-notes.py`
-    as the starting point for writing the change log.
+- Review the pending fragments in [changelog.d](changelog.d).
+  - Install the release-note tool with
+    `python -m pip install -r .github/scripts/changelog/requirements.txt`.
+  - Preview with `python -m towncrier build --draft --version <release-version>`.
+  - Merge any wording corrections as changes to the fragments, not to `CHANGELOG.md`.
 - Run the [Prepare release branch workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/prepare-release-branch.yml).
   - Press the "Run workflow" button, and leave the default branch `main` selected.
   - Review and merge the two pull requests that it creates
     (one is targeted to the release branch and one is targeted to `main`).
+  - Both pull requests generate the changelog and remove the fragments included in
+    that release. New fragments merged to `main` afterwards remain pending.
 
 ## Preparing a new patch release
 
@@ -52,12 +55,19 @@ and deadlocks.
     because the default `GITHUB_TOKEN` does not have permission to update workflow files (and the
     `otelbot` token doesn't have write permission to this repository at all, so while it
     can be used to open a PR, it can't be used to push to a local branch).
-- Merge a pull request to the release branch updating the `CHANGELOG.md`.
-  - The heading for the unreleased entries should be `## Unreleased`.
+- Include the corresponding release-note fragment when backporting a fix.
+  Review the fragments on the release branch and preview them with
+  `python -m towncrier build --draft --version <patch-version>`.
 - Run the [Prepare patch release workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/prepare-patch-release.yml).
   - Press the "Run workflow" button, then select the release branch from the dropdown list,
     e.g. `release/v1.9.x`, and click the "Run workflow" button below that.
   - Review and merge the pull request that it creates for updating the version.
+  - It also generates the patch changelog and removes the consumed fragments.
+
+Release branches created before Towncrier adoption still use their existing workflows.
+On those branches, update the `## Unreleased` section of `CHANGELOG.md` manually before
+preparing a patch release. Fragments cherry-picked onto such a branch are not rendered
+by its legacy release workflow.
 
 ## Making the release
 

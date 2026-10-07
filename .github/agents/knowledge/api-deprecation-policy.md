@@ -108,7 +108,8 @@ Rules:
   surfaces deprecated by the same PR often differ.
 - The **deprecated method must delegate to its replacement**, not the other way around. This ensures
   anyone overriding the deprecated method still gets called.
-- Add the `deprecation` label to the PR — this drives the automated `🚫 Deprecations` CHANGELOG entry.
+- Add the `deprecation` label to the PR and a `deprecation` fragment in `changelog.d`
+  describing what is deprecated and what replaces it.
 
 ### Deprecating default interface methods
 
@@ -225,5 +226,5 @@ static {
 ### CHANGELOG
 
 An instrumentation-name alias rename belongs under `🚫 Deprecations`, not breaking changes, while
-the compatibility alias remains. Record the breaking removal when v3-preview behavior becomes the
-default in 3.0.
+the compatibility alias remains. Add a `deprecation` fragment for the rename. Record the breaking
+removal in a `breaking` fragment when v3-preview behavior becomes the default in 3.0.

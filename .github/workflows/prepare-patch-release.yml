@@ -13,14 +13,21 @@ jobs:
         with:
           persist-credentials: false
 
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.14'
+
+      - name: Install Towncrier
+        run: python -m pip install -r .github/scripts/changelog/requirements.txt
+
       - run: |
           if [[ ! $GITHUB_REF_NAME =~ ^release/v[0-9]+\.[0-9]+\.x$ ]]; then
             echo this workflow should only be run against release branches
             exit 1
           fi
 
-          if ! grep --quiet "^## Unreleased$" CHANGELOG.md; then
-            echo the change log is missing an \"Unreleased\" section
+          if ! grep --quiet "^<!-- towncrier release notes start -->$" CHANGELOG.md; then
+            echo the change log is missing the Towncrier insertion marker
             exit 1
           fi
 

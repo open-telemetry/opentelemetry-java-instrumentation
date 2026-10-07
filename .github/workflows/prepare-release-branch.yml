@@ -20,8 +20,8 @@ jobs:
             exit 1
           fi
 
-          if ! grep --quiet "^## Unreleased$" CHANGELOG.md; then
-            echo the change log is missing an \"Unreleased\" section
+          if ! grep --quiet "^<!-- towncrier release notes start -->$" CHANGELOG.md; then
+            echo the change log is missing the Towncrier insertion marker
             exit 1
           fi
 
@@ -36,6 +36,13 @@ jobs:
           # re-running this workflow after merging additional PRs to main
           fetch-depth: 0
           persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.14'
+
+      - name: Install Towncrier
+        run: python -m pip install -r .github/scripts/changelog/requirements.txt
 
       - name: Set release branch variables
         run: |
@@ -100,6 +107,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.14'
+
+      - name: Install Towncrier
+        run: python -m pip install -r .github/scripts/changelog/requirements.txt
 
       - name: Set environment variables
         run: |

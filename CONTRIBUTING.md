@@ -8,9 +8,47 @@ and discuss your ideas or propose the changes you wish to make.
 
 ## Changelog
 
-The changelog is generated from merged pull requests. Do not add a changelog entry for normal
-changes. Add an entry only for a deprecation or breaking change, where the hand-written entry is
-useful for double-checking the generated changelog.
+The changelog is assembled by [Towncrier](https://towncrier.readthedocs.io/) from Markdown
+fragments in [changelog.d](changelog.d). Add a fragment for every user-visible change.
+Changes limited to tests, documentation, CI, or implementation-only refactors do not need one.
+Do not edit `CHANGELOG.md` directly; release preparation generates it from the fragments.
+
+Name the file `<PR-number>.<type>.md`, for example `12345.bugfix.md`. Its contents should be
+a short description of the effect on users, without a bullet prefix or PR link. Towncrier
+adds those when rendering the changelog. Include migration guidance for breaking changes
+and name replacement APIs or configuration for deprecations.
+
+| Type | Changelog section |
+| --- | --- |
+| `breaking` | Breaking changes to stable APIs, configuration, or telemetry |
+| `alpha-breaking` | Breaking changes to non-stable APIs |
+| `deprecation` | Deprecations |
+| `javaagent` | New javaagent instrumentation |
+| `library` | New library instrumentation |
+| `enhancement` | Enhancements |
+| `bugfix` | Bug fixes |
+
+Use `12345.bugfix.1.md` for another note of the same type in one PR. If the PR number is
+not available yet, start with a unique name such as `+fix-http-spans.bugfix.md` and rename
+it once the PR is open. Fragments starting with `+` render without an automatically
+generated PR link.
+
+For example, `12345.bugfix.md` could contain:
+
+```markdown
+Fix missing HTTP client spans when a request fails before receiving a response.
+```
+
+To preview pending release notes without modifying files:
+
+```bash
+python -m pip install -r .github/scripts/changelog/requirements.txt
+python -m towncrier build --draft --version 3.0.0
+```
+
+Use the upcoming release version in the preview command. Copilot and human reviewers check
+whether a fragment is needed and whether it accurately describes the change; there is no
+required fragment-presence CI check.
 
 ## Breaking Changes
 
@@ -18,7 +56,7 @@ When your PR introduces a breaking change:
 
 - Add the `breaking change` label to your PR
   - If you can't add labels directly, post a comment containing only `/breaking-change` and the label will be added automatically
-- Add an entry to the `Unreleased` section of `CHANGELOG.md`
+- Add a `breaking` or `alpha-breaking` fragment to `changelog.d`
 - Provide migration notes in the PR description:
   - What is changing and why
   - How users should update their code/configuration
@@ -37,7 +75,7 @@ When your PR deprecates functionality:
 
 - Add the `deprecation` label to your PR
   - If you can't add labels directly, post a comment containing only `/deprecation` and the label will be added automatically
-- Add an entry to the `Unreleased` section of `CHANGELOG.md`
+- Add a `deprecation` fragment to `changelog.d`
 - Provide deprecation details in the PR description:
   - What is being deprecated and why
   - What should be used instead (if applicable)

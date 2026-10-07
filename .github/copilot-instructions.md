@@ -13,6 +13,27 @@ formatter. Path-specific `.github/instructions/*.instructions.md` files contain 
 applicable repository review rules; use their stated conditions and exceptions. The longer
 `.github/agents/knowledge/` articles are optional reference, not a required loading step.
 
+## Release-note fragments
+
+For each user-visible change, check that the PR adds an accurate Markdown fragment in
+`changelog.d`. Report a missing fragment on a changed line responsible for the user-visible
+behavior, with category `[General]` and an actionable request to add it. Changes limited
+to tests, documentation, CI/build tooling, or implementation-only refactors need no fragment.
+Do not require one merely because production code changed; identify the effect users notice.
+
+Fragment filenames use `<PR-number>.<type>.md`; an additional numeric suffix supports
+multiple notes of the same type. Types are `breaking`, `alpha-breaking`, `deprecation`,
+`javaagent`, `library`, `enhancement`, and `bugfix`. Stable API, configuration, and telemetry
+breaking changes use `breaking`; non-stable API breaking changes use `alpha-breaking`.
+The `javaagent` and `library` types are for new instrumentations, not changes to existing ones.
+Check wording and migration guidance against the changed behavior. Fragments contain prose
+without an outer bullet prefix or an explicit PR link, since Towncrier adds both. A `+` filename
+denotes an orphan fragment with no generated link.
+
+Do not request direct edits to `CHANGELOG.md` for ordinary PRs. Release preparation generates
+it from fragments; release-note corrections and tooling migrations may edit it directly.
+There is no required fragment-presence CI check.
+
 ## Correctness and compatibility
 
 - Check changes for lifecycle leaks, reentrancy, concurrency under supported library usage,
@@ -25,8 +46,8 @@ applicable repository review rules; use their stated conditions and exceptions. 
   deprecated symbols in a later minor release. Do not mistake a 3.0 behavior migration for an
   alpha API that should be removed immediately. A replacement must be at least as stable as
   the old API; deprecated methods delegate to their replacements, not vice versa. Include
-  replacement and removal timing in `@deprecated` Javadoc and a deprecation CHANGELOG entry.
-  Document a breaking change to a published alpha API under the appropriate CHANGELOG heading.
+  replacement and removal timing in `@deprecated` Javadoc and a `deprecation` release-note fragment.
+  Document a breaking change to a published alpha API in an `alpha-breaking` fragment.
 - User-facing configuration names and outgoing telemetry identities also have compatibility
   contracts. When a module is renamed, inspect both its `otel.instrumentation.<name>.enabled`
   alias and emitted `otel.scope.name`, including v3-preview behavior and scope-version lookup.
@@ -56,7 +77,7 @@ of where its implementation lives.
   On rename, retain the old name until the next major version: read the replacement first,
   fall back to the old name only outside v3-preview, and log a `WARN` once at startup *when
   the old value is applied*, naming the old and replacement flat properties (or declarative
-  paths if there is no flat form). Add the deprecation to the CHANGELOG. Experimental/preview
+  paths if there is no flat form). Add a `deprecation` fragment in `changelog.d`. Experimental/preview
   names may be removed after a subsequent minor release and do not need the v3-preview guard.
   Instrumentation enablement aliases have distinct warning semantics; do not apply ordinary
   replacement-first warning logic to them.

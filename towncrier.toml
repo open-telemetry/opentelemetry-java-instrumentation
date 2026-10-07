@@ -1,0 +1,38 @@
+[tool.towncrier]
+directory = "changelog.d"
+filename = "CHANGELOG.md"
+template = ".github/scripts/changelog/template.md.jinja"
+start_string = "<!-- towncrier release notes start -->\n"
+title_format = "## Version {version} ({project_date})"
+issue_format = "[#{issue}](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/{issue})"
+underlines = ["", "", ""]
+# An explicit ignore list enables strict fragment-name validation.
+ignore = []
+
+[[tool.towncrier.type]]
+directory = "breaking"
+name = "⚠️ Breaking changes"
+
+[[tool.towncrier.type]]
+directory = "alpha-breaking"
+name = "⚠️ Breaking changes to non-stable APIs"
+
+[[tool.towncrier.type]]
+directory = "deprecation"
+name = "🚫 Deprecations"
+
+[[tool.towncrier.type]]
+directory = "javaagent"
+name = "🌟 New javaagent instrumentation"
+
+[[tool.towncrier.type]]
+directory = "library"
+name = "🌟 New library instrumentation"
+
+[[tool.towncrier.type]]
+directory = "enhancement"
+name = "📈 Enhancements"
+
+[[tool.towncrier.type]]
+directory = "bugfix"
+name = "🛠️ Bug fixes"
