@@ -616,7 +616,7 @@ public abstract class AbstractDubboTest {
     // Triple protocol requires Dubbo 3.x
     Assumptions.assumeTrue(testLatestDeps(), "Triple protocol requires Dubbo 3.x");
     Assumptions.assumeTrue(canCaptureUnknownServiceSpans(), "Requires agent instrumentation");
-    Assumptions.assumeTrue(emitPreviewRpcSemconv(), "Requires stable RPC semconv");
+    Assumptions.assumeTrue(emitPreviewRpcSemconv(), "Requires preview RPC semconv");
 
     int port = PortUtils.findOpenPort();
 

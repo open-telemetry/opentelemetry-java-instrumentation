@@ -26,7 +26,7 @@ public final class DubboClientNetworkAttributesGetter
   @Nullable
   @Override
   public String getServerAddress(DubboRequest request) {
-    // the registry address is the logical target only under the stable rpc semconv; keep the
+    // the registry address is the logical target only under the preview rpc semconv; keep the
     // resolved provider host under the old semconv to avoid changing already-emitted attributes
     String registryAddress = request.registryAddress();
     if (registryAddress != null && emitPreviewRpcSemconv()) {
