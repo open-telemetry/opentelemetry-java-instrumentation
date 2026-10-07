@@ -30,7 +30,7 @@ class PlaySmokeTest extends AbstractSmokeTest<Integer> {
   }
 
   @ParameterizedTest
-  @ValueSource(ints = {17, 21, 25})
+  @ValueSource(ints = {17, 21, 25, 27})
   void playSmokeTest(int jdk) {
     start(jdk);
 
