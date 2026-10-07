@@ -53,7 +53,21 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
   }
 
+  val testCaptureSearchQuerySettingIgnored =
+    register<Test>("testCaptureSearchQuerySettingIgnored") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+
+      filter {
+        includeTestsMatching(
+          "io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v5_0.ElasticsearchRest5Test.searchQueryIsCapturedAndSanitized"
+        )
+      }
+      jvmArgs("-Dotel.instrumentation.elasticsearch.capture-search-query=false")
+      systemProperty("collectMetadata", "false")
+    }
+
   check {
-    dependsOn(testV3Preview)
+    dependsOn(testV3Preview, testCaptureSearchQuerySettingIgnored)
   }
 }

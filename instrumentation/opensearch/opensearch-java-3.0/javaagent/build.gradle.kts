@@ -50,42 +50,21 @@ tasks {
 
   test {
     filter {
-      excludeTestsMatching("OpenSearchDisabledCaptureSearchQueryTest")
       excludeTestsMatching("OpenSearchQuerySanitizationDisabledTest")
       excludeTestsMatching("OpenSearchQuerySanitizationDisabledJsonbTest")
     }
   }
 
-  val testDisabledCaptureSearchQuery = register<Test>("testDisabledCaptureSearchQuery") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("OpenSearchDisabledCaptureSearchQueryTest")
-    }
-    jvmArgs("-Dotel.instrumentation.opensearch.capture-search-query=false")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.opensearch.capture-search-query=false",
-    )
-  }
-
-  val testDeprecatedCaptureSearchQueryV3Preview =
-    register<Test>("testDeprecatedCaptureSearchQueryV3Preview") {
+  val testCaptureSearchQuerySettingIgnored =
+    register<Test>("testCaptureSearchQuerySettingIgnored") {
       testClassesDirs = sourceSets.test.get().output.classesDirs
       classpath = sourceSets.test.get().runtimeClasspath
 
       filter {
-        includeTestsMatching("OpenSearchCaptureSearchQueryTest")
+        includeTestsMatching("OpenSearchCaptureSearchQuerySettingIgnoredTest")
       }
-      jvmArgs(
-        "-Dotel.instrumentation.opensearch.capture-search-query=false",
-        "-Dotel.instrumentation.common.v3-preview=true",
-      )
-      systemProperty(
-        "metadataConfig",
-        "otel.instrumentation.opensearch.capture-search-query=false,otel.instrumentation.common.v3-preview=true",
-      )
+      jvmArgs("-Dotel.instrumentation.opensearch.capture-search-query=false")
+      systemProperty("collectMetadata", "false")
     }
 
   val testQuerySanitizationDisabled = register<Test>("testQuerySanitizationDisabled") {
@@ -135,8 +114,7 @@ tasks {
 
   check {
     dependsOn(
-      testDisabledCaptureSearchQuery,
-      testDeprecatedCaptureSearchQueryV3Preview,
+      testCaptureSearchQuerySettingIgnored,
       testQuerySanitizationDisabled,
       testCommonQuerySanitizationDisabled,
       testQuerySanitizationEnabledOverride,

@@ -22,6 +22,14 @@
   singular count units such as `{connection}`, and seconds instead of milliseconds for durations.
   Pool attributes use `db.client.connection.pool.name` and `db.client.connection.state`; unnamed
   pools use stable database-derived names, and DBCP retains the first registered pool name.
+- Elasticsearch and OpenSearch query bodies are now always captured, regardless of v3-preview.
+  The `otel.instrumentation.elasticsearch.capture-search-query` and
+  `otel.instrumentation.opensearch.capture-search-query` properties and their declarative YAML
+  equivalents are no longer supported and have no replacement. Query sanitization remains enabled
+  by default and configurable with
+  `otel.instrumentation.elasticsearch.query-sanitization.enabled` or
+  `otel.instrumentation.opensearch.query-sanitization.enabled`, which override
+  `otel.instrumentation.common.db.query-sanitization.enabled`.
 
 ### ⚠️ Breaking changes to non-stable APIs
 
@@ -87,13 +95,6 @@ for more details.
 
 - Deprecate `otel.jmx.target.system` in favor of `otel.jmx.metrics.experimental.included`.
   ([#19783](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19783))
-- Deprecate `otel.instrumentation.elasticsearch.capture-search-query`. It will be removed in 3.0,
-  when search query bodies are always captured. There is no replacement.
-  ([#19675](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19675))
-- Deprecate `otel.instrumentation.opensearch.capture-search-query`. It will be removed in 3.0,
-  when search query bodies are always captured. There is no replacement. Sanitization remains
-  enabled by default and configurable with `otel.instrumentation.opensearch.query-sanitization.enabled`.
-  ([#19837](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19837))
 - Deprecate `otel.jmx.enabled` in favor of `otel.instrumentation.jmx.enabled` to align with
   other instrumentation enablement properties.
   ([#19945](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19945))

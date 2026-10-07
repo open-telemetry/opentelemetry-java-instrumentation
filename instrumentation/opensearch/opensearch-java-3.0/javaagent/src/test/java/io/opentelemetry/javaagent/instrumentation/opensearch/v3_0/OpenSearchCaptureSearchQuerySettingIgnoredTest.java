@@ -27,17 +27,12 @@ import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.opensearch.core.SearchResponse;
 
-/**
- * Tests compatibility for the deprecated capture-search-query=false configuration. This test class
- * runs with -Dotel.instrumentation.opensearch.capture-search-query=false and verifies that query
- * bodies are not captured in db.query.text.
- */
 @SuppressWarnings("deprecation") // using deprecated semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class OpenSearchDisabledCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
+class OpenSearchCaptureSearchQuerySettingIgnoredTest extends AbstractOpenSearchQueryTest {
 
   @Test
-  void shouldNotCaptureSearchQueryBodyWhenDisabled() throws IOException {
+  void shouldCaptureSearchQueryBodyWhenCaptureSettingIsFalse() throws IOException {
     SearchRequest searchRequest =
         SearchRequest.of(
             s ->
@@ -52,7 +47,6 @@ class OpenSearchDisabledCaptureSearchQueryTest extends AbstractOpenSearchQueryTe
         openSearchClient.search(searchRequest, TestDocument.class);
     assertThat(searchResponse.hits().total().value()).isGreaterThan(0);
 
-    // Verify trace does NOT include the query body
     getTesting()
         .waitAndAssertTraces(
             trace ->
@@ -63,7 +57,9 @@ class OpenSearchDisabledCaptureSearchQueryTest extends AbstractOpenSearchQueryTe
                             .hasAttributesSatisfyingExactly(
                                 equalTo(DB_SYSTEM_NAME, "opensearch"),
                                 equalTo(DB_OPERATION_NAME, "POST"),
-                                equalTo(DB_QUERY_TEXT, null),
+                                equalTo(
+                                    DB_QUERY_TEXT,
+                                    "{\"query\":{\"match\":{\"message\":{\"query\":\"?\"}}}}"),
                                 equalTo(SERVER_ADDRESS, httpHost.getHost()),
                                 equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))),
                     span ->

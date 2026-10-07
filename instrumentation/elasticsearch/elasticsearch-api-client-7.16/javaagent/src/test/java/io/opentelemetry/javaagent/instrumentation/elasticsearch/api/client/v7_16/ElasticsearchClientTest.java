@@ -55,9 +55,6 @@ import org.testcontainers.elasticsearch.ElasticsearchContainer;
 class ElasticsearchClientTest {
   private static final Logger logger = LoggerFactory.getLogger(ElasticsearchClientTest.class);
 
-  private static final boolean V3_PREVIEW =
-      Boolean.getBoolean("otel.instrumentation.common.v3-preview");
-
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -220,10 +217,7 @@ class ElasticsearchClientTest {
                 equalTo(SERVER_PORT, httpHost.getPort()),
                 equalTo(HTTP_REQUEST_METHOD, "POST"),
                 equalTo(URL_FULL, httpHost.toURI() + "/_search?typed_keys=true")));
-    if (V3_PREVIEW) {
-      assertions.add(
-          equalTo(DB_QUERY_TEXT, "{\"query\":{\"match\":{\"name\":{\"query\":\"?\"}}}}"));
-    }
+    assertions.add(equalTo(DB_QUERY_TEXT, "{\"query\":{\"match\":{\"name\":{\"query\":\"?\"}}}}"));
     return assertions;
   }
 
