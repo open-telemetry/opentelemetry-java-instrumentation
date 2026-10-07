@@ -8,6 +8,9 @@
   `otel.instrumentation.grpc.capture-metadata.server.request`.
   Use `otel.instrumentation.grpc.client.request-metadata.included` and
   `otel.instrumentation.grpc.server.request-metadata.included`.
+  For declarative configuration, replace `java.grpc.capture_metadata.client.request` and
+  `java.grpc.capture_metadata.server.request` with `java.grpc.client.request_metadata.included` and
+  `java.grpc.server.request_metadata.included`.
 - The Java agent and standalone libraries now use the existing v1.43.0 messaging implementation.
 - Emit only stable source code attributes: `code.function.name` replaces `code.namespace` and
   `code.function`, and log records use `code.file.path` and `code.line.number` instead of
