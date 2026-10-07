@@ -4,6 +4,15 @@
 
 ### ⚠️ Breaking changes
 
+- OSHI system metrics always use the previous v3-preview conventions, schema 1.44.0, and scope
+  `io.opentelemetry.oshi-5.0`, even with `otel.instrumentation.common.v3-preview=false`.
+  Update `system.network.packets` to `system.network.packet.count`, plural count units to
+  `{packet}`, `{error}`, and `{operation}`, and legacy `state`, `device`, and `direction`
+  attributes to the corresponding system, network, and disk attributes.
+  Remove `otel.instrumentation.oshi.experimental-metrics.enabled` and declarative
+  `java.oshi.experimental_metrics/development.enabled`; OSHI no longer emits `runtime.java.memory`
+  or `runtime.java.cpu_time`. `jvm.memory.used` measures JVM pools, not process RSS or virtual
+  memory, and `jvm.cpu.time` does not split user/system CPU time.
 - The Java agent and standalone libraries now use the existing v1.43.0 messaging implementation.
 - Emit only stable source code attributes: `code.function.name` replaces `code.namespace` and
   `code.function`, and log records use `code.file.path` and `code.line.number` instead of
@@ -25,6 +34,9 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Remove deprecated `ProcessMetrics` and `SystemMetrics.registerObservers(Meter)` from
+  `opentelemetry-oshi`. Use `SystemMetrics.registerObservers(OpenTelemetry)` for system metrics
+  and continue closing the returned observers.
 - Move `CodeAttributesGetter`, `CodeAttributesExtractor`, and `CodeSpanNameExtractor` from
   `io.opentelemetry.instrumentation.api.incubator.semconv.code` in
   `opentelemetry-instrumentation-api-incubator` to `io.opentelemetry.instrumentation.api.semconv.code`
@@ -6300,15 +6312,3 @@ it.
   ([#2775](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2775))
 - New Instrumenter API
   ([#2596](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/2596))
-- OSHI system metrics always use the previous v3-preview conventions, schema 1.44.0, and scope
-  `io.opentelemetry.oshi-5.0`, even with `otel.instrumentation.common.v3-preview=false`.
-  Update `system.network.packets` to `system.network.packet.count`, plural count units to
-  `{packet}`, `{error}`, and `{operation}`, and legacy `state`, `device`, and `direction`
-  attributes to the corresponding system, network, and disk attributes.
-  Remove `otel.instrumentation.oshi.experimental-metrics.enabled` and declarative
-  `java.oshi.experimental_metrics/development.enabled`; OSHI no longer emits `runtime.java.memory`
-  or `runtime.java.cpu_time`. `jvm.memory.used` measures JVM pools, not process RSS or virtual
-  memory, and `jvm.cpu.time` does not split user/system CPU time.
-- Remove deprecated `ProcessMetrics` and `SystemMetrics.registerObservers(Meter)` from
-  `opentelemetry-oshi`. Use `SystemMetrics.registerObservers(OpenTelemetry)` for system metrics
-  and continue closing the returned observers.
