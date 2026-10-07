@@ -4,7 +4,7 @@
 
 ### ⚠️ Breaking changes
 
-- OSHI system metrics use schema 1.44.0 and scope `io.opentelemetry.oshi-5.0`.
+- OSHI system metrics use schema version 1.44.0 and scope `io.opentelemetry.oshi-5.0`.
   Update `system.network.packets` to `system.network.packet.count`, plural count units to
   `{packet}`, `{error}`, and `{operation}`, and legacy `state`, `device`, and `direction`
   attributes to the corresponding system, network, and disk attributes.
