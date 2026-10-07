@@ -15,11 +15,8 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class OshiInstrumentationModule extends InstrumentationModule {
 
-  static final String OSHI_5_0_INSTRUMENTATION_NAME = "oshi-5.0";
-  static final String OSHI_INSTRUMENTATION_NAME = "oshi";
-
   public OshiInstrumentationModule() {
-    super(OSHI_5_0_INSTRUMENTATION_NAME, OSHI_INSTRUMENTATION_NAME);
+    super("oshi-5.0", "oshi");
   }
 
   @Override
