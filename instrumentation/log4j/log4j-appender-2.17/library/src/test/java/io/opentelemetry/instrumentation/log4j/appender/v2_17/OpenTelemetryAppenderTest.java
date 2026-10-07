@@ -531,6 +531,58 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
   }
 
   @Test
+  void commonMapMessageSelectorIsAppliedWhenAppenderHasNoSelector() {
+    OpenTelemetryAppender.install(
+        testing.getOpenTelemetry(),
+        IncludeExclude.builder()
+            .setIncluded(singletonList("common-*"))
+            .setExcluded(singletonList("*-secret"))
+            .build());
+
+    StringMapMessage message = new StringMapMessage();
+    message.put("common-included", "captured");
+    message.put("common-secret", "ignored");
+    message.put("other", "ignored");
+    LogManager.getLogger("CommonMapMessageSelectorTestLogger").info(message);
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("common-included"), "captured")));
+  }
+
+  @Test
+  void commonMapMessageSelectorDoesNotOverrideAppenderSelector() {
+    OpenTelemetryAppender.install(
+        testing.getOpenTelemetry(),
+        IncludeExclude.builder().setIncluded(singletonList("*")).build());
+
+    StringMapMessage message = new StringMapMessage();
+    message.put("selector-included", "captured");
+    message.put("selector-secret", "ignored");
+    message.put("common-value", "ignored");
+    LogManager.getLogger("MapMessageSelectorTestLogger").info(message);
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(AbstractLog4j2Test.mapMessageKey("selector-included"), "captured")));
+  }
+
+  @Test
+  void commonMapMessageSelectorDoesNotOverrideExplicitDisabledCapture() {
+    OpenTelemetryAppender.install(
+        testing.getOpenTelemetry(),
+        IncludeExclude.builder().setIncluded(singletonList("*")).build());
+
+    StringMapMessage message = new StringMapMessage();
+    message.put("value", "ignored");
+    LogManager.getLogger("MapMessageSelectorDisabledTestLogger").info(message);
+
+    testing.waitAndAssertLogRecords(logRecord -> logRecord.hasAttributesSatisfyingExactly());
+  }
+
+  @Test
   void logWithSpanContextFromContextData() {
     assumeFalse(Boolean.getBoolean("otel.instrumentation.common.v3-preview"));
 

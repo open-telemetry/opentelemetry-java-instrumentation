@@ -30,10 +30,9 @@ class OpenTelemetryAppenderLogstashStructuredArgsSelectorTest {
       "The captureLogstashStructuredArguments setting of the OpenTelemetry appender and the"
           + " otel.instrumentation.logback-appender.experimental"
           + ".capture-logstash-structured-arguments property are deprecated and may be removed"
-          + " in the next minor release. Use logstashStructuredArgumentAttributesIncluded,"
-          + " logstashStructuredArgumentAttributesExcluded, or"
-          + " otel.instrumentation.logback-appender.experimental"
-          + ".logstash-structured-argument-attributes.included instead.";
+          + " in the next minor release. Use logstashStructuredArgumentAttributesIncluded"
+          + " and logstashStructuredArgumentAttributesExcluded, or"
+          + " setLogstashStructuredArgumentAttributes(IncludeExclude) instead.";
 
   @RegisterExtension
   private static final LibraryInstrumentationExtension testing =

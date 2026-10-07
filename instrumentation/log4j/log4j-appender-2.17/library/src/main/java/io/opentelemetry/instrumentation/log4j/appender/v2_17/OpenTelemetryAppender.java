@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -68,6 +69,9 @@ public class OpenTelemetryAppender extends AbstractAppender {
   static final String PLUGIN_NAME = "OpenTelemetry";
 
   private final LogEventMapper<ReadOnlyStringMap> mapper;
+  private final AtomicReference<Predicate<String>> defaultMapMessageAttributes =
+      new AtomicReference<>();
+  private final boolean mapMessageAttributesConfigured;
   @Nullable private volatile OpenTelemetry openTelemetry;
 
   private final BlockingQueue<LogEventToReplay> eventsToReplay;
@@ -83,6 +87,20 @@ public class OpenTelemetryAppender extends AbstractAppender {
    */
   public static void install(OpenTelemetry openTelemetry) {
     forEachAppender(appender -> appender.setOpenTelemetry(openTelemetry));
+  }
+
+  /**
+   * Installs the {@code openTelemetry} instance and default {@link MapMessage} selector on {@link
+   * OpenTelemetryAppender}s identified in the {@link LoggerContext}. A selector configured directly
+   * on an appender takes precedence.
+   */
+  public static void install(OpenTelemetry openTelemetry, IncludeExclude mapMessageAttributes) {
+    Predicate<String> selector = mapMessageAttributes::matches;
+    forEachAppender(
+        appender -> {
+          appender.setDefaultMapMessageAttributes(selector);
+          appender.setOpenTelemetry(openTelemetry);
+        });
   }
 
   static void resetForTest() {
@@ -117,7 +135,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
 
     @PluginBuilderAttribute private boolean captureExperimentalAttributes;
     @PluginBuilderAttribute private boolean captureCodeAttributes;
-    @PluginBuilderAttribute private boolean captureMapMessageAttributes;
+    @Nullable @PluginBuilderAttribute private Boolean captureMapMessageAttributes;
     @Nullable @PluginBuilderAttribute private String mapMessageAttributesIncluded;
     @Nullable @PluginBuilderAttribute private String mapMessageAttributesExcluded;
     @Nullable private IncludeExclude mapMessageAttributes;
@@ -233,6 +251,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     @Deprecated // may be removed in the next minor release
     @CanIgnoreReturnValue
     public B setCaptureMapMessageAttributes(boolean captureMapMessageAttributes) {
+      this.captureMapMessageAttributes = captureMapMessageAttributes;
       return setMapMessageAttributes(
           captureMapMessageAttributes ? IncludeExclude.builder().setIncluded("*").build() : null);
     }
@@ -382,6 +401,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
           captureExperimentalAttributes,
           captureCodeAttributes,
           getEffectiveMapMessageAttributes(),
+          hasMapMessageAttributesConfigured(),
           captureMarkerAttribute,
           captureTemplate,
           captureArguments,
@@ -403,7 +423,14 @@ public class OpenTelemetryAppender extends AbstractAppender {
       if (!selector.isEmpty()) {
         return selector::matches;
       }
-      return captureMapMessageAttributes ? value -> true : null;
+      return Boolean.TRUE.equals(captureMapMessageAttributes) ? value -> true : null;
+    }
+
+    private boolean hasMapMessageAttributesConfigured() {
+      return mapMessageAttributes != null
+          || !splitAndFilterBlanksAndNulls(mapMessageAttributesIncluded).isEmpty()
+          || !splitAndFilterBlanksAndNulls(mapMessageAttributesExcluded).isEmpty()
+          || captureMapMessageAttributes != null;
     }
 
     @Nullable
@@ -433,6 +460,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
       boolean captureExperimentalAttributes,
       boolean captureCodeAttributes,
       @Nullable Predicate<String> mapMessageAttributes,
+      boolean mapMessageAttributesConfigured,
       boolean captureMarkerAttribute,
       boolean captureTemplate,
       boolean captureArguments,
@@ -445,11 +473,19 @@ public class OpenTelemetryAppender extends AbstractAppender {
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
     boolean v3Preview = commonConfig.getBoolean("v3_preview", false);
 
+    this.mapMessageAttributesConfigured = mapMessageAttributesConfigured;
+    Predicate<String> effectiveMapMessageAttributes =
+        mapMessageAttributes != null
+            ? mapMessageAttributes
+            : key -> {
+              Predicate<String> selector = defaultMapMessageAttributes.get();
+              return selector != null && selector.test(key);
+            };
     this.mapper =
         createMapper(
             captureExperimentalAttributes,
             captureCodeAttributes,
-            mapMessageAttributes,
+            effectiveMapMessageAttributes,
             captureMarkerAttribute,
             captureTemplate,
             captureArguments,
@@ -461,6 +497,12 @@ public class OpenTelemetryAppender extends AbstractAppender {
       this.eventsToReplay = new ArrayBlockingQueue<>(numLogsCapturedBeforeOtelInstall);
     } else {
       this.eventsToReplay = new ArrayBlockingQueue<>(1000);
+    }
+  }
+
+  private void setDefaultMapMessageAttributes(Predicate<String> selector) {
+    if (!mapMessageAttributesConfigured) {
+      defaultMapMessageAttributes.set(selector);
     }
   }
 
@@ -519,6 +561,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     writeLock.lock();
     try {
       openTelemetry = null;
+      defaultMapMessageAttributes.set(null);
       eventsToReplay.clear();
       replayLimitWarningLogged.set(false);
       legacyContextDataWarningLogged.set(false);

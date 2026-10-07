@@ -31,9 +31,9 @@ class OpenTelemetryAppenderKeyValuePairSelectorTest {
       "The captureKeyValuePairAttributes setting of the OpenTelemetry appender and the"
           + " otel.instrumentation.logback-appender.experimental"
           + ".capture-key-value-pair-attributes property are deprecated and may be removed in"
-          + " the next minor release. Use keyValuePairAttributesIncluded,"
-          + " keyValuePairAttributesExcluded, or otel.instrumentation.logback-appender"
-          + ".experimental.key-value-pair-attributes.included instead.";
+          + " the next minor release. Use keyValuePairAttributesIncluded and"
+          + " keyValuePairAttributesExcluded, or setKeyValuePairAttributes(IncludeExclude)"
+          + " instead.";
 
   @RegisterExtension
   private static final LibraryInstrumentationExtension testing =

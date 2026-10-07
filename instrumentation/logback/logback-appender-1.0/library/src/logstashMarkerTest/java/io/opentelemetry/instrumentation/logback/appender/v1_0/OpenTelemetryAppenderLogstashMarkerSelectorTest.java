@@ -30,9 +30,9 @@ class OpenTelemetryAppenderLogstashMarkerSelectorTest {
       "The captureLogstashMarkerAttributes setting of the OpenTelemetry appender and the"
           + " otel.instrumentation.logback-appender.experimental"
           + ".capture-logstash-marker-attributes property are deprecated and may be removed in"
-          + " the next minor release. Use logstashMarkerAttributesIncluded,"
-          + " logstashMarkerAttributesExcluded, or otel.instrumentation.logback-appender"
-          + ".experimental.logstash-marker-attributes.included instead.";
+          + " the next minor release. Use logstashMarkerAttributesIncluded and"
+          + " logstashMarkerAttributesExcluded, or"
+          + " setLogstashMarkerAttributes(IncludeExclude) instead.";
 
   @RegisterExtension
   private static final LibraryInstrumentationExtension testing =

@@ -182,9 +182,9 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
           "The captureKeyValuePairAttributes setting of the OpenTelemetry appender and the"
               + " otel.instrumentation.logback-appender.experimental"
               + ".capture-key-value-pair-attributes property are deprecated and may be removed in"
-              + " the next minor release. Use keyValuePairAttributesIncluded,"
-              + " keyValuePairAttributesExcluded, or otel.instrumentation.logback-appender"
-              + ".experimental.key-value-pair-attributes.included instead.");
+              + " the next minor release. Use keyValuePairAttributesIncluded and"
+              + " keyValuePairAttributesExcluded, or setKeyValuePairAttributes(IncludeExclude)"
+              + " instead.");
     }
     return AttributeSelectors.createDeprecated(captureKeyValuePairAttributes);
   }
@@ -236,9 +236,9 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
           "The captureLogstashMarkerAttributes setting of the OpenTelemetry appender and the"
               + " otel.instrumentation.logback-appender.experimental"
               + ".capture-logstash-marker-attributes property are deprecated and may be removed in"
-              + " the next minor release. Use logstashMarkerAttributesIncluded,"
-              + " logstashMarkerAttributesExcluded, or otel.instrumentation.logback-appender"
-              + ".experimental.logstash-marker-attributes.included instead.");
+              + " the next minor release. Use logstashMarkerAttributesIncluded and"
+              + " logstashMarkerAttributesExcluded, or"
+              + " setLogstashMarkerAttributes(IncludeExclude) instead.");
     }
     return AttributeSelectors.createDeprecated(captureLogstashMarkerAttributes);
   }
@@ -263,10 +263,9 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
           "The captureLogstashStructuredArguments setting of the OpenTelemetry appender and the"
               + " otel.instrumentation.logback-appender.experimental"
               + ".capture-logstash-structured-arguments property are deprecated and may be removed"
-              + " in the next minor release. Use logstashStructuredArgumentAttributesIncluded,"
-              + " logstashStructuredArgumentAttributesExcluded, or"
-              + " otel.instrumentation.logback-appender.experimental"
-              + ".logstash-structured-argument-attributes.included instead.");
+              + " in the next minor release. Use logstashStructuredArgumentAttributesIncluded"
+              + " and logstashStructuredArgumentAttributesExcluded, or"
+              + " setLogstashStructuredArgumentAttributes(IncludeExclude) instead.");
     }
     return AttributeSelectors.createDeprecated(captureLogstashStructuredArguments);
   }
