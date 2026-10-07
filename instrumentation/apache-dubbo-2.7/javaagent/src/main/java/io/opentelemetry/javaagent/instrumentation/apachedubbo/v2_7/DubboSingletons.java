@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachedubbo.v2_7;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.DubboRequest;
@@ -33,7 +33,7 @@ class DubboSingletons {
     clientFilter = telemetry.newClientFilter();
     serverFilter = telemetry.newServerFilter();
     serverInstrumenter =
-        emitStableRpcSemconv() ? DubboInternalHelper.getServerInstrumenter(telemetry) : null;
+        emitPreviewRpcSemconv() ? DubboInternalHelper.getServerInstrumenter(telemetry) : null;
   }
 
   static Filter clientFilter() {

@@ -41,7 +41,7 @@ class TelemetryParserTest {
   void normalizeWhenConditionStripsQuotes() {
     String content =
         """
-        when: "otel.instrumentation.common.experimental.view-telemetry.enabled=true,otel.instrumentation.jsp.experimental-span-attributes=true"
+        when: "otel.instrumentation.common.view-telemetry.enabled=true,otel.instrumentation.jsp.experimental-span-attributes=true"
         metrics_by_scope:
           - scope: io.opentelemetry.jsp-2.3
         """;
@@ -50,7 +50,7 @@ class TelemetryParserTest {
 
     assertThat(result)
         .isEqualTo(
-            "otel.instrumentation.common.experimental.view-telemetry.enabled=true,otel.instrumentation.jsp.experimental-span-attributes=true");
+            "otel.instrumentation.common.view-telemetry.enabled=true,otel.instrumentation.jsp.experimental-span-attributes=true");
   }
 
   @Test

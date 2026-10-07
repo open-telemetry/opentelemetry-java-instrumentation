@@ -81,12 +81,8 @@ class JdbcConnectionPoolMetricsUtilTest {
 
   @ParameterizedTest
   @MethodSource("propertyArguments")
-  void parsesLegacyEndpointAndConfiguredTargetFromProperties(
-      String serverName,
-      String portNumber,
-      String expectedLegacyAddress,
-      Integer expectedLegacyPort,
-      DbServerTarget expectedTarget) {
+  void parsesConfiguredTargetFromProperties(
+      String serverName, String portNumber, DbServerTarget expectedTarget) {
     Properties properties = new Properties();
     if (serverName != null) {
       properties.setProperty("serverName", serverName);
@@ -97,45 +93,26 @@ class JdbcConnectionPoolMetricsUtilTest {
 
     DbInfo dbInfo = JdbcConnectionPoolMetricsUtil.dbInfo(properties);
 
-    assertThat(dbInfo.getLegacyServerAddress()).isEqualTo(expectedLegacyAddress);
-    assertThat(dbInfo.getLegacyServerPort()).isEqualTo(expectedLegacyPort);
     assertThat(dbInfo.getConfiguredServerTarget()).isEqualTo(expectedTarget);
   }
 
   private static Stream<Arguments> propertyArguments() {
     return Stream.of(
         argumentSet(
-            "address and port",
-            "db.example",
-            "5432",
-            "db.example",
-            5432,
-            DbServerTarget.create("db.example", 5432)),
+            "address and port", "db.example", "5432", DbServerTarget.create("db.example", 5432)),
         argumentSet(
-            "portless address",
-            "db.example",
-            null,
-            "db.example",
-            null,
-            DbServerTarget.create("db.example", null)),
+            "portless address", "db.example", null, DbServerTarget.create("db.example", null)),
         argumentSet(
-            "invalid port",
-            "db.example",
-            "invalid",
-            "db.example",
-            null,
-            DbServerTarget.create("db.example", null)),
+            "invalid port", "db.example", "invalid", DbServerTarget.create("db.example", null)),
         argumentSet(
             "bracketed IPv6 address",
             "[2001:db8::1]",
             "5432",
-            "2001:db8::1",
-            5432,
             DbServerTarget.create("2001:db8::1", 5432)),
-        argumentSet("missing address", null, "5432", null, 5432, null),
-        argumentSet("empty address", "", "5432", null, 5432, null),
-        argumentSet("empty bracketed address", "[]", "5432", "", 5432, null),
-        argumentSet("no endpoint", null, null, null, null, null));
+        argumentSet("missing address", null, "5432", null),
+        argumentSet("empty address", "", "5432", null),
+        argumentSet("empty bracketed address", "[]", "5432", null),
+        argumentSet("no endpoint", null, null, null));
   }
 
   @ParameterizedTest
@@ -145,8 +122,6 @@ class JdbcConnectionPoolMetricsUtilTest {
         DbInfo.builder()
             .dbSystemName("postgresql")
             .dbNamespace("orders")
-            .legacyServerAddress("legacy.example")
-            .legacyServerPort(15432)
             .configuredServerTarget(target)
             .build();
 
@@ -213,39 +188,13 @@ class JdbcConnectionPoolMetricsUtilTest {
 
   private static Stream<Arguments> poolNameArguments() {
     return Stream.of(
-        argumentSet(
-            "address, port, and namespace",
-            DbInfo.builder()
-                .legacyServerAddress("db.example")
-                .legacyServerPort(5432)
-                .dbNamespace("orders")
-                .build(),
-            "orders"),
-        argumentSet(
-            "IPv6 address, port, and namespace",
-            DbInfo.builder()
-                .legacyServerAddress("2001:db8::1")
-                .legacyServerPort(5432)
-                .dbNamespace("orders")
-                .build(),
-            "orders"),
-        argumentSet(
-            "address only",
-            DbInfo.builder().legacyServerAddress("db.example").build(),
-            FALLBACK_NAME),
-        argumentSet(
-            "address and port",
-            DbInfo.builder().legacyServerAddress("db.example").legacyServerPort(5432).build(),
-            FALLBACK_NAME),
-        argumentSet(
-            "address and namespace",
-            DbInfo.builder().legacyServerAddress("db.example").dbNamespace("orders").build(),
-            "orders"),
         argumentSet("namespace only", DbInfo.builder().dbNamespace("orders").build(), "orders"),
-        argumentSet("port only", DbInfo.builder().legacyServerPort(5432).build(), FALLBACK_NAME),
         argumentSet(
-            "port and namespace",
-            DbInfo.builder().legacyServerPort(5432).dbNamespace("orders").build(),
+            "namespace takes precedence over target",
+            DbInfo.builder()
+                .configuredServerTarget(DbServerTarget.create("db.example", 5432))
+                .dbNamespace("orders")
+                .build(),
             "orders"),
         argumentSet(
             "configured address and port",
@@ -274,7 +223,6 @@ class JdbcConnectionPoolMetricsUtilTest {
         argumentSet(
             "empty namespace",
             DbInfo.builder()
-                .legacyServerAddress("db.example")
                 .dbNamespace("")
                 .configuredServerTarget(DbServerTarget.create("db.example", null))
                 .build(),
@@ -283,7 +231,6 @@ class JdbcConnectionPoolMetricsUtilTest {
             "empty configured address",
             DbInfo.builder()
                 .dbSystemName("postgresql")
-                .legacyServerAddress("postgresql")
                 .configuredServerTarget(DbServerTarget.create("", null))
                 .build(),
             "postgresql"),

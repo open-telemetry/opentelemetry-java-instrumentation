@@ -79,7 +79,7 @@ class CouchbaseQuerySanitizer {
     ANALYTICS_GET_STATEMENT = analyticsGetStatement;
   }
 
-  static SqlQuery analyzeWithSummary(Object query) {
+  static SqlQuery analyze(Object query) {
     if (query instanceof String) {
       return analyzeString((String) query);
     }
@@ -127,7 +127,7 @@ class CouchbaseQuerySanitizer {
   private static SqlQuery analyzeString(String query) {
     // "In SQL++ single and double quotation marks can be used for strings."
     // https://docs.couchbase.com/server/current/n1ql/n1ql-language-reference/literals.html
-    return analyzer.analyzeWithSummary(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+    return analyzer.analyze(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
   }
 
   private CouchbaseQuerySanitizer() {}
