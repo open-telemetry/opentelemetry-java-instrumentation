@@ -53,6 +53,14 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Remove the deprecated standalone appender boolean setters and XML settings:
+  Log4j `setCaptureMapMessageAttributes` / `captureMapMessageAttributes`, and Logback
+  `setCaptureKeyValuePairAttributes` / `captureKeyValuePairAttributes`,
+  `setCaptureLogstashMarkerAttributes` / `captureLogstashMarkerAttributes`, and
+  `setCaptureLogstashStructuredArguments` / `captureLogstashStructuredArguments`.
+  Use the corresponding `IncludeExclude` setters or XML included/excluded selectors.
+  An included `*` captures all attributes from that source, and an excluded `*` captures none.
+  Standalone capture remains opt-in.
 - Move `CodeAttributesGetter`, `CodeAttributesExtractor`, and `CodeSpanNameExtractor` from
   `io.opentelemetry.instrumentation.api.incubator.semconv.code` in
   `opentelemetry-instrumentation-api-incubator` to `io.opentelemetry.instrumentation.api.semconv.code`

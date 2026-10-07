@@ -103,7 +103,6 @@ The available settings are:
 | `captureArguments`                 | Boolean | `false` | Enable the capture of the log message arguments.                                                                                                                                                                                                                                                                                                    |
 | `mapMessageAttributesIncluded`     | String  |         | Comma-separated list of case-sensitive glob patterns for `MapMessage` keys to capture as log attributes. `*` matches any number of characters and `?` matches one character, so `*` captures all `MapMessage` attributes.                                                                                                                           |
 | `mapMessageAttributesExcluded`     | String  |         | Comma-separated list of case-sensitive glob patterns for `MapMessage` keys not to capture as log attributes. Excluded patterns take precedence over included patterns.                                                                                                                                                                              |
-| `captureMapMessageAttributes`      | Boolean | `false` | Deprecated boolean compatibility setting, where `true` captures all `MapMessage` attributes and `false` captures none. Use `mapMessageAttributesIncluded` instead. May be removed in the next minor release.                                                                                                                                        |
 | `contextDataAttributesIncluded`    | String  |         | Comma-separated list of case-sensitive glob patterns for context data keys to capture as log attributes. `*` matches any number of characters and `?` matches one character, so `*` captures all context data attributes.                                                                                                                           |
 | `contextDataAttributesExcluded`    | String  |         | Comma-separated list of case-sensitive glob patterns for context data keys not to capture as log attributes. Excluded patterns take precedence over included patterns.                                                                                                                                                                              |
 | `captureContextDataAttributes`     | String  |         | Deprecated include-only compatibility setting. It does not support glob patterns: a list containing only `*` captures all context data attributes, and otherwise every entry, including one containing `*` or `?`, is matched as a literal context data key. Use `contextDataAttributesIncluded` instead. May be removed in the next minor release. |
@@ -137,10 +136,10 @@ are captured only when every one of these sources is absent or empty.
 
 `MapMessage` attributes are selected the same way, with the same pattern syntax, case sensitivity,
 and precedence. Only a non-empty selector set with `setMapMessageAttributes(IncludeExclude)` takes
-precedence over the `mapMessageAttributesIncluded` and `mapMessageAttributesExcluded` settings,
-which in turn take precedence over the deprecated `captureMapMessageAttributes` setting. No
-`MapMessage` attributes are captured when the selector and the pattern settings are absent or empty
-and `captureMapMessageAttributes` is `false`, which is also its default.
+precedence over the `mapMessageAttributesIncluded` and `mapMessageAttributesExcluded` settings.
+No `MapMessage` attributes are captured when the selector and the pattern settings are absent or
+empty. Use `mapMessageAttributesIncluded="*"` to capture all `MapMessage` attributes or
+`mapMessageAttributesExcluded="*"` to exclude all of them.
 
 `MapMessage` keys are emitted as their original log attribute names.
 

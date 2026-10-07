@@ -389,15 +389,13 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation")
-  void deprecatedSetterDelegatesToMapMessageSelector() {
+  void emptyMapMessageSelectorFallsBackToConfigurationFileSelector() {
     OpenTelemetryAppender appender =
         OpenTelemetryAppender.builder()
             .setName("OpenTelemetryAppender")
             .setOpenTelemetry(testing.getOpenTelemetry())
-            .setCaptureMapMessageAttributes(true)
-            .setMapMessageAttributes(
-                IncludeExclude.builder().setIncluded(singletonList("order-*")).build())
+            .setMapMessageAttributes(IncludeExclude.builder().build())
+            .setMapMessageAttributesIncluded("order-*")
             .build();
     appender.start();
 
@@ -451,13 +449,12 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation")
-  void deprecatedCaptureMapMessageAttributesCapturesEverything() {
+  void mapMessageSelectorCapturesEverythingWhenIncluded() {
     OpenTelemetryAppender appender =
         OpenTelemetryAppender.builder()
             .setName("OpenTelemetryAppender")
             .setOpenTelemetry(testing.getOpenTelemetry())
-            .setCaptureMapMessageAttributes(true)
+            .setMapMessageAttributes(IncludeExclude.builder().setIncluded("*").build())
             .build();
     appender.start();
 
@@ -503,21 +500,6 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
   @Test
   void configurationFileMapMessageSelector() {
     Logger selectorLogger = LogManager.getLogger("MapMessageSelectorTestLogger");
-    StringMapMessage message = new StringMapMessage();
-    message.put("selector-included", "captured");
-    message.put("selector-secret", "ignored");
-    message.put("other", "ignored");
-    selectorLogger.info(message);
-
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord.hasAttributesSatisfyingExactly(
-                equalTo(AbstractLog4j2Test.mapMessageKey("selector-included"), "captured")));
-  }
-
-  @Test
-  void configurationFileMapMessageSelectorTakesPrecedenceOverDeprecatedAlias() {
-    Logger selectorLogger = LogManager.getLogger("MapMessageSelectorPrecedenceTestLogger");
     StringMapMessage message = new StringMapMessage();
     message.put("selector-included", "captured");
     message.put("selector-secret", "ignored");

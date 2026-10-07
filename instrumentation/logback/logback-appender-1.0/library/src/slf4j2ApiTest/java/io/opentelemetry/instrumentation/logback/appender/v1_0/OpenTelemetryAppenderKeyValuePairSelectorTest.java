@@ -27,14 +27,6 @@ import org.slf4j.spi.LoggingEventBuilder;
 
 class OpenTelemetryAppenderKeyValuePairSelectorTest {
 
-  private static final String DEPRECATED_KEY_VALUE_PAIR_ATTRIBUTES_WARNING =
-      "The captureKeyValuePairAttributes setting of the OpenTelemetry appender and the"
-          + " otel.instrumentation.logback-appender.experimental"
-          + ".capture-key-value-pair-attributes property are deprecated and may be removed in"
-          + " the next minor release. Use keyValuePairAttributesIncluded and"
-          + " keyValuePairAttributesExcluded, or setKeyValuePairAttributes(IncludeExclude)"
-          + " instead.";
-
   @RegisterExtension
   private static final LibraryInstrumentationExtension testing =
       LibraryInstrumentationExtension.create();
@@ -103,10 +95,9 @@ class OpenTelemetryAppenderKeyValuePairSelectorTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // testing the deprecated setting
-  void configurationFileSelectorTakesPrecedenceOverDeprecatedSetting() {
+  void emptySelectorFallsBackToConfigurationFileSelector() {
     appender.setKeyValuePairAttributesIncluded("key1");
-    appender.setCaptureKeyValuePairAttributes(true);
+    appender.setKeyValuePairAttributes(IncludeExclude.builder().build());
 
     log(keyValuePairs("key1", "value1", "key2", "value2"));
 
@@ -117,9 +108,8 @@ class OpenTelemetryAppenderKeyValuePairSelectorTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // testing the deprecated setting
-  void deprecatedSettingCapturesEverythingWhenEnabled() {
-    appender.setCaptureKeyValuePairAttributes(true);
+  void selectorCapturesEverythingWhenIncluded() {
+    appender.setKeyValuePairAttributes(IncludeExclude.builder().setIncluded("*").build());
 
     log(keyValuePairs("key1", "value1", "key2", "value2"));
 
@@ -127,30 +117,26 @@ class OpenTelemetryAppenderKeyValuePairSelectorTest {
         logRecord ->
             logRecord.hasAttributesSatisfyingExactly(
                 equalTo(stringKey("key1"), "value1"), equalTo(stringKey("key2"), "value2")));
-    assertThat(warnings()).containsExactly(DEPRECATED_KEY_VALUE_PAIR_ATTRIBUTES_WARNING);
+    assertThat(warnings()).isEmpty();
   }
 
   @Test
-  @SuppressWarnings("deprecation") // testing the deprecated setting
-  void deprecatedSettingCapturesNothingWhenDisabled() {
-    appender.setCaptureKeyValuePairAttributes(false);
+  void configurationFileSelectorCapturesNothingWhenEverythingExcluded() {
+    appender.setKeyValuePairAttributesExcluded("*");
 
     log(keyValuePairs("key1", "value1"));
 
     testing.waitAndAssertLogRecords(logRecord -> logRecord.hasAttributesSatisfyingExactly());
-    assertThat(warnings()).containsExactly(DEPRECATED_KEY_VALUE_PAIR_ATTRIBUTES_WARNING);
+    assertThat(warnings()).isEmpty();
   }
 
   @Test
-  @SuppressWarnings("deprecation") // testing the deprecated setting
-  void deprecatedSettingWarnsOnlyOnce() {
-    appender.setCaptureKeyValuePairAttributes(true);
+  void emptySelectorCapturesNothing() {
+    appender.setKeyValuePairAttributes(IncludeExclude.builder().build());
 
-    appender.start();
-    appender.stop();
-    appender.start();
+    log(keyValuePairs("key1", "value1"));
 
-    assertThat(warnings()).containsExactly(DEPRECATED_KEY_VALUE_PAIR_ATTRIBUTES_WARNING);
+    testing.waitAndAssertLogRecords(logRecord -> logRecord.hasAttributesSatisfyingExactly());
   }
 
   @Test

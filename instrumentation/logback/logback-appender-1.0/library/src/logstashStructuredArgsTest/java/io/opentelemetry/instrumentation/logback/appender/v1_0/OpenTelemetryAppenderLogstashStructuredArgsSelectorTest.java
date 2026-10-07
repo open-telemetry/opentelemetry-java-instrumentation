@@ -26,14 +26,6 @@ import org.slf4j.LoggerFactory;
 
 class OpenTelemetryAppenderLogstashStructuredArgsSelectorTest {
 
-  private static final String DEPRECATED_LOGSTASH_STRUCTURED_ARGUMENTS_WARNING =
-      "The captureLogstashStructuredArguments setting of the OpenTelemetry appender and the"
-          + " otel.instrumentation.logback-appender.experimental"
-          + ".capture-logstash-structured-arguments property are deprecated and may be removed"
-          + " in the next minor release. Use logstashStructuredArgumentAttributesIncluded"
-          + " and logstashStructuredArgumentAttributesExcluded, or"
-          + " setLogstashStructuredArgumentAttributes(IncludeExclude) instead.";
-
   @RegisterExtension
   private static final LibraryInstrumentationExtension testing =
       LibraryInstrumentationExtension.create();
@@ -108,10 +100,9 @@ class OpenTelemetryAppenderLogstashStructuredArgsSelectorTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // testing the deprecated setting
-  void configurationFileSelectorTakesPrecedenceOverDeprecatedSetting() {
+  void emptySelectorFallsBackToConfigurationFileSelector() {
     appender.setLogstashStructuredArgumentAttributesIncluded("key1");
-    appender.setCaptureLogstashStructuredArguments(true);
+    appender.setLogstashStructuredArgumentAttributes(IncludeExclude.builder().build());
 
     log();
 
@@ -122,9 +113,9 @@ class OpenTelemetryAppenderLogstashStructuredArgsSelectorTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // testing the deprecated setting
-  void deprecatedSettingCapturesEverythingWhenEnabled() {
-    appender.setCaptureLogstashStructuredArguments(true);
+  void selectorCapturesEverythingWhenIncluded() {
+    appender.setLogstashStructuredArgumentAttributes(
+        IncludeExclude.builder().setIncluded("*").build());
 
     log();
 
@@ -134,30 +125,26 @@ class OpenTelemetryAppenderLogstashStructuredArgsSelectorTest {
                 equalTo(stringKey("key1"), "value1"),
                 equalTo(stringKey("key2"), "value2"),
                 equalTo(stringKey("other"), "value3")));
-    assertThat(warnings()).containsExactly(DEPRECATED_LOGSTASH_STRUCTURED_ARGUMENTS_WARNING);
+    assertThat(warnings()).isEmpty();
   }
 
   @Test
-  @SuppressWarnings("deprecation") // testing the deprecated setting
-  void deprecatedSettingCapturesNothingWhenDisabled() {
-    appender.setCaptureLogstashStructuredArguments(false);
+  void configurationFileSelectorCapturesNothingWhenEverythingExcluded() {
+    appender.setLogstashStructuredArgumentAttributesExcluded("*");
 
     log();
 
     testing.waitAndAssertLogRecords(logRecord -> logRecord.hasAttributesSatisfyingExactly());
-    assertThat(warnings()).containsExactly(DEPRECATED_LOGSTASH_STRUCTURED_ARGUMENTS_WARNING);
+    assertThat(warnings()).isEmpty();
   }
 
   @Test
-  @SuppressWarnings("deprecation") // testing the deprecated setting
-  void deprecatedSettingWarnsOnlyOnce() {
-    appender.setCaptureLogstashStructuredArguments(true);
+  void emptySelectorCapturesNothing() {
+    appender.setLogstashStructuredArgumentAttributes(IncludeExclude.builder().build());
 
-    appender.start();
-    appender.stop();
-    appender.start();
+    log();
 
-    assertThat(warnings()).containsExactly(DEPRECATED_LOGSTASH_STRUCTURED_ARGUMENTS_WARNING);
+    testing.waitAndAssertLogRecords(logRecord -> logRecord.hasAttributesSatisfyingExactly());
   }
 
   @Test

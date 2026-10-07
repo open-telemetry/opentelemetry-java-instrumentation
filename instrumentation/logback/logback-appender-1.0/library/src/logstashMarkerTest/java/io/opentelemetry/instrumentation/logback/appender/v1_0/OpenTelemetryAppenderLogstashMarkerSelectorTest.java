@@ -26,14 +26,6 @@ import org.slf4j.LoggerFactory;
 
 class OpenTelemetryAppenderLogstashMarkerSelectorTest {
 
-  private static final String DEPRECATED_LOGSTASH_MARKER_ATTRIBUTES_WARNING =
-      "The captureLogstashMarkerAttributes setting of the OpenTelemetry appender and the"
-          + " otel.instrumentation.logback-appender.experimental"
-          + ".capture-logstash-marker-attributes property are deprecated and may be removed in"
-          + " the next minor release. Use logstashMarkerAttributesIncluded and"
-          + " logstashMarkerAttributesExcluded, or"
-          + " setLogstashMarkerAttributes(IncludeExclude) instead.";
-
   @RegisterExtension
   private static final LibraryInstrumentationExtension testing =
       LibraryInstrumentationExtension.create();
@@ -108,10 +100,9 @@ class OpenTelemetryAppenderLogstashMarkerSelectorTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // testing the deprecated setting
-  void configurationFileSelectorTakesPrecedenceOverDeprecatedSetting() {
+  void emptySelectorFallsBackToConfigurationFileSelector() {
     appender.setLogstashMarkerAttributesIncluded("key1");
-    appender.setCaptureLogstashMarkerAttributes(true);
+    appender.setLogstashMarkerAttributes(IncludeExclude.builder().build());
 
     log();
 
@@ -122,9 +113,8 @@ class OpenTelemetryAppenderLogstashMarkerSelectorTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // testing the deprecated setting
-  void deprecatedSettingCapturesEverythingWhenEnabled() {
-    appender.setCaptureLogstashMarkerAttributes(true);
+  void selectorCapturesEverythingWhenIncluded() {
+    appender.setLogstashMarkerAttributes(IncludeExclude.builder().setIncluded("*").build());
 
     log();
 
@@ -134,30 +124,26 @@ class OpenTelemetryAppenderLogstashMarkerSelectorTest {
                 equalTo(stringKey("key1"), "value1"),
                 equalTo(stringKey("key2"), "value2"),
                 equalTo(stringKey("other"), "value3")));
-    assertThat(warnings()).containsExactly(DEPRECATED_LOGSTASH_MARKER_ATTRIBUTES_WARNING);
+    assertThat(warnings()).isEmpty();
   }
 
   @Test
-  @SuppressWarnings("deprecation") // testing the deprecated setting
-  void deprecatedSettingCapturesNothingWhenDisabled() {
-    appender.setCaptureLogstashMarkerAttributes(false);
+  void configurationFileSelectorCapturesNothingWhenEverythingExcluded() {
+    appender.setLogstashMarkerAttributesExcluded("*");
 
     log();
 
     testing.waitAndAssertLogRecords(logRecord -> logRecord.hasAttributesSatisfyingExactly());
-    assertThat(warnings()).containsExactly(DEPRECATED_LOGSTASH_MARKER_ATTRIBUTES_WARNING);
+    assertThat(warnings()).isEmpty();
   }
 
   @Test
-  @SuppressWarnings("deprecation") // testing the deprecated setting
-  void deprecatedSettingWarnsOnlyOnce() {
-    appender.setCaptureLogstashMarkerAttributes(true);
+  void emptySelectorCapturesNothing() {
+    appender.setLogstashMarkerAttributes(IncludeExclude.builder().build());
 
-    appender.start();
-    appender.stop();
-    appender.start();
+    log();
 
-    assertThat(warnings()).containsExactly(DEPRECATED_LOGSTASH_MARKER_ATTRIBUTES_WARNING);
+    testing.waitAndAssertLogRecords(logRecord -> logRecord.hasAttributesSatisfyingExactly());
   }
 
   private void log() {
