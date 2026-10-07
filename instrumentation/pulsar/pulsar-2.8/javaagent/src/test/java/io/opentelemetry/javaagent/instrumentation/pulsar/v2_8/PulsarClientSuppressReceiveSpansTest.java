@@ -620,7 +620,7 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
       try {
         // added in 4.2.5
         method = ConsumerBase.class.getDeclaredMethod("drainListener");
-      } catch (NoSuchMethodException noSuchMethodException) {
+      } catch (NoSuchMethodException ignored) {
         method = ConsumerBase.class.getDeclaredMethod("triggerListener");
       }
       method.setAccessible(true);
