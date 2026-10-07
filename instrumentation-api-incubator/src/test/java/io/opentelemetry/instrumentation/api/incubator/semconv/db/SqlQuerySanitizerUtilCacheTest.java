@@ -26,7 +26,6 @@ class SqlQuerySanitizerUtilCacheTest {
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @Test
-  @SuppressWarnings("deprecation") // using deprecated semconv
   void testSqlSanitizerCaching() {
     String testQuery = "SELECT name FROM test WHERE id = 1";
     SqlClientAttributesGetter<Object, Void> getter =

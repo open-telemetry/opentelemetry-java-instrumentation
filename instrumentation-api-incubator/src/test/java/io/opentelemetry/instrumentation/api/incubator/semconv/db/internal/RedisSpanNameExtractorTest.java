@@ -36,21 +36,6 @@ class RedisSpanNameExtractorTest {
     assertThat(RedisSpanNameExtractor.create(getter).extract(request)).isEqualTo("GET key");
   }
 
-  @Test
-  @SuppressWarnings("deprecation") // testing distinct old and stable operation names
-  void preservesOldOperationName() {
-    TestGetter getter =
-        new TestGetter() {
-          @Override
-          public String getDbOperation(Object request) {
-            return "LEGACY GET";
-          }
-        };
-
-    assertThat(RedisSpanNameExtractor.create(getter).extract(request))
-        .isEqualTo("GET localhost:6379");
-  }
-
   private static class TestGetter implements DbClientAttributesGetter<Object, Void> {
     @Override
     public String getDbQueryText(Object request) {

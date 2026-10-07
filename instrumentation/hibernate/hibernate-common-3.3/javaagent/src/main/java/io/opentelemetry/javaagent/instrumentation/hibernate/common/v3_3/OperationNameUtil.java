@@ -26,7 +26,7 @@ public class OperationNameUtil {
   public static String getOperationNameForQuery(@Nullable String query) {
     if (query != null) {
       // note: summarization is not affected by the choice of dialect
-      SqlQuery info = analyzer.analyzeWithSummary(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+      SqlQuery info = analyzer.analyze(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
       String summary = info.getQuerySummary();
       if (summary != null) {
         return summary;
