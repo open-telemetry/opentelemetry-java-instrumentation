@@ -16,18 +16,80 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
-@SuppressWarnings("deprecation") // testing deprecated old db semconv accessors
+@SuppressWarnings("deprecation") // testing deprecated SqlQuery operation and collection accessors
 class SqlQueryAnalyzerTest {
 
   private static final SqlQueryAnalyzer ANALYZER = SqlQueryAnalyzer.create(true);
 
   private static SqlQuery analyze(String sql) {
-    return ANALYZER.analyzeWithSummary(sql, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+    return ANALYZER.analyze(sql, DOUBLE_QUOTES_ARE_STRING_LITERALS);
   }
 
   private static SqlQuery analyze(String sql, SqlDialect dialect) {
-    return ANALYZER.analyzeWithSummary(sql, dialect);
+    return ANALYZER.analyze(sql, dialect);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void nullQuery(boolean sanitizationEnabled) {
+    SqlQuery result =
+        SqlQueryAnalyzer.create(sanitizationEnabled)
+            .analyze(null, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+
+    assertThat(result.getQueryText()).isNull();
+    assertThat(result.getQuerySummary()).isNull();
+    assertThat(result.getOperationName()).isNull();
+    assertThat(result.getCollectionName()).isNull();
+    assertThat(result.getStoredProcedureName()).isNull();
+  }
+
+  @Test
+  void sanitizationDisabled() {
+    String query = "CALL unsanitized_procedure('secret')";
+    SqlQuery result =
+        SqlQueryAnalyzer.create(false).analyze(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+
+    assertThat(result.getQueryText()).isEqualTo(query);
+    assertThat(result.getQuerySummary()).isNull();
+    assertThat(result.getOperationName()).isNull();
+    assertThat(result.getCollectionName()).isNull();
+    assertThat(result.getStoredProcedureName()).isNull();
+    assertThat(SqlQueryAnalyzer.isCached(query, DOUBLE_QUOTES_ARE_STRING_LITERALS)).isFalse();
+  }
+
+  @Test
+  void cacheDistinguishesDialects() {
+    String query = "SELECT \"dialect_value\" FROM dialect_cache_test";
+
+    SqlQuery literals = analyze(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+    SqlQuery identifiers = analyze(query, DOUBLE_QUOTES_ARE_IDENTIFIERS);
+
+    assertThat(literals.getQueryText()).isEqualTo("SELECT ? FROM dialect_cache_test");
+    assertThat(identifiers.getQueryText()).isEqualTo(query);
+    assertThat(literals.getQuerySummary()).isEqualTo("SELECT dialect_cache_test");
+    assertThat(identifiers.getQuerySummary()).isEqualTo("SELECT dialect_cache_test");
+    assertThat(analyze(query, DOUBLE_QUOTES_ARE_STRING_LITERALS)).isSameAs(literals);
+    assertThat(analyze(query, DOUBLE_QUOTES_ARE_IDENTIFIERS)).isSameAs(identifiers);
+  }
+
+  @Test
+  void cacheThreshold() {
+    String prefix = "SELECT 1234 FROM cache_threshold_test";
+    String query = prefix + repeat(' ', 10 * 1024 - prefix.length());
+    SqlQuery result = analyze(query);
+
+    assertThat(result.getQueryText()).isEqualTo("SELECT ? FROM cache_threshold_test ");
+    assertThat(result.getQuerySummary()).isEqualTo("SELECT cache_threshold_test");
+    assertThat(SqlQueryAnalyzer.isCached(query, DOUBLE_QUOTES_ARE_STRING_LITERALS)).isTrue();
+    assertThat(analyze(query)).isSameAs(result);
+
+    String largeQuery = query + " ";
+    SqlQuery largeResult = analyze(largeQuery);
+    assertThat(largeResult).isEqualTo(result);
+    assertThat(SqlQueryAnalyzer.isCached(largeQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS)).isFalse();
+    assertThat(analyze(largeQuery)).isEqualTo(largeResult).isNotSameAs(largeResult);
   }
 
   @ParameterizedTest
@@ -64,6 +126,7 @@ class SqlQueryAnalyzerTest {
         ANALYZER.analyze("GRANT SELECT ON password TO admin", DOUBLE_QUOTES_ARE_STRING_LITERALS);
 
     assertThat(result.getQueryText()).isEqualTo("GRANT SELECT ON password TO admin");
+    assertThat(result.getQuerySummary()).isEqualTo("GRANT");
   }
 
   @Test
@@ -75,31 +138,13 @@ class SqlQueryAnalyzerTest {
 
     assertThat(result.getQueryText())
         .isEqualTo("SELECT ?; GRANT ALL PRIVILEGES ON database.* TO user IDENTIFIED BY ?");
+    assertThat(result.getQuerySummary()).isEqualTo("SELECT; GRANT");
   }
 
   @Test
   void sanitizeDdlObjectNamedPassword() {
     SqlQuery result =
         ANALYZER.analyze(
-            "CREATE USER password PASSWORD Password1", DOUBLE_QUOTES_ARE_STRING_LITERALS);
-
-    assertThat(result.getQueryText()).isEqualTo("CREATE USER password PASSWORD ?");
-  }
-
-  @Test
-  void sanitizeGrantObjectNamedPasswordWithSummary() {
-    SqlQuery result =
-        ANALYZER.analyzeWithSummary(
-            "GRANT SELECT ON password TO admin", DOUBLE_QUOTES_ARE_STRING_LITERALS);
-
-    assertThat(result.getQueryText()).isEqualTo("GRANT SELECT ON password TO admin");
-    assertThat(result.getQuerySummary()).isEqualTo("GRANT");
-  }
-
-  @Test
-  void sanitizeDdlObjectNamedPasswordWithSummary() {
-    SqlQuery result =
-        ANALYZER.analyzeWithSummary(
             "CREATE USER password PASSWORD Password1", DOUBLE_QUOTES_ARE_STRING_LITERALS);
 
     assertThat(result.getQueryText()).isEqualTo("CREATE USER password PASSWORD ?");
@@ -192,7 +237,8 @@ class SqlQueryAnalyzerTest {
     }
     String query = sb.toString();
 
-    String analyzedQuery = query.replace("=123", "=?").substring(0, AutoSqlSanitizer.LIMIT);
+    String analyzedQuery =
+        query.replace("=123", "=?").substring(0, AutoSqlSanitizerWithSummary.LIMIT);
 
     SqlQuery result = analyze(query);
 
@@ -241,7 +287,7 @@ class SqlQueryAnalyzerTest {
       s += String.valueOf(i);
     }
     SqlQuery result = SqlQueryAnalyzer.create(true).analyze(s, DOUBLE_QUOTES_ARE_STRING_LITERALS);
-    assertThat(result.getQueryText()).isEqualTo(s.substring(0, AutoSqlSanitizer.LIMIT));
+    assertThat(result.getQueryText()).isEqualTo(s.substring(0, AutoSqlSanitizerWithSummary.LIMIT));
   }
 
   @Test
@@ -251,14 +297,15 @@ class SqlQueryAnalyzerTest {
       s.append("SELECT * FROM TABLE WHERE FIELD = 1234 AND ");
     }
     SqlQuery result = analyze(s.toString());
-    assertThat(result.getQueryText().length()).isLessThanOrEqualTo(AutoSqlSanitizer.LIMIT);
+    assertThat(result.getQueryText().length())
+        .isLessThanOrEqualTo(AutoSqlSanitizerWithSummary.LIMIT);
     assertThat(result.getQueryText()).doesNotContain("1234");
     assertThat(result.getQuerySummary()).startsWith("SELECT TABLE SELECT TABLE SELECT TABLE");
   }
 
   @Test
   void queryTextTruncationDoesNotSplitSurrogatePair() {
-    String beforePair = repeat('A', AutoSqlSanitizer.LIMIT - 1);
+    String beforePair = repeat('A', AutoSqlSanitizerWithSummary.LIMIT - 1);
 
     SqlQuery result = analyze(beforePair + "😀");
 
@@ -331,7 +378,7 @@ class SqlQueryAnalyzerTest {
     }
     String result =
         SqlQueryAnalyzer.create(true)
-            .analyzeWithSummary(sql.toString(), DOUBLE_QUOTES_ARE_STRING_LITERALS)
+            .analyze(sql.toString(), DOUBLE_QUOTES_ARE_STRING_LITERALS)
             .getQuerySummary();
     assertThat(result).isNotNull();
     assertThat(result)

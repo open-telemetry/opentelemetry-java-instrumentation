@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.grpc.v1_6;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -164,7 +164,7 @@ class GrpcTest extends AbstractGrpcTest {
                                         : null),
                                 equalTo(
                                     stableClientAttributeKey,
-                                    emitStableRpcSemconv() && captureMetadata
+                                    emitPreviewRpcSemconv() && captureMetadata
                                         ? singletonList(clientMetadataValue)
                                         : null),
                                 equalTo(oldServerAttributeKey, null),
@@ -183,7 +183,7 @@ class GrpcTest extends AbstractGrpcTest {
                                         : null),
                                 equalTo(
                                     stableServerAttributeKey,
-                                    emitStableRpcSemconv() && captureMetadata
+                                    emitPreviewRpcSemconv() && captureMetadata
                                         ? singletonList(serverMetadataValue)
                                         : null))));
   }

@@ -11,7 +11,6 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.M
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.add;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.enable;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.databaseSchemaUrl;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.messagingSchemaUrl;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessageTelemetry.messageTelemetry;
 
@@ -35,6 +34,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators.DecoratorRegistry;
+import io.opentelemetry.semconv.SchemaUrls;
 import javax.annotation.Nullable;
 import org.apache.camel.Endpoint;
 import org.apache.camel.util.StringHelper;
@@ -46,7 +46,7 @@ class CamelSingletons {
   private static final DecoratorRegistry registry = new DecoratorRegistry();
   private static final Instrumenter<CamelRequest, Void> instrumenter = createInstrumenter();
   private static final Instrumenter<CamelRequest, Void> databaseInstrumenter =
-      createInstrumenter(databaseSchemaUrl());
+      createInstrumenter(SchemaUrls.V1_44_0);
   private static final Instrumenter<CamelRequest, Void> messagingSendInstrumenter =
       createMessagingInstrumenter(SEND, "send", true);
   private static final Instrumenter<CamelRequest, Void> messagingPublishInstrumenter =

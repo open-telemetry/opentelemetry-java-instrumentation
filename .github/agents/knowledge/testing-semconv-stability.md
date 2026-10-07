@@ -38,10 +38,7 @@ preview values outside v3-preview. V3-preview ignores those legacy tokens for pr
 Preserve tests that explicitly cover this compatibility behavior.
 
 The naming convention is `emitStable*Semconv()` for stable selection and
-`emitPreview*Semconv()` for preview selection. The preview accessor names below describe
-the intended API; their implementation and caller migration are tracked in
-[#20410](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20410).
-Until that rename lands, use the existing accessors when editing code.
+`emitPreview*Semconv()` for preview selection.
 
 Target `SemconvStability` method names:
 

@@ -14,7 +14,8 @@ import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_TABLE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_PARAMETER;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
@@ -34,9 +35,38 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class SqlClientAttributesExtractorTest {
+
+  @Test
+  void shouldRetainNetworkPeerWithoutProtocolAttributes() {
+    AttributesExtractor<Map<String, Object>, Void> extractor =
+        SqlClientAttributesExtractor.create(
+            new TestAttributesGetter() {
+              @Override
+              public String getNetworkPeerAddress(Map<String, Object> request, Void response) {
+                return "192.0.2.1";
+              }
+
+              @Override
+              public Integer getNetworkPeerPort(Map<String, Object> request, Void response) {
+                return 5432;
+              }
+
+              @Override
+              public String getNetworkTransport(Map<String, Object> request, Void response) {
+                return "tcp";
+              }
+            });
+    AttributesBuilder attributes = Attributes.builder();
+
+    extractor.onEnd(attributes, Context.root(), emptyMap(), null, null);
+
+    assertThat(attributes.build())
+        .containsOnly(entry(NETWORK_PEER_ADDRESS, "192.0.2.1"), entry(NETWORK_PEER_PORT, 5432L));
+  }
 
   @Test
   void shouldProvideSchemaUrl() {
@@ -63,24 +93,12 @@ class SqlClientAttributesExtractorTest {
 
     @Override
     public String getDbSystemName(Map<String, Object> map) {
-      return read(map, "db.system");
-    }
-
-    @Deprecated
-    @Override
-    public String getUser(Map<String, Object> map) {
-      return read(map, "db.user");
+      return read(map, "db.system.name");
     }
 
     @Override
     public String getDbNamespace(Map<String, Object> map) {
       return read(map, "db.namespace");
-    }
-
-    @Deprecated
-    @Override
-    public String getConnectionString(Map<String, Object> map) {
-      return read(map, "db.connection_string");
     }
 
     @Override
@@ -125,15 +143,22 @@ class SqlClientAttributesExtractorTest {
     }
   }
 
-  @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
-  @Test
-  void shouldExtractAllAttributes() {
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "h2database",
+        "oracle.db",
+        "ibm.db2",
+        "ibm.informix",
+        "microsoft.sql_server",
+        "sap.hana",
+        "myDb"
+      })
+  void shouldExtractAllAttributes(String dbSystemName) {
     // given
     Map<String, Object> request = new HashMap<>();
-    request.put("db.system", "myDb");
-    request.put("db.user", "username");
+    request.put("db.system.name", dbSystemName);
     request.put("db.namespace", "potatoes");
-    request.put("db.connection_string", "mydb:///potatoes");
     request.put("db.query.text", "SELECT * FROM potato WHERE id=12345");
 
     Context context = Context.root();
@@ -151,7 +176,7 @@ class SqlClientAttributesExtractorTest {
     // then
     assertThat(startAttributes.build())
         .containsOnly(
-            entry(DB_SYSTEM_NAME, "myDb"),
+            entry(DB_SYSTEM_NAME, dbSystemName),
             entry(DB_NAMESPACE, "potatoes"),
             entry(DB_QUERY_TEXT, "SELECT * FROM potato WHERE id=?"),
             entry(DB_QUERY_SUMMARY, "SELECT potato"));
@@ -176,30 +201,6 @@ class SqlClientAttributesExtractorTest {
     // then
     assertThat(attributes.build())
         .containsOnly(entry(DB_QUERY_TEXT, "SELECT *"), entry(DB_QUERY_SUMMARY, "SELECT"));
-  }
-
-  @Test
-  @SuppressWarnings("deprecation") // to support old database semantic conventions
-  void shouldExtractTableToSpecifiedKey() {
-    // given
-    Map<String, Object> request = new HashMap<>();
-    request.put("db.query.text", "SELECT * FROM table");
-
-    Context context = Context.root();
-
-    AttributesExtractor<Map<String, Object>, Void> underTest =
-        SqlClientAttributesExtractor.builder(new TestAttributesGetter())
-            .setTableAttribute(DB_CASSANDRA_TABLE)
-            .build();
-
-    // when
-    AttributesBuilder attributes = Attributes.builder();
-    underTest.onStart(attributes, context, request);
-
-    // then
-    assertThat(attributes.build())
-        .containsOnly(
-            entry(DB_QUERY_TEXT, "SELECT * FROM table"), entry(DB_QUERY_SUMMARY, "SELECT table"));
   }
 
   @Test
