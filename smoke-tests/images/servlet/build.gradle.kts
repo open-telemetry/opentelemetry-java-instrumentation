@@ -27,7 +27,7 @@ gradle.sharedServices.registerIfAbsent("dockerBuildService", DockerBuildService:
 val extraTag = findProperty("extraTag")
   ?: java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(java.time.LocalDateTime.now())
 
-val latestJava = "26" // renovate(java-version)
+val latestJava = "27" // renovate(java-version)
 
 // Each line under appserver describes one matrix of (version x vm x jdk), dockerfile key overrides
 // Dockerfile name, args key passes raw arguments to docker build
@@ -305,7 +305,7 @@ fun configureImage(
         "17" -> "eclipse-temurin:17.0.20_8-jdk-windowsservercore-ltsc2022@sha256:8633576ebfaa3bacb67d69680476760ed53757eb0bd0f1e9a53f7eee88935785"
         "21" -> "eclipse-temurin:21.0.12_8-jdk-windowsservercore-ltsc2022@sha256:87883996bf34a15b691000be1f87650e523d995e8be6871c0bf98c601950f65a"
         "25" -> "eclipse-temurin:25.0.4_7-jdk-windowsservercore-ltsc2022@sha256:cde5960f305a580de558cda3102c9edb06bbfd06d50004db2aa291d2d3cf58ef"
-        "26" -> "eclipse-temurin:26.0.2_10-jdk-windowsservercore-ltsc2022@sha256:32d5c7548f3e94884d5af4185e9baf6eda9ea107b5920839f54caebcc8c83d1b"
+        "27" -> "eclipse-temurin:27_35-jdk-windowsservercore-ltsc2022@sha256:b0d39af6f8d2f40fa25c42e1ddbc379dfc3fda4bb400e4b0273c4dc4421935e0"
         else -> throw GradleException("Unexpected jdk version for Windows: $jdk")
       }
     } else {
@@ -315,7 +315,7 @@ fun configureImage(
         "17" -> "eclipse-temurin:17.0.20_8-jdk@sha256:bc033b57e11b773c3043babfd664e7a5ef110805548b921cbfc3e8c67a0725d6"
         "21" -> "eclipse-temurin:21.0.12_8-jdk@sha256:92a2a4d7a928d057e7bd999c418d66c26a34eb9a0442f3ab67721c3f88110b2d"
         "25" -> "eclipse-temurin:25.0.4_7-jdk@sha256:97014c4b396021f9ddb7d592a7dbedb0c4e4215c29e03dc01c393558aefb71c2"
-        "26" -> "eclipse-temurin:26.0.2_10-jdk@sha256:3e708ab839f1fc71a85197818330d352aa66cf7ba2f8331e4a2ab8732cb18c77"
+        "27" -> "eclipse-temurin:27_35-jdk@sha256:2771efbbc159b89dc38b82ebe01312fd1b5f226071ff715ca9edd5411a389761"
         else -> throw GradleException("Unexpected jdk version for Linux: $jdk")
       }
     }
@@ -330,7 +330,7 @@ fun configureImage(
         "17" -> "ibm-semeru-runtimes:open-17-jdk@sha256:b306039101d6b1f0d2725de6ce25e7fd72a46e1afffa3cab12111a7c97d4f8b3"
         "21" -> "ibm-semeru-runtimes:open-21.0.9_10-jdk@sha256:2edabc89c49cfa2b9f0c051aced57ca6dee81c2e6b8820a1257182e779b58a48"
         "25" -> "ibm-semeru-runtimes:open-25-jdk@sha256:81ccace85bbed167fae73f7a6e82d02bcbb429ba6fe879e19dab8aab9aa9af33"
-        "26" -> "ibm-semeru-runtimes:open-26-jdk@sha256:6f290b42bce501a77d02569d1eafffa02bda3c6ae57ea36bc533c350b30734ed"
+        "27" -> "ibm-semeru-runtimes:open-27.0.0.0-jdk@sha256:b56c6480323746fc1c90db05a4d8e90ff89e183e0c23f0578d0e4b0666713f9c"
         else -> throw GradleException("Unexpected jdk version for openj9: $jdk")
       }
     }
