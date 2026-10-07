@@ -167,7 +167,8 @@ public abstract class AbstractSofaRpcTraceChainTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
+                                equalTo(
+                                    RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv() ? GenericService.class.getName() : null),
@@ -194,7 +195,8 @@ public abstract class AbstractSofaRpcTraceChainTest {
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
+                                equalTo(
+                                    RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -217,7 +219,8 @@ public abstract class AbstractSofaRpcTraceChainTest {
                             .hasParent(trace.getSpan(2))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
+                                equalTo(
+                                    RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -246,7 +249,8 @@ public abstract class AbstractSofaRpcTraceChainTest {
                             .hasParent(trace.getSpan(3))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
+                                equalTo(
+                                    RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -441,7 +445,8 @@ public abstract class AbstractSofaRpcTraceChainTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
+                                equalTo(
+                                    RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv() ? GenericService.class.getName() : null),
@@ -468,7 +473,8 @@ public abstract class AbstractSofaRpcTraceChainTest {
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
+                                equalTo(
+                                    RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -498,7 +504,8 @@ public abstract class AbstractSofaRpcTraceChainTest {
                             .hasNoParent() // No parent because CLIENT span was skipped
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
+                                equalTo(
+                                    RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()

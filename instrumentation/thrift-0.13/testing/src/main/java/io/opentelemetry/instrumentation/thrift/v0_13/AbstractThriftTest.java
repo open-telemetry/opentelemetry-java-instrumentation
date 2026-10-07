@@ -298,7 +298,9 @@ public abstract class AbstractThriftTest {
             equalTo(NETWORK_PEER_PORT, port),
             equalTo(
                 ERROR_TYPE,
-                hasError && emitPreviewRpcSemconv() ? TApplicationException.class.getName() : null));
+                hasError && emitPreviewRpcSemconv()
+                    ? TApplicationException.class.getName()
+                    : null));
     if (hasError) {
       span.hasException(new TApplicationException());
     }
