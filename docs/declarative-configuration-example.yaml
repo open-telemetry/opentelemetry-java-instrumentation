@@ -105,15 +105,6 @@ instrumentation/development:
           # augmenting queries with tracing context will make query texts unique, which may have
           # adverse impact on database performance.
           enabled: false
-      user:
-        name:
-          # Enables capturing the `user.name` identity attribute. Identity attributes are not
-          # captured by default.
-          enabled: false
-        roles:
-          # Enables capturing the `user.roles` identity attribute. Identity attributes are not
-          # captured by default.
-          enabled: false
       gen_ai:
         # Determines whether Generative AI events include full content of user and assistant
         # messages. Note that full content can have data privacy and size concerns and care should

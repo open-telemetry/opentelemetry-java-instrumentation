@@ -59,3 +59,4 @@ configurations:
     description: Experimental setting to inject a JavaScript snippet into HTML responses after the opening `<head>` tag.
     type: string
     default: ""
+  - ref: common.user.name.enabled

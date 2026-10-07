@@ -36,7 +36,8 @@
 ### ⚠️ Breaking changes to non-stable APIs
 
 - Rename `Experimental.setCaptureEnduserId` to `setCaptureUserName` in the Servlet 3.0 and 5.0
-  libraries, and remove the Spring Security `UserAttributesCapturer` scope-capture methods.
+  libraries, and remove the Spring Security `UserAttributesCapturer` scope-capture methods and
+  `UserConfig.isScopeEnabled()` from `opentelemetry-instrumentation-api-incubator`.
 - Move `CodeAttributesGetter`, `CodeAttributesExtractor`, and `CodeSpanNameExtractor` from
   `io.opentelemetry.instrumentation.api.incubator.semconv.code` in
   `opentelemetry-instrumentation-api-incubator` to `io.opentelemetry.instrumentation.api.semconv.code`
