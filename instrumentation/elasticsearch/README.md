@@ -2,9 +2,8 @@
 
 ## Settings for the [Elasticsearch Java API Client](https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/current/index.html) instrumentation
 
-Search query bodies are always captured. The `otel.instrumentation.elasticsearch.capture-search-query`
-property is no longer supported and has no replacement. Query
-sanitization remains enabled by default. The instrumentation-specific setting below overrides
+Search query bodies are always captured. Query sanitization remains enabled by default.
+The instrumentation-specific setting below overrides
 `otel.instrumentation.common.db.query-sanitization.enabled`; disabling sanitization captures bodies
 verbatim.
 
@@ -17,3 +16,9 @@ verbatim.
 | System property                                                   | Type    | Default | Description                                         |
 | ----------------------------------------------------------------- | ------- | ------- | --------------------------------------------------- |
 | `otel.instrumentation.elasticsearch.experimental-span-attributes` | Boolean | `false` | Enable the capture of experimental span attributes. |
+
+## Migration notes
+
+In 3.0, `otel.instrumentation.elasticsearch.capture-search-query` is no longer supported and has no
+replacement. Search query bodies are always captured; query sanitization remains independently
+configurable using the settings above.

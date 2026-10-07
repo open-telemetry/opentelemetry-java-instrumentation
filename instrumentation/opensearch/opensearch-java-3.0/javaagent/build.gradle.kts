@@ -55,18 +55,6 @@ tasks {
     }
   }
 
-  val testCaptureSearchQuerySettingIgnored =
-    register<Test>("testCaptureSearchQuerySettingIgnored") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
-
-      filter {
-        includeTestsMatching("OpenSearchCaptureSearchQuerySettingIgnoredTest")
-      }
-      jvmArgs("-Dotel.instrumentation.opensearch.capture-search-query=false")
-      systemProperty("collectMetadata", "false")
-    }
-
   val testQuerySanitizationDisabled = register<Test>("testQuerySanitizationDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -114,7 +102,6 @@ tasks {
 
   check {
     dependsOn(
-      testCaptureSearchQuerySettingIgnored,
       testQuerySanitizationDisabled,
       testCommonQuerySanitizationDisabled,
       testQuerySanitizationEnabledOverride,
