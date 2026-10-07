@@ -32,6 +32,14 @@
   singular count units such as `{connection}`, and seconds instead of milliseconds for durations.
   Pool attributes use `db.client.connection.pool.name` and `db.client.connection.state`; unnamed
   pools use stable database-derived names, and DBCP retains the first registered pool name.
+- Elasticsearch and OpenSearch query bodies are now always captured.
+  The `otel.instrumentation.elasticsearch.capture-search-query` and
+  `otel.instrumentation.opensearch.capture-search-query` properties
+  are no longer supported and have no replacement. Query sanitization remains enabled
+  by default and configurable with
+  `otel.instrumentation.elasticsearch.query-sanitization.enabled` or
+  `otel.instrumentation.opensearch.query-sanitization.enabled`, which override
+  `otel.instrumentation.common.db.query-sanitization.enabled`.
 
 ### ⚠️ Breaking changes to non-stable APIs
 
