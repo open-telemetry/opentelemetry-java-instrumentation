@@ -12,7 +12,7 @@ convention not caught by CI.
 
 ## Behavior coverage
 
-- [Testing] Test supported behavior. Do not add or request tests that only prove
+- Test supported behavior. Do not add or request tests that only prove
   removed settings are ignored, or preview variants that repeat the same behavior.
   When configuration wiring changes, test the real initialization path and emitted
   telemetry, not just helpers.

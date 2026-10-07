@@ -75,7 +75,7 @@ of where its implementation lives.
 
 ## Documentation
 
-- [Documentation] Keep migration notes in CHANGELOG.md, not READMEs or other documentation.
+- Keep migration notes in CHANGELOG.md, not READMEs or other documentation.
   READMEs and usage documentation should describe current supported behavior without migration
   sections or historical comparisons. PR descriptions may include migration guidance, old/new
   examples, and removed properties or APIs.
