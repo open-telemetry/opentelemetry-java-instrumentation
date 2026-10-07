@@ -9,8 +9,7 @@
   Update `system.network.packets` to `system.network.packet.count`, plural count units to
   `{packet}`, `{error}`, and `{operation}`, and legacy `state`, `device`, and `direction`
   attributes to the corresponding system, network, and disk attributes.
-  Remove `otel.instrumentation.oshi.experimental-metrics.enabled` and declarative
-  `java.oshi.experimental_metrics/development.enabled`; OSHI no longer emits `runtime.java.memory`
+  Remove `otel.instrumentation.oshi.experimental-metrics.enabled`; OSHI no longer emits `runtime.java.memory`
   or `runtime.java.cpu_time`. `jvm.memory.used` measures JVM pools, not process RSS or virtual
   memory, and `jvm.cpu.time` does not split user/system CPU time.
 - The Java agent and standalone libraries now use the existing v1.43.0 messaging implementation.
