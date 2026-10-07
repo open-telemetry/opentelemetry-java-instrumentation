@@ -125,7 +125,7 @@ public abstract class AbstractNamingConventionTest {
     Meter.builder(
             "renamedCustomMeter",
             Meter.Type.COUNTER,
-            singletonList(new Measurement(() -> 42, Statistic.COUNT)))
+            singletonList(new Measurement(() -> 42.0, Statistic.COUNT)))
         .register(Metrics.globalRegistry);
 
     testing()
