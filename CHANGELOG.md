@@ -7,8 +7,7 @@
 - Captured messaging header attribute keys now preserve dashes unconditionally; for example,
   `messaging.header.Test_Message_Id` is now `messaging.header.Test-Message-Id`. Replace
   `otel.instrumentation.messaging.experimental.headers.included=Test-Message-*` with
-  `otel.instrumentation.common.messaging.headers.included=Test-Message-*` (declarative
-  `java.messaging.headers/development.included` becomes `java.common.messaging.headers.included`).
+  `otel.instrumentation.common.messaging.headers.included=Test-Message-*`.
   The deprecated messaging header configuration fallbacks and
   `otel.instrumentation.messaging.experimental.receive-telemetry.enabled` are no longer supported;
   use `otel.instrumentation.common.messaging.headers.included` / `.excluded` and

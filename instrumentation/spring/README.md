@@ -23,15 +23,11 @@ This package streamlines the manual instrumentation process of OpenTelemetry for
 | `otel.instrumentation.kafka.experimental-span-attributes`                      | Boolean | `false` | Enable the capture of experimental span attributes for Spring Kafka version 2.7.                                                                                                                                                                                                                                                                        |
 
 When upgrading, replace `otel.instrumentation.messaging.experimental.headers.included=Test-Message-*`
-with `otel.instrumentation.common.messaging.headers.included=Test-Message-*`. The declarative
-equivalent changes from `java.messaging.headers/development.included` to
-`java.common.messaging.headers.included`. Replace
+with `otel.instrumentation.common.messaging.headers.included=Test-Message-*`. Replace
 `otel.instrumentation.messaging.experimental.capture-headers=Test-Message-Id` with
 `otel.instrumentation.common.messaging.headers.included=Test-Message-Id`. Also replace
 `otel.instrumentation.messaging.experimental.headers.excluded=Sensitive-*` with
-`otel.instrumentation.common.messaging.headers.excluded=Sensitive-*`. The declarative equivalent
-changes from `java.messaging.headers/development.excluded` to
-`java.common.messaging.headers.excluded`. Captured header keys now preserve dashes in every mode:
+`otel.instrumentation.common.messaging.headers.excluded=Sensitive-*`. Captured header keys now preserve dashes in every mode:
 `messaging.header.Test_Message_Id` becomes `messaging.header.Test-Message-Id`. Replace
 `otel.instrumentation.messaging.experimental.receive-telemetry.enabled` with
 `otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled`.
