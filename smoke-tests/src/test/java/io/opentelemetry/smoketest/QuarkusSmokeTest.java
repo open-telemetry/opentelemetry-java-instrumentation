@@ -29,7 +29,7 @@ class QuarkusSmokeTest extends AbstractSmokeTest<Integer> {
   }
 
   @ParameterizedTest
-  @ValueSource(ints = {17, 21, 25}) // Quarkus 3.7+ requires Java 17+
+  @ValueSource(ints = {17, 21, 25, 27}) // Quarkus 3.7+ requires Java 17+
   void quarkusSmokeTest(int jdk) {
     start(jdk);
 
