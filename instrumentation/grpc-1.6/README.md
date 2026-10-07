@@ -22,24 +22,3 @@ otel.instrumentation.grpc.capture-metadata.server.request=custom-key
 otel.instrumentation.grpc.client.request-metadata.included=custom-key
 otel.instrumentation.grpc.server.request-metadata.included=custom-key
 ```
-
-For declarative configuration, replace `java.grpc.capture_metadata.<side>.request` with
-`java.grpc.<side>.request_metadata.included`, for example:
-
-```yaml
-# Before
-instrumentation/development:
-  java:
-    grpc:
-      capture_metadata:
-        client:
-          request: [custom-key]
-
-# After
-instrumentation/development:
-  java:
-    grpc:
-      client:
-        request_metadata:
-          included: [custom-key]
-```
