@@ -86,14 +86,13 @@ class ChangelogTest(unittest.TestCase):
             "Test fixture",
         )
 
-    def prepare(self, version="3.0.0", *args, check=True):
+    def prepare(self, version="3.0.0", *, check=True):
         return self.run_command(
             "bash",
             "-e",
             ".github/scripts/update-changelog-for-release.sh",
             version,
             "2026-11-01",
-            *args,
             check=check,
         )
 
@@ -173,13 +172,17 @@ class ChangelogTest(unittest.TestCase):
         self.assertEqual(self.changelog(), before)
         self.assertEqual(self.run_command("git", "status", "--porcelain").stdout, "")
 
-    def test_prepare_main_preserves_history_and_stages_consumed_fragments(self):
+    def test_prepare_preserves_history_and_stages_consumed_fragments(self):
         self.write("changelog.d/1.bugfix.md", "Fix missing spans.\n")
         self.commit()
         history = self.changelog().split("## Version 2.32.0", 1)[1]
-        self.prepare("3.0.0", "--keep-unreleased-section")
+        self.prepare()
         result = self.changelog()
         self.assertIn("## Unreleased\n", result)
+        self.assertIn(
+            "Release notes for upcoming changes are in [changelog.d](changelog.d).\n",
+            result,
+        )
         self.assertIn("## Version 3.0.0 (2026-11-01)\n\n", result)
         self.assertIn("This release targets the OpenTelemetry SDK 1.66.0.\n", result)
         self.assertIn("many artifacts have the `-alpha` suffix", result)
@@ -197,13 +200,14 @@ class ChangelogTest(unittest.TestCase):
         self.write("changelog.d/1.bugfix.md", "Original fix.\n")
         self.commit()
         self.prepare()
-        self.assertNotIn("## Unreleased", self.changelog())
+        self.assertIn("## Unreleased\n", self.changelog())
         for version, number in (("3.0.1", 2), ("3.0.2", 3)):
             with self.subTest(version=version):
                 previous = self.changelog().split("## Version ", 1)[1]
                 self.write(f"changelog.d/{number}.bugfix.md", "Backported fix.\n")
                 self.commit()
                 self.prepare(version)
+                self.assertIn("## Unreleased\n", self.changelog())
                 self.assertIn(f"## Version {version} (2026-11-01)\n", self.changelog())
                 self.assertTrue(self.changelog().endswith("## Version " + previous))
                 self.assertIn("- Backported fix.\n", self.extract_section(version))
@@ -212,7 +216,7 @@ class ChangelogTest(unittest.TestCase):
     def test_post_release_corrections_preserve_pending_fragments(self):
         self.write("changelog.d/1.bugfix.md", "Original fix.\n")
         self.commit()
-        self.prepare("3.0.0", "--keep-unreleased-section")
+        self.prepare()
         section = self.extract_section("3.0.0").replace("Original fix.", "Corrected note.")
         self.write("changelog.d/2.enhancement.md", "Next release's enhancement.\n")
         self.synchronize("3.0.0", section)
@@ -225,7 +229,7 @@ class ChangelogTest(unittest.TestCase):
     def test_patch_synchronization_preserves_main_history(self):
         self.write("changelog.d/1.bugfix.md", "Original fix.\n")
         self.commit()
-        self.prepare("3.0.0", "--keep-unreleased-section")
+        self.prepare()
         main = self.changelog()
         self.write("changelog.d/2.bugfix.md", "Backported fix.\n")
         self.commit()
@@ -257,6 +261,21 @@ class ChangelogTest(unittest.TestCase):
         self.assertIn("already contains version 3.0.0", result.stderr)
         self.assertEqual(self.changelog(), before)
         self.assertTrue((self.repo / "changelog.d/2.bugfix.md").exists())
+
+    def test_preparation_accepts_only_version_and_date(self):
+        before = self.changelog()
+        for args in ((), ("3.0.0",), ("3.0.0", "2026-11-01", "unexpected")):
+            with self.subTest(args=args):
+                result = self.run_command(
+                    "bash",
+                    "-e",
+                    ".github/scripts/update-changelog-for-release.sh",
+                    *args,
+                    check=False,
+                )
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("<version> <date>", result.stderr)
+                self.assertEqual(self.changelog(), before)
 
     def test_invalid_marker_and_unknown_fragment_fail_without_changelog_changes(self):
         before = self.changelog()

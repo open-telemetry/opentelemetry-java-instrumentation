@@ -4,27 +4,15 @@
 # Adds the standard SDK-version and alpha-artifact preamble.
 #
 # Usage:
-#   update-changelog-for-release.sh <version> <date> [--keep-unreleased-section]
-#
-# With --keep-unreleased-section, the Unreleased heading and fragment-directory
-# link are preserved above the new version section.
+#   update-changelog-for-release.sh <version> <date>
 
-if [[ $# -lt 2 || $# -gt 3 ]]; then
-  echo "usage: $0 <version> <date> [--keep-unreleased-section]" >&2
+if [[ $# -ne 2 ]]; then
+  echo "usage: $0 <version> <date>" >&2
   exit 1
 fi
 
 version=$1
 date=$2
-keep_unreleased_section=false
-if [[ $# -eq 3 ]]; then
-  if [[ $3 != "--keep-unreleased-section" ]]; then
-    echo "unexpected argument: $3" >&2
-    exit 1
-  fi
-  keep_unreleased_section=true
-fi
-
 if [[ ! $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ || ! $date =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
   echo "expected a release version X.Y.Z and date YYYY-MM-DD" >&2
   exit 1
@@ -63,11 +51,5 @@ preamble_escaped=${preamble//$'\n'/\\n}
 python -m towncrier build --version "$version" --date "$date" --yes
 
 sed -Ei "s|^## Version ${version//./\\.} \($date\)$|&\n\n$preamble_escaped|" CHANGELOG.md
-
-if [[ $keep_unreleased_section == false ]]; then
-  sed -i '/^## Unreleased$/,/^<!-- towncrier release notes start -->$/ {
-    /^<!-- towncrier release notes start -->$/!d
-  }' CHANGELOG.md
-fi
 
 git add CHANGELOG.md

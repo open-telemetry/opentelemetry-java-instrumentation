@@ -137,7 +137,7 @@ jobs:
         run: |
           # the actual release date on main will be updated at the end of the release workflow
           date=$(date "+%Y-%m-%d")
-          .github/scripts/update-changelog-for-release.sh "$VERSION" "$date" --keep-unreleased-section
+          .github/scripts/update-changelog-for-release.sh "$VERSION" "$date"
 
       - name: Use CLA approved bot
         run: .github/scripts/use-cla-approved-bot.sh
