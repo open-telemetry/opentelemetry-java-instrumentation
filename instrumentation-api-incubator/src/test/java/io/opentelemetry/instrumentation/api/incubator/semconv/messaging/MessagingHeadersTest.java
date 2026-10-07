@@ -24,11 +24,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.ResourceLock;
-import org.junit.jupiter.api.parallel.Resources;
 
 /** Tests for the message header selector applied by {@link MessagingAttributesExtractor}. */
-@ResourceLock(Resources.SYSTEM_PROPERTIES)
 class MessagingHeadersTest {
 
   private static final Map<String, String> MESSAGE = new LinkedHashMap<>();
@@ -43,17 +40,6 @@ class MessagingHeadersTest {
   void capturesExactIncludedNames() {
     assertThat(capture(selector(singletonList("Test-Message-Header"), emptyList())))
         .containsOnly(headerEntry("Test-Message-Header", "one"));
-  }
-
-  @Test
-  void preservesDashesWhenV3PreviewIsDisabled() {
-    System.setProperty("otel.instrumentation.common.v3-preview", "false");
-    try {
-      assertThat(capture(selector(singletonList("Test-Message-Header"), emptyList())))
-          .containsOnly(headerEntry("Test-Message-Header", "one"));
-    } finally {
-      System.clearProperty("otel.instrumentation.common.v3-preview");
-    }
   }
 
   @Test

@@ -22,7 +22,9 @@ This package streamlines the manual instrumentation process of OpenTelemetry for
 | `otel.instrumentation.common.messaging.headers.excluded`                       | List    |         | Case-sensitive message header name patterns to exclude. An exclude-only selector captures all other headers, which may expose sensitive information. Captured attribute keys preserve the header name's original spelling, including dashes.                                                                                                            |
 | `otel.instrumentation.kafka.experimental-span-attributes`                      | Boolean | `false` | Enable the capture of experimental span attributes for Spring Kafka version 2.7.                                                                                                                                                                                                                                                                        |
 
-When upgrading, replace `otel.instrumentation.messaging.experimental.headers.included=Test-Message-*`
+## Migration to 3.0
+
+When upgrading to 3.0, replace `otel.instrumentation.messaging.experimental.headers.included=Test-Message-*`
 with `otel.instrumentation.common.messaging.headers.included=Test-Message-*`. Replace
 `otel.instrumentation.messaging.experimental.capture-headers=Test-Message-Id` with
 `otel.instrumentation.common.messaging.headers.included=Test-Message-Id`. Also replace

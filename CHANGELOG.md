@@ -8,10 +8,12 @@
   `messaging.header.Test_Message_Id` is now `messaging.header.Test-Message-Id`. Replace
   `otel.instrumentation.messaging.experimental.headers.included=Test-Message-*` with
   `otel.instrumentation.common.messaging.headers.included=Test-Message-*`.
-  The deprecated messaging header configuration fallbacks and
-  `otel.instrumentation.messaging.experimental.receive-telemetry.enabled` are no longer supported;
-  use `otel.instrumentation.common.messaging.headers.included` / `.excluded` and
-  `otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled` instead.
+  The deprecated `otel.instrumentation.messaging.experimental.headers.included`,
+  `otel.instrumentation.messaging.experimental.headers.excluded`, and
+  `otel.instrumentation.messaging.experimental.capture-headers` settings are no longer supported;
+  use `otel.instrumentation.common.messaging.headers.included` / `.excluded` instead.
+  `otel.instrumentation.messaging.experimental.receive-telemetry.enabled` is also no longer
+  supported; use `otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled`.
 - The Java agent and standalone libraries now use the existing v1.43.0 messaging implementation.
 - Emit only stable source code attributes: `code.function.name` replaces `code.namespace` and
   `code.function`, and log records use `code.file.path` and `code.line.number` instead of

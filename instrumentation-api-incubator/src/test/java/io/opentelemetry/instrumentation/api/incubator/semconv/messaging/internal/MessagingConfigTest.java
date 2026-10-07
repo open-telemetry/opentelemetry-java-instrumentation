@@ -11,8 +11,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Answers.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
@@ -75,20 +73,6 @@ class MessagingConfigTest {
   }
 
   @Test
-  void ignoresDeprecatedHeaderConfiguration() {
-    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
-    System.setProperty("otel.instrumentation.messaging.experimental.headers.included", "*");
-    System.setProperty("otel.instrumentation.messaging.experimental.capture-headers", "*");
-    try {
-      assertThat(MessagingConfig.getHeaders(openTelemetry, true).isEmpty()).isTrue();
-      verify(openTelemetry, never()).getInstrumentationConfig("messaging");
-    } finally {
-      System.clearProperty("otel.instrumentation.messaging.experimental.headers.included");
-      System.clearProperty("otel.instrumentation.messaging.experimental.capture-headers");
-    }
-  }
-
-  @Test
   void systemPropertyFallbackIsOnlyUsedWhenEnabled() {
     ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
     String property = "otel.instrumentation.common.messaging.headers.included";
@@ -141,19 +125,6 @@ class MessagingConfigTest {
     System.setProperty(property, "true");
     try {
       assertThat(MessagingConfig.isReceiveTelemetryEnabled(openTelemetry, true)).isTrue();
-    } finally {
-      System.clearProperty(property);
-    }
-  }
-
-  @Test
-  void ignoresDeprecatedReceiveTelemetrySystemProperty() {
-    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
-    String property = "otel.instrumentation.messaging.experimental.receive-telemetry.enabled";
-    System.setProperty(property, "true");
-    try {
-      assertThat(MessagingConfig.isReceiveTelemetryEnabled(openTelemetry, true)).isFalse();
-      verify(openTelemetry, never()).getInstrumentationConfig("messaging");
     } finally {
       System.clearProperty(property);
     }

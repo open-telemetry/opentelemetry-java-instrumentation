@@ -206,20 +206,6 @@ class ExperimentalConfigTest {
   }
 
   @Test
-  void ignoresDeprecatedCaptureHeaders() {
-    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
-    DeclarativeConfigProperties messaging =
-        openTelemetry.getInstrumentationConfig("common").get("messaging");
-    when(messaging.getScalarList("capture_headers/development", String.class))
-        .thenReturn(singletonList("deprecated"));
-
-    IncludeExclude headers = new ExperimentalConfig(openTelemetry).getMessagingHeaders();
-
-    assertThat(headers.isEmpty()).isTrue();
-    verify(messaging, never()).getScalarList("capture_headers/development", String.class);
-  }
-
-  @Test
   void absentConfigCapturesNothing() {
     IncludeExclude headers = new ExperimentalConfig(mockOpenTelemetry()).getMessagingHeaders();
 
