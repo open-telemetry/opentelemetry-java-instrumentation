@@ -11,10 +11,6 @@ Memory metrics use `system.memory.state`; network I/O and errors use `network.in
 and `network.io.direction`. Packet counts use `system.device`
 and `network.io.direction`; disk metrics use `system.device` and `disk.io.direction`.
 
-Standard JVM metrics are available separately:
-`jvm.memory.used` measures JVM memory pools, not process RSS or virtual memory, and
-`jvm.cpu.time` measures total JVM CPU time without splitting user and system CPU time.
-
 ## Using OSHI with OpenTelemetry Java agent
 
 Download the oshi-core jar from
