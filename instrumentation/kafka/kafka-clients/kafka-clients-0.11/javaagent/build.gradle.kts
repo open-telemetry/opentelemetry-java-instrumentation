@@ -62,16 +62,6 @@ tasks {
     systemProperty("collectMetadata", false)
   }
 
-  val testDisabledV3PreviewOn = register<Test>("testDisabledV3PreviewOn") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("*DefaultEnablementTest")
-    }
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-    systemProperty("collectMetadata", false)
-  }
-
   val testV3Preview = register<Test>("testV3Preview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -112,7 +102,6 @@ tasks {
   check {
     dependsOn(
       testDisabled,
-      testDisabledV3PreviewOn,
       testPropagationDisabled,
       testReceiveSpansDisabled,
       testV3Preview,
