@@ -206,36 +206,17 @@ class ExperimentalConfigTest {
   }
 
   @Test
-  void fallsBackToDeprecatedCaptureHeaders() {
+  void ignoresDeprecatedCaptureHeaders() {
     ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
-    when(openTelemetry
-            .getInstrumentationConfig("common")
-            .get("messaging")
-            .getScalarList("capture_headers/development", String.class))
-        .thenReturn(singletonList("deprecated"));
-
-    IncludeExclude headers = new ExperimentalConfig(openTelemetry).getMessagingHeaders();
-
-    assertThat(headers.getIncluded()).containsExactly("deprecated");
-    assertThat(headers.getExcluded()).isEmpty();
-  }
-
-  @Test
-  void v3PreviewUsesStableMessagingHeadersWithoutDeprecatedFallback() {
-    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
-    when(openTelemetry.getInstrumentationConfig("common").getBoolean("v3_preview"))
-        .thenReturn(true);
     DeclarativeConfigProperties messaging =
         openTelemetry.getInstrumentationConfig("common").get("messaging");
-    when(messaging.get("headers").getScalarList("included", String.class))
-        .thenReturn(singletonList("Test-*"));
     when(messaging.getScalarList("capture_headers/development", String.class))
         .thenReturn(singletonList("deprecated"));
 
     IncludeExclude headers = new ExperimentalConfig(openTelemetry).getMessagingHeaders();
 
-    assertThat(headers.matches("Test-public")).isTrue();
-    assertThat(headers.matches("deprecated")).isFalse();
+    assertThat(headers.isEmpty()).isTrue();
+    verify(messaging, never()).getScalarList("capture_headers/development", String.class);
   }
 
   @Test
@@ -256,23 +237,9 @@ class ExperimentalConfigTest {
     DeclarativeConfigProperties commonConfig =
         mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
     when(openTelemetry.getInstrumentationConfig("common")).thenReturn(commonConfig);
-    DeclarativeConfigProperties deprecatedMessagingConfig =
-        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
-    when(openTelemetry.getInstrumentationConfig("messaging")).thenReturn(deprecatedMessagingConfig);
     DeclarativeConfigProperties messaging = commonConfig.get("messaging");
     when(messaging.get("headers").getScalarList("included", String.class)).thenReturn(null);
     when(messaging.get("headers").getScalarList("excluded", String.class)).thenReturn(null);
-    when(messaging.getScalarList("capture_headers/development", String.class)).thenReturn(null);
-    when(deprecatedMessagingConfig
-            .get("headers/development")
-            .getScalarList("included", String.class))
-        .thenReturn(null);
-    when(deprecatedMessagingConfig
-            .get("headers/development")
-            .getScalarList("excluded", String.class))
-        .thenReturn(null);
-    when(deprecatedMessagingConfig.getScalarList("capture_headers/development", String.class))
-        .thenReturn(null);
     return openTelemetry;
   }
 
