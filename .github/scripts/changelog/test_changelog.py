@@ -30,6 +30,11 @@ class ChangelogTemplateTest(unittest.TestCase):
                             config["issue_format"].format(issue=1),
                         ],
                     },
+                    "feature": {
+                        "Add new instrumentation.": [
+                            config["issue_format"].format(issue=4),
+                        ],
+                    },
                 },
             },
         )
@@ -39,6 +44,10 @@ class ChangelogTemplateTest(unittest.TestCase):
             "- Remove `old`.\n"
             "  Use `replacement`.\n"
             "  ([#1](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/1))\n"
+            "\n"
+            "### 🌟 Features\n\n"
+            "- Add new instrumentation.\n"
+            "  ([#4](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4))\n"
             "\n"
             "### 🛠️ Bug fixes\n\n"
             "- Fix missing spans.\n"

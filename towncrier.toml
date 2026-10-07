@@ -23,16 +23,8 @@ directory = "deprecation"
 name = "🚫 Deprecations"
 
 [[tool.towncrier.type]]
-directory = "javaagent"
-name = "🌟 New javaagent instrumentation"
-
-[[tool.towncrier.type]]
-directory = "library"
-name = "🌟 New library instrumentation"
-
-[[tool.towncrier.type]]
-directory = "enhancement"
-name = "📈 Enhancements"
+directory = "feature"
+name = "🌟 Features"
 
 [[tool.towncrier.type]]
 directory = "bugfix"

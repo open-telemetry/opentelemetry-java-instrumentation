@@ -23,9 +23,7 @@ and name replacement APIs or configuration for deprecations.
 | `breaking` | Breaking changes to stable APIs, configuration, or telemetry |
 | `alpha-breaking` | Breaking changes to non-stable APIs |
 | `deprecation` | Deprecations |
-| `javaagent` | New javaagent instrumentation |
-| `library` | New library instrumentation |
-| `enhancement` | Enhancements |
+| `feature` | New features and enhancements, including new instrumentation |
 | `bugfix` | Bug fixes |
 
 Use `12345.bugfix.1.md` for another note of the same type in one PR. If the PR number is
