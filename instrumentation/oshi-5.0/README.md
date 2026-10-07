@@ -1,24 +1,19 @@
 # OSHI Instrumentation
 
-## Migrating to 3.0
+## Current metrics
 
-System metrics now always use schema 1.44.0 conventions. Both the library and agent use
+System metrics use schema 1.44.0 conventions. Both the library and agent use
 the instrumentation scope `io.opentelemetry.oshi-5.0`.
 
-Update queries and dashboards from `system.network.packets` to `system.network.packet.count`.
-Count units are now `{packet}`, `{error}`, and `{operation}`. Replace memory `state` with
-`system.memory.state`; network I/O and errors use `network.interface.name` and
-`network.io.direction` instead of `device` and `direction`. Packet counts use `system.device`
+Network packet counts use `system.network.packet.count`. Count units are `{packet}`,
+`{error}`, and `{operation}` for packets, errors, and disk operations, respectively.
+Memory metrics use `system.memory.state`; network I/O and errors use `network.interface.name`
+and `network.io.direction`. Packet counts use `system.device`
 and `network.io.direction`; disk metrics use `system.device` and `disk.io.direction`.
 
-The deprecated `ProcessMetrics` API and `otel.instrumentation.oshi.experimental-metrics.enabled`
-setting have been removed.
-Remove this setting from your configuration; it can no longer enable `runtime.java.memory`
-or `runtime.java.cpu_time`.
-
-Standard JVM metrics are available separately, but are not exact replacements:
+Standard JVM metrics are available separately:
 `jvm.memory.used` measures JVM memory pools, not process RSS or virtual memory, and
-`jvm.cpu.time` does not split user and system CPU time.
+`jvm.cpu.time` measures total JVM CPU time without splitting user and system CPU time.
 
 ## Using OSHI with OpenTelemetry Java agent
 
