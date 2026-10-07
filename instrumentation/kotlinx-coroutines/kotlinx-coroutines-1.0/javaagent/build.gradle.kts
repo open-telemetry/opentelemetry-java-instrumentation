@@ -95,6 +95,14 @@ testing {
         implementation(project(":instrumentation:reactor:reactor-3.1:library"))
         implementation(project(":instrumentation-annotations"))
       }
+
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.instrumentation.kotlinx-coroutines-annotations.enabled=true")
+          }
+        }
+      }
     }
   }
 }
@@ -104,13 +112,26 @@ tasks {
     enabled = false
   }
 
-  val testV3Preview = register<Test>("testV3Preview") {
+  val testDisabled = register<Test>("testDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    filter { includeTestsMatching("*DefaultEnablementTest") }
+    systemProperty("collectMetadata", false)
+  }
+
+  val testDisabledV3PreviewOff = register<Test>("testDisabledV3PreviewOff") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter { includeTestsMatching("*DefaultEnablementTest") }
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=false")
+    systemProperty("collectMetadata", false)
+  }
+
+  test {
+    jvmArgs("-Dotel.instrumentation.kotlinx-coroutines-annotations.enabled=true")
   }
 
   check {
-    dependsOn(testing.suites, testV3Preview)
+    dependsOn(testing.suites, testDisabled, testDisabledV3PreviewOff)
   }
 }

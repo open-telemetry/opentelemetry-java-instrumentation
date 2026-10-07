@@ -53,6 +53,25 @@ tasks {
     include("**/KafkaClientSuppressReceiveSpansTest.*")
   }
 
+  val testDisabled = register<Test>("testDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*DefaultEnablementTest")
+    }
+    systemProperty("collectMetadata", false)
+  }
+
+  val testDisabledV3PreviewOff = register<Test>("testDisabledV3PreviewOff") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*DefaultEnablementTest")
+    }
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=false")
+    systemProperty("collectMetadata", false)
+  }
+
   val testV3Preview = register<Test>("testV3Preview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -62,7 +81,6 @@ tasks {
     }
     jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-    // kafka metrics are disabled by default with v3-preview enabled
     jvmArgs("-Dotel.instrumentation.kafka-clients-metrics.enabled=true")
     systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
   }
@@ -77,6 +95,7 @@ tasks {
     }
     jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
+    jvmArgs("-Dotel.instrumentation.kafka-clients-metrics.enabled=true")
 
     systemProperty("metadataConfig", "otel.instrumentation.kafka.experimental-span-attributes=true")
   }
@@ -87,10 +106,13 @@ tasks {
       excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
     }
     jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.kafka-clients-metrics.enabled=true")
   }
 
   check {
     dependsOn(
+      testDisabled,
+      testDisabledV3PreviewOff,
       testPropagationDisabled,
       testReceiveSpansDisabled,
       testV3Preview,

@@ -4,6 +4,11 @@
 
 ### ⚠️ Breaking changes
 
+- Disable native Kafka client metrics and Kotlin coroutine `@WithSpan` annotation instrumentation by
+  default. Enable them independently with `otel.instrumentation.kafka-clients-metrics.enabled=true`
+  and `otel.instrumentation.kotlinx-coroutines-annotations.enabled=true`, respectively. Kafka
+  tracing, messaging operation metrics, and ordinary coroutine context propagation remain enabled.
+  The `kafka`/`kafka-clients` and `kotlinx-coroutines` selectors no longer enable these features.
 - The Java agent and standalone libraries now use the existing v1.43.0 messaging implementation.
 - Emit only stable source code attributes: `code.function.name` replaces `code.namespace` and
   `code.function`, and log records use `code.file.path` and `code.line.number` instead of
