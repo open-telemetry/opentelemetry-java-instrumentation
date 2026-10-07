@@ -4,12 +4,13 @@
 
 ### ⚠️ Breaking changes
 
-- Structured log attributes from Log4j `MapMessage` entries, SLF4J key-value pairs, Logback Logstash
-  markers, and Logstash structured arguments are now captured by default, even when v3-preview is
-  disabled. Use `otel.instrumentation.common.logging.structured-attributes.excluded` to exclude
-  selected keys, or set it to `*` to exclude all. The source-specific structured-attribute
-  configuration properties are no longer supported. Log4j `MapMessage` keys are now emitted
-  directly as log attribute names instead of with the `log4j.map_message.` prefix.
+- The Java agent and Spring Boot appender setup now capture structured log attributes from Log4j
+  `MapMessage` entries, SLF4J key-value pairs, Logback Logstash markers, and Logstash structured
+  arguments by default, even when v3-preview is disabled. Use
+  `otel.instrumentation.common.logging.structured-attributes.excluded` to exclude selected keys, or
+  set it to `*` to exclude all. The source-specific structured-attribute configuration properties
+  are no longer supported. Log4j `MapMessage` keys are now emitted directly as log attribute names
+  instead of with the `log4j.map_message.` prefix.
 - The Java agent and standalone libraries now use the existing v1.43.0 messaging implementation.
 - Emit only stable source code attributes: `code.function.name` replaces `code.namespace` and
   `code.function`, and log records use `code.file.path` and `code.line.number` instead of
