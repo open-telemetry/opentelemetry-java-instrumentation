@@ -37,9 +37,9 @@ class MyWebSecurityConfig {
 
     // Then, apply identity attribute capturing
     UserAttributesCapturer capturer = new UserAttributesCapturer();
-    // Set properties of capturer. Identity capture is disabled by default.
-    capturer.setNameEnabled(false);
-    capturer.setRolesEnabled(false);
+    // Enable identity capture.
+    capturer.setNameEnabled(true);
+    capturer.setRolesEnabled(true);
     capturer.setRoleGrantedAuthorityPrefix("ROLE_");
 
     new UserAttributesHttpSecurityCustomizer(capturer)
@@ -70,9 +70,9 @@ class MyWebFluxSecurityConfig {
 
     // Then, apply identity attribute capturing
     UserAttributesCapturer capturer = new UserAttributesCapturer();
-    // Set properties of capturer. Identity capture is disabled by default.
-    capturer.setNameEnabled(false);
-    capturer.setRolesEnabled(false);
+    // Enable identity capture.
+    capturer.setNameEnabled(true);
+    capturer.setRolesEnabled(true);
     capturer.setRoleGrantedAuthorityPrefix("ROLE_");
 
     new UserAttributesServerHttpSecurityCustomizer(capturer)
