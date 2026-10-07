@@ -54,8 +54,6 @@ required fragment-presence CI check.
 
 When your PR introduces a breaking change:
 
-- Add the `breaking change` label to your PR
-  - If you can't add labels directly, post a comment containing only `/breaking-change` and the label will be added automatically
 - Add a `breaking` or `alpha-breaking` fragment to `changelog.d`
 - Provide migration notes in the PR description:
   - What is changing and why
@@ -73,8 +71,6 @@ When your PR introduces a breaking change:
 
 When your PR deprecates functionality:
 
-- Add the `deprecation` label to your PR
-  - If you can't add labels directly, post a comment containing only `/deprecation` and the label will be added automatically
 - Add a `deprecation` fragment to `changelog.d`
 - Provide deprecation details in the PR description:
   - What is being deprecated and why

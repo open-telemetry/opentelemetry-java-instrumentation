@@ -108,8 +108,8 @@ Rules:
   surfaces deprecated by the same PR often differ.
 - The **deprecated method must delegate to its replacement**, not the other way around. This ensures
   anyone overriding the deprecated method still gets called.
-- Add the `deprecation` label to the PR and a `deprecation` fragment in `changelog.d`
-  describing what is deprecated and what replaces it.
+- Add a `deprecation` fragment in `changelog.d` describing what is deprecated and
+  what replaces it.
 
 ### Deprecating default interface methods
 
