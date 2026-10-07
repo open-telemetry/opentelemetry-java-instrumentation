@@ -27,8 +27,7 @@ instrumentation/development:
 ```
 
 Request attributes are disabled by default. To re-enable them, set
-`otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled=true` or set
-`java.servlet.trace_id_request_attribute/development.enabled: true` in declarative configuration.
+`otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled=true`.
 
 ### A word about version
 
