@@ -45,7 +45,7 @@ public final class DataDirectUrlParser implements JdbcUrlParser {
   // copied from DbIncubatingAttributes.DbSystemIncubatingValues
   private static final String DB2 = "db2";
 
-  // DataDirect subtypes mapped to stable db.system.name values
+  // DataDirect subtypes mapped to db.system.name values
   private static final String SUBTYPE_SQLSERVER = "sqlserver";
   private static final String SUBTYPE_ORACLE = "oracle";
   private static final String SUBTYPE_MYSQL = "mysql";

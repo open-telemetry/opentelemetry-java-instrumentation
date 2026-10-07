@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,8 +38,8 @@ class KafkaCamelOwnershipTest {
     assertThat(
             KafkaProcessingOwnershipUtil.rawProcessingEligibility(records, () -> true)
                 .getAsBoolean())
-        .isEqualTo(!camelConsumer || !emitStableMessagingSemconv());
+        .isEqualTo(!camelConsumer);
     assertThat(KafkaConsumerContextUtil.getRawProcessingEligibility(record).getAsBoolean())
-        .isEqualTo(!camelConsumer || !emitStableMessagingSemconv());
+        .isEqualTo(!camelConsumer);
   }
 }

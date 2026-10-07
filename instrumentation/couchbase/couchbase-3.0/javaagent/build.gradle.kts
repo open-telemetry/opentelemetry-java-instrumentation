@@ -32,13 +32,6 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
   val testV3Preview = register<Test>("testV3Preview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -60,7 +53,7 @@ tasks {
   }
 
   check {
-    dependsOn(testStableSemconv, testV3Preview, testV3PreviewExperimental)
+    dependsOn(testV3Preview, testV3PreviewExperimental)
   }
 
   if (otelProps.denyUnsafe) {

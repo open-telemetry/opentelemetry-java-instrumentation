@@ -7,8 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.vertx.kafka;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -19,17 +17,12 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CLUSTER_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.KAFKA;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -67,7 +60,6 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractVertxKafkaTest {
 
@@ -182,9 +174,9 @@ public abstract class AbstractVertxKafkaTest {
   protected static List<AttributeAssertion> sendAttributes(
       KafkaProducerRecord<String, String> record) {
     List<AttributeAssertion> assertions =
-        messagingAttributes(record.topic(), "publish", "send", "send", "producer");
+        messagingAttributes(record.topic(), "send", "send", "producer");
     assertions.add(satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
-    addOffsetAssertion(assertions);
+    assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
     assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(
@@ -211,30 +203,23 @@ public abstract class AbstractVertxKafkaTest {
     List<AttributeAssertion> assertions =
         messagingAttributes(
             topic,
-            operation,
             operation.equals("receive") ? "poll" : operation,
             operation.equals("receive") ? "receive" : "process",
             "consumer");
     assertions.add(satisfies(MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isPositive));
     assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     if (hasConsumerGroup()) {
-      addGroupAssertions(assertions);
+      assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test"));
     }
-    if (emitStableMessagingSemconv()) {
-      assertions.add(
-          satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
-    }
+    assertions.add(satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
     return assertions;
   }
 
   // the offset and the message key stay on the links even when the batch carries a single record,
   // because they are only recommended on spans that describe a single message operation
   protected static LinkData batchRecordLink(SpanData producerSpan) {
-    if (!emitStableMessagingSemconv()) {
-      return LinkData.create(asRemote(producerSpan.getSpanContext()));
-    }
-    return LinkData.create(
-        asRemote(producerSpan.getSpanContext()),
+
+    return LinkData.create(asRemote(producerSpan.getSpanContext()),
         Attributes.builder()
             .put(MESSAGING_KAFKA_OFFSET, producerSpan.getAttributes().get(MESSAGING_KAFKA_OFFSET))
             .put(
@@ -245,9 +230,9 @@ public abstract class AbstractVertxKafkaTest {
 
   protected List<AttributeAssertion> processAttributes(KafkaProducerRecord<String, String> record) {
     List<AttributeAssertion> assertions =
-        messagingAttributes(record.topic(), "process", "process", "process", "consumer");
+        messagingAttributes(record.topic(), "process", "process", "consumer");
     assertions.add(satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
-    addOffsetAssertion(assertions);
+    assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
     assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(
@@ -255,77 +240,41 @@ public abstract class AbstractVertxKafkaTest {
     }
     // consumer group is not available in version 0.11
     if (hasConsumerGroup()) {
-      addGroupAssertions(assertions);
+      assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test"));
     }
     String messageKey = record.key();
     if (messageKey != null) {
       assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
     }
-    String messageValue = record.value();
-    if (messageValue != null && emitOldMessagingSemconv()) {
-      assertions.add(equalTo(MESSAGING_MESSAGE_BODY_SIZE, messageValue.getBytes(UTF_8).length));
-    }
+
     return assertions;
   }
 
   private static List<AttributeAssertion> messagingAttributes(
-      String topic,
-      String oldOperation,
-      String operationName,
-      String operationType,
-      String clientIdPrefix) {
+      String topic, String operationName, String operationType, String clientIdPrefix) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
                 equalTo(MESSAGING_SYSTEM, KAFKA),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
-                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? oldOperation : null),
-                equalTo(
-                    MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? operationName : null),
-                equalTo(
-                    MESSAGING_OPERATION_TYPE,
-                    emitStableMessagingSemconv() ? operationType : null)));
-    if (emitOldMessagingSemconv()) {
-      assertions.add(
-          satisfies(stringKey("messaging.client_id"), val -> val.startsWith(clientIdPrefix)));
-    }
-    if (emitStableMessagingSemconv()) {
-      assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith(clientIdPrefix)));
-    }
+                equalTo(MESSAGING_OPERATION_NAME, operationName),
+                equalTo(MESSAGING_OPERATION_TYPE, operationType)));
+
+    assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith(clientIdPrefix)));
     return assertions;
   }
 
-  private static void addOffsetAssertion(List<AttributeAssertion> assertions) {
-    if (emitOldMessagingSemconv()) {
-      assertions.add(satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative));
-    }
-    if (emitStableMessagingSemconv()) {
-      assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
-    }
-  }
-
-  private static void addGroupAssertions(List<AttributeAssertion> assertions) {
-    if (emitOldMessagingSemconv()) {
-      assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
-    }
-    if (emitStableMessagingSemconv()) {
-      assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test"));
-    }
-  }
-
-  protected static String spanName(String topic, String oldOperation, String operationName) {
-    return emitStableMessagingSemconv() ? operationName + " " + topic : topic + " " + oldOperation;
+  protected static String spanName(String topic, String operationName) {
+    return operationName + " " + topic;
   }
 
   protected static SpanKind receiveKind() {
-    return emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER;
+    return SpanKind.CLIENT;
   }
 
   protected static List<AttributeAssertion> withErrorType(List<AttributeAssertion> assertions) {
     List<AttributeAssertion> result = new ArrayList<>(assertions);
-    if (emitStableMessagingSemconv()) {
-      result.add(equalTo(ERROR_TYPE, IllegalArgumentException.class.getName()));
-    }
+    result.add(equalTo(ERROR_TYPE, IllegalArgumentException.class.getName()));
     return result;
   }
 }

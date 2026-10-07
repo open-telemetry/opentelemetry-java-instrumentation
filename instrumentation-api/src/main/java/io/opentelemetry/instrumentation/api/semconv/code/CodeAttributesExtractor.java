@@ -3,13 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.incubator.semconv.code;
+package io.opentelemetry.instrumentation.api.semconv.code;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldCodeSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableCodeSemconv;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -17,16 +14,11 @@ import javax.annotation.Nullable;
 
 /**
  * Extractor of <a
- * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/attributes.md#source-code-attributes">source
+ * href="https://opentelemetry.io/docs/specs/semconv/general/attributes/#source-code-attributes">source
  * code attributes</a>.
  */
 public final class CodeAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
-
-  // copied from CodeIncubatingAttributes
-  private static final AttributeKey<String> CODE_NAMESPACE =
-      AttributeKey.stringKey("code.namespace");
-  private static final AttributeKey<String> CODE_FUNCTION = AttributeKey.stringKey("code.function");
 
   /** Creates the code attributes extractor. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
@@ -46,22 +38,15 @@ public final class CodeAttributesExtractor<REQUEST, RESPONSE>
     Class<?> cls = getter.getCodeClass(request);
     if (cls != null) {
       sb.append(cls.getName());
-
-      if (emitOldCodeSemconv()) {
-        attributes.put(CODE_NAMESPACE, cls.getName());
-      }
     }
-    String methodName = getter.getMethodName(request);
+    String methodName = getter.getCodeMethodName(request);
     if (methodName != null) {
       if (sb.length() > 0) {
         sb.append(".");
       }
       sb.append(methodName);
-      if (emitOldCodeSemconv()) {
-        attributes.put(CODE_FUNCTION, methodName);
-      }
     }
-    if (emitStableCodeSemconv() && sb.length() > 0) {
+    if (sb.length() > 0) {
       attributes.put(CODE_FUNCTION_NAME, sb.toString());
     }
   }

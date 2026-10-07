@@ -7,18 +7,15 @@ package io.opentelemetry.javaagent.instrumentation.spring.jms.v6_0;
 
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertCounter;
 import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertHistogram;
 import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertNoMetric;
-import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertNoStableMetrics;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -29,7 +26,6 @@ import org.assertj.core.api.AbstractStringAssert;
 
 class SpringListenerSuppressReceiveSpansTest extends AbstractSpringJmsListenerTest {
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   void assertSpringJmsListener() {
     testing.waitAndAssertTraces(
@@ -37,60 +33,29 @@ class SpringListenerSuppressReceiveSpansTest extends AbstractSpringJmsListenerTe
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent(),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "send spring-jms-listener"
-                                : "spring-jms-listener publish")
+                    span.hasName("send spring-jms-listener")
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, "spring-jms-listener"),
-                            equalTo(
-                                MESSAGING_OPERATION,
-                                emitStableMessagingSemconv() ? null : "publish"),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "send" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "send" : null),
+                            equalTo(MESSAGING_OPERATION_NAME, "send"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
                             satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank)),
                 span -> {
-                  span.hasName(
-                          emitStableMessagingSemconv()
-                              ? "process spring-jms-listener"
-                              : "spring-jms-listener process")
+                  span.hasName("process spring-jms-listener")
                       .hasKind(CONSUMER)
                       .hasParent(trace.getSpan(1))
                       .hasAttributesSatisfyingExactly(
                           equalTo(MESSAGING_SYSTEM, "jms"),
                           equalTo(MESSAGING_DESTINATION_NAME, "spring-jms-listener"),
-                          equalTo(
-                              MESSAGING_OPERATION, emitStableMessagingSemconv() ? null : "process"),
-                          equalTo(
-                              MESSAGING_OPERATION_NAME,
-                              emitStableMessagingSemconv() ? "process" : null),
-                          equalTo(
-                              MESSAGING_OPERATION_TYPE,
-                              emitStableMessagingSemconv() ? "process" : null),
+                          equalTo(MESSAGING_OPERATION_NAME, "process"),
+                          equalTo(MESSAGING_OPERATION_TYPE, "process"),
                           satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
-                          equalTo(
-                              MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                              emitStableMessagingSemconv() ? "durable-subscription" : null));
-                  if (emitStableMessagingSemconv()) {
-                    span.hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())));
-                  } else {
-                    span.hasTotalRecordedLinks(0);
-                  }
+                          equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "durable-subscription"));
+                  span.hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())));
                 },
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
-
-    if (!emitStableMessagingSemconv()) {
-      assertNoStableMetrics(testing, "io.opentelemetry.jms-3.0");
-      assertNoStableMetrics(testing, "io.opentelemetry.spring-jms-6.0");
-      return;
-    }
 
     Attributes sendAttributes =
         Attributes.of(

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -46,7 +45,6 @@ class SjmsConsumerInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.This Consumer consumer, @Advice.Return @Nullable MessageListener messageListener) {
       if (messageListener != null
-          && emitStableMessagingSemconv()
           && CamelInstrumentationEnabled.isEnabled(consumer.getEndpoint().getCamelContext())) {
         CamelJmsProcessingOwnership.markCamelAsProcessingOwner(messageListener);
       }

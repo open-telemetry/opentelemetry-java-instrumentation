@@ -5,12 +5,9 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.ArrayList;
 import java.util.List;
@@ -66,15 +63,6 @@ public final class KafkaConsumerContextUtil {
     Context parentContext = context.get(PROCESS_PARENT_CONTEXT_KEY);
     Context restored = parentContext != null ? parentContext : context.with(Span.getInvalid());
     return restored.with(RECEIVE_OPERATION_KEY, false);
-  }
-
-  /** Keeps legacy upstream extraction from seeing an abandoned raw Process scope. */
-  @Nullable
-  public static Scope withoutLeakedProcessSpanDuringExtraction() {
-    Context current = Context.current();
-    return !emitStableMessagingSemconv() && withoutLeakedProcessSpan(current) != current
-        ? Context.root().makeCurrent()
-        : null;
   }
 
   public static Context withProcessParentSpan(Context context, Context parentContext) {

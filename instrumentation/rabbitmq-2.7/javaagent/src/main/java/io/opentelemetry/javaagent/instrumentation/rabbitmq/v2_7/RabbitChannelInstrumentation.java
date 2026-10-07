@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitCommandInstrumentation.SpanHolder.CURRENT_RABBIT_CONTEXT;
@@ -13,7 +12,6 @@ import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitIns
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitSingletons.PROCESSING_OWNED_OUTSIDE_RABBIT_CLIENT;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitSingletons.channelInstrumenter;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitSingletons.receiveInstrumenter;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static net.bytebuddy.matcher.ElementMatchers.canThrow;
 import static net.bytebuddy.matcher.ElementMatchers.isGetter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -273,16 +271,12 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
         @Advice.This Channel channel,
         @Advice.Argument(0) String exchange,
         @Advice.Argument(1) String routingKey,
-        @Advice.Argument(4) AMQP.BasicProperties originalProps,
-        @Advice.Argument(5) byte[] body) {
+        @Advice.Argument(4) AMQP.BasicProperties originalProps) {
       ChannelPublishAdviceScope adviceScope =
           ChannelPublishAdviceScope.start(channel, exchange, routingKey);
 
       try {
-        return new Object[] {
-          adviceScope,
-          addHeaders(adviceScope, originalProps, body == null ? null : (long) body.length)
-        };
+        return new Object[] {adviceScope, addHeaders(adviceScope, originalProps)};
       } catch (Throwable ignored) {
         // the advice suppresses throwables, so a failure here would leave the scope, the call depth
         // and the current rabbit context behind; publish the message without headers instead
@@ -291,9 +285,7 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
     }
 
     public static AMQP.BasicProperties addHeaders(
-        ChannelPublishAdviceScope adviceScope,
-        @Nullable AMQP.BasicProperties originalProps,
-        @Nullable Long bodySize) {
+        ChannelPublishAdviceScope adviceScope, @Nullable AMQP.BasicProperties originalProps) {
       // when the span was not started, e.g. because it was suppressed, fall back to the current
       // context so that the message headers still get injected
       Context context = adviceScope.getContext();
@@ -304,10 +296,6 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
       AMQP.BasicProperties props = originalProps;
 
       if (span.getSpanContext().isValid()) {
-        if (bodySize != null && emitOldMessagingSemconv()) {
-          span.setAttribute(MESSAGING_MESSAGE_BODY_SIZE, bodySize);
-        }
-
         // This is the internal behavior when props are null.  We're just doing it earlier now.
         if (props == null) {
           props = MessageProperties.MINIMAL_BASIC;
@@ -367,16 +355,13 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
         @Advice.This Channel channel,
         @Advice.Argument(0) String exchange,
         @Advice.Argument(1) String routingKey,
-        @Advice.Argument(4) AMQP.BasicProperties originalProps,
-        @Advice.Argument(5) ByteBuffer body) {
+        @Advice.Argument(4) AMQP.BasicProperties originalProps) {
       ChannelPublishAdvice.ChannelPublishAdviceScope adviceScope =
           ChannelPublishAdvice.ChannelPublishAdviceScope.start(channel, exchange, routingKey);
 
       try {
-        // remaining() reports the body size without consuming the buffer
-        Long bodySize = body == null ? null : (long) body.remaining();
         return new Object[] {
-          adviceScope, ChannelPublishAdvice.addHeaders(adviceScope, originalProps, bodySize)
+          adviceScope, ChannelPublishAdvice.addHeaders(adviceScope, originalProps)
         };
       } catch (Throwable ignored) {
         // the advice suppresses throwables, so a failure here would leave the scope, the call depth

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.auto.value.AutoValue;
@@ -43,11 +42,7 @@ public abstract class JedisRequest {
     JedisConnectionInfo connectionInfo = getConnectionInfo(connection);
     String operationName = operationName(command);
     return new AutoValue_JedisRequest(
-        connectionInfo != null ? connectionInfo.getServerAddress() : null,
-        connectionInfo != null ? connectionInfo.getServerPort() : null,
-        emitStableDatabaseSemconv() && connectionInfo != null
-            ? connectionInfo.getServerTarget()
-            : null,
+        connectionInfo != null ? connectionInfo.getServerTarget() : null,
         connectionInfo != null ? connectionInfo.getDatabaseIndex() : null,
         operationName,
         sanitizer.sanitize(operationName, args),
@@ -85,8 +80,6 @@ public abstract class JedisRequest {
     JedisRequest first = requests.get(0);
     JedisRequest request =
         new AutoValue_JedisRequest(
-            first.getServerAddress(),
-            first.getServerPort(),
             first.getServerTarget(),
             first.getDatabaseIndex(),
             batchOperationName(requests, prefix),
@@ -102,12 +95,6 @@ public abstract class JedisRequest {
         ? JedisSingletons.connectionInfo((Connection) connection)
         : null;
   }
-
-  @Nullable
-  public abstract String getServerAddress();
-
-  @Nullable
-  public abstract Integer getServerPort();
 
   @Nullable
   public abstract RedisServerTarget getServerTarget();
@@ -149,17 +136,13 @@ public abstract class JedisRequest {
     StringBuilder builder = new StringBuilder();
     for (JedisRequest request : requests) {
       String queryText = request.getQueryText();
-      String separator = builder.length() == 0 ? "" : batchQuerySeparator();
+      String separator = builder.length() == 0 ? "" : "; ";
       if (builder.length() + separator.length() + queryText.length() > LIMIT) {
         break;
       }
       builder.append(separator).append(queryText);
     }
     return builder.toString();
-  }
-
-  private static String batchQuerySeparator() {
-    return emitStableDatabaseSemconv() ? "; " : ";";
   }
 
   public void setSocket(@Nullable Socket socket) {

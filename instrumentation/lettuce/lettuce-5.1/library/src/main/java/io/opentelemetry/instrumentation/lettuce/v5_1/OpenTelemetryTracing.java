@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
-
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.lettuce.core.output.CommandOutput;
 import io.lettuce.core.protocol.CompleteableCommand;
@@ -294,11 +292,6 @@ final class OpenTelemetryTracing implements Tracing {
           // ignore invalid values
         }
         return this;
-      }
-      // Under old semconv forward unknown tags as raw span attributes for backward compatibility;
-      // under stable semconv these are either captured structurally (e.g. error.type) or not needed
-      if (emitOldDatabaseSemconv() && context != null) {
-        Span.fromContext(context).setAttribute(key, value);
       }
       return this;
     }

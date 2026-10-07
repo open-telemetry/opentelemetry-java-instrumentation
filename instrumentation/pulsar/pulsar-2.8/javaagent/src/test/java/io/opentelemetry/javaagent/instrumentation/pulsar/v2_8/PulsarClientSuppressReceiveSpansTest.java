@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
@@ -72,31 +71,29 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
 
     assertThat(latch.await(1, MINUTES)).isTrue();
 
-    if (emitStableMessagingSemconv()) {
-      testing.waitAndAssertMetrics(
-          INSTRUMENTATION_NAME,
-          "messaging.client.consumed.messages",
-          metrics ->
-              metrics.satisfiesExactly(
-                  metric ->
-                      assertThat(metric)
-                          .hasLongSumSatisfying(
-                              sum ->
-                                  sum.hasPointsSatisfying(
-                                      point ->
-                                          point
-                                              .hasValue(1)
-                                              .hasAttributesSatisfyingExactly(
-                                                  equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                  equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                                  equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                                  equalTo(
-                                                      MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                                      "test_sub"),
-                                                  equalTo(
-                                                      ERROR_TYPE,
-                                                      IllegalStateException.class.getName()))))));
-    }
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        "messaging.client.consumed.messages",
+        metrics ->
+            metrics.satisfiesExactly(
+                metric ->
+                    assertThat(metric)
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(1)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                                equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                                equalTo(
+                                                    MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                                    "test_sub"),
+                                                equalTo(
+                                                    ERROR_TYPE,
+                                                    IllegalStateException.class.getName()))))));
   }
 
   @Test
@@ -125,31 +122,29 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
 
     latch.await(1, MINUTES);
 
-    if (emitStableMessagingSemconv()) {
-      testing.waitAndAssertMetrics(
-          INSTRUMENTATION_NAME,
-          "messaging.client.consumed.messages",
-          metrics ->
-              metrics.satisfiesExactly(
-                  metric ->
-                      assertThat(metric)
-                          .hasUnit("{message}")
-                          .hasDescription(
-                              "Number of messages that were delivered to the application.")
-                          .hasLongSumSatisfying(
-                              sum ->
-                                  sum.hasPointsSatisfying(
-                                      point ->
-                                          point
-                                              .hasValue(1)
-                                              .hasAttributesSatisfyingExactly(
-                                                  equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                  equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                                  equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                                  equalTo(
-                                                      MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                                      "test_sub"))))));
-    }
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        "messaging.client.consumed.messages",
+        metrics ->
+            metrics.satisfiesExactly(
+                metric ->
+                    assertThat(metric)
+                        .hasUnit("{message}")
+                        .hasDescription(
+                            "Number of messages that were delivered to the application.")
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(1)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                                equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                                equalTo(
+                                                    MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                                    "test_sub"))))));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -247,25 +242,6 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
   }
 
   private static void assertDirectReceiveTraces(String topic, MessageId msgId) {
-    if (!emitStableMessagingSemconv()) {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                  span ->
-                      span.hasName(spanName("send", topic))
-                          .hasKind(SpanKind.PRODUCER)
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(
-                              sendAttributes(topic, msgId.toString(), false)),
-                  span ->
-                      span.hasName(spanName("receive", topic))
-                          .hasKind(SpanKind.CONSUMER)
-                          .hasParent(trace.getSpan(1))
-                          .hasAttributesSatisfyingExactly(
-                              receiveAttributes(topic, msgId.toString(), false))));
-      return;
-    }
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
     testing.waitAndAssertSortedTraces(
@@ -542,11 +518,7 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
   }
 
   private static String spanName(String operationName, String destination) {
-    // the old semantic conventions used "publish" where the stable ones use "send"
-    String oldOperation = operationName.equals("send") ? "publish" : operationName;
-    return emitStableMessagingSemconv()
-        ? operationName + " " + destinationName(destination)
-        : destination + " " + oldOperation;
+    return operationName + " " + destinationName(destination);
   }
 
   @SuppressWarnings("unchecked")

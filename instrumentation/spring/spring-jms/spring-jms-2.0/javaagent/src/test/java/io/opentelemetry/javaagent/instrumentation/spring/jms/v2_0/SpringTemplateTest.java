@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
@@ -180,12 +179,7 @@ class SpringTemplateTest extends AbstractJmsTest {
     AtomicReference<SpanData> tmpProducerSpan = new AtomicReference<>();
     testing.waitAndAssertSortedTraces(
         orderByRootSpanName(
-            emitStableMessagingSemconv() ? "send SpringTemplateJms2" : "SpringTemplateJms2 publish",
-            emitStableMessagingSemconv()
-                ? "receive SpringTemplateJms2"
-                : "SpringTemplateJms2 receive",
-            emitStableMessagingSemconv() ? "send" : "(temporary) publish",
-            emitStableMessagingSemconv() ? "receive" : "(temporary) receive"),
+            "send SpringTemplateJms2", "receive SpringTemplateJms2", "send", "receive"),
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span -> assertProducerSpan(span, "SpringTemplateJms2", false));

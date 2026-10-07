@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertSendMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
@@ -82,12 +81,12 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(spanName("publish", "send"))
+                    span.hasName(spanName("send"))
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(sendAttributes("10", greeting, false)),
                 span ->
-                    span.hasName(spanName("process", "process"))
+                    span.hasName(spanName("process"))
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -131,12 +130,12 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(spanName("publish", "send"))
+                    span.hasName(spanName("send"))
                         .hasKind(SpanKind.PRODUCER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(sendAttributes(null, null, false)),
                 span ->
-                    span.hasName(spanName("process", "process"))
+                    span.hasName(spanName("process"))
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -167,7 +166,7 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
     assertThat(first.hasNext()).isFalse();
     assertThat(Span.current().getSpanContext().isValid()).isFalse();
 
-    String processName = spanName("process", "process");
+    String processName = spanName("process");
     assertThat(testing.spans())
         .filteredOn(span -> span.getName().equals(processName))
         .hasSize(2)
@@ -200,21 +199,19 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(spanName("publish", "send"))
+                    span.hasName(spanName("send"))
                         .hasKind(SpanKind.PRODUCER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(sendAttributes(null, greeting, false)),
                 span ->
-                    span.hasName(spanName("process", "process"))
+                    span.hasName(spanName("process"))
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             processAttributes(null, greeting, false, false))));
   }
 
-  private static String spanName(String oldOperation, String operationName) {
-    return emitStableMessagingSemconv()
-        ? operationName + " " + SHARED_TOPIC
-        : SHARED_TOPIC + " " + oldOperation;
+  private static String spanName(String operationName) {
+    return operationName + " " + SHARED_TOPIC;
   }
 }

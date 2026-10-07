@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -34,10 +33,6 @@ class SpringRabbitMetricsAssertions {
       String destination,
       String springErrorType,
       long consumedMessagesCount) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoMessagingMetrics(testing);
-      return;
-    }
 
     assertProcessDuration(testing, SPRING_INSTRUMENTATION_NAME, destination, springErrorType);
     testing.waitAndAssertMetrics(
@@ -79,14 +74,16 @@ class SpringRabbitMetricsAssertions {
                 metric.getInstrumentationScopeInfo().getName().equals(RABBIT_INSTRUMENTATION_NAME)
                     && metric.getName().equals("messaging.client.consumed.messages"))
         .isEmpty();
-    assertNoDeprecatedMessagingMetrics(testing);
+    assertThat(testing.metrics())
+        .filteredOn(
+            metric ->
+                metric.getInstrumentationScopeInfo().getName().equals(SPRING_INSTRUMENTATION_NAME))
+        .extracting(MetricData::getName)
+        .containsExactlyInAnyOrder(
+            "messaging.process.duration", "messaging.client.consumed.messages");
   }
 
   static void assertRabbitProcessDuration(InstrumentationExtension testing, String destination) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoMessagingMetrics(testing);
-      return;
-    }
 
     assertProcessDuration(testing, RABBIT_INSTRUMENTATION_NAME, destination, null);
   }
@@ -123,35 +120,6 @@ class SpringRabbitMetricsAssertions {
                                                         SERVER_ADDRESS, val -> val.isNotBlank()),
                                                     satisfies(
                                                         SERVER_PORT, val -> val.isPositive()))))));
-  }
-
-  private static void assertNoMessagingMetrics(InstrumentationExtension testing) {
-    assertThat(testing.metrics())
-        .filteredOn(
-            metric ->
-                (metric.getInstrumentationScopeInfo().getName().equals(RABBIT_INSTRUMENTATION_NAME)
-                        || metric
-                            .getInstrumentationScopeInfo()
-                            .getName()
-                            .equals(SPRING_INSTRUMENTATION_NAME))
-                    && metric.getName().startsWith("messaging."))
-        .isEmpty();
-  }
-
-  private static void assertNoDeprecatedMessagingMetrics(InstrumentationExtension testing) {
-    assertThat(testing.metrics())
-        .filteredOn(
-            metric ->
-                metric.getInstrumentationScopeInfo().getName().equals(RABBIT_INSTRUMENTATION_NAME)
-                    || metric
-                        .getInstrumentationScopeInfo()
-                        .getName()
-                        .equals(SPRING_INSTRUMENTATION_NAME))
-        .extracting(MetricData::getName)
-        .doesNotContain(
-            "messaging.publish.duration",
-            "messaging.receive.duration",
-            "messaging.receive.messages");
   }
 
   private SpringRabbitMetricsAssertions() {}

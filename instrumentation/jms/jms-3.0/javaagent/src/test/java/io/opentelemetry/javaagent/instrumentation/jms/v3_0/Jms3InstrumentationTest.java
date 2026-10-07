@@ -8,13 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.jms.v3_0;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -48,7 +46,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 @SuppressWarnings("deprecation")
 class Jms3InstrumentationTest extends AbstractJms3Test {
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void capturesDurableConsumerName() throws Exception {
     Topic topic = session.createTopic("durable-topic");
@@ -74,15 +71,9 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
-                            messagingDestinationName("durable-topic", "durable-topic"),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "send" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "send" : null),
+                            equalTo(MESSAGING_DESTINATION_NAME, "durable-topic"),
+                            equalTo(MESSAGING_OPERATION_NAME, "send"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(false)),
                 span ->
@@ -90,20 +81,13 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
-                            messagingDestinationName("durable-topic", "durable-topic"),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "process" : null),
+                            equalTo(MESSAGING_DESTINATION_NAME, "durable-topic"),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(false),
                             equalTo(
-                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                emitStableMessagingSemconv() ? "durable-subscription" : null))));
+                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "durable-subscription"))));
   }
 
   @Test
@@ -143,21 +127,13 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
-                            messagingDestinationName(topicName, topicName),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "process" : null),
+                            equalTo(MESSAGING_DESTINATION_NAME, topicName),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             messagingTempDestination(false),
                             equalTo(
                                 MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                emitStableMessagingSemconv()
-                                    ? "early-listener-subscription"
-                                    : null))));
+                                "early-listener-subscription"))));
   }
 
   @Test
@@ -187,19 +163,12 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
-                            messagingDestinationName(topicName, topicName),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "process" : null),
+                            equalTo(MESSAGING_DESTINATION_NAME, topicName),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             messagingTempDestination(false))));
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void doesNotReuseListenerSubscriptionNameAcrossCallbacks() throws JMSException {
     String topicName = "redelivered-message-topic";
@@ -229,21 +198,13 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
-                            messagingDestinationName(topicName, topicName),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "process" : null),
+                            equalTo(MESSAGING_DESTINATION_NAME, topicName),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             messagingTempDestination(false),
                             equalTo(
                                 MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                emitStableMessagingSemconv()
-                                    ? "redelivered-message-subscription"
-                                    : null))),
+                                "redelivered-message-subscription"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -251,19 +212,12 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
-                            messagingDestinationName(topicName, topicName),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "process" : null),
+                            equalTo(MESSAGING_DESTINATION_NAME, topicName),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             messagingTempDestination(false))));
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void capturesSubscriptionNameForChildClassLoaderListener() throws Exception {
     String topicName = "child-classloader-listener-topic";
@@ -293,21 +247,13 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
-                            messagingDestinationName(topicName, topicName),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "process" : null),
+                            equalTo(MESSAGING_DESTINATION_NAME, topicName),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             messagingTempDestination(false),
                             equalTo(
                                 MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                emitStableMessagingSemconv()
-                                    ? "child-classloader-subscription"
-                                    : null))));
+                                "child-classloader-subscription"))));
   }
 
   private static URLClassLoader childFirstClassLoader(String childClassName) {
@@ -360,15 +306,9 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
                           equalTo(MESSAGING_SYSTEM, "jms"),
-                          messagingDestinationName("shared-receive-topic", "shared-receive-topic"),
-                          equalTo(
-                              MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
-                          equalTo(
-                              MESSAGING_OPERATION_NAME,
-                              emitStableMessagingSemconv() ? "send" : null),
-                          equalTo(
-                              MESSAGING_OPERATION_TYPE,
-                              emitStableMessagingSemconv() ? "send" : null),
+                          equalTo(MESSAGING_DESTINATION_NAME, "shared-receive-topic"),
+                          equalTo(MESSAGING_OPERATION_NAME, "send"),
+                          equalTo(MESSAGING_OPERATION_TYPE, "send"),
                           equalTo(MESSAGING_MESSAGE_ID, messageId),
                           messagingTempDestination(false)));
           producerSpan.set(trace.getSpan(1));
@@ -377,25 +317,16 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("consumer parent").hasNoParent(),
                 span ->
-                    span.hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
+                    span.hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
-                            messagingDestinationName(
-                                "shared-receive-topic", "shared-receive-topic"),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "receive" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "receive" : null),
+                            equalTo(MESSAGING_DESTINATION_NAME, "shared-receive-topic"),
+                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
-                            equalTo(
-                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                emitStableMessagingSemconv() ? subscriptionName : null))));
+                            equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, subscriptionName))));
   }
 
   @ParameterizedTest
@@ -418,28 +349,16 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process shared-listener-topic"
-                                : "shared-listener-topic process")
+                    span.hasName("process shared-listener-topic")
                         .hasKind(CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
-                            messagingDestinationName(
-                                "shared-listener-topic", "shared-listener-topic"),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "process" : null),
+                            equalTo(MESSAGING_DESTINATION_NAME, "shared-listener-topic"),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             messagingTempDestination(false),
-                            equalTo(
-                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                emitStableMessagingSemconv() ? subscriptionName : null))));
+                            equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, subscriptionName))));
   }
 
   @Test
@@ -468,25 +387,15 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
-                            messagingDestinationName(
-                                "reused-listener-topic", "reused-listener-topic"),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "process" : null),
+                            equalTo(MESSAGING_DESTINATION_NAME, "reused-listener-topic"),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             messagingTempDestination(false),
                             equalTo(
                                 MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                emitStableMessagingSemconv()
-                                    ? "reused-listener-subscription"
-                                    : null))));
+                                "reused-listener-subscription"))));
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest
   @MethodSource("destinationArguments")
   void testMessageConsumer(DestinationFactory destinationFactory, boolean isTemporary)
@@ -522,24 +431,16 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
               span -> span.hasName("producer parent").hasNoParent(),
               span ->
                   span.hasName(
-                          emitStableMessagingSemconv()
-                              ? producerDestinationName.equals("(temporary)")
-                                  ? "send"
-                                  : "send " + producerDestinationName
-                              : producerDestinationName + " publish")
+                          producerDestinationName.equals("(temporary)")
+                              ? "send"
+                              : "send " + producerDestinationName)
                       .hasKind(PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
                           equalTo(MESSAGING_SYSTEM, "jms"),
-                          messagingDestinationName(producerDestinationName, actualDestinationName),
-                          equalTo(
-                              MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
-                          equalTo(
-                              MESSAGING_OPERATION_NAME,
-                              emitStableMessagingSemconv() ? "send" : null),
-                          equalTo(
-                              MESSAGING_OPERATION_TYPE,
-                              emitStableMessagingSemconv() ? "send" : null),
+                          equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
+                          equalTo(MESSAGING_OPERATION_NAME, "send"),
+                          equalTo(MESSAGING_OPERATION_TYPE, "send"),
                           equalTo(MESSAGING_MESSAGE_ID, messageId),
                           messagingTempDestination(isTemporary)));
 
@@ -550,25 +451,17 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                 span -> span.hasName("consumer parent").hasNoParent(),
                 span ->
                     span.hasName(
-                            emitStableMessagingSemconv()
-                                ? actualDestinationName.equals("(temporary)")
-                                    ? "receive"
-                                    : "receive " + actualDestinationName
-                                : actualDestinationName + " receive")
-                        .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
+                            actualDestinationName.equals("(temporary)")
+                                ? "receive"
+                                : "receive " + actualDestinationName)
+                        .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
-                            messagingDestinationName(actualDestinationName, actualDestinationName),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "receive" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "receive" : null),
+                            equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
+                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId))));
   }
 

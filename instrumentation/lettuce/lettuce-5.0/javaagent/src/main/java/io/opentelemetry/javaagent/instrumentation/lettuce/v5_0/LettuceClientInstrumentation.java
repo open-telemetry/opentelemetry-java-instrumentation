@@ -23,7 +23,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -87,11 +86,8 @@ class LettuceClientInstrumentation implements TypeInstrumentation {
       }
 
       RedisServerTarget target = LettuceServerTargets.of(redisUri);
-      String host = redisUri.getHost();
-      InetSocketAddress address =
-          host == null ? null : InetSocketAddress.createUnresolved(host, redisUri.getPort());
       LettuceConnectionState.captureEndpointAndConnection(
-          endpoint, connection, address, redisUri.getDatabase(), target);
+          endpoint, connection, redisUri.getDatabase(), target);
     }
   }
 

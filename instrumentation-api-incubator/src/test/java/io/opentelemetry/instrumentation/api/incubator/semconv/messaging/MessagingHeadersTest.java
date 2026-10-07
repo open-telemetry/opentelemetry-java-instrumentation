@@ -236,16 +236,6 @@ class MessagingHeadersTest {
     }
 
     @Override
-    public Long getMessageBodySize(Map<String, String> request) {
-      return null;
-    }
-
-    @Override
-    public Long getMessageEnvelopeSize(Map<String, String> request) {
-      return null;
-    }
-
-    @Override
     public String getMessageId(Map<String, String> request, Void response) {
       return null;
     }

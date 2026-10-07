@@ -21,24 +21,16 @@ import java.util.Map;
  */
 public final class SemconvStability {
 
-  public static final String LEGACY_MESSAGING_SCHEMA_URL = SchemaUrls.V1_24_0;
-
   private static final boolean v3Preview;
 
   private static final boolean emitOldDatabaseSemconv;
   private static final boolean emitStableDatabaseSemconv;
-
-  private static final boolean emitOldCodeSemconv;
-  private static final boolean emitStableCodeSemconv;
 
   private static final boolean emitOldServicePeerSemconv;
   private static final boolean emitStableServicePeerSemconv;
 
   private static final boolean emitOldRpcSemconv;
   private static final boolean emitStableRpcSemconv;
-
-  private static final boolean emitOldMessagingSemconv;
-  private static final boolean emitStableMessagingSemconv;
 
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.getOrNoop();
@@ -51,10 +43,6 @@ public final class SemconvStability {
     emitOldDatabaseSemconv = emitOld(databaseSelection);
     emitStableDatabaseSemconv = emitStable(databaseSelection);
 
-    SemconvMode codeSelection = semconvSelection.code();
-    emitOldCodeSemconv = emitOld(codeSelection);
-    emitStableCodeSemconv = emitStable(codeSelection);
-
     SemconvMode servicePeerSelection = semconvSelection.servicePeer();
     emitOldServicePeerSemconv = emitOld(servicePeerSelection);
     emitStableServicePeerSemconv = emitStable(servicePeerSelection);
@@ -62,10 +50,6 @@ public final class SemconvStability {
     SemconvMode rpcSelection = semconvSelection.rpc();
     emitOldRpcSemconv = emitOld(rpcSelection);
     emitStableRpcSemconv = emitStable(rpcSelection);
-
-    SemconvMode messagingSelection = semconvSelection.messaging();
-    emitOldMessagingSemconv = emitOld(messagingSelection);
-    emitStableMessagingSemconv = emitStable(messagingSelection);
   }
 
   public static boolean v3Preview(OpenTelemetry openTelemetry) {
@@ -127,14 +111,6 @@ public final class SemconvStability {
     return dbSystemName != null ? dbSystemName : oldDbSystem;
   }
 
-  public static boolean emitOldCodeSemconv() { // to be removed in 3.0
-    return emitOldCodeSemconv;
-  }
-
-  public static boolean emitStableCodeSemconv() { // to be removed in 3.0
-    return emitStableCodeSemconv;
-  }
-
   public static boolean emitOldRpcSemconv() {
     return emitOldRpcSemconv;
   }
@@ -180,19 +156,8 @@ public final class SemconvStability {
     return mode.version() >= 1;
   }
 
-  public static boolean emitOldMessagingSemconv() { // to be removed in 3.0
-    return emitOldMessagingSemconv;
-  }
-
-  // Returns whether the selected v1 experimental messaging semantic conventions should be emitted.
-  // The method name follows the existing pattern; it does not indicate that the messaging
-  // conventions are stable.
-  public static boolean emitStableMessagingSemconv() { // to be removed in 3.0
-    return emitStableMessagingSemconv;
-  }
-
   public static String messagingSchemaUrl() {
-    return emitStableMessagingSemconv ? SchemaUrls.V1_43_0 : LEGACY_MESSAGING_SCHEMA_URL;
+    return SchemaUrls.V1_43_0;
   }
 
   private SemconvStability() {}

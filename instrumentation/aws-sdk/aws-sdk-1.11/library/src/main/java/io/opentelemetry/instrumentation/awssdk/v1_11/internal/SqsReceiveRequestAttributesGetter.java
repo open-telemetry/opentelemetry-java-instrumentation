@@ -59,18 +59,6 @@ class SqsReceiveRequestAttributesGetter
     return null;
   }
 
-  @Nullable
-  @Override
-  public Long getMessageBodySize(SqsReceiveRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(SqsReceiveRequest request) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String getMessageId(SqsReceiveRequest request, @Nullable Response<?> response) {

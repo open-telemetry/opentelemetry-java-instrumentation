@@ -5,9 +5,7 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
-import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -26,7 +24,6 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
@@ -115,7 +112,6 @@ class RocketMqSimpleConsumerTest {
 
   @Test
   void shouldInstrumentSynchronousReceive() throws ClientException {
-    assumeTrue(emitStableMessagingSemconv());
     SpanData sendSpan = sendMessage();
 
     testing.runWithSpan(
@@ -132,7 +128,6 @@ class RocketMqSimpleConsumerTest {
 
   @Test
   void shouldInstrumentAsynchronousReceive() throws ClientException {
-    assumeTrue(emitStableMessagingSemconv());
     SpanData sendSpan = sendMessage();
 
     List<MessageView> messages =
@@ -147,8 +142,6 @@ class RocketMqSimpleConsumerTest {
 
   @Test
   void shouldNotInstrumentEmptySynchronousAndAsynchronousReceive() throws ClientException {
-    assumeTrue(emitStableMessagingSemconv());
-
     Map<String, FilterExpression> subscriptionExpressions = new HashMap<>();
     subscriptionExpressions.put(
         TOPIC, new FilterExpression("missing-tag", FilterExpressionType.TAG));
@@ -189,7 +182,6 @@ class RocketMqSimpleConsumerTest {
 
   @Test
   void shouldInstrumentReceiveWhenReceiveTelemetryDisabled() throws ClientException {
-    assumeTrue(emitStableMessagingSemconv());
     assumeFalse(RECEIVE_TELEMETRY_ENABLED);
     SpanData sendSpan = sendMessage();
 
@@ -244,37 +236,7 @@ class RocketMqSimpleConsumerTest {
   }
 
   @Test
-  void shouldPreserveLegacySuccessfulReceive() throws ClientException {
-    assumeFalse(emitStableMessagingSemconv());
-    sendMessage();
-
-    testing.runWithSpan(
-        "legacy receive parent",
-        () -> {
-          List<MessageView> messages = consumer.receive(1, Duration.ofSeconds(10));
-          for (MessageView message : messages) {
-            testing.runWithSpan("legacy process child", () -> {});
-            consumer.ack(message);
-          }
-        });
-
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(SpanKind.CONSUMER, SpanKind.INTERNAL),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName(TOPIC + " receive").hasKind(SpanKind.CONSUMER).hasNoParent()),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("legacy receive parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("legacy process child")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
-  }
-
-  @Test
-  void shouldInstrumentSynchronousReceiveErrorOnlyInStableMode() {
+  void shouldInstrumentSynchronousReceiveError() {
     assertThatThrownBy(
             () ->
                 testing.runWithSpan(
@@ -285,7 +247,7 @@ class RocketMqSimpleConsumerTest {
   }
 
   @Test
-  void shouldInstrumentAsynchronousReceiveErrorOnlyInStableMode() {
+  void shouldInstrumentAsynchronousReceiveError() {
     assertThatThrownBy(
             () ->
                 testing.runWithSpan(
@@ -313,7 +275,7 @@ class RocketMqSimpleConsumerTest {
             trace.hasSpansSatisfyingExactly(
                 span -> {
                   span.hasKind(SpanKind.PRODUCER)
-                      .hasName(emitStableMessagingSemconv() ? "send " + TOPIC : TOPIC + " publish")
+                      .hasName("send " + TOPIC)
                       .hasAttribute(MESSAGING_MESSAGE_ID, receipt.getMessageId().toString());
                   sendSpan.set(span.actual());
                 }));
@@ -330,28 +292,21 @@ class RocketMqSimpleConsumerTest {
   }
 
   private static void assertReceiveErrorTrace(String parentName) {
-    if (emitStableMessagingSemconv()) {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName(parentName).hasKind(SpanKind.INTERNAL).hasNoParent(),
-                  span ->
-                      span.hasName("receive")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasStatus(StatusData.error())
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
-                              equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                              equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                              equalTo(MESSAGING_OPERATION_TYPE, "receive"),
-                              equalTo(ERROR_TYPE, IllegalArgumentException.class.getName()))));
-      return;
-    }
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName(parentName).hasKind(SpanKind.INTERNAL).hasNoParent()));
+                span -> span.hasName(parentName).hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("receive")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasStatus(StatusData.error())
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
+                            equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                            equalTo(ERROR_TYPE, IllegalArgumentException.class.getName()))));
   }
 
   private static SpanDataAssert assertReceiveSpan(SpanDataAssert span, SpanData sendSpan) {
@@ -369,8 +324,7 @@ class RocketMqSimpleConsumerTest {
             equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, TAG),
             equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(KEYS)))
         .hasLinks(
-            LinkData.create(
-                asRemote(sendSpan.getSpanContext()),
+            LinkData.create(asRemote(sendSpan.getSpanContext()),
                 Attributes.of(
                     MESSAGING_MESSAGE_ID, sendSpan.getAttributes().get(MESSAGING_MESSAGE_ID))));
   }

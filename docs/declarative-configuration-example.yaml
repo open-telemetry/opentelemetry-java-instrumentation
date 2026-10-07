@@ -10,16 +10,6 @@ file_format: '1.0'
 
 instrumentation/development:
   general:
-    code:
-      semconv:
-        # With `version: 1`, emits both the old and the stable code semantic conventions. Not
-        # supported under v3 preview.
-        dual_emit: false
-    db:
-      semconv:
-        # With `version: 1`, emits both the old and the stable database semantic conventions. Not
-        # supported under v3 preview.
-        dual_emit: false
     http:
       client:
         # List of HTTP request headers to capture in HTTP client telemetry.
@@ -64,10 +54,9 @@ instrumentation/development:
           - sig
           - X-Goog-Signature
 
-    # Opt-in to emit stable semantic conventions instead of the old experimental semantic
-    # conventions. Accepts a comma-separated list of semantic convention groups (e.g., `database`,
-    # `http`, `messaging`). Use `<group>/dup` to emit both old and new conventions simultaneously.
-    # Stable semantic conventions will become the default in version 3.0 of the agent.
+    # A comma-separated list of semantic convention groups to opt into, such as `rpc`, `messaging`,
+    # and `service.peer`. Use `<group>/dup` to emit both old and new conventions. Under v3 preview
+    # the preview groups use `otel.semconv-stability.preview` instead.
     stability_opt_in_list: ''
   java:
     apache_elasticjob:
@@ -252,9 +241,8 @@ instrumentation/development:
           enabled: false
 
       # Enables a preview of the behavior planned for version 3.0 of the agent, such as emitting the
-      # stable database and code semantic conventions and the new messaging semantic conventions by
-      # default, and ignoring deprecated settings. The set of changes it enables can grow in any
-      # release.
+      # new messaging semantic conventions by default, and ignoring deprecated settings. The set
+      # of changes it enables can grow in any release.
       v3_preview: false
       view_telemetry:
         # Enables the creation of experimental view spans.

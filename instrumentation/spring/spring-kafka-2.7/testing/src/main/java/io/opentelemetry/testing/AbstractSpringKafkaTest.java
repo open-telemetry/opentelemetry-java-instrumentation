@@ -5,7 +5,6 @@
 
 package io.opentelemetry.testing;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
@@ -187,16 +186,12 @@ public abstract class AbstractSpringKafkaTest {
                       .isEqualTo(producerSpan.getSpanContext().getTraceFlags());
                   assertThat(link.getSpanContext().getTraceState())
                       .isEqualTo(producerSpan.getSpanContext().getTraceState());
-                  if (emitStableMessagingSemconv()) {
-                    assertThat(link.getAttributes().asMap())
-                        .containsOnlyKeys(MESSAGING_KAFKA_MESSAGE_KEY, MESSAGING_KAFKA_OFFSET);
-                    assertThat(link.getAttributes().get(MESSAGING_KAFKA_MESSAGE_KEY))
-                        .isEqualTo(producerSpan.getAttributes().get(MESSAGING_KAFKA_MESSAGE_KEY));
-                    assertThat(link.getAttributes().get(MESSAGING_KAFKA_OFFSET))
-                        .isEqualTo(producerSpan.getAttributes().get(MESSAGING_KAFKA_OFFSET));
-                  } else {
-                    assertThat(link.getAttributes().asMap()).isEmpty();
-                  }
+                  assertThat(link.getAttributes().asMap())
+                      .containsOnlyKeys(MESSAGING_KAFKA_MESSAGE_KEY, MESSAGING_KAFKA_OFFSET);
+                  assertThat(link.getAttributes().get(MESSAGING_KAFKA_MESSAGE_KEY))
+                      .isEqualTo(producerSpan.getAttributes().get(MESSAGING_KAFKA_MESSAGE_KEY));
+                  assertThat(link.getAttributes().get(MESSAGING_KAFKA_OFFSET))
+                      .isEqualTo(producerSpan.getAttributes().get(MESSAGING_KAFKA_OFFSET));
                 });
       }
     };
@@ -205,11 +200,8 @@ public abstract class AbstractSpringKafkaTest {
   // the offset and the message key stay on the links even when the batch carries a single record,
   // because they are only recommended on spans that describe a single message operation
   protected static LinkData recordLink(SpanData producerSpan) {
-    if (!emitStableMessagingSemconv()) {
-      return LinkData.create(asRemote(producerSpan.getSpanContext()));
-    }
-    return LinkData.create(
-        asRemote(producerSpan.getSpanContext()),
+
+    return LinkData.create(asRemote(producerSpan.getSpanContext()),
         Attributes.builder()
             .put(MESSAGING_KAFKA_OFFSET, producerSpan.getAttributes().get(MESSAGING_KAFKA_OFFSET))
             .put(

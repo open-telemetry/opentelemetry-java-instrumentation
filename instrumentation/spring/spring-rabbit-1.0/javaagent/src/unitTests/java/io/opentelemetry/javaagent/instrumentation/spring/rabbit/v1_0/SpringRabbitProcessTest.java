@@ -5,12 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -103,11 +101,9 @@ class SpringRabbitProcessTest {
                                 assertThat(data.getLinks())
                                     .extracting(link -> link.getSpanContext().getSpanId())
                                     .containsExactlyElementsOf(
-                                        emitStableMessagingSemconv()
-                                            ? asList(
-                                                firstCreation.getSpanId(),
-                                                secondCreation.getSpanId())
-                                            : emptyList()))));
+                                        asList(
+                                            firstCreation.getSpanId(),
+                                            secondCreation.getSpanId())))));
     assertConsumedMessages(2);
     assertProcessAttempts(1);
   }
@@ -133,9 +129,7 @@ class SpringRabbitProcessTest {
                                 assertThat(data.getLinks())
                                     .extracting(link -> link.getSpanContext().getSpanId())
                                     .containsExactlyElementsOf(
-                                        emitStableMessagingSemconv()
-                                            ? asList(creation.getSpanId(), creation.getSpanId())
-                                            : emptyList()))));
+                                        asList(creation.getSpanId(), creation.getSpanId())))));
   }
 
   @Test
@@ -250,10 +244,7 @@ class SpringRabbitProcessTest {
   }
 
   private static void assertConsumedMessages(long count) {
-    if (!emitStableMessagingSemconv()) {
-      assertThat(testing.metrics()).isEmpty();
-      return;
-    }
+
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "messaging.client.consumed.messages",
@@ -268,9 +259,7 @@ class SpringRabbitProcessTest {
   }
 
   private static void assertProcessAttempts(long count) {
-    if (!emitStableMessagingSemconv()) {
-      return;
-    }
+
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "messaging.process.duration",

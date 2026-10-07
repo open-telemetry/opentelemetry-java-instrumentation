@@ -5,22 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v6_4;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ELASTICSEARCH;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
@@ -103,14 +100,11 @@ class ElasticsearchRest6Test {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? httpHost.getHostName() + ":" + httpHost.getPort()
-                                : "GET")
+                    span.hasName(httpHost.getHostName() + ":" + httpHost.getPort())
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
+                            equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
@@ -152,16 +146,13 @@ class ElasticsearchRest6Test {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? httpHost.getHostName() + ":" + httpHost.getPort()
-                                : "POST")
+                    span.hasName(httpHost.getHostName() + ":" + httpHost.getPort())
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
+                            equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
                             equalTo(
-                                maybeStable(DB_STATEMENT),
+                                DB_QUERY_TEXT,
                                 v3Preview() ? "{\"query\":{\"match\":{\"title\":\"?\"}}}" : null),
                             equalTo(HTTP_REQUEST_METHOD, "POST"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
@@ -226,14 +217,11 @@ class ElasticsearchRest6Test {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? httpHost.getHostName() + ":" + httpHost.getPort()
-                                : "GET")
+                    span.hasName(httpHost.getHostName() + ":" + httpHost.getPort())
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
+                            equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
@@ -297,22 +285,20 @@ class ElasticsearchRest6Test {
   }
 
   private static void assertConfiguredTarget(String hostList) {
-    boolean stableHostList = emitStableDatabaseSemconv() && hostList != null;
+    boolean hasHostList = hostList != null;
     testing.waitAndAssertTraces(
         trace ->
             assertThat(trace.getSpan(0))
                 .hasName(
-                    emitStableDatabaseSemconv()
-                        ? (hostList != null
-                            ? hostList
-                            : httpHost.getHostName() + ":" + httpHost.getPort())
-                        : "GET")
+                    (hostList != null
+                        ? hostList
+                        : httpHost.getHostName() + ":" + httpHost.getPort()))
                 .hasKind(SpanKind.CLIENT)
                 .hasAttributesSatisfyingExactly(
-                    equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
+                    equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
                     equalTo(HTTP_REQUEST_METHOD, "GET"),
-                    equalTo(SERVER_ADDRESS, stableHostList ? hostList : httpHost.getHostName()),
-                    equalTo(SERVER_PORT, stableHostList ? null : Long.valueOf(httpHost.getPort())),
+                    equalTo(SERVER_ADDRESS, hasHostList ? hostList : httpHost.getHostName()),
+                    equalTo(SERVER_PORT, hasHostList ? null : Long.valueOf(httpHost.getPort())),
                     equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")));
   }
 }

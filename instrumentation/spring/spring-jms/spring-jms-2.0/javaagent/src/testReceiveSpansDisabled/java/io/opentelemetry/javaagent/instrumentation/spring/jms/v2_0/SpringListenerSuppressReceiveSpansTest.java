@@ -5,11 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertCounter;
 import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertHistogram;
 import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertNoMetric;
-import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertNoStableMetrics;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
@@ -62,19 +60,13 @@ class SpringListenerSuppressReceiveSpansTest extends AbstractJmsTest {
                 span ->
                     assertConsumerSpan(
                         span,
-                        emitStableMessagingSemconv() ? trace.getSpan(0) : null,
+                        trace.getSpan(0),
                         trace.getSpan(0),
                         "SpringListenerJms2",
                         "process",
                         false,
                         null,
                         "durable-subscription")));
-
-    if (!emitStableMessagingSemconv()) {
-      assertNoStableMetrics(testing, "io.opentelemetry.jms-1.1");
-      assertNoStableMetrics(testing, "io.opentelemetry.spring-jms-2.0");
-      return;
-    }
 
     Attributes sendAttributes =
         Attributes.of(

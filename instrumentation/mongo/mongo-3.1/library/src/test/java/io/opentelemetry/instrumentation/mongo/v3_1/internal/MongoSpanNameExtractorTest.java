@@ -9,6 +9,8 @@ import static io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoInstrume
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.mongodb.event.CommandStartedEvent;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import org.bson.BsonDocument;
 import org.bson.BsonInt32;
 import org.junit.jupiter.api.DisplayName;
@@ -19,8 +21,8 @@ class MongoSpanNameExtractorTest {
   @Test
   @DisplayName("test span name with no dbName")
   void testSpanNameWithNoDbName() {
-    MongoSpanNameExtractor nameExtractor =
-        new MongoSpanNameExtractor(
+    SpanNameExtractor<CommandStartedEvent> nameExtractor =
+        DbClientSpanNameExtractor.create(
             new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH));
 
     String command = "listDatabases";
