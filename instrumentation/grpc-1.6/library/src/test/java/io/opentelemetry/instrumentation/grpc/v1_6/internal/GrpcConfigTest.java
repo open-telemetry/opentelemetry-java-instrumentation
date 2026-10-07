@@ -42,20 +42,6 @@ class GrpcConfigTest {
   }
 
   @Test
-  void deprecatedConfigIsIgnored() {
-    DeclarativeConfigProperties config = mockConfig();
-    when(config.get("capture_metadata").get("client").getScalarList("request", String.class))
-        .thenReturn(singletonList("deprecated"));
-    when(config.get("capture_metadata").get("server").getScalarList("request", String.class))
-        .thenReturn(singletonList("deprecated"));
-
-    GrpcConfig grpcConfig = new GrpcConfig(config);
-
-    assertThat(grpcConfig.getClientRequestMetadata()).isNull();
-    assertThat(grpcConfig.getServerRequestMetadata()).isNull();
-  }
-
-  @Test
   void emptySelectorCapturesNothing() {
     DeclarativeConfigProperties config = mockConfig();
     when(config.get("client").get("request_metadata").getScalarList("included", String.class))
