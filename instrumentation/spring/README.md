@@ -27,7 +27,11 @@ with `otel.instrumentation.common.messaging.headers.included=Test-Message-*`. Th
 equivalent changes from `java.messaging.headers/development.included` to
 `java.common.messaging.headers.included`. Replace
 `otel.instrumentation.messaging.experimental.capture-headers=Test-Message-Id` with
-`otel.instrumentation.common.messaging.headers.included=Test-Message-Id`. Captured header keys now preserve dashes in every mode:
+`otel.instrumentation.common.messaging.headers.included=Test-Message-Id`. Also replace
+`otel.instrumentation.messaging.experimental.headers.excluded=Sensitive-*` with
+`otel.instrumentation.common.messaging.headers.excluded=Sensitive-*`. The declarative equivalent
+changes from `java.messaging.headers/development.excluded` to
+`java.common.messaging.headers.excluded`. Captured header keys now preserve dashes in every mode:
 `messaging.header.Test_Message_Id` becomes `messaging.header.Test-Message-Id`. Replace
 `otel.instrumentation.messaging.experimental.receive-telemetry.enabled` with
 `otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled`.
