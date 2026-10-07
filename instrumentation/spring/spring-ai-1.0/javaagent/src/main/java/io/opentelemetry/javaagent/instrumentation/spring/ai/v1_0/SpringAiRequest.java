@@ -12,13 +12,13 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.prompt.Prompt;
 
-public class SpringAiRequest {
+class SpringAiRequest {
   private final Prompt prompt;
   @Nullable private final ChatOptions defaultOptions;
   private final String provider;
   private final boolean streaming;
 
-  public static SpringAiRequest create(Prompt prompt, Object chatModel, boolean streaming) {
+  static SpringAiRequest create(Prompt prompt, Object chatModel, boolean streaming) {
     ChatOptions defaultOptions =
         chatModel instanceof ChatModel model ? model.getDefaultOptions() : null;
     return new SpringAiRequest(
@@ -33,69 +33,69 @@ public class SpringAiRequest {
     this.streaming = streaming;
   }
 
-  public Prompt prompt() {
+  Prompt prompt() {
     return prompt;
   }
 
-  public String provider() {
+  String provider() {
     return provider;
   }
 
-  public boolean streaming() {
+  boolean streaming() {
     return streaming;
   }
 
   @Nullable
-  public String model() {
+  String model() {
     ChatOptions options = prompt.getOptions();
     String model = options == null ? null : options.getModel();
     return model != null || defaultOptions == null ? model : defaultOptions.getModel();
   }
 
   @Nullable
-  public Double frequencyPenalty() {
+  Double frequencyPenalty() {
     ChatOptions options = prompt.getOptions();
     Double value = options == null ? null : options.getFrequencyPenalty();
     return value != null || defaultOptions == null ? value : defaultOptions.getFrequencyPenalty();
   }
 
   @Nullable
-  public Integer maxTokens() {
+  Integer maxTokens() {
     ChatOptions options = prompt.getOptions();
     Integer value = options == null ? null : options.getMaxTokens();
     return value != null || defaultOptions == null ? value : defaultOptions.getMaxTokens();
   }
 
   @Nullable
-  public Double presencePenalty() {
+  Double presencePenalty() {
     ChatOptions options = prompt.getOptions();
     Double value = options == null ? null : options.getPresencePenalty();
     return value != null || defaultOptions == null ? value : defaultOptions.getPresencePenalty();
   }
 
   @Nullable
-  public List<String> stopSequences() {
+  List<String> stopSequences() {
     ChatOptions options = prompt.getOptions();
     List<String> value = options == null ? null : options.getStopSequences();
     return value != null || defaultOptions == null ? value : defaultOptions.getStopSequences();
   }
 
   @Nullable
-  public Double temperature() {
+  Double temperature() {
     ChatOptions options = prompt.getOptions();
     Double value = options == null ? null : options.getTemperature();
     return value != null || defaultOptions == null ? value : defaultOptions.getTemperature();
   }
 
   @Nullable
-  public Integer topK() {
+  Integer topK() {
     ChatOptions options = prompt.getOptions();
     Integer value = options == null ? null : options.getTopK();
     return value != null || defaultOptions == null ? value : defaultOptions.getTopK();
   }
 
   @Nullable
-  public Double topP() {
+  Double topP() {
     ChatOptions options = prompt.getOptions();
     Double value = options == null ? null : options.getTopP();
     return value != null || defaultOptions == null ? value : defaultOptions.getTopP();

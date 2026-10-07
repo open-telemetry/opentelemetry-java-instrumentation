@@ -41,6 +41,7 @@ class SpringAiAttributesGetter implements GenAiAttributesGetter<SpringAiRequest,
   }
 
   @Override
+  @Nullable
   public Long getRequestSeed(SpringAiRequest request) {
     return null;
   }
@@ -52,17 +53,20 @@ class SpringAiAttributesGetter implements GenAiAttributesGetter<SpringAiRequest,
   }
 
   @Override
+  @Nullable
   public Double getRequestFrequencyPenalty(SpringAiRequest request) {
     return request.frequencyPenalty();
   }
 
   @Override
+  @Nullable
   public Long getRequestMaxTokens(SpringAiRequest request) {
     Integer maxTokens = request.maxTokens();
     return maxTokens == null ? null : maxTokens.longValue();
   }
 
   @Override
+  @Nullable
   public Double getRequestPresencePenalty(SpringAiRequest request) {
     return request.presencePenalty();
   }
@@ -74,17 +78,20 @@ class SpringAiAttributesGetter implements GenAiAttributesGetter<SpringAiRequest,
   }
 
   @Override
+  @Nullable
   public Double getRequestTemperature(SpringAiRequest request) {
     return request.temperature();
   }
 
   @Override
+  @Nullable
   public Double getRequestTopK(SpringAiRequest request) {
     Integer topK = request.topK();
     return topK == null ? null : topK.doubleValue();
   }
 
   @Override
+  @Nullable
   public Double getRequestTopP(SpringAiRequest request) {
     return request.topP();
   }

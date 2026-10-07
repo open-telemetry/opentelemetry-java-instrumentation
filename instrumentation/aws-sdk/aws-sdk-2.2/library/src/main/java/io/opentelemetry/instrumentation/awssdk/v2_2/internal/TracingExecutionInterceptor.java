@@ -529,6 +529,8 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     if (SqsAccess.isSqsDeleteRequest(request)) {
       return settleInstrumenter;
     }
+    // if there already is an active gen-ai span create a regular aws request span instead of
+    // bedrock gen-ai span
     if (shouldUseBedrockRuntimeInstrumenter(otelContext, request)) {
       return bedrockRuntimeInstrumenter;
     }
@@ -541,6 +543,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     return requestInstrumenter;
   }
 
+  // visible for testing
   static boolean shouldUseBedrockRuntimeInstrumenter(
       io.opentelemetry.context.Context otelContext, SdkRequest request) {
     return BedrockRuntimeAccess.isBedrockRuntimeRequest(request)

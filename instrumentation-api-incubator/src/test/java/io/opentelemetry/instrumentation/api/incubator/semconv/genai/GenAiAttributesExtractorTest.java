@@ -5,19 +5,19 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.genai;
 
-import static io.opentelemetry.api.common.AttributeKey.booleanKey;
-import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor.GEN_AI_OPERATION_NAME;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor.GEN_AI_PROVIDER_NAME;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor.GEN_AI_REQUEST_MODEL;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor.GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor.GEN_AI_USAGE_REASONING_OUTPUT_TOKENS;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_ENCODING_FORMATS;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_MODEL;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_STOP_SEQUENCES;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_STREAM;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_USAGE_REASONING_OUTPUT_TOKENS;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
@@ -32,14 +32,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+// TODO: Remove after https://github.com/open-telemetry/semantic-conventions-genai/issues/247
+// is resolved.
+@SuppressWarnings("deprecation")
 class GenAiAttributesExtractorTest {
-
-  private static final AttributeKey<Boolean> GEN_AI_REQUEST_STREAM =
-      booleanKey("gen_ai.request.stream");
-  private static final AttributeKey<List<String>> GEN_AI_REQUEST_ENCODING_FORMATS =
-      stringArrayKey("gen_ai.request.encoding_formats");
-  private static final AttributeKey<List<String>> GEN_AI_REQUEST_STOP_SEQUENCES =
-      stringArrayKey("gen_ai.request.stop_sequences");
 
   @Test
   void suppressesNestedGenAiInstrumenters() {

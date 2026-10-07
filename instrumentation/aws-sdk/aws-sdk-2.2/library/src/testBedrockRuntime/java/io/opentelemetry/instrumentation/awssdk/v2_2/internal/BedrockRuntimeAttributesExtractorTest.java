@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInterceptor.shouldUseBedrockRuntimeInstrumenter;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_BEDROCK_GUARDRAIL_ID;
 import static java.util.Collections.singletonList;
@@ -42,14 +43,9 @@ class BedrockRuntimeAttributesExtractorTest {
   void selectsRegularAwsInstrumenterWhenGenAiSpanAlreadyExists() {
     ConverseRequest request = ConverseRequest.builder().modelId("model").build();
 
-    assertThat(
-            TracingExecutionInterceptor.shouldUseBedrockRuntimeInstrumenter(
-                Context.root(), request))
-        .isTrue();
+    assertThat(shouldUseBedrockRuntimeInstrumenter(Context.root(), request)).isTrue();
     Context genAiContext = SpanKey.GEN_AI_CLIENT.storeInContext(Context.root(), Span.getInvalid());
-    assertThat(
-            TracingExecutionInterceptor.shouldUseBedrockRuntimeInstrumenter(genAiContext, request))
-        .isFalse();
+    assertThat(shouldUseBedrockRuntimeInstrumenter(genAiContext, request)).isFalse();
   }
 
   private final BedrockRuntimeAttributesExtractor extractor =

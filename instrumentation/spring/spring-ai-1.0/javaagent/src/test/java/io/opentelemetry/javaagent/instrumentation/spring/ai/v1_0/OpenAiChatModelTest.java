@@ -36,9 +36,7 @@ import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
 import java.util.List;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.ai.chat.model.ChatResponse;
@@ -73,15 +71,6 @@ class OpenAiChatModelTest {
       WireMockExtension.newInstance()
           .options(options().dynamicPort().usingFilesUnderClasspath("wiremock"))
           .build();
-
-  @BeforeAll
-  static void setUp() {
-    TestAgentListenerAccess.addSkipTransformationCondition(
-        typeName ->
-            typeName != null
-                && (typeName.startsWith("org.springframework.web.client.")
-                    || typeName.startsWith("org.springframework.http.client.")));
-  }
 
   @Test
   void callRecordsOpenAiSpringAiResponse() {

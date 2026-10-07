@@ -154,6 +154,7 @@ class ChatModelInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToReturned
+    @Nullable
     public static Flux<ChatResponse> onExit(
         @Advice.This Object chatModel,
         @Advice.Argument(0) Prompt prompt,

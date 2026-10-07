@@ -17,7 +17,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
-public class SpringAiSingletons {
+class SpringAiSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-ai-1.0";
   private static final int DEFAULT_MESSAGE_CONTENT_SPAN_ATTRIBUTE_MAX_LENGTH = 8192;
 
@@ -53,23 +53,23 @@ public class SpringAiSingletons {
     instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
-  public static Instrumenter<SpringAiRequest, SpringAiResponse> instrumenter() {
+  static Instrumenter<SpringAiRequest, SpringAiResponse> instrumenter() {
     return instrumenter;
   }
 
-  public static Logger eventLogger() {
+  static Logger eventLogger() {
     return eventLogger;
   }
 
-  public static boolean captureMessageContent() {
+  static boolean captureMessageContent() {
     return captureMessageContent;
   }
 
-  public static boolean captureMessageContentAsSpanAttributes() {
+  static boolean captureMessageContentAsSpanAttributes() {
     return captureMessageContentAsSpanAttributes;
   }
 
-  public static int messageContentSpanAttributeMaxLength() {
+  static int messageContentSpanAttributeMaxLength() {
     return messageContentSpanAttributeMaxLength;
   }
 

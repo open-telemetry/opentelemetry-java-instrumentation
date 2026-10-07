@@ -9,7 +9,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 import org.springframework.ai.chat.model.ChatResponse;
 
-final class SpringAiResponse {
+class SpringAiResponse {
   private final ChatResponse response;
   @Nullable private final List<String> streamedContents;
 

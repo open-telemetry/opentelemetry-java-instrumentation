@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.StringUtils.truncate;
 import static io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.SpringAiSingletons.captureMessageContentAsSpanAttributes;
 import static io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.SpringAiSingletons.messageContentSpanAttributeMaxLength;
-import static io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.SpringAiStringUtil.truncate;
 import static java.util.logging.Level.FINE;
 
 import com.fasterxml.jackson.core.io.JsonStringEncoder;

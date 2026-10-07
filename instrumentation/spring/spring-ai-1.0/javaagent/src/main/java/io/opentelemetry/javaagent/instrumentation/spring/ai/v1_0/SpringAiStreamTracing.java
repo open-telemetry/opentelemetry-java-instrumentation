@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.SpringAi
 import static io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.SpringAiSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.SpringAiSingletons.messageContentSpanAttributeMaxLength;
 import static java.util.Collections.emptyMap;
+import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.trace.Span;
@@ -38,10 +39,10 @@ import org.springframework.util.MimeType;
 import reactor.core.publisher.Flux;
 import reactor.util.context.ContextView;
 
-public class SpringAiStreamTracing {
+class SpringAiStreamTracing {
   private static final Logger logger = Logger.getLogger(SpringAiStreamTracing.class.getName());
 
-  public static Flux<ChatResponse> wrap(Flux<ChatResponse> source, SpringAiRequest request) {
+  static Flux<ChatResponse> wrap(Flux<ChatResponse> source, SpringAiRequest request) {
     return Flux.deferContextual(reactorContext -> start(source, request, reactorContext));
   }
 
@@ -53,8 +54,9 @@ public class SpringAiStreamTracing {
     try {
       chatInstrumenter = instrumenter();
       parentContext =
-          ContextPropagationOperator.getOpenTelemetryContextFromContextView(
-              reactorContext, Context.current());
+          requireNonNull(
+              ContextPropagationOperator.getOpenTelemetryContextFromContextView(
+                  reactorContext, Context.current()));
       if (!chatInstrumenter.shouldStart(parentContext, request)) {
         return source;
       }
@@ -224,7 +226,7 @@ public class SpringAiStreamTracing {
         Generation value = entry.getValue().value();
         if (value != null) {
           responseGenerations.add(value);
-          if (contents != null) {
+          if (contents != null && streamedContents != null) {
             ContentBuffer content = streamedContents.get(entry.getKey());
             contents.add(content == null ? "" : content.value());
           }
@@ -583,7 +585,7 @@ public class SpringAiStreamTracing {
         truncated = true;
         return;
       }
-      int end = SpringAiStringUtil.safeEndIndex(value, remaining);
+      int end = safeEndIndex(value, remaining);
       content.append(value, 0, end);
       truncated = end < value.length();
     }
@@ -597,6 +599,17 @@ public class SpringAiStreamTracing {
         return content.substring(0, length - 1);
       }
       return content.toString();
+    }
+
+    private static int safeEndIndex(String value, int maxLength) {
+      int end = Math.min(value.length(), Math.max(0, maxLength));
+      if (end < value.length()
+          && end > 0
+          && Character.isHighSurrogate(value.charAt(end - 1))
+          && Character.isLowSurrogate(value.charAt(end))) {
+        end--;
+      }
+      return end;
     }
   }
 
