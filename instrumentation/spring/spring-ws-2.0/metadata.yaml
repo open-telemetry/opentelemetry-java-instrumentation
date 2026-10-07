@@ -8,4 +8,3 @@ features:
 library_link: https://spring.io/projects/spring-ws
 configurations:
   - ref: common.controller-telemetry.enabled
-  - ref: common.deprecated-controller-telemetry.enabled

@@ -5,6 +5,14 @@
 ### ⚠️ Breaking changes
 
 - The Java agent and standalone libraries now use the existing v1.43.0 messaging implementation.
+- Remove support for the deprecated controller and view telemetry aliases. Replace
+  `otel.instrumentation.common.experimental.controller-telemetry.enabled` and
+  `otel.instrumentation.common.experimental.view-telemetry.enabled` with
+  `otel.instrumentation.common.controller-telemetry.enabled` and
+  `otel.instrumentation.common.view-telemetry.enabled`. Declarative users should replace
+  `java.common.controller_telemetry/development.enabled` and
+  `java.common.view_telemetry/development.enabled` with
+  `java.common.controller_telemetry.enabled` and `java.common.view_telemetry.enabled`.
 - Emit only stable source code attributes: `code.function.name` replaces `code.namespace` and
   `code.function`, and log records use `code.file.path` and `code.line.number` instead of
   `code.filepath` and `code.lineno`. The `code` and `code/dup` opt-ins and
