@@ -176,9 +176,9 @@ instrumentation/development:
           # attribute keys to capture. Applies to Log4j MapMessage entries, SLF4J key-value pairs,
           # Logback Logstash markers, and Logstash structured arguments. "*" matches any number of
           # characters and "?" matches one character. Excluded patterns take precedence. An
-          # exclude-only selector captures every key not excluded. Under v3-preview, an absent or
-          # empty selector captures all structured attributes by default. MDC and logger-context
-          # attributes remain separate and opt-in.
+          # exclude-only selector captures every key not excluded. An absent or empty selector
+          # captures all structured attributes by default. MDC and logger-context attributes remain
+          # separate and opt-in.
           included: []
 
         # Specifies the key name used to store the trace flags in the logging context.

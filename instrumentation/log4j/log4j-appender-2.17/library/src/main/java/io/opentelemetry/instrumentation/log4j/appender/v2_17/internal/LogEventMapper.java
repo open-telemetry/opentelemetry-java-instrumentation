@@ -58,7 +58,6 @@ public final class LogEventMapper<T> {
   private final boolean captureTemplate;
   private final boolean captureArguments;
   @Nullable private final Predicate<String> contextDataAttributes;
-  private final boolean v3Preview;
 
   @SuppressWarnings("TooManyParameters")
   public LogEventMapper(
@@ -69,8 +68,7 @@ public final class LogEventMapper<T> {
       boolean captureMarkerAttribute,
       boolean captureTemplate,
       boolean captureArguments,
-      @Nullable Predicate<String> contextDataAttributes,
-      boolean v3Preview) {
+      @Nullable Predicate<String> contextDataAttributes) {
 
     this.contextDataAccessor = contextDataAccessor;
     this.captureCodeAttributes = captureCodeAttributes;
@@ -80,7 +78,6 @@ public final class LogEventMapper<T> {
     this.captureTemplate = captureTemplate;
     this.captureArguments = captureArguments;
     this.contextDataAttributes = contextDataAttributes;
-    this.v3Preview = v3Preview;
   }
 
   /**
@@ -231,8 +228,7 @@ public final class LogEventMapper<T> {
   }
 
   public AttributeKey<String> getMapMessageAttributeKey(String key) {
-    return mapMessageAttributeKeyCache.computeIfAbsent(
-        key, k -> stringKey(v3Preview ? k : "log4j.map_message." + k));
+    return mapMessageAttributeKeyCache.computeIfAbsent(key, AttributeKey::stringKey);
   }
 
   private static Severity levelToSeverity(Level level) {

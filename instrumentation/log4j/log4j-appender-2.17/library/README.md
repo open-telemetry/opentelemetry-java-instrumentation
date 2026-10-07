@@ -142,6 +142,9 @@ which in turn take precedence over the deprecated `captureMapMessageAttributes` 
 `MapMessage` attributes are captured when the selector and the pattern settings are absent or empty
 and `captureMapMessageAttributes` is `false`, which is also its default.
 
+`MapMessage` keys are emitted directly as log attribute names. Previously, they were prefixed with
+`log4j.map_message.`; update queries and dashboards to use the original `MapMessage` keys.
+
 Captured context data and `MapMessage` attributes may contain sensitive information. Configure included and excluded patterns to limit the data exported as log attributes.
 
 The `otel.event.name` key is supported in `MapMessage` entries and context data entries. When present, its value is used as the log event name and is not emitted as an attribute.

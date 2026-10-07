@@ -453,8 +453,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
             captureMarkerAttribute,
             captureTemplate,
             captureArguments,
-            contextDataAttributes,
-            v3Preview);
+            contextDataAttributes);
     this.openTelemetry = openTelemetry;
     this.captureCodeAttributes = captureCodeAttributes;
     this.v3Preview = v3Preview;
@@ -482,8 +481,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
       boolean captureMarkerAttribute,
       boolean captureTemplate,
       boolean captureArguments,
-      @Nullable Predicate<String> contextDataAttributes,
-      boolean v3Preview) {
+      @Nullable Predicate<String> contextDataAttributes) {
     return new LogEventMapper<>(
         ContextDataAccessorImpl.INSTANCE,
         captureExperimentalAttributes,
@@ -492,8 +490,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
         captureMarkerAttribute,
         captureTemplate,
         captureArguments,
-        contextDataAttributes,
-        v3Preview);
+        contextDataAttributes);
   }
 
   /**
