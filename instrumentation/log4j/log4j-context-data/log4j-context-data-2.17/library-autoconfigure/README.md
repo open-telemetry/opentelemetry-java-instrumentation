@@ -55,11 +55,6 @@ The deprecated `otel.instrumentation.common.logging.trace-id`, `.span-id`, and
 `otel.instrumentation.common.v3-preview=false`. For example, replace
 `otel.instrumentation.common.logging.trace-id=custom_trace` with
 `otel.instrumentation.common.logging.trace-id-key=custom_trace`.
-The declarative equivalents are `java.common.logging.trace_id_key`,
-`.span_id_key`, and `.trace_flags_key`; for example, replace
-`java.common.logging.trace_id: custom_trace` with
-`java.common.logging.trace_id_key: custom_trace`.
-
 These string values support layout output, not asynchronous OpenTelemetry
 appender correlation.
 For that, configure the [appender context data injector](../../../log4j-appender-2.17/library/README.md#async-loggers)
