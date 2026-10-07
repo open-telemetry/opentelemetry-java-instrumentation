@@ -148,6 +148,13 @@ The `otel.event.name` key is supported in `MapMessage` entries and context data 
 
 #### Async Loggers
 
+Correlation no longer reconstructs a span context from `trace_id`, `span_id`, and `trace_flags`
+strings in Log4j context data, even when `otel.instrumentation.common.v3-preview=false`.
+Synchronous logging uses the current OpenTelemetry context. Asynchronous logging must carry the
+actual OpenTelemetry context as described below; without it or a current context, logs are uncorrelated.
+The appender no longer includes the context-data autoconfigure library transitively. Add that library
+separately if you also need trace and span IDs in layout output.
+
 When using Log4j async loggers, for example `AsyncRoot`, `AsyncLogger`, or Log4j's built-in
 `AsyncAppender`, Log4j creates the `LogEvent` on the application thread and later invokes appenders
 on a background thread. To make the `OpenTelemetryAppender` emit logs with the application thread's

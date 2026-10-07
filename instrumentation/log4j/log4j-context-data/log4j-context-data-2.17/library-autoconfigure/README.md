@@ -50,6 +50,18 @@ These keys can be customized using the following system properties or environmen
 | `otel.instrumentation.common.logging.span-id-key`     | `OTEL_INSTRUMENTATION_COMMON_LOGGING_SPAN_ID_KEY`     |
 | `otel.instrumentation.common.logging.trace-flags-key` | `OTEL_INSTRUMENTATION_COMMON_LOGGING_TRACE_FLAGS_KEY` |
 
+The deprecated `otel.instrumentation.common.logging.trace-id`, `.span-id`, and `.trace-flags`
+settings are no longer read, even when `otel.instrumentation.common.v3-preview=false`.
+For example, replace `otel.instrumentation.common.logging.trace-id=custom_trace` with
+`otel.instrumentation.common.logging.trace-id-key=custom_trace`.
+The declarative equivalents are `java.common.logging.trace_id_key`, `.span_id_key`, and
+`.trace_flags_key`; for example, replace `java.common.logging.trace_id: custom_trace` with
+`java.common.logging.trace_id_key: custom_trace`.
+
+These string values support layout output, not asynchronous OpenTelemetry appender correlation.
+For that, configure the [appender context data injector](../../../log4j-appender-2.17/library/README.md#async-loggers)
+to carry the full OpenTelemetry context.
+
 If the `otel.instrumentation.log4j-context-data.add-baggage` system property (or the
 `OTEL_INSTRUMENTATION_LOG4J_CONTEXT_DATA_ADD_BAGGAGE` environment variable) is set to `true`,
 key/value pairs in [baggage](https://opentelemetry.io/docs/concepts/signals/baggage/) will also be added to the context data.
