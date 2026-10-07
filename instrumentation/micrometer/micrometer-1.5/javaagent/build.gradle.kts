@@ -56,7 +56,6 @@ tasks {
       excludeTestsMatching("*PrometheusModeTest")
       excludeTestsMatching("*HistogramGaugesTest")
     }
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=false")
   }
 
   check {
