@@ -4,6 +4,12 @@
 
 ### ⚠️ Breaking changes
 
+- Remove `otel.instrumentation.grpc.capture-metadata.client.request` and
+  `otel.instrumentation.grpc.capture-metadata.server.request` and their declarative YAML paths.
+  Use `otel.instrumentation.grpc.client.request-metadata.included` and
+  `otel.instrumentation.grpc.server.request-metadata.included`, or their respective
+  `java.grpc.client.request_metadata.included` and `java.grpc.server.request_metadata.included` YAML
+  paths.
 - The Java agent and standalone libraries now use the existing v1.43.0 messaging implementation.
 - Emit only stable source code attributes: `code.function.name` replaces `code.namespace` and
   `code.function`, and log records use `code.file.path` and `code.line.number` instead of
