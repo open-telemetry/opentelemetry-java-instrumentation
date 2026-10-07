@@ -62,8 +62,7 @@ Micrometer tags become OpenTelemetry attributes. Meter names, tag keys, and tag 
 through the registry's naming convention, and metrics are emitted under the instrumentation scope
 `io.opentelemetry.micrometer-1.5`.
 
-Timers and distribution summaries no longer emit a separate `<name>.max` gauge. Their OpenTelemetry
-histograms already include the maximum value.
+Timer and distribution summary maximum values are available from their OpenTelemetry histograms.
 
 ### Units
 
@@ -150,5 +149,13 @@ MeterRegistry meterRegistry =
 ```
 
 For [custom meters](#custom-meters), the naming convention is applied to the base name before the
-statistic suffix is appended. A custom `Meter` of type `COUNTER` named `my.meter` with the base unit
-`bytes` is emitted as `my.meter.bytes.count` rather than `my.meter.count.bytes`.
+statistic suffix is appended. A custom `COUNTER` meter named `my.meter` with the base unit `bytes` is
+emitted as `my.meter.bytes.count`.
+
+## Migrating to 3.0
+
+Before 3.0, timers and distribution summaries also emitted a separate `<name>.max` gauge. Their
+maximum values are now available from their OpenTelemetry histograms.
+
+In Prometheus mode, a custom `COUNTER` meter named `my.meter` with the base unit `bytes` was emitted
+as `my.meter.count.bytes` before 3.0; it is now emitted as `my.meter.bytes.count`.
