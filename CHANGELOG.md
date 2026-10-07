@@ -24,8 +24,8 @@
   pools use stable database-derived names, and DBCP retains the first registered pool name.
 - Elasticsearch and OpenSearch query bodies are now always captured, regardless of v3-preview.
   The `otel.instrumentation.elasticsearch.capture-search-query` and
-  `otel.instrumentation.opensearch.capture-search-query` properties and their declarative YAML
-  equivalents are no longer supported and have no replacement. Query sanitization remains enabled
+  `otel.instrumentation.opensearch.capture-search-query` properties
+  are no longer supported and have no replacement. Query sanitization remains enabled
   by default and configurable with
   `otel.instrumentation.elasticsearch.query-sanitization.enabled` or
   `otel.instrumentation.opensearch.query-sanitization.enabled`, which override

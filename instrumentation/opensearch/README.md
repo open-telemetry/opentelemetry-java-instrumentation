@@ -7,7 +7,7 @@
 ## Settings for the [OpenSearch Java Client](https://docs.opensearch.org/latest/clients/java/) instrumentation
 
 Search query bodies are always captured. The `otel.instrumentation.opensearch.capture-search-query`
-property and the equivalent YAML setting are no longer supported and have no replacement. Query
+property is no longer supported and has no replacement. Query
 sanitization remains enabled by default and can be configured with the following settings.
 
 | System property                                                | Type    | Default | Description                                                                                                                                                                             |
