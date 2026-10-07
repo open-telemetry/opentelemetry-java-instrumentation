@@ -151,11 +151,3 @@ MeterRegistry meterRegistry =
 For [custom meters](#custom-meters), the naming convention is applied to the base name before the
 statistic suffix is appended. A custom `COUNTER` meter named `my.meter` with the base unit `bytes` is
 emitted as `my.meter.bytes.count`.
-
-## Migrating to 3.0
-
-Before 3.0, timers and distribution summaries also emitted a separate `<name>.max` gauge. Their
-maximum values are now available from their OpenTelemetry histograms.
-
-In Prometheus mode, a custom `COUNTER` meter named `my.meter` with the base unit `bytes` was emitted
-as `my.meter.count.bytes` before 3.0; it is now emitted as `my.meter.bytes.count`.
