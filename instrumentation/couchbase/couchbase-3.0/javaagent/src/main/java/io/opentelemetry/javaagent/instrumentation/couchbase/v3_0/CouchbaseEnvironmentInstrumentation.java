@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v3_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.databaseSchemaUrl;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -14,6 +13,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.semconv.SchemaUrls;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -43,7 +43,7 @@ class CouchbaseEnvironmentInstrumentation implements TypeInstrumentation {
           CouchbaseRequestTracer.create(
               GlobalOpenTelemetry.get()
                   .tracerBuilder(instrumentationName)
-                  .setSchemaUrl(databaseSchemaUrl())
+                  .setSchemaUrl(SchemaUrls.V1_44_0)
                   .build()));
     }
   }

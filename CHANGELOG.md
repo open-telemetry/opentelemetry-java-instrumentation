@@ -4,7 +4,26 @@
 
 ### ⚠️ Breaking changes
 
+- OSHI system metrics use schema version 1.44.0 and scope `io.opentelemetry.oshi-5.0`.
+  Update `system.network.packets` to `system.network.packet.count`, plural count units to
+  `{packet}`, `{error}`, and `{operation}`. Replace memory `state` with `system.memory.state`;
+  for network I/O and errors, replace `device` and `direction` with `network.interface.name`
+  and `network.io.direction`. Packet counts use `system.device` and `network.io.direction`;
+  disk metrics use `system.device` and `disk.io.direction`.
+  Remove `otel.instrumentation.oshi.experimental-metrics.enabled`; OSHI no longer emits `runtime.java.memory`
+  or `runtime.java.cpu_time`. `jvm.memory.used` measures JVM pools, not process RSS or virtual
+  memory, and `jvm.cpu.time` does not split user/system CPU time.
+- Remove the deprecated GraphQL configuration properties
+  `otel.instrumentation.graphql.add-operation-name-to-span-name.enabled` and
+  `otel.instrumentation.graphql.query-sanitizer.enabled`. Use
+  `otel.instrumentation.graphql.operation-name-in-span-name.enabled` and
+  `otel.instrumentation.graphql.query-sanitization.enabled`, respectively.
 - The Java agent and standalone libraries now use the existing v1.43.0 messaging implementation.
+- Remove support for the deprecated controller and view telemetry aliases. Replace
+  `otel.instrumentation.common.experimental.controller-telemetry.enabled` and
+  `otel.instrumentation.common.experimental.view-telemetry.enabled` with
+  `otel.instrumentation.common.controller-telemetry.enabled` and
+  `otel.instrumentation.common.view-telemetry.enabled`.
 - Emit only stable source code attributes: `code.function.name` replaces `code.namespace` and
   `code.function`, and log records use `code.file.path` and `code.line.number` instead of
   `code.filepath` and `code.lineno`. The `code` and `code/dup` opt-ins and
@@ -25,11 +44,22 @@
 - Servlet request parameter attribute keys now preserve the original parameter-name casing, and
   trace/span request attributes are disabled by default. Re-enable the latter with
   `otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled=true`.
+- Elasticsearch and OpenSearch query bodies are now always captured.
+  The `otel.instrumentation.elasticsearch.capture-search-query` and
+  `otel.instrumentation.opensearch.capture-search-query` properties
+  are no longer supported and have no replacement. Query sanitization remains enabled
+  by default and configurable with
+  `otel.instrumentation.elasticsearch.query-sanitization.enabled` or
+  `otel.instrumentation.opensearch.query-sanitization.enabled`, which override
+  `otel.instrumentation.common.db.query-sanitization.enabled`.
 
 ### ⚠️ Breaking changes to non-stable APIs
 
 - Remove deprecated `Experimental.setCaptureRequestParameters` from Servlet 3.0 and Servlet 5.0
   libraries. Use `Experimental.setRequestParameters` with an `IncludeExclude` selector instead.
+- Remove deprecated `ProcessMetrics` and `SystemMetrics.registerObservers(Meter)` from
+  `opentelemetry-oshi`. Use `SystemMetrics.registerObservers(OpenTelemetry)` for system metrics
+  and continue closing the returned observers.
 - Move `CodeAttributesGetter`, `CodeAttributesExtractor`, and `CodeSpanNameExtractor` from
   `io.opentelemetry.instrumentation.api.incubator.semconv.code` in
   `opentelemetry-instrumentation-api-incubator` to `io.opentelemetry.instrumentation.api.semconv.code`
@@ -62,6 +92,21 @@
 - Remove the deprecated `OpenTelemetryMeterRegistryBuilder#setMicrometerHistogramGaugesEnabled(boolean)`.
   Use `Experimental#setMicrometerHistogramGaugesEnabled(OpenTelemetryMeterRegistryBuilder, boolean)`
   instead.
+- Remove legacy database APIs from `io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-incubator`.
+  Replace `DbClientAttributesGetter.getDbSystem`, `getDbName`, and `getDbOperation` with
+  `getDbSystemName`, `getDbNamespace`, and `getDbOperationName`. Return canonical system names
+  such as `oracle.db` and `h2database` from `getDbSystemName`; extractors no longer translate
+  legacy system names. Remove overrides of `getUser` and `getConnectionString`, which have no
+  stable database attribute replacements. SQL getters use
+  `getRawQueryTexts` instead of `getRawQueryTextsForOldSemconv`; use
+  `DbClientSpanNameExtractor.create` instead of `createWithGenericOldSpanName`.
+  Remove `SqlClientAttributesExtractorBuilder.setTableAttribute`; enable
+  `setSingleOperationAndCollection(true)` to derive `db.collection.name` for systems that support
+  only one collection and operation per non-batch query.
+- Remove `SqlQueryAnalyzer.analyzeWithSummary` from
+  `io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-incubator` for 3.0.
+  Use `SqlQueryAnalyzer.analyze`, which now always produces query summaries when sanitization is
+  enabled. The public `SqlQuery` factory signatures are unchanged.
 - Remove `MessageOperation` and its overloads in the messaging attribute, span-name and span-kind
   extractors from `opentelemetry-instrumentation-api-incubator`.
   `MessagingAttributesGetter` no longer requires or exposes `getMessageBodySize()` or

@@ -16,7 +16,7 @@ public abstract class SqlQuery {
   private static final String SQL_CALL = "CALL";
   private static final int QUERY_SUMMARY_MAX_LENGTH = 255;
 
-  /** Creates a SqlQuery for stable semconv (uses querySummary). */
+  /** Creates a SQL analysis result with a query summary. */
   public static SqlQuery createWithSummary(
       @Nullable String queryText,
       @Nullable String storedProcedureName,
@@ -24,7 +24,7 @@ public abstract class SqlQuery {
     return createWithSummary(queryText, null, null, storedProcedureName, querySummary);
   }
 
-  /** Creates a SqlQuery for stable semconv (uses querySummary). */
+  /** Creates a SQL analysis result with a query summary. */
   static SqlQuery createWithSummary(
       @Nullable String queryText,
       @Nullable String operationName,
@@ -36,15 +36,9 @@ public abstract class SqlQuery {
         queryText, operationName, collectionName, storedProcedureName, truncatedQuerySummary);
   }
 
-  /**
-   * Creates a SqlQuery for old semconv (no querySummary). Package-private for backward
-   * compatibility with old jflex-generated sanitizer.
-   */
+  /** Creates a SQL analysis result with an operation and its table or stored procedure target. */
   public static SqlQuery create(
       @Nullable String queryText, @Nullable String operationName, @Nullable String target) {
-    // AutoValue constructor: (queryText, operationName, collectionName, storedProcedureName,
-    // querySummary)
-    // For old semconv: derive collectionName and storedProcedureName from target based on operation
     boolean isStoredProcedure = SQL_CALL.equals(operationName) || "EXECUTE".equals(operationName);
     String collectionName = isStoredProcedure ? null : target;
     String storedProcedureName = isStoredProcedure ? target : null;

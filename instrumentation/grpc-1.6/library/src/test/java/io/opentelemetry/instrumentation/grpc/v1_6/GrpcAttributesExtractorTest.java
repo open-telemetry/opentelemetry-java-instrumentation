@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.grpc.v1_6;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
@@ -58,7 +58,7 @@ class GrpcAttributesExtractorTest {
     assertThat(result.get(oldMetadataAttributeKey("included-key")))
         .isEqualTo(emitOldRpcSemconv() ? singletonList("included-value") : null);
     assertThat(result.get(stableMetadataAttributeKey("included-key")))
-        .isEqualTo(emitStableRpcSemconv() ? singletonList("included-value") : null);
+        .isEqualTo(emitPreviewRpcSemconv() ? singletonList("included-value") : null);
     assertExcludedMetadata(result, "included-excluded");
     assertExcludedMetadata(result, "other-key");
     assertExcludedMetadata(result, "included-bin");
@@ -115,7 +115,7 @@ class GrpcAttributesExtractorTest {
     assertThat(result.get(oldMetadataAttributeKey("included-key")))
         .isEqualTo(emitOldRpcSemconv() ? singletonList("included-value") : null);
     assertThat(result.get(stableMetadataAttributeKey("included-key")))
-        .isEqualTo(emitStableRpcSemconv() ? singletonList("included-value") : null);
+        .isEqualTo(emitPreviewRpcSemconv() ? singletonList("included-value") : null);
     assertExcludedMetadata(result, "Included-Key");
     assertExcludedMetadata(result, "excluded-key");
     assertExcludedMetadata(result, "Excluded-Key");

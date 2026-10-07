@@ -14,7 +14,9 @@ import com.couchbase.client.java.query.Select;
 import com.couchbase.client.java.query.dsl.Expression;
 import com.couchbase.client.java.view.SpatialViewQuery;
 import com.couchbase.client.java.view.ViewQuery;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -24,10 +26,33 @@ class CouchbaseQuerySanitizerTest {
   @ParameterizedTest
   @MethodSource("providesArguments")
   void testShouldNormalizeStringQuery(Parameter parameter) {
-    String normalized = CouchbaseQuerySanitizer.analyzeWithSummary(parameter.query).getQueryText();
+    String normalized = CouchbaseQuerySanitizer.analyze(parameter.query).getQueryText();
     // the analytics query ends up with trailing ';' in earlier couchbase version, but no trailing
     // ';' in later couchbase version
     assertThat(normalized.replaceFirst(";$", "")).isEqualTo(parameter.expected);
+  }
+
+  @SuppressWarnings("deprecation") // verify SQL operation and collection analysis
+  @Test
+  void queryAnalysisIsPreservedInRequestCopies() {
+    CouchbaseRequestInfo request =
+        CouchbaseRequestInfo.create(
+            "test", null, "SELECT field1 FROM `test` WHERE field2 = 'asdf'");
+    SqlQuery query = request.getSqlQuery();
+
+    assertThat(query).isNotNull();
+    assertThat(query.getQueryText()).isEqualTo("SELECT field1 FROM `test` WHERE field2 = ?");
+    assertThat(query.getQuerySummary()).isEqualTo("SELECT `test`");
+    assertThat(query.getOperationName()).isEqualTo("SELECT");
+    assertThat(query.getCollectionName()).isEqualTo("`test`");
+    assertThat(query.getStoredProcedureName()).isNull();
+    assertThat(request.getOperation()).isEqualTo("SELECT");
+
+    CouchbaseRequestInfo copy = request.copySupplier().get();
+    assertThat(copy).isNotSameAs(request);
+    assertThat(copy.getSqlQuery()).isSameAs(query);
+    assertThat(copy.getOperation()).isEqualTo("SELECT");
+    assertThat(copy.getBucket()).isEqualTo("test");
   }
 
   private static Stream<Arguments> providesArguments() {

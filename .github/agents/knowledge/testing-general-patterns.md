@@ -353,11 +353,6 @@ site.
 Replace `<domain>` with a supported selector. Use `emitStable*Semconv()` for stable selection
 and `emitPreview*Semconv()` for preview selection.
 
-The preview accessor names in this article describe the intended API. Their implementation
-and caller migration are tracked in
-[#20410](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20410).
-Until that rename lands, use the existing accessors when editing code.
-
 ### Mode-dependent expected values
 
 Assert keys and values directly when expectations do not depend on a mode:

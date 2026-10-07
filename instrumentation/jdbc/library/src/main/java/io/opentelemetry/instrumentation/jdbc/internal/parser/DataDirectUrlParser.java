@@ -24,7 +24,6 @@ import java.util.Map;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-@SuppressWarnings("deprecation") // supporting old semconv until 3.0
 public final class DataDirectUrlParser implements JdbcUrlParser {
 
   // copied from DbAttributes.DbSystemNameValues
@@ -37,13 +36,6 @@ public final class DataDirectUrlParser implements JdbcUrlParser {
   private static final String POSTGRESQL = "postgresql";
   // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String IBM_DB2 = "ibm.db2";
-
-  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
-  private static final String MSSQL = "mssql";
-  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
-  private static final String ORACLE = "oracle";
-  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
-  private static final String DB2 = "db2";
 
   // DataDirect subtypes mapped to db.system.name values
   private static final String SUBTYPE_SQLSERVER = "sqlserver";
@@ -61,16 +53,6 @@ public final class DataDirectUrlParser implements JdbcUrlParser {
     map.put(SUBTYPE_MYSQL, MYSQL);
     map.put(SUBTYPE_POSTGRESQL, POSTGRESQL);
     map.put(SUBTYPE_DB2, IBM_DB2);
-    return map;
-  }
-
-  private static final Map<String, String> SUBTYPE_TO_OLD_SYSTEM = buildSubtypeToOldSystem();
-
-  private static Map<String, String> buildSubtypeToOldSystem() {
-    Map<String, String> map = new HashMap<>(3);
-    map.put(SUBTYPE_SQLSERVER, MSSQL);
-    map.put(SUBTYPE_ORACLE, ORACLE);
-    map.put(SUBTYPE_DB2, DB2);
     return map;
   }
 
@@ -95,13 +77,7 @@ public final class DataDirectUrlParser implements JdbcUrlParser {
     String system = SUBTYPE_TO_SYSTEM.get(subtype);
     if (system != null) {
       ctx.system(system);
-      String oldSystem = SUBTYPE_TO_OLD_SYSTEM.get(subtype);
-      if (oldSystem != null) {
-        ctx.oldSemconvSystem(oldSystem);
-      }
     }
-
-    ctx.subtype(subtype);
 
     ctx.parseUrl(jdbcUrl);
 

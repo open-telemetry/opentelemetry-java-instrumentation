@@ -51,9 +51,9 @@ public abstract class CouchbaseRequestInfo {
   @SuppressWarnings("deprecation") // SqlQuery.getOperationName supplies db.operation.name
   public static CouchbaseRequestInfo create(
       @Nullable String bucket, @Nullable DbServerTarget serverTarget, Object query) {
-    SqlQuery sqlQueryWithSummary = CouchbaseQuerySanitizer.analyzeWithSummary(query);
-    String operation = sqlQueryWithSummary.getOperationName();
-    return new AutoValue_CouchbaseRequestInfo(bucket, sqlQueryWithSummary, operation, serverTarget);
+    SqlQuery sqlQuery = CouchbaseQuerySanitizer.analyze(query);
+    String operation = sqlQuery.getOperationName();
+    return new AutoValue_CouchbaseRequestInfo(bucket, sqlQuery, operation, serverTarget);
   }
 
   private static String computeOperation(Class<?> declaringClass, String methodName) {
@@ -75,7 +75,7 @@ public abstract class CouchbaseRequestInfo {
   public abstract String getBucket();
 
   @Nullable
-  public abstract SqlQuery getSqlQueryWithSummary();
+  public abstract SqlQuery getSqlQuery();
 
   @Nullable
   public abstract String getOperation();
@@ -95,7 +95,7 @@ public abstract class CouchbaseRequestInfo {
 
   private CouchbaseRequestInfo copy() {
     return new AutoValue_CouchbaseRequestInfo(
-        getBucket(), getSqlQueryWithSummary(), getOperation(), getServerTarget());
+        getBucket(), getSqlQuery(), getOperation(), getServerTarget());
   }
 
   @Nullable
