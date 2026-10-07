@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.springdata;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-
 import com.couchbase.client.java.cluster.BucketSettings;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import io.opentelemetry.instrumentation.couchbase.springdata.AbstractCouchbaseSpringTemplateTest;
@@ -22,7 +20,7 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseSpringTemplateTest {
 
   @Override
   protected boolean includesNetworkAttributes() {
-    return emitStableDatabaseSemconv();
+    return true;
   }
 
   @Override
@@ -34,12 +32,6 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseSpringTemplateTest {
   @Override
   protected boolean includesExperimentalOperationIdAttribute() {
     // The core-io versions before 1.6.0 have no CouchbaseRequest.operationId() to correlate with.
-    return false;
-  }
-
-  @Override
-  protected boolean includesOldServerAddressAttribute() {
-    // This module never resolves a node string to pair with the actual peer address.
     return false;
   }
 }

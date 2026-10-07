@@ -137,50 +137,6 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
-  val testMessagingPreview = register<Test>("testMessagingPreview") {
-    testClassesDirs = sourceSets["testSqs"].output.classesDirs
-    classpath = sourceSets["testSqs"].runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
-  val testMessagingPreviewNoReceiveTelemetry = register<Test>("testMessagingPreviewNoReceiveTelemetry") {
-    testClassesDirs = sourceSets["testSqsNoReceiveTelemetry"].output.classesDirs
-    classpath = sourceSets["testSqsNoReceiveTelemetry"].runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets["testSqs"].output.classesDirs
-    classpath = sourceSets["testSqs"].runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    // with the v3 preview off, the legacy opt-in flag selects the new messaging semconv too
-    jvmArgs("-Dotel.semconv-stability.opt-in=messaging/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging/dup")
-  }
-
-  check {
-    dependsOn(
-      testStableSemconv,
-      testMessagingPreview,
-      testMessagingPreviewNoReceiveTelemetry,
-      testBothSemconv
-    )
-  }
-
   if (otelProps.denyUnsafe) {
     // org.elasticmq:elasticmq-rest-sqs_2.13 uses unsafe. Future versions are likely to fix this.
     withType<Test>().configureEach {

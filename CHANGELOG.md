@@ -28,12 +28,34 @@
     selections in `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included`, or
     declarative `java.runtime_telemetry.jfr_metrics/development.included`.
 - Remove the legacy JFR metric name `jvm.cpu.limit`. Use `jvm.cpu.count` instead.
+- Remove the deprecated GraphQL configuration properties
+  `otel.instrumentation.graphql.add-operation-name-to-span-name.enabled` and
+  `otel.instrumentation.graphql.query-sanitizer.enabled`. Use
+  `otel.instrumentation.graphql.operation-name-in-span-name.enabled` and
+  `otel.instrumentation.graphql.query-sanitization.enabled`, respectively.
+- The Java agent and standalone libraries now use the existing v1.43.0 messaging implementation.
+- Remove support for the deprecated controller and view telemetry aliases. Replace
+  `otel.instrumentation.common.experimental.controller-telemetry.enabled` and
+  `otel.instrumentation.common.experimental.view-telemetry.enabled` with
+  `otel.instrumentation.common.controller-telemetry.enabled` and
+  `otel.instrumentation.common.view-telemetry.enabled`.
 - Emit only stable source code attributes: `code.function.name` replaces `code.namespace` and
   `code.function`, and log records use `code.file.path` and `code.line.number` instead of
   `code.filepath` and `code.lineno`. The `code` and `code/dup` opt-ins and
   `general.code.semconv` declarative settings no longer select legacy emission.
 - Change the Java agent's `telemetry.distro.name` resource attribute from
   `opentelemetry-java-instrumentation` to `opentelemetry-javaagent`.
+- Database telemetry now uses schema version 1.44.0.
+  Update telemetry queries and dashboards for `db.system.name`, `db.namespace`, `db.query.text`,
+  `db.operation.name`, and `db.collection.name` instead of their legacy keys, and for stable system
+  values such as `microsoft.sql_server`, `oracle.db`, and `h2database`. Database span names use query
+  summaries or stable operation/target fallbacks rather than legacy database-prefixed names.
+  Instrumentations using the shared database client metrics now emit `db.client.operation.duration`
+  in seconds by default. Pool metrics use `db.client.connection.*` rather than
+  `db.client.connections.*`, including `count` instead of `usage` and `limit` instead of `max`,
+  singular count units such as `{connection}`, and seconds instead of milliseconds for durations.
+  Pool attributes use `db.client.connection.pool.name` and `db.client.connection.state`; unnamed
+  pools use stable database-derived names, and DBCP retains the first registered pool name.
 
 ### ⚠️ Breaking changes to non-stable APIs
 
@@ -72,6 +94,25 @@
 - Remove the deprecated `OpenTelemetryMeterRegistryBuilder#setMicrometerHistogramGaugesEnabled(boolean)`.
   Use `Experimental#setMicrometerHistogramGaugesEnabled(OpenTelemetryMeterRegistryBuilder, boolean)`
   instead.
+- Remove legacy database APIs from `io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-incubator`.
+  Replace `DbClientAttributesGetter.getDbSystem`, `getDbName`, and `getDbOperation` with
+  `getDbSystemName`, `getDbNamespace`, and `getDbOperationName`. Return canonical system names
+  such as `oracle.db` and `h2database` from `getDbSystemName`; extractors no longer translate
+  legacy system names. Remove overrides of `getUser` and `getConnectionString`, which have no
+  stable database attribute replacements. SQL getters use
+  `getRawQueryTexts` instead of `getRawQueryTextsForOldSemconv`; use
+  `DbClientSpanNameExtractor.create` instead of `createWithGenericOldSpanName`.
+  Remove `SqlClientAttributesExtractorBuilder.setTableAttribute`; enable
+  `setSingleOperationAndCollection(true)` to derive `db.collection.name` for systems that support
+  only one collection and operation per non-batch query.
+- Remove `SqlQueryAnalyzer.analyzeWithSummary` from
+  `io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-incubator` for 3.0.
+  Use `SqlQueryAnalyzer.analyze`, which now always produces query summaries when sanitization is
+  enabled. The public `SqlQuery` factory signatures are unchanged.
+- Remove `MessageOperation` and its overloads in the messaging attribute, span-name and span-kind
+  extractors from `opentelemetry-instrumentation-api-incubator`.
+  `MessagingAttributesGetter` no longer requires or exposes `getMessageBodySize()` or
+  `getMessageEnvelopeSize()`.
 
 ## Version 2.32.0 (2026-10-03)
 

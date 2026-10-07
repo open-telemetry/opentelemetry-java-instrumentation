@@ -6,21 +6,21 @@
 package io.opentelemetry.spring.smoketest;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CLIENT_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CONSUMER_GROUP_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CLUSTER_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -37,8 +37,6 @@ import org.springframework.kafka.core.KafkaTemplate;
 abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
 
   @Autowired protected KafkaTemplate<String, String> kafkaTemplate;
-
-  private static final AttributeKey<String> MESSAGING_CLIENT_ID = stringKey("messaging.client_id");
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
@@ -67,43 +65,41 @@ abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarter
                   trace.hasSpansSatisfyingExactly(
                       span -> span.hasName("producer"),
                       span ->
-                          span.hasName("testTopic publish")
+                          span.hasName("send testTopic")
                               .hasKind(SpanKind.PRODUCER)
                               .hasParent(trace.getSpan(0))
                               .hasAttributesSatisfyingExactly(
                                   equalTo(MESSAGING_SYSTEM, "kafka"),
                                   equalTo(MESSAGING_DESTINATION_NAME, "testTopic"),
-                                  equalTo(MESSAGING_OPERATION, "publish"),
+                                  equalTo(MESSAGING_OPERATION_NAME, "send"),
+                                  equalTo(MESSAGING_OPERATION_TYPE, "send"),
                                   satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
                                   satisfies(
                                       MESSAGING_DESTINATION_PARTITION_ID,
                                       AbstractStringAssert::isNotEmpty),
                                   satisfies(
-                                      MESSAGING_KAFKA_MESSAGE_OFFSET,
-                                      AbstractLongAssert::isNotNegative),
+                                      MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative),
                                   equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
                                   satisfies(
                                       MESSAGING_KAFKA_CLUSTER_ID,
                                       AbstractStringAssert::isNotEmpty)),
                       span ->
-                          span.hasName("testTopic process")
+                          span.hasName("process testTopic")
                               .hasKind(SpanKind.CONSUMER)
                               .hasParent(trace.getSpan(1))
                               .hasAttributesSatisfying(
                                   equalTo(MESSAGING_SYSTEM, "kafka"),
                                   equalTo(MESSAGING_DESTINATION_NAME, "testTopic"),
-                                  equalTo(MESSAGING_OPERATION, "process"),
-                                  satisfies(
-                                      MESSAGING_MESSAGE_BODY_SIZE,
-                                      AbstractLongAssert::isNotNegative),
+                                  equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                  equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                                  satisfies(MESSAGING_MESSAGE_BODY_SIZE, val -> val.isNull()),
                                   satisfies(
                                       MESSAGING_DESTINATION_PARTITION_ID,
                                       AbstractStringAssert::isNotEmpty),
                                   satisfies(
-                                      MESSAGING_KAFKA_MESSAGE_OFFSET,
-                                      AbstractLongAssert::isNotNegative),
+                                      MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative),
                                   equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
-                                  equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "testListener"),
+                                  equalTo(MESSAGING_CONSUMER_GROUP_NAME, "testListener"),
                                   satisfies(
                                       longKey("kafka.record.queue_time_ms"),
                                       AbstractLongAssert::isNotNegative),

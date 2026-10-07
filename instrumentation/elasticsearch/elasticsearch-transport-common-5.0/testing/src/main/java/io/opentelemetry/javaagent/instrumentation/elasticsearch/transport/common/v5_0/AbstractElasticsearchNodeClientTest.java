@@ -7,15 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.commo
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ELASTICSEARCH;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
@@ -71,19 +67,12 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "cluster:monitor/health"
-                                : "ClusterHealthAction")
+                    span.hasName("cluster:monitor/health")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                            equalTo(
-                                maybeStable(DB_OPERATION),
-                                emitStableDatabaseSemconv()
-                                    ? "cluster:monitor/health"
-                                    : "ClusterHealthAction"),
+                            equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                            equalTo(DB_OPERATION_NAME, "cluster:monitor/health"),
                             equalTo(
                                 stringKey("elasticsearch.action"),
                                 experimental("ClusterHealthAction")),
@@ -120,19 +109,14 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
-                equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                equalTo(
-                    maybeStable(DB_OPERATION),
-                    emitStableDatabaseSemconv() ? "indices:data/read/get" : "GetAction"),
+                equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                equalTo(DB_OPERATION_NAME, "indices:data/read/get"),
                 equalTo(stringKey("elasticsearch.action"), experimental("GetAction")),
                 equalTo(stringKey("elasticsearch.request"), experimental("GetRequest")),
                 equalTo(
                     stringKey("elasticsearch.request.indices"), experimental("invalid-index"))));
 
-    if (emitStableDatabaseSemconv()) {
-      assertions.add(equalTo(ERROR_TYPE, "org.elasticsearch.index.IndexNotFoundException"));
-    }
-
+    assertions.add(equalTo(ERROR_TYPE, "org.elasticsearch.index.IndexNotFoundException"));
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -143,8 +127,7 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
                         .hasStatus(StatusData.error())
                         .hasException(expectedException),
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv() ? "indices:data/read/get" : "GetAction")
+                    span.hasName("indices:data/read/get")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
@@ -170,10 +153,8 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
       String indexName, String indexType, String id, long version) {
     return new ArrayList<>(
         asList(
-            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-            equalTo(
-                maybeStable(DB_OPERATION),
-                emitStableDatabaseSemconv() ? "indices:data/read/get" : "GetAction"),
+            equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+            equalTo(DB_OPERATION_NAME, "indices:data/read/get"),
             equalTo(stringKey("elasticsearch.action"), experimental("GetAction")),
             equalTo(stringKey("elasticsearch.request"), experimental("GetRequest")),
             equalTo(stringKey("elasticsearch.request.indices"), experimental(indexName)),
@@ -217,19 +198,12 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "indices:admin/create"
-                                : "CreateIndexAction")
+                    span.hasName("indices:admin/create")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                            equalTo(
-                                maybeStable(DB_OPERATION),
-                                emitStableDatabaseSemconv()
-                                    ? "indices:admin/create"
-                                    : "CreateIndexAction"),
+                            equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                            equalTo(DB_OPERATION_NAME, "indices:admin/create"),
                             equalTo(
                                 stringKey("elasticsearch.action"),
                                 experimental("CreateIndexAction")),
@@ -242,19 +216,12 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "cluster:monitor/health"
-                                : "ClusterHealthAction")
+                    span.hasName("cluster:monitor/health")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                            equalTo(
-                                maybeStable(DB_OPERATION),
-                                emitStableDatabaseSemconv()
-                                    ? "cluster:monitor/health"
-                                    : "ClusterHealthAction"),
+                            equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                            equalTo(DB_OPERATION_NAME, "cluster:monitor/health"),
                             equalTo(
                                 stringKey("elasticsearch.action"),
                                 experimental("ClusterHealthAction")),
@@ -264,8 +231,7 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv() ? "indices:data/read/get" : "GetAction")
+                    span.hasName("indices:data/read/get")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -273,19 +239,12 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "indices:data/write/index"
-                                : "IndexAction")
+                    span.hasName("indices:data/write/index")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                            equalTo(
-                                maybeStable(DB_OPERATION),
-                                emitStableDatabaseSemconv()
-                                    ? "indices:data/write/index"
-                                    : "IndexAction"),
+                            equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                            equalTo(DB_OPERATION_NAME, "indices:data/write/index"),
                             equalTo(stringKey("elasticsearch.action"), experimental("IndexAction")),
                             equalTo(
                                 stringKey("elasticsearch.request"), experimental("IndexRequest")),
@@ -309,8 +268,7 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv() ? "indices:data/read/get" : "GetAction")
+                    span.hasName("indices:data/read/get")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(

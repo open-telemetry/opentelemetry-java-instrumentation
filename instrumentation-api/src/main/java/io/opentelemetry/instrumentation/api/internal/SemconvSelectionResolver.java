@@ -26,12 +26,12 @@ class SemconvSelectionResolver {
   // SystemProperty-backed otel.semconv-stability.opt-in values.
   private final Set<String> stableFlags;
 
-  // Preview flags for service.peer, rpc, and messaging. Reads through OpenTelemetry-backed
+  // Preview flags for service.peer and rpc. Reads through OpenTelemetry-backed
   // java.common.semconv_stability.preview config, and falls back to SystemProperty for
   // otel.semconv-stability.preview in library instrumentation.
   private final Set<String> previewFlags;
 
-  // Forces database to stable-only emission. For preview domains, v3 preview uses only
+  // For preview domains, v3 preview uses only
   // preview flags; non-preview combines stable and preview flags for backward compatibility.
   private final boolean v3Preview;
 
@@ -55,18 +55,6 @@ class SemconvSelectionResolver {
     this.previewFlags = previewFlags;
   }
 
-  SemconvMode database() {
-    SemconvDomain.Builder domain = SemconvDomain.builder("db").flagKey("database");
-    if (v3Preview) {
-      domain.defaultMode(SemconvMode.V1_STABLE);
-    } else {
-      domain
-          .defaultMode(SemconvMode.V0_STABLE)
-          .otherSupportedModes(SemconvMode.V1_STABLE, SemconvMode.V1_STABLE.withDualEmit());
-    }
-    return resolveSemconvSelection(domain.build());
-  }
-
   SemconvMode rpc() {
     return resolveSemconvSelection(
         SemconvDomain.builder("rpc")
@@ -74,20 +62,6 @@ class SemconvSelectionResolver {
             .otherSupportedModes(
                 SemconvMode.V1_EXPERIMENTAL, SemconvMode.V1_EXPERIMENTAL.withDualEmit())
             .build());
-  }
-
-  SemconvMode messaging() {
-    SemconvDomain.Builder domain = SemconvDomain.builder("messaging");
-    if (v3Preview) {
-      // will be changed in 3.0 to V0_STABLE, which becomes the one and only messaging semconv
-      domain.defaultMode(SemconvMode.V1_EXPERIMENTAL);
-    } else {
-      domain
-          .defaultMode(SemconvMode.V0_STABLE)
-          .otherSupportedModes(
-              SemconvMode.V1_EXPERIMENTAL, SemconvMode.V1_EXPERIMENTAL.withDualEmit());
-    }
-    return resolveSemconvSelection(domain.build());
   }
 
   SemconvMode servicePeer() {

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,7 +12,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseRequestInfo;
 import java.net.InetSocketAddress;
 import org.junit.jupiter.api.Test;
@@ -28,11 +29,10 @@ class CouchbaseAttributesGetterTest {
             DbServerTarget.builder(11210).addEndpoint("cluster.example", -1).build(),
             getClass(),
             "get");
-    request.setNode(new InetSocketAddress("192.0.2.1", 32768), "node.example:11210");
+    request.setNode(new InetSocketAddress("192.0.2.1", 32768));
 
     CouchbaseAttributesGetter getter = new CouchbaseAttributesGetter();
-    assertThat(getter.getServerAddress(request))
-        .isEqualTo(emitStableDatabaseSemconv() ? "cluster.example" : null);
+    assertThat(getter.getServerAddress(request)).isEqualTo("cluster.example");
     assertThat(getter.getServerPort(request)).isNull();
   }
 
@@ -50,7 +50,7 @@ class CouchbaseAttributesGetterTest {
   }
 
   @Test
-  void reportsANonDefaultPortOnlyInStableMode() {
+  void reportsANonDefaultPort() {
     CouchbaseRequestInfo request =
         CouchbaseRequestInfo.create(
             "bucket",
@@ -59,13 +59,13 @@ class CouchbaseAttributesGetterTest {
             "get");
 
     CouchbaseAttributesGetter getter = new CouchbaseAttributesGetter();
-    assertThat(getter.getServerPort(request)).isEqualTo(emitStableDatabaseSemconv() ? 11211 : null);
+    assertThat(getter.getServerPort(request)).isEqualTo(11211);
   }
 
   @Test
   void doesNotReportTheNodeThatAnsweredAtStart() {
     CouchbaseRequestInfo request = CouchbaseRequestInfo.create("bucket", null, getClass(), "get");
-    request.setNode(new InetSocketAddress("192.0.2.1", 32768), "node.example:11210");
+    request.setNode(new InetSocketAddress("192.0.2.1", 32768));
 
     CouchbaseAttributesGetter getter = new CouchbaseAttributesGetter();
     assertThat(getter.getServerAddress(request)).isNull();
@@ -73,40 +73,36 @@ class CouchbaseAttributesGetterTest {
   }
 
   @Test
-  void reportsTheNodeThatAnsweredAtEndOnlyInLegacyMode() {
+  void doesNotReportTheNodeThatAnsweredAsServerAtEnd() {
     CouchbaseRequestInfo request = CouchbaseRequestInfo.create("bucket", null, getClass(), "get");
-    request.setNode(new InetSocketAddress("192.0.2.1", 32768), "node.example:11210");
+    request.setNode(new InetSocketAddress("192.0.2.1", 32768));
 
     AttributesBuilder attributes = Attributes.builder();
-    new CouchbaseAttributesGetter().onEnd(attributes, Context.root(), request, null, null);
+    DbClientAttributesExtractor.create(new CouchbaseAttributesGetter())
+        .onEnd(attributes, Context.root(), request, null, null);
 
-    if (emitStableDatabaseSemconv()) {
-      assertThat(attributes.build()).isEqualTo(Attributes.empty());
-    } else {
-      assertThat(attributes.build().get(SERVER_ADDRESS)).isEqualTo("node.example");
-      assertThat(attributes.build().get(SERVER_PORT)).isEqualTo(11210L);
-    }
+    assertThat(attributes.build().get(SERVER_ADDRESS)).isNull();
+    assertThat(attributes.build().get(SERVER_PORT)).isNull();
   }
 
   @Test
-  void preservesTheConfiguredTargetInStableMode() {
+  void preservesTheConfiguredTarget() {
     CouchbaseRequestInfo request =
         CouchbaseRequestInfo.create(
             "bucket",
             DbServerTarget.builder(11210).addEndpoint("cluster.example", -1).build(),
             getClass(),
             "get");
-    request.setNode(new InetSocketAddress("192.0.2.1", 32768), "node.example:11210");
+    request.setNode(new InetSocketAddress("192.0.2.1", 32768));
 
     AttributesBuilder attributes = Attributes.builder();
-    new CouchbaseAttributesGetter().onEnd(attributes, Context.root(), request, null, null);
+    AttributesExtractor<CouchbaseRequestInfo, Void> extractor =
+        DbClientAttributesExtractor.create(new CouchbaseAttributesGetter());
+    extractor.onStart(attributes, Context.root(), request);
+    extractor.onEnd(attributes, Context.root(), request, null, null);
 
-    if (emitStableDatabaseSemconv()) {
-      assertThat(attributes.build()).isEqualTo(Attributes.empty());
-    } else {
-      assertThat(attributes.build().get(SERVER_ADDRESS)).isEqualTo("node.example");
-      assertThat(attributes.build().get(SERVER_PORT)).isEqualTo(11210L);
-    }
+    assertThat(attributes.build().get(SERVER_ADDRESS)).isEqualTo("cluster.example");
+    assertThat(attributes.build().get(SERVER_PORT)).isNull();
   }
 
   @Test
@@ -120,30 +116,17 @@ class CouchbaseAttributesGetterTest {
   }
 
   @Test
-  void keepsTheSocketAndTheAddressOfTheLastContactedNodeTogether() {
+  void reportsTheLastContactedPeer() {
     CouchbaseRequestInfo request = CouchbaseRequestInfo.create("bucket", null, getClass(), "get");
     InetSocketAddress firstPeer = new InetSocketAddress("192.0.2.1", 32768);
     InetSocketAddress secondPeer = new InetSocketAddress("192.0.2.2", 32769);
 
     CouchbaseAttributesGetter getter = new CouchbaseAttributesGetter();
-    request.setNode(firstPeer, "2001:db8::1:11210");
+    request.setNode(firstPeer);
     assertThat(getter.getNetworkPeerInetSocketAddress(request, null)).isEqualTo(firstPeer);
-    assertThat(request.getNode().getBackendAddress()).isEqualTo("2001:db8::1");
-    assertThat(request.getNode().getBackendPort()).isEqualTo(11210);
 
-    request.setNode(secondPeer, "[2001:db8::2]:11211");
+    request.setNode(secondPeer);
     assertThat(getter.getNetworkPeerInetSocketAddress(request, null)).isEqualTo(secondPeer);
-    assertThat(request.getNode().getBackendAddress()).isEqualTo("2001:db8::2");
-    assertThat(request.getNode().getBackendPort()).isEqualTo(11211);
-  }
-
-  @Test
-  void acceptsBracketedIpv6BackendAddressWithoutPort() {
-    CouchbaseRequestInfo request = CouchbaseRequestInfo.create("bucket", null, getClass(), "get");
-    request.setNode(new InetSocketAddress("192.0.2.1", 32768), "[2001:db8::1]");
-
-    assertThat(request.getNode().getBackendAddress()).isEqualTo("2001:db8::1");
-    assertThat(request.getNode().getBackendPort()).isZero();
   }
 
   @Test
@@ -156,16 +139,14 @@ class CouchbaseAttributesGetterTest {
             "get");
     InetSocketAddress firstPeer = new InetSocketAddress("192.0.2.1", 32768);
     InetSocketAddress secondPeer = new InetSocketAddress("192.0.2.2", 32769);
-    request.setNode(secondPeer, "second.example:11211");
+    request.setNode(secondPeer);
 
     CouchbaseRequestInfo copy = request.copySupplier().get();
-    copy.setNode(firstPeer, "first.example:11210");
+    copy.setNode(firstPeer);
 
     CouchbaseAttributesGetter getter = new CouchbaseAttributesGetter();
     assertThat(getter.getNetworkPeerInetSocketAddress(request, null)).isEqualTo(secondPeer);
-    assertThat(request.getNode().getBackendAddress()).isEqualTo("second.example");
     assertThat(getter.getNetworkPeerInetSocketAddress(copy, null)).isEqualTo(firstPeer);
-    assertThat(copy.getNode().getBackendAddress()).isEqualTo("first.example");
   }
 
   @Test

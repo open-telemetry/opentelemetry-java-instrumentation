@@ -6,16 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.jdbc.test;
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.H2;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -85,11 +79,7 @@ class DruidDataSourceTest {
                             equalTo(
                                 CODE_FUNCTION_NAME,
                                 "com.alibaba.druid.pool.DruidDataSource.getConnection"),
-                            equalTo(
-                                DB_CONNECTION_STRING,
-                                emitStableDatabaseSemconv() ? null : "h2:mem:"),
-                            equalTo(maybeStable(DB_NAME), "test"),
-                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(H2)),
-                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"))));
+                            equalTo(DB_NAMESPACE, "test"),
+                            equalTo(DB_SYSTEM_NAME, "h2database"))));
   }
 }

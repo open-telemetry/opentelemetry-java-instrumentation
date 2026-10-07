@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.alibabadruid;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -23,10 +22,8 @@ public abstract class AbstractDruidInstrumentationTest {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.alibaba-druid-1.0";
   private static final AttributeKey<String> POOL_NAME_KEY =
-      AttributeKey.stringKey(
-          emitStableDatabaseSemconv() ? "db.client.connection.pool.name" : "pool.name");
-  private static final String CONNECTION_USAGE_METRIC_NAME =
-      emitStableDatabaseSemconv() ? "db.client.connection.count" : "db.client.connections.usage";
+      AttributeKey.stringKey("db.client.connection.pool.name");
+  private static final String CONNECTION_USAGE_METRIC_NAME = "db.client.connection.count";
 
   protected abstract InstrumentationExtension testing();
 

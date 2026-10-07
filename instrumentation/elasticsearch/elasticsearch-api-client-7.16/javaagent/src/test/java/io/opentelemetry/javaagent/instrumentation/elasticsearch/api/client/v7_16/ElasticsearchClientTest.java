@@ -5,27 +5,21 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.api.client.v7_16;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_ELASTICSEARCH_PATH_PARTS;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_PARAMETER;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ELASTICSEARCH;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -113,15 +107,12 @@ class ElasticsearchClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "info " + httpHost.getHostName() + ":" + httpHost.getPort()
-                                : "info")
+                    span.hasName("info " + httpHost.getHostName() + ":" + httpHost.getPort())
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "info"),
+                            equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                            equalTo(DB_OPERATION_NAME, "info"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(URL_FULL, httpHost.toURI() + "/"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
@@ -153,33 +144,20 @@ class ElasticsearchClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "index " + httpHost.getHostName() + ":" + httpHost.getPort()
-                                : "index")
+                    span.hasName("index " + httpHost.getHostName() + ":" + httpHost.getPort())
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "index"),
+                            equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                            equalTo(DB_OPERATION_NAME, "index"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "PUT"),
                             equalTo(
                                 URL_FULL,
                                 httpHost.toURI() + "/test-index/_doc/test-id?timeout=10s"),
-                            equalTo(
-                                DB_ELASTICSEARCH_PATH_PARTS.getAttributeKey("index"),
-                                emitOldDatabaseSemconv() ? "test-index" : null),
-                            equalTo(
-                                DB_ELASTICSEARCH_PATH_PARTS.getAttributeKey("id"),
-                                emitOldDatabaseSemconv() ? "test-id" : null),
-                            equalTo(
-                                DB_OPERATION_PARAMETER.getAttributeKey("index"),
-                                emitStableDatabaseSemconv() ? "test-index" : null),
-                            equalTo(
-                                DB_OPERATION_PARAMETER.getAttributeKey("id"),
-                                emitStableDatabaseSemconv() ? "test-id" : null)),
+                            equalTo(DB_OPERATION_PARAMETER.getAttributeKey("index"), "test-index"),
+                            equalTo(DB_OPERATION_PARAMETER.getAttributeKey("id"), "test-id")),
                 span ->
                     span.hasName("PUT")
                         .hasKind(SpanKind.CLIENT)
@@ -214,10 +192,7 @@ class ElasticsearchClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "search " + httpHost.getHostName() + ":" + httpHost.getPort()
-                                : "search")
+                    span.hasName("search " + httpHost.getHostName() + ":" + httpHost.getPort())
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(searchAttributes()),
@@ -239,16 +214,15 @@ class ElasticsearchClientTest {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
-                equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                equalTo(maybeStable(DB_OPERATION), "search"),
+                equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                equalTo(DB_OPERATION_NAME, "search"),
                 equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                 equalTo(SERVER_PORT, httpHost.getPort()),
                 equalTo(HTTP_REQUEST_METHOD, "POST"),
                 equalTo(URL_FULL, httpHost.toURI() + "/_search?typed_keys=true")));
     if (V3_PREVIEW) {
       assertions.add(
-          equalTo(
-              maybeStable(DB_STATEMENT), "{\"query\":{\"match\":{\"name\":{\"query\":\"?\"}}}}"));
+          equalTo(DB_QUERY_TEXT, "{\"query\":{\"match\":{\"name\":{\"query\":\"?\"}}}}"));
     }
     return assertions;
   }
@@ -280,15 +254,12 @@ class ElasticsearchClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "info " + httpHost.getHostName() + ":" + httpHost.getPort()
-                                : "info")
+                    span.hasName("info " + httpHost.getHostName() + ":" + httpHost.getPort())
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "info"),
+                            equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                            equalTo(DB_OPERATION_NAME, "info"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
@@ -343,19 +314,14 @@ class ElasticsearchClientTest {
     testing.waitAndAssertTraces(
         trace ->
             assertThat(trace.getSpan(0))
-                .hasName(emitStableDatabaseSemconv() ? "info " + hostList : "info")
+                .hasName("info " + hostList)
                 .hasKind(SpanKind.CLIENT)
                 .hasAttributesSatisfyingExactly(
-                    equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                    equalTo(maybeStable(DB_OPERATION), "info"),
+                    equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                    equalTo(DB_OPERATION_NAME, "info"),
                     equalTo(HTTP_REQUEST_METHOD, "GET"),
                     equalTo(URL_FULL, httpHost.toURI() + "/"),
-                    equalTo(
-                        SERVER_ADDRESS,
-                        emitStableDatabaseSemconv() ? hostList : httpHost.getHostName()),
-                    equalTo(
-                        SERVER_PORT,
-                        emitStableDatabaseSemconv() ? null : Long.valueOf(httpHost.getPort()))));
+                    equalTo(SERVER_ADDRESS, hostList)));
   }
 
   private static class AsyncRequest {

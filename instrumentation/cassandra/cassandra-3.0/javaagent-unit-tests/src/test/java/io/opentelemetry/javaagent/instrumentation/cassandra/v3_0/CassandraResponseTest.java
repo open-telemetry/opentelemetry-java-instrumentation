@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.javaagent.instrumentation.cassandra.v3_0.TestEndPoints.PROXY_ADDRESS;
 import static io.opentelemetry.javaagent.instrumentation.cassandra.v3_0.TestEndPoints.address;
 import static io.opentelemetry.javaagent.instrumentation.cassandra.v3_0.TestEndPoints.plainEndPoint;
 import static io.opentelemetry.javaagent.instrumentation.cassandra.v3_0.TestEndPoints.sniEndPoint;
@@ -42,10 +40,7 @@ class CassandraResponseTest {
     InetSocketAddress socketAddress = address(LOOPBACK_IP, 9042);
     when(executionInfo.getQueriedHost()).thenReturn(coordinator);
     when(coordinator.getSocketAddress()).thenReturn(socketAddress);
-    if (emitStableDatabaseSemconv()) {
-      when(coordinator.getEndPoint()).thenReturn(plainEndPoint(socketAddress));
-    }
-
+    when(coordinator.getEndPoint()).thenReturn(plainEndPoint(socketAddress));
     CassandraResponse response = CassandraResponse.create(executionInfo);
 
     assertThat(peerAddress(response)).isEqualTo(socketAddress);
@@ -56,31 +51,19 @@ class CassandraResponseTest {
     InetSocketAddress socketAddress = address(LOOPBACK_IPV6, 9042);
     when(executionInfo.getQueriedHost()).thenReturn(coordinator);
     when(coordinator.getSocketAddress()).thenReturn(socketAddress);
-    if (emitStableDatabaseSemconv()) {
-      when(coordinator.getEndPoint()).thenReturn(plainEndPoint(socketAddress));
-    }
-
+    when(coordinator.getEndPoint()).thenReturn(plainEndPoint(socketAddress));
     CassandraResponse response = CassandraResponse.create(executionInfo);
 
     assertThat(peerAddress(response)).isEqualTo(socketAddress);
   }
 
   @Test
-  void sniEndPointDoesNotResolvePeerInStableMode() {
+  void sniEndPointDoesNotResolvePeer() {
     when(executionInfo.getQueriedHost()).thenReturn(coordinator);
-    if (emitStableDatabaseSemconv()) {
-      when(coordinator.getEndPoint()).thenReturn(sniEndPoint());
-    } else {
-      when(coordinator.getSocketAddress()).thenReturn(PROXY_ADDRESS);
-    }
-
+    when(coordinator.getEndPoint()).thenReturn(sniEndPoint());
     CassandraResponse response = CassandraResponse.create(executionInfo);
 
-    if (emitStableDatabaseSemconv()) {
-      assertThat(peerAddress(response)).isNull();
-    } else {
-      assertPeerIsProxy(response);
-    }
+    assertThat(peerAddress(response)).isNull();
   }
 
   @Test
@@ -96,18 +79,14 @@ class CassandraResponseTest {
   }
 
   @Test
-  void sniEndPointExceptionDoesNotResolvePeerInStableMode() {
+  void sniEndPointExceptionDoesNotResolvePeer() {
     UnavailableException exception =
         new UnavailableException(sniEndPoint(), ConsistencyLevel.ONE, 1, 0);
 
     CassandraResponse response = CassandraResponse.create(exception);
 
     assertThat(response).isNotNull();
-    if (emitStableDatabaseSemconv()) {
-      assertThat(peerAddress(response)).isNull();
-    } else {
-      assertPeerIsProxy(response);
-    }
+    assertThat(peerAddress(response)).isNull();
   }
 
   @Test
@@ -117,13 +96,6 @@ class CassandraResponseTest {
     CassandraResponse response = CassandraResponse.create(executionInfo);
 
     assertThat(peerAddress(response)).isNull();
-  }
-
-  private static void assertPeerIsProxy(CassandraResponse response) {
-    InetSocketAddress peer = peerAddress(response);
-    assertThat(peer).isNotNull();
-    assertThat(peer.getHostString()).isEqualTo(PROXY_ADDRESS.getHostString());
-    assertThat(peer.getPort()).isEqualTo(PROXY_ADDRESS.getPort());
   }
 
   private static InetSocketAddress peerAddress(CassandraResponse response) {

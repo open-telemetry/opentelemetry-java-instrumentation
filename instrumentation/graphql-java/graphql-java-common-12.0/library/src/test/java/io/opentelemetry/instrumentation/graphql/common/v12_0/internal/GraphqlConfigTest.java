@@ -5,17 +5,14 @@
 
 package io.opentelemetry.instrumentation.graphql.common.v12_0.internal;
 
+import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Handler;
-import java.util.logging.LogRecord;
-import java.util.logging.Logger;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -23,60 +20,52 @@ class GraphqlConfigTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
-  void replacementSettingTakesPrecedence(boolean enabled) {
+  void operationNameInSpanNameSetting(boolean enabled) {
     DeclarativeConfigProperties config =
         mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
-    when(config.get("operation_name_in_span_name").getBoolean("enabled")).thenReturn(enabled);
-    when(config.get("add_operation_name_to_span_name").getBoolean("enabled")).thenReturn(!enabled);
+    when(config.get("operation_name_in_span_name").getBoolean("enabled", false))
+        .thenReturn(enabled);
 
-    Logger logger = Logger.getLogger(GraphqlConfig.class.getName());
-    TestHandler handler = new TestHandler();
-    logger.addHandler(handler);
-    try {
-      assertThat(GraphqlConfig.getOperationNameInSpanNameEnabled(config)).isEqualTo(enabled);
-      assertThat(handler.records).isEmpty();
-    } finally {
-      logger.removeHandler(handler);
-    }
+    assertThat(GraphqlConfig.getOperationNameInSpanNameEnabled(config)).isEqualTo(enabled);
+  }
+
+  @Test
+  void operationNameInSpanNameIsDisabledByDefault() {
+    assertThat(GraphqlConfig.getOperationNameInSpanNameEnabled(empty())).isFalse();
+  }
+
+  @Test
+  void operationNameInSpanNameIgnoresLegacySetting() {
+    DeclarativeConfigProperties config =
+        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
+    when(config.get("operation_name_in_span_name").getBoolean("enabled", false)).thenReturn(false);
+    when(config.get("add_operation_name_to_span_name").getBoolean("enabled")).thenReturn(true);
+
+    assertThat(GraphqlConfig.getOperationNameInSpanNameEnabled(config)).isFalse();
   }
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
-  void deprecatedSettingIsUsedAsFallback(boolean enabled) {
+  void querySanitizationSetting(boolean enabled) {
     DeclarativeConfigProperties config =
         mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
-    when(config.get("operation_name_in_span_name").getBoolean("enabled")).thenReturn(null);
-    when(config.get("add_operation_name_to_span_name").getBoolean("enabled")).thenReturn(enabled);
+    when(config.get("query_sanitization").getBoolean("enabled", true)).thenReturn(enabled);
 
-    Logger logger = Logger.getLogger(GraphqlConfig.class.getName());
-    TestHandler handler = new TestHandler();
-    logger.addHandler(handler);
-    try {
-      assertThat(GraphqlConfig.getOperationNameInSpanNameEnabled(config)).isEqualTo(enabled);
-      assertThat(handler.records)
-          .singleElement()
-          .extracting(LogRecord::getMessage)
-          .isEqualTo(
-              "The otel.instrumentation.graphql.add-operation-name-to-span-name.enabled setting is"
-                  + " deprecated and will be removed in 3.0. Use "
-                  + "otel.instrumentation.graphql.operation-name-in-span-name.enabled instead.");
-    } finally {
-      logger.removeHandler(handler);
-    }
+    assertThat(GraphqlConfig.getQuerySanitizationEnabled(config)).isEqualTo(enabled);
   }
 
-  private static final class TestHandler extends Handler {
-    private final List<LogRecord> records = new ArrayList<>();
+  @Test
+  void querySanitizationIsEnabledByDefault() {
+    assertThat(GraphqlConfig.getQuerySanitizationEnabled(empty())).isTrue();
+  }
 
-    @Override
-    public void publish(LogRecord record) {
-      records.add(record);
-    }
+  @Test
+  void querySanitizationIgnoresLegacySetting() {
+    DeclarativeConfigProperties config =
+        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
+    when(config.get("query_sanitization").getBoolean("enabled", true)).thenReturn(true);
+    when(config.get("query_sanitizer").getBoolean("enabled")).thenReturn(false);
 
-    @Override
-    public void flush() {}
-
-    @Override
-    public void close() {}
+    assertThat(GraphqlConfig.getQuerySanitizationEnabled(config)).isTrue();
   }
 }

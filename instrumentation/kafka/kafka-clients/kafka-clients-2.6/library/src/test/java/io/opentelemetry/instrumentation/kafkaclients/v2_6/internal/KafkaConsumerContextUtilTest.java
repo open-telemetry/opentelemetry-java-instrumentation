@@ -5,9 +5,7 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.v2_6.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
@@ -71,8 +69,6 @@ class KafkaConsumerContextUtilTest {
 
   @Test
   void preservesInheritedReceiveOperationWhenThereIsNoLeakedProcessSpan() {
-    assumeTrue(emitStableMessagingSemconv());
-
     Context context = KafkaConsumerContextUtil.withReceiveOperation(Context.current(), true);
 
     assertThat(

@@ -5,21 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.data.v3_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -76,8 +69,7 @@ class ReactiveSpringDataTest {
                                 CODE_FUNCTION_NAME,
                                 CustomerRepository.class.getName() + ".findAll")),
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv() ? "SELECT CUSTOMER" : "SELECT db.CUSTOMER")
+                    span.hasName("SELECT CUSTOMER")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         // assert that this span ends before its parent span
@@ -86,22 +78,10 @@ class ReactiveSpringDataTest {
                                 assertThat(spanData.getEndEpochNanos())
                                     .isLessThanOrEqualTo(trace.getSpan(1).getEndEpochNanos()))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
-                            equalTo(maybeStable(DB_NAME), "db"),
-                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
-                            equalTo(maybeStable(DB_STATEMENT), "SELECT CUSTOMER.* FROM CUSTOMER"),
-                            equalTo(
-                                DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT CUSTOMER" : null),
-                            equalTo(
-                                maybeStable(DB_OPERATION),
-                                emitStableDatabaseSemconv() ? null : "SELECT"),
-                            equalTo(
-                                maybeStable(DB_SQL_TABLE),
-                                emitStableDatabaseSemconv() ? null : "CUSTOMER"),
-                            equalTo(
-                                DB_CONNECTION_STRING,
-                                emitStableDatabaseSemconv() ? null : "h2:mem://localhost"),
+                            equalTo(DB_SYSTEM_NAME, "h2database"),
+                            equalTo(DB_NAMESPACE, "db"),
+                            equalTo(DB_QUERY_TEXT, "SELECT CUSTOMER.* FROM CUSTOMER"),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT CUSTOMER"),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(maybeStablePeerService(), "test-peer-service"))));
   }

@@ -91,15 +91,6 @@ configurations:
     type: boolean
     default: false
 
-  common.deprecated-controller-telemetry.enabled:
-    name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-    declarative_name: java.common.controller_telemetry/development.enabled
-    description: "Deprecated: use `otel.instrumentation.common.controller-telemetry.enabled` instead. This setting is ignored under v3-preview and will be removed in 3.0."
-    type: boolean
-    default: false
-    deprecated: true
-    replaced_by: otel.instrumentation.common.controller-telemetry.enabled
-
   sanitization.url.sensitive-query-parameters:
     name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
     declarative_name: general.sanitization.url.sensitive_query_parameters
@@ -178,7 +169,7 @@ configurations:
   messaging.batch-send.message-creation-spans.enabled:
     name: otel.instrumentation.common.messaging.message-create-spans.enabled
     declarative_name: java.common.messaging.message_create_spans.enabled
-    description: "Provides the default for whether to create a producer span for each eligible message in a batch send when stable messaging semantic conventions are enabled. An instrumentation-specific setting takes precedence."
+    description: "Provides the default for whether to create a producer span for each eligible message in a batch send. An instrumentation-specific setting takes precedence."
     type: boolean
     default: true
 
@@ -268,14 +259,22 @@ global_configurations:
   common.v3-preview:
     name: otel.instrumentation.common.v3-preview
     declarative_name: java.common.v3_preview
-    description: "Enables a preview of the behavior planned for version 3.0 of the agent, such as emitting the stable database semantic conventions and the new messaging semantic conventions by default, and ignoring deprecated settings. The set of changes it enables can grow in any release."
+    description: "Enables a preview of the behavior planned for version 3.0 of the agent, such as ignoring deprecated settings. The set of changes it enables can grow in any release."
     type: boolean
     default: false
+
+  semconv-stability.opt-in:
+    name: otel.semconv-stability.opt-in
+    declarative_name: general.stability_opt_in_list
+    description: "A comma-separated list of semantic convention groups to opt into, such as `rpc` and `service.peer`. Use `<group>/dup` to emit both old and new conventions. Under v3 preview the preview groups use `otel.semconv-stability.preview` instead."
+    type: list
+    declarative_type: string
+    default: ""
 
   semconv-stability.preview:
     name: otel.semconv-stability.preview
     declarative_name: java.common.semconv_stability.preview
-    description: "Opt-in to emit preview (not yet stable) semantic conventions for the `rpc`, `messaging`, and `service.peer` groups. Use `<group>/dup` to emit both the old and the preview conventions simultaneously. Outside v3 preview these groups are also accepted by `otel.semconv-stability.opt-in`; under v3 preview only this setting selects them for `rpc` and `service.peer`, and messaging always uses the preview conventions. The flat `otel.semconv-stability.preview` property is read only from system properties and environment variables, not from the agent configuration file."
+    description: "Opt-in to emit preview (not yet stable) semantic conventions for the `rpc` and `service.peer` groups. Use `<group>/dup` to emit both the old and the preview conventions simultaneously. Outside v3 preview these groups are also accepted by `otel.semconv-stability.opt-in`; under v3 preview only this setting selects them. The flat `otel.semconv-stability.preview` property is read only from system properties and environment variables, not from the agent configuration file."
     type: list
 
   semconv-exception.signal.preview:
@@ -299,17 +298,6 @@ global_configurations:
     deprecated: true
     replaced_by: otel.instrumentation.common.span-suppression-strategy
 
-  db.semconv.version:
-    declarative_name: general.db.semconv.version
-    description: "Database semantic convention version to emit: `0` for the old conventions or `1` for the stable conventions. Takes precedence over `stability_opt_in_list`; when unset, `stability_opt_in_list` selects the conventions. Under v3 preview only `1` is supported and it is the default."
-    type: int
-
-  db.semconv.dual_emit:
-    declarative_name: general.db.semconv.dual_emit
-    description: "With `version: 1`, emits both the old and the stable database semantic conventions. Not supported under v3 preview."
-    type: boolean
-    default: false
-
   rpc.semconv.version:
     declarative_name: general.rpc.semconv.version
     description: "RPC semantic convention version to emit: `0` for the current conventions or `1` together with `experimental: true` for the preview conventions. Takes precedence over the semantic convention opt-in settings; when unset, those settings select the conventions."
@@ -324,23 +312,6 @@ global_configurations:
   rpc.semconv.dual_emit:
     declarative_name: general.rpc.semconv.dual_emit
     description: "With `version: 1` and `experimental: true`, emits both the current and the preview RPC semantic conventions."
-    type: boolean
-    default: false
-
-  messaging.semconv.version:
-    declarative_name: general.messaging.semconv.version
-    description: "Messaging semantic convention version to emit: `0` for the current conventions or `1` together with `experimental: true` for the preview conventions. Takes precedence over the semantic convention opt-in settings; when unset, those settings select the conventions. Under v3 preview only the preview conventions are supported and they are the default."
-    type: int
-
-  messaging.semconv.experimental:
-    declarative_name: general.messaging.semconv.experimental
-    description: "With `version: 1`, selects the preview messaging semantic conventions. Required, because version 1 of the messaging semantic conventions is not yet stable."
-    type: boolean
-    default: false
-
-  messaging.semconv.dual_emit:
-    declarative_name: general.messaging.semconv.dual_emit
-    description: "With `version: 1` and `experimental: true`, emits both the current and the preview messaging semantic conventions. Not supported under v3 preview."
     type: boolean
     default: false
 

@@ -7,8 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v3_2;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.databaseSchemaUrl;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -26,6 +24,7 @@ import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.Couchbas
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseRequestPeers.Peer;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseServerTarget;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseSpanName;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.time.Duration;
 import java.time.Instant;
 import javax.annotation.Nullable;
@@ -40,7 +39,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
         new CouchbaseTracer(
             openTelemetry
                 .tracerBuilder("com.couchbase.client.jvm")
-                .setSchemaUrl(databaseSchemaUrl())
+                .setSchemaUrl(SchemaUrls.V1_44_0)
                 .build(),
             true,
             clientSpans ? CLIENT : INTERNAL,
@@ -50,7 +49,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
 
   public static void captureServerTarget(
       RequestSpan requestSpan, @Nullable CouchbaseServerTarget target) {
-    if (emitStableDatabaseSemconv() && target != null && requestSpan instanceof AgentRequestSpan) {
+    if (target != null && requestSpan instanceof AgentRequestSpan) {
       ((AgentRequestSpan) requestSpan).captureServerTarget(target);
     }
   }
@@ -96,7 +95,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
       this.delegate = delegate;
       this.spanName = new CouchbaseSpanName(name);
       this.hasCapturedPeer = peer != null;
-      if (emitStableDatabaseSemconv() && peer != null) {
+      if (peer != null) {
         delegate.setRawAttribute(NETWORK_PEER_ADDRESS.getKey(), peer.getAddress());
         delegate.setRawAttribute(NETWORK_PEER_PORT.getKey(), (long) peer.getPort());
       }
@@ -104,11 +103,9 @@ public final class CouchbaseRequestTracer implements RequestTracer {
 
     @Override
     public void attribute(String key, String value) {
-      if (emitStableDatabaseSemconv()) {
-        spanName.captureAttribute(key, value);
-        if (!hasCapturedPeer && TracingIdentifiers.ATTR_REMOTE_HOSTNAME.equals(key)) {
-          delegate.setRawAttribute(NETWORK_PEER_ADDRESS.getKey(), value);
-        }
+      spanName.captureAttribute(key, value);
+      if (!hasCapturedPeer && TracingIdentifiers.ATTR_REMOTE_HOSTNAME.equals(key)) {
+        delegate.setRawAttribute(NETWORK_PEER_ADDRESS.getKey(), value);
       }
       delegate.setAttribute(key, value);
     }
@@ -120,9 +117,7 @@ public final class CouchbaseRequestTracer implements RequestTracer {
 
     @Override
     public void attribute(String key, long value) {
-      if (emitStableDatabaseSemconv()
-          && !hasCapturedPeer
-          && TracingIdentifiers.ATTR_REMOTE_PORT.equals(key)) {
+      if (!hasCapturedPeer && TracingIdentifiers.ATTR_REMOTE_PORT.equals(key)) {
         delegate.setRawAttribute(NETWORK_PEER_PORT.getKey(), value);
       }
       delegate.setAttribute(key, value);
