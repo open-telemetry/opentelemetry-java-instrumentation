@@ -201,7 +201,8 @@ public abstract class AbstractSpringKafkaTest {
   // because they are only recommended on spans that describe a single message operation
   protected static LinkData recordLink(SpanData producerSpan) {
 
-    return LinkData.create(asRemote(producerSpan.getSpanContext()),
+    return LinkData.create(
+        asRemote(producerSpan.getSpanContext()),
         Attributes.builder()
             .put(MESSAGING_KAFKA_OFFSET, producerSpan.getAttributes().get(MESSAGING_KAFKA_OFFSET))
             .put(

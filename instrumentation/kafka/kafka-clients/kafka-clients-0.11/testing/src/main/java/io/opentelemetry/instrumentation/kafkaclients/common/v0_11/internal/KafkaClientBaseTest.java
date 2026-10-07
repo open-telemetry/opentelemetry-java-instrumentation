@@ -234,7 +234,8 @@ public abstract class KafkaClientBaseTest {
   // because they are only recommended on spans that describe an operation on a single message
   protected static LinkData receiveRecordLink(SpanData producerSpan) {
 
-    return LinkData.create(asRemote(producerSpan.getSpanContext()),
+    return LinkData.create(
+        asRemote(producerSpan.getSpanContext()),
         Attributes.builder()
             .put(MESSAGING_KAFKA_OFFSET, producerSpan.getAttributes().get(MESSAGING_KAFKA_OFFSET))
             .put(

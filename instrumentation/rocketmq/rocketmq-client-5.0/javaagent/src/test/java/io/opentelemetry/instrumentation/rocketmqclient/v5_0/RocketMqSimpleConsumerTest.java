@@ -324,7 +324,8 @@ class RocketMqSimpleConsumerTest {
             equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, TAG),
             equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(KEYS)))
         .hasLinks(
-            LinkData.create(asRemote(sendSpan.getSpanContext()),
+            LinkData.create(
+                asRemote(sendSpan.getSpanContext()),
                 Attributes.of(
                     MESSAGING_MESSAGE_ID, sendSpan.getAttributes().get(MESSAGING_MESSAGE_ID))));
   }

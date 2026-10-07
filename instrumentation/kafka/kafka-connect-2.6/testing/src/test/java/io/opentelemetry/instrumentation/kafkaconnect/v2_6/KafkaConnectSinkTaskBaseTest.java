@@ -315,7 +315,8 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
   // because they are only recommended on spans that describe an operation on a single message
   protected static LinkData recordLink(SpanContext producerSpanContext, String messageKey) {
 
-    return LinkData.create(asRemote(producerSpanContext),
+    return LinkData.create(
+        asRemote(producerSpanContext),
         Attributes.builder()
             .put(MESSAGING_KAFKA_OFFSET, 0)
             .put(MESSAGING_KAFKA_MESSAGE_KEY, messageKey)

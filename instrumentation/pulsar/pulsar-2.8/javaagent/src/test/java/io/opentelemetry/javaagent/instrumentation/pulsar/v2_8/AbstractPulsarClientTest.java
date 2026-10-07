@@ -319,7 +319,8 @@ abstract class AbstractPulsarClientTest {
   }
 
   private static LinkData batchLink(SpanData producerSpan, String messageId) {
-    return LinkData.create(asRemote(producerSpan.getSpanContext()), Attributes.of(MESSAGING_MESSAGE_ID, messageId));
+    return LinkData.create(
+        asRemote(producerSpan.getSpanContext()), Attributes.of(MESSAGING_MESSAGE_ID, messageId));
   }
 
   static List<AttributeAssertion> receiveAttributes(

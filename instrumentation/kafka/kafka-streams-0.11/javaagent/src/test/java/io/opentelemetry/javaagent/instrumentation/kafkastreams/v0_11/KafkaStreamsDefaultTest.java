@@ -298,7 +298,8 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
   // because they are only recommended on spans that describe an operation on a single message
   private static LinkData receiveRecordLink(SpanData producerSpan, @Nullable String messageKey) {
 
-    return LinkData.create(asRemote(producerSpan.getSpanContext()),
+    return LinkData.create(
+        asRemote(producerSpan.getSpanContext()),
         Attributes.builder()
             .put(MESSAGING_KAFKA_OFFSET, 0)
             .put(MESSAGING_KAFKA_MESSAGE_KEY, messageKey)
