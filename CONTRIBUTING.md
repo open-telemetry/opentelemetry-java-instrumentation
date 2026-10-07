@@ -23,7 +23,7 @@ and name replacement APIs or configuration for deprecations.
 | `breaking` | Breaking changes to stable APIs, configuration, or telemetry |
 | `alpha-breaking` | Breaking changes to non-stable APIs |
 | `deprecation` | Deprecations |
-| `feature` | New features and enhancements, including new instrumentation |
+| `feature` | Enhancements, including new features and instrumentation |
 | `bugfix` | Bug fixes |
 
 Use `12345.bugfix.1.md` for another note of the same type in one PR. If the PR number is

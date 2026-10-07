@@ -24,7 +24,7 @@ name = "🚫 Deprecations"
 
 [[tool.towncrier.type]]
 directory = "feature"
-name = "🌟 Features"
+name = "📈 Enhancements"
 
 [[tool.towncrier.type]]
 directory = "bugfix"

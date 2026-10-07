@@ -45,7 +45,7 @@ class ChangelogTemplateTest(unittest.TestCase):
             "  Use `replacement`.\n"
             "  ([#1](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/1))\n"
             "\n"
-            "### 🌟 Features\n\n"
+            "### 📈 Enhancements\n\n"
             "- Add new instrumentation.\n"
             "  ([#4](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/4))\n"
             "\n"
