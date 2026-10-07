@@ -4,6 +4,15 @@
 
 ### ⚠️ Breaking changes
 
+- OSHI system metrics use schema version 1.44.0 and scope `io.opentelemetry.oshi-5.0`.
+  Update `system.network.packets` to `system.network.packet.count`, plural count units to
+  `{packet}`, `{error}`, and `{operation}`. Replace memory `state` with `system.memory.state`;
+  for network I/O and errors, replace `device` and `direction` with `network.interface.name`
+  and `network.io.direction`. Packet counts use `system.device` and `network.io.direction`;
+  disk metrics use `system.device` and `disk.io.direction`.
+  Remove `otel.instrumentation.oshi.experimental-metrics.enabled`; OSHI no longer emits `runtime.java.memory`
+  or `runtime.java.cpu_time`. `jvm.memory.used` measures JVM pools, not process RSS or virtual
+  memory, and `jvm.cpu.time` does not split user/system CPU time.
 - Remove the deprecated GraphQL configuration properties
   `otel.instrumentation.graphql.add-operation-name-to-span-name.enabled` and
   `otel.instrumentation.graphql.query-sanitizer.enabled`. Use
@@ -43,6 +52,9 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Remove deprecated `ProcessMetrics` and `SystemMetrics.registerObservers(Meter)` from
+  `opentelemetry-oshi`. Use `SystemMetrics.registerObservers(OpenTelemetry)` for system metrics
+  and continue closing the returned observers.
 - Move `CodeAttributesGetter`, `CodeAttributesExtractor`, and `CodeSpanNameExtractor` from
   `io.opentelemetry.instrumentation.api.incubator.semconv.code` in
   `opentelemetry-instrumentation-api-incubator` to `io.opentelemetry.instrumentation.api.semconv.code`
