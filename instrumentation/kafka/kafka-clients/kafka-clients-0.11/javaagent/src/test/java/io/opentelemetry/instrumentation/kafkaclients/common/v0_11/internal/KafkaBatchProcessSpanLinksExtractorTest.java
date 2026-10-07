@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
@@ -13,8 +12,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeFalse;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -49,7 +46,6 @@ class KafkaBatchProcessSpanLinksExtractorTest {
 
   @Test
   void keepsCommonPartitionOnBatchSpan() {
-    assumeTrue(emitStableMessagingSemconv());
     ConsumerRecord<String, String> first = record("topic", 1, 10, "key");
     ConsumerRecord<String, String> second = record("topic", 1, 10, "key");
     KafkaReceiveRequest request = request(first, second);
@@ -71,7 +67,6 @@ class KafkaBatchProcessSpanLinksExtractorTest {
 
   @Test
   void keepsOffsetAndKeyOnLinkOfSingleRecordBatch() {
-    assumeTrue(emitStableMessagingSemconv());
     KafkaReceiveRequest request = request(record("topic", 1, 10, "key"));
 
     AttributesBuilder spanAttributes = Attributes.builder();
@@ -86,7 +81,6 @@ class KafkaBatchProcessSpanLinksExtractorTest {
 
   @Test
   void movesDifferingValuesToRecordLinks() {
-    assumeTrue(emitStableMessagingSemconv());
     ConsumerRecord<String, String> first = record("topic-a", 1, 10, "key-a");
     ConsumerRecord<String, String> second = record("topic-b", 2, 20, "key-b");
     KafkaReceiveRequest request = request(first, second);
@@ -105,7 +99,6 @@ class KafkaBatchProcessSpanLinksExtractorTest {
 
   @Test
   void movesPartitionToRecordLinksWhenDestinationVaries() {
-    assumeTrue(emitStableMessagingSemconv());
     ConsumerRecord<String, String> first = record("topic-a", 0, 5, "key");
     ConsumerRecord<String, String> second = record("topic-b", 0, 6, "key");
     KafkaReceiveRequest request = request(first, second);
@@ -126,7 +119,6 @@ class KafkaBatchProcessSpanLinksExtractorTest {
 
   @Test
   void keepsDestinationOnBatchSpanWhenOnlyPartitionVaries() {
-    assumeTrue(emitStableMessagingSemconv());
     ConsumerRecord<String, String> first = record("topic", 0, 5, "key");
     ConsumerRecord<String, String> second = record("topic", 1, 5, "key");
     KafkaReceiveRequest request = request(first, second);
@@ -144,14 +136,13 @@ class KafkaBatchProcessSpanLinksExtractorTest {
 
   @Test
   void movesPartitionToRecordLinksWhenBatchHasEmptyPartitionOfAnotherTopic() {
-    assumeTrue(emitStableMessagingSemconv());
     Map<TopicPartition, List<ConsumerRecord<String, String>>> recordsByPartition =
         new LinkedHashMap<>();
     recordsByPartition.put(
         new TopicPartition("topic-a", 0), singletonList(record("topic-a", 0, 5, "key")));
     recordsByPartition.put(new TopicPartition("topic-b", 0), emptyList());
     KafkaReceiveRequest request =
-        KafkaReceiveRequest.create(new ConsumerRecords<>(recordsByPartition), null, null);
+        KafkaReceiveRequest.create(new ConsumerRecords<>(recordsByPartition), null, null, null);
 
     AttributesBuilder spanAttributes = Attributes.builder();
     new KafkaReceiveAttributesExtractor().onStart(spanAttributes, Context.root(), request);
@@ -163,18 +154,6 @@ class KafkaBatchProcessSpanLinksExtractorTest {
     assertThat(spanAttributes.build()).isEqualTo(Attributes.empty());
     assertThat(links.attributes).containsExactly(linkAttributes("topic-a", "0", 5, "key"));
     assertThat(links.linksWithAttributes).isEqualTo(1);
-  }
-
-  @Test
-  void keepsLegacyLinksUnchanged() {
-    assumeFalse(emitStableMessagingSemconv());
-    KafkaReceiveRequest request =
-        request(record("topic-a", 1, 10, "key-a"), record("topic-b", 2, 20, "key-b"));
-
-    RecordingSpanLinksBuilder links = extractLinks(request);
-
-    assertThat(links.attributes).containsExactly(Attributes.empty(), Attributes.empty());
-    assertThat(links.linksWithoutAttributes).isEqualTo(2);
   }
 
   @Test
@@ -199,7 +178,7 @@ class KafkaBatchProcessSpanLinksExtractorTest {
               new TopicPartition(record.topic(), record.partition()), unused -> new ArrayList<>())
           .add(record);
     }
-    return KafkaReceiveRequest.create(new ConsumerRecords<>(recordsByPartition), null, null);
+    return KafkaReceiveRequest.create(new ConsumerRecords<>(recordsByPartition), null, null, null);
   }
 
   private static ConsumerRecord<String, String> record(
@@ -220,13 +199,11 @@ class KafkaBatchProcessSpanLinksExtractorTest {
 
   private static final class RecordingSpanLinksBuilder implements SpanLinksBuilder {
     private final List<Attributes> attributes = new ArrayList<>();
-    private int linksWithoutAttributes;
     private int linksWithAttributes;
 
     @Override
     public SpanLinksBuilder addLink(SpanContext spanContext) {
       attributes.add(Attributes.empty());
-      linksWithoutAttributes++;
       return this;
     }
 

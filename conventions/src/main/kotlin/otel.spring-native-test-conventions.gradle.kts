@@ -7,6 +7,7 @@
 //    point the extension at the extracted directory.
 //  * `collectReachabilityMetadata` triggers the same isolation issue and is disabled.
 
+import org.graalvm.buildtools.gradle.dsl.GraalVMExtension
 import org.graalvm.buildtools.gradle.dsl.GraalVMReachabilityMetadataRepositoryExtension
 
 // Keep this in sync with the org.graalvm.buildtools.native plugin version in settings.gradle.kts.
@@ -26,6 +27,12 @@ dependencies {
 }
 
 plugins.withId("org.graalvm.buildtools.native") {
+  extensions.configure<GraalVMExtension>("graalvmNative") {
+    binaries.named("test") {
+      quickBuild.set(true)
+    }
+  }
+
   dependencies {
     // javac 25 warns when JUnit's API Guardian annotation type is missing from this classpath.
     add("aotTestCompileOnly", "org.apiguardian:apiguardian-api:1.1.2")

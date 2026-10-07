@@ -16,7 +16,6 @@ import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import redis.RedisClientActorLike;
 import redis.commands.TransactionBuilder;
 
 class TransactionBuilderInstrumentation implements TypeInstrumentation {
@@ -46,11 +45,7 @@ class TransactionBuilderInstrumentation implements TypeInstrumentation {
         @Advice.This Object client,
         @Advice.Return @Nullable TransactionBuilder transactionBuilder) {
       if (transactionBuilder != null) {
-        ServerEndpoint endpoint =
-            client instanceof RedisClientActorLike
-                ? ServerEndpoint.create((RedisClientActorLike) client)
-                : null;
-        TRANSACTION_STATE.set(transactionBuilder, new RediscalaTransactionState(client, endpoint));
+        TRANSACTION_STATE.set(transactionBuilder, new RediscalaTransactionState(client));
       }
     }
   }

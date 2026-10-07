@@ -44,7 +44,6 @@ val generateJflex = tasks.register<JavaExec>("generateJflex") {
     val outputDir = outputDirProvider.get().asFile
     outputDir.mkdirs()
     val specFiles = listOf(
-      sourceDir.asFile.resolve("SqlSanitizer.jflex"),
       sourceDir.asFile.resolve("SqlSanitizerWithSummary.jflex"),
     )
     args(
@@ -66,7 +65,6 @@ tasks.compileJava {
 tasks {
   // exclude auto-generated code
   named<Checkstyle>("checkstyleMain") {
-    exclude("**/AutoSqlSanitizer.java")
     exclude("**/AutoSqlSanitizerWithSummary.java")
   }
 
@@ -92,16 +90,14 @@ tasks {
   val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database,code,service.peer,rpc")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer,rpc")
     inputs.dir(jflexOutputDir)
   }
 
   val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database/dup,code/dup,service.peer/dup,rpc/dup")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
+    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer/dup,rpc/dup")
     inputs.dir(jflexOutputDir)
   }
 

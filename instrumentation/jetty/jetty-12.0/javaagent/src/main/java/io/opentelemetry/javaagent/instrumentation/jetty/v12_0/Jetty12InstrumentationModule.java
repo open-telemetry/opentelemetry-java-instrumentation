@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -18,7 +19,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class Jetty12InstrumentationModule extends InstrumentationModule {
 
   public Jetty12InstrumentationModule() {
-    super("jetty", "jetty-12.0");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "jetty-12.0" : "jetty",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"jetty"}
+            : new String[] {"jetty-12.0"});
   }
 
   @Override

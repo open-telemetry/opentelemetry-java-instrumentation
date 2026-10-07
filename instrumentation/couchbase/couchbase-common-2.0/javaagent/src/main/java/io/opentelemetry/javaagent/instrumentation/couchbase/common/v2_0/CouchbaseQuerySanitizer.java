@@ -80,22 +80,14 @@ class CouchbaseQuerySanitizer {
   }
 
   static SqlQuery analyze(Object query) {
-    return analyzeInternal(query, false);
-  }
-
-  static SqlQuery analyzeWithSummary(Object query) {
-    return analyzeInternal(query, true);
-  }
-
-  private static SqlQuery analyzeInternal(Object query, boolean withSummary) {
     if (query instanceof String) {
-      return analyzeString((String) query, withSummary);
+      return analyzeString((String) query);
     }
     // Query is present in Couchbase [2.0.0, 2.2.0)
     // Statement is present starting from Couchbase 2.1.0
     if ((QUERY_CLASS != null && QUERY_CLASS.isAssignableFrom(query.getClass()))
         || (STATEMENT_CLASS != null && STATEMENT_CLASS.isAssignableFrom(query.getClass()))) {
-      return analyzeString(query.toString(), withSummary);
+      return analyzeString(query.toString());
     }
     // SpatialViewQuery is present starting from Couchbase 2.1.0
     String queryClassName = query.getClass().getName();
@@ -107,14 +99,14 @@ class CouchbaseQuerySanitizer {
     if (N1QL_QUERY_CLASS != null && N1QL_QUERY_CLASS.isAssignableFrom(query.getClass())) {
       String queryText = getQueryText(N1QL_GET_STATEMENT, query);
       if (queryText != null) {
-        return analyzeString(queryText, withSummary);
+        return analyzeString(queryText);
       }
     }
     // AnalyticsQuery is present starting from Couchbase 2.4.3
     if (ANALYTICS_QUERY_CLASS != null && ANALYTICS_QUERY_CLASS.isAssignableFrom(query.getClass())) {
       String queryText = getQueryText(ANALYTICS_GET_STATEMENT, query);
       if (queryText != null) {
-        return analyzeString(queryText, withSummary);
+        return analyzeString(queryText);
       }
     }
     return SqlQuery.create(query.getClass().getSimpleName(), null, null);
@@ -132,12 +124,9 @@ class CouchbaseQuerySanitizer {
     }
   }
 
-  private static SqlQuery analyzeString(String query, boolean withSummary) {
+  private static SqlQuery analyzeString(String query) {
     // "In SQL++ single and double quotation marks can be used for strings."
     // https://docs.couchbase.com/server/current/n1ql/n1ql-language-reference/literals.html
-    if (withSummary) {
-      return analyzer.analyzeWithSummary(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
-    }
     return analyzer.analyze(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
   }
 

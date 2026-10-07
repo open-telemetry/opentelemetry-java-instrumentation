@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.dbcp.v8_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
@@ -58,8 +57,7 @@ class TomcatDbcpInstrumentationTest {
     BasicDataSource dataSource = createDataSource();
     dataSource.setUrl("jdbc:postgresql://db.example:5432/orders");
 
-    assertDataSourceName(
-        dataSource, emitStableDatabaseSemconv() ? "orders" : "db.example:5432/orders");
+    assertDataSourceName(dataSource, "orders");
   }
 
   @Test
@@ -67,8 +65,7 @@ class TomcatDbcpInstrumentationTest {
     BasicDataSource dataSource = createDataSource();
     dataSource.setUrl("jdbc:postgresql://[2001:db8::1]:5432/orders");
 
-    assertDataSourceName(
-        dataSource, emitStableDatabaseSemconv() ? "orders" : "[2001:db8::1]:5432/orders");
+    assertDataSourceName(dataSource, "orders");
   }
 
   @Test
@@ -80,9 +77,7 @@ class TomcatDbcpInstrumentationTest {
     dataSource.addConnectionProperty("portNumber", "5433");
     dataSource.addConnectionProperty("databaseName", "inventory");
 
-    assertDataSourceName(
-        dataSource,
-        emitStableDatabaseSemconv() ? "inventory" : "properties.example:5433/inventory");
+    assertDataSourceName(dataSource, "inventory");
   }
 
   @Test
@@ -158,7 +153,7 @@ class TomcatDbcpInstrumentationTest {
   }
 
   @Test
-  void shouldKeepDataSourceNameWhenMBeanIsRegisteredAfterPoolStart() throws Exception {
+  void shouldUpdateDataSourceNameOnLateMBeanRegistrationOnlyWithLegacySemconv() throws Exception {
     BasicDataSource dataSource = createDataSource();
     dataSource.setUrl("jdbc:postgresql://db.example:5432/orders");
 
@@ -169,11 +164,11 @@ class TomcatDbcpInstrumentationTest {
 
     try {
       dataSource.getConnection().close();
-      assertDataSourceMetrics(emitStableDatabaseSemconv() ? "orders" : "db.example:5432/orders");
+      assertDataSourceMetrics("orders");
 
       objectName = mbeanServer.registerMBean(dataSource, objectName).getObjectName();
       testing.clearData();
-      assertDataSourceMetrics(emitStableDatabaseSemconv() ? "orders" : "db.example:5432/orders");
+      assertDataSourceMetrics("orders");
     } finally {
       dataSource.close();
       if (mbeanServer.isRegistered(objectName)) {

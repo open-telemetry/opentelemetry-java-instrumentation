@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
-import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.buildShortUrl;
-
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.HostPort;
@@ -25,10 +23,8 @@ public final class ParseContext {
 
   private final String type;
   @Nullable private String system;
-  @Nullable private String oldSemconvSystem;
-  @Nullable private String subtype;
-  @Nullable private String legacyHost;
-  @Nullable private Integer legacyPort;
+  @Nullable private String host;
+  @Nullable private Integer port;
   @Nullable private Integer parserDefaultPort;
   @Nullable private String singleServerHost;
   @Nullable private Integer singleServerPort;
@@ -37,7 +33,6 @@ public final class ParseContext {
   @Nullable private String user;
   @Nullable private String databaseName;
   @Nullable private String namespace;
-  @Deprecated @Nullable private String dbName;
   @Nullable private final Properties props;
 
   private ParseContext(String type, @Nullable Properties props) {
@@ -55,76 +50,48 @@ public final class ParseContext {
     return type;
   }
 
-  /** The database system identifier (stable/new value, e.g., "postgresql", "h2database"). */
+  /** The database system identifier (e.g., "postgresql", "h2database"). */
   @Nullable
   public String system() {
     return system;
   }
 
-  /**
-   * Set the database system identifier (stable/new value). For systems where old and new values
-   * differ, also call {@link #oldSemconvSystem(String)}.
-   */
+  /** Set the database system identifier. */
   public void system(String system) {
     this.system = system;
   }
 
-  /** The old semconv database system identifier (e.g., "mssql", "h2"). */
-  @Deprecated // to be removed in 3.0
-  @Nullable
-  public String oldSemconvSystem() {
-    return oldSemconvSystem;
-  }
-
-  /** Set the old semconv database system identifier (only required when different from system). */
-  @Deprecated // to be removed in 3.0
-  public void oldSemconvSystem(@Nullable String oldSemconvSystem) {
-    this.oldSemconvSystem = oldSemconvSystem;
-  }
-
-  /** The optional subtype (e.g., "tcp", "aurora"). */
-  @Nullable
-  public String subtype() {
-    return subtype;
-  }
-
-  /** Set the subtype value. */
-  public void subtype(@Nullable String subtype) {
-    this.subtype = subtype;
-  }
-
-  /** The legacy host accumulated so far, including any parser default. */
+  /** The parsed host accumulated so far, including any parser default. */
   @Nullable
   public String host() {
-    return legacyHost;
+    return host;
   }
 
   /**
-   * Record a parsed host for legacy output and, when allowed, single-server fallback. Enclosing
-   * brackets are removed from literal IPv6 addresses so that {@code server.address} holds the
-   * address alone.
+   * Record a parsed host and, when allowed, single-server fallback. Enclosing brackets are removed
+   * from literal IPv6 addresses so that {@code server.address} holds the address alone.
    */
   public void host(@Nullable String host) {
-    legacyHost = host == null ? null : UrlParsingUtils.stripIpv6Brackets(host);
+    this.host = host == null ? null : UrlParsingUtils.stripIpv6Brackets(host);
     if (allowSingleServerFallback) {
-      singleServerHost = legacyHost;
+      singleServerHost = this.host;
     }
   }
 
   /** Set a parser default host without marking it as configured. */
   public void defaultHost(@Nullable String host) {
-    legacyHost = host == null ? null : UrlParsingUtils.stripIpv6Brackets(host);
+    this.host = host == null ? null : UrlParsingUtils.stripIpv6Brackets(host);
   }
 
-  /** The legacy port accumulated so far, including any parser default. */
+  /** The parsed port accumulated so far, including any parser default. */
   @Nullable
   public Integer port() {
-    return legacyPort;
+    return port;
   }
 
-  /** Record a parsed port for legacy output and, when allowed, single-server fallback. */
+  /** Record a parsed port and, when allowed, single-server fallback. */
   public void port(@Nullable Integer port) {
-    legacyPort = port;
+    this.port = port;
     if (allowSingleServerFallback) {
       singleServerPort = port;
     }
@@ -132,7 +99,7 @@ public final class ParseContext {
 
   /** Set a parser default port without marking it as configured. */
   public void defaultPort(@Nullable Integer port) {
-    legacyPort = port;
+    this.port = port;
     parserDefaultPort = port;
   }
 
@@ -150,15 +117,13 @@ public final class ParseContext {
     allowSingleServerFallback = false;
   }
 
-  /** The user value accumulated so far. */
-  @Deprecated // to be removed in 3.0
+  /** The parsed user, used as PostgreSQL's schema fallback. */
   @Nullable
   public String user() {
     return user;
   }
 
   /** Set the user value. */
-  @Deprecated // to be removed in 3.0
   public void user(@Nullable String user) {
     this.user = user;
   }
@@ -183,22 +148,6 @@ public final class ParseContext {
   /** Set the namespace value. */
   public void namespace(@Nullable String namespace) {
     this.namespace = namespace;
-  }
-
-  /**
-   * Override for the dbName field in the resulting DbInfo. When set, this value takes precedence
-   * over the databaseName-derived value. Used by SQL Server parsers to preserve old behavior where
-   * dbName is the instance name when both instance and database are present.
-   */
-  @Deprecated // to be removed in 3.0
-  @Nullable
-  public String dbName() {
-    return dbName;
-  }
-
-  @Deprecated // to be removed in 3.0
-  public void dbName(@Nullable String dbName) {
-    this.dbName = dbName;
   }
 
   /** DataSource connection properties. */
@@ -351,32 +300,12 @@ public final class ParseContext {
    * @return the complete DbInfo
    */
   public DbInfo toDbInfo() {
-    // oldSemconvSystem falls back to system when not explicitly set (i.e., when both are the same)
-    String oldSystem = oldSemconvSystem != null ? oldSemconvSystem : system;
-    DbInfo.Builder builder = DbInfo.builder().dbSystemName(system).dbSystem(oldSystem);
-    if (legacyHost != null) {
-      builder.legacyServerAddress(legacyHost);
-    }
-    if (legacyPort != null) {
-      builder.legacyServerPort(legacyPort);
-    }
-    if (user != null) {
-      builder.dbUser(user);
-    }
+    DbInfo.Builder builder = DbInfo.builder().dbSystemName(system);
     if (namespace != null) {
       builder.dbNamespace(namespace);
     } else if (databaseName != null) {
       builder.dbNamespace(databaseName);
     }
-    if (dbName != null) {
-      builder.dbName(dbName);
-    } else if (databaseName != null) {
-      builder.dbName(databaseName);
-    } else if (namespace != null) {
-      builder.dbName(namespace);
-    }
-    String legacyConnectionString = buildShortUrl(type, subtype, legacyHost, legacyPort);
-    builder.dbConnectionString(legacyConnectionString);
     builder.configuredServerTarget(buildConfiguredServerTarget());
     return builder.build();
   }
@@ -389,7 +318,7 @@ public final class ParseContext {
     if (singleServerHost == null) {
       return null;
     }
-    Integer configuredPort = singleServerPort != null ? singleServerPort : legacyPort;
+    Integer configuredPort = singleServerPort != null ? singleServerPort : port;
     if (parserDefaultPort != null && parserDefaultPort.equals(configuredPort)) {
       configuredPort = null;
     }

@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
 
@@ -38,17 +39,33 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
         .isFalse();
   }
 
-  @Test
-  void testTranslateName_withDevelopmentSuffix_noExperimental() {
+  @ParameterizedTest
+  @ValueSource(strings = {"controller", "view"})
+  void testTranslateName_stableTelemetry(String telemetry) {
     DeclarativeConfigProperties config =
-        createConfig(
-            "otel.instrumentation.common.experimental.controller-telemetry.enabled", "true");
+        createConfig("otel.instrumentation.common." + telemetry + "-telemetry.enabled", "true");
 
     assertThat(
             config
                 .getStructured("java")
                 .getStructured("common")
-                .getStructured("controller_telemetry/development")
+                .getStructured(telemetry + "_telemetry")
+                .getBoolean("enabled"))
+        .isTrue();
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"controller", "view"})
+  void testTranslateName_withDevelopmentSuffix_noExperimental(String telemetry) {
+    DeclarativeConfigProperties config =
+        createConfig(
+            "otel.instrumentation.common.experimental." + telemetry + "-telemetry.enabled", "true");
+
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("common")
+                .getStructured(telemetry + "_telemetry/development")
                 .getBoolean("enabled"))
         .isNotNull()
         .isTrue();
@@ -108,6 +125,17 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
 
     assertThat(metrics.getScalarList("included", String.class)).containsExactly("jvm.*", "kafka.*");
     assertThat(metrics.getScalarList("excluded", String.class)).containsExactly("kafka.connect.*");
+
+    metrics = createConfig("otel.jmx.metrics.experimental.included", "jvm.*");
+
+    assertThat(
+            metrics
+                .getStructured("java")
+                .getStructured("jmx")
+                .getStructured("metrics")
+                .getStructured("experimental")
+                .getScalarList("included", String.class))
+        .containsExactly("jvm.*");
   }
 
   @Test
@@ -164,8 +192,8 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   @Test
   void testMessagingHeadersSelectorMapping() {
     Map<String, String> properties = new HashMap<>();
-    properties.put("otel.instrumentation.common.messaging.experimental.headers.included", "a,b");
-    properties.put("otel.instrumentation.common.messaging.experimental.headers.excluded", "c");
+    properties.put("otel.instrumentation.common.messaging.headers.included", "a,b");
+    properties.put("otel.instrumentation.common.messaging.headers.excluded", "c");
     properties.put("otel.instrumentation.messaging.experimental.capture-headers", "legacy");
 
     DeclarativeConfigProperties messaging =
@@ -176,11 +204,9 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
             .getStructured("common")
             .getStructured("messaging");
 
-    assertThat(
-            messaging.getStructured("headers/development").getScalarList("included", String.class))
+    assertThat(messaging.getStructured("headers").getScalarList("included", String.class))
         .containsExactly("a", "b");
-    assertThat(
-            messaging.getStructured("headers/development").getScalarList("excluded", String.class))
+    assertThat(messaging.getStructured("headers").getScalarList("excluded", String.class))
         .containsExactly("c");
     assertThat(messaging.getScalarList("capture_headers/development", String.class))
         .containsExactly("legacy");
@@ -263,6 +289,44 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   }
 
   @Test
+  void testStableSpanSuppressionStrategyMapping() {
+    DeclarativeConfigProperties common =
+        createConfig("otel.instrumentation.common.span-suppression-strategy", "none")
+            .getStructured("java")
+            .getStructured("common");
+
+    assertThat(common.getString("span_suppression_strategy")).isEqualTo("none");
+    assertThat(common.getString("span_suppression_strategy/development")).isNull();
+  }
+
+  @Test
+  void testDeprecatedSpanSuppressionStrategyMapping() {
+    DeclarativeConfigProperties common =
+        createConfig("otel.instrumentation.experimental.span-suppression-strategy", "span-kind")
+            .getStructured("java")
+            .getStructured("common");
+
+    assertThat(common.getString("span_suppression_strategy")).isNull();
+    assertThat(common.getString("span_suppression_strategy/development")).isEqualTo("span-kind");
+  }
+
+  @Test
+  void testSpanSuppressionStrategyMappingsDoNotConflict() {
+    Map<String, String> properties = new HashMap<>();
+    properties.put("otel.instrumentation.common.span-suppression-strategy", "none");
+    properties.put("otel.instrumentation.experimental.span-suppression-strategy", "span-kind");
+
+    DeclarativeConfigProperties common =
+        ConfigPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig(
+                DefaultConfigProperties.createFromMap(properties))
+            .getStructured("java")
+            .getStructured("common");
+
+    assertThat(common.getString("span_suppression_strategy")).isEqualTo("none");
+    assertThat(common.getString("span_suppression_strategy/development")).isEqualTo("span-kind");
+  }
+
+  @Test
   void testDeprecatedCommonDbStatementSanitizerMapping() {
     DeclarativeConfigProperties config =
         createConfig("otel.instrumentation.common.db-statement-sanitizer.enabled", "false");
@@ -307,24 +371,17 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   }
 
   @Test
-  void testDeprecatedGraphqlQuerySanitizerMapping() {
+  void testGraphqlOperationNameInSpanNameMapping() {
     DeclarativeConfigProperties config =
-        createConfig("otel.instrumentation.graphql.query-sanitizer.enabled", "false");
+        createConfig("otel.instrumentation.graphql.operation-name-in-span-name.enabled", "true");
 
     assertThat(
             config
                 .getStructured("java")
                 .getStructured("graphql")
-                .getStructured("query_sanitizer")
+                .getStructured("operation_name_in_span_name")
                 .getBoolean("enabled"))
-        .isFalse();
-    assertThat(
-            config
-                .getStructured("java")
-                .getStructured("graphql")
-                .getStructured("query_sanitization")
-                .getBoolean("enabled"))
-        .isNull();
+        .isTrue();
   }
 
   @Test

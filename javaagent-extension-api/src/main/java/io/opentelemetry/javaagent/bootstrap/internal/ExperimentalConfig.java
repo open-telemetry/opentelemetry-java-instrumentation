@@ -21,7 +21,8 @@ public final class ExperimentalConfig {
   private static final ExperimentalConfig instance =
       new ExperimentalConfig(GlobalOpenTelemetry.get());
 
-  private final DeclarativeConfigProperties commonConfig;
+  private final boolean controllerTelemetryEnabled;
+  private final boolean viewTelemetryEnabled;
   private final IncludeExclude messagingHeaders;
   private final boolean messagingReceiveInstrumentationEnabled;
 
@@ -31,18 +32,22 @@ public final class ExperimentalConfig {
   }
 
   public ExperimentalConfig(OpenTelemetry openTelemetry) {
-    this.commonConfig = DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
+    DeclarativeConfigProperties commonConfig =
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
+    this.controllerTelemetryEnabled =
+        commonConfig.get("controller_telemetry").getBoolean("enabled", false);
+    this.viewTelemetryEnabled = commonConfig.get("view_telemetry").getBoolean("enabled", false);
     this.messagingHeaders = MessagingConfig.getHeaders(openTelemetry);
     this.messagingReceiveInstrumentationEnabled =
         MessagingConfig.isReceiveTelemetryEnabled(openTelemetry, false);
   }
 
   public boolean controllerTelemetryEnabled() {
-    return commonConfig.get("controller_telemetry/development").getBoolean("enabled", false);
+    return controllerTelemetryEnabled;
   }
 
   public boolean viewTelemetryEnabled() {
-    return commonConfig.get("view_telemetry/development").getBoolean("enabled", false);
+    return viewTelemetryEnabled;
   }
 
   public boolean messagingReceiveInstrumentationEnabled() {

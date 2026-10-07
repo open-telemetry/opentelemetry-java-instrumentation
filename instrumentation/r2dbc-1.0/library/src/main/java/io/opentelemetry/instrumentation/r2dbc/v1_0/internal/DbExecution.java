@@ -11,10 +11,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.r2dbc.proxy.core.QueryExecutionInfo;
 import io.r2dbc.proxy.core.QueryInfo;
-import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 import java.util.List;
-import java.util.Locale;
 import javax.annotation.Nullable;
 
 /**
@@ -22,11 +20,7 @@ import javax.annotation.Nullable;
  * any time.
  */
 public final class DbExecution {
-  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
-  private static final String OTHER_SQL = "other_sql";
-
   private final R2dbcConnectionInfo connectionInfo;
-  private final String system;
   private final List<String> rawQueryTexts;
   @Nullable private final Long batchSize;
   private final boolean parameterizedQuery;
@@ -39,15 +33,6 @@ public final class DbExecution {
 
   DbExecution(QueryExecutionInfo queryInfo, R2dbcConnectionInfo connectionInfo) {
     this.connectionInfo = connectionInfo;
-    Connection originalConnection = queryInfo.getConnectionInfo().getOriginalConnection();
-    this.system =
-        originalConnection != null
-            ? originalConnection
-                .getMetadata()
-                .getDatabaseProductName()
-                .toLowerCase(Locale.ROOT)
-                .split(" ")[0]
-            : OTHER_SQL;
     this.rawQueryTexts =
         queryInfo.getQueries().stream()
             .map(QueryInfo::getQuery)
@@ -71,16 +56,6 @@ public final class DbExecution {
   }
 
   @Nullable
-  public String getServerAddress() {
-    return connectionInfo.getServerAddress();
-  }
-
-  @Nullable
-  public Integer getServerPort() {
-    return connectionInfo.getServerPort();
-  }
-
-  @Nullable
   public String getConfiguredServerAddress() {
     DbServerTarget target = connectionInfo.getConfiguredServerTarget();
     return target == null ? null : target.getAddress();
@@ -96,23 +71,9 @@ public final class DbExecution {
     return connectionInfo.getSystemName();
   }
 
-  @Deprecated // to be removed in 3.0
-  public String getSystem() {
-    return system;
-  }
-
-  @Nullable
-  public String getUser() {
-    return connectionInfo.getUser();
-  }
-
   @Nullable
   public String getNamespace() {
     return connectionInfo.getNamespace();
-  }
-
-  public String getConnectionString() {
-    return connectionInfo.getConnectionString();
   }
 
   public List<String> getRawQueryTexts() {

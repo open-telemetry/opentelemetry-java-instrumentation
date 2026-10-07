@@ -31,23 +31,8 @@ public class VertxSqlClientRequest {
   }
 
   @Nullable
-  public String getUser() {
-    return getInfo().getUser();
-  }
-
-  @Nullable
   public String getDatabase() {
     return getInfo().getNamespace();
-  }
-
-  @Nullable
-  public String getHost() {
-    return getInfo().getLegacyServerAddress();
-  }
-
-  @Nullable
-  public Integer getPort() {
-    return getInfo().getLegacyServerPort();
   }
 
   @Nullable

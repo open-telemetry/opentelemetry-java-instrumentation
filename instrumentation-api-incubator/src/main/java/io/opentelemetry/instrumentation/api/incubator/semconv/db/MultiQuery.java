@@ -31,10 +31,10 @@ class MultiQuery {
     this.collectionName = collectionName;
   }
 
-  static MultiQuery analyzeWithSummary(Collection<String> rawQueryTexts, SqlDialect dialect) {
+  static MultiQuery analyze(Collection<String> rawQueryTexts, SqlDialect dialect) {
     Builder builder = builder();
     for (String rawQueryText : rawQueryTexts) {
-      SqlQuery analyzedQuery = SqlQueryAnalyzerUtil.analyzeWithSummary(rawQueryText, dialect);
+      SqlQuery analyzedQuery = SqlQueryAnalyzerUtil.analyze(rawQueryText, dialect);
       builder.add(analyzedQuery, rawQueryText);
     }
 

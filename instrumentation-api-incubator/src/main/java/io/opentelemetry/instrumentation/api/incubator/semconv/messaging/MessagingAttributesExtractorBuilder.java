@@ -16,20 +16,17 @@ import javax.annotation.Nullable;
 public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   final MessagingAttributesGetter<REQUEST, RESPONSE> getter;
-  @Nullable private final MessagingOperationType operationType;
-  @Nullable private final String operationName;
-  private final boolean supportsStableSemconv;
+  private final MessagingOperationType operationType;
+  private final String operationName;
   @Nullable IncludeExclude headers;
 
   MessagingAttributesExtractorBuilder(
       MessagingAttributesGetter<REQUEST, RESPONSE> getter,
-      @Nullable MessagingOperationType operationType,
-      @Nullable String operationName,
-      boolean supportsStableSemconv) {
+      MessagingOperationType operationType,
+      String operationName) {
     this.getter = getter;
     this.operationType = operationType;
     this.operationName = operationName;
-    this.supportsStableSemconv = supportsStableSemconv;
   }
 
   /**
@@ -88,7 +85,6 @@ public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * MessagingAttributesExtractorBuilder}.
    */
   public AttributesExtractor<REQUEST, RESPONSE> build() {
-    return new MessagingAttributesExtractor<>(
-        getter, operationType, operationName, supportsStableSemconv, headers);
+    return new MessagingAttributesExtractor<>(getter, operationType, operationName, headers);
   }
 }

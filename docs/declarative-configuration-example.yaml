@@ -23,6 +23,15 @@ instrumentation/development:
 
         # List of HTTP response headers to capture in HTTP server telemetry.
         response_captured_headers: []
+    rpc:
+      semconv:
+        # With `version: 1` and `experimental: true`, emits both the current and the preview RPC
+        # semantic conventions.
+        dual_emit: false
+
+        # With `version: 1`, selects the preview RPC semantic conventions. Required, because version
+        # 1 of the RPC semantic conventions is not yet stable.
+        experimental: false
     sanitization:
       url:
         # List of URL query parameter names whose values are redacted in URL attributes. See
@@ -36,10 +45,9 @@ instrumentation/development:
           - sig
           - X-Goog-Signature
 
-    # Opt-in to emit stable semantic conventions instead of the old experimental semantic
-    # conventions. Accepts a comma-separated list of semantic convention groups (e.g., `database`,
-    # `http`, `messaging`). Use `<group>/dup` to emit both old and new conventions simultaneously.
-    # Stable semantic conventions will become the default in version 3.0 of the agent.
+    # A comma-separated list of semantic convention groups to opt into, such as `rpc` and
+    # `service.peer`. Use `<group>/dup` to emit both old and new conventions. Under v3 preview the
+    # preview groups use `otel.semconv-stability.preview` instead.
     stability_opt_in_list: ''
   java:
     apache_elasticjob:
@@ -61,11 +69,6 @@ instrumentation/development:
       # Enables the experimental span attributes `aws.agent`, `aws.queue.name`,
       # `aws.lambda.function.arn` and `aws.lambda.function.name` for AWS SDK instrumentation.
       experimental_span_attributes/development: false
-      message_create_spans:
-        # Determines whether to create a producer span for each eligible message in an SQS batch
-        # send when stable messaging semantic conventions are enabled. Overrides
-        # `otel.instrumentation.common.messaging.message-create-spans.enabled`.
-        enabled: true
 
       # Determines whether errors returned by each individual HTTP request should be recorded as
       # events for the SDK span.
@@ -79,7 +82,7 @@ instrumentation/development:
       # `camel.kafka.key` and `camel.kafka.offset` span attributes.
       experimental_span_attributes/development: false
     common:
-      controller_telemetry/development:
+      controller_telemetry:
         # Enables the creation of experimental controller spans.
         enabled: false
       db:
@@ -179,22 +182,22 @@ instrumentation/development:
         # list of attribute keys.
         resource_attributes: []
       messaging:
-        headers/development:
-          # A comma-separated list of message header name patterns to exclude from span attributes.
-          # Excluded patterns take precedence over included patterns. Matching is case-sensitive.
-          # `?` matches one character and `*` matches zero or more characters. If included is not
-          # configured, all non-excluded headers are captured, which may expose sensitive
-          # information.
+        headers:
+          # A comma-separated list of case-sensitive message header name glob patterns to exclude
+          # from span attributes. `?` matches one character and `*` matches zero or more characters.
+          # Excluded patterns take precedence over included patterns. An absent or empty selector
+          # captures no headers; an exclude-only selector captures every header not excluded, which
+          # may expose sensitive information.
           excluded: []
 
-          # A comma-separated list of message header name patterns to capture as span attributes.
-          # Matching is case-sensitive. `?` matches one character and `*` matches zero or more
-          # characters.
+          # A comma-separated list of case-sensitive message header name glob patterns to capture as
+          # span attributes. `?` matches one character and `*` matches zero or more characters.
+          # Excluded patterns take precedence over included patterns. An absent or empty selector
+          # captures no headers; an exclude-only selector captures every header not excluded.
           included: []
         message_create_spans:
           # Provides the default for whether to create a producer span for each eligible message in
-          # a batch send when stable messaging semantic conventions are enabled. An
-          # instrumentation-specific setting takes precedence.
+          # a batch send. An instrumentation-specific setting takes precedence.
           enabled: true
         receive_telemetry/development:
           # Enables experimental receive telemetry, which will cause consumers to start a new trace,
@@ -212,6 +215,11 @@ instrumentation/development:
       #     - peer: host
       #       service_name: serviceName
       service_peer_mapping: []
+
+      # Strategy for suppressing nested instrumentation spans: `semconv` suppresses a span nested in
+      # a span of the same semantic convention type, `span-kind` suppresses a span nested in a span
+      # of the same span kind, and `none` disables suppression.
+      span_suppression_strategy: semconv
       user:
         name:
           # Enables capturing the user.name attribute when v3 preview is enabled. This property and
@@ -221,7 +229,11 @@ instrumentation/development:
           # Enables capturing the user.roles attribute when v3 preview is enabled. This property and
           # the associated attribute are not supported when v3 preview is disabled.
           enabled: false
-      view_telemetry/development:
+
+      # Enables a preview of the behavior planned for version 3.0 of the agent, such as ignoring
+      # deprecated settings. The set of changes it enables can grow in any release.
+      v3_preview: false
+      view_telemetry:
         # Enables the creation of experimental view spans.
         enabled: false
     couchbase:
@@ -376,6 +388,12 @@ instrumentation/development:
         # that are not excluded are collected. With neither selector property configured, all
         # metrics are collected.
         excluded: []
+        experimental:
+          # Comma-separated list of case-sensitive glob patterns for unstable (experimental) bundled
+          # metric names to opt in to. "*" matches any number of characters and "?" matches one
+          # character. Normal metric include and exclude filters also apply. Custom metric
+          # definitions do not require experimental opt-in.
+          included: []
 
         # Comma-separated list of case-sensitive glob patterns for metric names to collect. "*"
         # matches any number of characters and "?" matches one character. Excluded patterns take
@@ -383,9 +401,6 @@ instrumentation/development:
         # that are not excluded are collected. With neither selector property configured, all
         # metrics are collected.
         included: []
-      target:
-        # List of predefined JMX target systems to collect metrics for.
-        system: []
     jsp:
       # Enables experimental span attributes `jsp.forwardOrigin`, `jsp.requestURL`, `jsp.compiler`,
       # and `jsp.classFQCN`.
@@ -536,10 +551,6 @@ instrumentation/development:
     opentelemetry_instrumentation_annotations:
       # All methods to be excluded from auto-instrumentation by annotation-based advices.
       exclude_methods: ''
-    oshi:
-      experimental_metrics/development:
-        # Enable the experimental `runtime.java.memory` and `runtime.java.cpu_time` metrics.
-        enabled: false
     powerjob:
       # Enables experimental span attributes `job.system`, `scheduling.powerjob.job.id`,
       # `scheduling.powerjob.job.param`, `scheduling.powerjob.job.instance.param`, and
@@ -554,7 +565,8 @@ instrumentation/development:
       experimental_span_attributes/development: false
     rabbitmq:
       # Enables experimental span attributes `rabbitmq.command`, `rabbitmq.delivery_mode`,
-      # `rabbitmq.queue`, and `rabbitmq.record.queue_time_ms`.
+      # `rabbitmq.queue`, `rabbitmq.record.queue_time_ms`, `messaging.rabbitmq.vhost.name`, and
+      # `messaging.rabbitmq.cluster.name`.
       experimental_span_attributes/development: false
     reactor:
       # Enables the capture of the experimental `reactor.canceled` attribute on spans when reactive
@@ -570,9 +582,9 @@ instrumentation/development:
       # `messaging.rocketmq.queue_id`, and `messaging.rocketmq.queue_offset`.
       experimental_span_attributes/development: false
       message_create_spans:
-        # Enables per-message Create spans for batch sends when stable messaging semantic
-        # conventions are enabled. Overrides the common messaging setting. Disabling this retains
-        # Send spans and context propagation and does not affect single-message sends.
+        # Enables per-message Create spans for batch sends. Overrides the common messaging setting.
+        # Disabling this retains Send spans and context propagation and does not affect
+        # single-message sends.
         enabled: true
     runtime_telemetry:
       # Enables the capture of experimental JFR-based JVM runtime metrics on Java 17+.

@@ -23,6 +23,7 @@ muzzle {
 
 dependencies {
   implementation(project(":instrumentation:jms:jms-common-1.1:javaagent"))
+  bootstrap(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
 
   compileOnly("javax.jms:jms-api:1.1-rev-1")
 
@@ -33,6 +34,17 @@ dependencies {
 
 testing {
   suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":javaagent-bootstrap"))
+        implementation(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
+        implementation(project(":instrumentation:jms:jms-common-1.1:javaagent"))
+        implementation(project(":javaagent-extension-api"))
+        implementation("javax.jms:jms-api:1.1-rev-1")
+      }
+    }
+
     register<JvmTestSuite>("jms2Test") {
       dependencies {
         implementation("org.hornetq:hornetq-jms-client:2.4.7.Final")
@@ -70,62 +82,6 @@ tasks {
     include("**/Jms1SuppressReceiveSpansTest.*")
   }
 
-  val testMessagingPreviewReceiveSpansDisabled =
-    register<Test>("testMessagingPreviewReceiveSpansDisabled") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
-      usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-
-      filter {
-        includeTestsMatching("Jms1SuppressReceiveSpansTest")
-      }
-      include("**/Jms1SuppressReceiveSpansTest.*")
-      jvmArgs("-Dotel.semconv-stability.preview=messaging")
-      systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-    }
-
-  val testMessagingPreview = register<Test>("testMessagingPreview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    filter {
-      excludeTestsMatching("Jms1SuppressReceiveSpansTest")
-    }
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
-  val testJms2MessagingPreview = register<Test>("testJms2MessagingPreview") {
-    testClassesDirs = sourceSets["jms2Test"].output.classesDirs
-    classpath = sourceSets["jms2Test"].runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
-  val testJms2BothSemconv = register<Test>("testJms2BothSemconv") {
-    testClassesDirs = sourceSets["jms2Test"].output.classesDirs
-    classpath = sourceSets["jms2Test"].runtimeClasspath
-    isEnabled = project.tasks.named("jms2Test").get().enabled
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    filter {
-      includeTestsMatching("Jms1InstrumentationTest")
-    }
-    include("**/Jms1InstrumentationTest.*")
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
-  }
-
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     filter {
@@ -142,11 +98,6 @@ tasks {
     dependsOn(
       testing.suites,
       testReceiveSpansDisabled,
-      testMessagingPreview,
-      testMessagingPreviewReceiveSpansDisabled,
-      testJms2MessagingPreview,
-      testJms2BothSemconv,
-      testBothSemconv,
     )
   }
 }

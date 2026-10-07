@@ -5,9 +5,6 @@
 
 package io.opentelemetry.instrumentation.couchbase;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-
 import com.couchbase.client.java.bucket.BucketType;
 import com.couchbase.client.java.cluster.BucketSettings;
 import com.couchbase.client.java.cluster.DefaultBucketSettings;
@@ -129,26 +126,11 @@ public abstract class AbstractCouchbaseTest {
   }
 
   /**
-   * Override to return false in subclasses that capture the network peer but not the node the
-   * driver considers itself connected to, because core-io before 1.6.0 has no reliable method to
-   * read it from for the whole 2.0-2.5 range. This only affects the old (non-stable) semantic
-   * conventions' server address/port fallback; defaults to {@link #includesNetworkAttributes()}
-   * since every other subclass that has one also has the other.
-   */
-  protected boolean includesOldServerAddressAttribute() {
-    return includesNetworkAttributes();
-  }
-
-  /**
    * Override to return true in subclasses where experimental attributes are enabled (when
    * otel.instrumentation.couchbase.emit-experimental-telemetry=true).
    */
   protected boolean includesExperimentalAttributes() {
     return EXPERIMENTAL_TELEMETRY;
-  }
-
-  protected String networkType() {
-    return includesNetworkAttributes() && emitOldDatabaseSemconv() ? "ipv4" : null;
   }
 
   protected String networkPeerAddress() {
@@ -160,24 +142,19 @@ public abstract class AbstractCouchbaseTest {
   }
 
   protected String configuredServerAddress() {
-    return emitStableDatabaseSemconv() ? "127.0.0.1" : null;
+    return "127.0.0.1";
   }
 
   protected StringAssertConsumer serverAddress() {
-    if (emitStableDatabaseSemconv()) {
-      return val -> val.isEqualTo(configuredServerAddress());
-    }
-    return includesOldServerAddressAttribute() ? val -> val.isNotNull() : val -> val.isNull();
+    return val -> val.isEqualTo(configuredServerAddress());
   }
 
   protected LongAssertConsumer serverPort() {
-    return !emitStableDatabaseSemconv() && includesOldServerAddressAttribute()
-        ? val -> val.isNotNull()
-        : val -> val.isNull();
+    return val -> val.isNull();
   }
 
   protected String spanName(String operation) {
-    return emitStableDatabaseSemconv() ? operation + " " + configuredServerAddress() : operation;
+    return operation + " " + configuredServerAddress();
   }
 
   protected StringAssertConsumer experimentalOperationId() {

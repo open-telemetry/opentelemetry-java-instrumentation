@@ -44,6 +44,18 @@ dependencies {
 
 testing {
   suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":javaagent-bootstrap"))
+        implementation(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
+        implementation(project(":instrumentation:jms:jms-1.1:javaagent"))
+        implementation(project(":instrumentation:jms:jms-common-1.1:javaagent"))
+        implementation(project(":javaagent-extension-api"))
+        implementation("javax.jms:jms-api:1.1-rev-1")
+      }
+    }
+
     register<JvmTestSuite>("testReceiveSpansDisabled") {
       dependencies {
         implementation(project(":instrumentation:spring:spring-jms:spring-jms-2.0:testing"))
@@ -65,23 +77,6 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testMessagingPreviewReceiveSpansDisabled =
-    register<Test>("testMessagingPreviewReceiveSpansDisabled") {
-      testClassesDirs = sourceSets["testReceiveSpansDisabled"].output.classesDirs
-      classpath = sourceSets["testReceiveSpansDisabled"].runtimeClasspath
-      jvmArgs("-Dotel.semconv-stability.preview=messaging")
-      systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-    }
-
-  val testBothSemconvReceiveSpansDisabled =
-    register<Test>("testBothSemconvReceiveSpansDisabled") {
-      testClassesDirs = sourceSets["testReceiveSpansDisabled"].output.classesDirs
-      classpath = sourceSets["testReceiveSpansDisabled"].runtimeClasspath
-      isEnabled = project.tasks.named("testReceiveSpansDisabled").get().enabled
-      jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-      systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
-    }
-
   // this does not apply to testReceiveSpansDisabled
   test {
     jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
@@ -89,14 +84,6 @@ tasks {
       "metadataConfig",
       "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
     )
-  }
-
-  val testMessagingPreview = register<Test>("testMessagingPreview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
 
   val testJmsDisabled = register<Test>("testJmsDisabled") {
@@ -109,28 +96,21 @@ tasks {
     }
     jvmArgs("-Dotel.instrumentation.jms.enabled=false")
     // receive telemetry is enabled here because the jms instrumentation that would create the
-    // receive operation is disabled, so the process operation has to count the consumed message
+    // receive operation is disabled, so the process operation owns the messaging telemetry
     jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("testJmsDisabled", "true")
-  }
 
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
+    systemProperty("testJmsDisabled", "true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.jms.enabled=false," +
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
+    )
   }
 
   check {
     dependsOn(
       testing.suites,
-      testMessagingPreview,
-      testMessagingPreviewReceiveSpansDisabled,
-      testBothSemconvReceiveSpansDisabled,
       testJmsDisabled,
-      testBothSemconv,
     )
   }
 }

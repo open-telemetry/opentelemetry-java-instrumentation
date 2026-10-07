@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.okhttp.v2_2;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -15,7 +16,11 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class OkHttp2InstrumentationModule extends InstrumentationModule {
   public OkHttp2InstrumentationModule() {
-    super("okhttp", "okhttp-2.2");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "okhttp-2.2" : "okhttp",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"okhttp"}
+            : new String[] {"okhttp-2.2"});
   }
 
   @Override

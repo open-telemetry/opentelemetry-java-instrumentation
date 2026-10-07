@@ -5,12 +5,17 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
+import static java.util.logging.Level.WARNING;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.impl.InstrumentationUtil;
@@ -22,14 +27,31 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
+import io.opentelemetry.instrumentation.config.bridge.DeclarativeConfigBridge;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfiguration;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryConfigurationModel;
+import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
+import io.opentelemetry.sdk.internal.SdkConfigProvider;
+import java.io.ByteArrayInputStream;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.junitpioneer.jupiter.SetSystemProperty;
 
 class SpanSuppressionStrategyTest {
@@ -43,6 +65,36 @@ class SpanSuppressionStrategyTest {
   void programmaticSpanSuppressionStrategyShouldOverrideDeprecatedProperty() {
     InstrumenterBuilder<String, String> builder =
         Instrumenter.<String, String>builder(OpenTelemetry.noop(), "test", request -> "test");
+    Experimental.setSpanSuppressionStrategy(builder, "span-kind");
+
+    SpanSuppressor suppressor = builder.buildSpanSuppressor();
+    Context context = suppressor.storeInContext(Context.root(), SpanKind.CLIENT, span);
+
+    assertThat(suppressor.shouldSuppress(context, SpanKind.CLIENT)).isTrue();
+  }
+
+  @Test
+  @SetSystemProperty(
+      key = "otel.instrumentation.experimental.span-suppression-strategy",
+      value = "none")
+  void programmaticSpanSuppressionStrategyShouldOverrideYaml() {
+    InstrumenterBuilder<String, String> builder =
+        Instrumenter.<String, String>builder(
+            withCommonConfig("none", "none", false), "test", request -> "test");
+    Experimental.setSpanSuppressionStrategy(builder, "span-kind");
+
+    SpanSuppressor suppressor = builder.buildSpanSuppressor();
+    Context context = suppressor.storeInContext(Context.root(), SpanKind.CLIENT, span);
+
+    assertThat(suppressor.shouldSuppress(context, SpanKind.CLIENT)).isTrue();
+  }
+
+  @Test
+  void programmaticSpanSuppressionStrategyShouldOverrideStableFlatProperty() {
+    Map<String, String> properties = new HashMap<>();
+    properties.put("otel.instrumentation.common.span-suppression-strategy", "none");
+    InstrumenterBuilder<String, String> builder =
+        Instrumenter.<String, String>builder(withFlatConfig(properties), "test", request -> "test");
     Experimental.setSpanSuppressionStrategy(builder, "span-kind");
 
     SpanSuppressor suppressor = builder.buildSpanSuppressor();
@@ -85,11 +137,236 @@ class SpanSuppressionStrategyTest {
     assertThat(suppressor.shouldSuppress(context, SpanKind.CLIENT)).isTrue();
   }
 
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void shouldUseStableFlatPropertyInBothPreviewModes(boolean v3Preview) {
+    Map<String, String> properties = new HashMap<>();
+    properties.put("otel.instrumentation.common.span-suppression-strategy", "span-kind");
+    properties.put("otel.instrumentation.experimental.span-suppression-strategy", "none");
+    properties.put("otel.instrumentation.common.v3-preview", Boolean.toString(v3Preview));
+    InstrumenterBuilder<String, String> builder =
+        Instrumenter.<String, String>builder(withFlatConfig(properties), "test", request -> "test");
+
+    SpanSuppressor suppressor = builder.buildSpanSuppressor();
+    Context context = suppressor.storeInContext(Context.root(), SpanKind.CLIENT, span);
+
+    assertThat(suppressor.shouldSuppress(context, SpanKind.CLIENT)).isTrue();
+  }
+
+  @Test
+  void shouldUseDeprecatedFlatPropertyFromBridgeAsFallback() {
+    Map<String, String> properties = new HashMap<>();
+    properties.put("otel.instrumentation.experimental.span-suppression-strategy", "span-kind");
+    InstrumenterBuilder<String, String> builder =
+        Instrumenter.<String, String>builder(withFlatConfig(properties), "test", request -> "test");
+
+    SpanSuppressor suppressor = builder.buildSpanSuppressor();
+    Context context = suppressor.storeInContext(Context.root(), SpanKind.CLIENT, span);
+
+    assertThat(suppressor.shouldSuppress(context, SpanKind.CLIENT)).isTrue();
+  }
+
+  @Test
+  void shouldUseDeprecatedFlatPropertyFromBridgeUnderV3Preview() {
+    Map<String, String> properties = new HashMap<>();
+    properties.put("otel.instrumentation.experimental.span-suppression-strategy", "span-kind");
+    properties.put("otel.instrumentation.common.v3-preview", "true");
+    InstrumenterBuilder<String, String> builder =
+        Instrumenter.<String, String>builder(withFlatConfig(properties), "test", request -> "test");
+    @SuppressWarnings("unchecked")
+    AttributesExtractor<String, String> extractor =
+        mock(AttributesExtractor.class, withSettings().extraInterfaces(SpanKeyProvider.class));
+    when(((SpanKeyProvider) extractor).internalGetSpanKey()).thenReturn(SpanKey.DB_CLIENT);
+    builder.addAttributesExtractor(extractor);
+
+    SpanSuppressor suppressor = builder.buildSpanSuppressor();
+    Context context = suppressor.storeInContext(Context.root(), SpanKind.CLIENT, span);
+
+    assertThat(SpanKey.DB_CLIENT.fromContextOrNull(context)).isNull();
+    assertThat(SpanKey.KIND_CLIENT.fromContextOrNull(context)).isSameAs(span);
+  }
+
   @Test
   @SetSystemProperty(
       key = "otel.instrumentation.experimental.span-suppression-strategy",
       value = "span-kind")
-  void shouldIgnoreDeprecatedPropertyWhenConfiguredV3PreviewIsEnabled() {
+  void stableYamlShouldOverrideDeprecatedYamlAndFlatProperty() {
+    InstrumenterBuilder<String, String> builder =
+        Instrumenter.<String, String>builder(
+            withCommonConfig("none", "span-kind", false), "test", request -> "test");
+
+    SpanSuppressor suppressor = builder.buildSpanSuppressor();
+
+    assertThat(suppressor.storeInContext(Context.root(), SpanKind.CLIENT, span))
+        .isSameAs(Context.root());
+  }
+
+  @Test
+  @SetSystemProperty(
+      key = "otel.instrumentation.experimental.span-suppression-strategy",
+      value = "span-kind")
+  void deprecatedYamlShouldOverrideDeprecatedFlatProperty() {
+    InstrumenterBuilder<String, String> builder =
+        Instrumenter.<String, String>builder(
+            withCommonConfig(null, "none", false), "test", request -> "test");
+
+    SpanSuppressor suppressor = builder.buildSpanSuppressor();
+
+    assertThat(suppressor.storeInContext(Context.root(), SpanKind.CLIENT, span))
+        .isSameAs(Context.root());
+  }
+
+  @Test
+  void shouldUseStableYaml() {
+    InstrumenterBuilder<String, String> builder =
+        Instrumenter.<String, String>builder(
+            withCommonConfig("span-kind", null, false), "test", request -> "test");
+
+    SpanSuppressor suppressor = builder.buildSpanSuppressor();
+    Context context = suppressor.storeInContext(Context.root(), SpanKind.CLIENT, span);
+
+    assertThat(suppressor.shouldSuppress(context, SpanKind.CLIENT)).isTrue();
+  }
+
+  @Test
+  void shouldUseStableYamlFromSdkConfigProvider() {
+    String yaml =
+        "file_format: 1.1\n"
+            + "instrumentation/development:\n"
+            + "  java:\n"
+            + "    common:\n"
+            + "      span_suppression_strategy: span-kind\n";
+    OpenTelemetryConfigurationModel model =
+        DeclarativeConfiguration.parse(new ByteArrayInputStream(yaml.getBytes(UTF_8)));
+    ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
+    when(openTelemetry.getConfigProvider())
+        .thenReturn(SdkConfigProvider.create(DeclarativeConfiguration.toConfigProperties(model)));
+    InstrumenterBuilder<String, String> builder =
+        Instrumenter.<String, String>builder(openTelemetry, "test", request -> "test");
+
+    SpanSuppressor suppressor = builder.buildSpanSuppressor();
+    Context context = suppressor.storeInContext(Context.root(), SpanKind.CLIENT, span);
+
+    assertThat(suppressor.shouldSuppress(context, SpanKind.CLIENT)).isTrue();
+  }
+
+  @Test
+  @SetSystemProperty(
+      key = "otel.instrumentation.experimental.span-suppression-strategy",
+      value = "none")
+  void shouldUseStableYamlFromSdkConfigProviderUnderV3Preview() {
+    String yaml =
+        "file_format: 1.1\n"
+            + "instrumentation/development:\n"
+            + "  java:\n"
+            + "    common:\n"
+            + "      v3_preview: true\n"
+            + "      span_suppression_strategy: span-kind\n"
+            + "      span_suppression_strategy/development: none\n";
+    OpenTelemetryConfigurationModel model =
+        DeclarativeConfiguration.parse(new ByteArrayInputStream(yaml.getBytes(UTF_8)));
+    ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
+    ConfigProvider configProvider =
+        SdkConfigProvider.create(DeclarativeConfiguration.toConfigProperties(model));
+    when(openTelemetry.getConfigProvider()).thenReturn(configProvider);
+    when(openTelemetry.getInstrumentationConfig("common"))
+        .thenReturn(configProvider.getInstrumentationConfig("common"));
+    InstrumenterBuilder<String, String> builder =
+        Instrumenter.<String, String>builder(openTelemetry, "test", request -> "test");
+
+    SpanSuppressor suppressor = builder.buildSpanSuppressor();
+    Context context = suppressor.storeInContext(Context.root(), SpanKind.CLIENT, span);
+
+    assertThat(suppressor.shouldSuppress(context, SpanKind.CLIENT)).isTrue();
+  }
+
+  @Test
+  @SetSystemProperty(
+      key = "otel.instrumentation.experimental.span-suppression-strategy",
+      value = "none")
+  void shouldUseDeprecatedYamlFromSdkConfigProviderUnderV3Preview() {
+    String yaml =
+        "file_format: 1.1\n"
+            + "instrumentation/development:\n"
+            + "  java:\n"
+            + "    common:\n"
+            + "      v3_preview: true\n"
+            + "      span_suppression_strategy/development: span-kind\n";
+    OpenTelemetryConfigurationModel model =
+        DeclarativeConfiguration.parse(new ByteArrayInputStream(yaml.getBytes(UTF_8)));
+    ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
+    ConfigProvider configProvider =
+        SdkConfigProvider.create(DeclarativeConfiguration.toConfigProperties(model));
+    when(openTelemetry.getConfigProvider()).thenReturn(configProvider);
+    when(openTelemetry.getInstrumentationConfig("common"))
+        .thenReturn(configProvider.getInstrumentationConfig("common"));
+    InstrumenterBuilder<String, String> builder =
+        Instrumenter.<String, String>builder(openTelemetry, "test", request -> "test");
+    @SuppressWarnings("unchecked")
+    AttributesExtractor<String, String> extractor =
+        mock(AttributesExtractor.class, withSettings().extraInterfaces(SpanKeyProvider.class));
+    when(((SpanKeyProvider) extractor).internalGetSpanKey()).thenReturn(SpanKey.DB_CLIENT);
+    builder.addAttributesExtractor(extractor);
+
+    SpanSuppressor suppressor = builder.buildSpanSuppressor();
+    Context context = suppressor.storeInContext(Context.root(), SpanKind.CLIENT, span);
+
+    assertThat(SpanKey.DB_CLIENT.fromContextOrNull(context)).isNull();
+    assertThat(SpanKey.KIND_CLIENT.fromContextOrNull(context)).isSameAs(span);
+  }
+
+  @Test
+  void shouldUseDeprecatedYaml() {
+    InstrumenterBuilder<String, String> builder =
+        Instrumenter.<String, String>builder(
+            withCommonConfig(null, "span-kind", false), "test", request -> "test");
+
+    SpanSuppressor suppressor = builder.buildSpanSuppressor();
+    Context context = suppressor.storeInContext(Context.root(), SpanKind.CLIENT, span);
+
+    assertThat(suppressor.shouldSuppress(context, SpanKind.CLIENT)).isTrue();
+  }
+
+  @Test
+  void shouldDefaultToSemconv() {
+    InstrumenterBuilder<String, String> builder =
+        Instrumenter.<String, String>builder(OpenTelemetry.noop(), "test", request -> "test");
+    @SuppressWarnings("unchecked")
+    AttributesExtractor<String, String> extractor =
+        mock(AttributesExtractor.class, withSettings().extraInterfaces(SpanKeyProvider.class));
+    when(((SpanKeyProvider) extractor).internalGetSpanKey()).thenReturn(SpanKey.DB_CLIENT);
+    builder.addAttributesExtractor(extractor);
+
+    SpanSuppressor suppressor = builder.buildSpanSuppressor();
+    Context context = suppressor.storeInContext(Context.root(), SpanKind.CLIENT, span);
+
+    assertThat(SpanKey.DB_CLIENT.fromContextOrNull(context)).isSameAs(span);
+    assertThat(SpanKey.KIND_CLIENT.fromContextOrNull(context)).isNull();
+  }
+
+  @Test
+  void shouldDefaultToSemconvWithFlatConfig() {
+    InstrumenterBuilder<String, String> builder =
+        Instrumenter.<String, String>builder(
+            withFlatConfig(new HashMap<>()), "test", request -> "test");
+    @SuppressWarnings("unchecked")
+    AttributesExtractor<String, String> extractor =
+        mock(AttributesExtractor.class, withSettings().extraInterfaces(SpanKeyProvider.class));
+    when(((SpanKeyProvider) extractor).internalGetSpanKey()).thenReturn(SpanKey.DB_CLIENT);
+    builder.addAttributesExtractor(extractor);
+
+    SpanSuppressor suppressor = builder.buildSpanSuppressor();
+    Context context = suppressor.storeInContext(Context.root(), SpanKind.CLIENT, span);
+
+    assertThat(SpanKey.DB_CLIENT.fromContextOrNull(context)).isSameAs(span);
+    assertThat(SpanKey.KIND_CLIENT.fromContextOrNull(context)).isNull();
+  }
+
+  @Test
+  @SetSystemProperty(
+      key = "otel.instrumentation.experimental.span-suppression-strategy",
+      value = "span-kind")
+  void shouldUseDeprecatedPropertyWhenConfiguredV3PreviewIsEnabled() {
     ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
     ConfigProvider configProvider = mock(ConfigProvider.class);
     DeclarativeConfigProperties commonConfig = mock(DeclarativeConfigProperties.class);
@@ -100,10 +377,211 @@ class SpanSuppressionStrategyTest {
 
     InstrumenterBuilder<String, String> builder =
         Instrumenter.<String, String>builder(openTelemetry, "test", request -> "test");
+    @SuppressWarnings("unchecked")
+    AttributesExtractor<String, String> extractor =
+        mock(AttributesExtractor.class, withSettings().extraInterfaces(SpanKeyProvider.class));
+    when(((SpanKeyProvider) extractor).internalGetSpanKey()).thenReturn(SpanKey.DB_CLIENT);
+    builder.addAttributesExtractor(extractor);
+
     SpanSuppressor suppressor = builder.buildSpanSuppressor();
 
     Context context = suppressor.storeInContext(Context.root(), SpanKind.CLIENT, span);
+    assertThat(SpanKey.DB_CLIENT.fromContextOrNull(context)).isNull();
+    assertThat(SpanKey.KIND_CLIENT.fromContextOrNull(context)).isSameAs(span);
+    verify(commonConfig).getString("span_suppression_strategy/development");
+  }
+
+  @Test
+  @SetSystemProperty(
+      key = "otel.instrumentation.experimental.span-suppression-strategy",
+      value = "span-kind")
+  void shouldUseDeprecatedYamlBeforeFlatPropertyUnderV3Preview() {
+    ExtendedOpenTelemetry openTelemetry = withCommonConfig(null, "none", true);
+    InstrumenterBuilder<String, String> builder =
+        Instrumenter.<String, String>builder(openTelemetry, "test", request -> "test");
+    @SuppressWarnings("unchecked")
+    AttributesExtractor<String, String> extractor =
+        mock(AttributesExtractor.class, withSettings().extraInterfaces(SpanKeyProvider.class));
+    when(((SpanKeyProvider) extractor).internalGetSpanKey()).thenReturn(SpanKey.DB_CLIENT);
+    builder.addAttributesExtractor(extractor);
+
+    SpanSuppressor suppressor = builder.buildSpanSuppressor();
+    Context context = suppressor.storeInContext(Context.root(), SpanKind.CLIENT, span);
     assertThat(context).isSameAs(Context.root());
+    verify(openTelemetry.getInstrumentationConfig("common"))
+        .getString("span_suppression_strategy/development");
+  }
+
+  @Test
+  @SetSystemProperty(key = "otel.instrumentation.common.v3-preview", value = "true")
+  @SetSystemProperty(
+      key = "otel.instrumentation.experimental.span-suppression-strategy",
+      value = "span-kind")
+  void shouldUseDeprecatedAliasesWhenFlatV3PreviewIsEnabled() {
+    ExtendedOpenTelemetry openTelemetry = withCommonConfig(null, "none", false);
+    InstrumenterBuilder<String, String> builder =
+        Instrumenter.<String, String>builder(openTelemetry, "test", request -> "test");
+    @SuppressWarnings("unchecked")
+    AttributesExtractor<String, String> extractor =
+        mock(AttributesExtractor.class, withSettings().extraInterfaces(SpanKeyProvider.class));
+    when(((SpanKeyProvider) extractor).internalGetSpanKey()).thenReturn(SpanKey.DB_CLIENT);
+    builder.addAttributesExtractor(extractor);
+
+    SpanSuppressor suppressor = builder.buildSpanSuppressor();
+    Context context = suppressor.storeInContext(Context.root(), SpanKind.CLIENT, span);
+
+    assertThat(context).isSameAs(Context.root());
+    verify(openTelemetry.getInstrumentationConfig("common"))
+        .getString("span_suppression_strategy/development");
+  }
+
+  @Test
+  @SetSystemProperty(
+      key = "otel.instrumentation.experimental.span-suppression-strategy",
+      value = "none")
+  void shouldUseStableYamlUnderV3Preview() {
+    InstrumenterBuilder<String, String> builder =
+        Instrumenter.<String, String>builder(
+            withCommonConfig("span-kind", "none", true), "test", request -> "test");
+
+    SpanSuppressor suppressor = builder.buildSpanSuppressor();
+    Context context = suppressor.storeInContext(Context.root(), SpanKind.CLIENT, span);
+
+    assertThat(suppressor.shouldSuppress(context, SpanKind.CLIENT)).isTrue();
+  }
+
+  @Test
+  @SetSystemProperty(
+      key = "otel.instrumentation.experimental.span-suppression-strategy",
+      value = "span-kind")
+  void shouldWarnOncePerDeprecatedConfigPathOnlyWhenApplied() throws ReflectiveOperationException {
+    Field configWarningLoggedField =
+        InstrumenterBuilder.class.getDeclaredField("spanSuppressionConfigWarningLogged");
+    configWarningLoggedField.setAccessible(true);
+    AtomicBoolean configWarningLogged = (AtomicBoolean) configWarningLoggedField.get(null);
+    boolean configWarningWasLogged = configWarningLogged.getAndSet(false);
+    Field propertyWarningLoggedField =
+        InstrumenterBuilder.class.getDeclaredField("spanSuppressionPropertyWarningLogged");
+    propertyWarningLoggedField.setAccessible(true);
+    AtomicBoolean propertyWarningLogged = (AtomicBoolean) propertyWarningLoggedField.get(null);
+    boolean propertyWarningWasLogged = propertyWarningLogged.getAndSet(false);
+    List<LogRecord> records = new ArrayList<>();
+    Logger logger = Logger.getLogger(InstrumenterBuilder.class.getName());
+    String warningMessage =
+        "The otel.instrumentation.experimental.span-suppression-strategy setting and the"
+            + " equivalent declarative configuration property are deprecated and will be removed"
+            + " in 3.0. Use otel.instrumentation.common.span-suppression-strategy or equivalent"
+            + " declarative configuration instead.";
+    Handler handler =
+        new Handler() {
+          @Override
+          public void publish(LogRecord record) {
+            records.add(record);
+          }
+
+          @Override
+          public void flush() {}
+
+          @Override
+          public void close() {}
+        };
+    logger.addHandler(handler);
+    try {
+      ExtendedOpenTelemetry stable = withCommonConfig("none", "span-kind", false);
+      Instrumenter.<String, String>builder(stable, "test", request -> "test").buildSpanSuppressor();
+      assertThat(records).isEmpty();
+
+      Map<String, String> properties = new HashMap<>();
+      properties.put("otel.instrumentation.common.span-suppression-strategy", "none");
+      properties.put("otel.instrumentation.experimental.span-suppression-strategy", "span-kind");
+      Instrumenter.<String, String>builder(withFlatConfig(properties), "test", request -> "test")
+          .buildSpanSuppressor();
+      assertThat(records).isEmpty();
+
+      ExtendedOpenTelemetry preview = withCommonConfig(null, "span-kind", true);
+      Instrumenter.<String, String>builder(preview, "test", request -> "test")
+          .buildSpanSuppressor();
+      Instrumenter.<String, String>builder(preview, "test", request -> "test")
+          .buildSpanSuppressor();
+      assertThat(records).hasSize(1);
+      assertThat(records.get(0).getLevel()).isEqualTo(WARNING);
+      assertThat(records.get(0).getMessage()).isEqualTo(warningMessage);
+      assertThat(configWarningLogged.get()).isTrue();
+      assertThat(propertyWarningLogged.get()).isFalse();
+      verify(preview.getInstrumentationConfig("common"), times(2))
+          .getString("span_suppression_strategy/development");
+
+      ExtendedOpenTelemetry deprecated = withCommonConfig(null, "span-kind", false);
+      Instrumenter.<String, String>builder(deprecated, "test", request -> "test")
+          .buildSpanSuppressor();
+      Instrumenter.<String, String>builder(deprecated, "test", request -> "test")
+          .buildSpanSuppressor();
+      assertThat(records).hasSize(1);
+      assertThat(records.get(0).getLevel()).isEqualTo(WARNING);
+      assertThat(records.get(0).getMessage()).isEqualTo(warningMessage);
+
+      records.clear();
+      configWarningLogged.set(false);
+      Map<String, String> deprecatedFlat = new HashMap<>();
+      deprecatedFlat.put("otel.instrumentation.experimental.span-suppression-strategy", "none");
+      Instrumenter.<String, String>builder(
+              withFlatConfig(deprecatedFlat), "test", request -> "test")
+          .buildSpanSuppressor();
+      Instrumenter.<String, String>builder(
+              withFlatConfig(deprecatedFlat), "test", request -> "test")
+          .buildSpanSuppressor();
+      assertThat(records).hasSize(1);
+      assertThat(records.get(0).getLevel()).isEqualTo(WARNING);
+      assertThat(records.get(0).getMessage()).isEqualTo(warningMessage);
+
+      records.clear();
+      Instrumenter.<String, String>builder(OpenTelemetry.noop(), "test", request -> "test")
+          .buildSpanSuppressor();
+      Instrumenter.<String, String>builder(OpenTelemetry.noop(), "test", request -> "test")
+          .buildSpanSuppressor();
+      assertThat(records).hasSize(1);
+      assertThat(records.get(0).getLevel()).isEqualTo(WARNING);
+      assertThat(records.get(0).getMessage())
+          .isEqualTo(
+              "The otel.instrumentation.experimental.span-suppression-strategy setting is"
+                  + " deprecated and will be removed in 3.0. Use"
+                  + " the programmatic API or equivalent declarative instrumentation"
+                  + " configuration instead.");
+
+      Instrumenter.<String, String>builder(
+              withCommonConfig(null, null, false), "test", request -> "test")
+          .buildSpanSuppressor();
+      assertThat(records).hasSize(1);
+    } finally {
+      logger.removeHandler(handler);
+      configWarningLogged.set(configWarningWasLogged);
+      propertyWarningLogged.set(propertyWarningWasLogged);
+    }
+  }
+
+  private static ExtendedOpenTelemetry withCommonConfig(
+      String stable, String deprecated, boolean v3Preview) {
+    ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
+    ConfigProvider configProvider = mock(ConfigProvider.class);
+    DeclarativeConfigProperties commonConfig = mock(DeclarativeConfigProperties.class);
+    when(openTelemetry.getConfigProvider()).thenReturn(configProvider);
+    when(configProvider.getInstrumentationConfig("common")).thenReturn(commonConfig);
+    when(openTelemetry.getInstrumentationConfig("common")).thenReturn(commonConfig);
+    when(commonConfig.getString("span_suppression_strategy")).thenReturn(stable);
+    when(commonConfig.getString("span_suppression_strategy/development")).thenReturn(deprecated);
+    when(commonConfig.getBoolean("v3_preview")).thenReturn(v3Preview ? true : null);
+    return openTelemetry;
+  }
+
+  private static ExtendedOpenTelemetry withFlatConfig(Map<String, String> properties) {
+    ConfigProvider configProvider =
+        DeclarativeConfigBridge.createInstrumentationConfig(
+            DefaultConfigProperties.createFromMap(properties));
+    ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
+    when(openTelemetry.getConfigProvider()).thenReturn(configProvider);
+    when(openTelemetry.getInstrumentationConfig("common"))
+        .thenReturn(configProvider.getInstrumentationConfig("common"));
+    return openTelemetry;
   }
 
   @ParameterizedTest

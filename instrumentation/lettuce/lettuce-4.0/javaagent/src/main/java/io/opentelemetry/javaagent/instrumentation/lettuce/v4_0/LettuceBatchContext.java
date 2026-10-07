@@ -17,7 +17,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CancellationException;
@@ -64,16 +63,10 @@ public final class LettuceBatchContext {
     }
     // flushCommands() does not re-enable auto-flush, so keep batching active with a fresh buffer
     BATCH_STATE.set(commands, new BatchState());
-    InetSocketAddress serverAddress = LettuceSingletons.serverAddress(commands.getConnection());
     Integer databaseIndex = LettuceSingletons.databaseIndex(commands.getConnection());
     RedisServerTarget serverTarget = LettuceServerTargets.get(commands.getConnection());
     return BatchScope.start(
-        state.commands,
-        state.asyncCommands,
-        state.parentContext,
-        serverAddress,
-        databaseIndex,
-        serverTarget);
+        state.commands, state.asyncCommands, state.parentContext, databaseIndex, serverTarget);
   }
 
   private LettuceBatchContext() {}
@@ -95,11 +88,10 @@ public final class LettuceBatchContext {
         List<RedisCommand<?, ?, ?>> commands,
         List<AsyncCommand<?, ?, ?>> asyncCommands,
         @Nullable Context capturedParentContext,
-        @Nullable InetSocketAddress serverAddress,
         @Nullable Integer databaseIndex,
         @Nullable RedisServerTarget serverTarget) {
       LettuceBatchRequest request =
-          LettuceBatchRequest.create(commands, serverAddress, databaseIndex, serverTarget);
+          LettuceBatchRequest.create(commands, databaseIndex, serverTarget);
       Context parentContext =
           capturedParentContext == null ? Context.current() : capturedParentContext;
       if (!batchInstrumenter().shouldStart(parentContext, request)) {

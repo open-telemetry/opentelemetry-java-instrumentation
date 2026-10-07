@@ -52,18 +52,6 @@ class KafkaConnectAttributesGetter implements MessagingAttributesGetter<KafkaCon
     return null;
   }
 
-  @Nullable
-  @Override
-  public Long getMessageBodySize(KafkaConnectTask request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(KafkaConnectTask request) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String getMessageId(KafkaConnectTask request, @Nullable Void unused) {

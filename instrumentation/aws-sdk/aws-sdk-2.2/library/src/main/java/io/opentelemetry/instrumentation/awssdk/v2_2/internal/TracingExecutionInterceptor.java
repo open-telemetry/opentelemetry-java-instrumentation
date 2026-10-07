@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkRequestType.DYNAMODB;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkRequestType.RDS_DATA;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -195,19 +194,17 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
       return request;
     }
 
-    if (emitStableMessagingSemconv()) {
-      SdkRequest preparedRequest =
-          SqsAccess.prepareBatchRequest(
-              request,
-              executionAttributes,
-              parentOtelContext,
-              producerCreateInstrumenter,
-              useXrayPropagator,
-              messagingPropagator,
-              messageCreateSpansEnabled);
-      if (preparedRequest != null) {
-        request = preparedRequest;
-      }
+    SdkRequest preparedRequest =
+        SqsAccess.prepareBatchRequest(
+            request,
+            executionAttributes,
+            parentOtelContext,
+            producerCreateInstrumenter,
+            useXrayPropagator,
+            messagingPropagator,
+            messageCreateSpansEnabled);
+    if (preparedRequest != null) {
+      request = preparedRequest;
     }
 
     executionAttributes.putAttribute(SDK_REQUEST_ATTRIBUTE, request);
@@ -529,7 +526,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     if (SqsAccess.isSqsProducerRequest(request)) {
       return producerInstrumenter;
     }
-    if (emitStableMessagingSemconv() && SqsAccess.isSqsDeleteRequest(request)) {
+    if (SqsAccess.isSqsDeleteRequest(request)) {
       return settleInstrumenter;
     }
     if (shouldUseBedrockRuntimeInstrumenter(otelContext, request)) {

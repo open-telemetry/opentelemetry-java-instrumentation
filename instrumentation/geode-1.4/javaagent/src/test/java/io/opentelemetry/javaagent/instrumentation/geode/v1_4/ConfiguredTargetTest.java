@@ -5,18 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.geode.v1_4;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.GEODE;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -26,8 +21,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
-import java.net.InetSocketAddress;
-import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.apache.geode.cache.Region;
@@ -194,7 +187,7 @@ class ConfiguredTargetTest {
   }
 
   @Test
-  void unsafeConfiguredServerIsOmittedOnlyFromStableTelemetry() {
+  void unsafeConfiguredServerIsOmittedFromTelemetry() {
     Region<Object, Object> region =
         createRegion(
             "unsafe-server", poolFactory -> poolFactory.addServer("user:secret@localhost", 40404));
@@ -282,27 +275,16 @@ class ConfiguredTargetTest {
   private static Consumer<TraceAssert> operation(
       Region<Object, Object> region, String serverAddress, Long serverPort) {
     String regionName = region.getName();
-    List<InetSocketAddress> legacyServers = PoolManager.find(region).getServers();
-    String legacyServerAddress =
-        legacyServers.size() == 1 ? legacyServers.get(0).getHostString() : null;
-    Long legacyServerPort =
-        legacyServers.size() == 1 ? (long) legacyServers.get(0).getPort() : null;
     return trace ->
         trace.hasSpansSatisfyingExactly(
             span ->
                 span.hasName("putAll " + regionName)
                     .hasKind(SpanKind.CLIENT)
                     .hasAttributesSatisfyingExactly(
-                        equalTo(maybeStable(DB_SYSTEM), GEODE),
-                        equalTo(
-                            DB_COLLECTION_NAME, emitStableDatabaseSemconv() ? regionName : null),
-                        equalTo(DB_NAME, emitStableDatabaseSemconv() ? null : regionName),
-                        equalTo(maybeStable(DB_OPERATION), "putAll"),
-                        equalTo(
-                            SERVER_ADDRESS,
-                            emitStableDatabaseSemconv() ? serverAddress : legacyServerAddress),
-                        equalTo(
-                            SERVER_PORT,
-                            emitStableDatabaseSemconv() ? serverPort : legacyServerPort)));
+                        equalTo(DB_SYSTEM_NAME, GEODE),
+                        equalTo(DB_COLLECTION_NAME, regionName),
+                        equalTo(DB_OPERATION_NAME, "putAll"),
+                        equalTo(SERVER_ADDRESS, serverAddress),
+                        equalTo(SERVER_PORT, serverPort)));
   }
 }

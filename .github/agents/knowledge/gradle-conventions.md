@@ -42,12 +42,14 @@ build or dependency boundary prevents one project from compiling both implementa
 
 When behavior is additive, optional, or starts in a higher subrange while the baseline remains
 compatible, keep the independently selected `InstrumentationModule` classes in the existing
-javaagent project. Give each module a unique module-specific instrumentation name as described in
-[Javaagent module structure patterns](javaagent-module-patterns.md#multiple-modules-in-one-gradle-project).
-Configure one Muzzle `pass` per range and target artifact. Each pass must use
-`excludeInstrumentationName(...)` to exclude every unrelated module in the project. Keep the
-baseline library dependency and add newer or optional referenced types with `compileOnly` when
-appropriate.
+javaagent project. Public enablement names describe the library and independently selectable
+features, not compatibility implementations. Multiple classes may share all their public names.
+Configure one Muzzle `pass` per range and target artifact, excluding unrelated modules in each pass.
+Prefer `excludeInstrumentationName(...)` when the public name selects the intended classes both
+outside v3 preview and in preview. Use `excludeInstrumentationModule(...)` with a fully qualified
+class name when public names cannot distinguish the required implementations. Both forms apply
+to inverse checks, and unknown class exclusions fail the check. Keep the baseline library dependency
+and add newer or optional referenced types with `compileOnly` when appropriate.
 
 Multiple Scala or artifact-name variants, a separate enablement name, a different test matrix, or
 dependencies on separate library, testing, helper, generated-code, or language-specific projects do
@@ -57,9 +59,10 @@ share the build.
 
 Narrow exceptions include incompatible toolchains or plugins and version-specific generated or
 shaded compile classpaths. The `opentelemetry-api-*` family is one example: each layer compiles
-against a distinct shaded API configuration. Kotlin Flow has a different boundary. Its
-`javaagent-kotlin` helper must remain separate because Muzzle generation does not correctly handle
-that Kotlin source, but its `InstrumentationModule` can still share the baseline javaagent owner.
+against a distinct shaded API configuration. Kotlin helpers such as Kotlin Flow can share a
+javaagent project with Java `InstrumentationModule` classes when `byteBuddyKotlin` is disabled.
+Muzzle generation runs through `byteBuddyJava`, whose classpath includes the Kotlin compiler output,
+and recursively inspects the referenced Kotlin helpers.
 
 Muzzle verifies generated symbol references, not whether every Byte Buddy method matcher matches.
 A pass lower bound may therefore start when the referenced types exist even when a more precise
@@ -299,6 +302,11 @@ Put the tests under `src/unitTests`. Declare test-only dependencies inside the s
 with `register<JvmTestSuite>(...)`. A variant task bound to `sourceSets.test` covers only the
 default source set.
 
+The semconv examples use `<domain>` as a placeholder for a supported selector.
+Use `otel.semconv-stability.opt-in=<domain>` for selectable stable conventions or
+`otel.semconv-stability.preview=<domain>` for preview conventions. Replace the placeholder
+before using the example in a build script; an unrecognized selector does not change the mode.
+
 Derive one variant task per suite only when every suite exercises behavior affected by the
 variant and the same task configuration applies to all of them:
 
@@ -309,8 +317,8 @@ val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
       testClassesDirs = suite.sources.output.classesDirs
       classpath = suite.sources.runtimeClasspath
 
-      jvmArgs("-Dotel.semconv-stability.opt-in=database")
-      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+      jvmArgs("-Dotel.semconv-stability.opt-in=<domain>")
+      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=<domain>")
     }
   }
 
@@ -320,8 +328,14 @@ check {
 ```
 
 The map produces `testStableSemconv` for the built-in suite, so the conventional task name is
-preserved. Declare a separate map per variant when a module has more than one, for example
-`${suite.name}StableSemconv` and `${suite.name}BothSemconv` for RPC modules.
+preserved. For preview selection, use a `previewSemconvSuites` map that registers
+`${suite.name}PreviewSemconv` tasks and sets `otel.semconv-stability.preview=<domain>`.
+Declare a separate map per variant when a module has more than one. Use the `StableSemconv`
+suffix for stable selection, `PreviewSemconv` for preview selection, and `BothSemconv`
+when duplicate-mode coverage is required.
+See [testing-semconv-stability.md](testing-semconv-stability.md) for domain-specific modes.
+
+Preserve mixed variants for selectable domains, along with experimental and library-version suites.
 
 #### Preserving source suite JVM settings
 
@@ -442,9 +456,10 @@ tasks {
     // ... other properties common to all test tasks
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testPreviewSemconv by registering(Test::class) {
     // only task-specific config here
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+    jvmArgs("-Dotel.semconv-stability.preview=<domain>")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=<domain>")
   }
 }
 ```

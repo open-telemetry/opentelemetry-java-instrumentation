@@ -10,11 +10,11 @@ import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
-import java.util.function.BiConsumer;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
@@ -22,7 +22,11 @@ public class VertxSqlClientInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public VertxSqlClientInstrumentationModule() {
-    super("vertx-sql-client", "vertx-sql-client-5.0", "vertx");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "vertx-sql-client-5.0" : "vertx-sql-client",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"vertx-sql-client", "vertx"}
+            : new String[] {"vertx-sql-client-5.0", "vertx"});
   }
 
   @Override
@@ -51,18 +55,18 @@ public class VertxSqlClientInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public void registerVirtualFields(BiConsumer<String, String> virtualFieldRegistrar) {
+  public void registerVirtualFields(VirtualFieldRegistration virtualFieldRegistration) {
     // we add the virtual field to CommandBase manually because it is in different package in 5.0
     // and 5.1
     // used in 5.0
-    virtualFieldRegistrar.accept(
+    virtualFieldRegistration.register(
         "io.vertx.sqlclient.internal.command.CommandBase", Context.class.getName());
-    virtualFieldRegistrar.accept(
+    virtualFieldRegistration.register(
         "io.vertx.sqlclient.internal.Connection", VertxSqlClientState.class.getName());
     // used in 5.1
-    virtualFieldRegistrar.accept(
+    virtualFieldRegistration.register(
         "io.vertx.sqlclient.spi.protocol.CommandBase", Context.class.getName());
-    virtualFieldRegistrar.accept(
+    virtualFieldRegistration.register(
         "io.vertx.sqlclient.spi.connection.Connection", VertxSqlClientState.class.getName());
   }
 }

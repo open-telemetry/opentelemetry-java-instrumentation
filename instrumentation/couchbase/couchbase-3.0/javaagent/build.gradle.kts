@@ -20,7 +20,6 @@ dependencies {
   testImplementation("org.testcontainers:testcontainers-couchbase")
 
   testInstrumentation(project(":instrumentation:couchbase:couchbase-2.0:javaagent"))
-  testInstrumentation(project(":instrumentation:couchbase:couchbase-2.6:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.1:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.2:javaagent"))
 
@@ -31,13 +30,6 @@ tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
   val testV3Preview = register<Test>("testV3Preview") {
@@ -61,7 +53,7 @@ tasks {
   }
 
   check {
-    dependsOn(testStableSemconv, testV3Preview, testV3PreviewExperimental)
+    dependsOn(testV3Preview, testV3PreviewExperimental)
   }
 
   if (otelProps.denyUnsafe) {

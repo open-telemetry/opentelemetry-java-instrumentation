@@ -83,41 +83,16 @@ tasks {
     )
   }
 
-  val testMessagingPreview = register<Test>("testMessagingPreview") {
+  val testSpringDisabled = register<Test>("testSpringDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
-      includeTestsMatching("SpringKafkaTest.shouldCreateSpansForSingleRecordProcess")
-      includeTestsMatching("SpringKafkaTest.shouldHandleFailureInKafkaListener")
-      includeTestsMatching("SpringKafkaTest.shouldCreateSpansForBatchReceiveAndProcess")
-      includeTestsMatching("SpringKafkaTest.shouldHandleFailureInKafkaBatchListener")
+      includeTestsMatching("SpringKafkaMockConsumerTest")
     }
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
+    jvmArgs("-Dotel.instrumentation.spring-kafka.enabled=false")
 
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("SpringKafkaTest.shouldCreateSpansForSingleRecordProcess")
-      includeTestsMatching("SpringKafkaTest.shouldHandleFailureInKafkaListener")
-      includeTestsMatching("SpringKafkaTest.shouldCreateSpansForBatchReceiveAndProcess")
-      includeTestsMatching("SpringKafkaTest.shouldHandleFailureInKafkaBatchListener")
-    }
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
-  }
-
-  val testMessagingPreviewNoReceiveTelemetry = register<Test>("testMessagingPreviewNoReceiveTelemetry") {
-    testClassesDirs = sourceSets["testNoReceiveTelemetry"].output.classesDirs
-    classpath = sourceSets["testNoReceiveTelemetry"].runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+    systemProperty("springDisabled", true)
+    systemProperty("metadataConfig", "otel.instrumentation.spring-kafka.enabled=false")
   }
 
   test {
@@ -129,7 +104,7 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, testExperimental, testMessagingPreview, testBothSemconv, testMessagingPreviewNoReceiveTelemetry)
+    dependsOn(testing.suites, testExperimental, testSpringDisabled)
   }
 }
 

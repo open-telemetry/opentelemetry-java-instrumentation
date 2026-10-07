@@ -5,12 +5,10 @@
 
 package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.StringUtils.truncate;
 import static java.util.Arrays.asList;
 
 import com.mongodb.MongoException;
-import com.mongodb.ServerAddress;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
@@ -115,25 +113,6 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
     return null;
   }
 
-  @Deprecated // to be removed in 3.0
-  @Override
-  @Nullable
-  public String getConnectionString(CommandStartedEvent event) {
-    ConnectionDescription connectionDescription = event.getConnectionDescription();
-    if (connectionDescription != null) {
-      ServerAddress sa = connectionDescription.getServerAddress();
-      if (sa != null) {
-        // https://docs.mongodb.com/manual/reference/connection-string/
-        String host = sa.getHost();
-        int port = sa.getPort();
-        if (host != null && port != 0) {
-          return "mongodb://" + host + ":" + port;
-        }
-      }
-    }
-    return null;
-  }
-
   @Override
   public String getDbQueryText(CommandStartedEvent event) {
     return sanitizeQuery(event.getCommand());
@@ -148,23 +127,15 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
   @Nullable
   @Override
   public String getServerAddress(CommandStartedEvent event) {
-    if (emitStableDatabaseSemconv()) {
-      MongoServerTarget target = MongoClusterTargets.get(event);
-      return target == null ? null : target.getAddress();
-    }
-    ServerAddress serverAddress = selectedServerAddress(event);
-    return serverAddress == null ? null : serverAddress.getHost();
+    MongoServerTarget target = MongoClusterTargets.get(event);
+    return target == null ? null : target.getAddress();
   }
 
   @Nullable
   @Override
   public Integer getServerPort(CommandStartedEvent event) {
-    if (emitStableDatabaseSemconv()) {
-      MongoServerTarget target = MongoClusterTargets.get(event);
-      return target == null ? null : target.getPort();
-    }
-    ServerAddress serverAddress = selectedServerAddress(event);
-    return serverAddress == null ? null : serverAddress.getPort();
+    MongoServerTarget target = MongoClusterTargets.get(event);
+    return target == null ? null : target.getPort();
   }
 
   @Nullable
@@ -182,12 +153,6 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
   }
 
   @Nullable
-  private static ServerAddress selectedServerAddress(CommandStartedEvent event) {
-    ConnectionDescription connectionDescription = event.getConnectionDescription();
-    return connectionDescription == null ? null : connectionDescription.getServerAddress();
-  }
-
-  @Nullable
   @Override
   public InetSocketAddress getNetworkPeerInetSocketAddress(
       CommandStartedEvent event, @Nullable Void unused) {
@@ -197,9 +162,6 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
 
   @Nullable
   private MongoNetworkPeer getNetworkPeer(CommandStartedEvent event) {
-    if (!emitStableDatabaseSemconv()) {
-      return null;
-    }
     ConnectionDescription connectionDescription = event.getConnectionDescription();
     if (connectionDescription == null || connectionPeerResolver == null) {
       return null;

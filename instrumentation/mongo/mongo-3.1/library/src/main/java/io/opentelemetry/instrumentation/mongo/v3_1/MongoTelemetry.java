@@ -49,11 +49,8 @@ public final class MongoTelemetry {
    * <p>Use this overload when you have the seed addresses from the client's configuration. Pass the
    * complete seed list used to configure the client.
    *
-   * <p>The supplied addresses are used to derive the stable {@code server.address} and {@code
-   * server.port} attributes when stable database semantic conventions are enabled.
-   *
-   * <p>Where the old database conventions are emitted, {@code db.connection_string} continues to
-   * describe the server selected by the driver.
+   * <p>The supplied addresses are used to derive the {@code server.address} and {@code server.port}
+   * attributes.
    *
    * @param configuredServerAddresses all seed addresses configured for the client
    * @return a command listener
@@ -68,9 +65,8 @@ public final class MongoTelemetry {
    * com.mongodb.MongoClientOptions.Builder#addCommandListener(CommandListener)}.
    *
    * <p>Use this method only when the client's configured seed addresses are not available. If they
-   * are available, use {@link #createCommandListener(List)} so that stable database semantic
-   * conventions can derive {@code server.address} and {@code server.port} from the configured
-   * target.
+   * are available, use {@link #createCommandListener(List)} to derive {@code server.address} and
+   * {@code server.port} from the configured target.
    */
   public CommandListener createCommandListener() {
     return new TracingCommandListener(instrumenter);

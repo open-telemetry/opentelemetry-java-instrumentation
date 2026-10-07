@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0;
 
-import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
@@ -50,7 +50,7 @@ class SpringWsTest extends AbstractHttpServerUsingTest<ConfigurableApplicationCo
   private static final Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
 
   private static final boolean CONTROLLER_TELEMETRY =
-      Boolean.getBoolean("otel.instrumentation.common.experimental.controller-telemetry.enabled");
+      Boolean.getBoolean("otel.instrumentation.common.controller-telemetry.enabled");
 
   @BeforeAll
   void setup() {
@@ -136,9 +136,10 @@ class SpringWsTest extends AbstractHttpServerUsingTest<ConfigurableApplicationCo
                           .hasName("HelloEndpoint." + methodName)
                           .hasKind(SpanKind.INTERNAL)
                           .hasAttributesSatisfyingExactly(
-                              codeFunctionAssertions(
-                                  "io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0.HelloEndpoint",
-                                  methodName))));
+                              equalTo(
+                                  CODE_FUNCTION_NAME,
+                                  "io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0.HelloEndpoint."
+                                      + methodName))));
     } else {
       testing.waitAndAssertTraces(
           trace ->
@@ -183,9 +184,10 @@ class SpringWsTest extends AbstractHttpServerUsingTest<ConfigurableApplicationCo
                                               EXCEPTION_STACKTRACE,
                                               val -> val.isInstanceOf(String.class))))
                           .hasAttributesSatisfyingExactly(
-                              codeFunctionAssertions(
-                                  "io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0.HelloEndpoint",
-                                  methodName))));
+                              equalTo(
+                                  CODE_FUNCTION_NAME,
+                                  "io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0.HelloEndpoint."
+                                      + methodName))));
     } else {
       testing.waitAndAssertTraces(
           trace ->

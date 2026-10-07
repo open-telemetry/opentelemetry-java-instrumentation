@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.hibernate.common.v3_3;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
@@ -25,35 +24,15 @@ public class OperationNameUtil {
 
   // query could be HQL or SQL
   public static String getOperationNameForQuery(@Nullable String query) {
-    if (emitStableDatabaseSemconv()) {
-      if (query != null) {
-        // note: summarization is not affected by the choice of dialect
-        SqlQuery info = analyzer.analyzeWithSummary(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
-        String summary = info.getQuerySummary();
-        if (summary != null) {
-          return summary;
-        }
-      }
-      return FALLBACK_SPAN_NAME;
-    }
-    return getOperationNameForQueryOldSemconv(query);
-  }
-
-  @SuppressWarnings("deprecation") // using deprecated old semconv operation
-  private static String getOperationNameForQueryOldSemconv(@Nullable String query) {
-    // set operation to default value that is used when sql sanitizer fails to extract
-    // operation name
-    String operation = "Hibernate Query";
-    SqlQuery info = analyzer.analyze(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
-    if (info.getOperationName() != null) {
-      operation = info.getOperationName();
-      if (info.getCollectionName() != null) {
-        operation += " " + info.getCollectionName();
-      } else if (info.getStoredProcedureName() != null) {
-        operation += " " + info.getStoredProcedureName();
+    if (query != null) {
+      // note: summarization is not affected by the choice of dialect
+      SqlQuery info = analyzer.analyze(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+      String summary = info.getQuerySummary();
+      if (summary != null) {
+        return summary;
       }
     }
-    return operation;
+    return FALLBACK_SPAN_NAME;
   }
 
   public static String getSessionMethodOperationName(String methodName) {

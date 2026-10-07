@@ -43,7 +43,8 @@ public class WeaverContainer extends GenericContainer<WeaverContainer> {
   @Nullable private JsonNode result = null;
 
   WeaverContainer(Path registryRoot, String... registryFiles) {
-    super("otel/weaver:v0.26.1");
+    super(
+        "otel/weaver:v0.27.0@sha256:3049b4079049d4abb1b5632f511ada2c33505a1c60f3f8535e93f87f0696f056");
 
     super.withExposedPorts(OTLP_PORT, ADMIN_PORT);
     super.waitingFor(Wait.forListeningPorts(OTLP_PORT, ADMIN_PORT));
@@ -86,8 +87,12 @@ public class WeaverContainer extends GenericContainer<WeaverContainer> {
     }
     String uri = "http://" + this.getHost() + ":" + this.getMappedPort(ADMIN_PORT) + "/";
     WebClient client = WebClient.of(uri);
-    try (HttpData result = client.post("/stop", new byte[0]).aggregate().join().content()) {
-      this.result = OBJECT_MAPPER.readTree(result.toInputStream());
+    try {
+      client.post("/stop", new byte[0]).aggregate().join();
+      try (HttpData result = client.get("/report").aggregate().join().content()) {
+        this.result = OBJECT_MAPPER.readTree(result.toInputStream());
+      }
+      client.post("/shutdown", new byte[0]).aggregate().join();
     } catch (IOException e) {
       throw new IllegalStateException(e);
     } finally {

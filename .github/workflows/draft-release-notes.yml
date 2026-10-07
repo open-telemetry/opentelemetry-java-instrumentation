@@ -5,6 +5,7 @@ on:
 
 permissions:
   contents: read
+  copilot-requests: write
 
 concurrency:
   group: draft-release-notes
@@ -32,8 +33,9 @@ jobs:
 
       - name: Run draft-release-notes
         env:
+          CLASSIFY_MODEL: ${{ vars.DRAFT_RELEASE_NOTES_MODEL || 'gpt-6-luna' }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python .github/scripts/draft-release-notes/draft-release-notes.py
 
       - name: Upload draft diagnostics artifact

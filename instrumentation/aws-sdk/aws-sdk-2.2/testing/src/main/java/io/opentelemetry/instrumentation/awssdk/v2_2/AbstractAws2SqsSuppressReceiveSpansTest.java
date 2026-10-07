@@ -6,8 +6,6 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -19,7 +17,6 @@ import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_RE
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SQS_QUEUE_URL;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -30,7 +27,6 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SY
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -54,7 +50,7 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
   protected void assertSqsTraces(boolean withParent, boolean captureHeaders) {
     // with an ambient span the process span is parented to it rather than to the message creation
     // context, which puts it in the same trace as the ambient span
-    boolean processInParentTrace = emitStableMessagingSemconv() && withParent;
+    boolean processInParentTrace = withParent;
     AtomicReference<SpanData> publishSpan = new AtomicReference<>();
 
     List<Consumer<TraceAssert>> traceAsserts =
@@ -133,7 +129,6 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
 
   @Test
   void testAbandonedIteratorDoesNotParentNextProcessSpan() {
-    assumeTrue(emitStableMessagingSemconv());
     SqsClientBuilder builder = SqsClient.builder();
     configureSdkClient(builder);
     SqsClient client = configureSqsClient(builder.build());
@@ -192,13 +187,12 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
 
     assertThat(totalAttrs).isEqualTo(10 + (isSqsAttributeInjectionEnabled() ? 3 : 0));
 
-    if (emitStableMessagingSemconv() && canInjectBatchCreationContext()) {
+    if (canInjectBatchCreationContext()) {
       List<SpanData> createSpans = new ArrayList<>();
-      List<Consumer<TraceAssert>> stableTraceAsserts = new ArrayList<>();
-      stableTraceAsserts.add(
-          trace -> trace.hasSpansSatisfyingExactly(span -> createQueueSpan(span)));
+      List<Consumer<TraceAssert>> traceAsserts = new ArrayList<>();
+      traceAsserts.add(trace -> trace.hasSpansSatisfyingExactly(span -> createQueueSpan(span)));
       for (int i = 0; i < 3; i++) {
-        stableTraceAsserts.add(
+        traceAsserts.add(
             trace -> {
               SpanData createSpan = trace.getSpan(0);
               createSpans.add(createSpan);
@@ -211,13 +205,11 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
                               equalTo(MESSAGING_SYSTEM, AWS_SQS),
                               equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
                               equalTo(MESSAGING_OPERATION_NAME, "create"),
-                              equalTo(
-                                  MESSAGING_OPERATION, emitOldMessagingSemconv() ? "create" : null),
                               equalTo(MESSAGING_OPERATION_TYPE, "create")),
                   span -> processSpan(span, createSpan, createSpan));
             });
       }
-      stableTraceAsserts.add(
+      traceAsserts.add(
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
@@ -230,7 +222,7 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
                                           createSpans.get(0).getSpanId(),
                                           createSpans.get(1).getSpanId(),
                                           createSpans.get(2).getSpanId()))));
-      getTesting().waitAndAssertTraces(stableTraceAsserts);
+      getTesting().waitAndAssertTraces(traceAsserts);
       return;
     }
 
@@ -258,10 +250,7 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
-                      span.hasName(
-                              emitStableMessagingSemconv()
-                                  ? "process testSdkSqs"
-                                  : "testSdkSqs process")
+                      span.hasName("process testSdkSqs")
                           .hasKind(SpanKind.CONSUMER)
                           // TODO: This is not good, and can also happen if producer is not
                           // instrumented
@@ -280,15 +269,8 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
                               equalTo(SERVER_PORT, sqsPort),
                               equalTo(MESSAGING_SYSTEM, AWS_SQS),
                               equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                              equalTo(
-                                  MESSAGING_OPERATION,
-                                  emitOldMessagingSemconv() ? "process" : null),
-                              equalTo(
-                                  MESSAGING_OPERATION_NAME,
-                                  emitStableMessagingSemconv() ? "process" : null),
-                              equalTo(
-                                  MESSAGING_OPERATION_TYPE,
-                                  emitStableMessagingSemconv() ? "process" : null),
+                              equalTo(MESSAGING_OPERATION_NAME, "process"),
+                              equalTo(MESSAGING_OPERATION_TYPE, "process"),
                               satisfies(
                                   MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)))));
     }

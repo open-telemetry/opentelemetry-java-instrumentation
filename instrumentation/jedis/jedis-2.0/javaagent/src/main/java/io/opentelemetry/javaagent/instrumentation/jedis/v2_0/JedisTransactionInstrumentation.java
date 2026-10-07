@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisPipelineContext.transactionFraming;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSingletons.currentTransactionFraming;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSingletons.instrumenter;
@@ -35,10 +34,7 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(named("exec"), getClass().getName() + "$ExecAdvice");
-    if (emitStableDatabaseSemconv()) {
-      transformer.applyAdviceToMethod(
-          named("execGetResponse"), getClass().getName() + "$ExecAdvice");
-    }
+    transformer.applyAdviceToMethod(named("execGetResponse"), getClass().getName() + "$ExecAdvice");
     transformer.applyAdviceToMethod(named("discard"), getClass().getName() + "$DiscardAdvice");
   }
 

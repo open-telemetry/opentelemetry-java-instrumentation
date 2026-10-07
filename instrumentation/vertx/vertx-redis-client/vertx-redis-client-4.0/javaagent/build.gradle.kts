@@ -9,7 +9,7 @@ muzzle {
     versions.set("[4.0.0,)")
     assertInverse.set(true)
 
-    excludeInstrumentationName("vertx-redis-client-4.4.5")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_4_5.VertxRedisClientInstrumentationModule")
   }
   pass {
     // instrumentation-docs:ignore - verification only, the directive above is the range we document
@@ -19,7 +19,7 @@ muzzle {
     versions.set("[4.4.5,)")
     assertInverse.set(true)
 
-    excludeInstrumentationName("vertx-redis-client-4.0-core")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0.VertxRedisClientInstrumentationModule")
   }
 }
 
@@ -69,7 +69,7 @@ testing {
       targets {
         all {
           testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
+            jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
           }
         }
       }
@@ -117,8 +117,8 @@ tasks {
         testClassesDirs = suite.sources.output.classesDirs
         classpath = suite.sources.runtimeClasspath
 
-        jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
-        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
+        jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
       }
     }
 

@@ -8,8 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertCounter;
+import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertHistogram;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
@@ -112,10 +111,7 @@ class SpringListenerTest extends AbstractJmsTest {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("producer parent").hasNoParent(),
               span ->
-                  span.hasName(
-                          emitStableMessagingSemconv()
-                              ? "send SpringListenerJms2"
-                              : "SpringListenerJms2 publish")
+                  span.hasName("send SpringListenerJms2")
                       .hasKind(PRODUCER)
                       .hasParent(trace.getSpan(0)));
           producerSpan.set(trace.getSpan(1));
@@ -124,20 +120,14 @@ class SpringListenerTest extends AbstractJmsTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("ambient").hasNoParent(),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "receive SpringListenerJms2"
-                                : "SpringListenerJms2 receive")
-                        .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
+                    span.hasName("receive SpringListenerJms2")
+                        .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext())),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process SpringListenerJms2"
-                                : "SpringListenerJms2 process")
+                    span.hasName("process SpringListenerJms2")
                         .hasKind(CONSUMER)
-                        .hasParent(trace.getSpan(emitStableMessagingSemconv() ? 0 : 1))
+                        .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))));
   }
 
@@ -164,44 +154,21 @@ class SpringListenerTest extends AbstractJmsTest {
     template.convertAndSend("SpringListenerJms2", "a message");
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
-    if (emitStableMessagingSemconv()) {
-      testing.waitAndAssertSortedTraces(
-          orderByRootSpanKind(PRODUCER, CLIENT),
-          trace -> {
-            trace.hasSpansSatisfyingExactly(
-                span -> assertProducerSpan(span, "SpringListenerJms2", false),
-                span ->
-                    assertConsumerSpan(
-                        span,
-                        trace.getSpan(0),
-                        trace.getSpan(0),
-                        "SpringListenerJms2",
-                        "process",
-                        false,
-                        null,
-                        subscriptionName));
-            producerSpan.set(trace.getSpan(0));
-          },
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      assertConsumerSpan(
-                          span,
-                          producerSpan.get(),
-                          null,
-                          "SpringListenerJms2",
-                          "receive",
-                          false,
-                          null,
-                          subscriptionName)));
-      return;
-    }
-
     testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(PRODUCER, CONSUMER),
+        orderByRootSpanKind(PRODUCER, CLIENT),
         trace -> {
           trace.hasSpansSatisfyingExactly(
-              span -> assertProducerSpan(span, "SpringListenerJms2", false));
+              span -> assertProducerSpan(span, "SpringListenerJms2", false),
+              span ->
+                  assertConsumerSpan(
+                      span,
+                      trace.getSpan(0),
+                      trace.getSpan(0),
+                      "SpringListenerJms2",
+                      "process",
+                      false,
+                      null,
+                      subscriptionName));
           producerSpan.set(trace.getSpan(0));
         },
         trace ->
@@ -213,16 +180,6 @@ class SpringListenerTest extends AbstractJmsTest {
                         null,
                         "SpringListenerJms2",
                         "receive",
-                        false,
-                        null,
-                        subscriptionName),
-                span ->
-                    assertConsumerSpan(
-                        span,
-                        producerSpan.get(),
-                        trace.getSpan(0),
-                        "SpringListenerJms2",
-                        "process",
                         false,
                         null,
                         subscriptionName)));
@@ -262,8 +219,6 @@ class SpringListenerTest extends AbstractJmsTest {
                         null,
                         "durable-subscription")));
 
-    // the jms instrumentation that would create the receive operation is disabled, so the process
-    // operation counts the consumed message
     Attributes processAttributes =
         Attributes.builder()
             .put(MESSAGING_OPERATION_NAME, "process")
@@ -271,11 +226,10 @@ class SpringListenerTest extends AbstractJmsTest {
             .put(MESSAGING_DESTINATION_NAME, "SpringListenerJms2")
             .put(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "durable-subscription")
             .build();
-    assertCounter(
+    assertHistogram(
         testing,
         "io.opentelemetry.spring-jms-2.0",
-        "messaging.client.consumed.messages",
-        1,
+        "messaging.process.duration",
         processAttributes);
   }
 

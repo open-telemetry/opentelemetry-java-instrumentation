@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
@@ -20,27 +18,10 @@ final class VertxRedisClientAttributesGetter
     return DbSystemNameIncubatingValues.REDIS;
   }
 
-  @Deprecated // to be removed in 3.0
-  @Override
-  @Nullable
-  public String getUser(VertxRedisClientRequest request) {
-    return request.getUser();
-  }
-
   @Override
   @Nullable
   public String getDbNamespace(VertxRedisClientRequest request) {
-    if (emitStableDatabaseSemconv()) {
-      return request.getDatabaseNamespace();
-    }
-    return null;
-  }
-
-  @Deprecated // to be removed in 3.0
-  @Override
-  @Nullable
-  public String getConnectionString(VertxRedisClientRequest request) {
-    return request.getConnectionString();
+    return request.getDatabaseNamespace();
   }
 
   @Override
@@ -64,11 +45,9 @@ final class VertxRedisClientAttributesGetter
   @Nullable
   @Override
   public String getServerAddress(VertxRedisClientRequest request) {
-    if (emitStableDatabaseSemconv()) {
-      if (request.isServerTargetCaptured()) {
-        RedisServerTarget target = request.getServerTarget();
-        return target != null ? target.getAddress() : null;
-      }
+    if (request.isServerTargetCaptured()) {
+      RedisServerTarget target = request.getServerTarget();
+      return target != null ? target.getAddress() : null;
     }
     return request.getServerAddress();
   }
@@ -76,11 +55,9 @@ final class VertxRedisClientAttributesGetter
   @Nullable
   @Override
   public Integer getServerPort(VertxRedisClientRequest request) {
-    if (emitStableDatabaseSemconv()) {
-      if (request.isServerTargetCaptured()) {
-        RedisServerTarget target = request.getServerTarget();
-        return target != null ? target.getPort() : null;
-      }
+    if (request.isServerTargetCaptured()) {
+      RedisServerTarget target = request.getServerTarget();
+      return target != null ? target.getPort() : null;
     }
     return request.getServerPort();
   }

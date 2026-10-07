@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.docs.internal.ConfigurationOption;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationType;
 import io.opentelemetry.instrumentation.docs.internal.DeclarativeSchema;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
+import io.opentelemetry.instrumentation.docs.internal.SharedConfigurationRegistry;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -45,7 +46,8 @@ public class DeclarativeConfigYamlGenerator {
   private static final Yaml SCALAR_YAML = new Yaml();
 
   /**
-   * Generates a declarative configuration YAML file from instrumentation modules.
+   * Generates a declarative configuration YAML file from instrumentation modules and the global
+   * configurations of the {@link SharedConfigurationRegistry}.
    *
    * @param modules the list of instrumentation modules
    * @param writer the writer to output the YAML to
@@ -53,8 +55,30 @@ public class DeclarativeConfigYamlGenerator {
    */
   public static void generateConfigurationYaml(
       List<InstrumentationModule> modules, BufferedWriter writer) throws IOException {
+    generateConfigurationYaml(
+        modules,
+        List.copyOf(SharedConfigurationRegistry.getInstance().globalConfigurations().values()),
+        writer);
+  }
 
-    Map<String, Object> configTree = buildConfigTree(modules);
+  /**
+   * Generates a declarative configuration YAML file from instrumentation modules and global
+   * configurations.
+   *
+   * @param modules the list of instrumentation modules
+   * @param globalConfigurations configurations read by the agent or the instrumentation API itself
+   *     rather than by a specific module, included regardless of the modules
+   * @param writer the writer to output the YAML to
+   * @throws IOException if an I/O error occurs
+   */
+  // Visible for testing
+  static void generateConfigurationYaml(
+      List<InstrumentationModule> modules,
+      List<ConfigurationOption> globalConfigurations,
+      BufferedWriter writer)
+      throws IOException {
+
+    Map<String, Object> configTree = buildConfigTree(modules, globalConfigurations);
 
     writeYaml(configTree, writer, 0);
   }
@@ -63,12 +87,17 @@ public class DeclarativeConfigYamlGenerator {
    * Builds a nested tree structure from all configurations.
    *
    * @param modules the list of instrumentation modules
+   * @param globalConfigurations configurations included regardless of the modules
    * @return the configuration tree
    */
-  private static Map<String, Object> buildConfigTree(List<InstrumentationModule> modules) {
+  private static Map<String, Object> buildConfigTree(
+      List<InstrumentationModule> modules, List<ConfigurationOption> globalConfigurations) {
     Map<String, Object> tree = new TreeMap<>();
     Set<String> seenConfigs = new HashSet<>();
 
+    for (ConfigurationOption config : globalConfigurations) {
+      addConfig(tree, seenConfigs, config);
+    }
     for (InstrumentationModule module : modules) {
       for (ConfigurationOption config : module.getMetadata().getConfigurations()) {
         addConfig(tree, seenConfigs, config);

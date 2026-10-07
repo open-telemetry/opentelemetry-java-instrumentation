@@ -61,18 +61,6 @@ class SqsProcessRequestAttributesGetter
     return null;
   }
 
-  @Nullable
-  @Override
-  public Long getMessageBodySize(SqsProcessRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(SqsProcessRequest request) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String getMessageId(SqsProcessRequest request, @Nullable Response response) {

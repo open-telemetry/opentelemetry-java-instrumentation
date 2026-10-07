@@ -3,17 +3,20 @@ plugins {
   id("otel.nullaway-conventions")
 }
 
-// context "leak" here is intentional: spring-integration instrumentation will always override
-// "local" span context with one extracted from the incoming message when it decides to start a
-// CONSUMER span
-extra["failOnContextLeak"] = false
-
 muzzle {
   pass {
     group.set("org.springframework.integration")
     module.set("spring-integration-core")
     versions.set("[4.1.0.RELEASE,)")
     assertInverse.set(true)
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationAmqpInstrumentationModule")
+  }
+  pass {
+    group.set("org.springframework.integration")
+    module.set("spring-integration-amqp")
+    versions.set("[4.1.0.RELEASE,)")
+    assertInverse.set(true)
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationInstrumentationModule")
   }
 }
 
@@ -21,6 +24,7 @@ dependencies {
   implementation(project(":instrumentation:spring:spring-integration-4.1:library"))
 
   library("org.springframework.integration:spring-integration-core:4.1.0.RELEASE")
+  compileOnly("org.springframework.integration:spring-integration-amqp:4.1.0.RELEASE")
 
   testInstrumentation(project(":instrumentation:rabbitmq-2.7:javaagent"))
   testInstrumentation(project(":instrumentation:spring:spring-rabbit-1.0:javaagent"))
@@ -42,6 +46,18 @@ dependencies {
 }
 
 tasks {
+  val testAmqpHandoffWithRabbitInstrumentation =
+    register<Test>("testAmqpHandoffWithRabbitInstrumentation") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+      filter {
+        includeTestsMatching("MessageProducerSupportInstrumentationTest")
+      }
+      include("**/MessageProducerSupportInstrumentationTest.*")
+      jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
+      systemProperty("springIntegrationRabbitHandoffTest", "true")
+    }
+
   val testWithRabbitInstrumentation = register<Test>("testWithRabbitInstrumentation") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -53,20 +69,6 @@ tasks {
     jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=true")
     systemProperty("metadataConfig", "otel.instrumentation.spring-rabbit.enabled=true")
   }
-
-  val testWithRabbitInstrumentationMessagingPreview =
-    register<Test>("testWithRabbitInstrumentationMessagingPreview") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
-      filter {
-        includeTestsMatching("SpringIntegrationAndRabbitTest")
-      }
-      include("**/SpringIntegrationAndRabbitTest.*")
-      jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=true")
-      jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=true")
-      jvmArgs("-Dotel.semconv-stability.preview=messaging")
-      systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-    }
 
   val testWithProducerInstrumentation = register<Test>("testWithProducerInstrumentation") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
@@ -81,7 +83,7 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.spring-integration.producer.enabled=true")
   }
 
-  val testMessagingPreview = register<Test>("testMessagingPreview") {
+  val testProducerEnabled = register<Test>("testProducerEnabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
@@ -91,22 +93,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
     jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=false")
     jvmArgs("-Dotel.instrumentation.spring-integration.producer.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      excludeTestsMatching("SpringIntegrationAndRabbitTest")
-      excludeTestsMatching("SpringCloudStreamRabbitTest")
-    }
-    jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
-    jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=false")
-    jvmArgs("-Dotel.instrumentation.spring-integration.producer.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
+    systemProperty("metadataConfig", "otel.instrumentation.spring-integration.producer.enabled=true")
   }
 
   test {
@@ -119,7 +106,12 @@ tasks {
   }
 
   check {
-    dependsOn(testWithRabbitInstrumentation, testWithRabbitInstrumentationMessagingPreview, testWithProducerInstrumentation, testMessagingPreview, testBothSemconv)
+    dependsOn(
+      testAmqpHandoffWithRabbitInstrumentation,
+      testWithRabbitInstrumentation,
+      testWithProducerInstrumentation,
+      testProducerEnabled,
+    )
   }
 
   withType<Test>().configureEach {

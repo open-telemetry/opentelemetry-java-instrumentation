@@ -13,12 +13,12 @@ import org.junit.jupiter.api.Test;
 class DbInfoTest {
 
   @Test
-  void copyPreservesLegacyEndpointAndConfiguredTarget() {
+  void copyPreservesDatabaseAttributesAndConfiguredTarget() {
     DbServerTarget target = DbServerTarget.create("h1:5432,h2:5433", null);
     DbInfo info =
         DbInfo.builder()
-            .legacyServerAddress("localhost")
-            .legacyServerPort(5432)
+            .dbSystemName("postgresql")
+            .dbNamespace("orders")
             .configuredServerTarget(target)
             .build();
 
@@ -26,8 +26,6 @@ class DbInfoTest {
 
     assertThat(copy).isEqualTo(info).hasSameHashCodeAs(info);
     assertThat(copy.getConfiguredServerTarget()).isSameAs(target);
-    assertThat(copy.getHost()).isEqualTo("localhost");
-    assertThat(copy.getPort()).isEqualTo(5432);
     assertThat(copy.toBuilder().configuredServerTarget(null).build().getConfiguredServerTarget())
         .isNull();
   }

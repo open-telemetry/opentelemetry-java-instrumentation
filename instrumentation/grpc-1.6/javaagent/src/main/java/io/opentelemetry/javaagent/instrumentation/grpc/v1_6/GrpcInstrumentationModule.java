@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.grpc.v1_6;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -15,7 +16,9 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class GrpcInstrumentationModule extends InstrumentationModule {
   public GrpcInstrumentationModule() {
-    super("grpc", "grpc-1.6");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "grpc-1.6" : "grpc",
+        AgentCommonConfig.get().isV3Preview() ? new String[] {"grpc"} : new String[] {"grpc-1.6"});
   }
 
   @Override

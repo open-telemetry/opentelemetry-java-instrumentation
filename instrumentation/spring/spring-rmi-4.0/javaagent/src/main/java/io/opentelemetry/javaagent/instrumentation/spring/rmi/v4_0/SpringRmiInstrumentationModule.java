@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.client.ClientInstrumentation;
@@ -20,7 +21,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class SpringRmiInstrumentationModule extends InstrumentationModule {
 
   public SpringRmiInstrumentationModule() {
-    super("spring-rmi", "spring-rmi-4.0");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "spring-rmi-4.0" : "spring-rmi",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"spring-rmi"}
+            : new String[] {"spring-rmi-4.0"});
   }
 
   @Override
