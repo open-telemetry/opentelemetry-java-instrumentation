@@ -172,6 +172,49 @@ class ChangelogTest(unittest.TestCase):
         self.assertEqual(self.changelog(), before)
         self.assertEqual(self.run_command("git", "status", "--porcelain").stdout, "")
 
+    def test_release_accepts_numeric_suffixes_and_orphan_fragments(self):
+        self.write("changelog.d/12345.bugfix.1.md", "A fix with a numeric suffix.\n")
+        self.write("changelog.d/+pending.bugfix.md", "A fix awaiting a PR number.\n")
+        self.commit()
+        self.prepare()
+        result = self.changelog()
+        self.assertIn("- A fix with a numeric suffix.\n", result)
+        self.assertIn("- A fix awaiting a PR number.\n", result)
+        self.assertIn(
+            "[#12345](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12345)",
+            result,
+        )
+        self.assertNotIn("/pull/+", result)
+        self.assertFalse((self.repo / "changelog.d/12345.bugfix.1.md").exists())
+        self.assertFalse((self.repo / "changelog.d/+pending.bugfix.md").exists())
+
+    def test_nonnumeric_pr_identifier_fails_without_changelog_changes(self):
+        self.write("changelog.d/fix-http.bugfix.md", "A fix without a PR number.\n")
+        self.write("changelog.d/1.bugfix.md", "A valid fix.\n")
+        self.commit()
+        before = self.changelog()
+        for draft in (True, False):
+            with self.subTest(draft=draft):
+                if draft:
+                    result = self.run_command(
+                        sys.executable,
+                        "-m",
+                        "towncrier",
+                        "build",
+                        "--draft",
+                        "--version",
+                        "3.0.0",
+                        check=False,
+                    )
+                else:
+                    result = self.prepare(check=False)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("Issue name 'fix-http' does not match", result.stderr)
+                self.assertEqual(self.changelog(), before)
+                self.assertEqual(
+                    self.run_command("git", "status", "--porcelain").stdout, ""
+                )
+
     def test_prepare_preserves_history_and_stages_consumed_fragments(self):
         self.write("changelog.d/1.bugfix.md", "Fix missing spans.\n")
         self.commit()

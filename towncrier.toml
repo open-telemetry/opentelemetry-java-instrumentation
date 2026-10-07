@@ -5,6 +5,7 @@ template = ".github/scripts/changelog/template.md.jinja"
 start_string = "<!-- towncrier release notes start -->\n"
 title_format = "## Version {version} ({project_date})"
 issue_format = "[#{issue}](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/{issue})"
+issue_pattern = "[0-9]+"
 underlines = ["", "", ""]
 # An explicit ignore list enables strict fragment-name validation.
 ignore = []
