@@ -14,8 +14,14 @@
   (`otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments`) with
   the common `otel.instrumentation.common.logging.structured-attributes.included` and
   `otel.instrumentation.common.logging.structured-attributes.excluded` selectors. Exclusions take
-  precedence, and `*` excludes all structured attributes. Log4j `MapMessage` keys are emitted as
-  their original log attribute names.
+  precedence, and `*` excludes all structured attributes. The source-specific
+  `.included` and `.excluded` selectors
+  (`otel.instrumentation.log4j-appender.experimental.map-message-attributes.*`,
+  `otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.*`,
+  `otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.*`, and
+  `otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.*`)
+  were removed and are now ignored, so migrate them to the common selectors to keep filtering.
+  Log4j `MapMessage` keys are emitted as their original log attribute names.
 - Remove the deprecated GraphQL configuration properties
   `otel.instrumentation.graphql.add-operation-name-to-span-name.enabled` and
   `otel.instrumentation.graphql.query-sanitizer.enabled`. Use
