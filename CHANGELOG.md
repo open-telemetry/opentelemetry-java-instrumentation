@@ -4,8 +4,7 @@
 
 ### ⚠️ Breaking changes
 
-- OSHI system metrics always use the previous v3-preview conventions, schema 1.44.0, and scope
-  `io.opentelemetry.oshi-5.0`, even with `otel.instrumentation.common.v3-preview=false`.
+- OSHI system metrics use schema 1.44.0 and scope `io.opentelemetry.oshi-5.0`.
   Update `system.network.packets` to `system.network.packet.count`, plural count units to
   `{packet}`, `{error}`, and `{operation}`, and legacy `state`, `device`, and `direction`
   attributes to the corresponding system, network, and disk attributes.
