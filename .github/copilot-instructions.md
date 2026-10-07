@@ -15,24 +15,10 @@ applicable repository review rules; use their stated conditions and exceptions. 
 
 ## Release-note fragments
 
-For each user-visible change, check that the PR adds an accurate Markdown fragment in
-`changelog.d`. Report a missing fragment on a changed line responsible for the user-visible
-behavior, with category `[General]` and an actionable request to add it. Changes limited
-to tests, documentation, CI/build tooling, or implementation-only refactors need no fragment.
-Do not require one merely because production code changed; identify the effect users notice.
-
-Fragment filenames use `<PR-number>.<type>.md`; an additional numeric suffix supports
-multiple notes of the same type. Types are `breaking`, `alpha-breaking`, `deprecation`,
-`javaagent`, `library`, `enhancement`, and `bugfix`. Stable API, configuration, and telemetry
-breaking changes use `breaking`; non-stable API breaking changes use `alpha-breaking`.
-The `javaagent` and `library` types are for new instrumentations, not changes to existing ones.
-Check wording and migration guidance against the changed behavior. Fragments contain prose
-without an outer bullet prefix or an explicit PR link, since Towncrier adds both. A `+` filename
-denotes an orphan fragment with no generated link.
-
-Do not request direct edits to `CHANGELOG.md` for ordinary PRs. Release preparation generates
-it from fragments; release-note corrections and tooling migrations may edit it directly.
-There is no required fragment-presence CI check.
+For user-visible changes, check that release-note fragments follow
+[CONTRIBUTING.md](../CONTRIBUTING.md#changelog) and accurately describe the changed behavior.
+Report missing fragments with `[General]` on a changed line responsible for that behavior.
+Changes with no user-visible effect need no fragment.
 
 ## Correctness and compatibility
 
