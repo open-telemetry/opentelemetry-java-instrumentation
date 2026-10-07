@@ -42,17 +42,15 @@ MeterRegistry meterRegistry = OpenTelemetryMeterRegistry.builder(openTelemetry).
 `<name>` below is the Micrometer meter name after the registry's
 [naming convention](https://docs.micrometer.io/micrometer/reference/concepts/naming.html) has been
 applied. The default convention passes the name through unchanged; see
-[Prometheus mode](#prometheus-mode) for the exception. For [custom meters](#custom-meters), unless
-`otel.instrumentation.common.v3-preview` is enabled, the naming convention is applied after the
-statistic suffix is appended to the raw meter name. Their emitted names may therefore differ from
-the `<name>.<statistic>` form under a custom convention.
+[Prometheus mode](#prometheus-mode) for the exception. For [custom meters](#custom-meters), the
+naming convention is applied to the base meter name and the statistic suffix is appended afterward.
 
 | Micrometer instrument | OpenTelemetry instrument(s)                                            | Name(s)                            | Unit                           |
 | --------------------- | ---------------------------------------------------------------------- | ---------------------------------- | ------------------------------ |
 | `Counter`             | synchronous double counter                                             | `<name>`                           | base unit                      |
 | `Gauge`               | asynchronous double gauge                                              | `<name>`                           | base unit                      |
-| `Timer`               | synchronous double histogram, plus an asynchronous double gauge        | `<name>`, `<name>.max`             | base time unit                 |
-| `DistributionSummary` | synchronous double histogram, plus an asynchronous double gauge        | `<name>`, `<name>.max`             | base unit                      |
+| `Timer`               | synchronous double histogram                                           | `<name>`                           | base time unit                 |
+| `DistributionSummary` | synchronous double histogram                                           | `<name>`                           | base unit                      |
 | `LongTaskTimer`       | asynchronous long up-down counter, asynchronous double up-down counter | `<name>.active`, `<name>.duration` | `{tasks}`, base time unit      |
 | `FunctionCounter`     | asynchronous double counter                                            | `<name>`                           | base unit                      |
 | `FunctionTimer`       | asynchronous long counter, asynchronous double counter                 | `<name>.count`, `<name>.sum`       | `{invocation}`, base time unit |
@@ -64,8 +62,8 @@ Micrometer tags become OpenTelemetry attributes. Meter names, tag keys, and tag 
 through the registry's naming convention, and metrics are emitted under the instrumentation scope
 `io.opentelemetry.micrometer-1.5`.
 
-The `<name>.max` gauge is deprecated and will be removed in 3.0. It is no longer emitted when
-`otel.instrumentation.common.v3-preview` is enabled.
+Timers and distribution summaries no longer emit a separate `<name>.max` gauge. Their OpenTelemetry
+histograms already include the maximum value.
 
 ### Units
 
@@ -151,7 +149,6 @@ MeterRegistry meterRegistry =
     OpenTelemetryMeterRegistry.builder(openTelemetry).setPrometheusMode(true).build();
 ```
 
-For [custom meters](#custom-meters), the naming convention is applied to the combined name and
-suffix instead of to the name alone, unless `otel.instrumentation.common.v3-preview` is enabled. A
-custom `Meter` of type `COUNTER` named `my.meter` with the base unit `bytes` is therefore emitted as
-`my.meter.count.bytes` rather than `my.meter.bytes.count`.
+For [custom meters](#custom-meters), the naming convention is applied to the base name before the
+statistic suffix is appended. A custom `Meter` of type `COUNTER` named `my.meter` with the base unit
+`bytes` is emitted as `my.meter.bytes.count` rather than `my.meter.count.bytes`.

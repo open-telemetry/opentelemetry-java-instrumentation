@@ -4,6 +4,12 @@
 
 ### ⚠️ Breaking changes
 
+- Micrometer timers and distribution summaries no longer emit separate `.max` gauge metrics; use the
+  maximum from their histogram instead. Custom meter statistic suffixes are appended after the base
+  name passes through the naming convention (for example, Prometheus mode changes
+  `my.meter.count.bytes` to `my.meter.bytes.count`). Remove the deprecated
+  `otel.instrumentation.micrometer.histogram-gauges.enabled` setting and use
+  `otel.instrumentation.micrometer.experimental.histogram-gauges.enabled`.
 - The Java agent and standalone libraries now use the existing v1.43.0 messaging implementation.
 - Emit only stable source code attributes: `code.function.name` replaces `code.namespace` and
   `code.function`, and log records use `code.file.path` and `code.line.number` instead of
