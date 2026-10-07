@@ -92,7 +92,7 @@ public final class CommonConfig {
             .get("server")
             .getBoolean("emit_experimental_telemetry/development", false);
     v3Preview = commonConfig.getBoolean("v3_preview", false);
-    userConfig = new UserConfig(commonConfig, v3Preview);
+    userConfig = new UserConfig(commonConfig);
     DeclarativeConfigProperties logging = commonConfig.get("logging");
     loggingTraceIdKey =
         getConfig(

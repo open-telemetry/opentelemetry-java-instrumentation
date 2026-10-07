@@ -215,6 +215,20 @@ configurations:
     type: string
     default: trace_id
 
+  common.user.name.enabled:
+    name: otel.instrumentation.common.user.name.enabled
+    declarative_name: java.common.user.name.enabled
+    description: "Enables capturing the `user.name` identity attribute. Identity attributes are not captured by default."
+    type: boolean
+    default: false
+
+  common.user.roles.enabled:
+    name: otel.instrumentation.common.user.roles.enabled
+    declarative_name: java.common.user.roles.enabled
+    description: "Enables capturing the `user.roles` identity attribute. Identity attributes are not captured by default."
+    type: boolean
+    default: false
+
   common.logging.span-id-key:
     name: otel.instrumentation.common.logging.span-id-key
     declarative_name: java.common.logging.span_id_key

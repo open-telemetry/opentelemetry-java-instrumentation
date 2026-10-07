@@ -49,6 +49,20 @@ ServletTelemetry telemetry = ServletTelemetry.create(openTelemetry);
 Filter filter = telemetry.createFilter();
 ```
 
+### Capture the authenticated user name
+
+Capture the name returned by `HttpServletRequest.getUserPrincipal()` as `user.name` by enabling it
+on the builder. Capture is disabled by default.
+
+```java
+ServletTelemetryBuilder builder = ServletTelemetry.builder(openTelemetry);
+Experimental.setCaptureUserName(builder, true);
+Filter filter = builder.build().createFilter();
+```
+
+Replace calls to `Experimental.setCaptureEnduserId(builder, enabled)` with
+`Experimental.setCaptureUserName(builder, enabled)`.
+
 ### Capture selected request parameters
 
 ```java

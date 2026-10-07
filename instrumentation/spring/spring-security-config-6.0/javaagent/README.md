@@ -3,21 +3,33 @@
 Javaagent automatic instrumentation to capture identity semantic attributes
 from Spring Security `Authentication` objects.
 
-By default this instrumentation emits the deprecated `enduser.*` attributes when enabled. When
-`otel.instrumentation.common.v3-preview` is enabled, it emits `user.name` and the string array
-`user.roles` instead, and `enduser.scope` is not supported.
+When explicitly enabled, this instrumentation emits `user.name` and `user.roles` as a string array.
+Identity capture is disabled by default. Scope authorities are not captured.
 
 ## Settings
 
-This module honors the [common `otel.instrumentation.common.enduser.*` properties](https://opentelemetry.io/docs/zero-code/java/agent/instrumentation/#capturing-enduser-attributes).
-When `otel.instrumentation.common.v3-preview` is enabled, it honors
-`otel.instrumentation.common.user.name.enabled` and
-`otel.instrumentation.common.user.roles.enabled` instead.
+Enable identity capture with `otel.instrumentation.common.user.name.enabled` and
+`otel.instrumentation.common.user.roles.enabled`; both default to `false`.
 
-It also supports the following properties:
+For example, migrate the former settings:
 
-| Property                                                                      | Type   | Default  | Description                                                                                                                                                                                                                     |
-| ----------------------------------------------------------------------------- | ------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `otel.instrumentation.spring-security.enduser.role.granted-authority-prefix`  | String | `ROLE_`  | Prefix of granted authorities identifying roles to capture in the `enduser.role` semantic attribute. This property is not honored when v3 preview is enabled; use the `user.roles` variant instead.                             |
-| `otel.instrumentation.spring-security.user.roles.granted-authority-prefix`    | String | `ROLE_`  | Prefix of granted authorities identifying roles to capture in the `user.roles` semantic attribute when v3 preview is enabled. This property is not honored when v3 preview is disabled; use the `enduser.role` variant instead. |
-| `otel.instrumentation.spring-security.enduser.scope.granted-authority-prefix` | String | `SCOPE_` | Prefix of granted authorities identifying scopes to capture in the `enduser.scope` semantic attribute. This property and the associated attribute are not supported when v3 preview is enabled.                                 |
+```properties
+# Before
+otel.instrumentation.common.enduser.id.enabled=true
+otel.instrumentation.common.enduser.role.enabled=true
+otel.instrumentation.spring-security.enduser.role.granted-authority-prefix=ROLE_
+
+# After
+otel.instrumentation.common.user.name.enabled=true
+otel.instrumentation.common.user.roles.enabled=true
+otel.instrumentation.spring-security.user.roles.granted-authority-prefix=ROLE_
+```
+
+The captured keys change from `enduser.id` and comma-separated `enduser.role` to `user.name` and
+string-array `user.roles`. The `enduser.scope` setting and scope capture are removed.
+
+The role property configures the authority prefix used to select roles:
+
+| Property                                                                   | Type   | Default | Description                                                          |
+| -------------------------------------------------------------------------- | ------ | ------- | -------------------------------------------------------------------- |
+| `otel.instrumentation.spring-security.user.roles.granted-authority-prefix` | String | `ROLE_` | Prefix of granted authorities identifying roles to capture as roles. |

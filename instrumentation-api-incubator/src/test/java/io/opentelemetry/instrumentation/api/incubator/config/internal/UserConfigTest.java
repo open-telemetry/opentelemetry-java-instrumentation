@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 class UserConfigTest {
 
   @Test
-  void readsEnduserConfigWhenV3PreviewIsDisabled() {
+  void readsUserConfigRegardlessOfV3Preview() {
     DeclarativeConfigProperties commonConfig =
         mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
     when(commonConfig.get("enduser").get("id").getBoolean("enabled", false)).thenReturn(false);
@@ -25,27 +25,24 @@ class UserConfigTest {
     when(commonConfig.get("user").get("name").getBoolean("enabled", false)).thenReturn(true);
     when(commonConfig.get("user").get("roles").getBoolean("enabled", false)).thenReturn(false);
 
-    UserConfig userConfig = new UserConfig(commonConfig, false);
+    UserConfig userConfig = new UserConfig(commonConfig);
 
-    assertThat(userConfig.isNameEnabled()).isFalse();
-    assertThat(userConfig.isRolesEnabled()).isTrue();
-    assertThat(userConfig.isScopeEnabled()).isTrue();
+    assertThat(userConfig.isNameEnabled()).isTrue();
+    assertThat(userConfig.isRolesEnabled()).isFalse();
   }
 
   @Test
-  void readsUserConfigWhenV3PreviewIsEnabled() {
+  void disabledByDefault() {
     DeclarativeConfigProperties commonConfig =
         mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
     when(commonConfig.get("enduser").get("id").getBoolean("enabled", false)).thenReturn(true);
     when(commonConfig.get("enduser").get("role").getBoolean("enabled", false)).thenReturn(true);
     when(commonConfig.get("enduser").get("scope").getBoolean("enabled", false)).thenReturn(true);
-    when(commonConfig.get("user").get("name").getBoolean("enabled", false)).thenReturn(false);
-    when(commonConfig.get("user").get("roles").getBoolean("enabled", false)).thenReturn(true);
 
-    UserConfig userConfig = new UserConfig(commonConfig, true);
+    UserConfig userConfig = new UserConfig(commonConfig);
 
     assertThat(userConfig.isNameEnabled()).isFalse();
-    assertThat(userConfig.isRolesEnabled()).isTrue();
-    assertThat(userConfig.isScopeEnabled()).isFalse();
+    assertThat(userConfig.isRolesEnabled()).isFalse();
+    assertThat(userConfig.isAnyEnabled()).isFalse();
   }
 }

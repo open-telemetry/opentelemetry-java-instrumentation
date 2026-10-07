@@ -4,6 +4,16 @@
 
 ### ⚠️ Breaking changes
 
+- Servlet principal and Spring Security identity capture now emit `user.name` and string-array
+  `user.roles` instead of `enduser.id` and comma-separated `enduser.role`. Replace
+  `otel.instrumentation.common.enduser.id.enabled` and
+  `otel.instrumentation.common.enduser.role.enabled` with
+  `otel.instrumentation.common.user.name.enabled` and
+  `otel.instrumentation.common.user.roles.enabled`. Replace
+  `otel.instrumentation.spring-security.enduser.role.granted-authority-prefix` with
+  `otel.instrumentation.spring-security.user.roles.granted-authority-prefix`.
+  `enduser.scope` capture and its configuration are removed. Identity capture remains disabled by
+  default.
 - The Java agent and standalone libraries now use the existing v1.43.0 messaging implementation.
 - Emit only stable source code attributes: `code.function.name` replaces `code.namespace` and
   `code.function`, and log records use `code.file.path` and `code.line.number` instead of
@@ -25,6 +35,8 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Rename `Experimental.setCaptureEnduserId` to `setCaptureUserName` in the Servlet 3.0 and 5.0
+  libraries, and remove the Spring Security `UserAttributesCapturer` scope-capture methods.
 - Move `CodeAttributesGetter`, `CodeAttributesExtractor`, and `CodeSpanNameExtractor` from
   `io.opentelemetry.instrumentation.api.incubator.semconv.code` in
   `opentelemetry-instrumentation-api-incubator` to `io.opentelemetry.instrumentation.api.semconv.code`
