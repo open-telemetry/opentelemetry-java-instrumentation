@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -69,8 +68,6 @@ public class OpenTelemetryAppender extends AbstractAppender {
   static final String PLUGIN_NAME = "OpenTelemetry";
 
   private final LogEventMapper<ReadOnlyStringMap> mapper;
-  private final AtomicReference<Predicate<String>> defaultMapMessageAttributes =
-      new AtomicReference<>();
   private final boolean mapMessageAttributesConfigured;
   @Nullable private volatile OpenTelemetry openTelemetry;
 
@@ -474,18 +471,11 @@ public class OpenTelemetryAppender extends AbstractAppender {
     boolean v3Preview = commonConfig.getBoolean("v3_preview", false);
 
     this.mapMessageAttributesConfigured = mapMessageAttributesConfigured;
-    Predicate<String> effectiveMapMessageAttributes =
-        mapMessageAttributes != null
-            ? mapMessageAttributes
-            : key -> {
-              Predicate<String> selector = defaultMapMessageAttributes.get();
-              return selector != null && selector.test(key);
-            };
     this.mapper =
         createMapper(
             captureExperimentalAttributes,
             captureCodeAttributes,
-            effectiveMapMessageAttributes,
+            mapMessageAttributes,
             captureMarkerAttribute,
             captureTemplate,
             captureArguments,
@@ -502,7 +492,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
 
   private void setDefaultMapMessageAttributes(Predicate<String> selector) {
     if (!mapMessageAttributesConfigured) {
-      defaultMapMessageAttributes.set(selector);
+      mapper.setMapMessageAttributes(selector);
     }
   }
 
@@ -561,7 +551,9 @@ public class OpenTelemetryAppender extends AbstractAppender {
     writeLock.lock();
     try {
       openTelemetry = null;
-      defaultMapMessageAttributes.set(null);
+      if (!mapMessageAttributesConfigured) {
+        mapper.setMapMessageAttributes(null);
+      }
       eventsToReplay.clear();
       replayLimitWarningLogged.set(false);
       legacyContextDataWarningLogged.set(false);
