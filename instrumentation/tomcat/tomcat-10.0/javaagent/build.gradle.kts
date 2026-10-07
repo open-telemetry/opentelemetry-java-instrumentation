@@ -31,6 +31,23 @@ tasks {
     jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.included=test-*")
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
+
+  val testUserNameCapture = register<Test>("testUserNameCapture") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*TomcatHandlerTest.capturesUserNameFromPrincipal")
+    }
+    jvmArgs("-Dotel.instrumentation.common.user.name.enabled=true")
+    jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    systemProperty("metadataConfig", "otel.instrumentation.common.user.name.enabled=true")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
+  check {
+    dependsOn(testUserNameCapture)
+  }
 }
 
 // Tomcat 10 uses deprecation annotation methods `forRemoval()` and `since()`

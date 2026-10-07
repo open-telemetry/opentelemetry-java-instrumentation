@@ -6,14 +6,6 @@ from Spring Security `Authentication` objects.
 When explicitly enabled, this instrumentation emits `user.name` and `user.roles` as a string array.
 Identity capture is disabled by default. Scope authorities are not captured.
 
-For javaagent users, replace `otel.instrumentation.common.enduser.id.enabled` and
-`otel.instrumentation.common.enduser.role.enabled` with
-`otel.instrumentation.common.user.name.enabled` and
-`otel.instrumentation.common.user.roles.enabled`, respectively. Replace
-`otel.instrumentation.spring-security.enduser.role.granted-authority-prefix` with
-`otel.instrumentation.spring-security.user.roles.granted-authority-prefix`. The `enduser.scope`
-setting has no replacement.
-
 Also provides `Customizer` implementations to insert those filters into the filter chains created by
 `HttpSecurity` and `ServerHttpSecurity`, respectively.
 

@@ -16,12 +16,9 @@ import org.junit.jupiter.api.Test;
 class UserConfigTest {
 
   @Test
-  void readsUserConfigRegardlessOfV3Preview() {
+  void readsUserConfig() {
     DeclarativeConfigProperties commonConfig =
         mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
-    when(commonConfig.get("enduser").get("id").getBoolean("enabled", false)).thenReturn(false);
-    when(commonConfig.get("enduser").get("role").getBoolean("enabled", false)).thenReturn(true);
-    when(commonConfig.get("enduser").get("scope").getBoolean("enabled", false)).thenReturn(true);
     when(commonConfig.get("user").get("name").getBoolean("enabled", false)).thenReturn(true);
     when(commonConfig.get("user").get("roles").getBoolean("enabled", false)).thenReturn(false);
 
@@ -35,9 +32,6 @@ class UserConfigTest {
   void disabledByDefault() {
     DeclarativeConfigProperties commonConfig =
         mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
-    when(commonConfig.get("enduser").get("id").getBoolean("enabled", false)).thenReturn(true);
-    when(commonConfig.get("enduser").get("role").getBoolean("enabled", false)).thenReturn(true);
-    when(commonConfig.get("enduser").get("scope").getBoolean("enabled", false)).thenReturn(true);
 
     UserConfig userConfig = new UserConfig(commonConfig);
 

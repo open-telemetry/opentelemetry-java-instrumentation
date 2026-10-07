@@ -31,6 +31,23 @@ tasks {
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
+
+  val testUserNameCapture = register<Test>("testUserNameCapture") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*Servlet3UserNameTest.capturesUserNameFromPrincipal")
+    }
+    jvmArgs("-Dotel.instrumentation.common.user.name.enabled=true")
+    jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    systemProperty("metadataConfig", "otel.instrumentation.common.user.name.enabled=true")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
+  check {
+    dependsOn(testUserNameCapture)
+  }
 }
 
 // Servlet 3.0 in latest Jetty versions requires Java 11

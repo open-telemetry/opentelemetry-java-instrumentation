@@ -60,9 +60,6 @@ Experimental.setCaptureUserName(builder, true);
 Filter filter = builder.build().createFilter();
 ```
 
-Replace calls to `Experimental.setCaptureEnduserId(builder, enabled)` with
-`Experimental.setCaptureUserName(builder, enabled)`.
-
 ### Capture selected request parameters
 
 ```java
