@@ -81,9 +81,8 @@ class LogbackAppenderTest {
   }
 
   @Test
-  void absentStructuredSelectorCapturesAllWithV3PreviewDisabled() {
+  void absentStructuredSelectorCapturesAll() {
     Map<String, Object> properties = new HashMap<>();
-    properties.put("otel.instrumentation.common.v3-preview", false);
 
     assertStructuredSelector(
         structuredAttributes(properties),

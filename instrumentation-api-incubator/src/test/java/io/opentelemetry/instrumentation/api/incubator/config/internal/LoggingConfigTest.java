@@ -38,25 +38,26 @@ class LoggingConfigTest {
   }
 
   @Test
-  void absentOrEmptySelectorCapturesEverythingRegardlessOfV3Preview() {
-    for (boolean v3Preview : new boolean[] {false, true}) {
-      for (boolean empty : new boolean[] {false, true}) {
-        ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry(v3Preview);
-        if (empty) {
-          DeclarativeConfigProperties selectorConfig =
-              openTelemetry
-                  .getInstrumentationConfig("common")
-                  .get("logging")
-                  .get("structured_attributes");
-          when(selectorConfig.getScalarList("included", String.class)).thenReturn(emptyList());
-          when(selectorConfig.getScalarList("excluded", String.class)).thenReturn(emptyList());
-        }
+  void absentSelectorCapturesEverything() {
+    Predicate<String> selector = LoggingConfig.resolveStructuredAttributes(mockOpenTelemetry());
 
-        Predicate<String> selector = LoggingConfig.resolveStructuredAttributes(openTelemetry);
+    assertThat(selector.test("anything")).isTrue();
+  }
 
-        assertThat(selector.test("anything")).isTrue();
-      }
-    }
+  @Test
+  void emptySelectorCapturesEverything() {
+    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
+    DeclarativeConfigProperties selectorConfig =
+        openTelemetry
+            .getInstrumentationConfig("common")
+            .get("logging")
+            .get("structured_attributes");
+    when(selectorConfig.getScalarList("included", String.class)).thenReturn(emptyList());
+    when(selectorConfig.getScalarList("excluded", String.class)).thenReturn(emptyList());
+
+    Predicate<String> selector = LoggingConfig.resolveStructuredAttributes(openTelemetry);
+
+    assertThat(selector.test("anything")).isTrue();
   }
 
   @Test
@@ -77,12 +78,5 @@ class LoggingConfigTest {
 
   private static ExtendedOpenTelemetry mockOpenTelemetry() {
     return mock(ExtendedOpenTelemetry.class, RETURNS_DEEP_STUBS);
-  }
-
-  private static ExtendedOpenTelemetry mockOpenTelemetry(boolean v3Preview) {
-    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
-    when(openTelemetry.getInstrumentationConfig("common").getBoolean("v3_preview"))
-        .thenReturn(v3Preview);
-    return openTelemetry;
   }
 }

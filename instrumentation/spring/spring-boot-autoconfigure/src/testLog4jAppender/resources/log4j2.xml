@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+  <Appenders>
+    <OpenTelemetry name="OpenTelemetryAppender"/>
+  </Appenders>
+  <Loggers>
+    <Logger name="spring-log4j-appender-test" level="INFO" additivity="false">
+      <AppenderRef ref="OpenTelemetryAppender"/>
+    </Logger>
+    <Root level="OFF"/>
+  </Loggers>
+</Configuration>
