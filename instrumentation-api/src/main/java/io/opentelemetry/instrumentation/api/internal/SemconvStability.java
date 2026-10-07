@@ -23,14 +23,11 @@ public final class SemconvStability {
 
   private static final boolean v3Preview;
 
-  private static final boolean emitOldDatabaseSemconv;
-  private static final boolean emitStableDatabaseSemconv;
-
   private static final boolean emitOldServicePeerSemconv;
-  private static final boolean emitStableServicePeerSemconv;
+  private static final boolean emitPreviewServicePeerSemconv;
 
   private static final boolean emitOldRpcSemconv;
-  private static final boolean emitStableRpcSemconv;
+  private static final boolean emitPreviewRpcSemconv;
 
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.getOrNoop();
@@ -39,17 +36,13 @@ public final class SemconvStability {
     SemconvSelectionResolver semconvSelection =
         new SemconvSelectionResolver(openTelemetry, generalConfig, v3Preview);
 
-    SemconvMode databaseSelection = semconvSelection.database();
-    emitOldDatabaseSemconv = emitOld(databaseSelection);
-    emitStableDatabaseSemconv = emitStable(databaseSelection);
-
     SemconvMode servicePeerSelection = semconvSelection.servicePeer();
     emitOldServicePeerSemconv = emitOld(servicePeerSelection);
-    emitStableServicePeerSemconv = emitStable(servicePeerSelection);
+    emitPreviewServicePeerSemconv = emitStable(servicePeerSelection);
 
     SemconvMode rpcSelection = semconvSelection.rpc();
     emitOldRpcSemconv = emitOld(rpcSelection);
-    emitStableRpcSemconv = emitStable(rpcSelection);
+    emitPreviewRpcSemconv = emitStable(rpcSelection);
   }
 
   public static boolean v3Preview(OpenTelemetry openTelemetry) {
@@ -66,61 +59,24 @@ public final class SemconvStability {
     return v3Preview;
   }
 
-  public static boolean emitOldDatabaseSemconv() { // to be removed in 3.0
-    return emitOldDatabaseSemconv;
-  }
-
-  public static boolean emitStableDatabaseSemconv() { // to be removed in 3.0
-    return emitStableDatabaseSemconv;
-  }
-
-  public static String databaseSchemaUrl() {
-    return emitStableDatabaseSemconv ? SchemaUrls.V1_44_0 : SchemaUrls.V1_24_0;
-  }
-
   public static boolean emitOldServicePeerSemconv() {
     return emitOldServicePeerSemconv;
   }
 
-  public static boolean emitStableServicePeerSemconv() {
-    return emitStableServicePeerSemconv;
-  }
-
-  private static final Map<String, String> dbSystemNameMap = new HashMap<>();
-
-  static {
-    dbSystemNameMap.put("adabas", "softwareag.adabas");
-    dbSystemNameMap.put("intersystems_cache", "intersystems.cache");
-    dbSystemNameMap.put("cosmosdb", "azure.cosmosdb");
-    dbSystemNameMap.put("db2", "ibm.db2");
-    dbSystemNameMap.put("dynamodb", "aws.dynamodb");
-    dbSystemNameMap.put("h2", "h2database");
-    dbSystemNameMap.put("hanadb", "sap.hana");
-    dbSystemNameMap.put("informix", "ibm.informix");
-    dbSystemNameMap.put("ingres", "actian.ingres");
-    dbSystemNameMap.put("maxdb", "sap.maxdb");
-    dbSystemNameMap.put("mssql", "microsoft.sql_server");
-    dbSystemNameMap.put("netezza", "ibm.netezza");
-    dbSystemNameMap.put("oracle", "oracle.db");
-    dbSystemNameMap.put("redshift", "aws.redshift");
-    dbSystemNameMap.put("spanner", "gcp.spanner");
-  }
-
-  public static String stableDbSystemName(String oldDbSystem) {
-    String dbSystemName = dbSystemNameMap.get(oldDbSystem);
-    return dbSystemName != null ? dbSystemName : oldDbSystem;
+  public static boolean emitPreviewServicePeerSemconv() {
+    return emitPreviewServicePeerSemconv;
   }
 
   public static boolean emitOldRpcSemconv() {
     return emitOldRpcSemconv;
   }
 
-  public static boolean emitStableRpcSemconv() {
-    return emitStableRpcSemconv;
+  public static boolean emitPreviewRpcSemconv() {
+    return emitPreviewRpcSemconv;
   }
 
   public static String rpcSchemaUrl() {
-    return emitStableRpcSemconv ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0;
+    return emitPreviewRpcSemconv ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0;
   }
 
   private static final Map<String, String> rpcSystemNameMap = new HashMap<>();

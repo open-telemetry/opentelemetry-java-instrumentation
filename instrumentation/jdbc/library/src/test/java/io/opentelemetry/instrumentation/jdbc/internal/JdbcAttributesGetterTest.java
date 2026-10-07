@@ -96,8 +96,6 @@ class JdbcAttributesGetterTest {
     DbInfo dbInfo =
         DbInfo.builder()
             .dbSystemName(MARIADB)
-            .legacyServerAddress("h1")
-            .legacyServerPort(3306)
             .configuredServerTarget(DbServerTarget.create("h1:15432,h2:15432", null))
             .build();
     DbRequest request = DbRequest.create(dbInfo, "SELECT 1", false);
@@ -140,8 +138,6 @@ class JdbcAttributesGetterTest {
     DbInfo dbInfo =
         DbInfo.builder()
             .dbSystemName(MARIADB)
-            .legacyServerAddress("h1")
-            .legacyServerPort(3306)
             .configuredServerTarget(DbServerTarget.create("h1", 3306))
             .build();
     DbRequest request = DbRequest.create(dbInfo, "SELECT 1", false);

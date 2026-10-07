@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.when;
@@ -26,7 +26,7 @@ class RpcSpanNameExtractorTest {
   void normal() {
     RpcRequest request = new RpcRequest();
 
-    if (emitStableRpcSemconv()) {
+    if (emitPreviewRpcSemconv()) {
       when(getter.getRpcMethod(request)).thenReturn("my.Service/Method");
     } else {
       when(getter.getService(request)).thenReturn("my.Service");
@@ -40,7 +40,7 @@ class RpcSpanNameExtractorTest {
   @Test
   @SuppressWarnings("deprecation") // testing deprecated method
   void serviceNull() {
-    assumeTrue(!emitStableRpcSemconv());
+    assumeTrue(!emitPreviewRpcSemconv());
 
     RpcRequest request = new RpcRequest();
 
@@ -52,7 +52,7 @@ class RpcSpanNameExtractorTest {
 
   @Test
   void methodNull() {
-    assumeTrue(!emitStableRpcSemconv());
+    assumeTrue(!emitPreviewRpcSemconv());
 
     RpcRequest request = new RpcRequest();
 
@@ -64,7 +64,7 @@ class RpcSpanNameExtractorTest {
 
   @Test
   void rpcMethodNull_fallsBackToSystemName() {
-    assumeTrue(emitStableRpcSemconv());
+    assumeTrue(emitPreviewRpcSemconv());
 
     RpcRequest request = new RpcRequest();
 
@@ -77,7 +77,7 @@ class RpcSpanNameExtractorTest {
   @Test
   @SuppressWarnings("deprecation") // testing deprecated method fallback
   void rpcMethodNull_fallsBackToSystemName_viaGetSystem() {
-    assumeTrue(emitStableRpcSemconv());
+    assumeTrue(emitPreviewRpcSemconv());
 
     RpcRequest request = new RpcRequest();
 

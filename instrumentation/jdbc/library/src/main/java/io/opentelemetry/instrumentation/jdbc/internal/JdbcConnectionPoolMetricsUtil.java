@@ -53,14 +53,9 @@ public final class JdbcConnectionPoolMetricsUtil {
     String serverName = getPropertyValue(properties, "serverName");
     if (serverName != null && !serverName.isEmpty()) {
       serverName = UrlParsingUtils.stripIpv6Brackets(serverName);
-      dbInfoBuilder.legacyServerAddress(serverName);
     }
 
     Integer serverPort = UrlParsingUtils.parsePort(getPropertyValue(properties, "portNumber"));
-    if (serverPort != null) {
-      dbInfoBuilder.legacyServerPort(serverPort);
-    }
-
     if (serverName != null && !serverName.isEmpty()) {
       dbInfoBuilder.configuredServerTarget(DbServerTarget.create(serverName, serverPort));
     }
