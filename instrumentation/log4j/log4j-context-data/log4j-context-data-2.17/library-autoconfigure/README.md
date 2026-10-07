@@ -79,11 +79,3 @@ You can use these keys when defining an appender in your `log4j.xml` configurati
   </Loggers>
 </Configuration>
 ```
-
-## Migrating to 3.0
-
-The former `otel.instrumentation.common.logging.trace-id`, `.span-id`, and
-`.trace-flags` settings have been replaced by the `-key` settings above. For
-example, replace
-`otel.instrumentation.common.logging.trace-id=custom_trace` with
-`otel.instrumentation.common.logging.trace-id-key=custom_trace`.

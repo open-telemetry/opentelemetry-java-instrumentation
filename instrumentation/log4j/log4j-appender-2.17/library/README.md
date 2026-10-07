@@ -30,6 +30,11 @@ For Gradle, add to your dependencies:
 implementation("io.opentelemetry.instrumentation:opentelemetry-log4j-appender-2.17:OPENTELEMETRY_VERSION")
 ```
 
+If Log4j layouts need trace or span IDs, also add
+`io.opentelemetry.instrumentation:opentelemetry-log4j-context-data-2.17-autoconfigure`.
+See the [context-data autoconfigure documentation](../../log4j-context-data/log4j-context-data-2.17/library-autoconfigure/README.md)
+for dependency declarations and logging key configuration.
+
 ### Usage
 
 The following demonstrates how you might configure the appender in your `log4j2.xml` configuration:
@@ -201,17 +206,5 @@ This adds an internal `otel.internal.context` context data entry to carry the
 OpenTelemetry `Context`. Applications that render all Log4j context data, for
 example with `%X` or JSON layouts, should exclude this key from log output
 because its value is not stable and may change without notice.
-
-## Migrating to 3.0
-
-The appender no longer reconstructs a span context from `trace_id`, `span_id`,
-and `trace_flags` strings in Log4j context data. Synchronous logging continues
-to use the current OpenTelemetry context. Standalone asynchronous logging must
-carry the actual OpenTelemetry context using the injector described in
-[Async Loggers](#async-loggers); otherwise, logs without a current context are
-uncorrelated.
-
-The appender no longer includes the context-data autoconfigure library
-transitively. Add it separately if Log4j layouts need trace or span IDs.
 
 [source code attributes]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/attributes.md#source-code-attributes
