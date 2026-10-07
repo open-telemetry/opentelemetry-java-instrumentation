@@ -2,8 +2,7 @@
 
 ## Migrating to 3.0
 
-System metrics now always use the previous v3-preview conventions and schema 1.44.0,
-even with `otel.instrumentation.common.v3-preview=false`. Both the library and agent use
+System metrics now always use schema 1.44.0 conventions. Both the library and agent use
 the instrumentation scope `io.opentelemetry.oshi-5.0`.
 
 Update queries and dashboards from `system.network.packets` to `system.network.packet.count`.
