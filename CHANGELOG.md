@@ -41,6 +41,9 @@
   singular count units such as `{connection}`, and seconds instead of milliseconds for durations.
   Pool attributes use `db.client.connection.pool.name` and `db.client.connection.state`; unnamed
   pools use stable database-derived names, and DBCP retains the first registered pool name.
+- Servlet request parameter attribute keys now preserve the original parameter-name casing, and
+  trace/span request attributes are disabled by default. Re-enable the latter with
+  `otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled=true`.
 - Elasticsearch and OpenSearch query bodies are now always captured.
   The `otel.instrumentation.elasticsearch.capture-search-query` and
   `otel.instrumentation.opensearch.capture-search-query` properties
@@ -52,6 +55,8 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Remove deprecated `Experimental.setCaptureRequestParameters` from Servlet 3.0 and Servlet 5.0
+  libraries. Use `Experimental.setRequestParameters` with an `IncludeExclude` selector instead.
 - Remove deprecated `ProcessMetrics` and `SystemMetrics.registerObservers(Meter)` from
   `opentelemetry-oshi`. Use `SystemMetrics.registerObservers(OpenTelemetry)` for system metrics
   and continue closing the returned observers.
