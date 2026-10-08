@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -191,9 +190,7 @@ class MessagingHeadersTest {
   }
 
   private static Map.Entry<AttributeKey<?>, Object> headerEntry(String name, String value) {
-    String attributeName = v3Preview() ? name : name.replace('-', '_');
-    return new SimpleEntry<>(
-        stringArrayKey("messaging.header." + attributeName), singletonList(value));
+    return new SimpleEntry<>(stringArrayKey("messaging.header." + name), singletonList(value));
   }
 
   private static final class MapGetter
