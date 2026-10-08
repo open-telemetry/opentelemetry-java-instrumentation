@@ -271,59 +271,5 @@ class DbClientSpanNameExtractorTest {
     assertThat(spanName).isEqualTo("BATCH");
   }
 
-  @Test
-  @SuppressWarnings("deprecation") // testing deprecated method
-  void shouldPreserveOldSemconvSpanNameForMigration() {
-    // given
-    DbRequest dbRequest = new DbRequest();
-
-    when(sqlAttributesGetter.getRawQueryTexts(dbRequest))
-        .thenReturn(singleton("SELECT * from table"));
-    SpanNameExtractor<DbRequest> underTest =
-        DbClientSpanNameExtractor.createWithGenericOldSpanName(sqlAttributesGetter);
-
-    // when
-    String spanName = underTest.extract(dbRequest);
-
-    // then
-    assertThat(spanName).isEqualTo("SELECT table");
-  }
-
-  @Test
-  @SuppressWarnings("deprecation") // testing deprecated method
-  void shouldFallBackToNamespaceForEmptySqlQueryInMigration() {
-    // given
-    DbRequest dbRequest = new DbRequest();
-
-    when(sqlAttributesGetter.getRawQueryTexts(dbRequest)).thenReturn(emptyList());
-    when(sqlAttributesGetter.getDbNamespace(dbRequest)).thenReturn("mydb");
-    SpanNameExtractor<DbRequest> underTest =
-        DbClientSpanNameExtractor.createWithGenericOldSpanName(sqlAttributesGetter);
-
-    // when
-    String spanName = underTest.extract(dbRequest);
-
-    // then
-    assertThat(spanName).isEqualTo("mydb");
-  }
-
-  @Test
-  @SuppressWarnings("deprecation") // testing deprecated method
-  void shouldExtractBatchSpanNameForEmptySqlQueryBatchInMigration() {
-    // given
-    DbRequest dbRequest = new DbRequest();
-
-    when(sqlAttributesGetter.getRawQueryTexts(dbRequest)).thenReturn(emptyList());
-    when(sqlAttributesGetter.getDbOperationBatchSize(dbRequest)).thenReturn(0L);
-    SpanNameExtractor<DbRequest> underTest =
-        DbClientSpanNameExtractor.createWithGenericOldSpanName(sqlAttributesGetter);
-
-    // when
-    String spanName = underTest.extract(dbRequest);
-
-    // then
-    assertThat(spanName).isEqualTo("BATCH");
-  }
-
   static class DbRequest {}
 }

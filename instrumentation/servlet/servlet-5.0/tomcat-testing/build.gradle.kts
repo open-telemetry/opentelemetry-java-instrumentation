@@ -20,8 +20,19 @@ if (otelProps.testLatestDeps) {
 }
 
 tasks {
-  test {
+  withType<Test>().configureEach {
     // exercises an exclude-only selector, which captures every parameter that it does not exclude
     jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.excluded=ignored-*")
+  }
+
+  val testExperimental = register<Test>("testExperimental") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled=true")
+  }
+
+  check {
+    dependsOn(testExperimental)
   }
 }
