@@ -55,6 +55,10 @@ and deadlocks.
     e.g. `release/v1.9.x`, and click the "Run workflow" button below that.
   - Review and merge the pull request that it creates for updating the version.
   - It also generates the patch changelog and removes the consumed fragments.
+  - Release branches cut before the Towncrier adoption (those without `towncrier.toml` and the
+    `<!-- towncrier release notes start -->` marker in `CHANGELOG.md`) still use the legacy
+    workflow: backport pull requests must update `CHANGELOG.md` manually, and `changelog.d`
+    fragments are ignored on those branches.
 
 ## Making the release
 
