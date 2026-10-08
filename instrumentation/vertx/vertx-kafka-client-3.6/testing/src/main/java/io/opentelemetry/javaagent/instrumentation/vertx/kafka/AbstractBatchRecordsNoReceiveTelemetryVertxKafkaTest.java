@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.kafka;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessDurationMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricPointCounts;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanEnabledSupplier;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -81,7 +82,7 @@ public abstract class AbstractBatchRecordsNoReceiveTelemetryVertxKafkaTest
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(processAttributes(record1));
-                    span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
+                    span.hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())));
                   },
                   span -> span.hasName("process testSpan1").hasParent(trace.getSpan(2)),
 
@@ -96,7 +97,7 @@ public abstract class AbstractBatchRecordsNoReceiveTelemetryVertxKafkaTest
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(4))
                         .hasAttributesSatisfyingExactly(processAttributes(record2));
-                    span.hasLinks(LinkData.create(trace.getSpan(4).getSpanContext()));
+                    span.hasLinks(LinkData.create(asRemote(trace.getSpan(4).getSpanContext())));
                   },
                   span -> span.hasName("process testSpan2").hasParent(trace.getSpan(5)));
 
@@ -161,7 +162,7 @@ public abstract class AbstractBatchRecordsNoReceiveTelemetryVertxKafkaTest
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(processAttributes(record));
-                    span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
+                    span.hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())));
                   },
                   span -> span.hasName("process error").hasParent(trace.getSpan(2)));
 

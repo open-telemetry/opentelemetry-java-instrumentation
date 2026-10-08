@@ -10,6 +10,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveMetrics;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanEnabledSupplier;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -204,7 +205,7 @@ public abstract class AbstractReactorKafkaTest {
                   span.hasName("process testTopic")
                       .hasKind(SpanKind.CONSUMER)
                       .hasParent(trace.getSpan(1))
-                      .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
+                      .hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())))
                       .hasAttributesSatisfyingExactly(processAttributes(record)),
               span -> span.hasName("consumer").hasParent(trace.getSpan(2)));
 
@@ -236,7 +237,7 @@ public abstract class AbstractReactorKafkaTest {
                       .hasKind(SpanKind.CONSUMER)
                       .hasParent(trace.getSpan(1))
                       .hasAttributesSatisfyingExactly(processAttributes(record));
-                  span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
+                  span.hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())));
                 },
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
     assertProcessMetricsWithConsumedMessages(
@@ -291,7 +292,7 @@ public abstract class AbstractReactorKafkaTest {
   private static LinkData receiveRecordLink(SpanData producerSpan) {
 
     return LinkData.create(
-        producerSpan.getSpanContext(),
+        asRemote(producerSpan.getSpanContext()),
         Attributes.builder()
             .put(MESSAGING_KAFKA_OFFSET, producerSpan.getAttributes().get(MESSAGING_KAFKA_OFFSET))
             .put(

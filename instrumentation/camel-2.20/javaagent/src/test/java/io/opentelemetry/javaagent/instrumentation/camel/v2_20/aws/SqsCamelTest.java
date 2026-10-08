@@ -186,7 +186,7 @@ class SqsCamelTest {
   private static LinkData propagatedLink(SpanData producerSpan) {
     SpanContext producerContext = producerSpan.getSpanContext();
     return LinkData.create(
-        SpanContext.create(
+        SpanContext.createFromRemoteParent(
             producerContext.getTraceId(),
             producerContext.getSpanId(),
             TraceFlags.getSampled(),
