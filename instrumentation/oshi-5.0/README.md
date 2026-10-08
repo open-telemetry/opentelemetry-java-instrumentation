@@ -1,10 +1,14 @@
 # OSHI Instrumentation
 
-## Settings for the OSHI instrumentation
+## Current metrics
 
-| System property                                          | Type    | Default | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| -------------------------------------------------------- | ------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `otel.instrumentation.oshi.experimental-metrics.enabled` | Boolean | `false` | Deprecated. Outside v3 preview, enable the `runtime.java.memory` and `runtime.java.cpu_time` process metrics. This setting is ignored when `otel.instrumentation.common.v3-preview=true`. Will be removed in 3.0. Use the standard JVM metrics `jvm.memory.used` and `jvm.cpu.time` instead. These are not exact replacements: `jvm.memory.used` measures JVM memory pools rather than process RSS or virtual memory, and `jvm.cpu.time` does not separate user and system CPU time. |
+System metrics use schema 1.44.0 conventions.
+
+Network packet counts use `system.network.packet.count`. Count units are `{packet}`,
+`{error}`, and `{operation}` for packets, errors, and disk operations, respectively.
+Memory metrics use `system.memory.state`; network I/O and errors use `network.interface.name`
+and `network.io.direction`. Packet counts use `system.device`
+and `network.io.direction`; disk metrics use `system.device` and `disk.io.direction`.
 
 ## Using OSHI with OpenTelemetry Java agent
 
