@@ -4,17 +4,4 @@ description: >
 display_name: OSHI
 semantic_conventions:
   - SYSTEM_METRICS
-configurations:
-  - name: otel.instrumentation.oshi.experimental-metrics.enabled
-    declarative_name: java.oshi.experimental_metrics/development.enabled
-    description: >
-      Deprecated. Outside v3 preview, enables the experimental `runtime.java.memory` and
-      `runtime.java.cpu_time` metrics. This setting is ignored when
-      `otel.instrumentation.common.v3-preview=true`. Will be removed in 3.0.
-      Use the standard JVM metrics `jvm.memory.used` and `jvm.cpu.time` instead. These are not exact
-      replacements: `jvm.memory.used` measures JVM memory pools rather than process RSS or virtual
-      memory, and `jvm.cpu.time` does not separate user and system CPU time.
-    type: boolean
-    default: false
-    deprecated: true
 library_link: https://github.com/oshi/oshi/
