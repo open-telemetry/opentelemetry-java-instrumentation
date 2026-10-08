@@ -104,7 +104,8 @@ class AwsSdkErrorTypeTest {
         .thenReturn(
             GetObjectResponse.builder()
                 .responseMetadata(
-                    DefaultAwsResponseMetadata.create(singletonMap("AWS_REQUEST_ID", "request-id")))
+                    DefaultAwsResponseMetadata.create(
+                        singletonMap("x-amz-request-id", "request-id")))
                 .build());
     interceptor.afterExecution(context, attributes);
 
