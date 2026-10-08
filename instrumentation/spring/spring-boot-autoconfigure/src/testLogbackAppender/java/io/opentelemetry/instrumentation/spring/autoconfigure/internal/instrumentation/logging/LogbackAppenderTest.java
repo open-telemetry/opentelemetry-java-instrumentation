@@ -85,8 +85,7 @@ class LogbackAppenderTest {
     Map<String, Object> properties = new HashMap<>();
 
     assertStructuredSelector(
-        structuredAttributes(properties),
-        selector -> assertThat(selector.isEmpty()).isTrue());
+        structuredAttributes(properties), selector -> assertThat(selector.isEmpty()).isTrue());
   }
 
   @Test
@@ -96,8 +95,7 @@ class LogbackAppenderTest {
     properties.put("otel.instrumentation.common.logging.structured-attributes.excluded", "");
 
     assertStructuredSelector(
-        structuredAttributes(properties),
-        selector -> assertThat(selector.isEmpty()).isTrue());
+        structuredAttributes(properties), selector -> assertThat(selector.isEmpty()).isTrue());
   }
 
   @Test
