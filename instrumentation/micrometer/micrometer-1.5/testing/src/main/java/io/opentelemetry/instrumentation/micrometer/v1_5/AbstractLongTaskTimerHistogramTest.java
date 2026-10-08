@@ -14,6 +14,7 @@ import io.micrometer.core.instrument.LongTaskTimer;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.MockClock;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.time.Duration;
 import org.junit.jupiter.api.Test;
@@ -51,7 +52,7 @@ public abstract class AbstractLongTaskTimerHistogramTest {
                 metric
                     .hasName("testLongTaskTimerHistogram.active")
                     .hasDescription("This is a test timer")
-                    .hasUnit("{tasks}")
+                    .hasUnit(SemconvStability.v3Preview() ? "{task}" : "{tasks}")
                     .hasLongSumSatisfying(
                         sum ->
                             sum.isNotMonotonic()
@@ -110,7 +111,7 @@ public abstract class AbstractLongTaskTimerHistogramTest {
                 metric
                     .hasName("testLongTaskTimerHistogram.active")
                     .hasDescription("This is a test timer")
-                    .hasUnit("{tasks}")
+                    .hasUnit(SemconvStability.v3Preview() ? "{task}" : "{tasks}")
                     .hasLongSumSatisfying(
                         sum ->
                             sum.isNotMonotonic()
