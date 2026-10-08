@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
-import static io.opentelemetry.instrumentation.micrometer.v1_5.MaxGaugeAssertions.assertMaxGauge;
+import static io.opentelemetry.instrumentation.micrometer.v1_5.NoMaxGaugeAssertions.assertNoMaxGauge;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.micrometer.core.instrument.DistributionSummary;
@@ -62,21 +62,7 @@ public abstract class AbstractDistributionSummaryTest {
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(stringKey("tag"), "value"))
                                         .hasBucketBoundaries(NO_BUCKETS))));
-    assertMaxGauge(
-        testing(),
-        "testSummary.max",
-        metric ->
-            metric
-                .hasName("testSummary.max")
-                .hasDescription("This is a test distribution summary")
-                .hasDoubleGaugeSatisfying(
-                    gauge ->
-                        gauge.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(4)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("tag"), "value")))));
+    assertNoMaxGauge(testing(), "testSummary.max");
 
     // micrometer gauge histogram is not emitted
     testing()
@@ -87,8 +73,7 @@ public abstract class AbstractDistributionSummaryTest {
     Metrics.globalRegistry.remove(summary);
 
     // then
-    // Histogram is synchronous and returns previous value after removal, max is asynchronous and is
-    // removed completely.
+    // The synchronous histogram returns its previous value after removal.
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,

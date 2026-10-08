@@ -492,8 +492,7 @@ class LogbackAppenderInstaller {
     String traceIdKey =
         getLoggingProperty(
             applicationEnvironmentPreparedEvent.getEnvironment(),
-            "otel.instrumentation.common.logging.trace-id-key",
-            "otel.instrumentation.common.logging.trace-id");
+            "otel.instrumentation.common.logging.trace-id-key");
     if (traceIdKey != null) {
       openTelemetryAppender.setTraceIdKey(traceIdKey);
     }
@@ -501,8 +500,7 @@ class LogbackAppenderInstaller {
     String spanIdKey =
         getLoggingProperty(
             applicationEnvironmentPreparedEvent.getEnvironment(),
-            "otel.instrumentation.common.logging.span-id-key",
-            "otel.instrumentation.common.logging.span-id");
+            "otel.instrumentation.common.logging.span-id-key");
     if (spanIdKey != null) {
       openTelemetryAppender.setSpanIdKey(spanIdKey);
     }
@@ -510,29 +508,10 @@ class LogbackAppenderInstaller {
     String traceFlagsKey =
         getLoggingProperty(
             applicationEnvironmentPreparedEvent.getEnvironment(),
-            "otel.instrumentation.common.logging.trace-flags-key",
-            "otel.instrumentation.common.logging.trace-flags");
+            "otel.instrumentation.common.logging.trace-flags-key");
     if (traceFlagsKey != null) {
       openTelemetryAppender.setTraceFlagsKey(traceFlagsKey);
     }
-  }
-
-  @Nullable
-  private static String getLoggingProperty(
-      ConfigurableEnvironment environment, String newProperty, String oldProperty) {
-    String value = getLoggingProperty(environment, newProperty);
-    if (value != null) {
-      return value;
-    }
-    value = getLoggingProperty(environment, oldProperty);
-    if (value != null) {
-      logger.warn(
-          "The '{}' property is deprecated and will be removed in 3.0. Use '{}' instead.",
-          oldProperty,
-          newProperty);
-      return value;
-    }
-    return null;
   }
 
   @Nullable

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessagingMetricsAssertions.assertSendAndProcessMetrics;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.ExperimentalTest.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -153,7 +154,7 @@ class JmsCamelTest {
                   equalTo(MESSAGING_OPERATION_TYPE, "process"),
                   equalTo(stringKey("camel.uri"), experimental("jms://queue:testQueue")),
                   satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)));
-          span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
+          span.hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())));
         });
     assertions.add(
         span ->

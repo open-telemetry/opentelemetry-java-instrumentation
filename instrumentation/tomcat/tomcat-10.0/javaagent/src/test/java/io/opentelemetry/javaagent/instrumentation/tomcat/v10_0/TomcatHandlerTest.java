@@ -21,6 +21,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
+import static io.opentelemetry.semconv.incubating.UserIncubatingAttributes.USER_NAME;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -32,13 +33,20 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
+import jakarta.servlet.ServletException;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
+import org.apache.catalina.connector.Request;
+import org.apache.catalina.connector.Response;
 import org.apache.catalina.core.StandardHost;
 import org.apache.catalina.startup.Tomcat;
+import org.apache.catalina.valves.ValveBase;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
@@ -83,11 +91,35 @@ class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
         .forEach(
             endpoint -> servletContext.addServletMappingDecoded(endpoint.getPath(), "testServlet"));
 
+    servletContext.getPipeline().addValve(new PrincipalValve());
+
     StandardHost host = (StandardHost) tomcatServer.getHost();
     host.setErrorReportValveClass(ErrorHandlerValve.class.getName());
 
     tomcatServer.start();
     return tomcatServer;
+  }
+
+  @Test
+  void capturesUserNameFromPrincipal() {
+    AggregatedHttpRequest request = request(SUCCESS, "GET");
+    request =
+        AggregatedHttpRequest.of(
+            request.headers().toBuilder().add("X-Test-Principal", "true").build());
+    client.execute(request).aggregate().join();
+
+    testing.waitAndAssertTraces(
+        trace -> {
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasKind(SpanKind.SERVER), span -> span.hasName("controller"));
+          assertThat(trace.getSpan(0).getInstrumentationScopeInfo().getName())
+              .isEqualTo("io.opentelemetry.tomcat-10.0");
+          assertThat(trace.getSpan(0).getAttributes().get(USER_NAME))
+              .isEqualTo(
+                  Boolean.getBoolean("otel.instrumentation.common.user.name.enabled")
+                      ? "test-user"
+                      : null);
+        });
   }
 
   @Override
@@ -132,5 +164,16 @@ class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
         .hasAttributesSatisfyingExactly(
             satisfies(CODE_FUNCTION_NAME, val -> val.endsWith("." + methodName)));
     return span;
+  }
+
+  private static class PrincipalValve extends ValveBase {
+
+    @Override
+    public void invoke(Request request, Response response) throws IOException, ServletException {
+      if ("true".equals(request.getHeader("X-Test-Principal"))) {
+        request.setUserPrincipal(() -> "test-user");
+      }
+      getNext().invoke(request, response);
+    }
   }
 }
