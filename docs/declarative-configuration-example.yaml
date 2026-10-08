@@ -45,8 +45,7 @@ instrumentation/development:
           - sig
           - X-Goog-Signature
 
-    # A comma-separated list of stable semantic convention groups to opt into. Preview RPC and
-    # service-peer conventions can be selected with `java.common.semconv_stability.preview`.
+    # A comma-separated list of stable semantic convention groups to opt into.
     stability_opt_in_list: ''
   java:
     apache_elasticjob:
