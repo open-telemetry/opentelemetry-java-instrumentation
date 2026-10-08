@@ -11,7 +11,7 @@ muzzle {
   pass {
     group.set("org.springframework.ai")
     module.set("spring-ai-model")
-    versions.set("[1.0.0,2)")
+    versions.set("[1.0.0,3)")
     assertInverse.set(true)
   }
 }
