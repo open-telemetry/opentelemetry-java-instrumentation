@@ -17,6 +17,23 @@
   respectively. For declarative configuration, replace
   `java.common.logging.trace_id`, `span_id`, and `trace_flags` with
   `java.common.logging.trace_id_key`, `span_id_key`, and `trace_flags_key`.
+- Remove `otel.instrumentation.grpc.capture-metadata.client.request` and
+  `otel.instrumentation.grpc.capture-metadata.server.request`.
+  Use `otel.instrumentation.grpc.client.request-metadata.included` and
+  `otel.instrumentation.grpc.server.request-metadata.included`.
+  For declarative configuration, replace `java.grpc.capture_metadata.client.request` and
+  `java.grpc.capture_metadata.server.request` with `java.grpc.client.request_metadata.included` and
+  `java.grpc.server.request_metadata.included`.
+- Captured messaging header attribute keys now preserve dashes unconditionally; for example,
+  `messaging.header.Test_Message_Id` is now `messaging.header.Test-Message-Id`. Replace
+  `otel.instrumentation.messaging.experimental.headers.included=Test-Message-*` with
+  `otel.instrumentation.common.messaging.headers.included=Test-Message-*`.
+  The deprecated `otel.instrumentation.messaging.experimental.headers.included`,
+  `otel.instrumentation.messaging.experimental.headers.excluded`, and
+  `otel.instrumentation.messaging.experimental.capture-headers` settings are no longer supported;
+  use `otel.instrumentation.common.messaging.headers.included` / `.excluded` instead.
+  `otel.instrumentation.messaging.experimental.receive-telemetry.enabled` is also no longer
+  supported; use `otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled`.
 - OSHI system metrics use schema version 1.44.0 and scope `io.opentelemetry.oshi-5.0`.
   Update `system.network.packets` to `system.network.packet.count`, plural count units to
   `{packet}`, `{error}`, and `{operation}`. Replace memory `state` with `system.memory.state`;
