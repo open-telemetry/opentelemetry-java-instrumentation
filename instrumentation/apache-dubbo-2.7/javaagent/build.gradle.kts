@@ -57,8 +57,12 @@ val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { sui
     testClassesDirs = suite.sources.output.classesDirs
     classpath = suite.sources.runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=rpc,service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc,service.peer")
+    jvmArgs("-Dotel.semconv-stability.opt-in=rpc")
+    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
+    systemProperty(
+      "metadataConfig",
+      "otel.semconv-stability.opt-in=rpc,otel.semconv-stability.preview=service.peer"
+    )
   }
 }
 
@@ -67,8 +71,12 @@ val bothSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite
     testClassesDirs = suite.sources.output.classesDirs
     classpath = suite.sources.runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=rpc/dup,service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc/dup,service.peer")
+    jvmArgs("-Dotel.semconv-stability.opt-in=rpc/dup")
+    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
+    systemProperty(
+      "metadataConfig",
+      "otel.semconv-stability.opt-in=rpc/dup,otel.semconv-stability.preview=service.peer"
+    )
   }
 }
 

@@ -31,8 +31,8 @@ class SemconvSelectionResolver {
   // otel.semconv-stability.preview in library instrumentation.
   private final Set<String> previewFlags;
 
-  // For preview domains, v3 preview uses only
-  // preview flags; non-preview combines stable and preview flags for backward compatibility.
+  // For RPC, v3 preview uses only preview flags; non-preview also accepts stable flags for
+  // backward compatibility. Service-peer always uses only preview flags.
   private final boolean v3Preview;
 
   SemconvSelectionResolver(
@@ -173,7 +173,10 @@ class SemconvSelectionResolver {
     if (v3Preview) {
       return previewFlags;
     }
-    return combine(stableFlags, previewFlags);
+    Set<String> compatibleFlags = new HashSet<>(stableFlags);
+    compatibleFlags.remove("service.peer");
+    compatibleFlags.remove("service.peer/dup");
+    return combine(compatibleFlags, previewFlags);
   }
 
   private static Set<String> resolveOptInValues(OpenTelemetry openTelemetry) {

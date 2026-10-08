@@ -55,7 +55,7 @@ testing {
 
       targets.all {
         testTask.configure {
-          jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+          jvmArgs("-Dotel.semconv-stability.preview=service.peer")
         }
       }
     }
@@ -158,10 +158,12 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.lettuce.connection-telemetry.enabled=true")
   }
 
-  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+  val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
     .filter { !it.name.endsWith("unitTests", true) }
     .map { suite ->
-      register<Test>("${suite.name}StableSemconv") {
+      val semconvTestName =
+        if (suite.name == "test") "testPreviewSemconv" else "${suite.name}StableSemconv"
+      register<Test>(semconvTestName) {
         val sourceTask = named<Test>(suite.name).get()
         setJvmArgs(sourceTask.jvmArgs)
         setSystemProperties(sourceTask.systemProperties)
@@ -169,11 +171,11 @@ tasks {
         testClassesDirs = suite.sources.output.classesDirs
         classpath = suite.sources.runtimeClasspath
 
-        val stableSemconvConfig = "otel.semconv-stability.opt-in=service.peer"
-        jvmArgs("-D$stableSemconvConfig")
+        val previewSemconvConfig = "otel.semconv-stability.preview=service.peer"
+        jvmArgs("-D$previewSemconvConfig")
         systemProperty(
           "metadataConfig",
-          listOfNotNull(sourceTask.systemProperties["metadataConfig"], stableSemconvConfig)
+          listOfNotNull(sourceTask.systemProperties["metadataConfig"], previewSemconvConfig)
             .joinToString(","),
         )
         isEnabled = sourceTask.enabled
@@ -186,11 +188,11 @@ tasks {
       classpath = sourceSets.test.get().runtimeClasspath
       jvmArgs(
         "-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true",
-        "-Dotel.semconv-stability.opt-in=service.peer"
+        "-Dotel.semconv-stability.preview=service.peer"
       )
       systemProperty(
         "metadataConfig",
-        "otel.instrumentation.lettuce.connection-telemetry.enabled=true,otel.semconv-stability.opt-in=service.peer"
+        "otel.instrumentation.lettuce.connection-telemetry.enabled=true,otel.semconv-stability.preview=service.peer"
       )
     }
 
@@ -208,7 +210,7 @@ tasks {
       testing.suites,
       testConnectionTelemetryEnabled,
       testConnectionTelemetryEnabledStableSemconv,
-      stableSemconvSuites,
+      previewSemconvSuites,
       testExperimental,
       testV3Preview
     )

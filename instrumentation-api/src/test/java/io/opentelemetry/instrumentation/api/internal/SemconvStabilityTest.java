@@ -5,14 +5,24 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
+import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.common.ComponentLoader;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfiguration;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryConfigurationModel;
+import io.opentelemetry.sdk.internal.SdkConfigProvider;
 import io.opentelemetry.semconv.SchemaUrls;
+import java.io.ByteArrayInputStream;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,9 +31,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.junitpioneer.jupiter.SetSystemProperty;
 
 class SemconvStabilityTest {
 
@@ -181,7 +195,7 @@ class SemconvStabilityTest {
   }
 
   @Test
-  void stableOptInAppliesToPreviewDomainsWhenV3PreviewIsDisabled() {
+  void stableOptInAppliesOnlyToRpcWhenV3PreviewIsDisabled() {
     // general:
     //   stability_opt_in_list: "rpc, service.peer"
     // java:
@@ -198,7 +212,7 @@ class SemconvStabilityTest {
     SemconvMode servicePeer = resolver.servicePeer();
 
     assertThat(rpc).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
-    assertThat(servicePeer).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
+    assertThat(servicePeer).isEqualTo(SemconvMode.V0_STABLE);
   }
 
   @Test
@@ -260,6 +274,87 @@ class SemconvStabilityTest {
 
     assertThat(resolver.rpc()).isEqualTo(SemconvMode.V1_EXPERIMENTAL.withDualEmit());
     assertThat(resolver.servicePeer()).isEqualTo(SemconvMode.V1_EXPERIMENTAL.withDualEmit());
+  }
+
+  @ParameterizedTest
+  @MethodSource("servicePeerSelections")
+  @SetSystemProperty(key = "otel.instrumentation.common.v3-preview", value = "")
+  @SetSystemProperty(key = "otel.semconv-stability.opt-in", value = "")
+  @SetSystemProperty(key = "otel.semconv-stability.preview", value = "")
+  void servicePeerSelectionFromFlatConfig(
+      boolean v3Preview, String optIn, String preview, SemconvMode expected) {
+    System.setProperty("otel.instrumentation.common.v3-preview", Boolean.toString(v3Preview));
+    System.setProperty("otel.semconv-stability.opt-in", optIn);
+    System.setProperty("otel.semconv-stability.preview", preview);
+    OpenTelemetry openTelemetry = OpenTelemetry.noop();
+    SemconvSelectionResolver resolver =
+        new SemconvSelectionResolver(
+            openTelemetry, general(), SemconvStability.v3Preview(openTelemetry));
+
+    assertThat(resolver.servicePeer()).isEqualTo(expected);
+  }
+
+  @ParameterizedTest
+  @MethodSource("servicePeerSelections")
+  void servicePeerSelectionFromDeclarativeConfig(
+      boolean v3Preview, String optIn, String preview, SemconvMode expected) {
+    String yaml =
+        "file_format: 1.1\n"
+            + "instrumentation/development:\n"
+            + "  general:\n"
+            + "    stability_opt_in_list: '"
+            + optIn
+            + "'\n"
+            + "  java:\n"
+            + "    common:\n"
+            + "      v3_preview: "
+            + v3Preview
+            + "\n"
+            + "      semconv_stability:\n"
+            + "        preview: ["
+            + preview
+            + "]\n";
+    OpenTelemetryConfigurationModel model =
+        DeclarativeConfiguration.parse(new ByteArrayInputStream(yaml.getBytes(UTF_8)));
+    ConfigProvider configProvider =
+        SdkConfigProvider.create(DeclarativeConfiguration.toConfigProperties(model));
+
+    assertThat(resolver(configProvider).servicePeer()).isEqualTo(expected);
+  }
+
+  private static Stream<Arguments> servicePeerSelections() {
+    return Stream.of(false, true)
+        .flatMap(
+            v3Preview ->
+                Stream.of(
+                    Arguments.of(v3Preview, "", "", SemconvMode.V0_STABLE),
+                    Arguments.of(v3Preview, "service.peer", "", SemconvMode.V0_STABLE),
+                    Arguments.of(v3Preview, "service.peer/dup", "", SemconvMode.V0_STABLE),
+                    Arguments.of(v3Preview, "", "service.peer", SemconvMode.V1_EXPERIMENTAL),
+                    Arguments.of(
+                        v3Preview,
+                        "",
+                        "service.peer/dup",
+                        SemconvMode.V1_EXPERIMENTAL.withDualEmit()),
+                    Arguments.of(
+                        v3Preview, "service.peer/dup", "service.peer", SemconvMode.V1_EXPERIMENTAL),
+                    Arguments.of(
+                        v3Preview,
+                        "service.peer",
+                        "service.peer/dup",
+                        SemconvMode.V1_EXPERIMENTAL.withDualEmit())));
+  }
+
+  private static SemconvSelectionResolver resolver(ConfigProvider configProvider) {
+    ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
+    when(openTelemetry.getGeneralInstrumentationConfig())
+        .thenReturn(configProvider.getGeneralInstrumentationConfig());
+    when(openTelemetry.getInstrumentationConfig("common"))
+        .thenReturn(configProvider.getInstrumentationConfig("common"));
+    return new SemconvSelectionResolver(
+        openTelemetry,
+        configProvider.getGeneralInstrumentationConfig(),
+        SemconvStability.v3Preview(openTelemetry));
   }
 
   @SafeVarargs

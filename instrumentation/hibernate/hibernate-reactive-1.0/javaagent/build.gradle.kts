@@ -85,13 +85,15 @@ tasks {
     }
   }
 
-  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+  val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
     .map { suite ->
-      register<Test>("${suite.name}StableSemconv") {
+      val semconvTestName =
+        if (suite.name == "test") "testPreviewSemconv" else "${suite.name}StableSemconv"
+      register<Test>(semconvTestName) {
         testClassesDirs = suite.sources.output.classesDirs
         classpath = suite.sources.runtimeClasspath
 
-        jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+        jvmArgs("-Dotel.semconv-stability.preview=service.peer")
       }
     }
 
@@ -112,7 +114,7 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, stableSemconvSuites)
+    dependsOn(testing.suites, previewSemconvSuites)
   }
 }
 
