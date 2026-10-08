@@ -4,6 +4,16 @@
 
 ### ⚠️ Breaking changes
 
+- Servlet principal and Spring Security identity capture now emit `user.name` and string-array
+  `user.roles` instead of `enduser.id` and comma-separated `enduser.role`. Replace
+  `otel.instrumentation.common.enduser.id.enabled` and
+  `otel.instrumentation.common.enduser.role.enabled` with
+  `otel.instrumentation.common.user.name.enabled` and
+  `otel.instrumentation.common.user.roles.enabled`. Replace
+  `otel.instrumentation.spring-security.enduser.role.granted-authority-prefix` with
+  `otel.instrumentation.spring-security.user.roles.granted-authority-prefix`.
+  The `otel.instrumentation.common.enduser.scope.enabled` setting and `enduser.scope` capture are
+  removed. Identity capture remains disabled by default.
 - Remove Log4j appender correlation reconstructed from trace-ID, span-ID, and
   trace-flags strings.
   For standalone asynchronous logging, configure
@@ -85,6 +95,10 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Rename `Experimental.setCaptureEnduserId` to `setCaptureUserName` in the Servlet 3.0 and 5.0
+  libraries. Remove `UserAttributesCapturer.setScopeEnabled(boolean)` and
+  `UserAttributesCapturer.setScopeGrantedAuthorityPrefix(String)`, and remove
+  `UserConfig.isScopeEnabled()` from `opentelemetry-instrumentation-api-incubator`.
 - Remove deprecated `Experimental.setCaptureRequestParameters` from Servlet 3.0 and Servlet 5.0
   libraries. Use `Experimental.setRequestParameters` with an `IncludeExclude` selector instead.
 - Remove deprecated `ProcessMetrics` and `SystemMetrics.registerObservers(Meter)` from
