@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.logging;
 
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.EarlyConfig;
@@ -26,16 +25,9 @@ final class StructuredAttributesConfig {
     List<String> included = getListProperty(environment, INCLUDED);
     List<String> excluded = getListProperty(environment, EXCLUDED);
     return IncludeExclude.builder()
-        .setIncluded(
-            isEmpty(included) && isEmpty(excluded)
-                ? singletonList("*")
-                : included == null ? emptyList() : included)
+        .setIncluded(included == null ? emptyList() : included)
         .setExcluded(excluded == null ? emptyList() : excluded)
         .build();
-  }
-
-  private static boolean isEmpty(@Nullable List<String> values) {
-    return values == null || values.isEmpty();
   }
 
   @Nullable

@@ -716,7 +716,11 @@ public final class LoggingEventMapper {
      */
     @CanIgnoreReturnValue
     public Builder setStructuredAttributes(@Nullable Predicate<String> structuredAttributes) {
-      this.structuredAttributes = structuredAttributes;
+      // OpenTelemetry rejects empty attribute names, which would drop the whole log record
+      this.structuredAttributes =
+          structuredAttributes == null
+              ? null
+              : key -> key != null && !key.isEmpty() && structuredAttributes.test(key);
       return this;
     }
 

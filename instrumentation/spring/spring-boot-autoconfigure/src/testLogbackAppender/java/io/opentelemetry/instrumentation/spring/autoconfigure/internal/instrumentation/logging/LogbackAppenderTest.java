@@ -81,29 +81,23 @@ class LogbackAppenderTest {
   }
 
   @Test
-  void absentStructuredSelectorCapturesAll() {
+  void absentStructuredSelectorDefersToAppenderConfiguration() {
     Map<String, Object> properties = new HashMap<>();
 
     assertStructuredSelector(
         structuredAttributes(properties),
-        selector -> {
-          assertThat(selector.matches("key1")).isTrue();
-          assertThat(selector.matches("key2")).isTrue();
-        });
+        selector -> assertThat(selector.isEmpty()).isTrue());
   }
 
   @Test
-  void emptyStructuredSelectorCapturesAll() {
+  void emptyStructuredSelectorDefersToAppenderConfiguration() {
     Map<String, Object> properties = new HashMap<>();
     properties.put("otel.instrumentation.common.logging.structured-attributes.included", "");
     properties.put("otel.instrumentation.common.logging.structured-attributes.excluded", "");
 
     assertStructuredSelector(
         structuredAttributes(properties),
-        selector -> {
-          assertThat(selector.matches("key1")).isTrue();
-          assertThat(selector.matches("key2")).isTrue();
-        });
+        selector -> assertThat(selector.isEmpty()).isTrue());
   }
 
   @Test
