@@ -1,7 +1,8 @@
 description: >
-  This instrumentation enables context propagation for Kotlin coroutines. The separate
-  `kotlinx-coroutines-annotations` instrumentation supports @WithSpan annotations on Kotlin suspend
-  functions and, starting with version 1.3.0, methods returning Kotlin Flow.
+  This instrumentation enables context propagation for Kotlin coroutines and, for Kotlin Flow
+  (starting with version 1.3.0), completes spans of Flow-returning methods asynchronously. The
+  separate `kotlinx-coroutines-annotations` instrumentation, which is disabled by default, supports
+  @WithSpan annotations on Kotlin suspend functions.
 display_name: Kotlin Coroutines
 features:
   - CONTEXT_PROPAGATION
