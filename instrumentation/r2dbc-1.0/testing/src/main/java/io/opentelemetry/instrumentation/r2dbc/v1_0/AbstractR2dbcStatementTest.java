@@ -32,9 +32,11 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.r2dbc.spi.Batch;
+import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactories;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
+import io.r2dbc.spi.Result;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,6 +44,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.UUID;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
@@ -189,6 +192,47 @@ public abstract class AbstractR2dbcStatementTest {
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void filteredResultConsumptionFinishesQuerySpan() {
+    ConnectionFactoryOptions options =
+        ConnectionFactoryOptions.parse("r2dbc:h2:mem:///filtered_result_" + UUID.randomUUID());
+    Connection connection =
+        Mono.from(createProxyConnectionFactory(options).create()).block(Duration.ofSeconds(10));
+    try {
+      getTesting()
+          .runWithSpan(
+              "parent",
+              () ->
+                  assertThat(
+                          Flux.from(connection.createStatement("SELECT 42").execute())
+                              .flatMap(
+                                  result ->
+                                      result
+                                          .filter(segment -> segment instanceof Result.RowSegment)
+                                          .flatMap(
+                                              segment ->
+                                                  Mono.just(
+                                                      ((Result.RowSegment) segment)
+                                                          .row()
+                                                          .get(0, Integer.class))))
+                              .collectList()
+                              .block(Duration.ofSeconds(10)))
+                      .containsExactly(42));
+    } finally {
+      Mono.from(connection.close()).block(Duration.ofSeconds(10));
+    }
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+                    span ->
+                        span.hasName("SELECT")
+                            .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))));
   }
 
