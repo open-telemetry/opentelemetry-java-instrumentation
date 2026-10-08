@@ -8,6 +8,3 @@
 | `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.excluded`            | List    |         | Exclude metrics from JFR using case-sensitive `*` and `?` glob patterns. Excluded patterns take precedence over included patterns. |
 | `otel.instrumentation.runtime-telemetry.experimental.package-emitter.enabled`         | Boolean | `false` | Enable creating events for JAR libraries used by the application.                                                                  |
 | `otel.instrumentation.runtime-telemetry.experimental.package-emitter.jars-per-second` | Integer | 10      | The number of JAR files processed per second.                                                                                      |
-
-JFR is disabled by default. See the [library documentation](library/README.md#configuration) for
-selector semantics and declarative YAML examples.
