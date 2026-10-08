@@ -213,9 +213,6 @@ The following metrics have JFR implementations and can be selected for JFR. JMX 
 
 The attributes reported on the memory metrics (`jvm.memory.*`) and gc metrics (`jvm.gc.*`) are dependent on the garbage collector used by the application, since each garbage collector organizes memory pools differently and has different strategies for reclaiming memory during garbage collection.
 
-JMX `jvm.gc.duration` metrics always include `jvm.gc.cause` from the JVM's GC notification. All metrics
-use the `io.opentelemetry.runtime-telemetry` instrumentation scope.
-
 The following lists attributes reported for a variety of garbage collectors. Notice that attributes are not necessarily constant across `*.used`, `*.committed`, and `*.limit` since not all memory pools report a limit.
 
 - CMS Garbage Collector
