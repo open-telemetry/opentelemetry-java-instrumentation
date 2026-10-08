@@ -9,6 +9,7 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 
 import io.opentelemetry.instrumentation.spring.pulsar.v1_0.AbstractSpringPulsarTest;
@@ -32,7 +33,7 @@ class SpringPulsarTest extends AbstractSpringPulsarTest {
                     span.hasName("process " + OTEL_TOPIC)
                         .hasKind(CONSUMER)
                         .hasParent(trace.getSpan(1))
-                        .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
+                        .hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())))
                         .hasAttributesSatisfyingExactly(processAttributes()),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))),
         trace ->

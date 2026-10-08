@@ -12,6 +12,10 @@ convention not caught by CI.
 
 ## Behavior coverage
 
+- Test supported behavior. Do not add or request tests that only prove
+  removed settings are ignored, or preview variants that repeat the same behavior.
+  When configuration wiring changes, test the real initialization path and emitted
+  telemetry, not just helpers.
 - For a javaagent change supporting multiple runtime library versions,
   look for tests with the installed agent against the required versions.
   Direct helper tests and `javaagent-unit-tests` do not exercise class

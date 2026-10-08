@@ -12,16 +12,12 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
-import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 import io.opentelemetry.api.trace.SpanContext;
-import io.opentelemetry.api.trace.TraceFlags;
-import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
-import io.opentelemetry.instrumentation.log4j.contextdata.v2_17.internal.ContextDataKeys;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
@@ -52,6 +48,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.junitpioneer.jupiter.SetSystemProperty;
 
 class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
@@ -111,8 +109,9 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
     }
   }
 
-  @Test
-  void logWithCarriedContextFromContextData() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void logWithCarriedContextFromContextData(boolean rootContext) {
     ContextCapturingLogRecordProcessor logRecordProcessor =
         new ContextCapturingLogRecordProcessor();
     InMemoryLogRecordExporter logRecordExporter = InMemoryLogRecordExporter.create();
@@ -133,21 +132,25 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
 
     try {
       StringMap contextData = ContextDataFactory.createContextData();
-      contextData.putValue(
-          OTEL_CONTEXT_DATA_KEY, Context.current().with(TEST_CONTEXT_KEY, "context-value"));
+      Context carriedContext =
+          rootContext ? Context.root() : Context.root().with(TEST_CONTEXT_KEY, "context-value");
+      contextData.putValue(OTEL_CONTEXT_DATA_KEY, carriedContext);
 
-      appender.append(
-          Log4jLogEvent.newBuilder()
-              .setLoggerName("TestLogger")
-              .setLevel(Level.INFO)
-              .setMessage(new FormattedMessage("log message 1", (Object) null))
-              .setContextData(contextData)
-              .build());
+      try (Scope ignored =
+          Context.current().with(TEST_CONTEXT_KEY, "appender-thread-context").makeCurrent()) {
+        appender.append(
+            Log4jLogEvent.newBuilder()
+                .setLoggerName("TestLogger")
+                .setLevel(Level.INFO)
+                .setMessage(new FormattedMessage("log message 1", (Object) null))
+                .setContextData(contextData)
+                .build());
+      }
 
       await()
           .untilAsserted(
               () -> assertThat(logRecordExporter.getFinishedLogRecordItems()).hasSize(1));
-      assertThat(logRecordProcessor.getContext().get(TEST_CONTEXT_KEY)).isEqualTo("context-value");
+      assertThat(logRecordProcessor.getContext()).isSameAs(carriedContext);
     } finally {
       openTelemetry.close();
     }
@@ -559,9 +562,8 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
   }
 
   @Test
-  void logWithSpanContextFromContextData() {
-    assumeFalse(Boolean.getBoolean("otel.instrumentation.common.v3-preview"));
-
+  @SetSystemProperty(key = "otel.instrumentation.common.v3-preview", value = "false")
+  void logWithOnlySpanContextStringsUsesRootContext() {
     OpenTelemetryAppender.resetForTest();
     OpenTelemetryAppender appender =
         OpenTelemetryAppender.builder()
@@ -573,11 +575,10 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
     String traceId = "ff000000000000000000000000000041";
     String spanId = "ff00000000000041";
     String traceFlags = "01";
-    ContextDataKeys contextDataKeys = ContextDataKeys.create(testing.getOpenTelemetry());
     StringMap contextData = ContextDataFactory.createContextData();
-    contextData.putValue(contextDataKeys.getTraceIdKey(), traceId);
-    contextData.putValue(contextDataKeys.getSpanIdKey(), spanId);
-    contextData.putValue(contextDataKeys.getTraceFlagsKey(), traceFlags);
+    contextData.putValue("trace_id", traceId);
+    contextData.putValue("span_id", spanId);
+    contextData.putValue("trace_flags", traceFlags);
 
     StatusMessageCollector statusMessages = new StatusMessageCollector();
     StatusLogger.getLogger().registerListener(statusMessages);
@@ -592,18 +593,11 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
               .setThreadName("application-thread")
               .build());
 
-      SpanContext spanContext =
-          SpanContext.create(
-              traceId, spanId, TraceFlags.fromHex(traceFlags, 0), TraceState.getDefault());
       testing.waitAndAssertLogRecords(
-          logRecord -> logRecord.hasBody("log message 1").hasSpanContext(spanContext));
+          logRecord -> logRecord.hasBody("log message 1").hasSpanContext(SpanContext.getInvalid()));
       assertThat(statusMessages.getMessages())
-          .anySatisfy(
-              message ->
-                  assertThat(message)
-                      .contains(
-                          "recovering span context from Log4j context data",
-                          OpenTelemetryAppenderContextDataInjector.class.getName()));
+          .noneMatch(
+              message -> message.contains("recovering span context from Log4j context data"));
     } finally {
       StatusLogger.getLogger().removeListener(statusMessages);
     }

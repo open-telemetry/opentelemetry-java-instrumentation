@@ -13,19 +13,12 @@ import static java.util.stream.Collectors.toList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.logs.LogRecordBuilder;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanContext;
-import io.opentelemetry.api.trace.TraceFlags;
-import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataAccessor;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.LogEventMapper;
-import io.opentelemetry.instrumentation.log4j.contextdata.v2_17.internal.ContextDataKeys;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,7 +49,6 @@ import org.apache.logging.log4j.core.config.plugins.PluginBuilderAttribute;
 import org.apache.logging.log4j.core.config.plugins.PluginBuilderFactory;
 import org.apache.logging.log4j.core.time.Instant;
 import org.apache.logging.log4j.message.MapMessage;
-import org.apache.logging.log4j.status.StatusLogger;
 import org.apache.logging.log4j.util.ReadOnlyStringMap;
 
 @Plugin(
@@ -72,10 +64,8 @@ public class OpenTelemetryAppender extends AbstractAppender {
 
   private final BlockingQueue<LogEventToReplay> eventsToReplay;
   private final AtomicBoolean replayLimitWarningLogged = new AtomicBoolean();
-  private final AtomicBoolean legacyContextDataWarningLogged = new AtomicBoolean();
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
   private final boolean captureCodeAttributes;
-  private final boolean v3Preview;
 
   /**
    * Installs the {@code openTelemetry} instance on any {@link OpenTelemetryAppender}s identified in
@@ -419,10 +409,6 @@ public class OpenTelemetryAppender extends AbstractAppender {
       @Nullable OpenTelemetry openTelemetry) {
     super(name, filter, layout, ignoreExceptions, properties);
 
-    DeclarativeConfigProperties commonConfig =
-        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
-    boolean v3Preview = commonConfig.getBoolean("v3_preview", false);
-
     this.mapper =
         createMapper(
             captureExperimentalAttributes,
@@ -434,7 +420,6 @@ public class OpenTelemetryAppender extends AbstractAppender {
             contextDataAttributes);
     this.openTelemetry = openTelemetry;
     this.captureCodeAttributes = captureCodeAttributes;
-    this.v3Preview = v3Preview;
     if (numLogsCapturedBeforeOtelInstall != 0) {
       this.eventsToReplay = new ArrayBlockingQueue<>(numLogsCapturedBeforeOtelInstall);
     } else {
@@ -499,7 +484,6 @@ public class OpenTelemetryAppender extends AbstractAppender {
       openTelemetry = null;
       eventsToReplay.clear();
       replayLimitWarningLogged.set(false);
-      legacyContextDataWarningLogged.set(false);
     } finally {
       writeLock.unlock();
     }
@@ -545,7 +529,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     LogRecordBuilder builder =
         openTelemetry.getLogsBridge().loggerBuilder(instrumentationName).build().logRecordBuilder();
     ReadOnlyStringMap contextData = event.getContextData();
-    Context context = getContext(openTelemetry, event, contextData);
+    Context context = getContext(contextData);
 
     mapper.mapLogEvent(
         builder,
@@ -568,62 +552,12 @@ public class OpenTelemetryAppender extends AbstractAppender {
     builder.emit();
   }
 
-  private Context getContext(
-      OpenTelemetry openTelemetry, LogEvent event, ReadOnlyStringMap contextData) {
+  private static Context getContext(ReadOnlyStringMap contextData) {
     Object context = contextData.getValue(OTEL_CONTEXT_DATA_KEY);
     if (context instanceof Context) {
       return (Context) context;
     }
-    Context currentContext = Context.current();
-    if (currentContext != Context.root()) {
-      return currentContext;
-    }
-
-    if (!v3Preview) {
-      // when using async logger we'll be executing on a different thread than what started logging
-      // reconstruct the context from context data
-      ContextDataAccessor<ReadOnlyStringMap> contextDataAccessor = ContextDataAccessorImpl.INSTANCE;
-      ContextDataKeys contextDataKeys = ContextDataKeys.create(openTelemetry);
-      String traceId = contextDataAccessor.getValue(contextData, contextDataKeys.getTraceIdKey());
-      String spanId = contextDataAccessor.getValue(contextData, contextDataKeys.getSpanIdKey());
-      String traceFlags =
-          contextDataAccessor.getValue(contextData, contextDataKeys.getTraceFlagsKey());
-      if (traceId != null && spanId != null && traceFlags != null) {
-        warnIfUsingLegacyContextDataForAsyncLoggers(event);
-        return Context.root()
-            .with(
-                Span.wrap(
-                    SpanContext.create(
-                        traceId,
-                        spanId,
-                        TraceFlags.fromHex(traceFlags, 0),
-                        TraceState.getDefault())));
-      }
-    }
-    return currentContext;
-  }
-
-  private void warnIfUsingLegacyContextDataForAsyncLoggers(LogEvent event) {
-    if (!wasLoggedOnDifferentThread(event)) {
-      return;
-    }
-    if (legacyContextDataWarningLogged.getAndSet(true)) {
-      return;
-    }
-    StatusLogger.getLogger()
-        .warn(
-            "OpenTelemetry Log4j appender is recovering span context from Log4j context data "
-                + "for an event logged on another thread. This compatibility behavior only "
-                + "propagates span context and will be removed in 3.0. Configure "
-                + "log4j2.ContextDataInjector="
-                + OpenTelemetryAppenderContextDataInjector.class.getName()
-                + " to propagate the full OpenTelemetry Context for async loggers.");
-  }
-
-  private static boolean wasLoggedOnDifferentThread(LogEvent event) {
-    long eventThreadId = event.getThreadId();
-    // Only treat this as async handoff when Log4j captured a usable, different thread id.
-    return eventThreadId > 0 && eventThreadId != Thread.currentThread().getId();
+    return Context.current();
   }
 
   private enum ContextDataAccessorImpl implements ContextDataAccessor<ReadOnlyStringMap> {

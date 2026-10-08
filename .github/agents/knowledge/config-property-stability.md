@@ -12,9 +12,9 @@ Instrumentation code reads configuration through the **declarative config API**
 ```java
 DeclarativeConfigProperties config =
     DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "grpc");
-boolean emitEvents = config.getBoolean("emit_message_events", true);
-List<String> metadata = config.get("capture_metadata").get("client")
-    .getScalarList("request", String.class, emptyList());
+DeclarativeConfigProperties requestMetadata = config.get("client").get("request_metadata");
+List<String> included = requestMetadata.getScalarList("included", String.class);
+List<String> excluded = requestMetadata.getScalarList("excluded", String.class);
 ```
 
 Users can supply values via **flat properties** (system properties, env vars) or **declarative
