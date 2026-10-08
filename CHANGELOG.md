@@ -22,6 +22,15 @@
   `otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.*`)
   were removed and are now ignored, so migrate them to the common selectors to keep filtering.
   Log4j `MapMessage` keys are emitted as their original log attribute names.
+- OSHI system metrics use schema version 1.44.0 and scope `io.opentelemetry.oshi-5.0`.
+  Update `system.network.packets` to `system.network.packet.count`, plural count units to
+  `{packet}`, `{error}`, and `{operation}`. Replace memory `state` with `system.memory.state`;
+  for network I/O and errors, replace `device` and `direction` with `network.interface.name`
+  and `network.io.direction`. Packet counts use `system.device` and `network.io.direction`;
+  disk metrics use `system.device` and `disk.io.direction`.
+  Remove `otel.instrumentation.oshi.experimental-metrics.enabled`; OSHI no longer emits `runtime.java.memory`
+  or `runtime.java.cpu_time`. `jvm.memory.used` measures JVM pools, not process RSS or virtual
+  memory, and `jvm.cpu.time` does not split user/system CPU time.
 - Remove the deprecated GraphQL configuration properties
   `otel.instrumentation.graphql.add-operation-name-to-span-name.enabled` and
   `otel.instrumentation.graphql.query-sanitizer.enabled`. Use
@@ -50,6 +59,17 @@
   singular count units such as `{connection}`, and seconds instead of milliseconds for durations.
   Pool attributes use `db.client.connection.pool.name` and `db.client.connection.state`; unnamed
   pools use stable database-derived names, and DBCP retains the first registered pool name.
+- Servlet request parameter attribute keys now preserve the original parameter-name casing, and
+  trace/span request attributes are disabled by default. Re-enable the latter with
+  `otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled=true`.
+- Elasticsearch and OpenSearch query bodies are now always captured.
+  The `otel.instrumentation.elasticsearch.capture-search-query` and
+  `otel.instrumentation.opensearch.capture-search-query` properties
+  are no longer supported and have no replacement. Query sanitization remains enabled
+  by default and configurable with
+  `otel.instrumentation.elasticsearch.query-sanitization.enabled` or
+  `otel.instrumentation.opensearch.query-sanitization.enabled`, which override
+  `otel.instrumentation.common.db.query-sanitization.enabled`.
 
 ### ⚠️ Breaking changes to non-stable APIs
 
@@ -64,6 +84,11 @@
   `structuredAttributesIncluded` / `structuredAttributesExcluded`. One selector filters all
   supported structured sources. Absent or empty selectors capture all structured attributes;
   an excluded `*` captures none. MDC and logger context capture remain separate and opt-in.
+- Remove deprecated `Experimental.setCaptureRequestParameters` from Servlet 3.0 and Servlet 5.0
+  libraries. Use `Experimental.setRequestParameters` with an `IncludeExclude` selector instead.
+- Remove deprecated `ProcessMetrics` and `SystemMetrics.registerObservers(Meter)` from
+  `opentelemetry-oshi`. Use `SystemMetrics.registerObservers(OpenTelemetry)` for system metrics
+  and continue closing the returned observers.
 - Move `CodeAttributesGetter`, `CodeAttributesExtractor`, and `CodeSpanNameExtractor` from
   `io.opentelemetry.instrumentation.api.incubator.semconv.code` in
   `opentelemetry-instrumentation-api-incubator` to `io.opentelemetry.instrumentation.api.semconv.code`
