@@ -41,7 +41,8 @@ tasks {
     jvmArgs("-Dotel.instrumentation.common.user.name.enabled=true")
     jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-    systemProperty("metadataConfig", "otel.instrumentation.common.user.name.enabled=true")
+    jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.included=test-*")
+    systemProperty("metadataConfig", "otel.instrumentation.common.user.name.enabled=true,otel.instrumentation.servlet.experimental.request-parameters.included=test-*")
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
