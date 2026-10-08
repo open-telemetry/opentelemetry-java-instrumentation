@@ -10,12 +10,12 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.logging.Level.WARNING;
 
 import io.opentelemetry.instrumentation.jmx.internal.ExperimentalJmxMetricHandler;
+import io.opentelemetry.instrumentation.jmx.internal.handler.HandlerRegistry;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -49,7 +49,7 @@ class BeanFinder {
   BeanFinder(
       MetricConfiguration conf,
       MetricRegistrar registrar,
-      Map<String, ExperimentalJmxMetricHandler> handlers,
+      HandlerRegistry handlerRegistry,
       long discoveryDelay) {
     this.conf = conf;
     this.registrar = registrar;
@@ -59,7 +59,7 @@ class BeanFinder {
     for (MetricDef metricDef : conf.getMetricDefs()) {
       for (MetricHandlerHolder holder : metricDef.getHandlers()) {
         String handlerName = holder.getHandlerName();
-        ExperimentalJmxMetricHandler handler = handlers.get(handlerName);
+        ExperimentalJmxMetricHandler handler = handlerRegistry.getHandler(handlerName);
         if (handler != null) {
           holder.setHandler(handler);
         } else {
@@ -185,7 +185,8 @@ class BeanFinder {
       }
       if (!validObjectNames.isEmpty()) {
         // Ready to collect metric values
-        registrar.enrollExtractor(connection, validObjectNames, extractor, attributeInfo);
+        registrar.enrollExtractor(
+            connection, validObjectNames, extractor, attributeInfo, conf.isUnstable(metricDef));
       }
     }
   }
@@ -193,7 +194,7 @@ class BeanFinder {
   private void resolveHandlers(
       Set<ObjectName> objectNames, MBeanServerConnection connection, MetricDef metricDef) {
     for (MetricHandlerHolder holder : metricDef.getHandlers()) {
-      registrar.enrollHandler(connection, objectNames, holder);
+      registrar.enrollHandler(connection, objectNames, holder, conf.isUnstable(metricDef));
     }
   }
 

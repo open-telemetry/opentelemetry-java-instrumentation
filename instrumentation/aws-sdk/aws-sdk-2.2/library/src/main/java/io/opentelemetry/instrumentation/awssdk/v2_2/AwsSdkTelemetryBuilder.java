@@ -23,6 +23,7 @@ public final class AwsSdkTelemetryBuilder {
   private boolean useXrayPropagator = true;
   private boolean messagingReceiveTelemetryEnabled;
   private boolean genaiCaptureMessageContent;
+  private boolean batchSendMessageCreationSpansEnabled = true;
 
   AwsSdkTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -32,9 +33,8 @@ public final class AwsSdkTelemetryBuilder {
    * Configures which message headers are captured as span attributes.
    *
    * <p>Header values are captured under the {@code messaging.header.<name>} attribute key. The
-   * {@code <name>} part in the attribute key is the header name with dashes replaced by underscores
-   * unless {@code otel.instrumentation.common.v3-preview} is enabled, in which case dashes are
-   * preserved.
+   * {@code <name>} part in the attribute key is the header name with its original spelling,
+   * including dashes.
    *
    * <p>Matching is case-sensitive. {@code ?} matches one character and {@code *} matches any number
    * of characters, including none. Excluded patterns take precedence over included patterns. A
@@ -143,6 +143,22 @@ public final class AwsSdkTelemetryBuilder {
   }
 
   /**
+   * Sets whether a producer "Create" span is emitted for each eligible entry in an SQS batch send.
+   * An entry is eligible when it does not already contain a creation context and an enabled
+   * propagation carrier can inject one. User message-attribute capacity applies only to the
+   * configured messaging propagator; the {@code AWSTraceHeader} system attribute does not use those
+   * slots.
+   *
+   * <p>This option is enabled by default.
+   */
+  @CanIgnoreReturnValue
+  public AwsSdkTelemetryBuilder setBatchSendMessageCreationSpansEnabled(
+      boolean batchSendMessageCreationSpansEnabled) {
+    this.batchSendMessageCreationSpansEnabled = batchSendMessageCreationSpansEnabled;
+    return this;
+  }
+
+  /**
    * Set whether Generative AI events include full content of user and assistant messages.
    *
    * <p>Note that full content can have data privacy and size concerns and care should be taken when
@@ -166,6 +182,7 @@ public final class AwsSdkTelemetryBuilder {
         useXrayPropagator,
         recordIndividualHttpError,
         messagingReceiveTelemetryEnabled,
-        genaiCaptureMessageContent);
+        genaiCaptureMessageContent,
+        batchSendMessageCreationSpansEnabled);
   }
 }

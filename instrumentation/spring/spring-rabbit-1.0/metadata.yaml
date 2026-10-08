@@ -6,4 +6,3 @@ semantic_conventions:
 configurations:
   - ref: messaging.headers.included
   - ref: messaging.headers.excluded
-  - ref: messaging.capture-headers

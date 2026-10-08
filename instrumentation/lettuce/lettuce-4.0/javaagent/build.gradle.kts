@@ -22,6 +22,7 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
@@ -45,8 +46,8 @@ tasks {
   val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
+    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
   }
 
   val testConnectionTelemetryEnabledStableSemconv =
@@ -55,11 +56,11 @@ tasks {
       classpath = sourceSets.test.get().runtimeClasspath
       jvmArgs(
         "-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true",
-        "-Dotel.semconv-stability.opt-in=database,service.peer"
+        "-Dotel.semconv-stability.opt-in=service.peer"
       )
       systemProperty(
         "metadataConfig",
-        "otel.instrumentation.lettuce.connection-telemetry.enabled=true,otel.semconv-stability.opt-in=database,service.peer"
+        "otel.instrumentation.lettuce.connection-telemetry.enabled=true,otel.semconv-stability.opt-in=service.peer"
       )
     }
 

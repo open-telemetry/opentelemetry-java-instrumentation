@@ -1,11 +1,8 @@
 # [Testing] Experimental Feature Flag Tests
 
-## Quick Reference
-
-- Use when: any `experimental` flag (e.g., `experimental-span-attributes`,
-  `emit-experimental-telemetry`, `experimental-metrics.enabled`) appears in JVM args or
-  system properties of a test task
-- Review focus: task wiring/metadata config and assertion patterns for flag-on vs flag-off behavior
+Consult this article when adding experimental-attribute coverage or moving a
+flag out of the default test task. It shows how to wire `testExperimental` and
+assert both flag modes.
 
 ## What `testExperimental` Is For
 
@@ -37,6 +34,12 @@ block but there is no dedicated `testExperimental` task, fix it:
 The `testExperimental` task follows the standard custom test task pattern — see
 [gradle-conventions.md](gradle-conventions.md) for `testClassesDirs`, `classpath`,
 `collectMetadata`, `metadataConfig`, and `check` wiring requirements.
+
+When the module creates an experimental variant for every `JvmTestSuite` and source suites have
+task-specific JVM arguments or system properties, follow the
+[source suite JVM settings](gradle-conventions.md#preserving-source-suite-jvm-settings)
+pattern. Inherit the source values, then add the experimental flag. Do not reconstruct source
+settings with checks against `suite.name`.
 
 The domain-specific parts are the `jvmArgs` and `metadataConfig` values:
 

@@ -5,11 +5,14 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static java.util.Arrays.asList;
 
 import io.lettuce.core.RedisClient;
+import io.lettuce.core.RedisCommandExecutionException;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -31,6 +34,8 @@ public abstract class AbstractLettuceClientTest {
   @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   protected static final int DB_INDEX = 0;
+  protected static final String WRONG_TYPE_KEY = "mykey";
+  protected static final String WRONG_TYPE_VALUE = "value";
 
   protected GenericContainer<?> redisServer =
       new GenericContainer<>("redis:6.2.3-alpine")
@@ -91,14 +96,43 @@ public abstract class AbstractLettuceClientTest {
             event -> event.hasName("redis.encode.end"));
   }
 
+  protected static void assertCommandErrorEvents(SpanData span) {
+    if (testLatestDeps()) {
+      assertThat(span)
+          .hasException(
+              new RedisCommandExecutionException(
+                  "WRONGTYPE Operation against a key holding the wrong kind of value"))
+          .hasEventsSatisfyingExactly(
+              event -> event.hasName("redis.encode.start"),
+              event -> event.hasName("redis.encode.end"),
+              event -> event.hasName("exception"));
+    } else {
+      assertCommandEncodeEvents(span);
+    }
+  }
+
+  protected void assertCommandErrorMetric(String errorType) {
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.lettuce-5.1",
+            "db.client.operation.duration",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point.hasAttributesSatisfying(
+                                                equalTo(ERROR_TYPE, errorType))))));
+  }
+
   protected String spanName(String operation) {
     return spanName(operation, host, port);
   }
 
   protected static String spanName(String operation, String serverAddress, long serverPort) {
-    if (emitStableDatabaseSemconv()) {
-      return operation + " " + serverAddress + ":" + serverPort;
-    }
-    return operation;
+    return operation + " " + serverAddress + ":" + serverPort;
   }
 }

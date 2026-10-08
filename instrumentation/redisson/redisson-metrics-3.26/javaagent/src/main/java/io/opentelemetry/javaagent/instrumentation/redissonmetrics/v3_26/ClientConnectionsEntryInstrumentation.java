@@ -50,8 +50,7 @@ class ClientConnectionsEntryInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) int regularMinIdle,
         @Advice.Argument(2) int regularMax,
         @Advice.Argument(5) MasterSlaveServersConfig config) {
-      RedissonConnectionPoolMetrics.registerMetrics(
-          entry, redisClient, regularMinIdle, regularMax, config);
+      RedissonSingletons.registerMetrics(entry, redisClient, regularMinIdle, regularMax, config);
     }
   }
 }

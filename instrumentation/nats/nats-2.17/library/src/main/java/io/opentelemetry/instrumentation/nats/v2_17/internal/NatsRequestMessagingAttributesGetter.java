@@ -13,8 +13,14 @@ import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 
-final class NatsRequestMessagingAttributesGetter
+class NatsRequestMessagingAttributesGetter
     implements MessagingAttributesGetter<NatsRequest, Object> {
+
+  private final boolean boundJetStreamAckDestination;
+
+  NatsRequestMessagingAttributesGetter(boolean boundJetStreamAckDestination) {
+    this.boundJetStreamAckDestination = boundJetStreamAckDestination;
+  }
 
   @Override
   public String getSystem(NatsRequest request) {
@@ -29,6 +35,9 @@ final class NatsRequestMessagingAttributesGetter
   @Nullable
   @Override
   public String getDestinationTemplate(NatsRequest request) {
+    if (boundJetStreamAckDestination && NatsSubject.isJetStreamSettlement(request.getSubject())) {
+      return NatsSubject.JETSTREAM_ACK_SUBJECT;
+    }
     if (isTemporaryDestination(request)) {
       return request.getInboxPrefix();
     }
@@ -48,17 +57,6 @@ final class NatsRequestMessagingAttributesGetter
   @Nullable
   @Override
   public String getConversationId(NatsRequest request) {
-    return null;
-  }
-
-  @Override
-  public Long getMessageBodySize(NatsRequest request) {
-    return request.getDataSize();
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(NatsRequest request) {
     return null;
   }
 

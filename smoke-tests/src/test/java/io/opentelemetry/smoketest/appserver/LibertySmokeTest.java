@@ -27,7 +27,7 @@ abstract class LibertySmokeTest extends AppServerTest {
                 Duration.ofMinutes(3), ".*server is ready to run a smarter planet.*"));
   }
 
-  @AppServer(version = "20.0.0.12", jdk = "8")
+  @AppServer(version = "20.0.0.12", jdk = "8", inReducedMatrix = true)
   static class Liberty20Jdk8 extends LibertySmokeTest {}
 
   @AppServer(version = "20.0.0.12", jdk = "8-openj9")
@@ -39,7 +39,7 @@ abstract class LibertySmokeTest extends AppServerTest {
   @AppServer(version = "20.0.0.12", jdk = "11-openj9")
   static class Liberty20Jdk11Openj9 extends LibertySmokeTest {}
 
-  @AppServer(version = "21.0.0.12", jdk = "8")
+  @AppServer(version = "21.0.0.12", jdk = "8", inReducedMatrix = true)
   static class Liberty21Jdk8 extends LibertySmokeTest {}
 
   @AppServer(version = "21.0.0.12", jdk = "8-openj9")
@@ -57,7 +57,7 @@ abstract class LibertySmokeTest extends AppServerTest {
   @AppServer(version = "21.0.0.12", jdk = "17-openj9")
   static class Liberty21Jdk17Openj9 extends LibertySmokeTest {}
 
-  @AppServer(version = "22.0.0.12", jdk = "8")
+  @AppServer(version = "22.0.0.12", jdk = "8", inReducedMatrix = true)
   static class Liberty22Jdk8 extends LibertySmokeTest {}
 
   @AppServer(version = "22.0.0.12", jdk = "8-openj9")
@@ -75,7 +75,7 @@ abstract class LibertySmokeTest extends AppServerTest {
   @AppServer(version = "22.0.0.12", jdk = "17-openj9")
   static class Liberty22Jdk17Openj9 extends LibertySmokeTest {}
 
-  @AppServer(version = "23.0.0.12", jdk = "8")
+  @AppServer(version = "23.0.0.12", jdk = "8", inReducedMatrix = true)
   static class Liberty23Jdk8 extends LibertySmokeTest {
     @Override
     protected boolean testJsp() {
@@ -109,7 +109,7 @@ abstract class LibertySmokeTest extends AppServerTest {
   @AppServer(version = "23.0.0.12", jdk = "21-openj9")
   static class Liberty23Jdk21Openj9 extends LibertySmokeTest {}
 
-  @AppServer(version = "26.0.0.3", jdk = "8")
+  @AppServer(version = "26.0.0.3", jdk = "8", inReducedMatrix = true)
   static class Liberty26Jdk8 extends LibertySmokeTest {
     @Override
     protected boolean testJsp() {

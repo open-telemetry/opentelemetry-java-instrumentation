@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.ExperimentalTest.experimental;
+import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.SuppressionTest.addNestedHttpClientSpan;
+import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.SuppressionTest.nestedHttpClientSpans;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
@@ -30,6 +32,10 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
@@ -104,76 +110,97 @@ class TwoServicesWithDirectClientCamelTest
     template.sendBody("direct:input", "Example request");
 
     testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("input")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("camel.uri"), experimental("direct://input"))),
-                span ->
-                    span.hasName("POST")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(HTTP_REQUEST_METHOD, "POST"),
-                            equalTo(URL_FULL, "http://localhost:" + portOne + "/serviceOne"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                            equalTo(
-                                stringKey("camel.uri"),
-                                experimental("http://localhost:" + portOne + "/serviceOne"))),
-                span ->
-                    span.hasName("POST /serviceOne")
-                        .hasKind(SpanKind.SERVER)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(HTTP_REQUEST_METHOD, "POST"),
-                            equalTo(URL_FULL, "http://localhost:" + portOne + "/serviceOne"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                            equalTo(
-                                stringKey("camel.uri"),
-                                experimental("http://0.0.0.0:" + portOne + "/serviceOne"))),
-                span ->
-                    span.hasName("POST")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(2))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(HTTP_REQUEST_METHOD, "POST"),
-                            equalTo(URL_FULL, "http://127.0.0.1:" + portTwo + "/serviceTwo"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                            equalTo(
-                                stringKey("camel.uri"),
-                                experimental("http://127.0.0.1:" + portTwo + "/serviceTwo"))),
-                span ->
-                    span.hasName("POST /serviceTwo")
-                        .hasKind(SpanKind.SERVER)
-                        .hasParent(trace.getSpan(3))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(HTTP_REQUEST_METHOD, "POST"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                            equalTo(URL_SCHEME, "http"),
-                            equalTo(URL_PATH, "/serviceTwo"),
-                            equalTo(USER_AGENT_ORIGINAL, "Jakarta Commons-HttpClient/3.1"),
-                            equalTo(HTTP_ROUTE, "/serviceTwo"),
-                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(SERVER_PORT, portTwo),
-                            equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class))),
-                span ->
-                    span.hasName("POST /serviceTwo")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(4))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(HTTP_REQUEST_METHOD, "POST"),
-                            equalTo(URL_FULL, "http://127.0.0.1:" + portTwo + "/serviceTwo"),
-                            equalTo(
-                                stringKey("camel.uri"),
-                                experimental(
-                                    "jetty:http://0.0.0.0:"
-                                        + portTwo
-                                        + "/serviceTwo?arg=value")))));
+        trace -> {
+          int nested = nestedHttpClientSpans();
+          List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
+          assertions.add(
+              span ->
+                  span.hasName("input")
+                      .hasKind(SpanKind.INTERNAL)
+                      .hasNoParent()
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(stringKey("camel.uri"), experimental("direct://input"))));
+          assertions.add(
+              span ->
+                  span.hasName("POST")
+                      .hasKind(SpanKind.CLIENT)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(HTTP_REQUEST_METHOD, "POST"),
+                          equalTo(URL_FULL, "http://localhost:" + portOne + "/serviceOne"),
+                          equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
+                          equalTo(
+                              stringKey("camel.uri"),
+                              experimental("http://localhost:" + portOne + "/serviceOne"))));
+          addNestedHttpClientSpan(
+              assertions,
+              "POST",
+              "http://localhost:" + portOne + "/serviceOne",
+              "localhost",
+              portOne,
+              trace.getSpan(1));
+          assertions.add(
+              span ->
+                  span.hasName("POST /serviceOne")
+                      .hasKind(SpanKind.SERVER)
+                      .hasParent(trace.getSpan(1 + nested))
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(HTTP_REQUEST_METHOD, "POST"),
+                          equalTo(URL_FULL, "http://localhost:" + portOne + "/serviceOne"),
+                          equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
+                          equalTo(
+                              stringKey("camel.uri"),
+                              experimental("http://0.0.0.0:" + portOne + "/serviceOne"))));
+          assertions.add(
+              span ->
+                  span.hasName("POST")
+                      .hasKind(SpanKind.CLIENT)
+                      .hasParent(trace.getSpan(2 + nested))
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(HTTP_REQUEST_METHOD, "POST"),
+                          equalTo(URL_FULL, "http://127.0.0.1:" + portTwo + "/serviceTwo"),
+                          equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
+                          equalTo(
+                              stringKey("camel.uri"),
+                              experimental("http://127.0.0.1:" + portTwo + "/serviceTwo"))));
+          addNestedHttpClientSpan(
+              assertions,
+              "POST",
+              "http://127.0.0.1:" + portTwo + "/serviceTwo",
+              "127.0.0.1",
+              portTwo,
+              trace.getSpan(3 + nested));
+          assertions.add(
+              span ->
+                  span.hasName("POST /serviceTwo")
+                      .hasKind(SpanKind.SERVER)
+                      .hasParent(trace.getSpan(3 + 2 * nested))
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(HTTP_REQUEST_METHOD, "POST"),
+                          equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
+                          equalTo(URL_SCHEME, "http"),
+                          equalTo(URL_PATH, "/serviceTwo"),
+                          equalTo(USER_AGENT_ORIGINAL, "Jakarta Commons-HttpClient/3.1"),
+                          equalTo(HTTP_ROUTE, "/serviceTwo"),
+                          equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                          equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                          equalTo(SERVER_PORT, portTwo),
+                          equalTo(CLIENT_ADDRESS, "127.0.0.1"),
+                          equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                          satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class))));
+          assertions.add(
+              span ->
+                  span.hasName("POST /serviceTwo")
+                      .hasKind(SpanKind.INTERNAL)
+                      .hasParent(trace.getSpan(4 + 2 * nested))
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(HTTP_REQUEST_METHOD, "POST"),
+                          equalTo(URL_FULL, "http://127.0.0.1:" + portTwo + "/serviceTwo"),
+                          equalTo(
+                              stringKey("camel.uri"),
+                              experimental(
+                                  "jetty:http://0.0.0.0:" + portTwo + "/serviceTwo?arg=value"))));
+          trace.hasSpansSatisfyingExactly(assertions);
+        });
   }
 }

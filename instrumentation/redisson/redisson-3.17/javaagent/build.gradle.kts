@@ -21,6 +21,33 @@ dependencies {
   testImplementation(project(":instrumentation:redisson:redisson-common-3.0:testing"))
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("redisson324Test") {
+      sources {
+        java {
+          setSrcDirs(listOf("src/test/java"))
+        }
+      }
+
+      dependencies {
+        implementation(project(":instrumentation:redisson:redisson-common-3.0:testing"))
+        // Redisson 3.24.3 routes configuration through ServiceManager.
+        implementation("org.redisson:redisson:3.24.3")
+      }
+
+      targets.all {
+        testTask.configure {
+          filter {
+            includeTestsMatching("*RedissonClientTest.configuredMasterSlaveServerTarget")
+            includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
+          }
+        }
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
@@ -28,15 +55,21 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
+  val redisson324StableSemconv = testing.suites.withType(JvmTestSuite::class)
+    .matching { it.name == "redisson324Test" }
+    .map { suite ->
+      register<Test>("${suite.name}StableSemconv") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
+        filter {
+          includeTestsMatching("*RedissonClientTest.configuredMasterSlaveServerTarget")
+          includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
+        }
+      }
+    }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites, redisson324StableSemconv)
   }
 
   if (otelProps.denyUnsafe) {

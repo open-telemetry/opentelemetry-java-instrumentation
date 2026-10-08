@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -16,11 +17,20 @@ import java.util.List;
 public class SpymemcachedInstrumentationModule extends InstrumentationModule {
 
   public SpymemcachedInstrumentationModule() {
-    super("spymemcached", "spymemcached-2.12");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "spymemcached-2.12" : "spymemcached",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"spymemcached"}
+            : new String[] {"spymemcached-2.12"});
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new MemcachedClientInstrumentation(), new MemcachedConnectionInstrumentation());
+    return asList(
+        new ConnectionFactoryInstrumentation(),
+        new MemcachedClientInstrumentation(),
+        new MemcachedConnectionInstrumentation(),
+        new MemcachedNodeInstrumentation(),
+        new OptimizedOperationInstrumentation());
   }
 }

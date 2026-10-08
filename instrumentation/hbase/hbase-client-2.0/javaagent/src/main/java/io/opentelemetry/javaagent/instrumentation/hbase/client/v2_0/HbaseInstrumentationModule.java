@@ -7,10 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -22,7 +22,11 @@ public final class HbaseInstrumentationModule extends InstrumentationModule {
   private static final String CALL_UTIL = "org.apache.hadoop.hbase.ipc.OpenTelemetryCallUtil";
 
   public HbaseInstrumentationModule() {
-    super("hbase-client", "hbase-client-2.0");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "hbase-client-2.0" : "hbase-client",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"hbase-client"}
+            : new String[] {"hbase-client-2.0"});
   }
 
   @Override
@@ -43,7 +47,7 @@ public final class HbaseInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<String> injectedClassNames() {
-    return singletonList(CALL_UTIL);
+    return asList(CALL_UTIL);
   }
 
   @Override
@@ -52,6 +56,7 @@ public final class HbaseInstrumentationModule extends InstrumentationModule {
         new RegionServerCallableInstrumentation(),
         new AbstractRpcClientInstrumentation(),
         new RpcConnectionInstrumentation(),
+        new NettyRpcDuplexHandlerInstrumentation(),
         new IpcCallInstrumentation());
   }
 }

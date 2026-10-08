@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcCommonAttributesExtractor.RPC_SYSTEM_NAME;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
@@ -26,42 +26,47 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import java.util.Collection;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class RpcClientMetricsTest {
+
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @Test
   void collectsMetrics() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
 
     OperationListener listener = RpcClientMetrics.get().create(meterProvider.get("test"));
 
     Attributes requestAttributes1 =
         Attributes.builder()
-            .put(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "grpc" : null)
+            .put(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "grpc" : null)
             .put(RPC_SYSTEM, emitOldRpcSemconv() ? "grpc" : null)
             .put(RPC_SERVICE, emitOldRpcSemconv() ? "myservice.EchoService" : null)
             .put(
                 RPC_METHOD,
-                emitStableRpcSemconv() ? "myservice.EchoService/exampleMethod" : "exampleMethod")
+                emitPreviewRpcSemconv() ? "myservice.EchoService/exampleMethod" : "exampleMethod")
             .put(RpcSizeAttributesExtractor.RPC_REQUEST_SIZE, 10)
             .build();
 
     Attributes requestAttributes2 =
         Attributes.builder()
-            .put(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "grpc" : null)
+            .put(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "grpc" : null)
             .put(RPC_SYSTEM, emitOldRpcSemconv() ? "grpc" : null)
             .put(RPC_SERVICE, emitOldRpcSemconv() ? "myservice.EchoService" : null)
             .put(
                 RPC_METHOD,
-                emitStableRpcSemconv() ? "myservice.EchoService/exampleMethod" : "exampleMethod")
+                emitPreviewRpcSemconv() ? "myservice.EchoService/exampleMethod" : "exampleMethod")
             .build();
 
     Attributes responseAttributes1 =
@@ -184,7 +189,7 @@ class RpcClientMetricsTest {
                                                       .hasSpanId("090a0b0c0d0e0f00")))));
     }
 
-    if (emitStableRpcSemconv()) {
+    if (emitPreviewRpcSemconv()) {
       assertThat(metrics1)
           .anySatisfy(
               metric ->
@@ -237,7 +242,7 @@ class RpcClientMetricsTest {
                                               equalTo(NETWORK_TRANSPORT, "tcp")))));
     }
 
-    if (emitStableRpcSemconv()) {
+    if (emitPreviewRpcSemconv()) {
       assertThat(metrics2)
           .anySatisfy(
               metric ->

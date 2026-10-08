@@ -6,12 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.geode.v1_4;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQueryAnalyzer;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
 
@@ -40,31 +40,12 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
 
   @Override
   @Nullable
-  // Old database semconv still uses db.name, so we must implement the deprecated hook.
-  @SuppressWarnings("deprecation")
-  public String getDbName(GeodeRequest request) {
-    return request.getRegion().getName();
-  }
-
-  @Override
-  @Nullable
   public String getDbQueryText(GeodeRequest request) {
     // Geode query language (OQL) is very different from SQL
     // but SQL sanitization is still useful to mask literals
-    if (emitStableDatabaseSemconv()) {
-      // even though not using the summary, this will use the same
-      // sanitization logic that will be the default under 3.0
-      //
-      // "String literals are delimited by single quotation marks."
-      // https://geode.apache.org/docs/guide/114/developing/query_additional/literals.html
-      return analyzer
-          .analyzeWithSummary(request.getQueryText(), DOUBLE_QUOTES_ARE_IDENTIFIERS)
-          .getQueryText();
-    } else {
-      // "String literals are delimited by single quotation marks."
-      // https://geode.apache.org/docs/guide/114/developing/query_additional/literals.html
-      return analyzer.analyze(request.getQueryText(), DOUBLE_QUOTES_ARE_IDENTIFIERS).getQueryText();
-    }
+    // "String literals are delimited by single quotation marks."
+    // https://geode.apache.org/docs/guide/114/developing/query_additional/literals.html
+    return analyzer.analyze(request.getQueryText(), DOUBLE_QUOTES_ARE_IDENTIFIERS).getQueryText();
   }
 
   @Override
@@ -79,5 +60,19 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
   @Nullable
   public String getDbOperationName(GeodeRequest request) {
     return request.getOperationName();
+  }
+
+  @Override
+  @Nullable
+  public String getServerAddress(GeodeRequest request) {
+    DbServerTarget target = request.getServerTarget();
+    return target == null ? null : target.getAddress();
+  }
+
+  @Override
+  @Nullable
+  public Integer getServerPort(GeodeRequest request) {
+    DbServerTarget target = request.getServerTarget();
+    return target == null ? null : target.getPort();
   }
 }

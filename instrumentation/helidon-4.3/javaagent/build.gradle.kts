@@ -13,6 +13,9 @@ muzzle {
 
 otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_21)
+  if (otelProps.testLatestDeps) {
+    javaToolchainVersion.set(JavaVersion.VERSION_27)
+  }
 }
 
 dependencies {

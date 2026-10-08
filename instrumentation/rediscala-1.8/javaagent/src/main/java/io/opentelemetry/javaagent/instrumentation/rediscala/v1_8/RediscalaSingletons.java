@@ -10,11 +10,13 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import redis.Request;
 import redis.commands.TransactionBuilder;
 
 public class RediscalaSingletons {
@@ -23,8 +25,12 @@ public class RediscalaSingletons {
 
   private static final Instrumenter<RediscalaRequest, Void> instrumenter;
 
-  public static final VirtualField<TransactionBuilder, ServerEndpoint> TRANSACTION_ENDPOINT =
-      VirtualField.find(TransactionBuilder.class, ServerEndpoint.class);
+  public static final VirtualField<TransactionBuilder, RediscalaTransactionState>
+      TRANSACTION_STATE =
+          VirtualField.find(TransactionBuilder.class, RediscalaTransactionState.class);
+
+  public static final VirtualField<Request, RedisServerTarget> REQUEST_TARGET =
+      VirtualField.find(Request.class, RedisServerTarget.class);
 
   static {
     RediscalaAttributesGetter dbAttributesGetter = new RediscalaAttributesGetter();
@@ -33,7 +39,7 @@ public class RediscalaSingletons {
         Instrumenter.<RediscalaRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(dbAttributesGetter))
+                RedisSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(builder);

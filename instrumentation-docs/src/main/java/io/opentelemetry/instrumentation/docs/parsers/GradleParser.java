@@ -34,6 +34,14 @@ public class GradleParser {
 
   private static final Pattern coreJdkPattern = Pattern.compile("coreJdk\\.set\\(true\\)");
 
+  /**
+   * Marker comment that excludes a muzzle directive from the generated documentation. Some pass
+   * blocks only exist to verify a sub-range or an alternate dependency set, and publishing their
+   * version range alongside the module's real range is misleading.
+   */
+  private static final Pattern docsIgnorePattern =
+      Pattern.compile("//\\s*instrumentation-docs:ignore");
+
   private static final Pattern ifBlockPattern =
       Pattern.compile("if\\s*\\([^)]*\\)\\s*\\{.*?}", Pattern.DOTALL);
 
@@ -76,6 +84,9 @@ public class GradleParser {
 
     while (passBlockMatcher.find()) {
       String passBlock = passBlockMatcher.group(1);
+      if (docsIgnorePattern.matcher(passBlock).find()) {
+        continue;
+      }
 
       if (coreJdkPattern.matcher(passBlock).find()) {
         if (minJavaVersion != null) {

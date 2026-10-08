@@ -18,12 +18,10 @@ package io.opentelemetry.instrumentation.jdbc.internal.parser;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-@SuppressWarnings("deprecation") // supporting old semconv until 3.0
 public final class InformixSqliUrlParser implements JdbcUrlParser {
 
   // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String IBM_INFORMIX = "ibm.informix";
-  private static final String OLD_SYSTEM = "informix-sqli";
 
   private static final int DEFAULT_PORT = 9088;
 
@@ -34,8 +32,7 @@ public final class InformixSqliUrlParser implements JdbcUrlParser {
   @Override
   public void parse(String jdbcUrl, ParseContext ctx) {
     ctx.system(IBM_INFORMIX);
-    ctx.oldSemconvSystem(OLD_SYSTEM);
-    ctx.port(DEFAULT_PORT);
+    ctx.defaultPort(DEFAULT_PORT);
 
     ctx.applyDataSourceProperties();
 

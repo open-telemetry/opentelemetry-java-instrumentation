@@ -20,6 +20,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -227,6 +228,28 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     }
 
     assertTheTraces(count, null, null, null, method, SUCCESS);
+  }
+
+  @Test
+  void clientAddressFromSocketPeer() {
+    assumeTrue(options.testClientAddressFromSocketPeer);
+
+    String method = "GET";
+    AggregatedHttpRequest request = request(SUCCESS, method);
+    AggregatedHttpResponse response = clientWithoutForwardedFor.execute(request).aggregate().join();
+
+    assertThat(response.status().code()).isEqualTo(SUCCESS.getStatus());
+    assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
+
+    String spanId = assertResponseHasCustomizedHeaders(response, SUCCESS, null);
+    assertTheTraces(
+        1,
+        null,
+        null,
+        spanId,
+        method,
+        SUCCESS,
+        span -> assertServerSpan(span, method, SUCCESS, SUCCESS.status, "127.0.0.1", "127.0.0.1"));
   }
 
   @Test
@@ -951,6 +974,24 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
       String spanId,
       String method,
       ServerEndpoint endpoint) {
+    assertTheTraces(
+        size,
+        traceId,
+        parentId,
+        spanId,
+        method,
+        endpoint,
+        span -> assertServerSpan(span, method, endpoint, endpoint.status));
+  }
+
+  private void assertTheTraces(
+      int size,
+      String traceId,
+      String parentId,
+      String spanId,
+      String method,
+      ServerEndpoint endpoint,
+      Consumer<SpanDataAssert> serverSpanAssertion) {
     List<Consumer<TraceAssert>> assertions = new ArrayList<>();
     for (int i = 0; i < size; i++) {
       assertions.add(
@@ -958,7 +999,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
             List<Consumer<SpanDataAssert>> spanAssertions = new ArrayList<>();
             spanAssertions.add(
                 span -> {
-                  assertServerSpan(span, method, endpoint, endpoint.status);
+                  serverSpanAssertion.accept(span);
                   if (traceId != null) {
                     span.hasTraceId(traceId);
                   }
@@ -1122,17 +1163,23 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   @CanIgnoreReturnValue
   protected SpanDataAssert assertServerSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint, int statusCode) {
+    return assertServerSpan(
+        span, method, endpoint, statusCode, options.sockPeerAddr.apply(endpoint), TEST_CLIENT_IP);
+  }
 
+  @CanIgnoreReturnValue
+  private SpanDataAssert assertServerSpan(
+      SpanDataAssert span,
+      String method,
+      ServerEndpoint endpoint,
+      int statusCode,
+      String expectedNetworkPeerAddress,
+      String expectedClientAddress) {
     Set<AttributeKey<?>> httpAttributes = options.httpAttributes.apply(endpoint);
     String expectedRoute = options.expectedHttpRoute.apply(endpoint, method);
     String name = options.expectedServerSpanNameMapper.apply(endpoint, method, expectedRoute);
 
-    span.hasName(name)
-        .hasKind(SpanKind.SERVER)
-        .satisfies(
-            spanData ->
-                assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
-                    .isEqualTo(SchemaUrls.V1_41_0));
+    span.hasName(name).hasKind(SpanKind.SERVER).satisfies(hasScopeSchemaUrl(SchemaUrls.V1_41_0));
     if (statusCode >= 500) {
       span.hasStatus(StatusData.error());
     }
@@ -1162,8 +1209,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
           }
 
           if (attrs.get(NETWORK_PEER_ADDRESS) != null) {
-            assertThat(attrs)
-                .containsEntry(NETWORK_PEER_ADDRESS, options.sockPeerAddr.apply(endpoint));
+            assertThat(attrs).containsEntry(NETWORK_PEER_ADDRESS, expectedNetworkPeerAddress);
           }
           if (attrs.get(NETWORK_PEER_PORT) != null) {
             assertThat(attrs)
@@ -1175,7 +1221,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                             .isNotEqualTo(Long.valueOf(port)));
           }
 
-          assertThat(attrs).containsEntry(CLIENT_ADDRESS, TEST_CLIENT_IP);
+          assertThat(attrs).containsEntry(CLIENT_ADDRESS, expectedClientAddress);
           // client.port is opt-in
           assertThat(attrs).doesNotContainKey(CLIENT_PORT);
 

@@ -1,0 +1,70 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.instrumentation.api.incubator.semconv.db.internal;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import org.junit.jupiter.api.Test;
+
+class RedisSpanNameExtractorTest {
+
+  private final Object request = new Object();
+
+  @Test
+  void omitsNamespaceFromSpanName() {
+    TestGetter getter = new TestGetter();
+
+    assertThat(getter.getDbNamespace(request)).isEqualTo("3");
+    assertThat(RedisSpanNameExtractor.create(getter).extract(request))
+        .isEqualTo("GET localhost:6379");
+  }
+
+  @Test
+  void usesQuerySummary() {
+    TestGetter getter =
+        new TestGetter() {
+          @Override
+          public String getDbQuerySummary(Object request) {
+            return "GET key";
+          }
+        };
+
+    assertThat(RedisSpanNameExtractor.create(getter).extract(request)).isEqualTo("GET key");
+  }
+
+  private static class TestGetter implements DbClientAttributesGetter<Object, Void> {
+    @Override
+    public String getDbQueryText(Object request) {
+      return null;
+    }
+
+    @Override
+    public String getDbOperationName(Object request) {
+      return "GET";
+    }
+
+    @Override
+    public String getDbSystemName(Object request) {
+      return "redis";
+    }
+
+    @Override
+    public String getDbNamespace(Object request) {
+      return "3";
+    }
+
+    @Override
+    public String getServerAddress(Object request) {
+      return "localhost";
+    }
+
+    @Override
+    public Integer getServerPort(Object request) {
+      return 6379;
+    }
+  }
+}

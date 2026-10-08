@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {
@@ -17,9 +18,11 @@ dependencies {
   implementation(project(":instrumentation:apache-dbcp-2.0:library"))
   implementation(project(":instrumentation:jdbc:javaagent-common"))
 
+  bootstrap(project(":instrumentation:apache-commons-pool-2.0:bootstrap"))
   bootstrap(project(":instrumentation:jdbc:bootstrap"))
 
   testImplementation(project(":instrumentation:apache-dbcp-2.0:testing"))
+  testInstrumentation(project(":instrumentation:apache-commons-pool-2.0:javaagent"))
 }
 
 tasks {
@@ -27,15 +30,20 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+  val testWithCommonsPoolInstrumentation =
+    register<Test>("testWithCommonsPoolInstrumentation") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+      filter {
+        includeTestsMatching(
+          "ApacheDbcpInstrumentationTest.shouldNotReportCommonsPoolMetrics",
+        )
+      }
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
+      jvmArgs("-Dotel.instrumentation.apache-commons-pool.enabled=true")
+    }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testWithCommonsPoolInstrumentation)
   }
 }

@@ -1,6 +1,6 @@
 # Library Instrumentation for Lettuce version 5.1 and higher
 
-Provides OpenTelemetry instrumentation for [Lettuce](https://lettuce.io/), enabling database client
+Provides OpenTelemetry instrumentation for [Lettuce](https://redis.github.io/lettuce/), enabling database client
 spans and metrics.
 
 ## Quickstart

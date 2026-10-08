@@ -18,12 +18,12 @@ import org.jboss.netty.handler.codec.http.HttpResponse;
 
 public class HttpClientResponseTracingHandler extends SimpleChannelUpstreamHandler {
 
-  private static final VirtualField<Channel, NettyClientRequestAndContexts> requestContextsField =
+  private static final VirtualField<Channel, NettyClientRequestAndContexts> REQUEST_AND_CONTEXTS =
       VirtualField.find(Channel.class, NettyClientRequestAndContexts.class);
 
   @Override
   public void messageReceived(ChannelHandlerContext ctx, MessageEvent msg) throws Exception {
-    NettyClientRequestAndContexts requestAndContexts = requestContextsField.get(ctx.getChannel());
+    NettyClientRequestAndContexts requestAndContexts = REQUEST_AND_CONTEXTS.get(ctx.getChannel());
 
     if (requestAndContexts == null) {
       super.messageReceived(ctx, msg);
@@ -37,7 +37,7 @@ public class HttpClientResponseTracingHandler extends SimpleChannelUpstreamHandl
               requestAndContexts.request(),
               (HttpResponse) msg.getMessage(),
               NettyErrorHolder.getOrDefault(requestAndContexts.context(), null));
-      requestContextsField.set(ctx.getChannel(), null);
+      REQUEST_AND_CONTEXTS.set(ctx.getChannel(), null);
     }
 
     // We want the callback in the scope of the parent, not the client span

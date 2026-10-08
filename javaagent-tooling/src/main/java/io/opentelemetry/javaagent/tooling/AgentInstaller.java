@@ -187,6 +187,14 @@ public class AgentInstaller {
     }
     logger.log(FINE, "Installed {0} extension(s)", numberOfLoadedExtensions);
 
+    // eagerly initialize context storage before any instrumentation is active, so that its lazy
+    // initialization cannot happen while an instrumented method holds a class loader lock that
+    // the initializing thread needs, see
+    // https://github.com/open-telemetry/opentelemetry-java/issues/8434
+    // note that this also finalizes the storage - ContextStorage.addWrapper() calls made after
+    // this point are ignored
+    ContextStorage.get();
+
     agentBuilder = AgentBuilderUtil.optimize(agentBuilder);
     ClassFileTransformer transformer = agentBuilder.installOn(inst);
     LambdaTransformer lambdaTransformer;
@@ -557,7 +565,8 @@ public class AgentInstaller {
     }
   }
 
-  private static class RedefinitionDiscoveryStrategy
+  // visible for testing
+  static class RedefinitionDiscoveryStrategy
       implements AgentBuilder.RedefinitionStrategy.DiscoveryStrategy {
     private static final AgentBuilder.RedefinitionStrategy.DiscoveryStrategy delegate =
         AgentBuilder.RedefinitionStrategy.DiscoveryStrategy.Reiterating.INSTANCE;
@@ -567,12 +576,26 @@ public class AgentInstaller {
       // filter out our agent classes and injected helper classes
       return () ->
           streamOf(delegate.resolve(instrumentation))
-              .map(RedefinitionDiscoveryStrategy::filterClasses)
+              .flatMap(RedefinitionDiscoveryStrategy::filterClasses)
               .iterator();
     }
 
-    private static Iterable<Class<?>> filterClasses(Iterable<Class<?>> classes) {
-      return () -> streamOf(classes).filter(c -> !isIgnored(c)).iterator();
+    private static Stream<Iterable<Class<?>>> filterClasses(Iterable<Class<?>> classes) {
+      List<Class<?>> classLoaders = new ArrayList<>();
+      List<Class<?>> otherClasses = new ArrayList<>();
+      for (Class<?> c : classes) {
+        if (isIgnored(c)) {
+          continue;
+        }
+        if (ClassLoader.class.isAssignableFrom(c)) {
+          classLoaders.add(c);
+        } else {
+          otherClasses.add(c);
+        }
+      }
+      // Initializing non-inline advice may load injected helpers during retransformation.
+      // Instrument class loaders in an earlier batch so those helpers can be defined.
+      return Stream.of(classLoaders, otherClasses);
     }
 
     private static <T> Stream<T> streamOf(Iterable<T> iterable) {

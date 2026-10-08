@@ -37,6 +37,25 @@ class DefaultRequestContextInstrumentation extends AbstractRequestContextInstrum
 
   @SuppressWarnings("unused")
   public static class ContainerRequestContextAdvice {
+    // HandlerData inspects annotations on the concrete filter method, so one Method from
+    // ContainerRequestFilter cannot be reused for every implementation.
+    private static final ClassValue<Method> filterMethod =
+        new ClassValue<Method>() {
+          @Nullable
+          @Override
+          protected Method computeValue(Class<?> type) {
+            try {
+              return type.getMethod("filter", ContainerRequestContext.class);
+            } catch (NoSuchMethodException ignored) {
+              return null;
+            }
+          }
+        };
+
+    @Nullable
+    public static Method getFilterMethod(Class<?> filterClass) {
+      return filterMethod.get(filterClass);
+    }
 
     public static class AdviceScope {
       private final Jaxrs3HandlerData handlerData;
@@ -84,13 +103,7 @@ class DefaultRequestContextInstrumentation extends AbstractRequestContextInstrum
       if (filterClass == null) {
         return null;
       }
-      Method method = null;
-      try {
-        method = filterClass.getMethod("filter", ContainerRequestContext.class);
-      } catch (NoSuchMethodException ignored) {
-        // Unable to find the filter method.  This should not be reachable because the context
-        // can only be aborted inside the filter method
-      }
+      Method method = getFilterMethod(filterClass);
       if (method == null) {
         return null;
       }

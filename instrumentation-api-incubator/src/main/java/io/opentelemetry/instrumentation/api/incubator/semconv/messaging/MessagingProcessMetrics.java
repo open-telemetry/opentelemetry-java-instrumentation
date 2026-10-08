@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.logging.Level.FINE;
 
@@ -17,11 +16,12 @@ import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
 import java.util.logging.Logger;
-import javax.annotation.Nullable;
 
 /**
  * {@link OperationListener} which keeps track of <a
@@ -35,10 +35,10 @@ public final class MessagingProcessMetrics implements OperationListener {
       ContextKey.named("messaging-process-metrics-state");
   private static final Logger logger = Logger.getLogger(MessagingProcessMetrics.class.getName());
 
-  @Nullable private final DoubleHistogram processDurationHistogram;
+  private final DoubleHistogram processDurationHistogram;
 
   private MessagingProcessMetrics(Meter meter) {
-    processDurationHistogram = emitStableMessagingSemconv() ? buildProcessDuration(meter) : null;
+    processDurationHistogram = buildProcessDuration(meter);
   }
 
   public static OperationMetrics get() {
@@ -48,19 +48,24 @@ public final class MessagingProcessMetrics implements OperationListener {
   @Override
   @CanIgnoreReturnValue
   public Context onStart(Context context, Attributes startAttributes, long startNanos) {
-    if (processDurationHistogram == null) {
-      return context;
-    }
-    return context.with(
-        MESSAGING_PROCESS_METRICS_STATE,
-        new AutoValue_MessagingProcessMetrics_State(startAttributes, startNanos));
+    boolean recordProcessDuration =
+        !MessagingTelemetryState.contains(
+            context, MessagingOperationType.PROCESS, MessagingTelemetrySignal.PROCESS_DURATION);
+    Context contextWithState =
+        context.with(
+            MESSAGING_PROCESS_METRICS_STATE,
+            new AutoValue_MessagingProcessMetrics_State(
+                startAttributes, startNanos, recordProcessDuration));
+    return recordProcessDuration
+        ? MessagingTelemetryState.addIfEnabled(
+            contextWithState,
+            MessagingOperationType.PROCESS,
+            MessagingTelemetrySignal.PROCESS_DURATION)
+        : contextWithState;
   }
 
   @Override
   public void onEnd(Context context, Attributes endAttributes, long endNanos) {
-    if (processDurationHistogram == null) {
-      return;
-    }
     State state = context.get(MESSAGING_PROCESS_METRICS_STATE);
     if (state == null) {
       logger.log(
@@ -70,11 +75,13 @@ public final class MessagingProcessMetrics implements OperationListener {
       return;
     }
 
-    Attributes attributes = state.startAttributes().toBuilder().putAll(endAttributes).build();
-    processDurationHistogram.record(
-        (endNanos - state.startTimeNanos()) / NANOS_PER_S,
-        MessagingMetricsAdvice.filterAttributes(attributes),
-        context);
+    if (state.recordProcessDuration()) {
+      Attributes attributes = state.startAttributes().toBuilder().putAll(endAttributes).build();
+      processDurationHistogram.record(
+          (endNanos - state.startTimeNanos()) / NANOS_PER_S,
+          MessagingMetricsAdvice.filterAttributes(attributes),
+          context);
+    }
   }
 
   private static DoubleHistogram buildProcessDuration(Meter meter) {
@@ -93,5 +100,7 @@ public final class MessagingProcessMetrics implements OperationListener {
     abstract Attributes startAttributes();
 
     abstract long startTimeNanos();
+
+    abstract boolean recordProcessDuration();
   }
 }

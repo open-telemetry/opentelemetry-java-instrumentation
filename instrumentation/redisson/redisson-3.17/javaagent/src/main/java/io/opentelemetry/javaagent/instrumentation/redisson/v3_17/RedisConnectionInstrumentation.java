@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson.v3_17;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.instrumentation.redisson.v3_17.RedissonSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -16,6 +15,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.EndOperationListener;
 import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.PromiseWrapper;
 import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.RedissonRequest;
+import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.RedissonServerTargets;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -56,7 +56,11 @@ class RedisConnectionInstrumentation implements TypeInstrumentation {
         InetSocketAddress remoteAddress =
             (InetSocketAddress) connection.getChannel().remoteAddress();
         RedissonRequest request =
-            RedissonRequest.create(remoteAddress, arg, databaseIndex(connection));
+            RedissonRequest.create(
+                remoteAddress,
+                arg,
+                databaseIndex(connection),
+                RedissonServerTargets.get(connection));
         PromiseWrapper<?> promise = request.getPromiseWrapper();
         if (promise == null) {
           return null;
@@ -75,9 +79,6 @@ class RedisConnectionInstrumentation implements TypeInstrumentation {
 
       @Nullable
       private static Long databaseIndex(RedisConnection connection) {
-        if (!emitStableDatabaseSemconv()) {
-          return null;
-        }
         RedisClient client = connection.getRedisClient();
         if (client == null) {
           return null;

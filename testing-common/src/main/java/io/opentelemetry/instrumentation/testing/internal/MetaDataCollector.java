@@ -5,11 +5,12 @@
 
 package io.opentelemetry.instrumentation.testing.internal;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributeType;
 import io.opentelemetry.api.internal.InternalAttributeKeyImpl;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
-import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.testing.internal.jackson.annotation.JsonInclude;
 import io.opentelemetry.testing.internal.jackson.annotation.JsonProperty;
 import io.opentelemetry.testing.internal.jackson.dataformat.yaml.YAMLFactory;
 import io.opentelemetry.testing.internal.jackson.dataformat.yaml.YAMLGenerator;
@@ -20,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,15 +57,17 @@ public class MetaDataCollector {
 
   public static void writeTelemetryToFiles(
       String path,
-      Map<InstrumentationScopeInfo, Map<String, MetricData>> metricsByScope,
+      Map<InstrumentationScopeInfo, Map<String, CollectedMetric>> metricsByScope,
       Map<InstrumentationScopeInfo, Map<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>>>
           spansByScopeAndKind,
+      Map<InstrumentationScopeInfo, Map<CollectedEvent.Key, CollectedEvent>> eventsByScope,
       Set<InstrumentationScopeInfo> instrumentationScopes)
       throws IOException {
 
     String moduleRoot = extractInstrumentationPath(path);
     writeMetricData(moduleRoot, metricsByScope);
     writeSpanData(moduleRoot, spansByScopeAndKind);
+    writeEventData(moduleRoot, eventsByScope);
     writeScopeData(moduleRoot, instrumentationScopes);
   }
 
@@ -145,9 +149,61 @@ public class MetaDataCollector {
     YAML.writeValue(spansPath.toFile(), spanData);
   }
 
+  private static void writeEventData(
+      String instrumentationPath,
+      Map<InstrumentationScopeInfo, Map<CollectedEvent.Key, CollectedEvent>> eventsByScope)
+      throws IOException {
+
+    if (eventsByScope.isEmpty()) {
+      return;
+    }
+
+    Path eventsPath =
+        Paths.get(instrumentationPath, TMP_DIR, "events-" + UUID.randomUUID() + ".yaml");
+
+    String config = System.getProperty("metadataConfig");
+    String when = (config != null && !config.isEmpty()) ? config : "default";
+
+    EventsData eventsData = new EventsData();
+    eventsData.when = when;
+    eventsData.eventsByScope = new ArrayList<>();
+
+    for (Map.Entry<InstrumentationScopeInfo, Map<CollectedEvent.Key, CollectedEvent>> entry :
+        eventsByScope.entrySet()) {
+      ScopeEvents scopeEvents = new ScopeEvents();
+      scopeEvents.scope = entry.getKey().getName();
+      scopeEvents.events = new ArrayList<>();
+
+      // Sorted so that the written file does not depend on hash iteration order.
+      List<CollectedEvent.Key> sortedKeys = new ArrayList<>(entry.getValue().keySet());
+      Collections.sort(sortedKeys);
+
+      for (CollectedEvent.Key eventKey : sortedKeys) {
+        CollectedEvent collectedEvent = entry.getValue().get(eventKey);
+        Event event = new Event();
+        event.name = eventKey.getName();
+        event.severity = eventKey.getSeverity();
+        event.attributes = new ArrayList<>();
+
+        for (InternalAttributeKeyImpl<?> key : collectedEvent.getAttributeKeys()) {
+          AttributeInfo attr = new AttributeInfo();
+          attr.name = key.getKey();
+          attr.type = key.getType().toString();
+          event.attributes.add(attr);
+        }
+
+        scopeEvents.events.add(event);
+      }
+
+      eventsData.eventsByScope.add(scopeEvents);
+    }
+
+    YAML.writeValue(eventsPath.toFile(), eventsData);
+  }
+
   private static void writeMetricData(
       String instrumentationPath,
-      Map<InstrumentationScopeInfo, Map<String, MetricData>> metricsByScope) {
+      Map<InstrumentationScopeInfo, Map<String, CollectedMetric>> metricsByScope) {
 
     if (metricsByScope.isEmpty()) {
       return;
@@ -164,16 +220,16 @@ public class MetaDataCollector {
       metricsData.when = when;
       metricsData.metricsByScope = new ArrayList<>();
 
-      for (Map.Entry<InstrumentationScopeInfo, Map<String, MetricData>> entry :
+      for (Map.Entry<InstrumentationScopeInfo, Map<String, CollectedMetric>> entry :
           metricsByScope.entrySet()) {
         InstrumentationScopeInfo scope = entry.getKey();
-        Map<String, MetricData> metrics = entry.getValue();
+        Map<String, CollectedMetric> metrics = entry.getValue();
 
         ScopeMetrics scopeMetrics = new ScopeMetrics();
         scopeMetrics.scope = scope.getName();
         scopeMetrics.metrics = new ArrayList<>();
 
-        for (MetricData metric : metrics.values()) {
+        for (CollectedMetric metric : metrics.values()) {
           Metric metricInfo = new Metric();
           metricInfo.name = metric.getName();
           metricInfo.description = metric.getDescription();
@@ -181,32 +237,13 @@ public class MetaDataCollector {
           metricInfo.unit = metric.getUnit();
           metricInfo.attributes = new ArrayList<>();
 
-          // Capture isMonotonic for SUM types to help infer instrument type
-          switch (metric.getType()) {
-            case LONG_SUM:
-              metricInfo.isMonotonic = metric.getLongSumData().isMonotonic();
-              break;
-            case DOUBLE_SUM:
-              metricInfo.isMonotonic = metric.getDoubleSumData().isMonotonic();
-              break;
-            default:
-              metricInfo.isMonotonic = null;
-              break;
+          metricInfo.isMonotonic = metric.isMonotonic();
+          for (AttributeKey<?> key : metric.getAttributeKeys()) {
+            AttributeInfo attr = new AttributeInfo();
+            attr.name = key.getKey();
+            attr.type = key.getType().toString();
+            metricInfo.attributes.add(attr);
           }
-
-          metric.getData().getPoints().stream()
-              .findFirst()
-              .ifPresent(
-                  point ->
-                      point
-                          .getAttributes()
-                          .forEach(
-                              (key, value) -> {
-                                AttributeInfo attr = new AttributeInfo();
-                                attr.name = key.getKey();
-                                attr.type = key.getType().toString();
-                                metricInfo.attributes.add(attr);
-                              }));
 
           scopeMetrics.metrics.add(metricInfo);
         }
@@ -270,6 +307,27 @@ public class MetaDataCollector {
   static class Span {
     @JsonProperty("span_kind")
     public String spanKind;
+
+    public List<AttributeInfo> attributes;
+  }
+
+  static class EventsData {
+    public String when;
+
+    @JsonProperty("events_by_scope")
+    public List<ScopeEvents> eventsByScope;
+  }
+
+  static class ScopeEvents {
+    public String scope;
+    public List<Event> events;
+  }
+
+  static class Event {
+    public String name;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public String severity;
 
     public List<AttributeInfo> attributes;
   }

@@ -27,6 +27,6 @@ jobs:
     needs:
       - fossa
     if: always()
-    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@62d5939b47144252763c5ff9fffe8c20d76cd806 # v0.4.0
+    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@0cc57aeabf2a31cf41114e7b24561f21a04e360b # v0.18.0
     with:
       success: ${{ needs.fossa.result == 'success' }}

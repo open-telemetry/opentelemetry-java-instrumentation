@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import org.apache.commons.pool2.impl.GenericKeyedObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CommonsPoolInstrumentationTest extends AbstractCommonsPoolInstrumentationTest {
@@ -48,5 +49,30 @@ class CommonsPoolInstrumentationTest extends AbstractCommonsPoolInstrumentationT
   @Override
   protected void shutdown(GenericKeyedObjectPool<?, ?> pool) {
     telemetry.unregisterMetrics(pool);
+  }
+
+  @Test
+  void shouldRegisterSamePoolInstanceIdempotently() throws Exception {
+    String poolName = "duplicateRegistrationPool";
+    String ignoredPoolName = "ignoredDuplicateRegistrationPool";
+    GenericObjectPool<Object> pool = createGenericObjectPool(poolName, false);
+    Object borrowed = null;
+    try {
+      configure(pool, poolName);
+      configure(pool, ignoredPoolName);
+
+      borrowed = pool.borrowObject();
+
+      assertGenericObjectPoolMetrics(poolName);
+      verifyPoolNameNotReported(ignoredPoolName);
+    } finally {
+      if (borrowed != null) {
+        pool.returnObject(borrowed);
+      }
+      shutdown(pool);
+      pool.close();
+    }
+
+    assertNoMetrics();
   }
 }

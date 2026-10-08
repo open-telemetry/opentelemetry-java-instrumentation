@@ -6,19 +6,20 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v5_0;
 
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ELASTICSEARCH;
+import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -31,6 +32,8 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import org.apache.http.HttpHost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseListener;
 import org.elasticsearch.client.RestClient;
@@ -99,11 +102,11 @@ class ElasticsearchRest5Test {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("GET")
+                    span.hasName(httpHost.getHostName() + ":" + httpHost.getPort())
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
+                            equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
@@ -127,6 +130,46 @@ class ElasticsearchRest5Test {
         DB_SYSTEM_NAME,
         SERVER_ADDRESS,
         SERVER_PORT);
+  }
+
+  @Test
+  void searchQueryIsCapturedAndSanitized() throws IOException {
+    Response response =
+        client.performRequest(
+            "POST",
+            "_search",
+            emptyMap(),
+            new StringEntity(
+                "{\"query\":{\"match\":{\"title\":\"secret user data\"}}}",
+                ContentType.APPLICATION_JSON));
+
+    assertThat(response.getStatusLine().getStatusCode()).isEqualTo(200);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(httpHost.getHostName() + ":" + httpHost.getPort())
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                            equalTo(DB_QUERY_TEXT, "{\"query\":{\"match\":{\"title\":\"?\"}}}"),
+                            equalTo(HTTP_REQUEST_METHOD, "POST"),
+                            equalTo(SERVER_ADDRESS, httpHost.getHostName()),
+                            equalTo(SERVER_PORT, httpHost.getPort()),
+                            equalTo(URL_FULL, httpHost.toURI() + "/_search")),
+                span ->
+                    span.hasName("POST")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, httpHost.getHostName()),
+                            equalTo(SERVER_PORT, httpHost.getPort()),
+                            equalTo(HTTP_REQUEST_METHOD, "POST"),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(URL_FULL, httpHost.toURI() + "/_search"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200))));
   }
 
   @Test
@@ -174,11 +217,11 @@ class ElasticsearchRest5Test {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("GET")
+                    span.hasName(httpHost.getHostName() + ":" + httpHost.getPort())
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
+                            equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
@@ -199,5 +242,57 @@ class ElasticsearchRest5Test {
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void configuredHostListIsTheWholeTarget() throws IOException {
+    RestClient hostListClient = hostListClient();
+    cleanup.deferCleanup(hostListClient);
+
+    hostListClient.performRequest("GET", "_cluster/health");
+
+    assertConfiguredTarget(hostList());
+  }
+
+  @Test
+  void theTargetDoesNotFollowLaterHostChanges() throws IOException {
+    RestClient hostListClient = hostListClient();
+    cleanup.deferCleanup(hostListClient);
+    // Simulate automatic node discovery replacing the active host list. The configured target must
+    // continue to reflect the hosts supplied when the client was built.
+    hostListClient.setHosts(httpHost);
+
+    hostListClient.performRequest("GET", "_cluster/health");
+
+    assertConfiguredTarget(hostList());
+  }
+
+  private static RestClient hostListClient() {
+    return RestClient.builder(httpHost, httpHost)
+        .setMaxRetryTimeoutMillis(Integer.MAX_VALUE)
+        .build();
+  }
+
+  private static String hostList() {
+    return httpHost.getHostName()
+        + ":"
+        + httpHost.getPort()
+        + ","
+        + httpHost.getHostName()
+        + ":"
+        + httpHost.getPort();
+  }
+
+  private static void assertConfiguredTarget(String hostList) {
+    testing.waitAndAssertTraces(
+        trace ->
+            assertThat(trace.getSpan(0))
+                .hasName(hostList)
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                    equalTo(HTTP_REQUEST_METHOD, "GET"),
+                    equalTo(SERVER_ADDRESS, hostList),
+                    equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")));
   }
 }

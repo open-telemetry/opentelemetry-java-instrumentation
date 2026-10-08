@@ -30,7 +30,7 @@ configurations.testRuntimeClasspath {
 }
 
 tasks.test {
-  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
 }
 
 if (otelProps.denyUnsafe) {

@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.server;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import akka.http.scaladsl.Http.IncomingConnection;
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import akka.stream.scaladsl.Flow;
@@ -38,8 +39,9 @@ class AkkaHttpServerSourceInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Flow<HttpRequest, HttpResponse, ?> wrapHandler(
+        @Advice.This IncomingConnection connection,
         @Advice.Argument(0) Flow<HttpRequest, HttpResponse, ?> handler) {
-      return AkkaFlowWrapper.wrap(handler);
+      return AkkaFlowWrapper.wrap(handler, connection.remoteAddress());
     }
   }
 }

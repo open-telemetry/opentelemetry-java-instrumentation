@@ -27,6 +27,17 @@ dependencies {
   latestDepTestLibrary("redis.clients:jedis:3.+") // see jedis-4.0 module
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("jedis36Test") {
+      dependencies {
+        implementation("redis.clients:jedis:3.6.1")
+        implementation("org.testcontainers:testcontainers")
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
@@ -37,11 +48,11 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
+    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites, testStableSemconv)
   }
 }

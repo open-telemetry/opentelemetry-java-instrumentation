@@ -20,7 +20,8 @@ import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SN
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SQS_QUEUE_URL;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
@@ -67,6 +68,18 @@ class AwsSpanAssertions {
       throw new IllegalStateException("can't get rpc method from span name " + spanName);
     }
 
+    boolean deleteMessage = spanName.equals("SQS.DeleteMessage");
+    String expectedSpanName = spanName;
+    if (deleteMessage) {
+      expectedSpanName = "delete " + queueName;
+    } else if (!spanName.startsWith("SQS.")) {
+      int operationSeparator = spanName.lastIndexOf(' ');
+      String destinationName = spanName.substring(0, operationSeparator);
+      String operationName = spanName.substring(operationSeparator + 1);
+      expectedSpanName =
+          (operationName.equals("publish") ? "send" : operationName) + " " + destinationName;
+    }
+
     List<AttributeAssertion> attributeAssertions =
         new ArrayList<>(
             asList(
@@ -99,22 +112,29 @@ class AwsSpanAssertions {
 
     if (spanName.endsWith("receive")
         || spanName.endsWith("process")
-        || spanName.endsWith("publish")) {
+        || spanName.endsWith("publish")
+        || deleteMessage) {
       attributeAssertions.addAll(
           asList(
               equalTo(MESSAGING_DESTINATION_NAME, queueName), equalTo(MESSAGING_SYSTEM, AWS_SQS)));
-      if (spanName.endsWith("receive")) {
-        attributeAssertions.add(equalTo(MESSAGING_OPERATION, "receive"));
+      if (deleteMessage) {
+        attributeAssertions.add(equalTo(MESSAGING_OPERATION_NAME, "delete"));
+        attributeAssertions.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
+      } else if (spanName.endsWith("receive")) {
+        attributeAssertions.add(equalTo(MESSAGING_OPERATION_NAME, "receive"));
+        attributeAssertions.add(equalTo(MESSAGING_OPERATION_TYPE, "receive"));
       } else if (spanName.endsWith("process")) {
-        attributeAssertions.add(equalTo(MESSAGING_OPERATION, "process"));
+        attributeAssertions.add(equalTo(MESSAGING_OPERATION_NAME, "process"));
+        attributeAssertions.add(equalTo(MESSAGING_OPERATION_TYPE, "process"));
         attributeAssertions.add(satisfies(MESSAGING_MESSAGE_ID, val -> val.isNotNull()));
       } else if (spanName.endsWith("publish")) {
-        attributeAssertions.add(equalTo(MESSAGING_OPERATION, "publish"));
+        attributeAssertions.add(equalTo(MESSAGING_OPERATION_NAME, "send"));
+        attributeAssertions.add(equalTo(MESSAGING_OPERATION_TYPE, "send"));
         attributeAssertions.add(satisfies(MESSAGING_MESSAGE_ID, val -> val.isNotNull()));
       }
     }
 
-    return span.hasName(spanName)
+    return span.hasName(expectedSpanName)
         .hasKind(spanKind)
         .hasAttributesSatisfyingExactly(attributeAssertions);
   }

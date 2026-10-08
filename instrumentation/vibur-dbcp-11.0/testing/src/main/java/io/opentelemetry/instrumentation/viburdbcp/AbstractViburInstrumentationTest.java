@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.viburdbcp;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -61,16 +60,13 @@ public abstract class AbstractViburInstrumentationTest {
     testing().clearData();
 
     // then
-    String countMetricName =
-        emitStableDatabaseSemconv() ? "db.client.connection.count" : "db.client.connections.usage";
+    String countMetricName = "db.client.connection.count";
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME, countMetricName, AbstractIterableAssert::isEmpty);
     testing()
         .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            emitStableDatabaseSemconv() ? "db.client.connection.max" : "db.client.connections.max",
-            AbstractIterableAssert::isEmpty);
+            INSTRUMENTATION_NAME, "db.client.connection.limit", AbstractIterableAssert::isEmpty);
   }
 
   protected void assertConnectionPoolEmitsMetrics(String poolName) {

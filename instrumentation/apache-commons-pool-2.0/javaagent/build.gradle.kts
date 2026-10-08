@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {
@@ -15,6 +16,8 @@ dependencies {
   library("org.apache.commons:commons-pool2:2.0")
 
   implementation(project(":instrumentation:apache-commons-pool-2.0:library"))
+
+  bootstrap(project(":instrumentation:apache-commons-pool-2.0:bootstrap"))
 
   testImplementation(project(":instrumentation:apache-commons-pool-2.0:testing"))
 }

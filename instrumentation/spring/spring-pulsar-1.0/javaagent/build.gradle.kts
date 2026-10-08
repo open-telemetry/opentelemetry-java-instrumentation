@@ -50,7 +50,7 @@ testing {
         all {
           testTask.configure {
             jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=true")
-            jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+            jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
             systemProperty(
               "metadataConfig",
               "otel.instrumentation.pulsar.experimental-span-attributes=true",
@@ -70,42 +70,17 @@ tasks {
 
   test {
     jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=false")
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true",
+      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
     )
   }
 
-  val testMessagingPreview = register<Test>("testMessagingPreview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=false")
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=false")
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
-  }
-
-  val testMessagingPreviewReceiveSpansDisabled = register<Test>("testMessagingPreviewReceiveSpansDisabled") {
-    testClassesDirs = sourceSets["testReceiveSpansDisabled"].output.classesDirs
-    classpath = sourceSets["testReceiveSpansDisabled"].runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=true")
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
   check {
-    dependsOn(testing.suites, testMessagingPreview, testBothSemconv, testMessagingPreviewReceiveSpansDisabled)
+    dependsOn(
+      testing.suites,
+    )
   }
 
   if (otelProps.denyUnsafe) {

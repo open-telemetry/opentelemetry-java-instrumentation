@@ -6,10 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
-import java.net.Inet4Address;
-import java.net.Inet6Address;
-import java.net.InetAddress;
 import javax.annotation.Nullable;
 
 final class OpenSearchRestAttributesGetter
@@ -27,8 +25,9 @@ final class OpenSearchRestAttributesGetter
   }
 
   @Override
+  @Nullable
   public String getDbQueryText(OpenSearchRestRequest request) {
-    return request.getMethod() + " " + request.getEndpoint();
+    return null;
   }
 
   @Override
@@ -52,32 +51,17 @@ final class OpenSearchRestAttributesGetter
     return null;
   }
 
-  @Nullable
   @Override
-  public String getNetworkType(
-      OpenSearchRestRequest request, @Nullable OpenSearchRestResponse response) {
-    if (response == null) {
-      return null;
-    }
-    InetAddress address = response.getAddress();
-    if (address instanceof Inet4Address) {
-      return "ipv4";
-    } else if (address instanceof Inet6Address) {
-      return "ipv6";
-    }
-    return null;
+  @Nullable
+  public String getServerAddress(OpenSearchRestRequest request) {
+    DbServerTarget target = request.getServerTarget();
+    return target != null ? target.getAddress() : null;
   }
 
   @Override
   @Nullable
-  public String getNetworkPeerAddress(
-      OpenSearchRestRequest request, @Nullable OpenSearchRestResponse response) {
-    if (response != null) {
-      InetAddress address = response.getAddress();
-      if (address != null) {
-        return address.getHostAddress();
-      }
-    }
-    return null;
+  public Integer getServerPort(OpenSearchRestRequest request) {
+    DbServerTarget target = request.getServerTarget();
+    return target != null ? target.getPort() : null;
   }
 }

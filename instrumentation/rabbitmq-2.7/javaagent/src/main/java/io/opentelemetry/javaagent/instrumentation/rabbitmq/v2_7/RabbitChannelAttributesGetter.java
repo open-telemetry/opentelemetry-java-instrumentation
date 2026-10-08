@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
@@ -30,10 +29,8 @@ final class RabbitChannelAttributesGetter
     if (!channelAndMethod.isPublish()) {
       return null;
     }
-    return emitStableMessagingSemconv()
-        ? RabbitInstrumenterHelper.producerDestinationName(
-            channelAndMethod.getExchange(), channelAndMethod.getRoutingKey())
-        : RabbitInstrumenterHelper.normalizeExchangeName(channelAndMethod.getExchange());
+    return RabbitInstrumenterHelper.producerDestinationName(
+        channelAndMethod.getExchange(), channelAndMethod.getRoutingKey());
   }
 
   @Nullable
@@ -49,8 +46,7 @@ final class RabbitChannelAttributesGetter
 
   @Override
   public boolean isAnonymousDestination(ChannelAndMethod channelAndMethod) {
-    return emitStableMessagingSemconv()
-        && channelAndMethod.isPublish()
+    return channelAndMethod.isPublish()
         && RabbitInstrumenterHelper.isDefaultExchange(channelAndMethod.getExchange())
         && RabbitInstrumenterHelper.isGeneratedQueueName(channelAndMethod.getRoutingKey());
   }
@@ -58,18 +54,6 @@ final class RabbitChannelAttributesGetter
   @Nullable
   @Override
   public String getConversationId(ChannelAndMethod channelAndMethod) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageBodySize(ChannelAndMethod channelAndMethod) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(ChannelAndMethod channelAndMethod) {
     return null;
   }
 

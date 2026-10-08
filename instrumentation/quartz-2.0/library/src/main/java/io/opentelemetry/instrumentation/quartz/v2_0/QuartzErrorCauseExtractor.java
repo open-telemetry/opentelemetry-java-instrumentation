@@ -6,15 +6,17 @@
 package io.opentelemetry.instrumentation.quartz.v2_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
+import io.opentelemetry.instrumentation.api.internal.CauseUnwrapper;
 import org.quartz.SchedulerException;
 
 final class QuartzErrorCauseExtractor implements ErrorCauseExtractor {
   @Override
   public Throwable extract(Throwable error) {
-    while (error instanceof SchedulerException
-        && ((SchedulerException) error).getUnderlyingException() != null) {
-      error = ((SchedulerException) error).getUnderlyingException();
-    }
-    return ErrorCauseExtractor.getDefault().extract(error);
+    Throwable unwrapped =
+        CauseUnwrapper.unwrap(
+            error,
+            candidate -> candidate instanceof SchedulerException,
+            candidate -> ((SchedulerException) candidate).getUnderlyingException());
+    return ErrorCauseExtractor.getDefault().extract(unwrapped);
   }
 }

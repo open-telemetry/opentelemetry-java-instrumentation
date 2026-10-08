@@ -60,8 +60,18 @@ testing {
       dependencies {
         implementation(project())
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
+        compileOnly("software.amazon.awssdk:bedrockruntime:2.26.5")
         val version = baseVersion("2.25.63").orLatest()
-        implementation("software.amazon.awssdk:bedrockruntime:$version")
+        runtimeOnly("software.amazon.awssdk:bedrockruntime:$version")
+      }
+    }
+
+    register<JvmTestSuite>("testRdsData") {
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
+        val version = baseVersion("2.5.54").orLatest()
+        implementation("software.amazon.awssdk:rdsdata:$version")
       }
     }
   }
@@ -75,39 +85,6 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-  }
-
-  val testMessagingPreview = register<Test>("testMessagingPreview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("*Sqs*")
-    }
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("*Sqs*")
-    }
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-  }
-
-  val testCoreOnlyStableSemconv = register<Test>("testCoreOnlyStableSemconv") {
-    val testCoreOnlySourceSet = sourceSets["testCoreOnly"]
-    testClassesDirs = testCoreOnlySourceSet.output.classesDirs
-    classpath = testCoreOnlySourceSet.runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-  }
-
   val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -118,10 +95,6 @@ tasks {
   check {
     dependsOn(
       testing.suites,
-      testStableSemconv,
-      testMessagingPreview,
-      testBothSemconv,
-      testCoreOnlyStableSemconv,
       testExceptionSignalLogs,
     )
   }

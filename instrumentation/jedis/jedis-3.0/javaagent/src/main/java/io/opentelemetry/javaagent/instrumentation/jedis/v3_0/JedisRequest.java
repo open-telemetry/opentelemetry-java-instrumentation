@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import java.util.List;
 import javax.annotation.Nullable;
 import redis.clients.jedis.BinaryClient;
@@ -31,7 +31,11 @@ public abstract class JedisRequest {
       Connection connection, ProtocolCommand command, List<byte[]> args) {
     String operationName = operationName(command);
     return new AutoValue_JedisRequest(
-        connection, operationName, sanitizer.sanitize(operationName, args), null);
+        connection,
+        JedisConfiguredTargets.connectionTarget(connection),
+        operationName,
+        sanitizer.sanitize(operationName, args),
+        null);
   }
 
   public static JedisRequest createPipeline(List<JedisRequest> requests) {
@@ -46,12 +50,16 @@ public abstract class JedisRequest {
     JedisRequest first = requests.get(0);
     return new AutoValue_JedisRequest(
         first.getConnection(),
+        first.getServerTarget(),
         batchOperationName(requests, prefix),
         pipelineQueryText(requests),
         requests.size() != 1 ? (long) requests.size() : null);
   }
 
   public abstract Connection getConnection();
+
+  @Nullable
+  public abstract RedisServerTarget getServerTarget();
 
   /**
    * Returns the index of the Redis database the connection is currently on, or {@code null} when
@@ -99,16 +107,12 @@ public abstract class JedisRequest {
     StringBuilder builder = new StringBuilder();
     for (JedisRequest request : requests) {
       String queryText = request.getQueryText();
-      String separator = builder.length() == 0 ? "" : batchQuerySeparator();
+      String separator = builder.length() == 0 ? "" : "; ";
       if (builder.length() + separator.length() + queryText.length() > LIMIT) {
         break;
       }
       builder.append(separator).append(queryText);
     }
     return builder.toString();
-  }
-
-  private static String batchQuerySeparator() {
-    return emitStableDatabaseSemconv() ? "; " : ";";
   }
 }

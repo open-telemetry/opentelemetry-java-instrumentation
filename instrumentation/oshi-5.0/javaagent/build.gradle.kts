@@ -27,16 +27,4 @@ tasks {
   withType<Test>().configureEach {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
-
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.oshi.experimental-metrics.enabled=true")
-    systemProperty("testExperimental", "true")
-    systemProperty("metadataConfig", "otel.instrumentation.oshi.experimental-metrics.enabled=true")
-  }
-
-  check {
-    dependsOn(testExperimental)
-  }
 }

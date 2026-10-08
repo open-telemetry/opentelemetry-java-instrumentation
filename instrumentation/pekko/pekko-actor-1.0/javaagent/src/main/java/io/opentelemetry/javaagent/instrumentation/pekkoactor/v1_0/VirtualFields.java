@@ -12,6 +12,9 @@ import org.apache.pekko.dispatch.sysmsg.SystemMessage;
 
 public class VirtualFields {
 
+  public static final VirtualField<Runnable, PropagatedContext> RUNNABLE_PROPAGATED_CONTEXT =
+      VirtualField.find(Runnable.class, PropagatedContext.class);
+
   public static final VirtualField<Envelope, PropagatedContext> ENVELOPE_PROPAGATED_CONTEXT =
       VirtualField.find(Envelope.class, PropagatedContext.class);
 

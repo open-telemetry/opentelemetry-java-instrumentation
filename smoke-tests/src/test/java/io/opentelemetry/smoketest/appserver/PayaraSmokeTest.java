@@ -33,7 +33,7 @@ abstract class PayaraSmokeTest extends AppServerTest {
     return super.getSpanName(path);
   }
 
-  @AppServer(version = "5.2020.6", jdk = "8")
+  @AppServer(version = "5.2020.6", jdk = "8", inReducedMatrix = true)
   static class Payara52020Jdk8 extends PayaraSmokeTest {}
 
   @AppServer(version = "5.2020.6", jdk = "8-openj9")
@@ -45,7 +45,7 @@ abstract class PayaraSmokeTest extends AppServerTest {
   @AppServer(version = "5.2020.6", jdk = "11-openj9")
   static class Payara52020Jdk11Openj9 extends PayaraSmokeTest {}
 
-  @AppServer(version = "5.2021.8", jdk = "8")
+  @AppServer(version = "5.2021.8", jdk = "8", inReducedMatrix = true)
   static class Payara52021Jdk8 extends PayaraSmokeTest {}
 
   @AppServer(version = "5.2021.8", jdk = "8-openj9")
@@ -57,7 +57,7 @@ abstract class PayaraSmokeTest extends AppServerTest {
   @AppServer(version = "5.2021.8", jdk = "11-openj9")
   static class Payara52021Jdk11Openj9 extends PayaraSmokeTest {}
 
-  @AppServer(version = "6.2023.12", jdk = "11")
+  @AppServer(version = "6.2023.12", jdk = "11", inReducedMatrix = true)
   static class Payara6Jdk11 extends PayaraSmokeTest {}
 
   @AppServer(version = "6.2023.12", jdk = "11-openj9")

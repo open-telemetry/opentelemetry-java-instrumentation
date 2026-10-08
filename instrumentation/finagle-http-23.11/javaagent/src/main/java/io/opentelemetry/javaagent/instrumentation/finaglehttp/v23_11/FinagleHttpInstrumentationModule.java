@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -16,7 +17,11 @@ import java.util.List;
 public class FinagleHttpInstrumentationModule extends InstrumentationModule {
 
   public FinagleHttpInstrumentationModule() {
-    super("finagle-http", "finagle-http-23.11");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "finagle-http-23.11" : "finagle-http",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"finagle-http"}
+            : new String[] {"finagle-http-23.11"});
   }
 
   @Override

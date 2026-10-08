@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -18,7 +19,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class MongoAsyncClientInstrumentationModule extends InstrumentationModule {
 
   public MongoAsyncClientInstrumentationModule() {
-    super("mongo-async", "mongo-async-3.3", "mongo");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "mongo-async-3.3" : "mongo-async",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"mongo"}
+            : new String[] {"mongo-async-3.3", "mongo"});
   }
 
   @Override
@@ -31,7 +36,9 @@ public class MongoAsyncClientInstrumentationModule extends InstrumentationModule
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new MongoClientSettingsBuildersInstrumentation(),
+        new ClusterSettingsBuilderInstrumentation(),
         new InternalStreamConnectionInstrumentation(),
-        new BaseClusterInstrumentation());
+        new BaseClusterInstrumentation(),
+        new ClusterInstrumentation());
   }
 }

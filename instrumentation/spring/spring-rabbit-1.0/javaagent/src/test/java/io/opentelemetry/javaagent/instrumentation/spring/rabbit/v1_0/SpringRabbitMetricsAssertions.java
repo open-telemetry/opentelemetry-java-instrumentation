@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -26,15 +25,18 @@ class SpringRabbitMetricsAssertions {
 
   static void assertProcessMetrics(
       InstrumentationExtension testing, String destination, String springErrorType) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoMessagingMetrics(testing);
-      return;
-    }
+    assertProcessMetrics(testing, destination, springErrorType, 1);
+  }
 
-    assertProcessDuration(testing, RABBIT_INSTRUMENTATION_NAME, destination, null);
+  static void assertProcessMetrics(
+      InstrumentationExtension testing,
+      String destination,
+      String springErrorType,
+      long consumedMessagesCount) {
+
     assertProcessDuration(testing, SPRING_INSTRUMENTATION_NAME, destination, springErrorType);
     testing.waitAndAssertMetrics(
-        RABBIT_INSTRUMENTATION_NAME,
+        SPRING_INSTRUMENTATION_NAME,
         "messaging.client.consumed.messages",
         metrics ->
             metrics.satisfiesExactly(
@@ -49,11 +51,11 @@ class SpringRabbitMetricsAssertions {
                                     .hasPointsSatisfying(
                                         point ->
                                             point
-                                                .hasValue(1)
+                                                .hasValue(consumedMessagesCount)
                                                 .hasAttributesSatisfyingExactly(
                                                     equalTo(MESSAGING_OPERATION_NAME, "process"),
                                                     equalTo(MESSAGING_SYSTEM, "rabbitmq"),
-                                                    equalTo(ERROR_TYPE, null),
+                                                    equalTo(ERROR_TYPE, springErrorType),
                                                     equalTo(
                                                         MESSAGING_DESTINATION_NAME, destination),
                                                     satisfies(
@@ -63,10 +65,27 @@ class SpringRabbitMetricsAssertions {
     assertThat(testing.metrics())
         .filteredOn(
             metric ->
-                metric.getInstrumentationScopeInfo().getName().equals(SPRING_INSTRUMENTATION_NAME)
+                metric.getInstrumentationScopeInfo().getName().equals(RABBIT_INSTRUMENTATION_NAME)
+                    && metric.getName().equals("messaging.process.duration"))
+        .isEmpty();
+    assertThat(testing.metrics())
+        .filteredOn(
+            metric ->
+                metric.getInstrumentationScopeInfo().getName().equals(RABBIT_INSTRUMENTATION_NAME)
                     && metric.getName().equals("messaging.client.consumed.messages"))
         .isEmpty();
-    assertNoDeprecatedMessagingMetrics(testing);
+    assertThat(testing.metrics())
+        .filteredOn(
+            metric ->
+                metric.getInstrumentationScopeInfo().getName().equals(SPRING_INSTRUMENTATION_NAME))
+        .extracting(MetricData::getName)
+        .containsExactlyInAnyOrder(
+            "messaging.process.duration", "messaging.client.consumed.messages");
+  }
+
+  static void assertRabbitProcessDuration(InstrumentationExtension testing, String destination) {
+
+    assertProcessDuration(testing, RABBIT_INSTRUMENTATION_NAME, destination, null);
   }
 
   private static void assertProcessDuration(
@@ -98,54 +117,9 @@ class SpringRabbitMetricsAssertions {
                                                     equalTo(
                                                         MESSAGING_DESTINATION_NAME, destination),
                                                     satisfies(
-                                                        SERVER_ADDRESS,
-                                                        val -> {
-                                                          if (instrumentationName.equals(
-                                                              RABBIT_INSTRUMENTATION_NAME)) {
-                                                            val.isNotBlank();
-                                                          } else {
-                                                            val.isNull();
-                                                          }
-                                                        }),
+                                                        SERVER_ADDRESS, val -> val.isNotBlank()),
                                                     satisfies(
-                                                        SERVER_PORT,
-                                                        val -> {
-                                                          if (instrumentationName.equals(
-                                                              RABBIT_INSTRUMENTATION_NAME)) {
-                                                            val.isPositive();
-                                                          } else {
-                                                            val.isNull();
-                                                          }
-                                                        }))))));
-  }
-
-  private static void assertNoMessagingMetrics(InstrumentationExtension testing) {
-    assertThat(testing.metrics())
-        .filteredOn(
-            metric ->
-                (metric.getInstrumentationScopeInfo().getName().equals(RABBIT_INSTRUMENTATION_NAME)
-                        || metric
-                            .getInstrumentationScopeInfo()
-                            .getName()
-                            .equals(SPRING_INSTRUMENTATION_NAME))
-                    && metric.getName().startsWith("messaging."))
-        .isEmpty();
-  }
-
-  private static void assertNoDeprecatedMessagingMetrics(InstrumentationExtension testing) {
-    assertThat(testing.metrics())
-        .filteredOn(
-            metric ->
-                metric.getInstrumentationScopeInfo().getName().equals(RABBIT_INSTRUMENTATION_NAME)
-                    || metric
-                        .getInstrumentationScopeInfo()
-                        .getName()
-                        .equals(SPRING_INSTRUMENTATION_NAME))
-        .extracting(MetricData::getName)
-        .doesNotContain(
-            "messaging.publish.duration",
-            "messaging.receive.duration",
-            "messaging.receive.messages");
+                                                        SERVER_PORT, val -> val.isPositive()))))));
   }
 
   private SpringRabbitMetricsAssertions() {}

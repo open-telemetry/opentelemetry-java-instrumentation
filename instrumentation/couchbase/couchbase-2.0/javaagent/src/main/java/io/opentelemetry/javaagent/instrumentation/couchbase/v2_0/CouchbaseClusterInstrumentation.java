@@ -6,12 +6,14 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.VirtualFieldHelper.COUCHBASE_SERVER_TARGET;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
+import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.java.CouchbaseCluster;
 import io.opentelemetry.instrumentation.rxjava.v1_0.TracedOnSubscribe;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
@@ -52,17 +54,22 @@ class CouchbaseClusterInstrumentation implements TypeInstrumentation {
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    @SuppressWarnings("deprecation") // Observable.create is required for RxJava 1.0 compatibility
     public static Observable<?> subscribeResult(
         @Advice.Origin("#t") Class<?> declaringClass,
         @Advice.Origin("#m") String methodName,
+        @Advice.FieldValue("core") ClusterFacade core,
         @Advice.Return Observable<?> result,
         @Advice.Enter CallDepth callDepth) {
       if (callDepth.decrementAndGet() > 0) {
         return result;
       }
 
-      CouchbaseRequestInfo request = CouchbaseRequestInfo.create(null, declaringClass, methodName);
-      return Observable.create(new TracedOnSubscribe<>(result, instrumenter(), request));
+      CouchbaseRequestInfo request =
+          CouchbaseRequestInfo.create(
+              null, COUCHBASE_SERVER_TARGET.get(core), declaringClass, methodName);
+      return Observable.create(
+          TracedOnSubscribe.perSubscription(result, instrumenter(), request.copySupplier()));
     }
   }
 }

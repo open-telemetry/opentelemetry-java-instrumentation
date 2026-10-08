@@ -1,11 +1,8 @@
 # [API] Breaking Changes and Deprecation Policy
 
-## Quick Reference
-
-- Use when: reviewing public API removals/renames, `@Deprecated` usage, stable-vs-alpha compatibility, or any module rename that touches user-facing config keys or emitted telemetry identity
-- Review focus: deprecate-then-remove timing (driven by the publishing artifact's stability),
-  delegation direction, required Javadoc/CHANGELOG coverage, v3-preview gating for config keys and
-  scope names
+Use this article when changing a published API or renaming a module. It
+explains how artifact stability sets removal timing and how to preserve
+configuration aliases and telemetry identity during migration.
 
 ## What Counts as "Public API"
 
@@ -145,8 +142,10 @@ Keep the pre-rename name by passing the `"<current>|deprecated:<old>"` marker th
 ```java
 public CxfInstrumentationModule() {
   super(
-      "cxf",
-      expandDeprecatedNames("jaxws-2.0-cxf-3.0|deprecated:jaxws-cxf-3.0", "jaxws"));
+      AgentCommonConfig.get().isV3Preview() ? "jaxws-2.0-cxf-3.0" : "cxf",
+      AgentCommonConfig.get().isV3Preview()
+          ? new String[] {"jaxws-cxf", "jaxws"}
+          : expandDeprecatedNames("jaxws-2.0-cxf-3.0|deprecated:jaxws-cxf-3.0", "jaxws"));
 }
 ```
 
@@ -158,9 +157,10 @@ silently ignored, matching 3.0; releases before then still warn outside preview 
 ordinary replacement-property fallback, the alias warning is driven by explicit legacy-key presence,
 so it fires even when the current name determines the effective enablement.
 
-No per-module `AgentCommonConfig` branching, `isV3Preview()` checks, or bespoke logging are
-needed — the marker string plus the statically imported `expandDeprecatedNames` call is the
-entire change.
+Choose preview names using the module-directory primary and applicable component, role, feature,
+and umbrella secondaries. Preserve the existing names and order outside preview, using
+`expandDeprecatedNames` for renamed aliases. The helper handles deprecated-key detection and
+logging; do not add bespoke logging in each module.
 
 ### 2. Emitted instrumentation scope name (`INSTRUMENTATION_NAME` in `*Singletons`)
 
@@ -227,41 +227,3 @@ static {
 An instrumentation-name alias rename belongs under `🚫 Deprecations`, not breaking changes, while
 the compatibility alias remains. Record the breaking removal when v3-preview behavior becomes the
 default in 3.0.
-
-## What to Flag in Review
-
-- **Breaking change without a prior deprecation**: a method/class was removed or its signature
-  changed in a stable module, but there was no `@Deprecated` annotation in the preceding release.
-  Flag and ask for the deprecation to be introduced first.
-
-- **Removal of a deprecated item from a stable module before 3.0**: deprecated items in stable
-  modules must not be removed in a minor release — they stay until the next major version.
-
-- **`to be removed in 3.0` on an alpha-only symbol**: check the publishing module's
-  `gradle.properties`. If it is not `otel.stable=true`, the deprecation should say
-  `may be removed in the next minor release` — unless it is 3.0 milestone work.
-
-- **Removal timing in a CHANGELOG deprecation bullet**: ask for the timing sentence to be dropped;
-  it belongs in the Javadoc, annotation comment, runtime warning, `metadata.yaml`, and README.
-
-- **`@Deprecated` without Javadoc**: annotation present but no `@deprecated` Javadoc, or the
-  Javadoc doesn't name the replacement — ask for both.
-
-- **Wrong delegation direction**: the new method delegates to the old/deprecated one instead of
-  the reversed. This breaks overriders of the old method.
-
-- **Deprecated method with new logic**: instead of delegating, it reimplements. The logic should
-  live in the new method.
-
-- **Removal PR for things never deprecated**: a removal PR must only remove things that were
-  already annotated `@Deprecated` in an earlier release.
-
-- **Missing CHANGELOG entry**: a breaking change PR that does not add an
-  `⚠️ Breaking changes to non-stable APIs` bullet in the `Unreleased` section of `CHANGELOG.md`.
-
-- **Module rename without backcompat**: `InstrumentationModule` constructor uses only the new
-  name, dropping the pre-rename name that drove the legacy
-  `otel.instrumentation.<old>.enabled` config key (it should be appended to the new name with
-  the {@code "|deprecated:<old>"} marker so `DeprecatedInstrumentationNames` can gate it on
-  v3-preview); and/or `*Singletons#INSTRUMENTATION_NAME` was changed unconditionally instead
-  of being gated on `AgentCommonConfig.get().isV3Preview()`.

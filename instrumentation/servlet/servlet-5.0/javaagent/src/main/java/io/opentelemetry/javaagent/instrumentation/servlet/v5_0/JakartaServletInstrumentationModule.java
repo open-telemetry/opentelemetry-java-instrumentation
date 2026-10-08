@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v5_0;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncContextInstrumentation;
@@ -23,7 +24,11 @@ public class JakartaServletInstrumentationModule extends InstrumentationModule {
   private static final String BASE_PACKAGE = "jakarta.servlet";
 
   public JakartaServletInstrumentationModule() {
-    super("servlet", "servlet-5.0");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "servlet-5.0" : "servlet",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"servlet"}
+            : new String[] {"servlet-5.0"});
   }
 
   @Override

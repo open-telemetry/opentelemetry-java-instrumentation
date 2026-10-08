@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.jdbc.v8_5;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -43,7 +42,7 @@ class TomcatJdbcInstrumentationTest {
     DataSource dataSource = newDataSource();
     dataSource.setUrl("jdbc:postgresql://db.example:5432/orders");
 
-    assertConnectionPoolMetrics(dataSource, "db.example:5432/orders");
+    assertConnectionPoolMetrics(dataSource, "orders");
   }
 
   @Test
@@ -51,7 +50,7 @@ class TomcatJdbcInstrumentationTest {
     DataSource dataSource = newDataSource();
     dataSource.setUrl("jdbc:postgresql://[2001:db8::1]:5432/orders");
 
-    assertConnectionPoolMetrics(dataSource, "[2001:db8::1]:5432/orders");
+    assertConnectionPoolMetrics(dataSource, "orders");
   }
 
   @Test
@@ -61,7 +60,7 @@ class TomcatJdbcInstrumentationTest {
     dataSource.setConnectionProperties(
         "serverName=properties.example;portNumber=5433;databaseName=inventory");
 
-    assertConnectionPoolMetrics(dataSource, "properties.example:5433/inventory");
+    assertConnectionPoolMetrics(dataSource, "inventory");
   }
 
   @Test
@@ -152,29 +151,23 @@ class TomcatJdbcInstrumentationTest {
   private static void assertNoConnectionPoolMetrics() {
     testing.waitAndAssertMetrics(
         "io.opentelemetry.tomcat-jdbc",
-        emitStableDatabaseSemconv() ? "db.client.connection.count" : "db.client.connections.usage",
+        "db.client.connection.count",
         AbstractIterableAssert::isEmpty);
     testing.waitAndAssertMetrics(
         "io.opentelemetry.tomcat-jdbc",
-        emitStableDatabaseSemconv()
-            ? "db.client.connection.idle.min"
-            : "db.client.connections.idle.min",
+        "db.client.connection.idle.min",
         AbstractIterableAssert::isEmpty);
     testing.waitAndAssertMetrics(
         "io.opentelemetry.tomcat-jdbc",
-        emitStableDatabaseSemconv()
-            ? "db.client.connection.idle.max"
-            : "db.client.connections.idle.max",
+        "db.client.connection.idle.max",
         AbstractIterableAssert::isEmpty);
     testing.waitAndAssertMetrics(
         "io.opentelemetry.tomcat-jdbc",
-        emitStableDatabaseSemconv() ? "db.client.connection.max" : "db.client.connections.max",
+        "db.client.connection.limit",
         AbstractIterableAssert::isEmpty);
     testing.waitAndAssertMetrics(
         "io.opentelemetry.tomcat-jdbc",
-        emitStableDatabaseSemconv()
-            ? "db.client.connection.pending_requests"
-            : "db.client.connections.pending_requests",
+        "db.client.connection.pending_requests",
         AbstractIterableAssert::isEmpty);
   }
 }

@@ -127,9 +127,25 @@ class AttributeBindingFactoryTest {
   }
 
   @Test
+  void createDefaultAttributeBindingForTypeVariable() throws Exception {
+    Type type = GenericTestFields.class.getDeclaredField("value").getGenericType();
+    AttributeBindingFactory.createBinding("key", type).apply(setter, new TestClass("foo"));
+    verify(setter).put(stringKey("key"), "TestClass{value = foo}");
+  }
+
+  @Test
   void createDefaultAttributeBindingForArray() {
     List<String> expected = asList("TestClass{value = foo}", "TestClass{value = bar}", null);
     AttributeBindingFactory.createBinding("key", TestClass[].class)
+        .apply(setter, new TestClass[] {new TestClass("foo"), new TestClass("bar"), null});
+    verify(setter).put(stringArrayKey("key"), expected);
+  }
+
+  @Test
+  void createDefaultAttributeBindingForGenericArray() throws Exception {
+    List<String> expected = asList("TestClass{value = foo}", "TestClass{value = bar}", null);
+    Type type = GenericTestFields.class.getDeclaredField("values").getGenericType();
+    AttributeBindingFactory.createBinding("key", type)
         .apply(setter, new TestClass[] {new TestClass("foo"), new TestClass("bar"), null});
     verify(setter).put(stringArrayKey("key"), expected);
   }
@@ -224,5 +240,10 @@ class AttributeBindingFactoryTest {
     List<Float> floatList;
     List<TestClass> otherList;
     ArrayList<Long> longArrayList;
+  }
+
+  static class GenericTestFields<T> {
+    T value;
+    T[] values;
   }
 }

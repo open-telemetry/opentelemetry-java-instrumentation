@@ -59,7 +59,7 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
     SPECIAL_MAPPINGS.put("general.semconv_stability.opt_in", "otel.semconv-stability.opt-in");
     SPECIAL_MAPPINGS.put(
         "general.semconv_exception.signal.preview", "otel.semconv.exception.signal.preview");
-    // moving common http, database, messaging, and gen_ai configs under common
+    // moving common http, database, and gen_ai configs under common
     SPECIAL_MAPPINGS.put(
         "java.common.http.known_methods", "otel.instrumentation.http.known-methods");
     SPECIAL_MAPPINGS.put(
@@ -68,18 +68,6 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
     SPECIAL_MAPPINGS.put(
         "java.common.http.server.emit_experimental_telemetry/development",
         "otel.instrumentation.http.server.emit-experimental-telemetry");
-    SPECIAL_MAPPINGS.put(
-        "java.common.messaging.receive_telemetry/development.enabled",
-        "otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
-    SPECIAL_MAPPINGS.put(
-        "java.common.messaging.headers/development.included",
-        "otel.instrumentation.messaging.experimental.headers.included");
-    SPECIAL_MAPPINGS.put(
-        "java.common.messaging.headers/development.excluded",
-        "otel.instrumentation.messaging.experimental.headers.excluded");
-    SPECIAL_MAPPINGS.put(
-        "java.common.messaging.capture_headers/development",
-        "otel.instrumentation.messaging.experimental.capture-headers");
     SPECIAL_MAPPINGS.put(
         "java.common.gen_ai.capture_message_content",
         "otel.instrumentation.genai.capture-message-content");
@@ -95,13 +83,17 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
     SPECIAL_MAPPINGS.put(
         "java.servlet.javascript_snippet/development", "otel.experimental.javascript-snippet");
     // jmx properties don't have an "instrumentation" segment
-    SPECIAL_MAPPINGS.put("java.jmx.enabled", "otel.jmx.enabled");
+    SPECIAL_MAPPINGS.put("java.jmx.enabled", "otel.jmx.enabled"); // TODO: remove in v3
     SPECIAL_MAPPINGS.put("java.jmx.config", "otel.jmx.config");
     // otel.jmx.discovery.delay also has a dedicated branch in getLong() that reads it as a
     // Duration and falls back to otel.metric.export.interval; this mapping is here only to keep
     // it consistent with the rest of the jmx.* properties.
     SPECIAL_MAPPINGS.put("java.jmx.discovery.delay", "otel.jmx.discovery.delay");
-    SPECIAL_MAPPINGS.put("java.jmx.target.system", "otel.jmx.target.system");
+    SPECIAL_MAPPINGS.put("java.jmx.target.system", "otel.jmx.target.system"); // TODO: remove in v3
+    SPECIAL_MAPPINGS.put(
+        "java.jmx.metrics.experimental.included", "otel.jmx.metrics.experimental.included");
+    SPECIAL_MAPPINGS.put("java.jmx.metrics.included", "otel.jmx.metrics.included");
+    SPECIAL_MAPPINGS.put("java.jmx.metrics.excluded", "otel.jmx.metrics.excluded");
   }
 
   private final ConfigProperties configProperties;

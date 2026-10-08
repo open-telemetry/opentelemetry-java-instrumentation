@@ -33,7 +33,7 @@ public class JedisRequestContext<T> {
 
   public void detachAndEnd() {
     contextThreadLocal.remove();
-    if (request != null) {
+    if (request != null && instrumenter != null && context != null) {
       endSpan(instrumenter, context, request, throwable);
     }
   }

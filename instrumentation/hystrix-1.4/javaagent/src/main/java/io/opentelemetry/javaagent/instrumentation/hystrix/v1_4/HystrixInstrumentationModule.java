@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.hystrix.v1_4;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -16,7 +17,16 @@ import java.util.List;
 public class HystrixInstrumentationModule extends InstrumentationModule {
 
   public HystrixInstrumentationModule() {
-    super("hystrix", "hystrix-1.4");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "hystrix-1.4" : "hystrix",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"hystrix"}
+            : new String[] {"hystrix-1.4"});
+  }
+
+  @Override
+  public boolean defaultEnabled() {
+    return super.defaultEnabled() && !AgentCommonConfig.get().isV3Preview();
   }
 
   @Override

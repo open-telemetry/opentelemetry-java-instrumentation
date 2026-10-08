@@ -16,7 +16,7 @@ import java.util.List;
 public class OshiInstrumentationModule extends InstrumentationModule {
 
   public OshiInstrumentationModule() {
-    super("oshi", "oshi-5.0");
+    super("oshi-5.0", "oshi");
   }
 
   @Override

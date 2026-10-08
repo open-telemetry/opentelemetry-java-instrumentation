@@ -113,6 +113,7 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
   testImplementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
   testImplementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
+  testImplementation("io.opentelemetry.contrib:opentelemetry-samplers")
   testImplementation("io.opentelemetry:opentelemetry-exporter-logging")
   testImplementation("io.opentelemetry:opentelemetry-exporter-otlp")
   testImplementation("io.opentelemetry:opentelemetry-exporter-zipkin")
@@ -364,13 +365,7 @@ tasks {
     from(sourceSets["javaSpring4"].java)
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-  }
-
   check {
-    dependsOn(testing.suites, testStableSemconv)
+    dependsOn(testing.suites)
   }
 }

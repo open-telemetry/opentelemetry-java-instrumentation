@@ -156,8 +156,7 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
           // underlying netty instrumentation does not provide these
           attributes.remove(SERVER_ADDRESS);
           attributes.remove(SERVER_PORT);
-        } else {
-          // ratpack client instrumentation does not provide this
+        } else if (!capturesProtocolVersion()) {
           attributes.remove(NETWORK_PROTOCOL_VERSION);
         }
         return attributes;
@@ -166,6 +165,10 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
 
   protected boolean useNettyClientAttributes() {
     return true;
+  }
+
+  protected boolean capturesProtocolVersion() {
+    return false;
   }
 
   private static Throwable nettyClientSpanErrorMapper(URI uri, Throwable exception) {

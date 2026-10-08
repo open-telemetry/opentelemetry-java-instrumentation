@@ -38,50 +38,37 @@ tasks {
   }
 
   test {
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true",
+      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
     )
   }
 
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+  val experimentalSuites = testing.suites.withType(JvmTestSuite::class)
+    .map { suite ->
+      register<Test>("${suite.name}Experimental") {
+        val sourceTask = named<Test>(suite.name).get()
+        setJvmArgs(sourceTask.jvmArgs)
+        setSystemProperties(sourceTask.systemProperties)
 
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true,otel.instrumentation.kafka.experimental-span-attributes=true",
-    )
-  }
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
 
-  val testMessagingPreview = register<Test>("testMessagingPreview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
-  }
-
-  val testMessagingPreviewNoReceiveTelemetry = register<Test>("testMessagingPreviewNoReceiveTelemetry") {
-    testClassesDirs = sourceSets["testNoReceiveTelemetry"].output.classesDirs
-    classpath = sourceSets["testNoReceiveTelemetry"].runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
+        val experimentalConfig = "otel.instrumentation.kafka.experimental-span-attributes=true"
+        jvmArgs("-D$experimentalConfig")
+        systemProperty(
+          "metadataConfig",
+          listOfNotNull(sourceTask.systemProperties["metadataConfig"], experimentalConfig).joinToString(","),
+        )
+        isEnabled = sourceTask.enabled
+      }
+    }
 
   check {
-    dependsOn(testing.suites, testExperimental, testMessagingPreview, testBothSemconv, testMessagingPreviewNoReceiveTelemetry)
+    dependsOn(
+      testing.suites,
+      experimentalSuites,
+    )
   }
 }

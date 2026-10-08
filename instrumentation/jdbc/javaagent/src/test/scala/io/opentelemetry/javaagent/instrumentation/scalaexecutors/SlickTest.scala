@@ -5,12 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.scalaexecutors
 
+import io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE
+import io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME
+import io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT
+import io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME
 import io.opentelemetry.api.trace.{SpanKind, Tracer}
-import io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv
-import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.{
-  maybeStable,
-  maybeStableDbSystemName
-}
 import io.opentelemetry.instrumentation.testing.junit.{
   AgentInstrumentationExtension,
   InstrumentationExtension
@@ -81,39 +80,18 @@ class SlickTest {
             new Consumer[SpanDataAssert] {
               override def accept(span: SpanDataAssert): Unit =
                 span
-                  .hasName(
-                    if (emitStableDatabaseSemconv()) "SELECT"
-                    else s"SELECT ${Db}"
-                  )
+                  .hasName("SELECT")
                   .hasKind(SpanKind.CLIENT)
                   .hasParent(trace.getSpan(0))
                   .hasAttributesSatisfyingExactly(
                     equalTo(
-                      maybeStable(DB_SYSTEM),
-                      maybeStableDbSystemName(DbSystemIncubatingValues.H2)
+                      DB_SYSTEM_NAME,
+                      "h2database"
                     ),
-                    equalTo(maybeStable(DB_NAME), Db),
-                    equalTo(
-                      DB_USER,
-                      if (emitStableDatabaseSemconv()) null else Username
-                    ),
-                    equalTo(
-                      DB_CONNECTION_STRING,
-                      if (emitStableDatabaseSemconv()) null else "h2:mem:"
-                    ),
-                    equalTo(
-                      maybeStable(DB_STATEMENT),
-                      if (emitStableDatabaseSemconv()) "SELECT 3"
-                      else "SELECT ?"
-                    ),
-                    equalTo(
-                      DB_QUERY_SUMMARY,
-                      if (emitStableDatabaseSemconv()) "SELECT" else null
-                    ),
-                    equalTo(
-                      maybeStable(DB_OPERATION),
-                      if (emitStableDatabaseSemconv()) null else "SELECT"
-                    )
+                    equalTo(DB_NAMESPACE, Db),
+
+                    equalTo(DB_QUERY_TEXT, "SELECT 3"),
+                    equalTo(DB_QUERY_SUMMARY, "SELECT")
                   )
             }
           )

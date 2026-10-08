@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.assertNoMetrics;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -18,9 +16,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_ANONYMOUS;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY;
@@ -49,7 +45,6 @@ class SpringIntegrationAndRabbitTest {
     rabbit = new RabbitExtension(null);
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void shouldCooperateWithExistingRabbitMqInstrumentation() {
     testing.waitForTraces(13); // from rabbitmq instrumentation of startup
@@ -78,10 +73,7 @@ class SpringIntegrationAndRabbitTest {
                 span -> span.hasName("queue.declare"),
                 span -> span.hasName("queue.bind"),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "publish testTopic:testTopic"
-                                : "testTopic publish")
+                    span.hasName("publish testTopic:testTopic")
                         .hasParent(trace.getSpan(1))
                         .hasKind(SpanKind.PRODUCER)
                         .hasAttributesSatisfyingExactly(
@@ -93,33 +85,15 @@ class SpringIntegrationAndRabbitTest {
                             serverAddress(),
                             serverPort(),
                             equalTo(MESSAGING_SYSTEM, "rabbitmq"),
-                            equalTo(
-                                MESSAGING_DESTINATION_NAME,
-                                emitStableMessagingSemconv() ? "testTopic:testTopic" : "testTopic"),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "publish" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "send" : null),
-                            bodySize(),
+                            equalTo(MESSAGING_DESTINATION_NAME, "testTopic:testTopic"),
+                            equalTo(MESSAGING_OPERATION_NAME, "publish"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
                             satisfies(
                                 MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
                                 val -> val.isInstanceOf(String.class))),
-                // spring-cloud-stream-binder-rabbit listener puts all messages into a BlockingQueue
-                // immediately after receiving
-                // that's why the rabbitmq CONSUMER span will never have any child span (and
-                // propagate context, actually)
+                // Listener registration marks Spring Rabbit as this consumer's Process owner.
                 span ->
-                    span.satisfies(
-                            spanData ->
-                                assertThat(spanData.getName())
-                                    .matches(
-                                        emitStableMessagingSemconv()
-                                            ? "process"
-                                            : "testTopic.anonymous.[-\\w]+ process"))
+                    span.satisfies(spanData -> assertThat(spanData.getName()).matches("process"))
                         .hasParent(trace.getSpan(6))
                         .hasKind(SpanKind.CONSUMER)
                         .hasAttributesSatisfyingExactly(
@@ -132,56 +106,18 @@ class SpringIntegrationAndRabbitTest {
                             serverPort(),
                             equalTo(MESSAGING_SYSTEM, "rabbitmq"),
                             consumerDestinationName(),
-                            anonymousDestination(),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            bodySize(),
-                            satisfies(
-                                MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
-                                val -> val.isInstanceOf(String.class)),
-                            deliveryTag()),
-                // spring-integration will detect that spring-rabbit has already created a consumer
-                // span and back off
-                span ->
-                    span.satisfies(
-                            spanData ->
-                                assertThat(spanData.getName())
-                                    .matches(
-                                        emitStableMessagingSemconv()
-                                            ? "process"
-                                            : "testTopic process"))
-                        .hasParent(trace.getSpan(6))
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "rabbitmq"),
-                            consumerDestinationName(),
-                            anonymousDestination(),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "process" : null),
+                            equalTo(MESSAGING_DESTINATION_ANONYMOUS, true),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
-                            bodySize(),
-                            equalTo(
-                                MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
-                                emitStableMessagingSemconv() ? "testTopic" : null),
+                            equalTo(MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, "testTopic"),
                             deliveryTag()),
                 span ->
-                    span.hasName("consumer").hasParent(trace.getSpan(8)).hasTotalAttributeCount(0)),
+                    span.hasName("consumer").hasParent(trace.getSpan(7)).hasTotalAttributeCount(0)),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableMessagingSemconv() ? "ack" : "basic.ack")
+                    span.hasName("ack")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(ackAssertions())));
 
@@ -190,7 +126,6 @@ class SpringIntegrationAndRabbitTest {
     assertNoMetrics(testing);
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   private static List<AttributeAssertion> ackAssertions() {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
@@ -200,16 +135,11 @@ class SpringIntegrationAndRabbitTest {
                 satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                 satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6", null)),
                 equalTo(MESSAGING_SYSTEM, "rabbitmq")));
-    if (emitStableMessagingSemconv()) {
-      assertions.add(serverAddress());
-      assertions.add(serverPort());
-      assertions.add(equalTo(MESSAGING_OPERATION_NAME, "ack"));
-      assertions.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
-      assertions.add(deliveryTag());
-      if (emitOldMessagingSemconv()) {
-        assertions.add(equalTo(MESSAGING_OPERATION, "settle"));
-      }
-    }
+    assertions.add(serverAddress());
+    assertions.add(serverPort());
+    assertions.add(equalTo(MESSAGING_OPERATION_NAME, "ack"));
+    assertions.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
+    assertions.add(deliveryTag());
     return assertions;
   }
 
@@ -217,11 +147,7 @@ class SpringIntegrationAndRabbitTest {
     return satisfies(
         SERVER_ADDRESS,
         val -> {
-          if (emitStableMessagingSemconv()) {
-            val.isIn("127.0.0.1", "0:0:0:0:0:0:0:1");
-          } else {
-            val.isNull();
-          }
+          val.isIn("127.0.0.1", "0:0:0:0:0:0:0:1");
         });
   }
 
@@ -229,24 +155,7 @@ class SpringIntegrationAndRabbitTest {
     return satisfies(
         SERVER_PORT,
         val -> {
-          if (emitStableMessagingSemconv()) {
-            val.isInstanceOf(Long.class);
-          } else {
-            val.isNull();
-          }
-        });
-  }
-
-  @SuppressWarnings("deprecation") // using deprecated semconv
-  private static AttributeAssertion bodySize() {
-    return satisfies(
-        MESSAGING_MESSAGE_BODY_SIZE,
-        val -> {
-          if (emitOldMessagingSemconv()) {
-            val.isInstanceOf(Long.class);
-          } else {
-            val.isNull();
-          }
+          val.isInstanceOf(Long.class);
         });
   }
 
@@ -254,11 +163,7 @@ class SpringIntegrationAndRabbitTest {
     return satisfies(
         MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG,
         val -> {
-          if (emitStableMessagingSemconv()) {
-            val.isNotNegative();
-          } else {
-            val.isNull();
-          }
+          val.isNotNegative();
         });
   }
 
@@ -266,15 +171,7 @@ class SpringIntegrationAndRabbitTest {
     return satisfies(
         MESSAGING_DESTINATION_NAME,
         val -> {
-          if (emitStableMessagingSemconv()) {
-            val.matches("testTopic:testTopic:testTopic\\.anonymous\\.[A-Za-z0-9_-]{22}");
-          } else {
-            val.isEqualTo("testTopic");
-          }
+          val.matches("testTopic:testTopic:testTopic\\.anonymous\\.[A-Za-z0-9_-]{22}");
         });
-  }
-
-  private static AttributeAssertion anonymousDestination() {
-    return equalTo(MESSAGING_DESTINATION_ANONYMOUS, emitStableMessagingSemconv() ? true : null);
   }
 }

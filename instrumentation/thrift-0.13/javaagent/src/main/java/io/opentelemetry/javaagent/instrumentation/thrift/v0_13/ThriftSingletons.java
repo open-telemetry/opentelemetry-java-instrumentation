@@ -21,7 +21,7 @@ import org.apache.thrift.protocol.TProtocol;
 
 public final class ThriftSingletons {
 
-  private static final VirtualField<TProtocol, TProtocol> protocolVirtualField =
+  private static final VirtualField<TProtocol, TProtocol> PROTOCOL_DECORATOR =
       VirtualField.find(TProtocol.class, TProtocol.class);
   private static final Instrumenter<ThriftRequest, ThriftResponse> clientInstrumenter =
       ThriftInstrumenterFactory.createClientInstrumenter(
@@ -44,7 +44,7 @@ public final class ThriftSingletons {
   }
 
   public static TProtocol getProtocolDecorator(TProtocol protocol, boolean isOutput) {
-    TProtocol protocolDecorator = protocolVirtualField.get(protocol);
+    TProtocol protocolDecorator = PROTOCOL_DECORATOR.get(protocol);
     if (protocolDecorator != null) {
       return protocolDecorator;
     }
@@ -53,7 +53,7 @@ public final class ThriftSingletons {
         isOutput
             ? new ServerOutProtocolDecorator(protocol)
             : new ServerInProtocolDecorator(protocol, null, serverInstrumenter());
-    protocolVirtualField.set(protocol, protocolDecorator);
+    PROTOCOL_DECORATOR.set(protocol, protocolDecorator);
     return protocolDecorator;
   }
 

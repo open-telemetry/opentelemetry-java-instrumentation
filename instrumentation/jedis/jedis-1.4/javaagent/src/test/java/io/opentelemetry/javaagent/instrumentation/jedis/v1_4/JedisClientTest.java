@@ -5,18 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -30,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.GenericContainer;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class JedisClientTest {
@@ -73,12 +70,12 @@ class JedisClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                    span.hasName("SET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "SET foo ?"),
+                            equalTo(DB_OPERATION_NAME, "SET"),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
@@ -93,6 +90,38 @@ class JedisClientTest {
   }
 
   @Test
+  void pooledCommand() throws Exception {
+    JedisPool pool = new JedisPool(host, port);
+    cleanup.deferCleanup(pool::destroy);
+    try {
+      pool.getClass().getMethod("setDefaultPoolWait", long.class).invoke(pool, 10_000L);
+      pool.getClass().getMethod("init").invoke(pool);
+    } catch (NoSuchMethodException ignored) {
+      // Jedis 1.5 initializes pools in the constructor.
+    }
+    Jedis pooled = pool.getResource();
+    try {
+      pooled.set("pooled", "value");
+    } finally {
+      pool.returnResource(pooled);
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SET " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "SET pooled ?"),
+                            equalTo(DB_OPERATION_NAME, "SET"),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port))));
+  }
+
+  @Test
   void getCommand() {
     jedis.set("foo", "bar");
     String value = jedis.get("foo");
@@ -103,24 +132,24 @@ class JedisClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                    span.hasName("SET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "SET foo ?"),
+                            equalTo(DB_OPERATION_NAME, "SET"),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "GET " + host + ":" + port : "GET")
+                    span.hasName("GET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "GET foo"),
-                            equalTo(maybeStable(DB_OPERATION), "GET"),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "GET foo"),
+                            equalTo(DB_OPERATION_NAME, "GET"),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
@@ -137,27 +166,24 @@ class JedisClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                    span.hasName("SET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "SET foo ?"),
+                            equalTo(DB_OPERATION_NAME, "SET"),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "RANDOMKEY " + host + ":" + port
-                                : "RANDOMKEY")
+                    span.hasName("RANDOMKEY " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY"),
-                            equalTo(maybeStable(DB_OPERATION), "RANDOMKEY"),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "RANDOMKEY"),
+                            equalTo(DB_OPERATION_NAME, "RANDOMKEY"),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));

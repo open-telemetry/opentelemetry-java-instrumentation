@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.geode.v1_4;
 
 import com.google.auto.value.AutoValue;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import javax.annotation.Nullable;
 import org.apache.geode.cache.Region;
 
@@ -14,7 +15,8 @@ abstract class GeodeRequest {
 
   static GeodeRequest create(
       Region<?, ?> region, String operationName, @Nullable String queryText) {
-    return new AutoValue_GeodeRequest(region, operationName, queryText);
+    return new AutoValue_GeodeRequest(
+        region, operationName, queryText, GeodeServerTargets.get(region));
   }
 
   abstract Region<?, ?> getRegion();
@@ -23,4 +25,7 @@ abstract class GeodeRequest {
 
   @Nullable
   abstract String getQueryText();
+
+  @Nullable
+  abstract DbServerTarget getServerTarget();
 }

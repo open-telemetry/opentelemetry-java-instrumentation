@@ -27,8 +27,6 @@ public class AgentDistributionConfig {
 
   private static volatile boolean initialized;
 
-  private final boolean indyEnabled;
-
   // This property may be set to force synchronous AgentListener#afterAgent() execution: the
   // condition for delaying the AgentListener initialization is pretty broad and in case it covers
   // too much javaagent users can file a bug, force sync execution by setting this property to true
@@ -83,14 +81,12 @@ public class AgentDistributionConfig {
 
   @JsonCreator
   AgentDistributionConfig(
-      @Nullable @JsonProperty("indy/development") Boolean indyEnabled,
       @Nullable @JsonProperty("force_synchronous_agent_listeners/development")
           Boolean forceSynchronousAgentListeners,
       @Nullable @JsonProperty("exclude_classes") List<String> excludeClasses,
       @Nullable @JsonProperty("exclude_class_loaders") List<String> excludeClassLoaders,
       @Nullable @JsonProperty("thread_details_enabled") Boolean threadDetailsEnabled,
       @Nullable @JsonProperty("instrumentation") InstrumentationConfig instrumentation) {
-    this.indyEnabled = indyEnabled != null ? indyEnabled : false;
     this.forceSynchronousAgentListeners =
         forceSynchronousAgentListeners != null ? forceSynchronousAgentListeners : false;
     this.excludeClasses =
@@ -103,7 +99,7 @@ public class AgentDistributionConfig {
 
   // Default constructor for testing
   AgentDistributionConfig() {
-    this(null, null, null, null, null, null);
+    this(null, null, null, null, null);
   }
 
   /**
@@ -121,8 +117,9 @@ public class AgentDistributionConfig {
    * Returns whether any of the given instrumentations is enabled, falling back to {@code
    * defaultEnabled} if none of the names are explicitly configured.
    *
-   * <p>Names are checked in order; the first name found in either the disabled or enabled list
-   * wins. For any given name, disabled takes priority over enabled.
+   * <p>For declarative configuration, hyphens and periods in names are converted to underscores.
+   * Names are checked in order; the first name found in either the disabled or enabled list wins.
+   * For any given name, disabled takes priority over enabled.
    *
    * @param names the instrumentation names to check
    * @param defaultEnabled the default to use if no name is explicitly configured
@@ -130,7 +127,7 @@ public class AgentDistributionConfig {
    */
   public boolean isInstrumentationEnabled(Iterable<String> names, boolean defaultEnabled) {
     for (String name : names) {
-      String normalizedName = name.replace('-', '_');
+      String normalizedName = name.replace('-', '_').replace('.', '_');
       if (instrumentation.getDisabled().contains(normalizedName)) {
         return false;
       }
@@ -160,10 +157,6 @@ public class AgentDistributionConfig {
   // Only used by tests
   InstrumentationConfig getInstrumentation() {
     return instrumentation;
-  }
-
-  public boolean isIndyEnabled() {
-    return indyEnabled;
   }
 
   public boolean isThreadDetailsEnabled() {
@@ -237,7 +230,6 @@ public class AgentDistributionConfig {
     private ConfigPropertiesAgentDistributionConfig(
         ConfigProperties configProperties, boolean v3Preview) {
       super(
-          configProperties.getBoolean("otel.javaagent.experimental.indy", v3Preview),
           configProperties.getBoolean(
               "otel.javaagent.experimental.force-synchronous-agent-listeners", false),
           configProperties.getList("otel.javaagent.exclude-classes"),

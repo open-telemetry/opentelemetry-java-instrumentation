@@ -24,7 +24,7 @@
 package io.opentelemetry.instrumentation.thrift.v0_13;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -287,10 +287,10 @@ public abstract class AbstractThriftTest {
         .hasAttributesSatisfyingExactly(
             equalTo(
                 RPC_METHOD,
-                emitStableRpcSemconv() ? CustomService.class.getName() + "/" + method : method),
+                emitPreviewRpcSemconv() ? CustomService.class.getName() + "/" + method : method),
             equalTo(RPC_SERVICE, emitOldRpcSemconv() ? CustomService.class.getName() : null),
             equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_thrift" : null),
-            equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "apache_thrift" : null),
+            equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "apache_thrift" : null),
             equalTo(SERVER_PORT, port),
             equalTo(SERVER_ADDRESS, "localhost"),
             equalTo(NETWORK_TYPE, "ipv4"),
@@ -298,7 +298,9 @@ public abstract class AbstractThriftTest {
             equalTo(NETWORK_PEER_PORT, port),
             equalTo(
                 ERROR_TYPE,
-                hasError && emitStableRpcSemconv() ? TApplicationException.class.getName() : null));
+                hasError && emitPreviewRpcSemconv()
+                    ? TApplicationException.class.getName()
+                    : null));
     if (hasError) {
       span.hasException(new TApplicationException());
     }
@@ -311,10 +313,10 @@ public abstract class AbstractThriftTest {
     return span.hasName(className + "/" + method)
         .hasKind(SpanKind.SERVER)
         .hasAttributesSatisfyingExactly(
-            equalTo(RPC_METHOD, emitStableRpcSemconv() ? className + "/" + method : method),
+            equalTo(RPC_METHOD, emitPreviewRpcSemconv() ? className + "/" + method : method),
             equalTo(RPC_SERVICE, emitOldRpcSemconv() ? className : null),
             equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_thrift" : null),
-            equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "apache_thrift" : null),
+            equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "apache_thrift" : null),
             equalTo(SERVER_PORT, port),
             equalTo(SERVER_ADDRESS, "127.0.0.1"),
             equalTo(NETWORK_TYPE, "ipv4"),
@@ -322,7 +324,7 @@ public abstract class AbstractThriftTest {
             satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative),
             equalTo(NETWORK_LOCAL_ADDRESS, "127.0.0.1"),
             equalTo(NETWORK_LOCAL_PORT, port),
-            equalTo(ERROR_TYPE, emitStableRpcSemconv() ? errorType : null));
+            equalTo(ERROR_TYPE, emitPreviewRpcSemconv() ? errorType : null));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
@@ -336,11 +338,11 @@ public abstract class AbstractThriftTest {
     return span.hasName(className + "/" + method)
         .hasKind(SpanKind.SERVER)
         .hasAttributesSatisfyingExactly(
-            equalTo(RPC_METHOD, emitStableRpcSemconv() ? className + "/" + method : method),
+            equalTo(RPC_METHOD, emitPreviewRpcSemconv() ? className + "/" + method : method),
             equalTo(RPC_SERVICE, emitOldRpcSemconv() ? className : null),
             equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_thrift" : null),
-            equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "apache_thrift" : null),
-            equalTo(ERROR_TYPE, emitStableRpcSemconv() ? errorType : null));
+            equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "apache_thrift" : null),
+            equalTo(ERROR_TYPE, emitPreviewRpcSemconv() ? errorType : null));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
@@ -388,7 +390,7 @@ public abstract class AbstractThriftTest {
                                           equalTo(RPC_SYSTEM, "apache_thrift"),
                                           equalTo(NETWORK_TYPE, "ipv4")))));
     }
-    if (emitStableRpcSemconv()) {
+    if (emitPreviewRpcSemconv()) {
       getTesting()
           .waitAndAssertMetrics(
               "io.opentelemetry.thrift-0.13",
@@ -449,7 +451,7 @@ public abstract class AbstractThriftTest {
     assertMetrics(port);
   }
 
-  private static Stream<Arguments> transports() throws Exception {
+  private static TTransportFactory framedTransportFactory() throws Exception {
     Class<?> framedTransportClass;
     try {
       framedTransportClass = Class.forName("org.apache.thrift.transport.TFramedTransport$Factory");
@@ -457,6 +459,10 @@ public abstract class AbstractThriftTest {
       framedTransportClass =
           Class.forName("org.apache.thrift.transport.layered.TFramedTransport$Factory");
     }
+    return (TTransportFactory) framedTransportClass.getConstructor().newInstance();
+  }
+
+  private static Stream<Arguments> transports() throws Exception {
     Class<?> fastFramedTransportClass;
     try {
       fastFramedTransportClass =
@@ -465,12 +471,10 @@ public abstract class AbstractThriftTest {
       fastFramedTransportClass =
           Class.forName("org.apache.thrift.transport.layered.TFastFramedTransport$Factory");
     }
-    TTransportFactory framedTransportFactory =
-        (TTransportFactory) framedTransportClass.getConstructor().newInstance();
     TTransportFactory fastFramedTransportFactory =
         (TTransportFactory) fastFramedTransportClass.getConstructor().newInstance();
     return Stream.of(
-        Arguments.of(named("framed", framedTransportFactory)),
+        Arguments.of(named("framed", framedTransportFactory())),
         Arguments.of(named("fast framed", fastFramedTransportFactory)));
   }
 
@@ -1070,5 +1074,43 @@ public abstract class AbstractThriftTest {
                         span.hasName("callback")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void asyncServerErrorDoesNotAffectFollowingRequestOnSameConnection() throws Exception {
+    int port = startAsyncServer();
+    CustomService.Iface client = createClient(port, framedTransportFactory());
+
+    assertThatThrownBy(client::withError).isInstanceOf(TApplicationException.class);
+    assertThat(client.say("After", "Error")).isEqualTo("Say After Error");
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        assertClientSpan(span, "withError", port, true)
+                            .hasNoParent()
+                            .hasStatus(StatusData.error()),
+                    span ->
+                        assertServerSpan(
+                                span,
+                                CustomAsyncHandler.class.getName(),
+                                "withError",
+                                port,
+                                IllegalStateException.class.getName())
+                            .hasParent(trace.getSpan(0))
+                            .hasStatus(StatusData.error())),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        assertClientSpan(span, "say", port)
+                            .hasNoParent()
+                            .hasStatus(StatusData.unset()),
+                    span ->
+                        assertServerSpan(
+                                span, CustomAsyncHandler.class.getName(), "say", port, null)
+                            .hasParent(trace.getSpan(0))
+                            .hasStatus(StatusData.unset())));
   }
 }

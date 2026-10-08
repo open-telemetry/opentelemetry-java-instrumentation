@@ -5,18 +5,15 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.v2_6.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -87,8 +84,6 @@ class OpenTelemetryConsumerInterceptorTest {
 
   @Test
   void deduplicatesRecordsAcrossReceiveInstrumentations() {
-    assumeTrue(emitStableMessagingSemconv());
-
     KafkaTelemetry telemetry =
         KafkaTelemetry.builder(testing.getOpenTelemetry())
             .setMessagingReceiveTelemetryEnabled(true)
@@ -115,8 +110,6 @@ class OpenTelemetryConsumerInterceptorTest {
 
   @Test
   void disabledReceiveClearsInheritedReceiveOperation() {
-    assumeTrue(emitStableMessagingSemconv());
-
     KafkaTelemetry telemetry =
         KafkaTelemetry.builder(testing.getOpenTelemetry())
             .setMessagingReceiveTelemetryEnabled(false)
@@ -141,8 +134,7 @@ class OpenTelemetryConsumerInterceptorTest {
         KafkaConsumerContextUtil.withReceiveOperation(Context.current(), true);
     try (Scope ignored = inheritedContext.makeCurrent()) {
       receiveContext =
-          requireNonNull(
-              supplier.get().buildAndFinishSpan(records, "test", "client", Timer.start()));
+          requireNonNull(supplier.get().buildAndFinishSpan(records, "test", "client", null));
     }
 
     assertThat(KafkaConsumerContextUtil.hasReceiveOperation(receiveContext)).isFalse();

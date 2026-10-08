@@ -8,9 +8,6 @@ package io.opentelemetry.agents;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 public class Agent {
 
@@ -22,31 +19,19 @@ public class Agent {
       new Agent("latest", "latest mainstream release", OTEL_LATEST);
   public static final Agent LATEST_SNAPSHOT =
       new Agent("snapshot", "latest available snapshot version from main");
-  public static final Agent LATEST_SNAPSHOT_INDY =
-      new Agent(
-          "snapshot-indy",
-          "latest available snapshot version from main with indy enabled",
-          null,
-          Collections.singletonList("-Dotel.javaagent.experimental.indy=true"));
 
   private final String name;
   private final String description;
   private final URL url;
-  private final List<String> additionalJvmArgs;
 
   public Agent(String name, String description) {
     this(name, description, null);
   }
 
   public Agent(String name, String description, String url) {
-    this(name, description, url, Collections.emptyList());
-  }
-
-  public Agent(String name, String description, String url, List<String> additionalJvmArgs) {
     this.name = name;
     this.description = description;
     this.url = makeUrl(url);
-    this.additionalJvmArgs = new ArrayList<>(additionalJvmArgs);
   }
 
   public String getName() {
@@ -63,10 +48,6 @@ public class Agent {
 
   public URL getUrl() {
     return url;
-  }
-
-  public List<String> getAdditionalJvmArgs() {
-    return Collections.unmodifiableList(additionalJvmArgs);
   }
 
   private static URL makeUrl(String url) {

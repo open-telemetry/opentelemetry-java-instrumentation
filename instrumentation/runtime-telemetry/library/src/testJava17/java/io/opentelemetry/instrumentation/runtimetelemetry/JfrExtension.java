@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Experimental;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Internal;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrConfig;
+import io.opentelemetry.instrumentation.testing.internal.CollectedMetric;
 import io.opentelemetry.instrumentation.testing.internal.MetaDataCollector;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
@@ -44,7 +45,7 @@ class JfrExtension implements BeforeEachCallback, AfterEachCallback {
   private SdkMeterProvider meterProvider;
   private InMemoryMetricReader metricReader;
   private RuntimeTelemetry runtimeMetrics;
-  private final Map<InstrumentationScopeInfo, Map<String, MetricData>> metricsByScope =
+  private final Map<InstrumentationScopeInfo, Map<String, CollectedMetric>> metricsByScope =
       new HashMap<>();
   private final Set<InstrumentationScopeInfo> instrumentationScopes = new HashSet<>();
 
@@ -90,7 +91,7 @@ class JfrExtension implements BeforeEachCallback, AfterEachCallback {
       String path = new File("").getAbsolutePath();
 
       MetaDataCollector.writeTelemetryToFiles(
-          path, metricsByScope, emptyMap(), instrumentationScopes);
+          path, metricsByScope, emptyMap(), emptyMap(), instrumentationScopes);
     }
   }
 
@@ -114,13 +115,13 @@ class JfrExtension implements BeforeEachCallback, AfterEachCallback {
 
   private void collectEmittedMetrics(List<MetricData> metrics) {
     for (MetricData metric : metrics) {
-      Map<String, MetricData> scopeMap =
+      Map<String, CollectedMetric> scopeMap =
           this.metricsByScope.computeIfAbsent(
               metric.getInstrumentationScopeInfo(), m -> new HashMap<>());
 
-      if (!scopeMap.containsKey(metric.getName())) {
-        scopeMap.put(metric.getName(), metric);
-      }
+      scopeMap
+          .computeIfAbsent(metric.getName(), name -> new CollectedMetric(metric))
+          .collect(metric);
 
       InstrumentationScopeInfo scopeInfo = metric.getInstrumentationScopeInfo();
       if (!scopeInfo.getName().equals("test")) {

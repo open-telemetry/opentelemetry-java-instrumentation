@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("org.apache.pulsar")
     module.set("pulsar-client")
-    versions.set("[2.8.0,)")
+    versions.set("[2.8.0,5)")
     assertInverse.set(true)
   }
 }
@@ -17,6 +17,10 @@ dependencies {
   testImplementation("javax.annotation:javax.annotation-api:1.3.2")
   testImplementation("org.testcontainers:testcontainers-pulsar")
   testLibrary("org.apache.pulsar:pulsar-client-admin:2.8.0")
+
+  // api changes in pulsar client v5
+  latestDepTestLibrary("org.apache.pulsar:pulsar-client:4.+") // documented limitation
+  latestDepTestLibrary("org.apache.pulsar:pulsar-client-admin:4.+") // documented limitation
 }
 
 tasks {
@@ -42,54 +46,20 @@ tasks {
     filter {
       excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
     }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
 
     jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=true")
     systemProperty("metadataConfig", "otel.instrumentation.pulsar.experimental-span-attributes=true")
-  }
-
-  val testMessagingPreview = register<Test>("testMessagingPreview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
-    }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
-  val testMessagingPreviewReceiveSpansDisabled = register<Test>("testMessagingPreviewReceiveSpansDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("PulsarClientSuppressReceiveSpansTest")
-    }
-    include("**/PulsarClientSuppressReceiveSpansTest.*")
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("PulsarClientTest.testConsumeNonPartitionedTopic")
-    }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
   }
 
   test {
     filter {
       excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
     }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true",
+      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
     )
   }
 
@@ -97,9 +67,6 @@ tasks {
     dependsOn(
       testReceiveSpanDisabled,
       testExperimental,
-      testMessagingPreview,
-      testMessagingPreviewReceiveSpansDisabled,
-      testBothSemconv,
     )
   }
 

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.okhttp.v2_2;
 
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import com.squareup.okhttp.Callback;
@@ -15,7 +14,6 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 import com.squareup.okhttp.internal.http.HttpMethod;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
@@ -23,9 +21,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.io.IOException;
 import java.net.URI;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -95,19 +91,5 @@ class OkHttp2Test extends AbstractHttpClientTest<Request> {
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.disableTestCircularRedirects();
-
-    optionsBuilder.setHttpAttributes(
-        uri -> {
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          // protocol is extracted from the response, and those URLs cause exceptions (= null
-          // response)
-          if ("http://localhost:61/".equals(uri.toString())
-              || "https://192.0.2.1/".equals(uri.toString())
-              || resolveAddress("/read-timeout").toString().equals(uri.toString())) {
-            attributes.remove(NETWORK_PROTOCOL_VERSION);
-          }
-          return attributes;
-        });
   }
 }

@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -18,7 +19,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class GwtInstrumentationModule extends InstrumentationModule {
 
   public GwtInstrumentationModule() {
-    super("gwt", "gwt-2.0");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "gwt-2.0" : "gwt",
+        AgentCommonConfig.get().isV3Preview() ? new String[] {"gwt"} : new String[] {"gwt-2.0"});
   }
 
   @Override

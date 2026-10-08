@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -18,7 +19,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class RestletInstrumentationModule extends InstrumentationModule {
 
   public RestletInstrumentationModule() {
-    super("restlet", "restlet-2.0");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "restlet-2.0" : "restlet",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"restlet"}
+            : new String[] {"restlet-2.0"});
   }
 
   @Override

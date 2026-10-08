@@ -47,18 +47,18 @@ public abstract class AbstractSpanLoggingCustomizerProvider
     TracerProviderModel tracerProvider = model.getTracerProvider();
     if (tracerProvider == null) {
       tracerProvider = new TracerProviderModel();
-      model.withTracerProvider(tracerProvider);
+      model.setTracerProvider(tracerProvider);
     }
     List<SpanProcessorModel> processors = tracerProvider.getProcessors();
     if (processors == null) {
       processors = new ArrayList<>();
-      tracerProvider.withProcessors(processors);
+      tracerProvider.setProcessors(processors);
     }
     SpanProcessorModel processor =
         new SpanProcessorModel()
-            .withSimple(
+            .setSimple(
                 new SimpleSpanProcessorModel()
-                    .withExporter(new SpanExporterModel().withConsole(new ConsoleExporterModel())));
+                    .setExporter(new SpanExporterModel().setConsole(new ConsoleExporterModel())));
     processors.add(processor);
   }
 

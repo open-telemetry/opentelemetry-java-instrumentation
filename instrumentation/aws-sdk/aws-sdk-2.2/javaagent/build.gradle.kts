@@ -15,10 +15,10 @@ muzzle {
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
 
-    excludeInstrumentationName("aws-sdk-2.2-bedrock-runtime")
-    excludeInstrumentationName("aws-sdk-2.2-sqs")
-    excludeInstrumentationName("aws-sdk-2.2-sns")
-    excludeInstrumentationName("aws-sdk-2.2-lambda")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.BedrockRuntimeInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.SqsInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.SnsInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.LambdaInstrumentationModule")
   }
 
   fail {
@@ -31,7 +31,7 @@ muzzle {
 
     // "fail" asserts that *all* the instrumentation modules fail to load, but the core one is
     // actually expected to succeed, so exclude it from checks.
-    excludeInstrumentationName("aws-sdk-2.2-core")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.AwsSdkInstrumentationModule")
   }
 
   pass {
@@ -43,9 +43,9 @@ muzzle {
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
 
-    excludeInstrumentationName("aws-sdk-2.2-bedrock-runtime")
-    excludeInstrumentationName("aws-sdk-2.2-sns")
-    excludeInstrumentationName("aws-sdk-2.2-lambda")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.BedrockRuntimeInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.SnsInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.LambdaInstrumentationModule")
   }
 
   pass {
@@ -56,9 +56,9 @@ muzzle {
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
 
-    excludeInstrumentationName("aws-sdk-2.2-bedrock-runtime")
-    excludeInstrumentationName("aws-sdk-2.2-sqs")
-    excludeInstrumentationName("aws-sdk-2.2-lambda")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.BedrockRuntimeInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.SqsInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.LambdaInstrumentationModule")
   }
   pass {
     group.set("software.amazon.awssdk")
@@ -69,9 +69,9 @@ muzzle {
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
 
-    excludeInstrumentationName("aws-sdk-2.2-bedrock-runtime")
-    excludeInstrumentationName("aws-sdk-2.2-sqs")
-    excludeInstrumentationName("aws-sdk-2.2-sns")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.BedrockRuntimeInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.SqsInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.SnsInstrumentationModule")
   }
   pass {
     group.set("software.amazon.awssdk")
@@ -81,9 +81,9 @@ muzzle {
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
 
-    excludeInstrumentationName("aws-sdk-2.2-lambda")
-    excludeInstrumentationName("aws-sdk-2.2-sqs")
-    excludeInstrumentationName("aws-sdk-2.2-sns")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.LambdaInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.SqsInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.SnsInstrumentationModule")
   }
 }
 
@@ -164,6 +164,14 @@ testing {
         }
       }
     }
+
+    register<JvmTestSuite>("testRdsData") {
+      dependencies {
+        implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
+        val version = baseVersion("2.5.54").orLatest()
+        implementation("software.amazon.awssdk:rdsdata:$version")
+      }
+    }
   }
 }
 
@@ -176,7 +184,12 @@ tasks {
       excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
     }
     systemProperty("otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", "true")
-    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
+    systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging=true," +
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
+    )
   }
 
   val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {
@@ -189,76 +202,18 @@ tasks {
     include("**/Aws2SqsSuppressReceiveSpansTest.*")
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
-    }
-    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
-  val testMessagingPreview = register<Test>("testMessagingPreview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("*Sqs*")
-      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
-    }
-    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
-  val testMessagingPreviewReceiveSpansDisabled = register<Test>("testMessagingPreviewReceiveSpansDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
-    }
-    include("**/Aws2SqsSuppressReceiveSpansTest.*")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("*Sqs*")
-      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
-    }
-    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
-  }
-
   test {
     filter {
       excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
     }
-    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
+    systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
   }
 
   check {
     dependsOn(
       testing.suites,
       testExperimentalSqs,
-      testStableSemconv,
       testReceiveSpansDisabled,
-      testMessagingPreview,
-      testMessagingPreviewReceiveSpansDisabled,
-      testBothSemconv
     )
   }
 

@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 // building against 2.3 and testing against 2.4 because JettyHandler is available since 2.4 only

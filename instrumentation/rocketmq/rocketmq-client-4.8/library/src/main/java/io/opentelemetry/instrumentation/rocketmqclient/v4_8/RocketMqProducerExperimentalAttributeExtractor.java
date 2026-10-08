@@ -27,7 +27,8 @@ final class RocketMqProducerExperimentalAttributeExtractor
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, SendMessageContext request) {
-    if (request.getMessage() != null) {
+    if (request.getMessage() != null
+        && !RocketMqBatchSendSpanLinksExtractor.isBatchRequest(request)) {
       attributes.put(MESSAGING_ROCKETMQ_MESSAGE_TAG, request.getMessage().getTags());
     }
     attributes.put(MESSAGING_ROCKETMQ_BROKER_ADDRESS, request.getBrokerAddr());
@@ -40,6 +41,7 @@ final class RocketMqProducerExperimentalAttributeExtractor
       SendMessageContext request,
       @Nullable Void unused,
       @Nullable Throwable error) {
+    attributes.put(MESSAGING_ROCKETMQ_BROKER_ADDRESS, request.getBrokerAddr());
     if (request.getSendResult() != null) {
       attributes.put(
           MESSAGING_ROCKETMQ_SEND_RESULT, request.getSendResult().getSendStatus().name());

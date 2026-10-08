@@ -9,6 +9,7 @@ import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.AkkaHttpUtil;
+import java.net.InetSocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 import scala.Option;
@@ -66,5 +67,12 @@ class AkkaHttpServerAttributesGetter
   public String getNetworkProtocolVersion(
       HttpRequest request, @Nullable HttpResponse httpResponse) {
     return AkkaHttpUtil.protocolVersion(request);
+  }
+
+  @Nullable
+  @Override
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
+      HttpRequest request, @Nullable HttpResponse httpResponse) {
+    return AkkaHttpServerRequestPeer.get(request);
   }
 }

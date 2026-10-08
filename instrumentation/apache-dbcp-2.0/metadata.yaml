@@ -8,21 +8,12 @@ description: >
   is closed. JMX registration is not required. When a JMX `ObjectName` is available, its `name`
   property is used as the pool name; if the property is absent, the full `ObjectName` is used.
   Otherwise, the JDBC URL and connection properties are used to derive
-  `server.address[:server.port][/db.namespace]`. If neither server address nor database namespace is
-  available, `apache-dbcp2` is used. A pool registered as an MBean after it has already started
-  switches from the derived name to the `ObjectName`-based name.
+  the pool name. The first available value among `db.namespace`, the configured endpoint
+  (`server.address[:server.port]`), and `db.system.name` is used. If none is available,
+  `apache-dbcp2` is used.
+
+  The pool name selected when metrics are first
+  registered is retained until the pool is closed, including when MBean registration occurs later.
 library_link: https://commons.apache.org/proper/commons-dbcp/
 semantic_conventions:
   - DATABASE_POOL_METRICS
-configurations:
-  - name: otel.semconv-stability.opt-in
-    declarative_name: general.stability_opt_in_list
-    description: >
-      Opt-in to emit stable semantic conventions instead of the old
-      experimental semantic conventions. Accepts a comma-separated list of semantic convention
-      groups (e.g., `database`, `http`, `messaging`). Use `<group>/dup` to emit both old and new
-      conventions simultaneously. Stable semantic conventions will become the default in version
-      3.0 of the agent.
-    type: list
-    declarative_type: string
-    default: ""

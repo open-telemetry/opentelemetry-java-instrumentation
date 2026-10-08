@@ -1,0 +1,196 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package org.redisson.config;
+
+import static java.util.logging.Level.FINE;
+
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.net.URI;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.logging.Logger;
+import javax.annotation.Nullable;
+
+// This helper is in the Redisson package to access non-public configuration methods.
+public class ConfigServerTargetUtil30 {
+
+  private static final Logger logger = Logger.getLogger(ConfigServerTargetUtil30.class.getName());
+
+  @Nullable
+  private static final MethodHandle CONFIG_GET_ELASTICACHE_SERVERS =
+      findConfigMethod("getElasticacheServersConfig");
+
+  @Nullable
+  private static final MethodHandle ELASTICACHE_SERVERS_GET_NODE_ADDRESSES =
+      findReturnTypeMethod(CONFIG_GET_ELASTICACHE_SERVERS, "getNodeAddresses");
+
+  @Nullable
+  private static final MethodHandle CONFIG_GET_REPLICATED_SERVERS =
+      findConfigMethod("getReplicatedServersConfig");
+
+  @Nullable
+  private static final MethodHandle REPLICATED_SERVERS_GET_NODE_ADDRESSES =
+      findReturnTypeMethod(CONFIG_GET_REPLICATED_SERVERS, "getNodeAddresses");
+
+  @Nullable
+  private static final MethodHandle SINGLE_SERVER_CONFIG_GET_ADDRESS =
+      findPublicMethod(SingleServerConfig.class, "getAddress");
+
+  @Nullable
+  private static final MethodHandle MASTER_SLAVE_SERVERS_CONFIG_GET_MASTER_ADDRESS =
+      findPublicMethod(MasterSlaveServersConfig.class, "getMasterAddress");
+
+  @Nullable
+  private static MethodHandle findConfigMethod(String methodName) {
+    try {
+      return MethodHandles.lookup().unreflect(Config.class.getDeclaredMethod(methodName));
+    } catch (ReflectiveOperationException ignored) {
+      return null;
+    }
+  }
+
+  @Nullable
+  private static MethodHandle findPublicMethod(Class<?> declaringClass, String methodName) {
+    try {
+      return MethodHandles.publicLookup().unreflect(declaringClass.getMethod(methodName));
+    } catch (ReflectiveOperationException ignored) {
+      return null;
+    }
+  }
+
+  @Nullable
+  private static MethodHandle findReturnTypeMethod(
+      @Nullable MethodHandle method, String returnTypeMethodName) {
+    if (method == null) {
+      return null;
+    }
+    return findPublicMethod(method.type().returnType(), returnTypeMethodName);
+  }
+
+  @Nullable
+  public static RedisServerTarget of(@Nullable Config config) {
+    if (config == null) {
+      return null;
+    }
+    SingleServerConfig singleServerConfig = config.getSingleServerConfig();
+    if (singleServerConfig != null) {
+      return RedisServerTarget.ofEndpoint(addressString(getAddress(singleServerConfig)));
+    }
+    SentinelServersConfig sentinelConfig = config.getSentinelServersConfig();
+    if (sentinelConfig != null) {
+      return RedisServerTarget.ofUnorderedEndpointsAndLogicalName(
+          addressList(sentinelConfig.getSentinelAddresses()), sentinelConfig.getMasterName());
+    }
+    ClusterServersConfig clusterConfig = config.getClusterServersConfig();
+    if (clusterConfig != null) {
+      return RedisServerTarget.ofUnorderedEndpoints(addressList(clusterConfig.getNodeAddresses()));
+    }
+    RedisServerTarget elasticacheTarget =
+        ofOptionalServerConfig(
+            config, CONFIG_GET_ELASTICACHE_SERVERS, ELASTICACHE_SERVERS_GET_NODE_ADDRESSES);
+    if (elasticacheTarget != null) {
+      return elasticacheTarget;
+    }
+    RedisServerTarget replicatedTarget =
+        ofOptionalServerConfig(
+            config, CONFIG_GET_REPLICATED_SERVERS, REPLICATED_SERVERS_GET_NODE_ADDRESSES);
+    if (replicatedTarget != null) {
+      return replicatedTarget;
+    }
+    MasterSlaveServersConfig masterSlaveConfig = config.getMasterSlaveServersConfig();
+    if (masterSlaveConfig != null) {
+      return RedisServerTarget.ofEndpointAndUnorderedEndpoints(
+          addressString(getMasterAddress(masterSlaveConfig)),
+          addressList(masterSlaveConfig.getSlaveAddresses()));
+    }
+    return null;
+  }
+
+  // Redisson changes the single server address return type across supported versions.
+  @Nullable
+  private static Object getAddress(SingleServerConfig config) {
+    if (SINGLE_SERVER_CONFIG_GET_ADDRESS == null) {
+      return null;
+    }
+    try {
+      return SINGLE_SERVER_CONFIG_GET_ADDRESS.invoke(config);
+    } catch (Throwable t) {
+      logger.log(FINE, "Failed to read the configured Redisson single-server address", t);
+      return null;
+    }
+  }
+
+  @Nullable
+  private static RedisServerTarget ofOptionalServerConfig(
+      Config config,
+      @Nullable MethodHandle getServerConfig,
+      @Nullable MethodHandle getNodeAddresses) {
+    if (getServerConfig == null || getNodeAddresses == null) {
+      return null;
+    }
+    try {
+      Object serverConfig = getServerConfig.invoke(config);
+      if (serverConfig == null) {
+        return null;
+      }
+      Object addresses = getNodeAddresses.invoke(serverConfig);
+      return addresses instanceof Collection
+          ? RedisServerTarget.ofUnorderedEndpoints(addressList((Collection<?>) addresses))
+          : null;
+    } catch (Throwable t) {
+      logger.log(FINE, "Failed to read the configured Redisson servers", t);
+      return null;
+    }
+  }
+
+  // Redisson changes the master address return type across supported versions.
+  @Nullable
+  private static Object getMasterAddress(MasterSlaveServersConfig config) {
+    if (MASTER_SLAVE_SERVERS_CONFIG_GET_MASTER_ADDRESS == null) {
+      return null;
+    }
+    try {
+      return MASTER_SLAVE_SERVERS_CONFIG_GET_MASTER_ADDRESS.invoke(config);
+    } catch (Throwable t) {
+      logger.log(FINE, "Failed to read the configured Redisson master address", t);
+      return null;
+    }
+  }
+
+  // Redisson stores addresses as URI, URL, or String across supported versions.
+  @Nullable
+  private static List<String> addressList(@Nullable Collection<?> addresses) {
+    if (addresses == null) {
+      return null;
+    }
+    List<String> endpoints = new ArrayList<>(addresses.size());
+    for (Object address : addresses) {
+      endpoints.add(addressString(address));
+    }
+    return endpoints;
+  }
+
+  @Nullable
+  private static String addressString(@Nullable Object address) {
+    String value;
+    if (address instanceof String) {
+      value = (String) address;
+    } else if (address instanceof URI) {
+      value = address.toString();
+    } else if (address instanceof URL) {
+      value = ((URL) address).toExternalForm();
+    } else {
+      return null;
+    }
+    return value.startsWith("//") ? "redis:" + value : value;
+  }
+
+  private ConfigServerTargetUtil30() {}
+}

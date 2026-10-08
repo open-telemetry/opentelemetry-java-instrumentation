@@ -1,0 +1,11 @@
+plugins {
+  id("otel.java-conventions")
+}
+
+dependencies {
+  testImplementation(project(":instrumentation-api-incubator"))
+  testImplementation(project(":instrumentation:lettuce:lettuce-4.0:javaagent"))
+  testImplementation(project(":javaagent-extension-api"))
+  testImplementation("biz.paluch.redis:lettuce:4.0.Final")
+  testImplementation("io.netty:netty-transport-native-epoll:4.0.56.Final")
+}

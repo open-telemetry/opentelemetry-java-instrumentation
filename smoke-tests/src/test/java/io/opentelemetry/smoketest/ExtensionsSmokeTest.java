@@ -13,9 +13,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIf;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
@@ -43,9 +42,8 @@ class ExtensionsSmokeTest {
 
   private static final String IMAGE = "eclipse-temurin:21";
 
-  @ParameterizedTest
-  @ValueSource(booleans = {true, false})
-  void inlinedExtension(boolean indy) throws InterruptedException {
+  @Test
+  void inlinedExtension() throws InterruptedException {
 
     List<String> cmd = new ArrayList<>();
     cmd.add("java");
@@ -58,8 +56,6 @@ class ExtensionsSmokeTest {
     config.put("otel.traces.exporter", "none");
     // add extension
     config.put("otel.javaagent.extensions", TARGET_EXTENSION_FILENAME);
-    // toggle indy on/off
-    config.put("otel.javaagent.experimental.indy", Boolean.toString(indy));
     // toggle debug if needed
     config.put("otel.javaagent.debug", "false");
     config.forEach((k, v) -> cmd.add(String.format("-D%s=%s", k, v)));
