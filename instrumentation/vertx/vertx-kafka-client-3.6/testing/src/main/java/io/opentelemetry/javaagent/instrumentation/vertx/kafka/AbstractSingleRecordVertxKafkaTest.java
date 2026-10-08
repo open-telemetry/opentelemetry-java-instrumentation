@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.kafka;
 
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveMetrics;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanEnabledSupplier;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -74,7 +75,7 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
                       span.hasName(spanName("testSingleTopic", "process"))
                           .hasKind(SpanKind.CONSUMER)
                           .hasParent(trace.getSpan(1))
-                          .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
+                          .hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())))
                           .hasAttributesSatisfyingExactly(processAttributes(record)),
                   span -> span.hasName("consumer").hasParent(trace.getSpan(2)));
               producer.set(trace.getSpan(1));
@@ -115,7 +116,7 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
                       span.hasName(spanName("testSingleTopic", "process"))
                           .hasKind(SpanKind.CONSUMER)
                           .hasParent(trace.getSpan(1))
-                          .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
+                          .hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())))
                           .hasStatus(StatusData.error())
                           .hasException(new IllegalArgumentException("boom"))
                           .hasAttributesSatisfyingExactly(withErrorType(processAttributes(record))),

@@ -28,6 +28,61 @@
     selections in `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included`, or
     declarative `java.runtime_telemetry.jfr_metrics/development.included`.
 - Remove the legacy JFR metric name `jvm.cpu.limit`. Use `jvm.cpu.count` instead.
+- Micrometer timers and distribution summaries no longer emit separate `.max` gauge metrics; use the
+  maximum from their histogram instead. Custom meter statistic suffixes are appended after the base
+  name passes through the naming convention (for example, Prometheus mode changes
+  `my.meter.count.bytes` to `my.meter.bytes.count`). Remove the deprecated
+  `otel.instrumentation.micrometer.histogram-gauges.enabled` setting and use
+  `otel.instrumentation.micrometer.experimental.histogram-gauges.enabled`.
+- Servlet principal and Spring Security identity capture now emit `user.name` and string-array
+  `user.roles` instead of `enduser.id` and comma-separated `enduser.role`. Replace
+  `otel.instrumentation.common.enduser.id.enabled` and
+  `otel.instrumentation.common.enduser.role.enabled` with
+  `otel.instrumentation.common.user.name.enabled` and
+  `otel.instrumentation.common.user.roles.enabled`. Replace
+  `otel.instrumentation.spring-security.enduser.role.granted-authority-prefix` with
+  `otel.instrumentation.spring-security.user.roles.granted-authority-prefix`.
+  The `otel.instrumentation.common.enduser.scope.enabled` setting and `enduser.scope` capture are
+  removed. Identity capture remains disabled by default.
+- Remove Log4j appender correlation reconstructed from trace-ID, span-ID, and
+  trace-flags strings.
+  For standalone asynchronous logging, configure
+  `log4j2.ContextDataInjector=io.opentelemetry.instrumentation.log4j.appender.v2_17.OpenTelemetryAppenderContextDataInjector`
+  to carry the full OpenTelemetry context; Java agent correlation remains supported.
+  The appender no longer brings in
+  `io.opentelemetry.instrumentation:opentelemetry-log4j-context-data-2.17-autoconfigure`
+  transitively; add it separately if Log4j layouts need trace or span IDs.
+  Replace `otel.instrumentation.common.logging.trace-id`, `.span-id`, and
+  `.trace-flags` with `.trace-id-key`, `.span-id-key`, and `.trace-flags-key`,
+  respectively. For declarative configuration, replace
+  `java.common.logging.trace_id`, `span_id`, and `trace_flags` with
+  `java.common.logging.trace_id_key`, `span_id_key`, and `trace_flags_key`.
+- Remove `otel.instrumentation.grpc.capture-metadata.client.request` and
+  `otel.instrumentation.grpc.capture-metadata.server.request`.
+  Use `otel.instrumentation.grpc.client.request-metadata.included` and
+  `otel.instrumentation.grpc.server.request-metadata.included`.
+  For declarative configuration, replace `java.grpc.capture_metadata.client.request` and
+  `java.grpc.capture_metadata.server.request` with `java.grpc.client.request_metadata.included` and
+  `java.grpc.server.request_metadata.included`.
+- Captured messaging header attribute keys now preserve dashes unconditionally; for example,
+  `messaging.header.Test_Message_Id` is now `messaging.header.Test-Message-Id`. Replace
+  `otel.instrumentation.messaging.experimental.headers.included=Test-Message-*` with
+  `otel.instrumentation.common.messaging.headers.included=Test-Message-*`.
+  The deprecated `otel.instrumentation.messaging.experimental.headers.included`,
+  `otel.instrumentation.messaging.experimental.headers.excluded`, and
+  `otel.instrumentation.messaging.experimental.capture-headers` settings are no longer supported;
+  use `otel.instrumentation.common.messaging.headers.included` / `.excluded` instead.
+  `otel.instrumentation.messaging.experimental.receive-telemetry.enabled` is also no longer
+  supported; use `otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled`.
+- OSHI system metrics use schema version 1.44.0 and scope `io.opentelemetry.oshi-5.0`.
+  Update `system.network.packets` to `system.network.packet.count`, plural count units to
+  `{packet}`, `{error}`, and `{operation}`. Replace memory `state` with `system.memory.state`;
+  for network I/O and errors, replace `device` and `direction` with `network.interface.name`
+  and `network.io.direction`. Packet counts use `system.device` and `network.io.direction`;
+  disk metrics use `system.device` and `disk.io.direction`.
+  Remove `otel.instrumentation.oshi.experimental-metrics.enabled`; OSHI no longer emits `runtime.java.memory`
+  or `runtime.java.cpu_time`. `jvm.memory.used` measures JVM pools, not process RSS or virtual
+  memory, and `jvm.cpu.time` does not split user/system CPU time.
 - Remove the deprecated GraphQL configuration properties
   `otel.instrumentation.graphql.add-operation-name-to-span-name.enabled` and
   `otel.instrumentation.graphql.query-sanitizer.enabled`. Use
@@ -56,12 +111,32 @@
   singular count units such as `{connection}`, and seconds instead of milliseconds for durations.
   Pool attributes use `db.client.connection.pool.name` and `db.client.connection.state`; unnamed
   pools use stable database-derived names, and DBCP retains the first registered pool name.
+- Servlet request parameter attribute keys now preserve the original parameter-name casing, and
+  trace/span request attributes are disabled by default. Re-enable the latter with
+  `otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled=true`.
+- Elasticsearch and OpenSearch query bodies are now always captured.
+  The `otel.instrumentation.elasticsearch.capture-search-query` and
+  `otel.instrumentation.opensearch.capture-search-query` properties
+  are no longer supported and have no replacement. Query sanitization remains enabled
+  by default and configurable with
+  `otel.instrumentation.elasticsearch.query-sanitization.enabled` or
+  `otel.instrumentation.opensearch.query-sanitization.enabled`, which override
+  `otel.instrumentation.common.db.query-sanitization.enabled`.
 
 ### ⚠️ Breaking changes to non-stable APIs
 
 - Remove `Experimental.setPreferJfrMetrics` and `Experimental.JMX_OVERLAPPING_JFR_METRICS` from the
   runtime telemetry library. Use `Experimental.setJfrMetrics` with an `IncludeExclude` selector
   specifying the metrics to source from JFR.
+- Rename `Experimental.setCaptureEnduserId` to `setCaptureUserName` in the Servlet 3.0 and 5.0
+  libraries. Remove `UserAttributesCapturer.setScopeEnabled(boolean)` and
+  `UserAttributesCapturer.setScopeGrantedAuthorityPrefix(String)`, and remove
+  `UserConfig.isScopeEnabled()` from `opentelemetry-instrumentation-api-incubator`.
+- Remove deprecated `Experimental.setCaptureRequestParameters` from Servlet 3.0 and Servlet 5.0
+  libraries. Use `Experimental.setRequestParameters` with an `IncludeExclude` selector instead.
+- Remove deprecated `ProcessMetrics` and `SystemMetrics.registerObservers(Meter)` from
+  `opentelemetry-oshi`. Use `SystemMetrics.registerObservers(OpenTelemetry)` for system metrics
+  and continue closing the returned observers.
 - Move `CodeAttributesGetter`, `CodeAttributesExtractor`, and `CodeSpanNameExtractor` from
   `io.opentelemetry.instrumentation.api.incubator.semconv.code` in
   `opentelemetry-instrumentation-api-incubator` to `io.opentelemetry.instrumentation.api.semconv.code`

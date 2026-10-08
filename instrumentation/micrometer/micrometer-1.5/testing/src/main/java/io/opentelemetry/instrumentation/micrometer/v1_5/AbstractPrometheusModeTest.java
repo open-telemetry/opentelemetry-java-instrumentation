@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
-import static io.opentelemetry.instrumentation.micrometer.v1_5.MaxGaugeAssertions.assertMaxGauge;
+import static io.opentelemetry.instrumentation.micrometer.v1_5.NoMaxGaugeAssertions.assertNoMaxGauge;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.singletonList;
@@ -25,7 +25,6 @@ import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Statistic;
 import io.micrometer.core.instrument.Timer;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.time.Duration;
 import org.junit.jupiter.api.Test;
@@ -102,22 +101,7 @@ public abstract class AbstractPrometheusModeTest {
                                         .hasCount(2)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(stringKey("tag"), "value")))));
-    assertMaxGauge(
-        testing(),
-        "testPrometheusSummary.items.max",
-        metric ->
-            metric
-                .hasName("testPrometheusSummary.items.max")
-                .hasDescription("This is a test summary")
-                .hasUnit("items")
-                .hasDoubleGaugeSatisfying(
-                    gauge ->
-                        gauge.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(42)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("tag"), "value")))));
+    assertNoMaxGauge(testing(), "testPrometheusSummary.items.max");
   }
 
   @Test
@@ -290,11 +274,6 @@ public abstract class AbstractPrometheusModeTest {
   void testMeter() {
     // given
     Measurement measurement = new Measurement(() -> 12.0, Statistic.COUNT);
-    String expectedName =
-        SemconvStability.v3Preview()
-            ? "testPrometheusMeter.bytes.count"
-            : "testPrometheusMeter.count.bytes";
-
     // when
     Meter.builder("testPrometheusMeter", Meter.Type.COUNTER, singletonList(measurement))
         .description("This is a test meter")
@@ -308,7 +287,7 @@ public abstract class AbstractPrometheusModeTest {
             INSTRUMENTATION_NAME,
             metric ->
                 metric
-                    .hasName(expectedName)
+                    .hasName("testPrometheusMeter.bytes.count")
                     .hasDescription("This is a test meter")
                     .hasUnit("bytes")
                     .hasDoubleSumSatisfying(
@@ -354,22 +333,7 @@ public abstract class AbstractPrometheusModeTest {
                                         .hasCount(3)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(stringKey("tag"), "value")))));
-    assertMaxGauge(
-        testing(),
-        "testPrometheusTimer.seconds.max",
-        metric ->
-            metric
-                .hasName("testPrometheusTimer.seconds.max")
-                .hasDescription("This is a test timer")
-                .hasUnit("s")
-                .hasDoubleGaugeSatisfying(
-                    gauge ->
-                        gauge.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(10.789)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("tag"), "value")))));
+    assertNoMaxGauge(testing(), "testPrometheusTimer.seconds.max");
   }
 
   @Test

@@ -351,47 +351,14 @@
       "defaultValue": false
     },
     {
-      "name": "otel.instrumentation.messaging.experimental.receive-telemetry.enabled",
-      "type": "java.lang.Boolean",
-      "description": "Deprecated: use otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled instead. It may be removed in the next minor release. Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.",
-      "defaultValue": false,
-      "deprecation": {
-        "replacement": "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled"
-      }
-    },
-    {
       "name": "otel.instrumentation.common.messaging.headers.included",
       "type": "java.util.List<java.lang.String>",
-      "description": "A comma-separated list of case-sensitive message header name glob patterns to capture as span attributes. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. An absent or empty selector captures no headers; an exclude-only selector captures every header not excluded."
-    },
-    {
-      "name": "otel.instrumentation.messaging.experimental.headers.included",
-      "type": "java.util.List<java.lang.String>",
-      "description": "Deprecated: use otel.instrumentation.common.messaging.headers.included instead. It may be removed in the next minor release. A comma-separated list of message header name patterns to capture as span attributes. Matching is case-sensitive. `?` matches one character and `*` matches zero or more characters.",
-      "deprecation": {
-        "replacement": "otel.instrumentation.common.messaging.headers.included"
-      }
+      "description": "A comma-separated list of case-sensitive message header name glob patterns to capture as span attributes. Captured attribute keys preserve the header name's original spelling, including dashes. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. An absent or empty selector captures no headers; an exclude-only selector captures every header not excluded."
     },
     {
       "name": "otel.instrumentation.common.messaging.headers.excluded",
       "type": "java.util.List<java.lang.String>",
-      "description": "A comma-separated list of case-sensitive message header name glob patterns to exclude from span attributes. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. An absent or empty selector captures no headers; an exclude-only selector captures every header not excluded, which may expose sensitive information."
-    },
-    {
-      "name": "otel.instrumentation.messaging.experimental.headers.excluded",
-      "type": "java.util.List<java.lang.String>",
-      "description": "Deprecated: use otel.instrumentation.common.messaging.headers.excluded instead. It may be removed in the next minor release. A comma-separated list of message header name patterns to exclude from span attributes. Excluded patterns take precedence over included patterns. Matching is case-sensitive. `?` matches one character and `*` matches zero or more characters. If included is not configured, all non-excluded headers are captured, which may expose sensitive information.",
-      "deprecation": {
-        "replacement": "otel.instrumentation.common.messaging.headers.excluded"
-      }
-    },
-    {
-      "name": "otel.instrumentation.messaging.experimental.capture-headers",
-      "type": "java.util.List<java.lang.String>",
-      "description": "Deprecated: use otel.instrumentation.common.messaging.headers.included instead. A comma-separated list of header names to capture as span attributes.",
-      "deprecation": {
-        "replacement": "otel.instrumentation.common.messaging.headers.included"
-      }
+      "description": "A comma-separated list of case-sensitive message header name glob patterns to exclude from span attributes. Captured attribute keys preserve the header name's original spelling, including dashes. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. An absent or empty selector captures no headers; an exclude-only selector captures every header not excluded, which may expose sensitive information."
     },
     {
       "name": "otel.instrumentation.jdbc.enabled",

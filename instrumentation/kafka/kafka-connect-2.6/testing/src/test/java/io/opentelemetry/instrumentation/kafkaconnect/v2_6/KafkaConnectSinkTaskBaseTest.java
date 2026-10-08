@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.kafkaconnect.v2_6;
 
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveMetrics;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.groupTraces;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -315,7 +316,7 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
   protected static LinkData recordLink(SpanContext producerSpanContext, String messageKey) {
 
     return LinkData.create(
-        producerSpanContext,
+        asRemote(producerSpanContext),
         Attributes.builder()
             .put(MESSAGING_KAFKA_OFFSET, 0)
             .put(MESSAGING_KAFKA_MESSAGE_KEY, messageKey)
