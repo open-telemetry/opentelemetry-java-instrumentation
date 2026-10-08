@@ -295,6 +295,34 @@ class LogEventMapperTest {
   }
 
   @Test
+  void testCaptureMapMessageSkipsEmptyKey() {
+    // given
+    LogEventMapper<Map<String, String>> mapper =
+        new LogEventMapper<>(
+            ContextDataAccessorImpl.INSTANCE,
+            false,
+            false,
+            include("*"),
+            false,
+            false,
+            false,
+            include("*"));
+
+    StringMapMessage message = new StringMapMessage();
+    message.put("", "empty");
+    message.put("key1", "value1");
+
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
+
+    // when
+    mapper.captureMessage(builder, message);
+
+    // then
+    verify(builder).setAttribute(stringKey("key1"), "value1");
+    verifyNoMoreInteractions(builder);
+  }
+
+  @Test
   void testCaptureStructuredDataMessage() {
     // given
     LogEventMapper<Map<String, String>> mapper =

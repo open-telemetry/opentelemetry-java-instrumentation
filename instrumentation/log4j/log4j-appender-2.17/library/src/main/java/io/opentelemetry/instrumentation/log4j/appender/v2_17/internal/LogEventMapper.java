@@ -197,6 +197,7 @@ public final class LogEventMapper<T> {
           .forEach(
               (key, value) -> {
                 if (value != null
+                    && !key.isEmpty()
                     && !key.equals(OTEL_EVENT_NAME.getKey())
                     && (!checkSpecialMapMessageAttribute
                         || !key.equals(SPECIAL_MAP_MESSAGE_ATTRIBUTE))
