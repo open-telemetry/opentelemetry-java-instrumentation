@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.databaseSchemaUrl;
 
 import com.lambdaworks.redis.ReactiveCommandDispatcher;
 import com.lambdaworks.redis.RedisChannelHandler;
@@ -26,6 +25,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.net.SocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -94,7 +94,7 @@ public class LettuceSingletons {
                 ServicePeerAttributesExtractor.create(
                     netAttributesGetter, GlobalOpenTelemetry.get()))
             .addAttributesExtractor(new LettuceConnectAttributesExtractor())
-            .setSchemaUrl(databaseSchemaUrl())
+            .setSchemaUrl(SchemaUrls.V1_44_0)
             .setEnabled(
                 DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "lettuce")
                     .get("connection_telemetry")

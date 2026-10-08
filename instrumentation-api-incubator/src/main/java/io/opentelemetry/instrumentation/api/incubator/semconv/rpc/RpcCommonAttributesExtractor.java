@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.rpcSchemaUrl;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 
@@ -43,7 +43,7 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public final void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
 
-    if (emitStableRpcSemconv()) {
+    if (emitPreviewRpcSemconv()) {
       attributes.put(RPC_SYSTEM_NAME, getter.getRpcSystemName(request));
       attributes.put(RPC_METHOD, getter.getRpcMethod(request));
       attributes.put(RPC_METHOD_ORIGINAL, getter.getRpcMethodOriginal(request));
@@ -52,7 +52,7 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
     if (emitOldRpcSemconv()) {
       attributes.put(RPC_SYSTEM, getter.getSystem(request));
       attributes.put(RPC_SERVICE, getter.getService(request));
-      if (!emitStableRpcSemconv()) {
+      if (!emitPreviewRpcSemconv()) {
         // only set old rpc.method on spans when there's no clash with stable rpc.method
         attributes.put(RPC_METHOD, getter.getMethod(request));
       }
@@ -66,7 +66,7 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
-    if (emitStableRpcSemconv()) {
+    if (emitPreviewRpcSemconv()) {
       String errorType = getter.getErrorType(request, response, error);
       // fall back to exception class name
       if (errorType == null && error != null) {

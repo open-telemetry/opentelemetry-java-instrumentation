@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcCommonAttributesExtractor.RPC_SYSTEM_NAME;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_ADDRESS;
@@ -51,23 +51,23 @@ class RpcServerMetricsTest {
 
     Attributes requestAttributes1 =
         Attributes.builder()
-            .put(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "grpc" : null)
+            .put(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "grpc" : null)
             .put(RPC_SYSTEM, emitOldRpcSemconv() ? "grpc" : null)
             .put(RPC_SERVICE, emitOldRpcSemconv() ? "myservice.EchoService" : null)
             .put(
                 RPC_METHOD,
-                emitStableRpcSemconv() ? "myservice.EchoService/exampleMethod" : "exampleMethod")
+                emitPreviewRpcSemconv() ? "myservice.EchoService/exampleMethod" : "exampleMethod")
             .put(RpcSizeAttributesExtractor.RPC_REQUEST_SIZE, 10)
             .build();
 
     Attributes requestAttributes2 =
         Attributes.builder()
-            .put(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "grpc" : null)
+            .put(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "grpc" : null)
             .put(RPC_SYSTEM, emitOldRpcSemconv() ? "grpc" : null)
             .put(RPC_SERVICE, emitOldRpcSemconv() ? "myservice.EchoService" : null)
             .put(
                 RPC_METHOD,
-                emitStableRpcSemconv() ? "myservice.EchoService/exampleMethod" : "exampleMethod")
+                emitPreviewRpcSemconv() ? "myservice.EchoService/exampleMethod" : "exampleMethod")
             .build();
 
     Attributes responseAttributes1 =
@@ -195,7 +195,7 @@ class RpcServerMetricsTest {
                                                       .hasSpanId("090a0b0c0d0e0f00")))));
     }
 
-    if (emitStableRpcSemconv()) {
+    if (emitPreviewRpcSemconv()) {
       assertThat(metrics1)
           .anySatisfy(
               metric ->
@@ -248,7 +248,7 @@ class RpcServerMetricsTest {
                                               equalTo(NETWORK_TRANSPORT, "tcp")))));
     }
 
-    if (emitStableRpcSemconv()) {
+    if (emitPreviewRpcSemconv()) {
       assertThat(metrics2)
           .anySatisfy(
               metric ->

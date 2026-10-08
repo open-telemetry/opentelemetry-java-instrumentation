@@ -23,15 +23,6 @@ instrumentation/development:
 
         # List of HTTP response headers to capture in HTTP server telemetry.
         response_captured_headers: []
-    messaging:
-      semconv:
-        # With `version: 1` and `experimental: true`, emits both the current and the preview
-        # messaging semantic conventions. Not supported under v3 preview.
-        dual_emit: false
-
-        # With `version: 1`, selects the preview messaging semantic conventions. Required, because
-        # version 1 of the messaging semantic conventions is not yet stable.
-        experimental: false
     rpc:
       semconv:
         # With `version: 1` and `experimental: true`, emits both the current and the preview RPC
@@ -54,9 +45,9 @@ instrumentation/development:
           - sig
           - X-Goog-Signature
 
-    # A comma-separated list of semantic convention groups to opt into, such as `rpc`, `messaging`,
-    # and `service.peer`. Use `<group>/dup` to emit both old and new conventions. Under v3 preview
-    # the preview groups use `otel.semconv-stability.preview` instead.
+    # A comma-separated list of semantic convention groups to opt into, such as `rpc` and
+    # `service.peer`. Use `<group>/dup` to emit both old and new conventions. Under v3 preview the
+    # preview groups use `otel.semconv-stability.preview` instead.
     stability_opt_in_list: ''
   java:
     apache_elasticjob:
@@ -193,8 +184,7 @@ instrumentation/development:
           included: []
         message_create_spans:
           # Provides the default for whether to create a producer span for each eligible message in
-          # a batch send when stable messaging semantic conventions are enabled. An
-          # instrumentation-specific setting takes precedence.
+          # a batch send. An instrumentation-specific setting takes precedence.
           enabled: true
         receive_telemetry/development:
           # Enables experimental receive telemetry, which will cause consumers to start a new trace,
@@ -227,9 +217,8 @@ instrumentation/development:
           # captured by default.
           enabled: false
 
-      # Enables a preview of the behavior planned for version 3.0 of the agent, such as emitting the
-      # new messaging semantic conventions by default, and ignoring deprecated settings. The set
-      # of changes it enables can grow in any release.
+      # Enables a preview of the behavior planned for version 3.0 of the agent, such as ignoring
+      # deprecated settings. The set of changes it enables can grow in any release.
       v3_preview: false
       view_telemetry:
         # Enables the creation of experimental view spans.
@@ -580,9 +569,9 @@ instrumentation/development:
       # `messaging.rocketmq.queue_id`, and `messaging.rocketmq.queue_offset`.
       experimental_span_attributes/development: false
       message_create_spans:
-        # Enables per-message Create spans for batch sends when stable messaging semantic
-        # conventions are enabled. Overrides the common messaging setting. Disabling this retains
-        # Send spans and context propagation and does not affect single-message sends.
+        # Enables per-message Create spans for batch sends. Overrides the common messaging setting.
+        # Disabling this retains Send spans and context propagation and does not affect
+        # single-message sends.
         enabled: true
     runtime_telemetry:
       # Enables the capture of experimental JFR-based JVM runtime metrics on Java 17+.

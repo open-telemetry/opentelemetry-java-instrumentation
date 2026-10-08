@@ -27,7 +27,7 @@ dependencies {
 }
 
 tasks {
-  test {
+  withType<Test>().configureEach {
     jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.included=test-*")
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
@@ -45,7 +45,16 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
+  val testExperimental = register<Test>("testExperimental") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled=true")
+    systemProperty("metadataConfig", "otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled=true")
+  }
+
   check {
+    dependsOn(testExperimental)
     dependsOn(testUserNameCapture)
   }
 }

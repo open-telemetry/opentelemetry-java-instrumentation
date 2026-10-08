@@ -142,12 +142,11 @@ public class DbSpanDecorator extends BaseSpanDecorator {
     String rawQueryText = getRawQueryText(exchange);
     if (rawQueryText != null) {
       // using the conservative default since the underlying database is unknown to camel
-      SqlQuery sqlQueryWithSummary =
-          analyzer.analyzeWithSummary(rawQueryText, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+      SqlQuery sqlQuery = analyzer.analyze(rawQueryText, DOUBLE_QUOTES_ARE_STRING_LITERALS);
 
-      if (sqlQueryWithSummary != null) {
-        attributes.put(DB_QUERY_TEXT, sqlQueryWithSummary.getQueryText());
-        attributes.put(DB_QUERY_SUMMARY, sqlQueryWithSummary.getQuerySummary());
+      if (sqlQuery != null) {
+        attributes.put(DB_QUERY_TEXT, sqlQuery.getQueryText());
+        attributes.put(DB_QUERY_SUMMARY, sqlQuery.getQuerySummary());
       }
     }
   }

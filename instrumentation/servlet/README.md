@@ -12,9 +12,10 @@ When Servlet instrumentation observes a request principal, javaagent capture of 
 | `otel.instrumentation.servlet.experimental.request-parameters.included`        | List    | Empty   | Case-sensitive request parameter name patterns to capture. `?` matches one character and `*` matches zero or more characters.                                                                                                                                                                                           |
 | `otel.instrumentation.servlet.experimental.request-parameters.excluded`        | List    | Empty   | Case-sensitive request parameter name patterns to exclude. Excluded patterns take precedence over included patterns.                                                                                                                                                                                                    |
 | `otel.instrumentation.servlet.experimental.capture-request-parameters`         | List    | Empty   | Deprecated include-only alias for `otel.instrumentation.servlet.experimental.request-parameters.included`. It does not support glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other entry is matched as a literal request parameter name. May be removed in the next minor release. |
-| `otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled` | Boolean | `true`  | Enable adding `trace_id` and `span_id` as request attributes.                                                                                                                                                                                                                                                           |
+| `otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled` | Boolean | `false` | Enable adding `trace_id` and `span_id` as request attributes.                                                                                                                                                                                                                                                           |
 
 An absent or empty request parameter selector captures nothing. An exclude-only selector captures every available request parameter except those matching an excluded pattern, which may expose sensitive information. To capture all parameters explicitly, configure `otel.instrumentation.servlet.experimental.request-parameters.included=*`.
+Captured parameter names retain their original casing in `servlet.request.parameter.<name>` attribute keys. For example, `userId` produces `servlet.request.parameter.userId`.
 
 The equivalent declarative configuration is:
 
@@ -25,6 +26,8 @@ instrumentation/development:
       request_parameters/development:
         included: ["user-*", "search-?"]
         excluded: ["password", "*-token"]
+      trace_id_request_attribute/development:
+        enabled: true
 ```
 
 ### A word about version
