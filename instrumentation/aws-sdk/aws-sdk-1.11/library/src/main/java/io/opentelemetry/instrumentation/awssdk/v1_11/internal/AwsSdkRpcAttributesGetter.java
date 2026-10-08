@@ -5,9 +5,11 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesGetter;
+import javax.annotation.Nullable;
 
 class AwsSdkRpcAttributesGetter implements RpcAttributesGetter<Request<?>, Response<?>> {
 
@@ -41,5 +43,18 @@ class AwsSdkRpcAttributesGetter implements RpcAttributesGetter<Request<?>, Respo
   @Override
   public String getMethod(Request<?> request) {
     return OPERATION_NAME.get(request.getOriginalRequest().getClass());
+  }
+
+  @Nullable
+  @Override
+  public String getErrorType(
+      Request<?> request, @Nullable Response<?> response, @Nullable Throwable error) {
+    if (error instanceof AmazonServiceException) {
+      String errorCode = ((AmazonServiceException) error).getErrorCode();
+      if (errorCode != null && !errorCode.isEmpty()) {
+        return errorCode;
+      }
+    }
+    return null;
   }
 }

@@ -58,7 +58,25 @@ tasks {
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
   }
 
+  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*AwsSdkErrorTypeTest")
+    }
+    jvmArgs("-Dotel.semconv-stability.preview=rpc")
+  }
+
+  val testPreviewSemconvDup = register<Test>("testPreviewSemconvDup") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*AwsSdkErrorTypeTest")
+    }
+    jvmArgs("-Dotel.semconv-stability.preview=rpc/dup")
+  }
+
   check {
-    dependsOn(testing.suites, testExceptionSignalLogs)
+    dependsOn(testing.suites, testExceptionSignalLogs, testPreviewSemconv, testPreviewSemconvDup)
   }
 }
