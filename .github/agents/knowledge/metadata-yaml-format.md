@@ -204,12 +204,17 @@ Add `examples` only for module-specific configs with non-obvious format (lists, 
 **Never add for**: `general.*`, `java.common.*`, or boolean configs.
 
 ```yaml
-- name: otel.instrumentation.grpc.capture-metadata.client.request
-  declarative_name: java.grpc.capture_metadata.client.request
+- name: otel.instrumentation.grpc.client.request-metadata.included
+  declarative_name: java.grpc.client.request_metadata.included
   type: list
   examples:
     - "custom-request-header"
-    - "header1,header2,header3"
+    - "my-*-key,another-metadata-key"
+- name: otel.instrumentation.grpc.client.request-metadata.excluded
+  declarative_name: java.grpc.client.request_metadata.excluded
+  type: list
+  examples:
+    - "authorization,*-token"
 ```
 
 ## Checking an Edited Metadata File
