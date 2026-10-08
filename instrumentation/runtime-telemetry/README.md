@@ -1,8 +1,5 @@
 # Settings for the Runtime Telemetry instrumentation
 
-JVM metrics and package-emitter events use the `io.opentelemetry.runtime-telemetry` instrumentation
-scope. JMX GC duration metrics always include the `jvm.gc.cause` attribute.
-
 | System property                                                                       | Type    | Default | Description                                                                                                                        |
 | ------------------------------------------------------------------------------------- | ------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `otel.instrumentation.runtime-telemetry.emit-experimental-metrics`                    | Boolean | `false` | Enable the capture of experimental JMX-based metrics.                                                                              |
