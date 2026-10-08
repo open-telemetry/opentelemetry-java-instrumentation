@@ -47,7 +47,9 @@ testing {
       dependencies {
         implementation(project())
         implementation("io.opentelemetry:opentelemetry-api")
-        implementation(project(":opentelemetry-api-shaded-for-instrumenting", configuration = "shadow"))
+        implementation(project(":opentelemetry-api-shaded-for-instrumenting")) {
+          targetConfiguration = "shadow"
+        }
       }
     }
   }
