@@ -7,18 +7,22 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
-import static io.opentelemetry.instrumentation.micrometer.v1_5.MaxGaugeAssertions.assertMaxGauge;
+import static io.opentelemetry.instrumentation.micrometer.v1_5.NoMaxGaugeAssertions.assertNoMaxGauge;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.LongTaskTimer;
+import io.micrometer.core.instrument.Measurement;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.Metrics;
+import io.micrometer.core.instrument.Statistic;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.config.NamingConvention;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.Test;
@@ -93,18 +97,7 @@ public abstract class AbstractNamingConventionTest {
                                 point ->
                                     point.hasAttributesSatisfyingExactly(
                                         equalTo(stringKey("test.tag"), "test.value")))));
-    assertMaxGauge(
-        testing(),
-        "test.renamedSummary.max",
-        metric ->
-            metric
-                .hasName("test.renamedSummary.max")
-                .hasDoubleGaugeSatisfying(
-                    gauge ->
-                        gauge.hasPointsSatisfying(
-                            point ->
-                                point.hasAttributesSatisfyingExactly(
-                                    equalTo(stringKey("test.tag"), "test.value")))));
+    assertNoMaxGauge(testing(), "test.renamedSummary.max");
   }
 
   @Test
@@ -125,6 +118,26 @@ public abstract class AbstractNamingConventionTest {
                                 point ->
                                     point.hasAttributesSatisfyingExactly(
                                         equalTo(stringKey("test.tag"), "test.value")))));
+  }
+
+  @Test
+  void renameCustomMeterStatistic() {
+    Meter.builder(
+            "renamedCustomMeter",
+            Meter.Type.COUNTER,
+            singletonList(new Measurement(() -> 42.0, Statistic.COUNT)))
+        .register(Metrics.globalRegistry);
+
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            metric ->
+                metric
+                    .hasName("test.renamedCustomMeter.count")
+                    .hasDoubleSumSatisfying(
+                        sum ->
+                            sum.hasPointsSatisfying(
+                                point -> point.hasValue(42).hasAttributes(Attributes.empty()))));
   }
 
   @Test
@@ -242,17 +255,6 @@ public abstract class AbstractNamingConventionTest {
                                 point ->
                                     point.hasAttributesSatisfyingExactly(
                                         equalTo(stringKey("test.tag"), "test.value")))));
-    assertMaxGauge(
-        testing(),
-        "test.renamedTimer.max",
-        metric ->
-            metric
-                .hasName("test.renamedTimer.max")
-                .hasDoubleGaugeSatisfying(
-                    gauge ->
-                        gauge.hasPointsSatisfying(
-                            point ->
-                                point.hasAttributesSatisfyingExactly(
-                                    equalTo(stringKey("test.tag"), "test.value")))));
+    assertNoMaxGauge(testing(), "test.renamedTimer.max");
   }
 }
