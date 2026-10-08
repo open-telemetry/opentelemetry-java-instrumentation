@@ -61,6 +61,12 @@ abstract class TomcatSmokeTest extends AppServerTest {
   @AppServer(version = "8.5.98", jdk = "25-openj9")
   static class Tomcat8Jdk25Openj9 extends TomcatSmokeTest {}
 
+  @AppServer(version = "8.5.98", jdk = "27", inReducedMatrix = true)
+  static class Tomcat8Jdk27 extends TomcatSmokeTest {}
+
+  @AppServer(version = "8.5.98", jdk = "27-openj9")
+  static class Tomcat8Jdk27Openj9 extends TomcatSmokeTest {}
+
   @AppServer(version = "9.0.111", jdk = "8", inReducedMatrix = true)
   static class Tomcat9Jdk8 extends TomcatSmokeTest {}
 
@@ -91,6 +97,12 @@ abstract class TomcatSmokeTest extends AppServerTest {
   @AppServer(version = "9.0.111", jdk = "25-openj9")
   static class Tomcat9Jdk25Openj9 extends TomcatSmokeTest {}
 
+  @AppServer(version = "9.0.111", jdk = "27", inReducedMatrix = true)
+  static class Tomcat9Jdk27 extends TomcatSmokeTest {}
+
+  @AppServer(version = "9.0.111", jdk = "27-openj9")
+  static class Tomcat9Jdk27Openj9 extends TomcatSmokeTest {}
+
   @AppServer(version = "10.1.48", jdk = "11", inReducedMatrix = true)
   static class Tomcat10Jdk11 extends TomcatSmokeTest {}
 
@@ -114,4 +126,10 @@ abstract class TomcatSmokeTest extends AppServerTest {
 
   @AppServer(version = "10.1.48", jdk = "25-openj9")
   static class Tomcat10Jdk25Openj9 extends TomcatSmokeTest {}
+
+  @AppServer(version = "10.1.48", jdk = "27", inReducedMatrix = true)
+  static class Tomcat10Jdk27 extends TomcatSmokeTest {}
+
+  @AppServer(version = "10.1.48", jdk = "27-openj9")
+  static class Tomcat10Jdk27Openj9 extends TomcatSmokeTest {}
 }

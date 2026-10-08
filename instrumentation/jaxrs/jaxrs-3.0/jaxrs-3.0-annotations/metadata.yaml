@@ -9,7 +9,6 @@ features:
 disabled_by_default: true
 configurations:
   - ref: common.controller-telemetry.enabled
-  - ref: common.deprecated-controller-telemetry.enabled
   - name: otel.instrumentation.jaxrs.experimental-span-attributes
     declarative_name: java.jaxrs.experimental_span_attributes/development
     type: boolean

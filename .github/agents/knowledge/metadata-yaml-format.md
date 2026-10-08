@@ -190,7 +190,6 @@ Examples:
 | `otel.instrumentation.grpc.experimental-span-attributes`                     | `java.grpc.experimental_span_attributes/development`        |
 | `otel.instrumentation.aws-sdk.experimental-span-attributes`                  | `java.aws_sdk.experimental_span_attributes/development`     |
 | `otel.instrumentation.logback-appender.experimental.capture-code-attributes` | `java.logback_appender.capture_code_attributes/development` |
-| `otel.instrumentation.common.experimental.controller-telemetry.enabled`      | `java.common.controller_telemetry/development.enabled`      |
 | `otel.instrumentation.common.controller-telemetry.enabled`                   | `java.common.controller_telemetry.enabled`                  |
 
 **Key distinction**:

@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toMap;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.Mockito.when;
 
@@ -958,6 +959,49 @@ class InstrumenterTest {
 
     assertThatSpanKeyWasStored(SpanKey.DB_CLIENT, context);
     assertThatSpanKeyWasStored(SpanKey.HTTP_CLIENT, context);
+  }
+
+  @Test
+  void shouldEndSpanOnError() {
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "span")
+            .addAttributesExtractor(
+                new AttributesExtractor<Map<String, String>, Map<String, String>>() {
+                  @Override
+                  public void onStart(
+                      AttributesBuilder attributes,
+                      Context parentContext,
+                      Map<String, String> request) {}
+
+                  @Override
+                  public void onEnd(
+                      AttributesBuilder attributes,
+                      Context context,
+                      Map<String, String> request,
+                      @Nullable Map<String, String> response,
+                      @Nullable Throwable error) {
+                    throw new IllegalStateException("error");
+                  }
+                })
+            .buildInstrumenter();
+
+    Map<String, String> request = emptyMap();
+    Context context = instrumenter.start(Context.root(), request);
+
+    SpanContext spanContext = Span.fromContext(context).getSpanContext();
+    assertThat(spanContext.isValid()).isTrue();
+
+    assertThatThrownBy(() -> instrumenter.end(context, emptyMap(), emptyMap(), null))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("error");
+
+    otelTesting
+        .assertTraces()
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("span").hasKind(SpanKind.INTERNAL)));
   }
 
   private static void assertThatSpanKeyWasStored(SpanKey spanKey, Context context) {

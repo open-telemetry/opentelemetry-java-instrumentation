@@ -346,24 +346,17 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   }
 
   @Test
-  void testDeprecatedGraphqlQuerySanitizerMapping() {
+  void testGraphqlOperationNameInSpanNameMapping() {
     DeclarativeConfigProperties config =
-        createConfig("otel.instrumentation.graphql.query-sanitizer.enabled", "false");
+        createConfig("otel.instrumentation.graphql.operation-name-in-span-name.enabled", "true");
 
     assertThat(
             config
                 .getStructured("java")
                 .getStructured("graphql")
-                .getStructured("query_sanitizer")
+                .getStructured("operation_name_in_span_name")
                 .getBoolean("enabled"))
-        .isFalse();
-    assertThat(
-            config
-                .getStructured("java")
-                .getStructured("graphql")
-                .getStructured("query_sanitization")
-                .getBoolean("enabled"))
-        .isNull();
+        .isTrue();
   }
 
   @Test

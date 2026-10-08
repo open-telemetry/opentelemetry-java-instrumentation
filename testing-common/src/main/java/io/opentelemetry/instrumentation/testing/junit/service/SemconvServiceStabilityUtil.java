@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.testing.junit.service;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableServicePeerSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewServicePeerSemconv;
 import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes.SERVICE_PEER_NAME;
 
@@ -16,7 +16,7 @@ public class SemconvServiceStabilityUtil {
 
   /** Returns PEER_SERVICE or SERVICE_PEER_NAME depending on service.peer semconv stability mode. */
   public static AttributeKey<String> maybeStablePeerService() {
-    if (emitStableServicePeerSemconv()) {
+    if (emitPreviewServicePeerSemconv()) {
       return SERVICE_PEER_NAME;
     }
     return PEER_SERVICE;
