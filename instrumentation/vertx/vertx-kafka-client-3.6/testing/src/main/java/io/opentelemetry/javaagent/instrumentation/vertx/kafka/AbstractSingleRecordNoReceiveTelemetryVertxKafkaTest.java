@@ -8,17 +8,13 @@ package io.opentelemetry.javaagent.instrumentation.vertx.kafka;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanEnabledSupplier;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -88,8 +84,6 @@ public abstract class AbstractSingleRecordNoReceiveTelemetryVertxKafkaTest
 
     KafkaProducerRecord<String, String> record =
         KafkaProducerRecord.create("testSingleTopic", "10", "error");
-    List<AttributeAssertion> attributes = processAttributes(record);
-    attributes.add(equalTo(ERROR_TYPE, IllegalArgumentException.class.getName()));
     CountDownLatch sent = new CountDownLatch(1);
     testing().runWithSpan("producer", () -> sendRecord(record, result -> sent.countDown()));
     assertThat(sent.await(30, SECONDS)).isTrue();
@@ -110,7 +104,7 @@ public abstract class AbstractSingleRecordNoReceiveTelemetryVertxKafkaTest
                           .hasParent(trace.getSpan(1))
                           .hasStatus(StatusData.error())
                           .hasException(new IllegalArgumentException("boom"))
-                          .hasAttributesSatisfyingExactly(attributes);
+                          .hasAttributesSatisfyingExactly(withErrorType(processAttributes(record)));
                       span.hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())));
                     },
                     span -> span.hasName("consumer").hasParent(trace.getSpan(2))));

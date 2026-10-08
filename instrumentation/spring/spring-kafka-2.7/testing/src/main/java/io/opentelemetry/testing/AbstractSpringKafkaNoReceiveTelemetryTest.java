@@ -110,8 +110,6 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
 
     List<AttributeAssertion> processAttributes =
         singleProcessAttributes("testSingleTopic", "testSingleListener", "10");
-    List<AttributeAssertion> errorAttributes = new ArrayList<>(processAttributes);
-    errorAttributes.add(equalTo(ERROR_TYPE, IllegalArgumentException.class.getName()));
 
     testing()
         .waitAndAssertTraces(
@@ -133,7 +131,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                 .hasParent(trace.getSpan(1))
                                 .hasStatus(StatusData.error())
                                 .hasException(new IllegalArgumentException("boom"))
-                                .hasAttributesSatisfyingExactly(errorAttributes);
+                                .hasAttributesSatisfyingExactly(withErrorType(processAttributes));
                             span.hasLinks(LinkData.create(asRemote(producerContext)));
                           },
                           span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
@@ -149,7 +147,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                             .hasParent(trace.getSpan(1))
                             .hasStatus(StatusData.error())
                             .hasException(new IllegalArgumentException("boom"))
-                            .hasAttributesSatisfyingExactly(errorAttributes);
+                            .hasAttributesSatisfyingExactly(withErrorType(processAttributes));
                         span.hasLinks(LinkData.create(asRemote(producerContext)));
                       },
                       span ->
@@ -262,8 +260,6 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
 
     List<AttributeAssertion> processAttributes =
         batchProcessAttributes("testBatchTopic", "testBatchListener", 1);
-    List<AttributeAssertion> errorAttributes = new ArrayList<>(processAttributes);
-    errorAttributes.add(equalTo(ERROR_TYPE, IllegalArgumentException.class.getName()));
 
     testing()
         .waitAndAssertSortedTraces(
@@ -288,7 +284,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                             .hasLinksSatisfying(links(producer.get()))
                             .hasStatus(StatusData.error())
                             .hasException(new IllegalArgumentException("boom"))
-                            .hasAttributesSatisfyingExactly(errorAttributes),
+                            .hasAttributesSatisfyingExactly(withErrorType(processAttributes)),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(0))),
             trace -> {
               if (isLibraryInstrumentationTest() && testLatestDeps()) {
@@ -302,7 +298,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                             .hasLinksSatisfying(links(producer.get()))
                             .hasStatus(StatusData.error())
                             .hasException(new IllegalArgumentException("boom"))
-                            .hasAttributesSatisfyingExactly(errorAttributes),
+                            .hasAttributesSatisfyingExactly(withErrorType(processAttributes)),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(0)));
               }
             },
@@ -387,5 +383,11 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
 
     assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith(clientIdPrefix)));
     return assertions;
+  }
+
+  private static List<AttributeAssertion> withErrorType(List<AttributeAssertion> assertions) {
+    List<AttributeAssertion> result = new ArrayList<>(assertions);
+    result.add(equalTo(ERROR_TYPE, IllegalArgumentException.class.getName()));
+    return result;
   }
 }

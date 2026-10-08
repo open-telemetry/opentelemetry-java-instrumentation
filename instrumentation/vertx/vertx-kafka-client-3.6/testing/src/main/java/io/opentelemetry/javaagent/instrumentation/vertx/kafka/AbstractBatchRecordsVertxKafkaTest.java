@@ -12,18 +12,14 @@ import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMess
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanEnabledSupplier;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.BeforeAll;
@@ -198,8 +194,6 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
 
   private void assertBatchFailure(KafkaProducerRecord<String, String> record) {
     AtomicReference<SpanData> producer = new AtomicReference<>();
-    List<AttributeAssertion> attributes = batchProcessAttributes("testBatchTopic");
-    attributes.add(equalTo(ERROR_TYPE, IllegalArgumentException.class.getName()));
 
     testing()
         .waitAndAssertSortedTraces(
@@ -231,7 +225,8 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
                             .hasLinks(batchRecordLink(producer.get()))
                             .hasStatus(StatusData.error())
                             .hasException(new IllegalArgumentException("boom"))
-                            .hasAttributesSatisfyingExactly(attributes),
+                            .hasAttributesSatisfyingExactly(
+                                withErrorType(batchProcessAttributes("testBatchTopic"))),
                     span -> span.hasName("batch consumer").hasParent(trace.getSpan(0))),
             trace ->
                 trace.hasSpansSatisfyingExactly(
