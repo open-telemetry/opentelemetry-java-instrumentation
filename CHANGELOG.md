@@ -4,10 +4,11 @@
 
 ### ⚠️ Breaking changes
 
-- Disable native Kafka client metrics and Kotlin coroutine `@WithSpan` annotation instrumentation by
-  default. Enable them independently with `otel.instrumentation.kafka-clients-metrics.enabled=true`
+- Disable native Kafka client metrics and Kotlin suspend function `@WithSpan` annotation
+  instrumentation by default. Enable them independently with `otel.instrumentation.kafka-clients-metrics.enabled=true`
   and `otel.instrumentation.kotlinx-coroutines-annotations.enabled=true`, respectively. Kafka
-  tracing, messaging operation metrics, and ordinary coroutine context propagation remain enabled.
+  tracing, messaging operation metrics, ordinary coroutine context propagation, and `@WithSpan` on
+  `Flow`-returning methods (via the default-enabled annotations instrumentation) remain enabled.
   The `kafka`, `kafka-clients`, `kafka-clients-0.11`, `kafka-clients-metrics-0.11`,
   `kotlinx-coroutines`, `kotlinx-coroutines-1.0`,
   `kotlinx-coroutines-opentelemetry-instrumentation-annotations`, and
