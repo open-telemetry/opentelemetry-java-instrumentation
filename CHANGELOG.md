@@ -8,7 +8,10 @@
   default. Enable them independently with `otel.instrumentation.kafka-clients-metrics.enabled=true`
   and `otel.instrumentation.kotlinx-coroutines-annotations.enabled=true`, respectively. Kafka
   tracing, messaging operation metrics, and ordinary coroutine context propagation remain enabled.
-  The `kafka`/`kafka-clients` and `kotlinx-coroutines` selectors no longer enable these features.
+  The `kafka`, `kafka-clients`, `kafka-clients-0.11`, `kafka-clients-metrics-0.11`,
+  `kotlinx-coroutines`, `kotlinx-coroutines-1.0`,
+  `kotlinx-coroutines-opentelemetry-instrumentation-annotations`, and
+  `opentelemetry-instrumentation-annotations` selectors no longer enable these features.
 - OSHI system metrics use schema version 1.44.0 and scope `io.opentelemetry.oshi-5.0`.
   Update `system.network.packets` to `system.network.packet.count`, plural count units to
   `{packet}`, `{error}`, and `{operation}`. Replace memory `state` with `system.memory.state`;
