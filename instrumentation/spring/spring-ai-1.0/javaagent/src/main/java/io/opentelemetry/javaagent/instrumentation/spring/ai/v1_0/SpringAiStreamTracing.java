@@ -6,9 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0;
 
 import static io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.SpringAiSingletons.captureMessageContent;
-import static io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.SpringAiSingletons.captureMessageContentAsSpanAttributes;
 import static io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.SpringAiSingletons.instrumenter;
-import static io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.SpringAiSingletons.messageContentSpanAttributeMaxLength;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINE;
@@ -22,7 +21,6 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
@@ -35,7 +33,6 @@ import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.content.Media;
-import org.springframework.util.MimeType;
 import reactor.core.publisher.Flux;
 import reactor.util.context.ContextView;
 
@@ -73,11 +70,7 @@ class SpringAiStreamTracing {
       logger.log(FINE, "Failed to emit Spring AI prompt events", t);
     }
     AtomicBoolean ended = new AtomicBoolean();
-    StreamState state =
-        new StreamState(
-            captureMessageContent(),
-            captureMessageContentAsSpanAttributes(),
-            messageContentSpanAttributeMaxLength());
+    StreamState state = new StreamState(captureMessageContent());
     Flux<ChatResponse> traced =
         source
             // Suppress nested GenAI operations in the source, including deferred delegates.
@@ -134,34 +127,11 @@ class SpringAiStreamTracing {
     @Nullable private String responseModel;
     @Nullable private Usage usage;
     @Nullable private final Map<Integer, ContentBuffer> streamedContents;
-    private final int contentMaxLength;
     private final boolean captureToolCallArguments;
-    private final int toolCallArgumentMaxLength;
-    private final boolean captureMedia;
 
-    private StreamState(
-        boolean captureMessageContent,
-        boolean captureMessageContentAsSpanAttributes,
-        int spanAttributeMaxLength) {
-      if (captureMessageContent) {
-        captureToolCallArguments = true;
-        toolCallArgumentMaxLength = -1;
-      } else if (captureMessageContentAsSpanAttributes) {
-        captureToolCallArguments = true;
-        toolCallArgumentMaxLength = spanAttributeMaxLength;
-      } else {
-        captureToolCallArguments = false;
-        toolCallArgumentMaxLength = 0;
-      }
-      captureMedia = captureMessageContentAsSpanAttributes;
-
-      if (!captureMessageContent && !captureMessageContentAsSpanAttributes) {
-        streamedContents = null;
-        contentMaxLength = 0;
-      } else {
-        streamedContents = new TreeMap<>();
-        contentMaxLength = captureMessageContent ? -1 : spanAttributeMaxLength;
-      }
+    private StreamState(boolean captureMessageContent) {
+      captureToolCallArguments = captureMessageContent;
+      streamedContents = captureMessageContent ? new TreeMap<>() : null;
     }
 
     private synchronized void add(ChatResponse response) {
@@ -194,16 +164,14 @@ class SpringAiStreamTracing {
         int index = SpringAiMessageEvents.choiceIndex(generation, position);
         GenerationState generationState = this.generations.get(index);
         if (generationState == null) {
-          generationState =
-              new GenerationState(
-                  captureToolCallArguments, toolCallArgumentMaxLength, captureMedia);
+          generationState = new GenerationState(captureToolCallArguments);
           this.generations.put(index, generationState);
         }
         generationState.add(generation);
         if (streamedContents != null) {
           ContentBuffer contentBuffer = streamedContents.get(index);
           if (contentBuffer == null) {
-            contentBuffer = new ContentBuffer(contentMaxLength);
+            contentBuffer = new ContentBuffer(-1);
             streamedContents.put(index, contentBuffer);
           }
           String content = generation.getOutput().getText();
@@ -251,27 +219,18 @@ class SpringAiStreamTracing {
 
   private static final class GenerationState {
     private final boolean captureToolCallArguments;
-    private final int toolCallArgumentMaxLength;
     @Nullable private Generation generation;
     @Nullable private String finishReason;
     private final List<ToolCallState> toolCalls = new ArrayList<>();
-    private final List<MediaState> media = new ArrayList<>();
-    private final boolean captureMedia;
 
-    private GenerationState(
-        boolean captureToolCallArguments, int toolCallArgumentMaxLength, boolean captureMedia) {
+    private GenerationState(boolean captureToolCallArguments) {
       this.captureToolCallArguments = captureToolCallArguments;
-      this.toolCallArgumentMaxLength = toolCallArgumentMaxLength;
-      this.captureMedia = captureMedia;
     }
 
     private void add(Generation generation) {
       this.generation = generation;
       AssistantMessage output = generation.getOutput();
       addToolCalls(output);
-      if (captureMedia) {
-        addMedia(output);
-      }
       ChatGenerationMetadata metadata = generation.getMetadata();
       if (metadata != null && metadata.getFinishReason() != null) {
         finishReason = metadata.getFinishReason();
@@ -285,7 +244,7 @@ class SpringAiStreamTracing {
       }
 
       AssistantMessage output = generation.getOutput();
-      if (!toolCalls.isEmpty() || !media.isEmpty()) {
+      if (!toolCalls.isEmpty()) {
         output = withAccumulatedStructuredParts(output);
       }
 
@@ -330,25 +289,9 @@ class SpringAiStreamTracing {
         return toolCalls.get(index);
       }
 
-      ToolCallState state = new ToolCallState(captureToolCallArguments, toolCallArgumentMaxLength);
+      ToolCallState state = new ToolCallState(captureToolCallArguments);
       toolCalls.add(state);
       return state;
-    }
-
-    private void addMedia(AssistantMessage message) {
-      List<Media> newMedia = message.getMedia();
-      if (newMedia == null || newMedia.isEmpty()) {
-        return;
-      }
-      // Match each previously captured occurrence at most once per chunk so that equal media
-      // within a chunk remain distinct while repeated chunks do not duplicate them.
-      List<MediaState> unmatchedMedia = new ArrayList<>(media);
-      for (Media item : newMedia) {
-        MediaState state = MediaState.create(item);
-        if (!unmatchedMedia.remove(state)) {
-          media.add(state);
-        }
-      }
     }
 
     private AssistantMessage withAccumulatedStructuredParts(AssistantMessage message) {
@@ -356,68 +299,7 @@ class SpringAiStreamTracing {
       for (ToolCallState toolCall : toolCalls) {
         aggregatedToolCalls.add(toolCall.value());
       }
-      List<Media> aggregatedMedia = new ArrayList<>(media.size());
-      for (MediaState item : media) {
-        aggregatedMedia.add(item.value());
-      }
-      return assistantMessage(message, aggregatedToolCalls, aggregatedMedia);
-    }
-  }
-
-  private static final class MediaState {
-    private final MimeType mimeType;
-    @Nullable private final String uri;
-    @Nullable private final String id;
-    @Nullable private final String name;
-
-    private MediaState(
-        MimeType mimeType, @Nullable String uri, @Nullable String id, @Nullable String name) {
-      this.mimeType = mimeType;
-      this.uri = uri;
-      this.id = id;
-      this.name = name;
-    }
-
-    private static MediaState create(Media media) {
-      String uri = SpringAiMessageAttributes.uriString(media.getData());
-      if (uri != null) {
-        return new MediaState(media.getMimeType(), uri, null, null);
-      }
-      String id = media.getId();
-      if (id != null && !id.isEmpty()) {
-        return new MediaState(media.getMimeType(), null, id, null);
-      }
-      return new MediaState(media.getMimeType(), null, null, media.getName());
-    }
-
-    private Media value() {
-      Media.Builder builder = Media.builder().mimeType(mimeType).data(uri == null ? "" : uri);
-      if (id != null) {
-        builder.id(id);
-      }
-      if (name != null) {
-        builder.name(name);
-      }
-      return builder.build();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj) {
-        return true;
-      }
-      if (!(obj instanceof MediaState other)) {
-        return false;
-      }
-      return mimeType.equals(other.mimeType)
-          && Objects.equals(uri, other.uri)
-          && Objects.equals(id, other.id)
-          && Objects.equals(name, other.name);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(mimeType, uri, id, name);
+      return assistantMessage(message, aggregatedToolCalls, emptyList());
     }
   }
 
@@ -428,8 +310,8 @@ class SpringAiStreamTracing {
     @Nullable private final ContentBuffer arguments;
     private boolean hasArguments;
 
-    private ToolCallState(boolean captureArguments, int argumentMaxLength) {
-      arguments = captureArguments ? new ContentBuffer(argumentMaxLength) : null;
+    private ToolCallState(boolean captureArguments) {
+      arguments = captureArguments ? new ContentBuffer(-1) : null;
     }
 
     private void add(AssistantMessage.ToolCall toolCall) {

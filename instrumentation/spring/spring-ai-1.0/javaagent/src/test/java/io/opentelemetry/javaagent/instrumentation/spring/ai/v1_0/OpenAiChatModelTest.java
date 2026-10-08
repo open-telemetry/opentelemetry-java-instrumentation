@@ -59,9 +59,6 @@ class OpenAiChatModelTest {
   private static final String FINISH_REASON = "STOP";
   private static final boolean CAPTURE_MESSAGE_CONTENT =
       Boolean.getBoolean("otel.instrumentation.genai.capture-message-content");
-  private static final boolean EXPERIMENTAL_ATTRIBUTES =
-      Boolean.getBoolean(
-          "otel.instrumentation.spring-ai.experimental.capture-message-content-as-span-attributes.enabled");
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -101,19 +98,7 @@ class OpenAiChatModelTest {
                             equalTo(GEN_AI_RESPONSE_ID, "chatcmpl-test"),
                             equalTo(GEN_AI_RESPONSE_MODEL, RESPONSE_MODEL),
                             equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
-                            equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 2L),
-                            equalTo(
-                                stringKey("gen_ai.input.messages"),
-                                experimental(
-                                    "[{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\""
-                                        + PROMPT
-                                        + "\"}]}]")),
-                            equalTo(
-                                stringKey("gen_ai.output.messages"),
-                                experimental(
-                                    "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\""
-                                        + RESPONSE
-                                        + "\"}]}]")))));
+                            equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 2L))));
     assertMetrics();
     assertMessageEvents(spanContext);
   }
@@ -207,9 +192,5 @@ class OpenAiChatModelTest {
         KeyValue.of("finish_reason", Value.of(FINISH_REASON)),
         KeyValue.of("index", Value.of(0)),
         KeyValue.of("message", message));
-  }
-
-  private static <T> T experimental(T value) {
-    return EXPERIMENTAL_ATTRIBUTES ? value : null;
   }
 }

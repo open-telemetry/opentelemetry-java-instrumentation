@@ -34,7 +34,6 @@ import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenA
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
-import static java.util.Collections.nCopies;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -53,8 +52,6 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.ToolResponseMessage;
@@ -87,13 +84,6 @@ class ChatModelTest {
   private static final String MEDIA_URL = "https://example.com/weather.png";
   private static final boolean CAPTURE_MESSAGE_CONTENT =
       Boolean.getBoolean("otel.instrumentation.genai.capture-message-content");
-  private static final boolean EXPERIMENTAL_ATTRIBUTES =
-      Boolean.getBoolean(
-          "otel.instrumentation.spring-ai.experimental.capture-message-content-as-span-attributes.enabled");
-  private static final int MESSAGE_CONTENT_SPAN_ATTRIBUTE_MAX_LENGTH =
-      Integer.getInteger(
-          "otel.instrumentation.spring-ai.experimental.message-content-span-attribute.max-length",
-          8192);
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -210,59 +200,6 @@ class ChatModelTest {
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0))));
     assertMetrics();
-  }
-
-  @Test
-  void callResponseEventSurvivesSpanAttributeSerializationFailure() {
-    AssistantMessage output =
-        new AssistantMessage(RESPONSE) {
-          @Override
-          public List<Media> getMedia() {
-            throw new IllegalStateException("media processing failed");
-          }
-        };
-    chatModel.setCallResponse(
-        response(
-            singletonList(generation(output, "stop")),
-            ChatResponseMetadata.builder()
-                .id("response-id")
-                .model(MODEL)
-                .usage(new DefaultUsage(3, 2))
-                .build()));
-
-    testing.runWithSpan("parent", () -> chatModel.call(prompt()));
-
-    SpanContext spanContext = testing.waitForTraces(1).get(0).get(1).getSpanContext();
-    assertTraces("test", false, false);
-    assertMetrics();
-    assertMessageEvents(spanContext);
-  }
-
-  @Test
-  void streamResponseEventSurvivesSpanAttributeSerializationFailure() {
-    AssistantMessage output =
-        new AssistantMessage(RESPONSE) {
-          @Override
-          public List<Media> getMedia() {
-            throw new IllegalStateException("media processing failed");
-          }
-        };
-    chatModel.setStreamPublisher(
-        Flux.just(
-            response(
-                singletonList(generation(output, "stop")),
-                ChatResponseMetadata.builder()
-                    .id("response-id")
-                    .model(MODEL)
-                    .usage(new DefaultUsage(3, 2))
-                    .build())));
-
-    testing.runWithSpan("parent", () -> chatModel.stream(prompt()).blockLast());
-
-    SpanContext spanContext = testing.waitForTraces(1).get(0).get(1).getSpanContext();
-    assertTraces("test", true, false);
-    assertMetrics();
-    assertMessageEvents(spanContext);
   }
 
   @Test
@@ -402,77 +339,9 @@ class ChatModelTest {
                             equalTo(GEN_AI_RESPONSE_ID, "response-id"),
                             equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
                             equalTo(GEN_AI_USAGE_INPUT_TOKENS, 3L),
-                            equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 2L),
-                            equalTo(
-                                stringKey("gen_ai.input.messages"),
-                                experimental(
-                                    "[{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\""
-                                        + PROMPT
-                                        + "\"}]}]")),
-                            equalTo(
-                                stringKey("gen_ai.output.messages"),
-                                experimental(
-                                    "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\"A one\"}]},"
-                                        + "{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\"B two\"}]}]")))));
+                            equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 2L))));
     assertMetrics();
     assertMultiChoiceEvents(spanContext);
-  }
-
-  @ParameterizedTest
-  @CsvSource({"1,1,1", "2,2,2", "1,2,2", "2,1,2", "0,2,2", "2,0,2"})
-  void streamPreservesMediaMultiplicityAcrossChunks(
-      int firstChunkCount, int secondChunkCount, int expectedCount) {
-    Media firstMedia =
-        Media.builder()
-            .mimeType(Media.Format.IMAGE_PNG)
-            .data(new byte[] {1, 2, 3})
-            .name("image")
-            .build();
-    Media secondMedia =
-        Media.builder()
-            .mimeType(Media.Format.IMAGE_PNG)
-            .data(new byte[] {4, 5, 6})
-            .name("image")
-            .build();
-    chatModel.setStreamPublisher(
-        Flux.just(
-            response(
-                singletonList(
-                    generation(
-                        assistantMessage(
-                            "",
-                            emptyList(),
-                            List.of(firstMedia, secondMedia).subList(0, firstChunkCount)),
-                        null)),
-                ChatResponseMetadata.builder().id("response-id").model(MODEL).build()),
-            response(
-                singletonList(
-                    generation(
-                        assistantMessage(
-                            "",
-                            emptyList(),
-                            List.of(secondMedia, firstMedia).subList(0, secondChunkCount)),
-                        "stop")),
-                ChatResponseMetadata.builder().usage(new DefaultUsage(3, 2)).build())));
-
-    testing.runWithSpan("parent", () -> chatModel.stream(prompt()).blockLast());
-
-    assertThat(
-            testing
-                .waitForTraces(1)
-                .get(0)
-                .get(1)
-                .getAttributes()
-                .get(stringKey("gen_ai.output.messages")))
-        .isEqualTo(
-            experimental(
-                "[{\"role\":\"assistant\",\"parts\":["
-                    + String.join(
-                        ",",
-                        nCopies(
-                            expectedCount,
-                            "{\"type\":\"media\",\"mime_type\":\"image/png\",\"modality\":\"image\",\"name\":\"image\"}"))
-                    + "]}]"));
   }
 
   @Test
@@ -498,20 +367,6 @@ class ChatModelTest {
     testing.runWithSpan("parent", () -> chatModel.stream(prompt()).blockLast());
 
     SpanContext spanContext = testing.waitForTraces(1).get(0).get(1).getSpanContext();
-    assertThat(
-            testing
-                .waitForTraces(1)
-                .get(0)
-                .get(1)
-                .getAttributes()
-                .get(stringKey("gen_ai.output.messages")))
-        .isEqualTo(
-            experimental(
-                "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"tool_call\",\"id\":\""
-                    + TOOL_CALL_ID
-                    + "\",\"name\":\""
-                    + TOOL_NAME
-                    + "\",\"arguments\":\"{\\\"location\\\":\\\"Paris\\\"}\"}]}]"));
     testing.waitAndAssertLogRecords(
         log ->
             log.hasAttributesSatisfyingExactly(
@@ -525,51 +380,6 @@ class ChatModelTest {
                     equalTo(stringKey("event.name"), "gen_ai.choice"))
                 .hasSpanContext(spanContext)
                 .hasBody(choiceBodyWithToolCall("")));
-  }
-
-  @Test
-  void streamAggregatesParallelToolCallDeltasByIndex() {
-    ChatResponse firstChunk =
-        response(
-            singletonList(
-                generation(
-                    assistantMessage(
-                        "",
-                        asList(
-                            toolCall(TOOL_CALL_ID, "function", TOOL_NAME, "{\"loc"),
-                            toolCall("call_time", "function", "get_time", "{\"time"))),
-                    null)),
-            ChatResponseMetadata.builder().id("response-id").model(MODEL).build());
-    ChatResponse secondChunk =
-        response(
-            singletonList(
-                generation(
-                    assistantMessage(
-                        "",
-                        asList(
-                            toolCall(null, null, null, "ation\":\"Paris\"}"),
-                            toolCall(null, null, null, "zone\":\"UTC\"}"))),
-                    "tool_calls")),
-            ChatResponseMetadata.builder().usage(new DefaultUsage(3, 2)).build());
-    chatModel.setStreamPublisher(Flux.just(firstChunk, secondChunk));
-
-    testing.runWithSpan("parent", () -> chatModel.stream(prompt()).blockLast());
-
-    assertThat(
-            testing
-                .waitForTraces(1)
-                .get(0)
-                .get(1)
-                .getAttributes()
-                .get(stringKey("gen_ai.output.messages")))
-        .isEqualTo(
-            experimental(
-                "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"tool_call\",\"id\":\""
-                    + TOOL_CALL_ID
-                    + "\",\"name\":\""
-                    + TOOL_NAME
-                    + "\",\"arguments\":\"{\\\"location\\\":\\\"Paris\\\"}\"},"
-                    + "{\"type\":\"tool_call\",\"id\":\"call_time\",\"name\":\"get_time\",\"arguments\":\"{\\\"timezone\\\":\\\"UTC\\\"}\"}]}]"));
   }
 
   @Test
@@ -601,19 +411,7 @@ class ChatModelTest {
                             equalTo(GEN_AI_REQUEST_TOP_K, 4.0),
                             equalTo(GEN_AI_REQUEST_TOP_P, 0.5),
                             equalTo(GEN_AI_RESPONSE_FINISH_REASONS, singletonList("stop")),
-                            equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
-                            equalTo(
-                                stringKey("gen_ai.input.messages"),
-                                experimental(
-                                    "[{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\""
-                                        + PROMPT
-                                        + "\"}]}]")),
-                            equalTo(
-                                stringKey("gen_ai.output.messages"),
-                                experimental(
-                                    "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\""
-                                        + RESPONSE
-                                        + "\"}]}]")))));
+                            equalTo(GEN_AI_RESPONSE_MODEL, MODEL))));
     assertMetricsWithoutTokenUsage();
   }
 
@@ -657,59 +455,6 @@ class ChatModelTest {
                     equalTo(stringKey("event.name"), "gen_ai.choice"))
                 .hasSpanContext(spanContext)
                 .hasBody(choiceBody("stop", 1, RESPONSE)));
-  }
-
-  @Test
-  void structuredMessageSpanAttributePreservesToolCallsToolResponsesAndMedia() {
-    chatModel.setCallResponse(
-        response(
-            singletonList(generation(outputMessageWithToolCall(), "tool_calls")),
-            ChatResponseMetadata.builder().id("response-id").model(MODEL).build()));
-
-    testing.runWithSpan("parent", () -> chatModel.call(toolCallingPrompt()));
-
-    assertThat(
-            testing
-                .waitForTraces(1)
-                .get(0)
-                .get(1)
-                .getAttributes()
-                .get(stringKey("gen_ai.input.messages")))
-        .isEqualTo(
-            experimental(
-                "[{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\""
-                    + PROMPT
-                    + "\"},{\"type\":\"uri\",\"mime_type\":\"image/png\",\"modality\":\"image\",\"uri\":\""
-                    + MEDIA_URL
-                    + "\"}]},"
-                    + "{\"role\":\"assistant\",\"parts\":[{\"type\":\"tool_call\",\"id\":\""
-                    + TOOL_CALL_ID
-                    + "\",\"name\":\""
-                    + TOOL_NAME
-                    + "\",\"arguments\":\"{\\\"location\\\":\\\"Paris\\\"}\"}]},"
-                    + "{\"role\":\"tool\",\"parts\":[{\"type\":\"tool_call_response\",\"id\":\""
-                    + TOOL_CALL_ID
-                    + "\",\"name\":\""
-                    + TOOL_NAME
-                    + "\",\"response\":\""
-                    + TOOL_RESPONSE
-                    + "\"}]}]"));
-    assertThat(
-            testing
-                .waitForTraces(1)
-                .get(0)
-                .get(1)
-                .getAttributes()
-                .get(stringKey("gen_ai.output.messages")))
-        .isEqualTo(
-            experimental(
-                "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\""
-                    + RESPONSE
-                    + "\"},{\"type\":\"tool_call\",\"id\":\""
-                    + TOOL_CALL_ID
-                    + "\",\"name\":\""
-                    + TOOL_NAME
-                    + "\",\"arguments\":\"{\\\"location\\\":\\\"Paris\\\"}\"}]}]"));
   }
 
   @Test
@@ -858,213 +603,7 @@ class ChatModelTest {
                         .hasStatus(StatusData.unset())));
   }
 
-  @Test
-  void messageSpanAttributeIsTruncatedWithoutChangingItsJsonStructure() {
-    String content = repeatedContent(8193);
-    testing.runWithSpan("parent", () -> chatModel.call(new Prompt(content)));
-
-    assertThat(
-            testing
-                .waitForTraces(1)
-                .get(0)
-                .get(1)
-                .getAttributes()
-                .get(stringKey("gen_ai.input.messages")))
-        .isEqualTo(
-            experimental(
-                "[{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\""
-                    + repeatedContent(8192)
-                    + "\"}]}]"));
-  }
-
-  @Test
-  void messageSpanAttributeUsesConfiguredMaxLength() {
-    String content = repeatedContent(MESSAGE_CONTENT_SPAN_ATTRIBUTE_MAX_LENGTH + 1);
-    testing.runWithSpan("parent", () -> chatModel.call(new Prompt(content)));
-
-    assertThat(
-            testing
-                .waitForTraces(1)
-                .get(0)
-                .get(1)
-                .getAttributes()
-                .get(stringKey("gen_ai.input.messages")))
-        .isEqualTo(
-            experimental(
-                "[{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\""
-                    + repeatedContent(MESSAGE_CONTENT_SPAN_ATTRIBUTE_MAX_LENGTH)
-                    + "\"}]}]"));
-  }
-
-  @Test
-  void streamedMessageSpanAttributeIsBoundedAtASurrogateBoundary() {
-    ChatResponse firstChunk =
-        response(
-            singletonList(
-                generation(repeatedContent(8191) + Character.toString((char) 0xD83D), null)),
-            ChatResponseMetadata.builder().id("response-id").model(MODEL).build());
-    ChatResponse secondChunk =
-        response(
-            singletonList(generation(Character.toString((char) 0xDE00) + "ignored", "stop")),
-            ChatResponseMetadata.builder().usage(new DefaultUsage(3, 2)).build());
-    chatModel.setStreamPublisher(Flux.just(firstChunk, secondChunk));
-
-    testing.runWithSpan("parent", () -> chatModel.stream(prompt()).blockLast());
-
-    assertThat(
-            testing
-                .waitForTraces(1)
-                .get(0)
-                .get(1)
-                .getAttributes()
-                .get(stringKey("gen_ai.output.messages")))
-        .isEqualTo(
-            experimental(
-                "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\""
-                    + repeatedContent(8191)
-                    + "\"}]}]"));
-  }
-
-  @Test
-  void streamedMessageSpanAttributeUsesConfiguredMaxLength() {
-    String content = repeatedContent(MESSAGE_CONTENT_SPAN_ATTRIBUTE_MAX_LENGTH + 1);
-    chatModel.setStreamPublisher(
-        Flux.just(
-            response(
-                singletonList(generation(content, "stop")),
-                ChatResponseMetadata.builder()
-                    .id("response-id")
-                    .model(MODEL)
-                    .usage(new DefaultUsage(3, 2))
-                    .build())));
-
-    testing.runWithSpan("parent", () -> chatModel.stream(prompt()).blockLast());
-
-    assertThat(
-            testing
-                .waitForTraces(1)
-                .get(0)
-                .get(1)
-                .getAttributes()
-                .get(stringKey("gen_ai.output.messages")))
-        .isEqualTo(
-            experimental(
-                "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\""
-                    + repeatedContent(MESSAGE_CONTENT_SPAN_ATTRIBUTE_MAX_LENGTH)
-                    + "\"}]}]"));
-  }
-
-  @Test
-  void streamedToolCallArgumentsUseConfiguredMaxLength() {
-    String arguments = repeatedContent(MESSAGE_CONTENT_SPAN_ATTRIBUTE_MAX_LENGTH + 1);
-    ChatResponse firstChunk =
-        response(
-            singletonList(
-                generation(
-                    assistantMessage(
-                        "",
-                        singletonList(
-                            toolCall(
-                                TOOL_CALL_ID,
-                                "function",
-                                TOOL_NAME,
-                                arguments.substring(
-                                    0, MESSAGE_CONTENT_SPAN_ATTRIBUTE_MAX_LENGTH)))),
-                    null)),
-            ChatResponseMetadata.builder().id("response-id").model(MODEL).build());
-    ChatResponse secondChunk =
-        response(
-            singletonList(
-                generation(
-                    assistantMessage(
-                        "",
-                        singletonList(
-                            toolCall(
-                                null,
-                                null,
-                                null,
-                                arguments.substring(MESSAGE_CONTENT_SPAN_ATTRIBUTE_MAX_LENGTH)))),
-                    "tool_calls")),
-            ChatResponseMetadata.builder().usage(new DefaultUsage(3, 2)).build());
-    chatModel.setStreamPublisher(Flux.just(firstChunk, secondChunk));
-
-    testing.runWithSpan("parent", () -> chatModel.stream(prompt()).blockLast());
-
-    assertThat(
-            testing
-                .waitForTraces(1)
-                .get(0)
-                .get(1)
-                .getAttributes()
-                .get(stringKey("gen_ai.output.messages")))
-        .isEqualTo(
-            experimental(
-                "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"tool_call\",\"id\":\""
-                    + TOOL_CALL_ID
-                    + "\",\"name\":\""
-                    + TOOL_NAME
-                    + "\",\"arguments\":\""
-                    + repeatedContent(MESSAGE_CONTENT_SPAN_ATTRIBUTE_MAX_LENGTH)
-                    + "\"}]}]"));
-  }
-
-  @Test
-  void messageSpanAttributeEscapesJsonContent() {
-    testing.runWithSpan("parent", () -> chatModel.call(new Prompt("line\n\"quoted\"")));
-
-    assertThat(
-            testing
-                .waitForTraces(1)
-                .get(0)
-                .get(1)
-                .getAttributes()
-                .get(stringKey("gen_ai.input.messages")))
-        .isEqualTo(
-            experimental(
-                "[{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\"line\\n\\\"quoted\\\"\"}]}]"));
-  }
-
-  @Test
-  void messageSpanAttributeDropsRelativeUriMedia() {
-    Prompt prompt =
-        new Prompt(
-            singletonList(
-                UserMessage.builder()
-                    .text(PROMPT)
-                    .media(
-                        Media.builder()
-                            .mimeType(Media.Format.IMAGE_PNG)
-                            .data(URI.create("/relative/path.png"))
-                            .build())
-                    .build()));
-
-    testing.runWithSpan("parent", () -> chatModel.call(prompt));
-
-    String inputMessages =
-        testing
-            .waitForTraces(1)
-            .get(0)
-            .get(1)
-            .getAttributes()
-            .get(stringKey("gen_ai.input.messages"));
-    if (!EXPERIMENTAL_ATTRIBUTES) {
-      assertThat(inputMessages).isNull();
-      return;
-    }
-
-    assertThat(inputMessages)
-        .contains("\"type\":\"media\"")
-        .contains("\"mime_type\":\"image/png\"")
-        .contains("\"modality\":\"image\"")
-        .doesNotContain("\"type\":\"uri\"");
-  }
-
   private static void assertTraces(String provider, boolean streaming) {
-    assertTraces(provider, streaming, true);
-  }
-
-  private static void assertTraces(
-      String provider, boolean streaming, boolean expectOutputMessages) {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -1089,21 +628,7 @@ class ChatModelTest {
                             equalTo(GEN_AI_RESPONSE_ID, "response-id"),
                             equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
                             equalTo(GEN_AI_USAGE_INPUT_TOKENS, 3L),
-                            equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 2L),
-                            equalTo(
-                                stringKey("gen_ai.input.messages"),
-                                experimental(
-                                    "[{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\""
-                                        + PROMPT
-                                        + "\"}]}]")),
-                            equalTo(
-                                stringKey("gen_ai.output.messages"),
-                                expectOutputMessages
-                                    ? experimental(
-                                        "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\""
-                                            + RESPONSE
-                                            + "\"}]}]")
-                                    : null))));
+                            equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 2L))));
   }
 
   private static void assertErrorTrace(IllegalStateException error, boolean streaming) {
@@ -1134,13 +659,7 @@ class ChatModelTest {
                             equalTo(GEN_AI_REQUEST_TEMPERATURE, 0.3),
                             equalTo(GEN_AI_REQUEST_TOP_K, 4.0),
                             equalTo(GEN_AI_REQUEST_TOP_P, 0.5),
-                            equalTo(ERROR_TYPE, IllegalStateException.class.getName()),
-                            equalTo(
-                                stringKey("gen_ai.input.messages"),
-                                experimental(
-                                    "[{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\""
-                                        + PROMPT
-                                        + "\"}]}]")))));
+                            equalTo(ERROR_TYPE, IllegalStateException.class.getName()))));
   }
 
   private static void assertMetrics() {
@@ -1477,20 +996,8 @@ class ChatModelTest {
     return new ToolResponseMessage.ToolResponse(TOOL_CALL_ID, TOOL_NAME, TOOL_RESPONSE);
   }
 
-  private static String repeatedContent(int length) {
-    StringBuilder content = new StringBuilder(length);
-    for (int index = 0; index < length; index++) {
-      content.append('a');
-    }
-    return content.toString();
-  }
-
   private static void assertCurrentSpanContext(SpanContext current, SpanContext expected) {
     assertThat(current.getTraceId()).isEqualTo(expected.getTraceId());
     assertThat(current.getSpanId()).isEqualTo(expected.getSpanId());
-  }
-
-  private static <T> T experimental(T value) {
-    return EXPERIMENTAL_ATTRIBUTES ? value : null;
   }
 }

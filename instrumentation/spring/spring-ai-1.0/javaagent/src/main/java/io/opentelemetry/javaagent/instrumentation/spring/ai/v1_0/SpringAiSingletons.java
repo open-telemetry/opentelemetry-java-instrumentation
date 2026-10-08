@@ -19,8 +19,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
 class SpringAiSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-ai-1.0";
-  private static final int DEFAULT_MESSAGE_CONTENT_SPAN_ATTRIBUTE_MAX_LENGTH = 8192;
-
   private static final Instrumenter<SpringAiRequest, SpringAiResponse> instrumenter;
   private static final Logger eventLogger =
       GlobalOpenTelemetry.get().getLogsBridge().get(INSTRUMENTATION_NAME);
@@ -28,16 +26,6 @@ class SpringAiSingletons {
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "common")
           .get("gen_ai")
           .getBoolean("capture_message_content", false);
-  private static final boolean captureMessageContentAsSpanAttributes =
-      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "spring_ai")
-          .get("capture_message_content_as_span_attributes/development")
-          .getBoolean("enabled", false);
-  private static final int messageContentSpanAttributeMaxLength =
-      Math.max(
-          0,
-          DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "spring_ai")
-              .get("message_content_span_attribute/development")
-              .getInt("max_length", DEFAULT_MESSAGE_CONTENT_SPAN_ATTRIBUTE_MAX_LENGTH));
 
   static {
     SpringAiAttributesGetter getter = new SpringAiAttributesGetter();
@@ -47,7 +35,6 @@ class SpringAiSingletons {
                 INSTRUMENTATION_NAME,
                 GenAiSpanNameExtractor.create(getter))
             .addAttributesExtractor(GenAiAttributesExtractor.create(getter))
-            .addAttributesExtractor(new SpringAiMessageAttributes())
             .addOperationMetrics(GenAiClientMetrics.get());
     setGenAiClientExceptionEventExtractor(builder);
     instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
@@ -63,14 +50,6 @@ class SpringAiSingletons {
 
   static boolean captureMessageContent() {
     return captureMessageContent;
-  }
-
-  static boolean captureMessageContentAsSpanAttributes() {
-    return captureMessageContentAsSpanAttributes;
-  }
-
-  static int messageContentSpanAttributeMaxLength() {
-    return messageContentSpanAttributeMaxLength;
   }
 
   private SpringAiSingletons() {}
