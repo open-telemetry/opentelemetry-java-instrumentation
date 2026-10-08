@@ -21,7 +21,9 @@ class UndertowHttpAttributesGetter
   @Override
   @Nullable
   public String getErrorType(
-      HttpServerExchange request, @Nullable HttpServerExchange response, @Nullable Throwable error) {
+      HttpServerExchange request,
+      @Nullable HttpServerExchange response,
+      @Nullable Throwable error) {
     return null;
   }
 

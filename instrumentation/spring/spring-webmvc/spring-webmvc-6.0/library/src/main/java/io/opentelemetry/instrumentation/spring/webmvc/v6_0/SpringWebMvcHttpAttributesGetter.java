@@ -146,7 +146,9 @@ final class SpringWebMvcHttpAttributesGetter
   @Override
   @Nullable
   public String getErrorType(
-      HttpServletRequest request, @Nullable HttpServletResponse response, @Nullable Throwable error) {
+      HttpServletRequest request,
+      @Nullable HttpServletResponse response,
+      @Nullable Throwable error) {
     return null;
   }
 }
