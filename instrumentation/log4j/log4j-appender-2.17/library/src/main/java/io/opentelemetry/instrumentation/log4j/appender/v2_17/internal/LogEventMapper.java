@@ -53,7 +53,7 @@ public final class LogEventMapper<T> {
 
   private final boolean captureExperimentalAttributes;
   private final boolean captureCodeAttributes;
-  @Nullable private volatile Predicate<String> mapMessageAttributes;
+  @Nullable private final Predicate<String> mapMessageAttributes;
   private final boolean captureMarkerAttribute;
   private final boolean captureTemplate;
   private final boolean captureArguments;
@@ -78,10 +78,6 @@ public final class LogEventMapper<T> {
     this.captureTemplate = captureTemplate;
     this.captureArguments = captureArguments;
     this.contextDataAttributes = contextDataAttributes;
-  }
-
-  public void setMapMessageAttributes(@Nullable Predicate<String> mapMessageAttributes) {
-    this.mapMessageAttributes = mapMessageAttributes;
   }
 
   /**
@@ -189,7 +185,6 @@ public final class LogEventMapper<T> {
       builder.setEventName(eventName);
     }
 
-    Predicate<String> mapMessageAttributes = this.mapMessageAttributes;
     if (mapMessageAttributes != null) {
       // TODO (trask) this could be optimized in 2.9 and later by calling MapMessage.forEach()
       mapMessage

@@ -8,7 +8,7 @@
     <!-- TODO run tests both with and without experimental log attributes -->
     <!-- captureContextDataAttributes is retained for deprecated XML compatibility. -->
     <OpenTelemetry name="OpenTelemetryAppender" numLogsCapturedBeforeOtelInstall="1" captureMarkerAttribute="true" captureContextDataAttributes="key1,key2" captureExperimentalAttributes="true" captureCodeAttributes="true"/>
-    <OpenTelemetry name="OpenTelemetryCommonMapMessageSelectorAppender" numLogsCapturedBeforeOtelInstall="1"/>
+    <OpenTelemetry name="OpenTelemetryDefaultMapMessageSelectorAppender" numLogsCapturedBeforeOtelInstall="1"/>
     <OpenTelemetry name="OpenTelemetryMapMessageSelectorDisabledAppender" numLogsCapturedBeforeOtelInstall="1" structuredAttributesExcluded="*"/>
     <OpenTelemetry name="OpenTelemetryContextDataSelectorAppender" numLogsCapturedBeforeOtelInstall="1" contextDataAttributesIncluded="selector-*" contextDataAttributesExcluded="*-secret"/>
     <OpenTelemetry name="OpenTelemetryMapMessageSelectorAppender" numLogsCapturedBeforeOtelInstall="1" structuredAttributesIncluded="selector-*" structuredAttributesExcluded="*-secret"/>
@@ -25,8 +25,8 @@
     <Logger name="ContextDataSelectorTestLogger" level="All">
       <AppenderRef ref="OpenTelemetryContextDataSelectorAppender"/>
     </Logger>
-    <Logger name="CommonMapMessageSelectorTestLogger" level="All">
-      <AppenderRef ref="OpenTelemetryCommonMapMessageSelectorAppender"/>
+    <Logger name="DefaultMapMessageSelectorTestLogger" level="All">
+      <AppenderRef ref="OpenTelemetryDefaultMapMessageSelectorAppender"/>
     </Logger>
     <Logger name="MapMessageSelectorDisabledTestLogger" level="All">
       <AppenderRef ref="OpenTelemetryMapMessageSelectorDisabledAppender"/>

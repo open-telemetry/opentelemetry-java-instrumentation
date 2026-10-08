@@ -68,7 +68,6 @@ public class OpenTelemetryAppender extends AbstractAppender {
   static final String PLUGIN_NAME = "OpenTelemetry";
 
   private final LogEventMapper<ReadOnlyStringMap> mapper;
-  private final boolean structuredAttributesConfigured;
   @Nullable private volatile OpenTelemetry openTelemetry;
 
   private final BlockingQueue<LogEventToReplay> eventsToReplay;
@@ -84,21 +83,6 @@ public class OpenTelemetryAppender extends AbstractAppender {
    */
   public static void install(OpenTelemetry openTelemetry) {
     forEachAppender(appender -> appender.setOpenTelemetry(openTelemetry));
-  }
-
-  /**
-   * Installs the {@code openTelemetry} instance and default structured attribute selector on {@link
-   * OpenTelemetryAppender}s identified in the {@link LoggerContext}. A selector configured directly
-   * on an appender takes precedence.
-   */
-  public static void install(OpenTelemetry openTelemetry, IncludeExclude structuredAttributes) {
-    Predicate<String> selector =
-        structuredAttributes.isEmpty() ? value -> true : structuredAttributes::matches;
-    forEachAppender(
-        appender -> {
-          appender.setDefaultStructuredAttributes(selector);
-          appender.setOpenTelemetry(openTelemetry);
-        });
   }
 
   static void resetForTest() {
@@ -377,7 +361,6 @@ public class OpenTelemetryAppender extends AbstractAppender {
           captureExperimentalAttributes,
           captureCodeAttributes,
           getEffectiveStructuredAttributes(),
-          hasStructuredAttributesConfigured(),
           captureMarkerAttribute,
           captureTemplate,
           captureArguments,
@@ -399,12 +382,6 @@ public class OpenTelemetryAppender extends AbstractAppender {
         return selector::matches;
       }
       return value -> true;
-    }
-
-    private boolean hasStructuredAttributesConfigured() {
-      return structuredAttributes != null
-          || !splitAndFilterBlanksAndNulls(structuredAttributesIncluded).isEmpty()
-          || !splitAndFilterBlanksAndNulls(structuredAttributesExcluded).isEmpty();
     }
 
     @Nullable
@@ -434,7 +411,6 @@ public class OpenTelemetryAppender extends AbstractAppender {
       boolean captureExperimentalAttributes,
       boolean captureCodeAttributes,
       Predicate<String> structuredAttributes,
-      boolean structuredAttributesConfigured,
       boolean captureMarkerAttribute,
       boolean captureTemplate,
       boolean captureArguments,
@@ -447,7 +423,6 @@ public class OpenTelemetryAppender extends AbstractAppender {
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
     boolean v3Preview = commonConfig.getBoolean("v3_preview", false);
 
-    this.structuredAttributesConfigured = structuredAttributesConfigured;
     this.mapper =
         createMapper(
             captureExperimentalAttributes,
@@ -464,12 +439,6 @@ public class OpenTelemetryAppender extends AbstractAppender {
       this.eventsToReplay = new ArrayBlockingQueue<>(numLogsCapturedBeforeOtelInstall);
     } else {
       this.eventsToReplay = new ArrayBlockingQueue<>(1000);
-    }
-  }
-
-  private void setDefaultStructuredAttributes(Predicate<String> selector) {
-    if (!structuredAttributesConfigured) {
-      mapper.setMapMessageAttributes(selector);
     }
   }
 
@@ -528,9 +497,6 @@ public class OpenTelemetryAppender extends AbstractAppender {
     writeLock.lock();
     try {
       openTelemetry = null;
-      if (!structuredAttributesConfigured) {
-        mapper.setMapMessageAttributes(value -> true);
-      }
       eventsToReplay.clear();
       replayLimitWarningLogged.set(false);
       legacyContextDataWarningLogged.set(false);

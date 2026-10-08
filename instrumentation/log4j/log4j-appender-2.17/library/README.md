@@ -78,6 +78,9 @@ public class Application {
 
 #### Settings for the Log4j Appender
 
+When used with the Spring Boot starter, appender settings are configured through XML or the
+programmatic builder. The starter attaches its `OpenTelemetry` instance to the configured appenders.
+
 Setting can be configured as XML attributes, for example:
 
 ```xml

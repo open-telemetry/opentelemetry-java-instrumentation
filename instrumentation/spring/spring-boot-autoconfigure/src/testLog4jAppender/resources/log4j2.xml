@@ -2,10 +2,16 @@
 <Configuration status="WARN">
   <Appenders>
     <OpenTelemetry name="OpenTelemetryAppender"/>
+    <OpenTelemetry name="OpenTelemetrySelectorAppender"
+                   structuredAttributesIncluded="request-*"
+                   structuredAttributesExcluded="*-secret"/>
   </Appenders>
   <Loggers>
     <Logger name="spring-log4j-appender-test" level="INFO" additivity="false">
       <AppenderRef ref="OpenTelemetryAppender"/>
+    </Logger>
+    <Logger name="spring-log4j-appender-selector-test" level="INFO" additivity="false">
+      <AppenderRef ref="OpenTelemetrySelectorAppender"/>
     </Logger>
     <Root level="OFF"/>
   </Loggers>

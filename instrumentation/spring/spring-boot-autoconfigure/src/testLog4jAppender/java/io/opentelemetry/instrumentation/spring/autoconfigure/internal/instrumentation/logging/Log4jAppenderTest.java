@@ -14,8 +14,6 @@ import io.opentelemetry.instrumentation.log4j.appender.v2_17.OpenTelemetryAppend
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import java.util.HashMap;
-import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -47,7 +45,7 @@ class Log4jAppenderTest {
 
   @Test
   void capturesMapMessageAttributesByDefault() {
-    startSpringApplication(new HashMap<>());
+    startSpringApplication();
     testing.clearData();
 
     logger.info(new StringMapMessage().with("included", "captured").with("excluded", "captured"));
@@ -61,27 +59,27 @@ class Log4jAppenderTest {
   }
 
   @Test
-  void excludesMapMessageAttributesWithCommonSelector() {
-    Map<String, Object> properties = new HashMap<>();
-    properties.put(
-        "otel.instrumentation.common.logging.structured-attributes.excluded", "excluded");
-    startSpringApplication(properties);
+  void filtersMapMessageAttributesWithXmlSelector() {
+    startSpringApplication();
     testing.clearData();
 
-    logger.info(
-        new StringMapMessage().with("included", "captured").with("excluded", "not captured"));
+    LogManager.getLogger("spring-log4j-appender-selector-test")
+        .info(
+            new StringMapMessage()
+                .with("request-id", "captured")
+                .with("request-secret", "not captured")
+                .with("other", "not captured"));
 
     testing.waitAndAssertLogRecords(
         logRecord ->
             assertThat(logRecord.actual().getAttributes().asMap())
-                .containsOnly(entry(stringKey("included"), "captured")));
+                .containsOnly(entry(stringKey("request-id"), "captured")));
   }
 
-  private static void startSpringApplication(Map<String, Object> properties) {
+  private static void startSpringApplication() {
     SpringApplication app =
         new SpringApplication(
             TestingOpenTelemetryConfiguration.class, OpenTelemetryAppenderAutoConfiguration.class);
-    app.setDefaultProperties(properties);
     ConfigurableApplicationContext context = app.run();
     cleanup.deferCleanup(context);
   }

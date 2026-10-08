@@ -13,7 +13,6 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.ConfigurableEnvironment;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -31,9 +30,10 @@ public class OpenTelemetryAppenderAutoConfiguration {
 
     @Bean
     ApplicationListener<ApplicationReadyEvent> log4jOtelAppenderInitializer(
-        OpenTelemetry openTelemetry, ConfigurableEnvironment environment) {
+        OpenTelemetry openTelemetry) {
       return event -> {
-        Log4jAppenderInstaller.install(openTelemetry, environment);
+        io.opentelemetry.instrumentation.log4j.appender.v2_17.OpenTelemetryAppender.install(
+            openTelemetry);
       };
     }
   }

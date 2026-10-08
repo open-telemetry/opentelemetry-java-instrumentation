@@ -21,6 +21,10 @@
   `otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.*`, and
   `otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.*`)
   were removed and are now ignored, so migrate them to the common selectors to keep filtering.
+  The common properties apply to the Java agent and Spring Boot's Logback integration.
+  Standalone appenders, including Log4j under Spring Boot, use
+  `structuredAttributesIncluded` and `structuredAttributesExcluded` in XML, or
+  `setStructuredAttributes(IncludeExclude)` programmatically.
   Log4j `MapMessage` keys are emitted as their original log attribute names.
 - OSHI system metrics use schema version 1.44.0 and scope `io.opentelemetry.oshi-5.0`.
   Update `system.network.packets` to `system.network.packet.count`, plural count units to
