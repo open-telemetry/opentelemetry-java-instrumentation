@@ -33,7 +33,6 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.instrumentation.rocketmqclient.v4_8.base.BaseConf;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
@@ -211,7 +210,7 @@ abstract class AbstractRocketMqClientTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                                 equalTo(MESSAGING_ROCKETMQ_NAMESPACE, NAMESPACE),
-                                consumerGroup(),
+                                equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
                                 equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
                                 equalTo(MESSAGING_OPERATION_NAME, "process"),
                                 equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -277,7 +276,7 @@ abstract class AbstractRocketMqClientTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                                 equalTo(MESSAGING_ROCKETMQ_NAMESPACE, NAMESPACE),
-                                consumerGroup(),
+                                equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
                                 equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
                                 equalTo(MESSAGING_OPERATION_NAME, "process"),
                                 equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -481,7 +480,7 @@ abstract class AbstractRocketMqClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "rocketmq"),
                             equalTo(MESSAGING_ROCKETMQ_NAMESPACE, NAMESPACE),
-                            consumerGroup(),
+                            equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
                             equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
                             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2L),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
@@ -554,7 +553,7 @@ abstract class AbstractRocketMqClientTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                                 equalTo(MESSAGING_ROCKETMQ_NAMESPACE, NAMESPACE),
-                                consumerGroup(),
+                                equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
                                 equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
                                 equalTo(MESSAGING_OPERATION_NAME, "process"),
                                 equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -612,7 +611,7 @@ abstract class AbstractRocketMqClientTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                                 equalTo(MESSAGING_ROCKETMQ_NAMESPACE, NAMESPACE),
-                                consumerGroup(),
+                                equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
                                 equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
                                 equalTo(MESSAGING_OPERATION_NAME, "process"),
                                 equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -669,9 +668,5 @@ abstract class AbstractRocketMqClientTest {
                 });
       }
     };
-  }
-
-  private static AttributeAssertion consumerGroup() {
-    return equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP);
   }
 }

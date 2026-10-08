@@ -11,14 +11,18 @@ import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMess
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanEnabledSupplier;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.BeforeAll;
@@ -73,12 +77,12 @@ public abstract class AbstractBatchRecordsNoReceiveTelemetryVertxKafkaTest
 
                   // first record
                   span ->
-                      span.hasName(spanName("testBatchTopic", "send"))
+                      span.hasName("send testBatchTopic")
                           .hasKind(SpanKind.PRODUCER)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(sendAttributes(record1)),
                   span -> {
-                    span.hasName(spanName("testBatchTopic", "process"))
+                    span.hasName("process testBatchTopic")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(processAttributes(record1));
@@ -88,12 +92,12 @@ public abstract class AbstractBatchRecordsNoReceiveTelemetryVertxKafkaTest
 
                   // second record
                   span ->
-                      span.hasName(spanName("testBatchTopic", "send"))
+                      span.hasName("send testBatchTopic")
                           .hasKind(SpanKind.PRODUCER)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(sendAttributes(record2)),
                   span -> {
-                    span.hasName(spanName("testBatchTopic", "process"))
+                    span.hasName("process testBatchTopic")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(4))
                         .hasAttributesSatisfyingExactly(processAttributes(record2));
@@ -108,7 +112,7 @@ public abstract class AbstractBatchRecordsNoReceiveTelemetryVertxKafkaTest
                 trace.hasSpansSatisfyingExactly(
                     // batch consumer
                     span ->
-                        span.hasName(spanName("testBatchTopic", "process"))
+                        span.hasName("process testBatchTopic")
                             .hasKind(SpanKind.CONSUMER)
                             .hasNoParent()
                             .hasLinks(
@@ -144,6 +148,8 @@ public abstract class AbstractBatchRecordsNoReceiveTelemetryVertxKafkaTest
     kafkaConsumer.resume();
 
     AtomicReference<SpanData> producer = new AtomicReference<>();
+    List<AttributeAssertion> attributes = batchProcessAttributes("testBatchTopic");
+    attributes.add(equalTo(ERROR_TYPE, IllegalArgumentException.class.getName()));
 
     // the regular handler is not being called if the batch one fails
     testing()
@@ -153,12 +159,12 @@ public abstract class AbstractBatchRecordsNoReceiveTelemetryVertxKafkaTest
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("producer"),
                   span ->
-                      span.hasName(spanName("testBatchTopic", "send"))
+                      span.hasName("send testBatchTopic")
                           .hasKind(SpanKind.PRODUCER)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(sendAttributes(record)),
                   span -> {
-                    span.hasName(spanName("testBatchTopic", "process"))
+                    span.hasName("process testBatchTopic")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(processAttributes(record));
@@ -171,14 +177,13 @@ public abstract class AbstractBatchRecordsNoReceiveTelemetryVertxKafkaTest
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName(spanName("testBatchTopic", "process"))
+                        span.hasName("process testBatchTopic")
                             .hasKind(SpanKind.CONSUMER)
                             .hasNoParent()
                             .hasLinks(batchRecordLink(producer.get()))
                             .hasStatus(StatusData.error())
                             .hasException(new IllegalArgumentException("boom"))
-                            .hasAttributesSatisfyingExactly(
-                                withErrorType(batchProcessAttributes("testBatchTopic"))),
+                            .hasAttributesSatisfyingExactly(attributes),
                     span -> span.hasName("batch consumer").hasParent(trace.getSpan(0))));
     assertProcessDurationMetrics(
         testing(),
