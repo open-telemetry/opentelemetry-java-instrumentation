@@ -1113,8 +1113,7 @@ class LogbackAppenderTest {
       properties.put(
           "otel.instrumentation/development.java.common.logging.span_id", "legacy_spanid");
       properties.put(
-          "otel.instrumentation/development.java.common.logging.trace_flags",
-          "legacy_traceflags");
+          "otel.instrumentation/development.java.common.logging.trace_flags", "legacy_traceflags");
       if (replacementConfigured) {
         properties.put(
             "otel.instrumentation/development.java.common.logging.trace_id_key", "traceid");
