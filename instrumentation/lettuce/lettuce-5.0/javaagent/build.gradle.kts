@@ -161,9 +161,7 @@ tasks {
   val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
     .filter { !it.name.endsWith("unitTests", true) }
     .map { suite ->
-      val semconvTestName =
-        if (suite.name == "test") "testPreviewSemconv" else "${suite.name}StableSemconv"
-      register<Test>(semconvTestName) {
+      register<Test>("${suite.name}PreviewSemconv") {
         val sourceTask = named<Test>(suite.name).get()
         setJvmArgs(sourceTask.jvmArgs)
         setSystemProperties(sourceTask.systemProperties)

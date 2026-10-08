@@ -68,9 +68,7 @@ tasks {
   val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
     .matching { it.name != "unitTests" }
     .map { suite ->
-      val semconvTestName =
-        if (suite.name == "test") "testPreviewSemconv" else "${suite.name}StableSemconv"
-      register<Test>(semconvTestName) {
+      register<Test>("${suite.name}PreviewSemconv") {
         testClassesDirs = suite.sources.output.classesDirs
         classpath = suite.sources.runtimeClasspath
 

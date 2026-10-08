@@ -113,9 +113,7 @@ tasks {
   val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
     .filter { !it.name.endsWith("unitTests", true) }
     .associate { suite ->
-      val semconvTestName =
-        if (suite.name == "test") "testPreviewSemconv" else "${suite.name}StableSemconv"
-      suite.name to register<Test>(semconvTestName) {
+      suite.name to register<Test>("${suite.name}PreviewSemconv") {
         testClassesDirs = suite.sources.output.classesDirs
         classpath = suite.sources.runtimeClasspath
 

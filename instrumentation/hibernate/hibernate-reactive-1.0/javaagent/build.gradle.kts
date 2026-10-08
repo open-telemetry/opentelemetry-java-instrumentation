@@ -87,9 +87,7 @@ tasks {
 
   val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
     .map { suite ->
-      val semconvTestName =
-        if (suite.name == "test") "testPreviewSemconv" else "${suite.name}StableSemconv"
-      register<Test>(semconvTestName) {
+      register<Test>("${suite.name}PreviewSemconv") {
         testClassesDirs = suite.sources.output.classesDirs
         classpath = suite.sources.runtimeClasspath
 
@@ -98,17 +96,17 @@ tasks {
     }
 
   if (testJavaVersion.isJava8) {
-    named("hibernateReactive2TestStableSemconv", Test::class).configure {
+    named("hibernateReactive2TestPreviewSemconv", Test::class).configure {
       enabled = false
     }
     if (otelProps.testLatestDeps) {
-      named("hibernateReactive1TestStableSemconv", Test::class).configure {
+      named("hibernateReactive1TestPreviewSemconv", Test::class).configure {
         enabled = false
       }
     }
   }
   if (testJavaVersion.isJava8 || testJavaVersion.isJava11) {
-    named("hibernateReactive4TestStableSemconv", Test::class).configure {
+    named("hibernateReactive4TestPreviewSemconv", Test::class).configure {
       enabled = false
     }
   }
