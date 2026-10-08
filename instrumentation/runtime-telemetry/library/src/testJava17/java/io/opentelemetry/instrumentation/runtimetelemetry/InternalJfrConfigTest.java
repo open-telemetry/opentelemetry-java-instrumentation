@@ -50,6 +50,20 @@ class InternalJfrConfigTest {
         .contains("jvm.class.count", "jvm.cpu.longlock", "jvm.memory.allocation");
   }
 
+  @Test
+  void jfrOwnershipIsNotReportedAsJmxRegistration() {
+    ensureJfrAvailable();
+    TestConfig config = new TestConfig();
+    when(config.jfrMetrics.getScalarList("included", String.class))
+        .thenReturn(singletonList("jvm.class.*"));
+    RuntimeTelemetry telemetry = config.configure();
+    cleanup.deferCleanup(telemetry);
+    assertThat(telemetry.getJfrTelemetry()).isNotNull();
+    assertThat(Internal.getRegisteredJmxObservers(telemetry))
+        .doesNotContain("jvm.class.count", "jvm.class.loaded", "jvm.class.unloaded")
+        .contains("jvm.memory.used", "jvm.thread.count");
+  }
+
   // an empty selector is equivalent to no selector at all
   @Test
   void emptySelectorKeepsJfrDisabled() {

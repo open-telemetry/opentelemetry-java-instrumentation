@@ -6,6 +6,29 @@ description: >
   with metrics already captured by other instrumentations.
 library_link: https://micrometer.io/
 configurations:
+  - name: otel.instrumentation.micrometer.experimental.jvm-metrics-ownership.enabled
+    declarative_name: java.micrometer.jvm_metrics_ownership/development.enabled
+    description: >
+      Stops bridging supported Micrometer JVM metrics only when the corresponding agent JMX
+      observer or GC notification listener registered before bridge initialization. Disabled,
+      unsupported, JFR-only, or late replacements retain the Micrometer copy. Registration does
+      not guarantee export through SDK views, and decisions do not change when runtime telemetry
+      later starts or stops. Custom meters with the same eligible names and types can also be
+      suppressed; use `otel.instrumentation.micrometer.experimental.jvm-metrics-ownership.kept`
+      to keep specific meters.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.micrometer.experimental.jvm-metrics-ownership.kept
+    declarative_name: java.micrometer.jvm_metrics_ownership/development.kept
+    description: >
+      Exact registered Micrometer meter names to keep bridged despite JVM ownership, including
+      their companions. Names are matched after meter filters and before export naming
+      conventions. Use the active convention name; wildcards are not supported.
+    type: list
+    default: ""
+    examples:
+      - jvm.classes.loaded
+      - jvm.class.count,jvm.class.loaded
   - name: otel.instrumentation.micrometer.prometheus-mode.enabled
     declarative_name: java.micrometer.prometheus_mode.enabled
     description: >

@@ -5,8 +5,10 @@
 
 package io.opentelemetry.instrumentation.micrometer.v1_5.internal;
 
+import io.micrometer.core.instrument.Meter;
 import io.opentelemetry.instrumentation.micrometer.v1_5.OpenTelemetryMeterRegistryBuilder;
 import java.util.function.BiConsumer;
+import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
 /**
@@ -44,6 +46,34 @@ public final class Experimental {
   public static void internalSetMicrometerHistogramGaugesEnabled(
       BiConsumer<OpenTelemetryMeterRegistryBuilder, Boolean> setMicrometerHistogramGaugesEnabled) {
     Experimental.setMicrometerHistogramGaugesEnabled = setMicrometerHistogramGaugesEnabled;
+  }
+
+  @Nullable
+  private static volatile BiConsumer<OpenTelemetryMeterRegistryBuilder, Predicate<Meter.Id>>
+      setSuppressionPredicate;
+
+  /**
+   * Sets the predicate deciding which meters the bridge declines to bridge. A meter the predicate
+   * accepts creates no OpenTelemetry instrument and records nothing.
+   *
+   * <p>The predicate receives the registered Micrometer ID after meter filters, before bridge
+   * naming conventions. It is evaluated when creating a meter; changing its result does not replace
+   * already registered meters. A suppressed timer or distribution summary also creates none of its
+   * companion instruments (the {@code .max} gauge and the percentile and histogram gauges).
+   *
+   * <p>The caller owns the suppression policy. The bridge does not determine whether another
+   * instrumentation replaces the meter's observations.
+   */
+  public static void setSuppressionPredicate(
+      OpenTelemetryMeterRegistryBuilder builder, Predicate<Meter.Id> predicate) {
+    if (setSuppressionPredicate != null) {
+      setSuppressionPredicate.accept(builder, predicate);
+    }
+  }
+
+  public static void internalSetSuppressionPredicate(
+      BiConsumer<OpenTelemetryMeterRegistryBuilder, Predicate<Meter.Id>> setSuppressionPredicate) {
+    Experimental.setSuppressionPredicate = setSuppressionPredicate;
   }
 
   private Experimental() {}

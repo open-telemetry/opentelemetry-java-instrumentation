@@ -10,6 +10,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -24,28 +25,32 @@ public final class SystemCpu {
 
   /** Register observers for java runtime experimental CPU metrics. */
   public static List<AutoCloseable> registerObservers(Meter meter) {
-    return registerObservers(meter, unused -> true);
+    return registerObservers(meter, unused -> true, unused -> {});
   }
 
-  static List<AutoCloseable> registerObservers(Meter meter, Predicate<String> metricNamePredicate) {
+  static List<AutoCloseable> registerObservers(
+      Meter meter, Predicate<String> metricNamePredicate, Consumer<String> registered) {
     return registerObservers(
         meter,
         ManagementFactory.getOperatingSystemMXBean(),
         CpuMethods.systemCpuUtilization(),
-        metricNamePredicate);
+        metricNamePredicate,
+        registered);
   }
 
   // Visible for testing
   static List<AutoCloseable> registerObservers(
       Meter meter, OperatingSystemMXBean osBean, @Nullable Supplier<Double> systemCpuUtilization) {
-    return registerObservers(meter, osBean, systemCpuUtilization, unused -> true);
+    return registerObservers(meter, osBean, systemCpuUtilization, unused -> true, unused -> {});
   }
 
-  private static List<AutoCloseable> registerObservers(
+  // Visible for testing
+  static List<AutoCloseable> registerObservers(
       Meter meter,
       OperatingSystemMXBean osBean,
       @Nullable Supplier<Double> systemCpuUtilization,
-      Predicate<String> metricNamePredicate) {
+      Predicate<String> metricNamePredicate,
+      Consumer<String> registered) {
 
     List<AutoCloseable> observables = new ArrayList<>();
     if (metricNamePredicate.test("jvm.system.cpu.load_1m")) {
@@ -62,6 +67,7 @@ public final class SystemCpu {
                       observableMeasurement.record(loadAverage);
                     }
                   }));
+      registered.accept("jvm.system.cpu.load_1m");
     }
     if (systemCpuUtilization != null && metricNamePredicate.test("jvm.system.cpu.utilization")) {
       observables.add(
@@ -76,6 +82,7 @@ public final class SystemCpu {
                       observableMeasurement.record(cpuUsage);
                     }
                   }));
+      registered.accept("jvm.system.cpu.utilization");
     }
     return observables;
   }

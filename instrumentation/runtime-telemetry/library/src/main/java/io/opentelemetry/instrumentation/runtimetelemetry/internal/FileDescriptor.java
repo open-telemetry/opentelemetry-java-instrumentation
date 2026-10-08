@@ -11,6 +11,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 /**
@@ -31,21 +32,26 @@ public final class FileDescriptor {
 
   /** Register observers for java runtime file descriptor metrics. */
   public static List<AutoCloseable> registerObservers(Meter meter) {
-    return registerObservers(meter, unused -> true);
+    return registerObservers(meter, unused -> true, unused -> {});
   }
 
-  static List<AutoCloseable> registerObservers(Meter meter, Predicate<String> metricNamePredicate) {
+  static List<AutoCloseable> registerObservers(
+      Meter meter, Predicate<String> metricNamePredicate, Consumer<String> registered) {
     return registerObservers(
-        meter, ManagementFactory.getOperatingSystemMXBean(), metricNamePredicate);
+        meter, ManagementFactory.getOperatingSystemMXBean(), metricNamePredicate, registered);
   }
 
   // Visible for testing
   static List<AutoCloseable> registerObservers(Meter meter, OperatingSystemMXBean osBean) {
-    return registerObservers(meter, osBean, unused -> true);
+    return registerObservers(meter, osBean, unused -> true, unused -> {});
   }
 
-  private static List<AutoCloseable> registerObservers(
-      Meter meter, OperatingSystemMXBean osBean, Predicate<String> metricNamePredicate) {
+  // Visible for testing
+  static List<AutoCloseable> registerObservers(
+      Meter meter,
+      OperatingSystemMXBean osBean,
+      Predicate<String> metricNamePredicate,
+      Consumer<String> registered) {
     List<AutoCloseable> observables = new ArrayList<>();
 
     if (unixOperatingSystemMxBeanClass != null
@@ -64,6 +70,7 @@ public final class FileDescriptor {
                         observableMeasurement.record(value);
                       }
                     }));
+        registered.accept("jvm.file_descriptor.count");
       }
       if (metricNamePredicate.test("jvm.file_descriptor.limit")) {
         observables.add(
@@ -78,6 +85,7 @@ public final class FileDescriptor {
                         observableMeasurement.record(value);
                       }
                     }));
+        registered.accept("jvm.file_descriptor.limit");
       }
     }
 

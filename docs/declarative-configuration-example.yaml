@@ -533,6 +533,20 @@ instrumentation/development:
       histogram_gauges/development:
         # Enables gauge-based Micrometer histograms for DistributionSummary and Timer instruments.
         enabled: false
+      jvm_metrics_ownership/development:
+        # Stops bridging supported Micrometer JVM metrics only when the corresponding agent JMX
+        # observer or GC notification listener registered before bridge initialization. Disabled,
+        # unsupported, JFR-only, or late replacements retain the Micrometer copy. Registration does
+        # not guarantee export through SDK views, and decisions do not change when runtime telemetry
+        # later starts or stops. Custom meters with the same eligible names and types can also be
+        # suppressed; use `otel.instrumentation.micrometer.experimental.jvm-metrics-ownership.kept`
+        # to keep specific meters.
+        enabled: false
+
+        # Exact registered Micrometer meter names to keep bridged despite JVM ownership, including
+        # their companions. Names are matched after meter filters and before export naming
+        # conventions. Use the active convention name; wildcards are not supported.
+        kept: []
       prometheus_mode:
         # Simulates the behavior of Micrometer's PrometheusMeterRegistry. The instruments will be
         # renamed to match Micrometer instrument naming, and the base time unit will be set to

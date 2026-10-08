@@ -10,6 +10,7 @@ import java.lang.management.ClassLoadingMXBean;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 /**
@@ -28,20 +29,25 @@ public class Classes {
 
   /** Register observers for java runtime class metrics. */
   public static List<AutoCloseable> registerObservers(Meter meter) {
-    return registerObservers(meter, unused -> true);
+    return registerObservers(meter, unused -> true, unused -> {});
   }
 
-  static List<AutoCloseable> registerObservers(Meter meter, Predicate<String> metricNamePredicate) {
-    return registerObservers(meter, ManagementFactory.getClassLoadingMXBean(), metricNamePredicate);
+  static List<AutoCloseable> registerObservers(
+      Meter meter, Predicate<String> metricNamePredicate, Consumer<String> registered) {
+    return registerObservers(
+        meter, ManagementFactory.getClassLoadingMXBean(), metricNamePredicate, registered);
   }
 
   // Visible for testing
   List<AutoCloseable> registerObservers(Meter meter, ClassLoadingMXBean classBean) {
-    return registerObservers(meter, classBean, unused -> true);
+    return registerObservers(meter, classBean, unused -> true, unused -> {});
   }
 
   private static List<AutoCloseable> registerObservers(
-      Meter meter, ClassLoadingMXBean classBean, Predicate<String> metricNamePredicate) {
+      Meter meter,
+      ClassLoadingMXBean classBean,
+      Predicate<String> metricNamePredicate,
+      Consumer<String> registered) {
     List<AutoCloseable> observables = new ArrayList<>();
 
     if (metricNamePredicate.test("jvm.class.loaded")) {
@@ -53,6 +59,7 @@ public class Classes {
               .buildWithCallback(
                   observableMeasurement ->
                       observableMeasurement.record(classBean.getTotalLoadedClassCount())));
+      registered.accept("jvm.class.loaded");
     }
     if (metricNamePredicate.test("jvm.class.unloaded")) {
       observables.add(
@@ -63,6 +70,7 @@ public class Classes {
               .buildWithCallback(
                   observableMeasurement ->
                       observableMeasurement.record(classBean.getUnloadedClassCount())));
+      registered.accept("jvm.class.unloaded");
     }
     if (metricNamePredicate.test("jvm.class.count")) {
       observables.add(
@@ -73,6 +81,7 @@ public class Classes {
               .buildWithCallback(
                   observableMeasurement ->
                       observableMeasurement.record(classBean.getLoadedClassCount())));
+      registered.accept("jvm.class.count");
     }
 
     return observables;
