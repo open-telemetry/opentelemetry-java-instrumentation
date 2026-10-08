@@ -79,7 +79,7 @@ https://central.sonatype.com/repository/maven-snapshots/io/opentelemetry/javaage
 
 ### Building from source
 
-Build using Java 25:
+Run the following commands from the repository root using Java 25:
 
 ```bash
 java -version
