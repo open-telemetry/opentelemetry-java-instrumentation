@@ -8,6 +8,7 @@ package io.opentelemetry.testing;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessDurationMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
@@ -80,15 +81,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                               singleProcessAttributes(
                                   "testSingleTopic", "testSingleListener", "10"));
                       SpanContext producerContext = trace.getSpan(1).getSpanContext();
-                      span.hasLinks(
-                          LinkData.create(
-                              isLibraryInstrumentationTest()
-                                  ? SpanContext.createFromRemoteParent(
-                                      producerContext.getTraceId(),
-                                      producerContext.getSpanId(),
-                                      producerContext.getTraceFlags(),
-                                      producerContext.getTraceState())
-                                  : producerContext));
+                      span.hasLinks(LinkData.create(asRemote(producerContext)));
                     },
                     span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
     assertProcessMetricsWithConsumedMessages(
@@ -140,15 +133,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                 .hasException(new IllegalArgumentException("boom"))
                                 .hasAttributesSatisfyingExactly(
                                     withErrorType(processAttributes, true));
-                            span.hasLinks(
-                                LinkData.create(
-                                    isLibraryInstrumentationTest()
-                                        ? SpanContext.createFromRemoteParent(
-                                            producerContext.getTraceId(),
-                                            producerContext.getSpanId(),
-                                            producerContext.getTraceFlags(),
-                                            producerContext.getTraceState())
-                                        : producerContext));
+                            span.hasLinks(LinkData.create(asRemote(producerContext)));
                           },
                           span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
               if (testLatestDeps()) {
@@ -164,15 +149,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                             .hasStatus(StatusData.error())
                             .hasException(new IllegalArgumentException("boom"))
                             .hasAttributesSatisfyingExactly(withErrorType(processAttributes, true));
-                        span.hasLinks(
-                            LinkData.create(
-                                isLibraryInstrumentationTest()
-                                    ? SpanContext.createFromRemoteParent(
-                                        producerContext.getTraceId(),
-                                        producerContext.getSpanId(),
-                                        producerContext.getTraceFlags(),
-                                        producerContext.getTraceState())
-                                    : producerContext));
+                        span.hasLinks(LinkData.create(asRemote(producerContext)));
                       },
                       span ->
                           span.hasName("consumer")
@@ -189,15 +166,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                             .hasParent(trace.getSpan(1))
                             .hasStatus(StatusData.unset())
                             .hasAttributesSatisfyingExactly(processAttributes);
-                        span.hasLinks(
-                            LinkData.create(
-                                isLibraryInstrumentationTest()
-                                    ? SpanContext.createFromRemoteParent(
-                                        producerContext.getTraceId(),
-                                        producerContext.getSpanId(),
-                                        producerContext.getTraceFlags(),
-                                        producerContext.getTraceState())
-                                    : producerContext));
+                        span.hasLinks(LinkData.create(asRemote(producerContext)));
                       },
                       span ->
                           span.hasName("consumer")

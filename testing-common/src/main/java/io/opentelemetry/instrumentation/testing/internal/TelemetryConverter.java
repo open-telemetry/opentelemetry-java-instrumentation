@@ -10,6 +10,8 @@ import static io.opentelemetry.api.common.AttributeKey.doubleArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.longArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.valueKey;
+import static io.opentelemetry.testing.internal.proto.trace.v1.SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK_VALUE;
+import static io.opentelemetry.testing.internal.proto.trace.v1.SpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK_VALUE;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.stream.Collectors.toList;
 
@@ -175,11 +177,7 @@ public class TelemetryConverter {
                           .map(
                               link ->
                                   LinkData.create(
-                                      SpanContext.create(
-                                          bytesToHex(link.getTraceId().toByteArray()),
-                                          bytesToHex(link.getSpanId().toByteArray()),
-                                          TraceFlags.fromByte((byte) link.getFlags()),
-                                          extractTraceState(link.getTraceState())),
+                                      createLinkContext(link),
                                       fromProto(link.getAttributesList()),
                                       link.getDroppedAttributesCount() + link.getAttributesCount()))
                           .collect(toList()))
@@ -194,6 +192,18 @@ public class TelemetryConverter {
       }
     }
     return spans;
+  }
+
+  private static SpanContext createLinkContext(Span.Link link) {
+    String traceId = bytesToHex(link.getTraceId().toByteArray());
+    String spanId = bytesToHex(link.getSpanId().toByteArray());
+    TraceFlags traceFlags = TraceFlags.fromByte((byte) link.getFlags());
+    TraceState traceState = extractTraceState(link.getTraceState());
+    if ((link.getFlags() & SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK_VALUE) != 0
+        && (link.getFlags() & SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK_VALUE) != 0) {
+      return SpanContext.createFromRemoteParent(traceId, spanId, traceFlags, traceState);
+    }
+    return SpanContext.create(traceId, spanId, traceFlags, traceState);
   }
 
   public static List<MetricData> getMetricsData(Collection<ResourceMetrics> allResourceMetrics) {
