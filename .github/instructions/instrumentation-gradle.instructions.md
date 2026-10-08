@@ -1,5 +1,5 @@
 ---
-applyTo: "**/build.gradle.kts,settings.gradle.kts,**/settings.gradle.kts"
+applyTo: "**/build.gradle.kts,settings.gradle.kts,**/settings.gradle.kts,.github/scripts/instrumentations.sh"
 ---
 
 # Instrumentation build and test wiring
@@ -18,7 +18,7 @@ or test failure that CI will report.
   modules, check that Muzzle covers their supported ranges and that the main enablement name
   in v3 preview matches the full module directory, including versions, except where a default-off
   feature needs a separate identity within that module. Default-off registrations must not share
-  names with default-on instrumentation. Include new test variants in
+  names with default-on instrumentation. Include new telemetry-collection test variants in
   `.github/scripts/instrumentations.sh`, keep `settings.gradle.kts` entries alphabetical,
   add the supported-library entry, and regenerate `.fossa.yml` with
   `generateFossaConfiguration` when adding a module. For a new javaagent module with user-facing
@@ -52,9 +52,31 @@ or test failure that CI will report.
   on tasks that really use containers, not every task with a transitive dependency. Use
   `withType<Test>().configureEach` for configuration shared by multiple explicitly declared
   test tasks; not for a module with only `tasks.test` (implicit `latestDepTest` does not count).
-- If metadata-collection properties are already present, ensure non-default tasks describe
-  the actual JVM setting in `metadataConfig` and also enable `collectMetadata`. Do not ask
-  for these properties merely as cleanup or on unit-test suites.
+- Metadata collection documents default telemetry and supported telemetry modes, not every test
+  configuration. Check it when collection wiring or collected telemetry changes; do not request
+  a metadata migration as unrelated cleanup. Collected tasks need
+  `systemProperty("collectMetadata", otelProps.collectMetadata)` and registration in
+  `.github/scripts/instrumentations.sh` for automated collection. A lone `metadataConfig` label
+  does not enable collection.
+- For a collected task, set `metadataConfig` only when non-default user-facing settings change the
+  documented instrumentation's signals, span kinds, attributes, metrics, or events. Use the actual
+  flat `key=value` conditions without `-D`; include all settings needed to describe the mode,
+  including inherited settings, separated by commas. Use consistent ordering for the same mode.
+  Leave it unset for default telemetry, regardless of the task name; label `test` too if it enables
+  non-default telemetry. Do not copy every JVM flag: omit ports, timeouts, JVM access flags, unrelated
+  instrumentation settings used to isolate tests, and whole-module enablement used to exercise a
+  default-off instrumentation. Include span suppression settings only when they determine the
+  documented instrumentation's telemetry. `metadataConfig` is a label, not runtime configuration;
+  verify the task separately applies its settings. Missing labels merge optional telemetry into
+  `when: default`, while setup-only labels create misleading configuration requirements.
+- Do not collect unit-test suites or regression-only disablement, adapter-fallback, or classpath
+  compatibility variants. Keep regression coverage in `check`, but omit these tasks from
+  `.github/scripts/instrumentations.sh` and do not give them `metadataConfig`. If a shared block
+  passes through `collectMetadata`, override it with `systemProperty("collectMetadata", false)` on
+  excluded tasks. Omitting only `metadataConfig` records their telemetry under `default`; it does
+  not exclude collection. A Camel adapters-disabled regression task, for example, does not need a
+  profile listing the disabled adapters. Do not infer regression-only status from a task name when
+  its tests actually document a supported telemetry mode.
 - When tests exercise behavior behind an experimental feature or telemetry flag, including
   experimental metrics, cover default-off and flag-on modes in separate JVMs. Keep the flag off
   the default test task and run the flag-on assertions through a wired `testExperimental` task
