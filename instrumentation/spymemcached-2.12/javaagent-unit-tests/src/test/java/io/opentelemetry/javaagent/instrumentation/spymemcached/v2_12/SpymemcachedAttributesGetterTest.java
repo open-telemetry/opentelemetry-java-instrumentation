@@ -67,11 +67,7 @@ class SpymemcachedAttributesGetterTest {
 
     DbClientAttributesExtractor.create(getter)
         .onEnd(
-            attributes,
-            Context.root(),
-            request,
-            null,
-            new OperationException(null, "no category"));
+            attributes, Context.root(), request, null, new OperationException(null, "no category"));
 
     assertThat(attributes.build().get(ERROR_TYPE)).isEqualTo(OperationException.class.getName());
   }
