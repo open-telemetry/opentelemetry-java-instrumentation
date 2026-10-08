@@ -76,7 +76,7 @@ abstract class AbstractPulsarClientTest {
   static final String INSTRUMENTATION_NAME = "io.opentelemetry.pulsar-2.8";
 
   private static final DockerImageName DEFAULT_IMAGE_NAME =
-      DockerImageName.parse("apachepulsar/pulsar:2.8.0");
+      DockerImageName.parse(System.getProperty("pulsarBrokerImage", "apachepulsar/pulsar:2.8.0"));
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();

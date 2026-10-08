@@ -34,7 +34,7 @@ testing {
     register<JvmTestSuite>("version5Test") {
       sources {
         java {
-          setSrcDirs(listOf("src/test/java"))
+          setSrcDirs(listOf("src/test/java", "src/version5Test/java"))
         }
       }
       dependencies {
@@ -49,6 +49,7 @@ testing {
             excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
           }
           jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
+          systemProperty("pulsarBrokerImage", "apachepulsar/pulsar:5.0.0")
           systemProperty(
             "metadataConfig",
             "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
