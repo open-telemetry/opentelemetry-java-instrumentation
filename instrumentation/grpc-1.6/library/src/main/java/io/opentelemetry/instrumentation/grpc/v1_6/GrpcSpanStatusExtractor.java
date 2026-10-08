@@ -56,12 +56,16 @@ enum GrpcSpanStatusExtractor implements SpanStatusExtractor<GrpcRequest, Status>
       }
     }
     if (status != null) {
-      if (isError.test(status)) {
+      if (isError(status)) {
         spanStatusBuilder.setStatus(StatusCode.ERROR);
       }
     } else {
       SpanStatusExtractor.getDefault().extract(spanStatusBuilder, request, status, error);
     }
+  }
+
+  boolean isError(Status status) {
+    return isError.test(status);
   }
 
   private static boolean isServerError(Status status) {

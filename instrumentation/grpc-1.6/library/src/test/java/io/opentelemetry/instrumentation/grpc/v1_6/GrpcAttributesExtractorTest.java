@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.grpc.v1_6;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
@@ -19,18 +20,44 @@ import static org.mockito.Mockito.when;
 
 import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
+import io.grpc.Status;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.util.HashSet;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class GrpcAttributesExtractorTest {
+
+  @ParameterizedTest
+  @EnumSource(GrpcSpanStatusExtractor.class)
+  void missingStatusPreservesExceptionFallback(GrpcSpanStatusExtractor role) {
+    GrpcRpcAttributesGetter getter = new GrpcRpcAttributesGetter(role);
+    AttributesExtractor<GrpcRequest, Status> extractor =
+        role == GrpcSpanStatusExtractor.CLIENT
+            ? RpcClientAttributesExtractor.create(getter)
+            : RpcServerAttributesExtractor.create(getter);
+    GrpcRequest request = new GrpcRequest(mock(MethodDescriptor.class), null, null, null);
+    AttributesBuilder attributes = Attributes.builder();
+    Throwable error = new IllegalStateException("transport failure");
+
+    extractor.onEnd(attributes, Context.root(), request, null, error);
+
+    assertThat(attributes.build())
+        .isEqualTo(
+            emitPreviewRpcSemconv()
+                ? Attributes.of(ERROR_TYPE, IllegalStateException.class.getName())
+                : Attributes.empty());
+  }
 
   @Test
   void selectsCanonicalAsciiMetadataKeys() {
@@ -51,7 +78,8 @@ class GrpcAttributesExtractorTest {
             .build();
     AttributesBuilder attributes = Attributes.builder();
 
-    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), selector)
+    new GrpcAttributesExtractor(
+            new GrpcRpcAttributesGetter(GrpcSpanStatusExtractor.CLIENT), selector)
         .onEnd(attributes, Context.root(), request, null, null);
 
     Attributes result = attributes.build();
@@ -71,7 +99,7 @@ class GrpcAttributesExtractorTest {
     GrpcRequest request = new GrpcRequest(mock(MethodDescriptor.class), metadata, null, null);
     AttributesBuilder attributes = Attributes.builder();
 
-    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), null)
+    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(GrpcSpanStatusExtractor.CLIENT), null)
         .onEnd(attributes, Context.root(), request, null, null);
 
     assertExcludedMetadata(attributes.build(), "some-key");
@@ -84,7 +112,9 @@ class GrpcAttributesExtractorTest {
     GrpcRequest request = new GrpcRequest(mock(MethodDescriptor.class), metadata, null, null);
     AttributesBuilder attributes = Attributes.builder();
 
-    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), IncludeExclude.builder().build())
+    new GrpcAttributesExtractor(
+            new GrpcRpcAttributesGetter(GrpcSpanStatusExtractor.CLIENT),
+            IncludeExclude.builder().build())
         .onEnd(attributes, Context.root(), request, null, null);
 
     assertExcludedMetadata(attributes.build(), "some-key");
@@ -108,7 +138,8 @@ class GrpcAttributesExtractorTest {
             .build();
     AttributesBuilder attributes = Attributes.builder();
 
-    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), selector)
+    new GrpcAttributesExtractor(
+            new GrpcRpcAttributesGetter(GrpcSpanStatusExtractor.CLIENT), selector)
         .onEnd(attributes, Context.root(), request, null, null);
 
     Attributes result = attributes.build();
@@ -130,7 +161,8 @@ class GrpcAttributesExtractorTest {
     AttributesBuilder attributes = Attributes.builder();
     IncludeExclude selector = IncludeExclude.builder().setIncluded(singleton("*")).build();
 
-    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), selector)
+    new GrpcAttributesExtractor(
+            new GrpcRpcAttributesGetter(GrpcSpanStatusExtractor.CLIENT), selector)
         .onEnd(attributes, Context.root(), request, null, null);
 
     assertThat(attributes.build()).isEqualTo(Attributes.empty());

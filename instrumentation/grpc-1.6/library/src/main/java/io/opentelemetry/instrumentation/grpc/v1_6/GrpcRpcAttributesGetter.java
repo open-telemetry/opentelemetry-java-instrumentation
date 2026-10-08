@@ -17,6 +17,12 @@ import javax.annotation.Nullable;
 
 final class GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest, Status> {
 
+  private final GrpcSpanStatusExtractor spanStatusExtractor;
+
+  GrpcRpcAttributesGetter(GrpcSpanStatusExtractor spanStatusExtractor) {
+    this.spanStatusExtractor = spanStatusExtractor;
+  }
+
   @Override
   public String getSystem(GrpcRequest request) {
     return "grpc";
@@ -48,6 +54,15 @@ final class GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest, 
   @Override
   public String getRpcMethod(GrpcRequest request) {
     return request.getMethod().getFullMethodName();
+  }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      GrpcRequest request, @Nullable Status response, @Nullable Throwable error) {
+    return response != null && spanStatusExtractor.isError(response)
+        ? response.getCode().name()
+        : null;
   }
 
   @Override

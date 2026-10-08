@@ -2,6 +2,15 @@
 
 Provides OpenTelemetry instrumentation for [gRPC](https://grpc.io/).
 
+## Error classification
+
+With preview RPC semantic conventions enabled (`otel.semconv-stability.opt-in=rpc` or
+`rpc/dup`), `error.type` uses the gRPC status code name for all non-`OK` client statuses.
+On the server, status-based classification applies only to `UNKNOWN`, `DEADLINE_EXCEEDED`,
+`UNIMPLEMENTED`, `INTERNAL`, `UNAVAILABLE`, and `DATA_LOSS`. These status names take precedence
+over exception types. When no status-based classification applies, the exception's
+fully-qualified class name is used if an exception is present.
+
 ## Quickstart
 
 ### Add the following dependencies to your project

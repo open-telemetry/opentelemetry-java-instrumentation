@@ -541,7 +541,7 @@ public abstract class AbstractGrpcTest {
   }
 
   @ParameterizedTest
-  @MethodSource("provideErrorArguments")
+  @MethodSource("provideReturnedErrorArguments")
   void errorReturned(Status status) throws Exception {
     BindableService greeter =
         new GreeterGrpc.GreeterImplBase() {
@@ -567,7 +567,13 @@ public abstract class AbstractGrpcTest {
               assertThat(t.getStatus().getDescription()).isEqualTo(status.getDescription());
             });
 
-    boolean isServerError = status.getCode() != Status.Code.NOT_FOUND;
+    boolean isServerError =
+        status.getCode() == Status.Code.UNKNOWN
+            || status.getCode() == Status.Code.DEADLINE_EXCEEDED
+            || status.getCode() == Status.Code.UNIMPLEMENTED
+            || status.getCode() == Status.Code.INTERNAL
+            || status.getCode() == Status.Code.UNAVAILABLE
+            || status.getCode() == Status.Code.DATA_LOSS;
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -604,6 +610,9 @@ public abstract class AbstractGrpcTest {
                                     equalTo(
                                         RPC_RESPONSE_STATUS_CODE,
                                         emitPreviewRpcSemconv() ? status.getCode().name() : null),
+                                    equalTo(
+                                        ERROR_TYPE,
+                                        emitPreviewRpcSemconv() ? status.getCode().name() : null),
                                     equalTo(SERVER_ADDRESS, "localhost"),
                                     equalTo(SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(
@@ -635,8 +644,12 @@ public abstract class AbstractGrpcTest {
                                         : "SayHello"),
                                 equalTo(
                                     ERROR_TYPE,
-                                    emitPreviewRpcSemconv() && status.getCause() != null
-                                        ? status.getCause().getClass().getName()
+                                    emitPreviewRpcSemconv()
+                                        ? (isServerError
+                                            ? status.getCode().name()
+                                            : (status.getCause() != null
+                                                ? status.getCause().getClass().getName()
+                                                : null))
                                         : null),
                                 equalTo(
                                     RPC_GRPC_STATUS_CODE,
@@ -755,6 +768,11 @@ public abstract class AbstractGrpcTest {
                                         emitPreviewRpcSemconv()
                                             ? Status.UNKNOWN.getCode().name()
                                             : null),
+                                    equalTo(
+                                        ERROR_TYPE,
+                                        emitPreviewRpcSemconv()
+                                            ? Status.Code.UNKNOWN.name()
+                                            : null),
                                     equalTo(SERVER_ADDRESS, "localhost"),
                                     equalTo(SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(
@@ -781,9 +799,7 @@ public abstract class AbstractGrpcTest {
                                         : "SayHello"),
                                 equalTo(
                                     ERROR_TYPE,
-                                    emitPreviewRpcSemconv()
-                                        ? StatusRuntimeException.class.getName()
-                                        : null),
+                                    emitPreviewRpcSemconv() ? Status.Code.UNKNOWN.name() : null),
                                 equalTo(
                                     RPC_GRPC_STATUS_CODE,
                                     emitOldRpcSemconv()
@@ -823,6 +839,22 @@ public abstract class AbstractGrpcTest {
     }
 
     assertMetrics(server, Status.Code.UNKNOWN);
+  }
+
+  private static Stream<Arguments> provideReturnedErrorArguments() {
+    return Stream.concat(
+        provideErrorArguments(),
+        Stream.of(
+                Status.CANCELLED,
+                Status.INVALID_ARGUMENT,
+                Status.ALREADY_EXISTS,
+                Status.PERMISSION_DENIED,
+                Status.RESOURCE_EXHAUSTED,
+                Status.FAILED_PRECONDITION,
+                Status.ABORTED,
+                Status.OUT_OF_RANGE,
+                Status.UNAUTHENTICATED)
+            .map(Arguments::of));
   }
 
   private static Stream<Arguments> provideErrorArguments() {
@@ -1140,7 +1172,7 @@ public abstract class AbstractGrpcTest {
                                     equalTo(
                                         ERROR_TYPE,
                                         emitPreviewRpcSemconv()
-                                            ? thrown.getClass().getName()
+                                            ? Status.Code.CANCELLED.name()
                                             : null),
                                     equalTo(
                                         RPC_GRPC_STATUS_CODE,
