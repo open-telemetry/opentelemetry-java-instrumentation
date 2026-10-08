@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.trace;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -48,17 +49,17 @@ class SpanBridgeTest {
   private static Stream<Arguments> spanContexts() {
     TraceState traceState = TraceState.builder().put("vendor", "value").build();
     return Stream.of(
-        Arguments.argumentSet(
+        argumentSet(
             "local sampled",
             SpanContext.create(TRACE_ID, SPAN_ID, TraceFlags.getSampled(), traceState)),
-        Arguments.argumentSet(
+        argumentSet(
             "local unsampled",
             SpanContext.create(TRACE_ID, SPAN_ID, TraceFlags.getDefault(), traceState)),
-        Arguments.argumentSet(
+        argumentSet(
             "remote sampled",
             SpanContext.createFromRemoteParent(
                 TRACE_ID, SPAN_ID, TraceFlags.getSampled(), traceState)),
-        Arguments.argumentSet(
+        argumentSet(
             "remote unsampled",
             SpanContext.createFromRemoteParent(
                 TRACE_ID, SPAN_ID, TraceFlags.getDefault(), traceState)));
