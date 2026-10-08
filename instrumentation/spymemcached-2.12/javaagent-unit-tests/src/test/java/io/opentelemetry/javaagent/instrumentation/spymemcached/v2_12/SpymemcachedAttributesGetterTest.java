@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Arrays.asList;
@@ -17,6 +18,7 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -26,11 +28,53 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.MemcachedNode;
+import net.spy.memcached.ops.OperationErrorType;
+import net.spy.memcached.ops.OperationException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 class SpymemcachedAttributesGetterTest {
 
   private final SpymemcachedAttributesGetter getter = new SpymemcachedAttributesGetter();
+
+  @ParameterizedTest
+  @EnumSource(OperationErrorType.class)
+  void structuredErrorType(OperationErrorType type) {
+    SpymemcachedRequest request = request(singletonList(node("one.example", 11211)));
+
+    assertThat(getter.getErrorType(request, null, new OperationException(type, "first message")))
+        .isEqualTo(type.name());
+    assertThat(getter.getErrorType(request, null, new OperationException(type, "another message")))
+        .isEqualTo(type.name());
+  }
+
+  @Test
+  void unavailableErrorTypeUsesSharedFallback() {
+    SpymemcachedRequest request = request(singletonList(node("one.example", 11211)));
+
+    assertThat(getter.getErrorType(request, null, new OperationException(null, "no category")))
+        .isNull();
+    assertThat(getter.getErrorType(request, null, new IllegalStateException("SERVER_ERROR")))
+        .isNull();
+    assertThat(getter.getErrorType(request, new Object(), null)).isNull();
+  }
+
+  @Test
+  void unclassifiedOperationExceptionRetainsExceptionClassFallback() {
+    SpymemcachedRequest request = request(singletonList(node("one.example", 11211)));
+    AttributesBuilder attributes = Attributes.builder();
+
+    DbClientAttributesExtractor.create(getter)
+        .onEnd(
+            attributes,
+            Context.root(),
+            request,
+            null,
+            new OperationException(null, "no category"));
+
+    assertThat(attributes.build().get(ERROR_TYPE)).isEqualTo(OperationException.class.getName());
+  }
 
   @Test
   void singleDefaultPortIsOmitted() {

@@ -21,6 +21,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.MEMCACHED;
+import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -41,6 +42,7 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -51,6 +53,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -69,8 +72,10 @@ import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.MemcachedNode;
 import net.spy.memcached.internal.CheckedOperationTimeoutException;
 import net.spy.memcached.internal.GetFuture;
+import net.spy.memcached.internal.OperationFuture;
 import net.spy.memcached.ops.KeyedOperation;
 import net.spy.memcached.ops.Operation;
+import net.spy.memcached.ops.OperationException;
 import net.spy.memcached.ops.OperationQueueFactory;
 import net.spy.memcached.ops.OperationState;
 import net.spy.memcached.protocol.BaseOperationImpl;
@@ -1098,6 +1103,66 @@ class SpymemcachedTest {
                             equalTo(DB_OPERATION_NAME, "decr"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(SERVER_PORT, (long) memcachedAddress.getPort()))));
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "ERROR,GENERAL",
+    "CLIENT_ERROR invalid request,CLIENT",
+    "SERVER_ERROR unavailable,SERVER"
+  })
+  void operationErrorCompletion(String reply, String errorType) throws Exception {
+    ReentrantLock queueLock = new ReentrantLock();
+    MemcachedClient memcached =
+        getMemcached(
+            emptyMap(),
+            builder ->
+                builder.setProtocol(TEXT).setOpQueueFactory(() -> getLockableQueue(queueLock)));
+    MemcachedConnection connection = memcached.getConnection();
+    waitForNodes(connection);
+    String requestKey = key("operation-error");
+
+    OperationFuture<Boolean> future;
+    Operation operation;
+    queueLock.lock();
+    try {
+      future =
+          testing.runWithSpan(
+              "parent", () -> memcached.set(requestKey, EXPIRATION_SECONDS, "value"));
+      operation = onlyOperation(connection.getLocator().getPrimary(requestKey).destroyInputQueue());
+      operation.writing();
+      operation.writeComplete();
+      assertThatThrownBy(
+              () -> operation.readFromBuffer(ByteBuffer.wrap((reply + "\r\n").getBytes(US_ASCII))))
+          .isInstanceOf(OperationException.class);
+    } finally {
+      queueLock.unlock();
+    }
+
+    assertThat(future.isDone()).isTrue();
+    assertThatThrownBy(future::get)
+        .isInstanceOf(ExecutionException.class)
+        .hasCause(operation.getException());
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+                span ->
+                    span.hasName(spanName("set"))
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasStatus(StatusData.error())
+                        .hasException(operation.getException())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                            equalTo(DB_OPERATION_NAME, "set"),
+                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                memcachedAddress.getAddress().getHostAddress()),
+                            equalTo(NETWORK_PEER_PORT, memcachedAddress.getPort()),
+                            equalTo(ERROR_TYPE, errorType))));
   }
 
   @Test
