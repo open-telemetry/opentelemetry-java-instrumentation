@@ -153,8 +153,8 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   }
 
   /**
-   * Capture {@link UserIncubatingAttributes#USER_NAME} as a span attribute when SERVER span is not
-   * created by servlet instrumentation.
+   * Capture {@code user.name} as a span attribute when SERVER span is not created by servlet
+   * instrumentation.
    *
    * <p>When SERVER span is created by servlet instrumentation we register {@link
    * ServletAdditionalAttributesExtractor} as an attribute extractor. When SERVER span is not
