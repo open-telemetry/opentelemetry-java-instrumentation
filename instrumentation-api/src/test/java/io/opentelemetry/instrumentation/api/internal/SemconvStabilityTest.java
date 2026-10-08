@@ -219,12 +219,10 @@ class SemconvStabilityTest {
 
   @ParameterizedTest
   @MethodSource("previewSelections")
-  @SetSystemProperty(key = "otel.instrumentation.common.v3-preview", value = "")
   @SetSystemProperty(key = "otel.semconv-stability.opt-in", value = "")
   @SetSystemProperty(key = "otel.semconv-stability.preview", value = "")
   void previewSelectionFromFlatConfig(
-      String domain, boolean v3Preview, String optIn, String preview, SemconvMode expected) {
-    System.setProperty("otel.instrumentation.common.v3-preview", Boolean.toString(v3Preview));
+      String domain, String optIn, String preview, SemconvMode expected) {
     System.setProperty("otel.semconv-stability.opt-in", optIn);
     System.setProperty("otel.semconv-stability.preview", preview);
     OpenTelemetry openTelemetry = OpenTelemetry.noop();
@@ -236,7 +234,7 @@ class SemconvStabilityTest {
   @ParameterizedTest
   @MethodSource("previewSelections")
   void previewSelectionFromDeclarativeConfig(
-      String domain, boolean v3Preview, String optIn, String preview, SemconvMode expected) {
+      String domain, String optIn, String preview, SemconvMode expected) {
     String yaml =
         "file_format: 1.1\n"
             + "instrumentation/development:\n"
@@ -246,9 +244,6 @@ class SemconvStabilityTest {
             + "'\n"
             + "  java:\n"
             + "    common:\n"
-            + "      v3_preview: "
-            + v3Preview
-            + "\n"
             + "      semconv_stability:\n"
             + "        preview: ["
             + preview
@@ -265,11 +260,7 @@ class SemconvStabilityTest {
   @ParameterizedTest
   @MethodSource("structuredRpcSelections")
   void structuredRpcSelectionFromDeclarativeConfig(
-      boolean v3Preview,
-      int version,
-      boolean experimental,
-      boolean dualEmit,
-      SemconvMode expected) {
+      int version, boolean experimental, boolean dualEmit, SemconvMode expected) {
     String yaml =
         "file_format: 1.1\n"
             + "instrumentation/development:\n"
@@ -287,9 +278,6 @@ class SemconvStabilityTest {
             + "\n"
             + "  java:\n"
             + "    common:\n"
-            + "      v3_preview: "
-            + v3Preview
-            + "\n"
             + "      semconv_stability:\n"
             + "        preview: [rpc/dup]\n";
     OpenTelemetryConfigurationModel model =
@@ -301,45 +289,27 @@ class SemconvStabilityTest {
   }
 
   private static Stream<Arguments> structuredRpcSelections() {
-    return Stream.of(false, true)
-        .flatMap(
-            v3Preview ->
-                Stream.of(
-                    Arguments.of(v3Preview, 0, false, true, SemconvMode.V0_STABLE),
-                    Arguments.of(v3Preview, 1, true, false, SemconvMode.V1_EXPERIMENTAL),
-                    Arguments.of(
-                        v3Preview, 1, true, true, SemconvMode.V1_EXPERIMENTAL.withDualEmit())));
+    return Stream.of(
+        Arguments.of(0, false, true, SemconvMode.V0_STABLE),
+        Arguments.of(1, true, false, SemconvMode.V1_EXPERIMENTAL),
+        Arguments.of(1, true, true, SemconvMode.V1_EXPERIMENTAL.withDualEmit()));
   }
 
   private static Stream<Arguments> previewSelections() {
     return Stream.of("rpc", "service.peer")
         .flatMap(
             domain ->
-                Stream.of(false, true)
-                    .flatMap(
-                        v3Preview ->
-                            Stream.of(
-                                Arguments.of(domain, v3Preview, "", "", SemconvMode.V0_STABLE),
-                                Arguments.of(
-                                    domain, v3Preview, "", domain, SemconvMode.V1_EXPERIMENTAL),
-                                Arguments.of(
-                                    domain,
-                                    v3Preview,
-                                    "",
-                                    domain + "/dup",
-                                    SemconvMode.V1_EXPERIMENTAL.withDualEmit()),
-                                Arguments.of(
-                                    domain,
-                                    v3Preview,
-                                    domain + "/dup",
-                                    domain,
-                                    SemconvMode.V1_EXPERIMENTAL),
-                                Arguments.of(
-                                    domain,
-                                    v3Preview,
-                                    domain,
-                                    domain + "/dup",
-                                    SemconvMode.V1_EXPERIMENTAL.withDualEmit()))));
+                Stream.of(
+                    Arguments.of(domain, "", "", SemconvMode.V0_STABLE),
+                    Arguments.of(domain, "", domain, SemconvMode.V1_EXPERIMENTAL),
+                    Arguments.of(
+                        domain, "", domain + "/dup", SemconvMode.V1_EXPERIMENTAL.withDualEmit()),
+                    Arguments.of(domain, domain + "/dup", domain, SemconvMode.V1_EXPERIMENTAL),
+                    Arguments.of(
+                        domain,
+                        domain,
+                        domain + "/dup",
+                        SemconvMode.V1_EXPERIMENTAL.withDualEmit())));
   }
 
   private static SemconvSelectionResolver resolver(ConfigProvider configProvider) {
