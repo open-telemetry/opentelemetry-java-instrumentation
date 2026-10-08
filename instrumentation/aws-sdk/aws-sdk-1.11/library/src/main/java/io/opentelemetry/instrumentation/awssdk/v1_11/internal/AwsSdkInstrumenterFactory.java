@@ -150,9 +150,7 @@ public final class AwsSdkInstrumenterFactory {
                 for (SqsMessage message : request.getMessages()) {
                   SpanContext spanContext =
                       Span.fromContext(message.getCreationContext()).getSpanContext();
-                  if (spanContext.isValid()) {
-                    spanLinks.addLink(spanContext, messageLinkAttributes(message));
-                  }
+                  spanLinks.addLink(spanContext, messageLinkAttributes(message));
                 }
               });
         },
