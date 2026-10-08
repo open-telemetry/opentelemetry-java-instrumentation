@@ -60,7 +60,9 @@ class TracingFilterTest {
 
   @BeforeEach
   void setUp() {
+    RpcContext.removeContext();
     RpcContext.getContext().setUrl(new URL("dubbo", "localhost", 0));
+    RpcContext.getContext().setFuture(null);
     Mockito.<Invoker<?>>when(invocation.getInvoker()).thenReturn(invoker);
     when(invocation.getMethodName()).thenReturn("run");
     when(invoker.getInterface()).thenReturn(Runnable.class);
@@ -68,6 +70,7 @@ class TracingFilterTest {
 
   @AfterEach
   void tearDown() {
+    RpcContext.getContext().setFuture(null);
     RpcContext.removeContext();
   }
 
