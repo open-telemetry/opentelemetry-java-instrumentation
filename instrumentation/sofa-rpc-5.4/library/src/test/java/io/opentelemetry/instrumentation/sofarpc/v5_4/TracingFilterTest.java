@@ -38,7 +38,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class TracingFilterTest {
 
   @RegisterExtension
@@ -154,6 +153,7 @@ class TracingFilterTest {
     return client ? telemetry.newClientFilter() : telemetry.newServerFilter();
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static void assertSpan(boolean client, String errorType, boolean failed) {
     testing.waitAndAssertTraces(
         trace ->
