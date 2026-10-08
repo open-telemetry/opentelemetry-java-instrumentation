@@ -190,6 +190,7 @@ readonly INSTRUMENTATIONS=(
   "lettuce:lettuce-5.0:javaagent:testConnectionTelemetryEnabledStableSemconv"
   "lettuce:lettuce-5.0:javaagent:testV3Preview"
   "lettuce:lettuce-5.1:javaagent:test"
+  "mcp-java-sdk-0.14:javaagent:test"
   "mongo:mongo-3.1:javaagent:test"
   "mongo:mongo-3.1:javaagent:testV3Preview"
   "mongo:mongo-3.1:javaagent:version37Test"

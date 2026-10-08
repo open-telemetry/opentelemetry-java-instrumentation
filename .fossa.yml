@@ -219,6 +219,9 @@ targets:
       target: ':instrumentation:kubernetes-client-7.0:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:mcp-java-sdk-0.14:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:methods:javaagent'
     - type: gradle
       path: ./
