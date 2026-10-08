@@ -349,6 +349,7 @@
     "org.apache.pulsar:pulsar-client#4.+": "4.2.5",
     "org.apache.pulsar:pulsar-client-admin#+": "5.0.0",
     "org.apache.pulsar:pulsar-client-admin#4.+": "4.2.5",
+    "org.apache.pulsar:pulsar-client-v5-all#+": "5.0.0",
     "org.apache.rocketmq:rocketmq-client#+": "5.5.1",
     "org.apache.rocketmq:rocketmq-client-java#+": "5.2.2",
     "org.apache.rocketmq:rocketmq-test#+": "5.5.1",
