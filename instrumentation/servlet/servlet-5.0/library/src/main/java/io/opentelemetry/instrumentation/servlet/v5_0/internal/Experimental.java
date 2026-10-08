@@ -6,9 +6,7 @@
 package io.opentelemetry.instrumentation.servlet.v5_0.internal;
 
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
-import io.opentelemetry.instrumentation.api.internal.DeprecatedCaptureNames;
 import io.opentelemetry.instrumentation.servlet.v5_0.ServletTelemetryBuilder;
-import java.util.Collection;
 import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
 
@@ -95,29 +93,6 @@ public final class Experimental {
     if (setRequestParameters != null) {
       setRequestParameters.accept(builder, requestParameters);
     }
-  }
-
-  /**
-   * Sets the request parameters to be captured as span attributes.
-   *
-   * <p>The parameter names are matched literally. Names containing {@code *} or {@code ?} are
-   * ignored and logged, since this setting never supported wildcards.
-   *
-   * @param builder the telemetry builder
-   * @param captureRequestParameters request parameter names to capture
-   * @deprecated Use {@link #setRequestParameters(ServletTelemetryBuilder, IncludeExclude)} instead.
-   *     May be removed in the next minor release.
-   * @see jakarta.servlet.ServletRequest#getParameterValues(String)
-   */
-  @Deprecated // may be removed in the next minor release
-  public static void setCaptureRequestParameters(
-      ServletTelemetryBuilder builder, Collection<String> captureRequestParameters) {
-    setRequestParameters(
-        builder,
-        DeprecatedCaptureNames.toSelectorOrEmpty(
-            captureRequestParameters,
-            "Experimental.setCaptureRequestParameters()",
-            "setRequestParameters(ServletTelemetryBuilder, IncludeExclude)"));
   }
 
   public static void internalSetEmitExperimentalTelemetry(
