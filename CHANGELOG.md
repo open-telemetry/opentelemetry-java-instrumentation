@@ -4,6 +4,19 @@
 
 ### ⚠️ Breaking changes
 
+- Remove Log4j appender correlation reconstructed from trace-ID, span-ID, and
+  trace-flags strings.
+  For standalone asynchronous logging, configure
+  `log4j2.ContextDataInjector=io.opentelemetry.instrumentation.log4j.appender.v2_17.OpenTelemetryAppenderContextDataInjector`
+  to carry the full OpenTelemetry context; Java agent correlation remains supported.
+  The appender no longer brings in
+  `io.opentelemetry.instrumentation:opentelemetry-log4j-context-data-2.17-autoconfigure`
+  transitively; add it separately if Log4j layouts need trace or span IDs.
+  Replace `otel.instrumentation.common.logging.trace-id`, `.span-id`, and
+  `.trace-flags` with `.trace-id-key`, `.span-id-key`, and `.trace-flags-key`,
+  respectively. For declarative configuration, replace
+  `java.common.logging.trace_id`, `span_id`, and `trace_flags` with
+  `java.common.logging.trace_id_key`, `span_id_key`, and `trace_flags_key`.
 - Remove `otel.instrumentation.grpc.capture-metadata.client.request` and
   `otel.instrumentation.grpc.capture-metadata.server.request`.
   Use `otel.instrumentation.grpc.client.request-metadata.included` and
