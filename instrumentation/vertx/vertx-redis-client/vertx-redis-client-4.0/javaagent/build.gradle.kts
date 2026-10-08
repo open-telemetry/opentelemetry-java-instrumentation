@@ -53,7 +53,7 @@ testing {
       }
     }
 
-    register<JvmTestSuite>("stableSemconvUnitTests") {
+    register<JvmTestSuite>("previewSemconvUnitTests") {
       sources {
         java {
           srcDir("src/unitTests/java")
@@ -123,7 +123,7 @@ tasks {
     }
 
   check {
-    dependsOn(testing.suites.named("unitTests"), testing.suites.named("stableSemconvUnitTests"))
+    dependsOn(testing.suites.named("unitTests"), testing.suites.named("previewSemconvUnitTests"))
     if (otelProps.testLatestDeps) {
       dependsOn(previewSemconvSuites.getValue("test"))
     } else {

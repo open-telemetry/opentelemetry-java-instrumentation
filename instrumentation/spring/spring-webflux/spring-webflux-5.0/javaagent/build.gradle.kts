@@ -101,7 +101,7 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
   }
 
-  val testControllerTelemetryStableSemconv = register<Test>("testControllerTelemetryStableSemconv") {
+  val testControllerTelemetryPreviewSemconv = register<Test>("testControllerTelemetryPreviewSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     include("**/server/**")
@@ -130,7 +130,7 @@ tasks {
     dependsOn(
       testControllerTelemetry,
       testPreviewSemconv,
-      testControllerTelemetryStableSemconv,
+      testControllerTelemetryPreviewSemconv,
       testExceptionSignalLogs
     )
   }

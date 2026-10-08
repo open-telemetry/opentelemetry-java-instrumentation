@@ -39,7 +39,7 @@ testing {
       }
     }
 
-    register<JvmTestSuite>("testStableSemconvUnitTests") {
+    register<JvmTestSuite>("testPreviewSemconvUnitTests") {
       sources {
         java {
           setSrcDirs(listOf("src/unitTests/java"))
@@ -180,8 +180,8 @@ tasks {
       }
     }
 
-  val testConnectionTelemetryEnabledStableSemconv =
-    register<Test>("testConnectionTelemetryEnabledStableSemconv") {
+  val testConnectionTelemetryEnabledPreviewSemconv =
+    register<Test>("testConnectionTelemetryEnabledPreviewSemconv") {
       testClassesDirs = sourceSets.test.get().output.classesDirs
       classpath = sourceSets.test.get().runtimeClasspath
       jvmArgs(
@@ -207,7 +207,7 @@ tasks {
     dependsOn(
       testing.suites,
       testConnectionTelemetryEnabled,
-      testConnectionTelemetryEnabledStableSemconv,
+      testConnectionTelemetryEnabledPreviewSemconv,
       previewSemconvSuites,
       testExperimental,
       testV3Preview

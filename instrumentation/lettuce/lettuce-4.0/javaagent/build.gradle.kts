@@ -50,8 +50,8 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
   }
 
-  val testConnectionTelemetryEnabledStableSemconv =
-    register<Test>("testConnectionTelemetryEnabledStableSemconv") {
+  val testConnectionTelemetryEnabledPreviewSemconv =
+    register<Test>("testConnectionTelemetryEnabledPreviewSemconv") {
       testClassesDirs = sourceSets.test.get().output.classesDirs
       classpath = sourceSets.test.get().runtimeClasspath
       jvmArgs(
@@ -67,7 +67,7 @@ tasks {
   check {
     dependsOn(
       testConnectionTelemetryEnabled,
-      testConnectionTelemetryEnabledStableSemconv,
+      testConnectionTelemetryEnabledPreviewSemconv,
       testPreviewSemconv,
       testExperimental
     )

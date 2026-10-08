@@ -99,7 +99,7 @@ tasks {
     systemProperty("ratpack14Test", true)
   }
 
-  val version17TestStableSemconv = register<Test>("version17TestStableSemconv") {
+  val version17TestPreviewSemconv = register<Test>("version17TestPreviewSemconv") {
     testClassesDirs = version17Test.get().sources.output.classesDirs
     classpath = version17Test.get().sources.runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.preview=service.peer")
@@ -117,7 +117,7 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, testPreviewSemconv, version17TestStableSemconv, version17TestV3Preview)
+    dependsOn(testing.suites, testPreviewSemconv, version17TestPreviewSemconv, version17TestV3Preview)
   }
 
   if (otelProps.denyUnsafe) {
