@@ -32,7 +32,6 @@ class CouchbaseQuerySanitizerTest {
     assertThat(normalized.replaceFirst(";$", "")).isEqualTo(parameter.expected);
   }
 
-  @SuppressWarnings("deprecation") // verify SQL operation and collection analysis
   @Test
   void queryAnalysisIsPreservedInRequestCopies() {
     CouchbaseRequestInfo request =

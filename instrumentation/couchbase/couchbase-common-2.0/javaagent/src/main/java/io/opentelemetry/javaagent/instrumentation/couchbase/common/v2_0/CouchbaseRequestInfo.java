@@ -48,7 +48,6 @@ public abstract class CouchbaseRequestInfo {
     return new AutoValue_CouchbaseRequestInfo(bucket, null, operation, serverTarget);
   }
 
-  @SuppressWarnings("deprecation") // SqlQuery.getOperationName supplies db.operation.name
   public static CouchbaseRequestInfo create(
       @Nullable String bucket, @Nullable DbServerTarget serverTarget, Object query) {
     SqlQuery sqlQuery = CouchbaseQuerySanitizer.analyze(query);

@@ -80,7 +80,6 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     serverAttributesExtractor = ServerAttributesExtractor.create(getter);
   }
 
-  @SuppressWarnings("deprecation") // SQL analysis supplies operation and collection names
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     SqlDialect dialect = getter.getSqlDialect(request);

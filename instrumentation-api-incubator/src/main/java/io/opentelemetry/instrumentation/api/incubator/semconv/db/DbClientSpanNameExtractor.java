@@ -132,7 +132,6 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
       this.getter = getter;
     }
 
-    @SuppressWarnings("deprecation") // SQL analysis supplies collection names for fallback naming
     @Override
     public String extract(REQUEST request) {
       SqlDialect dialect = getter.getSqlDialect(request);
