@@ -307,6 +307,12 @@ class HttpHeaderSelectorTest {
     }
 
     @Override
+    public String getErrorType(
+        Map<String, String> request, Map<String, String> response, Throwable error) {
+      return null;
+    }
+
+    @Override
     public List<String> getHttpResponseHeader(
         Map<String, String> request, Map<String, String> response, String name) {
       return headerValue(response, name);

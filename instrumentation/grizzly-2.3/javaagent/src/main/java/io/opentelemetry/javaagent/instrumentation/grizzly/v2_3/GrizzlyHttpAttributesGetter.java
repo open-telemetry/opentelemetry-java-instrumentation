@@ -22,6 +22,13 @@ final class GrizzlyHttpAttributesGetter
     implements HttpServerAttributesGetter<HttpRequestPacket, HttpResponsePacket> {
 
   @Override
+  @Nullable
+  public String getErrorType(
+      HttpRequestPacket request, @Nullable HttpResponsePacket response, @Nullable Throwable error) {
+    return null;
+  }
+
+  @Override
   public String getHttpRequestMethod(HttpRequestPacket request) {
     return request.getMethod().getMethodString();
   }

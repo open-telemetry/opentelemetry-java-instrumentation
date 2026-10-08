@@ -20,6 +20,13 @@ final class NettyHttpServerAttributesGetter
     implements HttpServerAttributesGetter<NettyRequest, HttpResponse> {
 
   @Override
+  @Nullable
+  public String getErrorType(
+      NettyRequest request, @Nullable HttpResponse response, @Nullable Throwable error) {
+    return null;
+  }
+
+  @Override
   public String getHttpRequestMethod(NettyRequest requestAndChannel) {
     return requestAndChannel.request().getMethod().getName();
   }

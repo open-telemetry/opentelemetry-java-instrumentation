@@ -138,6 +138,11 @@ class DbClientAttributesExtractorTest {
     public String getDbOperationName(Map<String, String> map) {
       return map.get("db.operation.name");
     }
+
+    @Override
+    public String getErrorType(Map<String, String> request, Void response, Throwable error) {
+      return null;
+    }
   }
 
   @Test

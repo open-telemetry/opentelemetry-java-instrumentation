@@ -286,6 +286,11 @@ class RpcClientMetricsTest {
               public String getMethod(String request) {
                 return request;
               }
+
+              @Override
+              public String getErrorType(String request, Void response, Throwable error) {
+                return null;
+              }
             })
         .onStart(context, method, Attributes.empty());
   }

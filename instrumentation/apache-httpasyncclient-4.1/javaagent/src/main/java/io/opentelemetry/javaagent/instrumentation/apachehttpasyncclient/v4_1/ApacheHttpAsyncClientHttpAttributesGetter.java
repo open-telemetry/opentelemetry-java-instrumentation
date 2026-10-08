@@ -19,6 +19,13 @@ final class ApacheHttpAsyncClientHttpAttributesGetter
     implements HttpClientAttributesGetter<ApacheHttpClientRequest, HttpResponse> {
 
   @Override
+  @Nullable
+  public String getErrorType(
+      ApacheHttpClientRequest request, @Nullable HttpResponse response, @Nullable Throwable error) {
+    return null;
+  }
+
+  @Override
   public String getHttpRequestMethod(ApacheHttpClientRequest request) {
     return request.getMethod();
   }

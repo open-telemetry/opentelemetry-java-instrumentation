@@ -80,5 +80,12 @@ public final class RedisSpanNameExtractor {
     public Integer getServerPort(REQUEST request) {
       return delegate.getServerPort(request);
     }
+
+    @Override
+    @Nullable
+    public String getErrorType(
+        REQUEST request, @Nullable Object response, @Nullable Throwable error) {
+      return null;
+    }
   }
 }

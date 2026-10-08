@@ -119,4 +119,11 @@ class SpringWebHttpAttributesGetter
     URI uri = httpRequest.getURI();
     return HttpConstants.portOrDefaultFromScheme(uri.getPort(), uri.getScheme());
   }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      HttpRequest request, @Nullable ClientHttpResponse response, @Nullable Throwable error) {
+    return null;
+  }
 }

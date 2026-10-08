@@ -14,6 +14,13 @@ import javax.annotation.Nullable;
 final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
 
   @Override
+  @Nullable
+  public String getErrorType(
+      JedisRequest request, @Nullable Void response, @Nullable Throwable error) {
+    return null;
+  }
+
+  @Override
   public String getDbSystemName(JedisRequest request) {
     return DbSystemNameIncubatingValues.REDIS;
   }

@@ -33,4 +33,6 @@ internal object KtorHttpServerAttributesGetter : HttpServerAttributesGetter<Appl
   override fun getNetworkProtocolName(request: ApplicationRequest, response: ApplicationResponse?): String? = if (request.httpVersion.startsWith("HTTP/")) "http" else null
 
   override fun getNetworkProtocolVersion(request: ApplicationRequest, response: ApplicationResponse?): String? = if (request.httpVersion.startsWith("HTTP/")) request.httpVersion.substring("HTTP/".length) else null
+
+  override fun getErrorType(request: ApplicationRequest, response: ApplicationResponse?, error: Throwable?): String? = null
 }

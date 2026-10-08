@@ -146,4 +146,11 @@ final class RestletHttpAttributesGetter implements HttpServerAttributesGetter<Re
     }
     return null;
   }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      Request request, @Nullable Response response, @Nullable Throwable error) {
+    return null;
+  }
 }

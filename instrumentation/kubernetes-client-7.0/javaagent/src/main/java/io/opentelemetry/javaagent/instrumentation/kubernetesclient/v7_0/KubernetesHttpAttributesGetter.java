@@ -17,6 +17,13 @@ class KubernetesHttpAttributesGetter
     implements HttpClientAttributesGetter<Request, ApiResponse<?>> {
 
   @Override
+  @Nullable
+  public String getErrorType(
+      Request request, @Nullable ApiResponse<?> response, @Nullable Throwable error) {
+    return null;
+  }
+
+  @Override
   public String getHttpRequestMethod(Request request) {
     return request.method();
   }

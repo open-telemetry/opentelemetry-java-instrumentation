@@ -74,4 +74,11 @@ class AwsSdkHttpAttributesGetter
         ? null
         : HttpConstants.portOrDefaultFromScheme(httpRequest.port(), httpRequest.protocol());
   }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      ExecutionAttributes request, @Nullable Response response, @Nullable Throwable error) {
+    return null;
+  }
 }

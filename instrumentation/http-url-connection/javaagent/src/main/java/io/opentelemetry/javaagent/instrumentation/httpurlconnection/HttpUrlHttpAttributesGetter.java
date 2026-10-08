@@ -19,6 +19,13 @@ class HttpUrlHttpAttributesGetter
     implements HttpClientAttributesGetter<HttpURLConnection, Integer> {
 
   @Override
+  @Nullable
+  public String getErrorType(
+      HttpURLConnection request, @Nullable Integer response, @Nullable Throwable error) {
+    return null;
+  }
+
+  @Override
   public String getHttpRequestMethod(HttpURLConnection connection) {
     return connection.getRequestMethod();
   }

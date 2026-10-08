@@ -132,4 +132,11 @@ public final class OkHttpAttributesGetter
       return null;
     }
   }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      Interceptor.Chain request, @Nullable Response response, @Nullable Throwable error) {
+    return null;
+  }
 }

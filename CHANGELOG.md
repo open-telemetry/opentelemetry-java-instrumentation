@@ -4,6 +4,10 @@
 
 ### ⚠️ Breaking changes
 
+- `getErrorType` is now required on `DbClientAttributesGetter`, `RpcAttributesGetter`,
+  `HttpCommonAttributesGetter`, and `GenAiAttributesGetter`. Custom implementations must implement
+  this method; return `null` to use the exception-class fallback. HTTP attribute extraction continues
+  to support previously compiled getters that do not implement the method.
 - Micrometer timers and distribution summaries no longer emit separate `.max` gauge metrics; use the
   maximum from their histogram instead. Custom meter statistic suffixes are appended after the base
   name passes through the naming convention (for example, Prometheus mode changes

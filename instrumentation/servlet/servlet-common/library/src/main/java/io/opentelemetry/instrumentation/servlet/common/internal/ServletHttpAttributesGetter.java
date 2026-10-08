@@ -159,4 +159,13 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
       @Nullable ServletResponseContext<RESPONSE> response) {
     return accessor.getRequestLocalPort(requestContext.request());
   }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      ServletRequestContext<REQUEST> request,
+      @Nullable ServletResponseContext<RESPONSE> response,
+      @Nullable Throwable error) {
+    return null;
+  }
 }

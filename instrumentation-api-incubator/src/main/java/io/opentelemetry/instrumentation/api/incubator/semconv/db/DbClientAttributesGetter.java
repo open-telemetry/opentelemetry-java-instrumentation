@@ -74,9 +74,5 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
    * method are recommended to document the custom values they support.
    */
   @Nullable
-  // TODO remove the default implementation and make this required to implement
-  default String getErrorType(
-      REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
-    return null;
-  }
+  String getErrorType(REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error);
 }

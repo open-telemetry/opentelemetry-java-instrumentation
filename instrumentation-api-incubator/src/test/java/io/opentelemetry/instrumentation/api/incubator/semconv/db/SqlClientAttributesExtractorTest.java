@@ -102,6 +102,11 @@ class SqlClientAttributesExtractorTest {
     }
 
     @Override
+    public String getErrorType(Map<String, Object> request, Void response, Throwable error) {
+      return null;
+    }
+
+    @Override
     public Long getDbOperationBatchSize(Map<String, Object> map) {
       return read(map, DB_OPERATION_BATCH_SIZE.getKey(), Long.class);
     }

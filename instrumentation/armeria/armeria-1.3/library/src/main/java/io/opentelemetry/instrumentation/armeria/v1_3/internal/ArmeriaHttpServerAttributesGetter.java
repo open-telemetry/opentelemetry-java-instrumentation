@@ -113,4 +113,11 @@ final class ArmeriaHttpServerAttributesGetter
   private static HttpRequest request(ServiceRequestContext ctx) {
     return ctx.request();
   }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      ServiceRequestContext request, @Nullable RequestLog response, @Nullable Throwable error) {
+    return null;
+  }
 }

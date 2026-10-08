@@ -105,4 +105,11 @@ class HelidonAttributesGetter implements HttpServerAttributesGetter<ServerReques
     var address = req.localPeer().address();
     return address instanceof InetSocketAddress s ? s : null;
   }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      ServerRequest request, @Nullable ServerResponse response, @Nullable Throwable error) {
+    return null;
+  }
 }

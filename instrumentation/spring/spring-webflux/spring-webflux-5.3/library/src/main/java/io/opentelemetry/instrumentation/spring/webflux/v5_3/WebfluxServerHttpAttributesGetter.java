@@ -167,4 +167,11 @@ enum WebfluxServerHttpAttributesGetter
       ServerWebExchange request, @Nullable ServerWebExchange response) {
     return request.getRequest().getLocalAddress();
   }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      ServerWebExchange request, @Nullable ServerWebExchange response, @Nullable Throwable error) {
+    return null;
+  }
 }

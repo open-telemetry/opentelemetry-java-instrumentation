@@ -15,6 +15,13 @@ final class LettuceDbAttributesGetter
     implements DbClientAttributesGetter<RedisCommand<?, ?, ?>, Void> {
 
   @Override
+  @Nullable
+  public String getErrorType(
+      RedisCommand<?, ?, ?> request, @Nullable Void response, @Nullable Throwable error) {
+    return null;
+  }
+
+  @Override
   public String getDbSystemName(RedisCommand<?, ?, ?> request) {
     return DbSystemNameIncubatingValues.REDIS;
   }

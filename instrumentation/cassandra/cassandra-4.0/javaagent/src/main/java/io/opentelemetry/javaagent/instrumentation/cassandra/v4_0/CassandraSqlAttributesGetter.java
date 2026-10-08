@@ -25,6 +25,13 @@ final class CassandraSqlAttributesGetter
     implements SqlClientAttributesGetter<CassandraRequest, ExecutionInfo> {
 
   @Override
+  @Nullable
+  public String getErrorType(
+      CassandraRequest request, @Nullable ExecutionInfo response, @Nullable Throwable error) {
+    return null;
+  }
+
+  @Override
   public String getDbSystemName(CassandraRequest request) {
     return DbSystemNameIncubatingValues.CASSANDRA;
   }

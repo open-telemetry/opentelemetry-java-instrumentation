@@ -119,4 +119,11 @@ public final class NettyHttpServerAttributesGetter
     }
     return null;
   }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      NettyCommonRequest request, @Nullable HttpResponse response, @Nullable Throwable error) {
+    return null;
+  }
 }

@@ -38,4 +38,6 @@ internal object KtorHttpClientAttributesGetter : HttpClientAttributesGetter<Http
   override fun getServerAddress(request: HttpRequestData) = request.url.host
 
   override fun getServerPort(request: HttpRequestData) = request.url.port
+
+  override fun getErrorType(request: HttpRequestData, response: HttpResponse?, error: Throwable?): String? = null
 }

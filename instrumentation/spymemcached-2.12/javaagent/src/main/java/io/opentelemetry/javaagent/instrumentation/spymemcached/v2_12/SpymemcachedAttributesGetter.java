@@ -15,6 +15,13 @@ class SpymemcachedAttributesGetter
     implements DbClientAttributesGetter<SpymemcachedRequest, Object> {
 
   @Override
+  @Nullable
+  public String getErrorType(
+      SpymemcachedRequest request, @Nullable Object response, @Nullable Throwable error) {
+    return null;
+  }
+
+  @Override
   public String getDbSystemName(SpymemcachedRequest spymemcachedRequest) {
     return DbSystemNameIncubatingValues.MEMCACHED;
   }

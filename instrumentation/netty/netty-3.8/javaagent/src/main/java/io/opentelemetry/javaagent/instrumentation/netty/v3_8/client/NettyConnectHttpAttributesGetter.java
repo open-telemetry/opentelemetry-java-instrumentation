@@ -19,6 +19,13 @@ import org.jboss.netty.channel.Channel;
 final class NettyConnectHttpAttributesGetter
     implements HttpClientAttributesGetter<NettyConnectionRequest, Channel> {
 
+  @Override
+  @Nullable
+  public String getErrorType(
+      NettyConnectionRequest request, @Nullable Channel response, @Nullable Throwable error) {
+    return null;
+  }
+
   @Nullable
   @Override
   public String getUrlFull(NettyConnectionRequest nettyConnectionRequest) {

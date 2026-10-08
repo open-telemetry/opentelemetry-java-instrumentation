@@ -22,6 +22,13 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
           DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "geode"));
 
   @Override
+  @Nullable
+  public String getErrorType(
+      GeodeRequest request, @Nullable Void response, @Nullable Throwable error) {
+    return null;
+  }
+
+  @Override
   public String getDbSystemName(GeodeRequest request) {
     return DbSystemNameIncubatingValues.GEODE;
   }

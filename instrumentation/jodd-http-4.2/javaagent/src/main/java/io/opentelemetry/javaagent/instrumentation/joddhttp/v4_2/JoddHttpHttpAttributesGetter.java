@@ -17,6 +17,13 @@ final class JoddHttpHttpAttributesGetter
     implements HttpClientAttributesGetter<HttpRequest, HttpResponse> {
 
   @Override
+  @Nullable
+  public String getErrorType(
+      HttpRequest request, @Nullable HttpResponse response, @Nullable Throwable error) {
+    return null;
+  }
+
+  @Override
   public String getHttpRequestMethod(HttpRequest request) {
     return request.method();
   }

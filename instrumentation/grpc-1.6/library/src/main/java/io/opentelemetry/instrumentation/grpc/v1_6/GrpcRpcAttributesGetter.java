@@ -80,4 +80,11 @@ final class GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest, 
 
     return StreamSupport.stream(values.spliterator(), false).collect(toList());
   }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      GrpcRequest request, @Nullable Status response, @Nullable Throwable error) {
+    return null;
+  }
 }

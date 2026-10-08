@@ -14,6 +14,13 @@ final class LibertyDispatcherHttpAttributesGetter
 
   @Override
   @Nullable
+  public String getErrorType(
+      LibertyRequest request, @Nullable LibertyResponse response, @Nullable Throwable error) {
+    return null;
+  }
+
+  @Override
+  @Nullable
   public String getHttpRequestMethod(LibertyRequest libertyRequest) {
     return libertyRequest.getMethod();
   }

@@ -140,4 +140,11 @@ class BedrockRuntimeAttributesGetter
     }
     return BedrockRuntimeAccess.getUsageOutputTokens(executionAttributes, response);
   }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      ExecutionAttributes request, @Nullable Response response, @Nullable Throwable error) {
+    return null;
+  }
 }

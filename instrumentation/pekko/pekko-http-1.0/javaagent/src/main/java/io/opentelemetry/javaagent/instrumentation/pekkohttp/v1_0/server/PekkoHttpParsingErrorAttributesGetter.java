@@ -21,6 +21,13 @@ import org.apache.pekko.http.scaladsl.model.ErrorInfo;
 class PekkoHttpParsingErrorAttributesGetter
     implements HttpServerAttributesGetter<ErrorInfo, HttpResponse> {
 
+  @Override
+  @Nullable
+  public String getErrorType(
+      ErrorInfo request, @Nullable HttpResponse response, @Nullable Throwable error) {
+    return null;
+  }
+
   @Nullable
   @Override
   public String getHttpRequestMethod(ErrorInfo request) {

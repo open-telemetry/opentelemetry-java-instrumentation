@@ -91,9 +91,5 @@ public interface RpcAttributesGetter<REQUEST, RESPONSE> {
    * <p>Examples: {@code CANCELLED}, {@code UNKNOWN}, {@code -32602}
    */
   @Nullable
-  // TODO remove default implementation
-  default String getErrorType(
-      REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
-    return null;
-  }
+  String getErrorType(REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error);
 }

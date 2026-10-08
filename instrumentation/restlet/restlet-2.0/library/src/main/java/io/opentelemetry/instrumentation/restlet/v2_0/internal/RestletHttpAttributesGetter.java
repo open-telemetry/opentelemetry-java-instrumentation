@@ -108,4 +108,11 @@ final class RestletHttpAttributesGetter implements HttpServerAttributesGetter<Re
   public String getNetworkLocalAddress(Request request, @Nullable Response response) {
     return ServerCallAccess.getServerAddress(request);
   }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      Request request, @Nullable Response response, @Nullable Throwable error) {
+    return null;
+  }
 }

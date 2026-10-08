@@ -105,7 +105,11 @@ abstract class HttpCommonAttributesExtractor<
         errorType = statusCode.toString();
       }
     } else {
-      errorType = getter.getErrorType(request, response, error);
+      try {
+        errorType = getter.getErrorType(request, response, error);
+      } catch (AbstractMethodError ignored) {
+        // Support getters compiled against an older version of the API.
+      }
       // fall back to exception class name & _OTHER
       if (errorType == null && error != null) {
         errorType = error.getClass().getName();

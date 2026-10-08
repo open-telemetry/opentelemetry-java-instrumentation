@@ -18,6 +18,13 @@ final class CouchbaseAttributesGetter
     implements DbClientAttributesGetter<CouchbaseRequestInfo, Void> {
 
   @Override
+  @Nullable
+  public String getErrorType(
+      CouchbaseRequestInfo request, @Nullable Void response, @Nullable Throwable error) {
+    return null;
+  }
+
+  @Override
   public String getDbSystemName(CouchbaseRequestInfo couchbaseRequest) {
     return DbSystemNameIncubatingValues.COUCHBASE;
   }

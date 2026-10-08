@@ -12,7 +12,9 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAi
 import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor.GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor.GEN_AI_USAGE_REASONING_OUTPUT_TOKENS;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static java.util.Collections.emptyList;
+import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -94,6 +96,42 @@ class GenAiAttributesExtractorTest {
     assertThat(attributes.build()).isEmpty();
   }
 
+  @Test
+  void fallsBackToExceptionClassForErrorType() {
+    AttributesExtractor<Request, Response> extractor =
+        GenAiAttributesExtractor.create(new TestGetter());
+    AttributesBuilder attributes = Attributes.builder();
+
+    extractor.onEnd(
+        attributes, Context.root(), new Request(false), null, new IllegalStateException("failure"));
+
+    assertThat(attributes.build())
+        .containsOnly(entry(ERROR_TYPE, IllegalStateException.class.getName()));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void usesGetterErrorTypeBeforeExceptionClass(boolean hasException) {
+    AttributesExtractor<Request, Response> extractor =
+        GenAiAttributesExtractor.create(
+            new TestGetter() {
+              @Override
+              public String getErrorType(Request request, Response response, Throwable error) {
+                return "provider_error";
+              }
+            });
+    AttributesBuilder attributes = Attributes.builder();
+
+    extractor.onEnd(
+        attributes,
+        Context.root(),
+        new Request(false),
+        null,
+        hasException ? new IllegalStateException("failure") : null);
+
+    assertThat(attributes.build()).containsOnly(entry(ERROR_TYPE, "provider_error"));
+  }
+
   private static final class Request {
     private final boolean streaming;
 
@@ -112,7 +150,7 @@ class GenAiAttributesExtractorTest {
     }
   }
 
-  private static final class TestGetter implements GenAiAttributesGetter<Request, Response> {
+  private static class TestGetter implements GenAiAttributesGetter<Request, Response> {
 
     @Override
     public String getOperationName(Request request) {
@@ -220,6 +258,11 @@ class GenAiAttributesExtractorTest {
     @Nullable
     @Override
     public Long getUsageOutputTokens(Request request, @Nullable Response response) {
+      return null;
+    }
+
+    @Override
+    public String getErrorType(Request request, Response response, Throwable error) {
       return null;
     }
 

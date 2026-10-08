@@ -18,6 +18,13 @@ final class InfluxDbQueryAttributesGetter
     implements SqlClientAttributesGetter<InfluxDbQuery, Void> {
 
   @Override
+  @Nullable
+  public String getErrorType(
+      InfluxDbQuery request, @Nullable Void response, @Nullable Throwable error) {
+    return null;
+  }
+
+  @Override
   public Collection<String> getRawQueryTexts(InfluxDbQuery request) {
     String query = request.getQuery();
     if (query == null) {

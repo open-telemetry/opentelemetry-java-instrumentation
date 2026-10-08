@@ -60,4 +60,11 @@ final class DubboRpcAttributesGetter implements RpcAttributesGetter<DubboRequest
   public String getRpcMethodOriginal(DubboRequest request) {
     return request.originalFullMethodName();
   }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      DubboRequest request, @Nullable Result response, @Nullable Throwable error) {
+    return null;
+  }
 }

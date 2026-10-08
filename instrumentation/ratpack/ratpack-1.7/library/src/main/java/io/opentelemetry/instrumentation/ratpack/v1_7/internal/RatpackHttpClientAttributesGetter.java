@@ -71,4 +71,11 @@ final class RatpackHttpClientAttributesGetter
     URI uri = request.getUri();
     return HttpConstants.portOrDefaultFromScheme(uri.getPort(), uri.getScheme());
   }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      RequestSpec request, @Nullable HttpResponse response, @Nullable Throwable error) {
+    return null;
+  }
 }

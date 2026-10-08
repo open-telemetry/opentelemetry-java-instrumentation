@@ -10,6 +10,13 @@ import javax.annotation.Nullable;
 
 final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxDbOperation, Void> {
 
+  @Override
+  @Nullable
+  public String getErrorType(
+      InfluxDbOperation request, @Nullable Void response, @Nullable Throwable error) {
+    return null;
+  }
+
   @Nullable
   @Override
   public String getDbOperationName(InfluxDbOperation request) {

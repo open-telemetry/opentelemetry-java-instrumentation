@@ -99,4 +99,11 @@ final class CassandraSqlAttributesGetter
   public boolean isParameterizedQuery(CassandraRequest request, int queryIndex) {
     return request.isParameterizedQuery(queryIndex);
   }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      CassandraRequest request, @Nullable ExecutionInfo response, @Nullable Throwable error) {
+    return null;
+  }
 }

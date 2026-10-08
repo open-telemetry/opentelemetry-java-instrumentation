@@ -24,6 +24,13 @@ final class NettyHttpClientAttributesGetter
 
   @Override
   @Nullable
+  public String getErrorType(
+      NettyRequest request, @Nullable HttpResponse response, @Nullable Throwable error) {
+    return null;
+  }
+
+  @Override
+  @Nullable
   public String getUrlFull(NettyRequest requestAndChannel) {
     try {
       String hostHeader = getHost(requestAndChannel);

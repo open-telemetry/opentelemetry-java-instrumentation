@@ -138,4 +138,11 @@ class SpringWebMvcHttpAttributesGetter
       HttpServletRequest request, @Nullable HttpServletResponse response) {
     return request.getLocalPort();
   }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      HttpServletRequest request, @Nullable HttpServletResponse response, @Nullable Throwable error) {
+    return null;
+  }
 }

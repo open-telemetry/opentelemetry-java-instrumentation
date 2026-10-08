@@ -89,4 +89,11 @@ final class NettyConnectHttpAttributesGetter
     }
     return null;
   }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      NettyConnectionRequest request, @Nullable Channel response, @Nullable Throwable error) {
+    return null;
+  }
 }

@@ -79,4 +79,11 @@ class RdsDataSqlAttributesGetter
     Object value = request.getValueForField(fieldName, Object.class).orElse(null);
     return value instanceof List ? (List<?>) value : emptyList();
   }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      ExecutionAttributes request, @Nullable Response response, @Nullable Throwable error) {
+    return null;
+  }
 }

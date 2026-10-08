@@ -13,6 +13,13 @@ import javax.annotation.Nullable;
 final class RediscalaAttributesGetter implements DbClientAttributesGetter<RediscalaRequest, Void> {
 
   @Override
+  @Nullable
+  public String getErrorType(
+      RediscalaRequest request, @Nullable Void response, @Nullable Throwable error) {
+    return null;
+  }
+
+  @Override
   public String getDbSystemName(RediscalaRequest request) {
     return DbSystemNameIncubatingValues.REDIS;
   }

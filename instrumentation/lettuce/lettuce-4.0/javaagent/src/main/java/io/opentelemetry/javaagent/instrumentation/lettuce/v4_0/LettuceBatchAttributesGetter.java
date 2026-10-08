@@ -14,6 +14,13 @@ final class LettuceBatchAttributesGetter
     implements DbClientAttributesGetter<LettuceBatchRequest, Void> {
 
   @Override
+  @Nullable
+  public String getErrorType(
+      LettuceBatchRequest request, @Nullable Void response, @Nullable Throwable error) {
+    return null;
+  }
+
+  @Override
   public String getDbSystemName(LettuceBatchRequest request) {
     return DbSystemNameIncubatingValues.REDIS;
   }

@@ -101,4 +101,11 @@ final class RatpackHttpAttributesGetter implements HttpServerAttributesGetter<Re
   public Integer getNetworkPeerPort(Request request, @Nullable Response response) {
     return request.getRemoteAddress().getPort();
   }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      Request request, @Nullable Response response, @Nullable Throwable error) {
+    return null;
+  }
 }

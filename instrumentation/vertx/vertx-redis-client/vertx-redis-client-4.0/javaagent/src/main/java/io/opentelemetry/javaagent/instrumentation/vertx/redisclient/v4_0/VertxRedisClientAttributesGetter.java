@@ -14,6 +14,13 @@ final class VertxRedisClientAttributesGetter
     implements DbClientAttributesGetter<VertxRedisClientRequest, Void> {
 
   @Override
+  @Nullable
+  public String getErrorType(
+      VertxRedisClientRequest request, @Nullable Void response, @Nullable Throwable error) {
+    return null;
+  }
+
+  @Override
   public String getDbSystemName(VertxRedisClientRequest request) {
     return DbSystemNameIncubatingValues.REDIS;
   }

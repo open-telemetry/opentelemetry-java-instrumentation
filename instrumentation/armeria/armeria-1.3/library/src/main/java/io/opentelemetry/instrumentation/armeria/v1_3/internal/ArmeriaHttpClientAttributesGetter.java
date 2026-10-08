@@ -180,4 +180,11 @@ final class ArmeriaHttpClientAttributesGetter
     }
     return request;
   }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      ClientRequestContext request, @Nullable RequestLog response, @Nullable Throwable error) {
+    return null;
+  }
 }

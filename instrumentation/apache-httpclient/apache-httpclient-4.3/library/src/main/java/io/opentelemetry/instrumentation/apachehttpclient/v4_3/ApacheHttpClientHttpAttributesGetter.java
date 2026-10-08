@@ -88,4 +88,11 @@ class ApacheHttpClientHttpAttributesGetter
       ApacheHttpClientRequest request, @Nullable HttpResponse response) {
     return request.getNetworkPeerAddress();
   }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      ApacheHttpClientRequest request, @Nullable HttpResponse response, @Nullable Throwable error) {
+    return null;
+  }
 }

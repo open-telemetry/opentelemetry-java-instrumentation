@@ -45,4 +45,11 @@ final class SofaRpcAttributesGetter implements RpcAttributesGetter<SofaRpcReques
     }
     return null;
   }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      SofaRpcRequest request, @Nullable SofaResponse response, @Nullable Throwable error) {
+    return null;
+  }
 }

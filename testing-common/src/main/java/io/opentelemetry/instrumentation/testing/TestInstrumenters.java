@@ -178,5 +178,11 @@ class TestInstrumenters {
     public String getUrlQuery(String s) {
       return null;
     }
+
+    @Override
+    @Nullable
+    public String getErrorType(String request, @Nullable Void response, @Nullable Throwable error) {
+      return null;
+    }
   }
 }

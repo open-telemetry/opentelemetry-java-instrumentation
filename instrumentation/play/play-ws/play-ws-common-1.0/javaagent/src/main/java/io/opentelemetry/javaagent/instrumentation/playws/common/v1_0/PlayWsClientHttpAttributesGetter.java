@@ -18,6 +18,13 @@ final class PlayWsClientHttpAttributesGetter
     implements HttpClientAttributesGetter<Request, Response> {
 
   @Override
+  @Nullable
+  public String getErrorType(
+      Request request, @Nullable Response response, @Nullable Throwable error) {
+    return null;
+  }
+
+  @Override
   public String getHttpRequestMethod(Request request) {
     return request.getMethod();
   }

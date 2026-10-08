@@ -18,6 +18,13 @@ final class GoogleHttpClientHttpAttributesGetter
 
   @Override
   @Nullable
+  public String getErrorType(
+      HttpRequest request, @Nullable HttpResponse response, @Nullable Throwable error) {
+    return null;
+  }
+
+  @Override
+  @Nullable
   public String getHttpRequestMethod(HttpRequest httpRequest) {
     return httpRequest.getRequestMethod();
   }

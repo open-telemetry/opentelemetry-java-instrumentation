@@ -66,5 +66,10 @@ class RedisSpanNameExtractorTest {
     public Integer getServerPort(Object request) {
       return 6379;
     }
+
+    @Override
+    public String getErrorType(Object request, Void response, Throwable error) {
+      return null;
+    }
   }
 }

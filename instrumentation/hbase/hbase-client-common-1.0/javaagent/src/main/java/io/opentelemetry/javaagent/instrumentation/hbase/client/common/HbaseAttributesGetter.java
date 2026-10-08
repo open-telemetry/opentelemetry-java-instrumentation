@@ -14,6 +14,13 @@ import org.apache.hadoop.hbase.TableName;
 final class HbaseAttributesGetter implements DbClientAttributesGetter<HbaseRequest, Void> {
 
   @Override
+  @Nullable
+  public String getErrorType(
+      HbaseRequest request, @Nullable Void response, @Nullable Throwable error) {
+    return null;
+  }
+
+  @Override
   public String getDbSystemName(HbaseRequest hbaseRequest) {
     return DbSystemNameIncubatingValues.HBASE;
   }

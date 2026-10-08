@@ -88,6 +88,12 @@ public class InstrumenterBenchmark {
       return 200;
     }
 
+    @Nullable
+    @Override
+    public String getErrorType(Object request, @Nullable Void response, @Nullable Throwable error) {
+      return null;
+    }
+
     @Override
     public List<String> getHttpResponseHeader(Object unused, Void unused2, String name) {
       return emptyList();

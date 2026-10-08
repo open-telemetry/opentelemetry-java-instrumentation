@@ -38,6 +38,12 @@ class MockHttpServerAttributesGetter implements HttpServerAttributesGetter<Strin
 
   @Nullable
   @Override
+  public String getErrorType(String s, @Nullable Void unused, @Nullable Throwable error) {
+    return null;
+  }
+
+  @Nullable
+  @Override
   public String getUrlScheme(String s) {
     return null;
   }

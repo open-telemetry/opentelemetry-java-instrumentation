@@ -183,4 +183,11 @@ final class ChatAttributesGetter
         .flatMap(CompletionUsage.CompletionTokensDetails::reasoningTokens)
         .orElse(null);
   }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      ChatCompletionRequest request, @Nullable ChatCompletion response, @Nullable Throwable error) {
+    return null;
+  }
 }

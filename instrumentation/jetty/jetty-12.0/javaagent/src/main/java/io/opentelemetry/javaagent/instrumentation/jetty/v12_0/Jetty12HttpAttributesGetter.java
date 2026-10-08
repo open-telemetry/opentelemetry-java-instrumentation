@@ -17,6 +17,13 @@ import org.eclipse.jetty.server.Response;
 class Jetty12HttpAttributesGetter implements HttpServerAttributesGetter<Request, Response> {
 
   @Override
+  @Nullable
+  public String getErrorType(
+      Request request, @Nullable Response response, @Nullable Throwable error) {
+    return null;
+  }
+
+  @Override
   public String getHttpRequestMethod(Request request) {
     return request.getMethod();
   }

@@ -25,6 +25,13 @@ class PekkoHttpServerAttributesGetter
   private static final String AUTHORITY_PSEUDO_HEADER = ":authority";
 
   @Override
+  @Nullable
+  public String getErrorType(
+      HttpRequest request, @Nullable HttpResponse response, @Nullable Throwable error) {
+    return null;
+  }
+
+  @Override
   public String getHttpRequestMethod(HttpRequest request) {
     return request.method().value();
   }

@@ -392,6 +392,28 @@ class HttpServerAttributesExtractorTest {
     assertThat(attributes.build()).containsEntry(ERROR_TYPE, HttpConstants._OTHER);
   }
 
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void shouldExtractErrorType_legacyGetter(boolean hasException) {
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpServerAttributesExtractor.create(
+            new TestHttpServerAttributesGetter() {
+              @Override
+              public String getErrorType(
+                  Map<String, String> request, Map<String, String> response, Throwable error) {
+                throw new AbstractMethodError();
+              }
+            });
+    AttributesBuilder attributes = Attributes.builder();
+
+    extractor.onEnd(
+        attributes, Context.root(), emptyMap(), null, hasException ? new ConnectException() : null);
+
+    assertThat(attributes.build())
+        .containsOnly(
+            entry(ERROR_TYPE, hasException ? "java.net.ConnectException" : HttpConstants._OTHER));
+  }
+
   @Test
   void shouldPreferUrlSchemeFromForwardedHeader() {
     Map<String, String> request = new HashMap<>();

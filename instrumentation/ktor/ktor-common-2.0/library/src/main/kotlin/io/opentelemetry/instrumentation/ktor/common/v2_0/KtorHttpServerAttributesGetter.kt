@@ -62,4 +62,6 @@ internal object KtorHttpServerAttributesGetter : HttpServerAttributesGetter<Appl
     }
     return null
   }
+
+  override fun getErrorType(request: ApplicationRequest, response: ApplicationResponse?, error: Throwable?): String? = null
 }

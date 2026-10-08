@@ -20,6 +20,13 @@ final class AsyncHttpClientHttpAttributesGetter
     implements HttpClientAttributesGetter<RequestContext, Response> {
 
   @Override
+  @Nullable
+  public String getErrorType(
+      RequestContext request, @Nullable Response response, @Nullable Throwable error) {
+    return null;
+  }
+
+  @Override
   public String getHttpRequestMethod(RequestContext requestContext) {
     return requestContext.getRequest().getMethod();
   }

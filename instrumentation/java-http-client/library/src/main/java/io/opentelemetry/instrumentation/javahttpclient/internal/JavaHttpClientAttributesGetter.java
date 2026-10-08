@@ -94,4 +94,11 @@ final class JavaHttpClientAttributesGetter
     URI uri = request.uri();
     return HttpConstants.portOrDefaultFromScheme(uri.getPort(), uri.getScheme());
   }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      HttpRequest request, @Nullable HttpResponse<?> response, @Nullable Throwable error) {
+    return null;
+  }
 }

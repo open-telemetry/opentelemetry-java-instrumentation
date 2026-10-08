@@ -132,4 +132,13 @@ final class EmbeddingAttributesGetter
       EmbeddingCreateParams request, @Nullable CreateEmbeddingResponse response) {
     return null;
   }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      EmbeddingCreateParams request,
+      @Nullable CreateEmbeddingResponse response,
+      @Nullable Throwable error) {
+    return null;
+  }
 }

@@ -100,4 +100,11 @@ class JettyClientHttpAttributesGetter implements HttpClientAttributesGetter<Requ
     }
     return names;
   }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      Request request, @Nullable Response response, @Nullable Throwable error) {
+    return null;
+  }
 }

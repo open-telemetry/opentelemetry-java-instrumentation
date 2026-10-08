@@ -18,6 +18,13 @@ class PekkoHttpClientAttributesGetter
     implements HttpClientAttributesGetter<HttpRequest, HttpResponse> {
 
   @Override
+  @Nullable
+  public String getErrorType(
+      HttpRequest request, @Nullable HttpResponse response, @Nullable Throwable error) {
+    return null;
+  }
+
+  @Override
   public String getUrlFull(HttpRequest httpRequest) {
     return httpRequest.uri().toString();
   }

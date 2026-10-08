@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesGetter;
+import javax.annotation.Nullable;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 
@@ -25,5 +26,12 @@ class AwsSdkRpcAttributesGetter implements RpcAttributesGetter<ExecutionAttribut
   @Override
   public String getMethod(ExecutionAttributes request) {
     return request.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
+  }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      ExecutionAttributes request, @Nullable Response response, @Nullable Throwable error) {
+    return null;
   }
 }

@@ -49,6 +49,11 @@ class SqlQuerySanitizerUtilCacheTest {
           public SqlDialect getSqlDialect(Object request) {
             return DOUBLE_QUOTES_ARE_STRING_LITERALS;
           }
+
+          @Override
+          public String getErrorType(Object request, Void response, Throwable error) {
+            return null;
+          }
         };
     SpanNameExtractor<Object> spanNameExtractor = DbClientSpanNameExtractor.create(getter);
     AttributesExtractor<Object, Void> attributesExtractor =

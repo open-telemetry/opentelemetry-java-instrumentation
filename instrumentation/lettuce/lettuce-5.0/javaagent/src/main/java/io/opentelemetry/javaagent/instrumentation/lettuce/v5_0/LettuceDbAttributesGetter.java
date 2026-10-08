@@ -26,6 +26,13 @@ final class LettuceDbAttributesGetter
           DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "lettuce"));
 
   @Override
+  @Nullable
+  public String getErrorType(
+      RedisCommand<?, ?, ?> request, @Nullable Void response, @Nullable Throwable error) {
+    return null;
+  }
+
+  @Override
   public String getDbSystemName(RedisCommand<?, ?, ?> request) {
     return DbSystemNameIncubatingValues.REDIS;
   }

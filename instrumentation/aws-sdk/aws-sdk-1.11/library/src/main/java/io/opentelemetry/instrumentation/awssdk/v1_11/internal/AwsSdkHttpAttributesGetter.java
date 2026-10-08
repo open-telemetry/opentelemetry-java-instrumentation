@@ -100,4 +100,11 @@ class AwsSdkHttpAttributesGetter implements HttpClientAttributesGetter<Request<?
     URI endpoint = request.getEndpoint();
     return HttpConstants.portOrDefaultFromScheme(endpoint.getPort(), endpoint.getScheme());
   }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      Request<?> request, @Nullable Response<?> response, @Nullable Throwable error) {
+    return null;
+  }
 }

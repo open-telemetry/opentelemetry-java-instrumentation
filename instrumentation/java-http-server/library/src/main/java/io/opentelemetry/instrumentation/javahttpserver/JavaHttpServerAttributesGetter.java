@@ -98,4 +98,11 @@ final class JavaHttpServerAttributesGetter
       HttpExchange exchange, @Nullable HttpExchange res) {
     return exchange.getLocalAddress();
   }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      HttpExchange request, @Nullable HttpExchange response, @Nullable Throwable error) {
+    return null;
+  }
 }

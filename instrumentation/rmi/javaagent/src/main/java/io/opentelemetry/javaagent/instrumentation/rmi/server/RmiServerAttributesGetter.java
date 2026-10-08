@@ -7,8 +7,16 @@ package io.opentelemetry.javaagent.instrumentation.rmi.server;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
+import javax.annotation.Nullable;
 
 final class RmiServerAttributesGetter implements RpcAttributesGetter<ClassAndMethod, Void> {
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      ClassAndMethod request, @Nullable Void response, @Nullable Throwable error) {
+    return null;
+  }
 
   @Override
   public String getSystem(ClassAndMethod classAndMethod) {

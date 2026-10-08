@@ -137,4 +137,11 @@ class ApacheHttpClientHttpAttributesGetter
     }
     return protocolVersion;
   }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      ApacheHttpClientRequest request, @Nullable HttpResponse response, @Nullable Throwable error) {
+    return null;
+  }
 }

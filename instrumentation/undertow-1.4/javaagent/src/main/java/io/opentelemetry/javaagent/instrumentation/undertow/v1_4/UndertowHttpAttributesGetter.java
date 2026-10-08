@@ -19,6 +19,13 @@ class UndertowHttpAttributesGetter
     implements HttpServerAttributesGetter<HttpServerExchange, HttpServerExchange> {
 
   @Override
+  @Nullable
+  public String getErrorType(
+      HttpServerExchange request, @Nullable HttpServerExchange response, @Nullable Throwable error) {
+    return null;
+  }
+
+  @Override
   public String getHttpRequestMethod(HttpServerExchange exchange) {
     return exchange.getRequestMethod().toString();
   }
