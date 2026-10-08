@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesGetter;
 import javax.annotation.Nullable;
 import org.apache.dubbo.rpc.Result;
+import org.apache.dubbo.rpc.RpcException;
 
 final class DubboRpcAttributesGetter implements RpcAttributesGetter<DubboRequest, Result> {
 
@@ -59,5 +60,26 @@ final class DubboRpcAttributesGetter implements RpcAttributesGetter<DubboRequest
   @Nullable
   public String getRpcMethodOriginal(DubboRequest request) {
     return request.originalFullMethodName();
+  }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      DubboRequest request, @Nullable Result response, @Nullable Throwable error) {
+    if (!(error instanceof RpcException)) {
+      return null;
+    }
+    int code = ((RpcException) error).getCode();
+    switch (code) {
+      case RpcException.NETWORK_EXCEPTION:
+      case RpcException.TIMEOUT_EXCEPTION:
+      case RpcException.BIZ_EXCEPTION:
+      case RpcException.FORBIDDEN_EXCEPTION:
+      case RpcException.SERIALIZATION_EXCEPTION:
+      case RpcException.NO_INVOKER_AVAILABLE_AFTER_FILTER:
+        return Integer.toString(code);
+      default:
+        return null;
+    }
   }
 }
