@@ -14,7 +14,9 @@
   transitively; add it separately if Log4j layouts need trace or span IDs.
   Replace `otel.instrumentation.common.logging.trace-id`, `.span-id`, and
   `.trace-flags` with `.trace-id-key`, `.span-id-key`, and `.trace-flags-key`,
-  respectively.
+  respectively. For declarative configuration, replace
+  `java.common.logging.trace_id`, `span_id`, and `trace_flags` with
+  `java.common.logging.trace_id_key`, `span_id_key`, and `trace_flags_key`.
 - OSHI system metrics use schema version 1.44.0 and scope `io.opentelemetry.oshi-5.0`.
   Update `system.network.packets` to `system.network.packet.count`, plural count units to
   `{packet}`, `{error}`, and `{operation}`. Replace memory `state` with `system.memory.state`;
