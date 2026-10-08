@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.sofarpc.v5_4;
 
+import com.alipay.sofa.rpc.core.exception.SofaRpcException;
 import com.alipay.sofa.rpc.core.response.SofaResponse;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesGetter;
 import javax.annotation.Nullable;
@@ -42,6 +43,16 @@ final class SofaRpcAttributesGetter implements RpcAttributesGetter<SofaRpcReques
     String method = request.request().getMethodName();
     if (service != null && method != null) {
       return service + "/" + method;
+    }
+    return null;
+  }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      SofaRpcRequest request, @Nullable SofaResponse response, @Nullable Throwable error) {
+    if (error instanceof SofaRpcException) {
+      return Integer.toString(((SofaRpcException) error).getErrorType());
     }
     return null;
   }

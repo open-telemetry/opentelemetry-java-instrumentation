@@ -868,11 +868,7 @@ public abstract class AbstractSofaRpcTest {
                                 satisfies(
                                     NETWORK_PEER_PORT, AbstractSofaRpcTest::assertNetworkPeerPort),
                                 satisfies(NETWORK_TYPE, AbstractSofaRpcTest::assertNetworkType),
-                                equalTo(
-                                    ERROR_TYPE,
-                                    emitPreviewRpcSemconv()
-                                        ? SofaTimeOutException.class.getName()
-                                        : null))
+                                equalTo(ERROR_TYPE, emitPreviewRpcSemconv() ? "200" : null))
                             .hasException(emitExceptionAsSpanEvents() ? clientException : null),
                     // Server span: server completes normally (after 2s), so no error status
                     span ->

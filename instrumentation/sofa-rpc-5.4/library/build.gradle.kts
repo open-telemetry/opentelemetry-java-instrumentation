@@ -27,6 +27,20 @@ tasks.withType<Test>().configureEach {
 }
 
 tasks {
+  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.preview=rpc")
+  }
+
+  val testBothSemconv = register<Test>("testBothSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.preview=rpc/dup")
+  }
+
   val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -35,6 +49,6 @@ tasks {
   }
 
   check {
-    dependsOn(testExceptionSignalLogs)
+    dependsOn(testPreviewSemconv, testBothSemconv, testExceptionSignalLogs)
   }
 }
