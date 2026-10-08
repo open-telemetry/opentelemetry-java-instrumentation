@@ -32,6 +32,20 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
+  val testUserNameCapture = register<Test>("testUserNameCapture") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*TomcatHandlerTest.capturesUserNameFromPrincipal")
+    }
+    jvmArgs("-Dotel.instrumentation.common.user.name.enabled=true")
+    jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.included=test-*")
+    systemProperty("metadataConfig", "otel.instrumentation.common.user.name.enabled=true,otel.instrumentation.servlet.experimental.request-parameters.included=test-*")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
   val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -42,6 +56,7 @@ tasks {
 
   check {
     dependsOn(testExperimental)
+    dependsOn(testUserNameCapture)
   }
 }
 

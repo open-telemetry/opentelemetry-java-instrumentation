@@ -6,9 +6,6 @@ dependencies {
   library("org.apache.logging.log4j:log4j-core:2.17.0")
   annotationProcessor("org.apache.logging.log4j:log4j-core:2.17.0")
 
-  // to be removed in 3.0
-  implementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-2.17:library-autoconfigure"))
-
   testImplementation(project(":instrumentation:log4j:log4j-appender-2.17:testing"))
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testLibrary("com.lmax:disruptor:3.3.4")
