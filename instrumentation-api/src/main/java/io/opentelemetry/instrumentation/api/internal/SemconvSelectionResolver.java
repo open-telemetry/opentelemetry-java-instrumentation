@@ -31,26 +31,18 @@ class SemconvSelectionResolver {
   // otel.semconv-stability.preview in library instrumentation.
   private final Set<String> previewFlags;
 
-  // For RPC, v3 preview uses only preview flags; non-preview also accepts stable flags for
-  // backward compatibility. Service-peer always uses only preview flags.
-  private final boolean v3Preview;
-
-  SemconvSelectionResolver(
-      OpenTelemetry openTelemetry, DeclarativeConfigProperties generalConfig, boolean v3Preview) {
+  SemconvSelectionResolver(OpenTelemetry openTelemetry, DeclarativeConfigProperties generalConfig) {
     this(
         generalConfig,
-        v3Preview,
         resolveStableOptInValues(openTelemetry, generalConfig),
         resolvePreviewValues(openTelemetry));
   }
 
   SemconvSelectionResolver(
       DeclarativeConfigProperties structuredConfig,
-      boolean v3Preview,
       Set<String> stableFlags,
       Set<String> previewFlags) {
     this.structuredConfig = structuredConfig;
-    this.v3Preview = v3Preview;
     this.stableFlags = stableFlags;
     this.previewFlags = previewFlags;
   }
@@ -156,7 +148,7 @@ class SemconvSelectionResolver {
 
   private Set<String> flagsFor(Set<SemconvMode> supportedModes) {
     if (supportedModes.contains(SemconvMode.V1_EXPERIMENTAL)) {
-      return effectivePreviewFlags();
+      return previewFlags;
     }
     return stableFlags;
   }
@@ -167,16 +159,6 @@ class SemconvSelectionResolver {
       return targetMode.withDualEmit();
     }
     return targetMode;
-  }
-
-  private Set<String> effectivePreviewFlags() {
-    if (v3Preview) {
-      return previewFlags;
-    }
-    Set<String> compatibleFlags = new HashSet<>(stableFlags);
-    compatibleFlags.remove("service.peer");
-    compatibleFlags.remove("service.peer/dup");
-    return combine(compatibleFlags, previewFlags);
   }
 
   private static Set<String> resolveOptInValues(OpenTelemetry openTelemetry) {
@@ -236,17 +218,5 @@ class SemconvSelectionResolver {
         .map(String::trim)
         .filter(v -> !v.isEmpty())
         .collect(toSet());
-  }
-
-  private static Set<String> combine(Set<String> first, Set<String> second) {
-    if (first.isEmpty()) {
-      return second;
-    }
-    if (second.isEmpty()) {
-      return first;
-    }
-    Set<String> result = new HashSet<>(first);
-    result.addAll(second);
-    return result;
   }
 }
