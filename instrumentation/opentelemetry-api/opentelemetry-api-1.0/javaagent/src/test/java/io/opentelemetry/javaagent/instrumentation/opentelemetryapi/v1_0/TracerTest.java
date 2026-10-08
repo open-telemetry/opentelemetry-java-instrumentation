@@ -22,6 +22,8 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.TraceFlags;
+import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -40,6 +42,56 @@ class TracerTest {
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @Test
+  void reusesSpanContextAfterSpanEnds() {
+    Span span = GlobalOpenTelemetry.getTracer("test").spanBuilder("test").startSpan();
+    SpanContext context;
+    try {
+      context = span.getSpanContext();
+      assertThat(span.getSpanContext()).isSameAs(context);
+    } finally {
+      span.end();
+    }
+    assertThat(span.getSpanContext()).isSameAs(context);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(exported -> exported.hasName("test").hasNoParent()));
+  }
+
+  @Test
+  void propagatesUnsampledSpanWithTraceState() {
+    SpanContext parent =
+        SpanContext.createFromRemoteParent(
+            "0123456789abcdef0123456789abcdef",
+            "0123456789abcdef",
+            TraceFlags.getDefault(),
+            TraceState.builder().put("vendor", "value").build());
+    Span span =
+        GlobalOpenTelemetry.getTracer("test")
+            .spanBuilder("unsampled")
+            .setParent(Context.root().with(Span.wrap(parent)))
+            .startSpan();
+    try {
+      SpanContext context = span.getSpanContext();
+      assertThat(context.isValid()).isTrue();
+      assertThat(context.isSampled()).isFalse();
+      assertThat(context.isRemote()).isFalse();
+      assertThat(context.getTraceId()).isEqualTo(parent.getTraceId());
+      assertThat(context.getTraceState()).isEqualTo(parent.getTraceState());
+      assertThat(span.getSpanContext()).isSameAs(context);
+
+      try (Scope ignored = Context.root().with(span).makeCurrent()) {
+        assertThat(Span.current().getSpanContext()).isEqualTo(context);
+      }
+      try (Scope ignored = span.makeCurrent()) {
+        assertThat(Span.current().getSpanContext()).isEqualTo(context);
+      }
+    } finally {
+      span.end();
+    }
+    assertThat(testing.spans()).isEmpty();
+  }
 
   @Test
   @DisplayName("capture span, kind, attributes, and status")
