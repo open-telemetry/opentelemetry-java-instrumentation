@@ -37,17 +37,6 @@ For example, `12345.bugfix.md` could contain:
 Fix missing HTTP client spans when a request fails before receiving a response.
 ```
 
-To preview pending release notes without modifying files:
-
-```bash
-python -m pip install -r .github/scripts/changelog/requirements.txt
-python -m towncrier build --draft --version 3.0.0
-```
-
-Use the upcoming release version in the preview command. Copilot and human reviewers check
-whether a fragment is needed and whether it accurately describes the change; there is no
-required fragment-presence CI check.
-
 ## Breaking Changes
 
 When your PR introduces a breaking change:
