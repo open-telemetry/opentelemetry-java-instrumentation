@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0.SpringRabbitMetricsAssertions.assertProcessMetrics;
 import static io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0.SpringRabbitMetricsAssertions.assertRabbitProcessDuration;
@@ -401,8 +402,8 @@ class SpringRabbitMqTest {
                     .hasAttributesSatisfyingExactly(
                         getAssertions(queue, "process", ip, true, true, false, 2L));
                 span.hasLinks(
-                    LinkData.create(producerSpan.getSpanContext()),
-                    LinkData.create(producerSpan.getSpanContext()));
+                    LinkData.create(asRemote(producerSpan.getSpanContext())),
+                    LinkData.create(asRemote(producerSpan.getSpanContext())));
               });
         },
         trace -> trace.hasSpansSatisfyingExactly(SpringRabbitMqTest::verifyAckSpan));
@@ -630,7 +631,7 @@ class SpringRabbitMqTest {
     if (linkSpan == null) {
       span.hasTotalRecordedLinks(0);
     } else {
-      span.hasLinks(LinkData.create(linkSpan.getSpanContext()));
+      span.hasLinks(LinkData.create(asRemote(linkSpan.getSpanContext())));
     }
   }
 

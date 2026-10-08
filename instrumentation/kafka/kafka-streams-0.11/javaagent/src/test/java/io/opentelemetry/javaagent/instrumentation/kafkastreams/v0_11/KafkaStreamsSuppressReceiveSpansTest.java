@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -115,7 +116,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                     span.hasName("process " + STREAM_PENDING)
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(0))
-                        .hasLinks(LinkData.create(trace.getSpan(0).getSpanContext()))
+                        .hasLinks(LinkData.create(asRemote(trace.getSpan(0).getSpanContext())))
                         .hasAttributesSatisfyingExactly(
                             processAttributes(
                                 STREAM_PENDING,
@@ -145,7 +146,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                     span.hasName("process " + STREAM_PROCESSED)
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(2))
-                        .hasLinks(LinkData.create(trace.getSpan(2).getSpanContext()))
+                        .hasLinks(LinkData.create(asRemote(trace.getSpan(2).getSpanContext())))
                         .hasAttributesSatisfyingExactly(
                             processAttributes(
                                 STREAM_PROCESSED,
