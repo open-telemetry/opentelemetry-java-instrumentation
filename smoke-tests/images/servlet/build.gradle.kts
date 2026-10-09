@@ -194,6 +194,7 @@ val targets = mapOf(
       listOf("41.0.1.Final"),
       listOf("hotspot", "openj9"),
       listOf("25"),
+      mapOf("archiveFormat" to "zip"),
       war = "servlet-5.0"
     ),
   ),
