@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.apachedubbo.v2_7;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.DubboRequest;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.DubboTelemetry;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboClientNetworkAttributesGetter;
@@ -24,16 +25,19 @@ class DubboSingletons {
   @Nullable private static final Instrumenter<DubboRequest, Result> serverInstrumenter;
 
   static {
+    OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
     DubboTelemetry telemetry =
-        DubboTelemetry.builder(GlobalOpenTelemetry.get())
+        DubboTelemetry.builder(openTelemetry)
             .addAttributesExtractor(
                 ServicePeerAttributesExtractor.create(
-                    new DubboClientNetworkAttributesGetter(), GlobalOpenTelemetry.get()))
+                    new DubboClientNetworkAttributesGetter(openTelemetry), openTelemetry))
             .build();
     clientFilter = telemetry.newClientFilter();
     serverFilter = telemetry.newServerFilter();
     serverInstrumenter =
-        emitPreviewRpcSemconv() ? DubboInternalHelper.getServerInstrumenter(telemetry) : null;
+        emitPreviewRpcSemconv(openTelemetry)
+            ? DubboInternalHelper.getServerInstrumenter(telemetry)
+            : null;
   }
 
   static Filter clientFilter() {

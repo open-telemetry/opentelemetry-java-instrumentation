@@ -51,6 +51,9 @@ public class ServicePeerResolver {
           comparing(PortPathMatcher::getPort, nullsFirst(naturalOrder()))
               .thenComparing(PortPathMatcher::getPath, nullsFirst(naturalOrder())));
 
+  private final boolean emitOldServicePeerSemconv;
+  private final boolean emitPreviewServicePeerSemconv;
+
   // Mappings resolved from separately supplied server.address, server.port, and optional URL path.
   private final Map<String, Map<PortPathMatcher, ServicePeer>> servicePeersByHost = new HashMap<>();
 
@@ -58,6 +61,8 @@ public class ServicePeerResolver {
   private final Map<String, ServicePeer> servicePeersByExactAddress = new HashMap<>();
 
   public ServicePeerResolver(OpenTelemetry openTelemetry) {
+    emitOldServicePeerSemconv = emitOldServicePeerSemconv(openTelemetry);
+    emitPreviewServicePeerSemconv = emitPreviewServicePeerSemconv(openTelemetry);
     DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common")
         .getStructuredList("service_peer_mapping", emptyList())
         .forEach(
@@ -149,14 +154,14 @@ public class ServicePeerResolver {
 
     String name = servicePeer.name;
     if (name != null) {
-      if (emitOldServicePeerSemconv()) {
+      if (emitOldServicePeerSemconv) {
         attributeSetter.accept(PEER_SERVICE, name);
       }
-      if (emitPreviewServicePeerSemconv()) {
+      if (emitPreviewServicePeerSemconv) {
         attributeSetter.accept(SERVICE_PEER_NAME, name);
       }
     }
-    if (emitPreviewServicePeerSemconv()) {
+    if (emitPreviewServicePeerSemconv) {
       String namespace = servicePeer.namespace;
       if (namespace != null) {
         attributeSetter.accept(SERVICE_PEER_NAMESPACE, namespace);

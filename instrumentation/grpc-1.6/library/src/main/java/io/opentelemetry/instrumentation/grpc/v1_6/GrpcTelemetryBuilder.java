@@ -234,30 +234,34 @@ public final class GrpcTelemetryBuilder {
     clientInstrumenterBuilder
         .setSpanStatusExtractor(GrpcSpanStatusExtractor.CLIENT)
         .addAttributesExtractors(additionalExtractors)
-        .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter))
+        .addAttributesExtractor(
+            RpcClientAttributesExtractor.create(openTelemetry, rpcAttributesGetter))
         .addAttributesExtractor(ServerAttributesExtractor.create(netClientAttributesGetter))
         .addAttributesExtractor(NetworkAttributesExtractor.create(netClientAttributesGetter))
         .addAttributesExtractors(additionalClientExtractors)
         .addAttributesExtractor(
-            new GrpcAttributesExtractor(rpcAttributesGetter, clientRequestMetadata))
-        .addOperationMetrics(RpcClientMetrics.get())
+            new GrpcAttributesExtractor(openTelemetry, rpcAttributesGetter, clientRequestMetadata))
+        .addOperationMetrics(RpcClientMetrics.get(openTelemetry))
         .addContextCustomizer(
-            RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
+            RpcMetricsContextCustomizers.dualEmitContextCustomizer(
+                openTelemetry, rpcAttributesGetter));
     setRpcClientExceptionEventExtractor(clientInstrumenterBuilder);
     Experimental.addOperationListenerAttributesExtractor(
         clientInstrumenterBuilder, RpcSizeAttributesExtractor.create(rpcAttributesGetter));
     serverInstrumenterBuilder
         .setSpanStatusExtractor(GrpcSpanStatusExtractor.SERVER)
         .addAttributesExtractors(additionalExtractors)
-        .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
+        .addAttributesExtractor(
+            RpcServerAttributesExtractor.create(openTelemetry, rpcAttributesGetter))
         .addAttributesExtractor(ServerAttributesExtractor.create(netServerAttributesGetter))
         .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
         .addAttributesExtractor(
-            new GrpcAttributesExtractor(rpcAttributesGetter, serverRequestMetadata))
+            new GrpcAttributesExtractor(openTelemetry, rpcAttributesGetter, serverRequestMetadata))
         .addAttributesExtractors(additionalServerExtractors)
-        .addOperationMetrics(RpcServerMetrics.get())
+        .addOperationMetrics(RpcServerMetrics.get(openTelemetry))
         .addContextCustomizer(
-            RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
+            RpcMetricsContextCustomizers.dualEmitContextCustomizer(
+                openTelemetry, rpcAttributesGetter));
     setRpcServerExceptionEventExtractor(serverInstrumenterBuilder);
     Experimental.addOperationListenerAttributesExtractor(
         serverInstrumenterBuilder, RpcSizeAttributesExtractor.create(rpcAttributesGetter));

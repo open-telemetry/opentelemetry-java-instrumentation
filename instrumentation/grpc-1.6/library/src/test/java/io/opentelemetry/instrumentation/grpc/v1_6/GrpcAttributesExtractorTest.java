@@ -19,6 +19,7 @@ import static org.mockito.Mockito.when;
 
 import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -51,7 +52,7 @@ class GrpcAttributesExtractorTest {
             .build();
     AttributesBuilder attributes = Attributes.builder();
 
-    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), selector)
+    new GrpcAttributesExtractor(OpenTelemetry.noop(), new GrpcRpcAttributesGetter(), selector)
         .onEnd(attributes, Context.root(), request, null, null);
 
     Attributes result = attributes.build();
@@ -71,7 +72,7 @@ class GrpcAttributesExtractorTest {
     GrpcRequest request = new GrpcRequest(mock(MethodDescriptor.class), metadata, null, null);
     AttributesBuilder attributes = Attributes.builder();
 
-    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), null)
+    new GrpcAttributesExtractor(OpenTelemetry.noop(), new GrpcRpcAttributesGetter(), null)
         .onEnd(attributes, Context.root(), request, null, null);
 
     assertExcludedMetadata(attributes.build(), "some-key");
@@ -84,7 +85,8 @@ class GrpcAttributesExtractorTest {
     GrpcRequest request = new GrpcRequest(mock(MethodDescriptor.class), metadata, null, null);
     AttributesBuilder attributes = Attributes.builder();
 
-    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), IncludeExclude.builder().build())
+    new GrpcAttributesExtractor(
+            OpenTelemetry.noop(), new GrpcRpcAttributesGetter(), IncludeExclude.builder().build())
         .onEnd(attributes, Context.root(), request, null, null);
 
     assertExcludedMetadata(attributes.build(), "some-key");
@@ -108,7 +110,7 @@ class GrpcAttributesExtractorTest {
             .build();
     AttributesBuilder attributes = Attributes.builder();
 
-    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), selector)
+    new GrpcAttributesExtractor(OpenTelemetry.noop(), new GrpcRpcAttributesGetter(), selector)
         .onEnd(attributes, Context.root(), request, null, null);
 
     Attributes result = attributes.build();
@@ -130,7 +132,7 @@ class GrpcAttributesExtractorTest {
     AttributesBuilder attributes = Attributes.builder();
     IncludeExclude selector = IncludeExclude.builder().setIncluded(singleton("*")).build();
 
-    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), selector)
+    new GrpcAttributesExtractor(OpenTelemetry.noop(), new GrpcRpcAttributesGetter(), selector)
         .onEnd(attributes, Context.root(), request, null, null);
 
     assertThat(attributes.build()).isEqualTo(Attributes.empty());

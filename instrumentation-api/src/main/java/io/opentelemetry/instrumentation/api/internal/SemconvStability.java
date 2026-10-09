@@ -63,20 +63,41 @@ public final class SemconvStability {
     return emitOldServicePeerSemconv;
   }
 
+  public static boolean emitOldServicePeerSemconv(OpenTelemetry openTelemetry) {
+    return emitOld(selectionResolver(openTelemetry).servicePeer());
+  }
+
   public static boolean emitPreviewServicePeerSemconv() {
     return emitPreviewServicePeerSemconv;
+  }
+
+  public static boolean emitPreviewServicePeerSemconv(OpenTelemetry openTelemetry) {
+    return emitStable(selectionResolver(openTelemetry).servicePeer());
   }
 
   public static boolean emitOldRpcSemconv() {
     return emitOldRpcSemconv;
   }
 
+  public static boolean emitOldRpcSemconv(OpenTelemetry openTelemetry) {
+    return emitOld(selectionResolver(openTelemetry).rpc());
+  }
+
   public static boolean emitPreviewRpcSemconv() {
     return emitPreviewRpcSemconv;
   }
 
+  public static boolean emitPreviewRpcSemconv(OpenTelemetry openTelemetry) {
+    return emitStable(selectionResolver(openTelemetry).rpc());
+  }
+
   public static String rpcSchemaUrl() {
     return emitPreviewRpcSemconv ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0;
+  }
+
+  private static SemconvSelectionResolver selectionResolver(OpenTelemetry openTelemetry) {
+    return new SemconvSelectionResolver(
+        openTelemetry, getGeneralInstrumentationConfig(openTelemetry));
   }
 
   private static final Map<String, String> rpcSystemNameMap = new HashMap<>();

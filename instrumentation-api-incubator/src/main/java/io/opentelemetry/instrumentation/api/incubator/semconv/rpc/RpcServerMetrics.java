@@ -14,6 +14,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
@@ -48,9 +49,9 @@ public final class RpcServerMetrics implements OperationListener {
   @Nullable private final LongHistogram oldServerRequestSize;
   @Nullable private final LongHistogram oldServerResponseSize;
 
-  private RpcServerMetrics(Meter meter) {
+  private RpcServerMetrics(Meter meter, boolean emitOldRpcSemconv, boolean emitPreviewRpcSemconv) {
     // Old metric (milliseconds)
-    if (emitOldRpcSemconv()) {
+    if (emitOldRpcSemconv) {
       DoubleHistogramBuilder oldDurationBuilder =
           meter
               .histogramBuilder("rpc.server.duration")
@@ -63,7 +64,7 @@ public final class RpcServerMetrics implements OperationListener {
     }
 
     // Stable metric (seconds)
-    if (emitPreviewRpcSemconv()) {
+    if (emitPreviewRpcSemconv) {
       DoubleHistogramBuilder stableDurationBuilder =
           meter
               .histogramBuilder("rpc.server.call.duration")
@@ -75,7 +76,7 @@ public final class RpcServerMetrics implements OperationListener {
       stableServerDurationHistogram = null;
     }
 
-    if (emitOldRpcSemconv()) {
+    if (emitOldRpcSemconv) {
       LongHistogramBuilder requestSizeBuilder =
           meter
               .histogramBuilder("rpc.server.request.size")
@@ -105,7 +106,18 @@ public final class RpcServerMetrics implements OperationListener {
    * io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder}.
    */
   public static OperationMetrics get() {
-    return OperationMetricsUtil.create("rpc server", RpcServerMetrics::new);
+    return create(emitOldRpcSemconv(), emitPreviewRpcSemconv());
+  }
+
+  /** Returns RPC server metrics using the supplied instance's configuration. */
+  public static OperationMetrics get(OpenTelemetry openTelemetry) {
+    return create(emitOldRpcSemconv(openTelemetry), emitPreviewRpcSemconv(openTelemetry));
+  }
+
+  private static OperationMetrics create(boolean emitOldRpcSemconv, boolean emitPreviewRpcSemconv) {
+    return OperationMetricsUtil.create(
+        "rpc server",
+        meter -> new RpcServerMetrics(meter, emitOldRpcSemconv, emitPreviewRpcSemconv));
   }
 
   @Override
@@ -129,12 +141,10 @@ public final class RpcServerMetrics implements OperationListener {
     Attributes attributes = state.startAttributes().toBuilder().putAll(endAttributes).build();
     double durationNanos = endNanos - state.startTimeNanos();
 
-    if (emitOldRpcSemconv()) {
+    if (oldServerDurationHistogram != null) {
       Attributes oldAttributes = getOldAttributes(attributes, state);
 
-      if (oldServerDurationHistogram != null) {
-        oldServerDurationHistogram.record(durationNanos / NANOS_PER_MS, oldAttributes, context);
-      }
+      oldServerDurationHistogram.record(durationNanos / NANOS_PER_MS, oldAttributes, context);
 
       Long rpcServerRequestBodySize = attributes.get(RpcSizeAttributesExtractor.RPC_REQUEST_SIZE);
       if (oldServerRequestSize != null && rpcServerRequestBodySize != null) {

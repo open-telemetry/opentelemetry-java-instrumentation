@@ -192,7 +192,9 @@ class ServicePeerResolverTest {
   private static ServicePeerResolver createResolver(DeclarativeConfigProperties... entries) {
     ExtendedOpenTelemetry otel = mock(ExtendedOpenTelemetry.class);
     DeclarativeConfigProperties commonConfig = mock(DeclarativeConfigProperties.class);
+    when(otel.getGeneralInstrumentationConfig()).thenReturn(DeclarativeConfigProperties.empty());
     when(otel.getInstrumentationConfig("common")).thenReturn(commonConfig);
+    when(commonConfig.get("semconv_stability")).thenReturn(DeclarativeConfigProperties.empty());
 
     List<DeclarativeConfigProperties> entryList = asList(entries);
     when(commonConfig.getStructuredList("service_peer_mapping", emptyList())).thenReturn(entryList);
