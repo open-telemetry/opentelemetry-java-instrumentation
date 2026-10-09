@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
-import static io.opentelemetry.instrumentation.micrometer.v1_5.NoMaxGaugeAssertions.assertNoMaxGauge;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -97,7 +96,6 @@ public abstract class AbstractNamingConventionTest {
                                 point ->
                                     point.hasAttributesSatisfyingExactly(
                                         equalTo(stringKey("test.tag"), "test.value")))));
-    assertNoMaxGauge(testing(), "test.renamedSummary.max");
   }
 
   @Test
@@ -255,6 +253,5 @@ public abstract class AbstractNamingConventionTest {
                                 point ->
                                     point.hasAttributesSatisfyingExactly(
                                         equalTo(stringKey("test.tag"), "test.value")))));
-    assertNoMaxGauge(testing(), "test.renamedTimer.max");
   }
 }

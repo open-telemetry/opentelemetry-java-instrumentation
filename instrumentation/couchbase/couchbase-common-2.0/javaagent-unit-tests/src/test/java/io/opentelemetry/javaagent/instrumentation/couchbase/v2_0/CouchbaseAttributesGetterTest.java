@@ -5,14 +5,21 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseRequestInfo;
@@ -20,6 +27,31 @@ import java.net.InetSocketAddress;
 import org.junit.jupiter.api.Test;
 
 class CouchbaseAttributesGetterTest {
+
+  @Test
+  void queryCopiesPreserveTelemetry() {
+    CouchbaseRequestInfo request =
+        CouchbaseRequestInfo.create(
+            "test", null, "SELECT field1 FROM `test` WHERE field2 = 'asdf'");
+    CouchbaseAttributesGetter getter = new CouchbaseAttributesGetter();
+    AttributesExtractor<CouchbaseRequestInfo, Void> extractor =
+        DbClientAttributesExtractor.create(getter);
+
+    for (CouchbaseRequestInfo copy :
+        new CouchbaseRequestInfo[] {request, request.copySupplier().get()}) {
+      AttributesBuilder attributes = Attributes.builder();
+      extractor.onStart(attributes, Context.root(), copy);
+
+      assertThat(DbClientSpanNameExtractor.create(getter).extract(copy)).isEqualTo("SELECT `test`");
+      assertThat(attributes.build().asMap())
+          .containsOnly(
+              entry(DB_SYSTEM_NAME, "couchbase"),
+              entry(DB_NAMESPACE, "test"),
+              entry(DB_OPERATION_NAME, "SELECT"),
+              entry(DB_QUERY_TEXT, "SELECT field1 FROM `test` WHERE field2 = ?"),
+              entry(DB_QUERY_SUMMARY, "SELECT `test`"));
+    }
+  }
 
   @Test
   void reportsTheConfiguredTargetRatherThanTheNodeThatAnswered() {

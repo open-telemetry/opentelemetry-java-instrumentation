@@ -218,7 +218,7 @@ global_configurations:
   semconv-stability.opt-in:
     name: otel.semconv-stability.opt-in
     declarative_name: general.stability_opt_in_list
-    description: "A comma-separated list of semantic convention groups to opt into, such as `rpc` and `service.peer`. Use `<group>/dup` to emit both old and new conventions. Under v3 preview the preview groups use `otel.semconv-stability.preview` instead."
+    description: "A comma-separated list of stable semantic convention groups to opt into."
     type: list
     declarative_type: string
     default: ""
@@ -226,7 +226,7 @@ global_configurations:
   semconv-stability.preview:
     name: otel.semconv-stability.preview
     declarative_name: java.common.semconv_stability.preview
-    description: "Opt-in to emit preview (not yet stable) semantic conventions for the `rpc` and `service.peer` groups. Use `<group>/dup` to emit both the old and the preview conventions simultaneously. Outside v3 preview these groups are also accepted by `otel.semconv-stability.opt-in`; under v3 preview only this setting selects them. The flat `otel.semconv-stability.preview` property is read only from system properties and environment variables, not from the agent configuration file."
+    description: "Opt-in to emit preview (not yet stable) semantic conventions for the `rpc` and `service.peer` groups. Use `<group>/dup` to emit both the old and the preview conventions simultaneously. The flat `otel.semconv-stability.preview` property is read only from system properties and environment variables, not from the agent configuration file."
     type: list
 
   semconv-exception.signal.preview:

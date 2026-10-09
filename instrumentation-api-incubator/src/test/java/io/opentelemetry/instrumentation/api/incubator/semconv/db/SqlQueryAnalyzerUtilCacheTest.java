@@ -22,11 +22,11 @@ import java.util.Collection;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class SqlQuerySanitizerUtilCacheTest {
+class SqlQueryAnalyzerUtilCacheTest {
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @Test
-  void testSqlSanitizerCaching() {
+  void testSqlAnalysisCaching() {
     String testQuery = "SELECT name FROM test WHERE id = 1";
     SqlClientAttributesGetter<Object, Void> getter =
         new SqlClientAttributesGetter<Object, Void>() {
@@ -70,5 +70,22 @@ class SqlQuerySanitizerUtilCacheTest {
       attributesExtractor.onStart(builder, Context.root(), null);
       assertThat(builder.build().get(queryTextKey)).isEqualTo("SELECT name FROM test WHERE id = ?");
     }
+  }
+
+  @Test
+  void analysisCacheIsScopedToInstrumenterCall() {
+    String query = "SELECT * FROM test " + new String(new char[10 * 1024]).replace('\0', ' ');
+    InstrumenterContext.reset();
+    cleanup.deferCleanup(InstrumenterContext::reset);
+
+    SqlQuery first = SqlQueryAnalyzerUtil.analyze(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+    assertThat(SqlQueryAnalyzer.isCached(query, DOUBLE_QUOTES_ARE_STRING_LITERALS)).isFalse();
+    assertThat(SqlQueryAnalyzerUtil.analyze(query, DOUBLE_QUOTES_ARE_STRING_LITERALS))
+        .isSameAs(first);
+
+    InstrumenterContext.reset();
+    assertThat(SqlQueryAnalyzerUtil.analyze(query, DOUBLE_QUOTES_ARE_STRING_LITERALS))
+        .isEqualTo(first)
+        .isNotSameAs(first);
   }
 }
