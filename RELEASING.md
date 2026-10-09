@@ -58,7 +58,9 @@ and deadlocks.
   - Release branches cut before the Towncrier adoption (those without `towncrier.toml` and the
     `<!-- towncrier release notes start -->` marker in `CHANGELOG.md`) still use the legacy
     workflow: backport pull requests must update `CHANGELOG.md` manually, and `changelog.d`
-    fragments are ignored on those branches.
+    fragments are ignored on those branches. The patch preparation workflow skips Towncrier
+    when `towncrier.toml` is absent and replaces the `## Unreleased` heading with the release
+    version and date.
 
 ## Making the release
 
