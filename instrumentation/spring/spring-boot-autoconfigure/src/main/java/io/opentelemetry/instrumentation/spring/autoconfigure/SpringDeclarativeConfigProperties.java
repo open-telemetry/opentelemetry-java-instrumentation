@@ -203,6 +203,31 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
     return doubleOrNull(simpleEntries.get(name));
   }
 
+  @Override
+  public boolean isString(String name) {
+    return getString(name) != null;
+  }
+
+  @Override
+  public boolean isBoolean(String name) {
+    return getBoolean(name) != null;
+  }
+
+  @Override
+  public boolean isInt(String name) {
+    return getInt(name) != null;
+  }
+
+  @Override
+  public boolean isLong(String name) {
+    return getLong(name) != null;
+  }
+
+  @Override
+  public boolean isDouble(String name) {
+    return getDouble(name) != null;
+  }
+
   @Nullable
   @Override
   public <T> List<T> getScalarList(String name, Class<T> scalarType) {

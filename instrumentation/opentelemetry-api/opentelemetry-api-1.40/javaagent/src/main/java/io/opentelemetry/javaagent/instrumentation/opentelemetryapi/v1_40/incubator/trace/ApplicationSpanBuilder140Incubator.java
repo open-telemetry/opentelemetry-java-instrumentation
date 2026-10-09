@@ -208,6 +208,8 @@ public class ApplicationSpanBuilder140Incubator extends ApplicationSpanBuilder
               c,
               new application.io.opentelemetry.context.propagation.TextMapGetter<C>() {
 
+                @SuppressWarnings(
+                    "deprecation") // The application API 1.40 getter only exposes keys.
                 @Override
                 public Iterable<String> keys(C c) {
                   return textMapGetter.keys(c);

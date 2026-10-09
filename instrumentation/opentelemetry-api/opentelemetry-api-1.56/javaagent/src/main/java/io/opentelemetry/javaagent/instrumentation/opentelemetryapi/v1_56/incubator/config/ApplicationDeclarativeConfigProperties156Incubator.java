@@ -76,6 +76,26 @@ class ApplicationDeclarativeConfigProperties156Incubator
     return instrumentationConfig.getDouble(name, defaultValue);
   }
 
+  public boolean isString(String name) {
+    return instrumentationConfig.isString(name);
+  }
+
+  public boolean isBoolean(String name) {
+    return instrumentationConfig.isBoolean(name);
+  }
+
+  public boolean isInt(String name) {
+    return instrumentationConfig.isInt(name);
+  }
+
+  public boolean isLong(String name) {
+    return instrumentationConfig.isLong(name);
+  }
+
+  public boolean isDouble(String name) {
+    return instrumentationConfig.isDouble(name);
+  }
+
   @Nullable
   @Override
   public <T> List<T> getScalarList(String name, Class<T> scalarType) {

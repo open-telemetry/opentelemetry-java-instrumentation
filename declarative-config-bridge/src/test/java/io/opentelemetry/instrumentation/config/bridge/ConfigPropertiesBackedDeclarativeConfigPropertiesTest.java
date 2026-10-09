@@ -389,11 +389,7 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
 
     assertThat(config.getStructured("java").getStructured("aws_lambda").getInt("flush_timeout"))
         .isEqualTo(5000);
-    assertThat(
-            config
-                .getStructured("java")
-                .getStructured("aws_lambda")
-                .isInt("flush_timeout"))
+    assertThat(config.getStructured("java").getStructured("aws_lambda").isInt("flush_timeout"))
         .isTrue();
   }
 
