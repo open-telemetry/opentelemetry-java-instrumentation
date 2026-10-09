@@ -5,9 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
-
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
@@ -24,10 +22,10 @@ import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 public final class RpcClientAttributesExtractor<REQUEST, RESPONSE>
     extends RpcCommonAttributesExtractor<REQUEST, RESPONSE> implements SpanKeyProvider {
 
-  /** Creates the RPC client attributes extractor. */
+  /** Creates the RPC client attributes extractor using the global instance's configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       RpcAttributesGetter<REQUEST, RESPONSE> getter) {
-    return new RpcClientAttributesExtractor<>(getter, emitOldRpcSemconv(), emitPreviewRpcSemconv());
+    return new RpcClientAttributesExtractor<>(getter, GlobalOpenTelemetry.getOrNoop());
   }
 
   /** Creates the RPC client attributes extractor using the supplied instance's configuration. */
@@ -41,13 +39,6 @@ public final class RpcClientAttributesExtractor<REQUEST, RESPONSE>
   private RpcClientAttributesExtractor(
       RpcAttributesGetter<REQUEST, RESPONSE> getter, OpenTelemetry openTelemetry) {
     super(getter, openTelemetry);
-  }
-
-  private RpcClientAttributesExtractor(
-      RpcAttributesGetter<REQUEST, RESPONSE> getter,
-      boolean emitOldRpcSemconv,
-      boolean emitPreviewRpcSemconv) {
-    super(getter, emitOldRpcSemconv, emitPreviewRpcSemconv);
   }
 
   /**

@@ -40,16 +40,9 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
 
   RpcCommonAttributesExtractor(
       RpcAttributesGetter<REQUEST, RESPONSE> getter, OpenTelemetry openTelemetry) {
-    this(getter, emitOldRpcSemconv(openTelemetry), emitPreviewRpcSemconv(openTelemetry));
-  }
-
-  RpcCommonAttributesExtractor(
-      RpcAttributesGetter<REQUEST, RESPONSE> getter,
-      boolean emitOldRpcSemconv,
-      boolean emitPreviewRpcSemconv) {
     this.getter = getter;
-    this.emitOldRpcSemconv = emitOldRpcSemconv;
-    this.emitPreviewRpcSemconv = emitPreviewRpcSemconv;
+    this.emitOldRpcSemconv = emitOldRpcSemconv(openTelemetry);
+    this.emitPreviewRpcSemconv = emitPreviewRpcSemconv(openTelemetry);
   }
 
   @SuppressWarnings("deprecation") // for getSystem(), getMethod()
