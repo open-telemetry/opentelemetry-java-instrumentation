@@ -4,7 +4,6 @@ ARG jdkImageHash
 FROM ${jdkImageName}@sha256:${jdkImageHash}
 ARG version
 ARG baseDownloadUrl
-ARG archiveExtension=tar.gz
 
 # Create a user and group used to launch processes
 # The user ID 1000 is the default for the first "regular" user on Fedora/RHEL,
@@ -25,17 +24,17 @@ USER jboss
 
 # Set the WILDFLY_VERSION env variable
 ENV WILDFLY_VERSION=${version}
-ENV DOWNLOAD_URL=${baseDownloadUrl}.${archiveExtension}
+ENV DOWNLOAD_URL=${baseDownloadUrl}.zip
 ENV JBOSS_HOME /opt/jboss/wildfly
 
 USER root
 RUN echo curl -O -L $DOWNLOAD_URL
-# Add the WildFly distribution to /opt, and make wildfly the owner of the extracted tar content
+# Add the WildFly distribution to /opt, and make wildfly the owner of the extracted content
 # Make sure the distribution is available from a well-known place
 RUN cd $HOME \
     && archive=$(basename "$DOWNLOAD_URL") \
     && wget -nv $DOWNLOAD_URL \
-    && if [ "$archiveExtension" = "zip" ]; then unzip -q "$archive"; else tar xf "$archive"; fi \
+    && unzip -q "$archive" \
     && mv $HOME/wildfly-$WILDFLY_VERSION $JBOSS_HOME \
     && rm "$archive" \
     && chown -R jboss:0 ${JBOSS_HOME} \
