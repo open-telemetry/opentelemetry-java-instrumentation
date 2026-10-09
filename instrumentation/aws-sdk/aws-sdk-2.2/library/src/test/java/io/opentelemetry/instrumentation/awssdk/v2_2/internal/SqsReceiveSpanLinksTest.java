@@ -48,6 +48,7 @@ class SqsReceiveSpanLinksTest {
     OpenTelemetry openTelemetry = mock(OpenTelemetry.class);
     when(openTelemetry.getTracerProvider()).thenReturn(tracerProvider);
     when(openTelemetry.getMeterProvider()).thenReturn(OpenTelemetry.noop().getMeterProvider());
+    when(openTelemetry.getLogsBridge()).thenReturn(OpenTelemetry.noop().getLogsBridge());
 
     SqsMessage message = mock(SqsMessage.class);
     when(message.getCreationContext()).thenReturn(Context.root().with(Span.wrap(spanContext)));
