@@ -35,8 +35,12 @@ public final class RpcClientAttributesExtractor<REQUEST, RESPONSE>
   // via openTelemetry.getConfigProvider()
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       RpcAttributesGetter<REQUEST, RESPONSE> getter, OpenTelemetry openTelemetry) {
-    return new RpcClientAttributesExtractor<>(
-        getter, emitOldRpcSemconv(openTelemetry), emitPreviewRpcSemconv(openTelemetry));
+    return new RpcClientAttributesExtractor<>(getter, openTelemetry);
+  }
+
+  private RpcClientAttributesExtractor(
+      RpcAttributesGetter<REQUEST, RESPONSE> getter, OpenTelemetry openTelemetry) {
+    super(getter, openTelemetry);
   }
 
   private RpcClientAttributesExtractor(

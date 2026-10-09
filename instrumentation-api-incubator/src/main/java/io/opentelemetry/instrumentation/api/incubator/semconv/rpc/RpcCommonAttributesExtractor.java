@@ -5,8 +5,11 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -34,6 +37,11 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
   private final RpcAttributesGetter<REQUEST, RESPONSE> getter;
   private final boolean emitOldRpcSemconv;
   private final boolean emitPreviewRpcSemconv;
+
+  RpcCommonAttributesExtractor(
+      RpcAttributesGetter<REQUEST, RESPONSE> getter, OpenTelemetry openTelemetry) {
+    this(getter, emitOldRpcSemconv(openTelemetry), emitPreviewRpcSemconv(openTelemetry));
+  }
 
   RpcCommonAttributesExtractor(
       RpcAttributesGetter<REQUEST, RESPONSE> getter,
