@@ -47,6 +47,8 @@ dependencies {
 
 /** Typed dependency scope for an OSGi test suite, avoiding stringly-typed invoke() calls. */
 class OsgiSuiteDependencies(private val sourceSet: SourceSet, private val handler: DependencyHandler) {
+  fun project(path: String) = handler.project(path)
+
   fun implementation(notation: Any) = handler.add(sourceSet.implementationConfigurationName, notation)
   fun compileOnly(notation: Any) = handler.add(sourceSet.compileOnlyConfigurationName, notation)
   fun runtimeOnly(notation: Any) = handler.add(sourceSet.runtimeOnlyConfigurationName, notation)
