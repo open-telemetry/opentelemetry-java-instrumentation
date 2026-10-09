@@ -3,6 +3,21 @@ plugins {
   id("otel.nullaway-conventions")
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":javaagent-extension-api"))
+      }
+    }
+  }
+}
+
+tasks.check {
+  dependsOn(testing.suites.named("unitTests"))
+}
+
 // this instrumentation applies to the class 'org.eclipse.osgi.internal.loader.BundleLoader'
 // which is present in the following artifacts dating back to version 3.6 (2010):
 //

@@ -9,6 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -34,6 +35,7 @@ class ReflectionInstrumentation implements TypeInstrumentation {
             .and(takesArguments(2))
             .and(takesArgument(0, Class.class))
             .and(takesArgument(1, Field[].class))
+            .and(returns(Field[].class))
             .and(isPublic())
             .and(isStatic()),
         getClass().getName() + "$FilterFieldsAdvice");
@@ -43,6 +45,7 @@ class ReflectionInstrumentation implements TypeInstrumentation {
             .and(takesArguments(2))
             .and(takesArgument(0, Class.class))
             .and(takesArgument(1, Method[].class))
+            .and(returns(Method[].class))
             .and(isPublic())
             .and(isStatic()),
         getClass().getName() + "$FilterMethodsAdvice");
