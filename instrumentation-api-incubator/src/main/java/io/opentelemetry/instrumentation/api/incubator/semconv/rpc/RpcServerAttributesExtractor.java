@@ -25,7 +25,7 @@ public final class RpcServerAttributesExtractor<REQUEST, RESPONSE>
   /** Creates the RPC server attributes extractor using the global instance's configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       RpcAttributesGetter<REQUEST, RESPONSE> getter) {
-    return new RpcServerAttributesExtractor<>(getter, GlobalOpenTelemetry.getOrNoop());
+    return create(getter, GlobalOpenTelemetry.getOrNoop());
   }
 
   /** Creates the RPC server attributes extractor using the supplied instance's configuration. */

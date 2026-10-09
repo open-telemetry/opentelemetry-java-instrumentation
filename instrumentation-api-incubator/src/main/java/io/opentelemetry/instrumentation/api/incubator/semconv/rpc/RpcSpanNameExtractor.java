@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 
@@ -16,10 +17,12 @@ public final class RpcSpanNameExtractor<REQUEST> implements SpanNameExtractor<RE
   /**
    * Returns a {@link SpanNameExtractor} that constructs the span name according to RPC semantic
    * conventions: {@code <rpc.service>/<rpc.method>}.
+   *
+   * <p>Uses the global instance's configuration.
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
       RpcAttributesGetter<REQUEST, ?> attributesExtractor) {
-    return new RpcSpanNameExtractor<>(attributesExtractor, emitPreviewRpcSemconv());
+    return create(attributesExtractor, GlobalOpenTelemetry.getOrNoop());
   }
 
   /** Creates the RPC span name extractor using the supplied instance's configuration. */
@@ -27,16 +30,16 @@ public final class RpcSpanNameExtractor<REQUEST> implements SpanNameExtractor<RE
   // via openTelemetry.getConfigProvider()
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
       RpcAttributesGetter<REQUEST, ?> getter, OpenTelemetry openTelemetry) {
-    return new RpcSpanNameExtractor<>(getter, emitPreviewRpcSemconv(openTelemetry));
+    return new RpcSpanNameExtractor<>(getter, openTelemetry);
   }
 
   private final RpcAttributesGetter<REQUEST, ?> getter;
   private final boolean emitPreviewRpcSemconv;
 
   private RpcSpanNameExtractor(
-      RpcAttributesGetter<REQUEST, ?> getter, boolean emitPreviewRpcSemconv) {
+      RpcAttributesGetter<REQUEST, ?> getter, OpenTelemetry openTelemetry) {
     this.getter = getter;
-    this.emitPreviewRpcSemconv = emitPreviewRpcSemconv;
+    this.emitPreviewRpcSemconv = emitPreviewRpcSemconv(openTelemetry);
   }
 
   @SuppressWarnings("deprecation") // for getMethod()
