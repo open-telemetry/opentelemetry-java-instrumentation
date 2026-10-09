@@ -42,7 +42,6 @@ val generateJflex = tasks.register<JavaExec>("generateJflex") {
 
   doFirst {
     val outputDir = outputDirProvider.get().asFile
-    outputDir.deleteRecursively()
     outputDir.mkdirs()
     val specFiles = listOf(
       sourceDir.asFile.resolve("SqlSanitizer.jflex"),
