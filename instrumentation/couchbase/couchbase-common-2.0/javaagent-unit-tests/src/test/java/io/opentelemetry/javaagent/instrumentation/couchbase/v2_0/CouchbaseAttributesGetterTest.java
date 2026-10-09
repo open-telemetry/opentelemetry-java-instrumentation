@@ -15,16 +15,20 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
+import com.couchbase.client.java.view.ViewQuery;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseRequestInfo;
 import java.net.InetSocketAddress;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class CouchbaseAttributesGetterTest {
 
@@ -33,9 +37,9 @@ class CouchbaseAttributesGetterTest {
     CouchbaseRequestInfo request =
         CouchbaseRequestInfo.create(
             "test", null, "SELECT field1 FROM `test` WHERE field2 = 'asdf'");
-    CouchbaseAttributesGetter getter = new CouchbaseAttributesGetter();
+    CouchbaseSqlAttributesGetter getter = new CouchbaseSqlAttributesGetter();
     AttributesExtractor<CouchbaseRequestInfo, Void> extractor =
-        DbClientAttributesExtractor.create(getter);
+        SqlClientAttributesExtractor.create(getter);
 
     for (CouchbaseRequestInfo copy :
         new CouchbaseRequestInfo[] {request, request.copySupplier().get()}) {
@@ -47,10 +51,68 @@ class CouchbaseAttributesGetterTest {
           .containsOnly(
               entry(DB_SYSTEM_NAME, "couchbase"),
               entry(DB_NAMESPACE, "test"),
-              entry(DB_OPERATION_NAME, "SELECT"),
               entry(DB_QUERY_TEXT, "SELECT field1 FROM `test` WHERE field2 = ?"),
               entry(DB_QUERY_SUMMARY, "SELECT `test`"));
     }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void sanitizesSqlStringLiterals(boolean sanitizationEnabled) {
+    String query = "SELECT * FROM `test` WHERE field1 = 'secret' AND field2 = \"secret\"";
+    CouchbaseRequestInfo request = CouchbaseRequestInfo.create("test", null, query);
+    CouchbaseSqlAttributesGetter getter = new CouchbaseSqlAttributesGetter();
+    AttributesBuilder attributes = Attributes.builder();
+    SqlClientAttributesExtractor.builder(getter)
+        .setQuerySanitizationEnabled(sanitizationEnabled)
+        .build()
+        .onStart(attributes, Context.root(), request);
+
+    assertThat(getter.getRawQueryTexts(request)).containsExactly(query);
+    assertThat(attributes.build().asMap())
+        .containsOnly(
+            entry(DB_SYSTEM_NAME, "couchbase"),
+            entry(DB_NAMESPACE, "test"),
+            entry(
+                DB_QUERY_TEXT,
+                sanitizationEnabled
+                    ? "SELECT * FROM `test` WHERE field1 = ? AND field2 = ?"
+                    : query),
+            entry(DB_QUERY_SUMMARY, "SELECT `test`"));
+  }
+
+  @Test
+  void preservesNonSqlOperationNames() {
+    CouchbaseRequestInfo request = CouchbaseRequestInfo.create("test", null, getClass(), "get");
+    CouchbaseAttributesGetter getter = new CouchbaseAttributesGetter();
+    AttributesBuilder attributes = Attributes.builder();
+    DbClientAttributesExtractor.create(getter).onStart(attributes, Context.root(), request);
+
+    assertThat(request.isSqlQuery()).isFalse();
+    assertThat(DbClientSpanNameExtractor.create(getter).extract(request))
+        .isEqualTo("CouchbaseAttributesGetterTest.get test");
+    assertThat(attributes.build().asMap())
+        .containsOnly(
+            entry(DB_SYSTEM_NAME, "couchbase"),
+            entry(DB_NAMESPACE, "test"),
+            entry(DB_OPERATION_NAME, "CouchbaseAttributesGetterTest.get"));
+  }
+
+  @Test
+  void preservesOpaqueViewQueries() {
+    ViewQuery query = ViewQuery.from("design", "view").skip(10);
+    CouchbaseRequestInfo request = CouchbaseRequestInfo.create("test", null, query);
+    CouchbaseAttributesGetter getter = new CouchbaseAttributesGetter();
+    AttributesBuilder attributes = Attributes.builder();
+    DbClientAttributesExtractor.create(getter).onStart(attributes, Context.root(), request);
+
+    assertThat(request.isSqlQuery()).isFalse();
+    assertThat(DbClientSpanNameExtractor.create(getter).extract(request)).isEqualTo("test");
+    assertThat(attributes.build().asMap())
+        .containsOnly(
+            entry(DB_SYSTEM_NAME, "couchbase"),
+            entry(DB_NAMESPACE, "test"),
+            entry(DB_QUERY_TEXT, query.toString()));
   }
 
   @Test

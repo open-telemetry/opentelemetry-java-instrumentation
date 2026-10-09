@@ -72,7 +72,7 @@ class CouchbaseBucketInstrumentation implements TypeInstrumentation {
           CouchbaseRequestInfo.create(
               bucket, COUCHBASE_SERVER_TARGET.get(core), declaringClass, methodName);
       return Observable.create(
-          TracedOnSubscribe.perSubscription(result, instrumenter(), request.copySupplier()));
+          TracedOnSubscribe.perSubscription(result, instrumenter(request), request.copySupplier()));
     }
   }
 
@@ -107,7 +107,7 @@ class CouchbaseBucketInstrumentation implements TypeInstrumentation {
                   bucket, COUCHBASE_SERVER_TARGET.get(core), declaringClass, methodName)
               : CouchbaseRequestInfo.create(bucket, COUCHBASE_SERVER_TARGET.get(core), query);
       return Observable.create(
-          TracedOnSubscribe.perSubscription(result, instrumenter(), request.copySupplier()));
+          TracedOnSubscribe.perSubscription(result, instrumenter(request), request.copySupplier()));
     }
   }
 }

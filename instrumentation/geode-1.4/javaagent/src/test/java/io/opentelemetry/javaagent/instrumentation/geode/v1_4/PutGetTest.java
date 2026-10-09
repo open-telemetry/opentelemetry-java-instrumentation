@@ -81,6 +81,17 @@ class PutGetTest {
         Arguments.of("One", Integer.valueOf(1)));
   }
 
+  private static Stream<Arguments> sanitizationQueries() {
+    return Stream.of(
+        Arguments.of(
+            "SELECT * FROM /test-region p WHERE p.expDate = '10/2020'",
+            "SELECT * FROM /test-region p WHERE p.expDate = ?"),
+        Arguments.of(
+            "SELECT * FROM /test-region p WHERE p.cardNumber = '1234432156788765'"
+                + " AND p.expDate = '10/2020'",
+            "SELECT * FROM /test-region p WHERE p.cardNumber = ? AND p.expDate = ?"));
+  }
+
   @Test
   void testDurationMetric() {
     region.put("key", "value");
@@ -323,8 +334,9 @@ class PutGetTest {
                             equalTo(SERVER_PORT, serverPort))));
   }
 
-  @Test
-  void shouldSanitizeGeodeQuery() throws QueryException {
+  @ParameterizedTest
+  @MethodSource("sanitizationQueries")
+  void shouldSanitizeGeodeQuery(String query, String sanitizedQuery) throws QueryException {
     Card value = new Card("1234432156788765", "10/2020");
     SelectResults<Object> results =
         testing.runWithSpan(
@@ -332,7 +344,7 @@ class PutGetTest {
             () -> {
               region.clear();
               region.put(1, value);
-              return region.query("SELECT * FROM /test-region p WHERE p.expDate = '10/2020'");
+              return region.query(query);
             });
 
     assertThat(results.asList()).singleElement().usingRecursiveComparison().isEqualTo(value);
@@ -365,8 +377,7 @@ class PutGetTest {
                             equalTo(DB_SYSTEM_NAME, GEODE),
                             equalTo(DB_COLLECTION_NAME, "test-region"),
                             equalTo(DB_OPERATION_NAME, "query"),
-                            equalTo(
-                                DB_QUERY_TEXT, "SELECT * FROM /test-region p WHERE p.expDate = ?"),
+                            equalTo(DB_QUERY_TEXT, sanitizedQuery),
                             equalTo(SERVER_ADDRESS, SERVER_HOST),
                             equalTo(SERVER_PORT, serverPort))));
   }
