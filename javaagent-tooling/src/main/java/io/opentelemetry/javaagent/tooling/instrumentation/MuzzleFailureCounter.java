@@ -12,6 +12,7 @@ public final class MuzzleFailureCounter {
 
   private MuzzleFailureCounter() {}
 
+  // visible for testing
   public static int getAndReset() {
     return counter.getAndSet(0);
   }

@@ -34,6 +34,7 @@ public final class ClassLoaderValue<T> {
     return (T) ClassLoaderMap.get(classLoader, classInjector, this);
   }
 
+  // visible for testing
   public void put(ClassLoader classLoader, T value) {
     ClassLoaderMap.put(classLoader, classInjector, this, value);
   }

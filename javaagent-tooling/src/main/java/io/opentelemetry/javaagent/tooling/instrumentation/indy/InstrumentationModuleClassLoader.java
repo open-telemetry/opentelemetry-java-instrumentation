@@ -102,6 +102,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
         new StringMatcher("io.opentelemetry.javaagent", StringMatcher.Mode.STARTS_WITH));
   }
 
+  // visible for testing
   InstrumentationModuleClassLoader(
       @Nullable ClassLoader instrumentedCl,
       ClassLoader agentOrExtensionCl,
