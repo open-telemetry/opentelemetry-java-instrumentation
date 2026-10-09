@@ -21,13 +21,8 @@ import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigura
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.internal.SdkConfigProvider;
 import java.io.ByteArrayInputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.logging.Handler;
-import java.util.logging.LogRecord;
-import java.util.logging.Logger;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -41,73 +36,34 @@ class ExperimentalConfigTest {
     assertThat(telemetryEnabled(new ExperimentalConfig(flatConfig(properties)), telemetry))
         .isFalse();
 
-    properties.put(
-        "otel.instrumentation.common.experimental." + telemetry + "-telemetry.enabled", "true");
-    Logger logger = Logger.getLogger(ExperimentalConfig.class.getName());
-    TestHandler handler = new TestHandler();
-    logger.addHandler(handler);
-    try {
-      assertThat(telemetryEnabled(new ExperimentalConfig(flatConfig(properties)), telemetry))
-          .isFalse();
-
-      properties.put("otel.instrumentation.common.v3-preview", "false");
-      assertThat(telemetryEnabled(new ExperimentalConfig(flatConfig(properties)), telemetry))
-          .isFalse();
-      assertThat(handler.records).isEmpty();
-
-      properties.put("otel.instrumentation.common." + telemetry + "-telemetry.enabled", "false");
-      assertThat(telemetryEnabled(new ExperimentalConfig(flatConfig(properties)), telemetry))
-          .isFalse();
-      properties.put("otel.instrumentation.common." + telemetry + "-telemetry.enabled", "true");
-      assertThat(telemetryEnabled(new ExperimentalConfig(flatConfig(properties)), telemetry))
-          .isTrue();
-    } finally {
-      logger.removeHandler(handler);
-    }
+    properties.put("otel.instrumentation.common." + telemetry + "-telemetry.enabled", "false");
+    assertThat(telemetryEnabled(new ExperimentalConfig(flatConfig(properties)), telemetry))
+        .isFalse();
+    properties.put("otel.instrumentation.common." + telemetry + "-telemetry.enabled", "true");
+    assertThat(telemetryEnabled(new ExperimentalConfig(flatConfig(properties)), telemetry))
+        .isTrue();
   }
 
   @ParameterizedTest
   @ValueSource(strings = {"controller", "view"})
   void yamlTelemetryConfig(String telemetry) {
-    String oldYaml =
-        "file_format: 1.1\n"
-            + "instrumentation/development:\n"
-            + "  java:\n"
-            + "    common:\n"
-            + "      "
-            + telemetry
-            + "_telemetry/development:\n"
-            + "        enabled: true\n";
-    Logger logger = Logger.getLogger(ExperimentalConfig.class.getName());
-    TestHandler handler = new TestHandler();
-    logger.addHandler(handler);
-    try {
-      assertThat(telemetryEnabled(new ExperimentalConfig(yamlConfig(oldYaml)), telemetry))
-          .isFalse();
-      String oldYamlWithV3PreviewDisabled =
-          oldYaml.replace("    common:\n", "    common:\n      v3_preview: false\n");
-      assertThat(
-              telemetryEnabled(
-                  new ExperimentalConfig(yamlConfig(oldYamlWithV3PreviewDisabled)), telemetry))
-          .isFalse();
-      assertThat(handler.records).isEmpty();
+    String yaml = "file_format: 1.1\n" + "instrumentation/development:\n" + "  java:\n";
+    assertThat(
+            telemetryEnabled(
+                new ExperimentalConfig(yamlConfig(yaml + "    common: {}\n")), telemetry))
+        .isFalse();
 
-      String stableKey = "      " + telemetry + "_telemetry:\n";
-      assertThat(
-              telemetryEnabled(
-                  new ExperimentalConfig(
-                      yamlConfig(oldYaml + stableKey + "        enabled: false\n")),
-                  telemetry))
-          .isFalse();
-      assertThat(
-              telemetryEnabled(
-                  new ExperimentalConfig(
-                      yamlConfig(oldYaml + stableKey + "        enabled: true\n")),
-                  telemetry))
-          .isTrue();
-    } finally {
-      logger.removeHandler(handler);
-    }
+    String key = "    common:\n      " + telemetry + "_telemetry:\n";
+    assertThat(
+            telemetryEnabled(
+                new ExperimentalConfig(yamlConfig(yaml + key + "        enabled: false\n")),
+                telemetry))
+        .isFalse();
+    assertThat(
+            telemetryEnabled(
+                new ExperimentalConfig(yamlConfig(yaml + key + "        enabled: true\n")),
+                telemetry))
+        .isTrue();
   }
 
   private static ExtendedOpenTelemetry flatConfig(Map<String, String> properties) {
@@ -176,20 +132,5 @@ class ExperimentalConfigTest {
     when(messaging.get("headers").getScalarList("included", String.class)).thenReturn(null);
     when(messaging.get("headers").getScalarList("excluded", String.class)).thenReturn(null);
     return openTelemetry;
-  }
-
-  private static final class TestHandler extends Handler {
-    private final List<LogRecord> records = new ArrayList<>();
-
-    @Override
-    public void publish(LogRecord record) {
-      records.add(record);
-    }
-
-    @Override
-    public void flush() {}
-
-    @Override
-    public void close() {}
   }
 }

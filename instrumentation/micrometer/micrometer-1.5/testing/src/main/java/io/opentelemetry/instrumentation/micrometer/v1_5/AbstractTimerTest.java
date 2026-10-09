@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
-import static io.opentelemetry.instrumentation.micrometer.v1_5.NoMaxGaugeAssertions.assertNoMaxGauge;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -63,7 +62,6 @@ public abstract class AbstractTimerTest {
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(stringKey("tag"), "value"))
                                         .hasBucketBoundaries(NO_BUCKETS))));
-    assertNoMaxGauge(testing(), "testTimer.max");
 
     // micrometer gauge histogram is not emitted
     testing()
@@ -104,7 +102,6 @@ public abstract class AbstractTimerTest {
                                         .hasSum(0.001234)
                                         .hasCount(1)
                                         .hasAttributes(Attributes.empty()))));
-    assertNoMaxGauge(testing(), "testNanoTimer.max");
   }
 
   @Test

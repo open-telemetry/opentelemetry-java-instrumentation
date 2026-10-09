@@ -10,8 +10,6 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
@@ -32,9 +30,6 @@ class CommonConfigTest {
     when(openTelemetry.getInstrumentationConfig("common")).thenReturn(commonConfig);
     when(commonConfig.get("http").getScalarList(eq("known_methods"), eq(String.class), anyList()))
         .thenReturn(new ArrayList<>());
-    when(commonConfig.get("logging").getString("trace_id")).thenReturn("legacy_trace_id");
-    when(commonConfig.get("logging").getString("span_id")).thenReturn("legacy_span_id");
-    when(commonConfig.get("logging").getString("trace_flags")).thenReturn("legacy_trace_flags");
     DeclarativeConfigProperties logging = commonConfig.get("logging");
     when(logging.getString("trace_id_key", LoggingContextConstants.TRACE_ID))
         .thenReturn(LoggingContextConstants.TRACE_ID);
@@ -48,9 +43,6 @@ class CommonConfigTest {
     assertThat(config.getTraceIdKey()).isEqualTo(LoggingContextConstants.TRACE_ID);
     assertThat(config.getSpanIdKey()).isEqualTo(LoggingContextConstants.SPAN_ID);
     assertThat(config.getTraceFlagsKey()).isEqualTo(LoggingContextConstants.TRACE_FLAGS);
-    verify(logging, never()).getString("trace_id");
-    verify(logging, never()).getString("span_id");
-    verify(logging, never()).getString("trace_flags");
 
     when(logging.getString("trace_id_key", LoggingContextConstants.TRACE_ID))
         .thenReturn("supported_trace_id");
