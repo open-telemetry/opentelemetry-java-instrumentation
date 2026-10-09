@@ -6,8 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.hibernate.v4_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Hibernate4Singletons.SHARED_SESSION_CONTRACT_SESSION_INFO;
+import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -38,7 +40,7 @@ class SessionFactoryInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         namedOneOf("openSession", "openStatelessSession")
             .and(takesArguments(0))
-            .and(returns(namedOneOf("org.hibernate.Session", "org.hibernate.StatelessSession"))),
+            .and(returns(hasSuperType(named("org.hibernate.SharedSessionContract")))),
         getClass().getName() + "$SessionFactoryAdvice");
   }
 

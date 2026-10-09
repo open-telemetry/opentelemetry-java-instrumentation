@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.ReactorNettySingletons.CONNECTION_REQUEST_AND_CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.ReactorNettySingletons.connectionInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -56,13 +56,7 @@ class TransportConnectorInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("doConnect")
             .and(takesArgument(0, List.class))
-            .and(
-                takesArgument(
-                    2,
-                    namedOneOf(
-                        "io.netty.channel.ChannelPromise",
-                        // since 1.0.34
-                        "reactor.netty.transport.TransportConnector$MonoChannelPromise")))
+            .and(takesArgument(2, hasSuperType(named("io.netty.channel.ChannelPromise"))))
             .and(takesArgument(3, int.class)),
         getClass().getName() + "$ConnectNewAdvice");
   }
