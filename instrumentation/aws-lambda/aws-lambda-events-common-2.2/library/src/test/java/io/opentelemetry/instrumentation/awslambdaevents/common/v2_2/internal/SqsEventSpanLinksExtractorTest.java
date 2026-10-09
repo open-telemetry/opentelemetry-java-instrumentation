@@ -11,8 +11,8 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
@@ -41,7 +41,7 @@ class SqsEventSpanLinksExtractorTest {
   }
 
   @Test
-  void skipsUntracedMessagesWithoutAttributes() {
+  void delegatesUntracedMessagesWithoutAttributes() {
     SQSMessage message1 = new SQSMessage();
     message1.setEventSourceArn("arn:aws:sqs:us-east-2:123456789012:queue1");
     SQSMessage message2 = new SQSMessage();
@@ -52,7 +52,7 @@ class SqsEventSpanLinksExtractorTest {
 
     new SqsEventSpanLinksExtractor().extract(spanLinks, Context.root(), event);
 
-    verifyNoInteractions(spanLinks);
+    verify(spanLinks, times(2)).addLink(SpanContext.getInvalid(), Attributes.empty());
   }
 
   @Test
