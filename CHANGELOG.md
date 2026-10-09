@@ -12,6 +12,28 @@
   `java.couchbase.query_sanitization.enabled: false`, including when inherited from the common
   database setting. Non-query operations, Couchbase view queries, and existing configuration names
   and precedence are unchanged.
+- The Java agent, Spring Boot setup, and standalone appenders now capture structured log attributes from Log4j
+  `MapMessage` entries, SLF4J key-value pairs, Logback Logstash markers, and Logstash structured
+  arguments by default. Replace the former flat settings for Log4j MapMessage
+  (`otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes`), Logback
+  key/value pairs (`otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes`),
+  Logstash markers (`otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes`),
+  and structured arguments
+  (`otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments`) with
+  the common `otel.instrumentation.common.logging.structured-attributes.included` and
+  `otel.instrumentation.common.logging.structured-attributes.excluded` selectors. Exclusions take
+  precedence, and `*` excludes all structured attributes. The source-specific
+  `.included` and `.excluded` selectors
+  (`otel.instrumentation.log4j-appender.experimental.map-message-attributes.*`,
+  `otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.*`,
+  `otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.*`, and
+  `otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.*`)
+  were removed and are now ignored, so migrate them to the common selectors to keep filtering.
+  The common properties apply to the Java agent and Spring Boot's Logback integration.
+  Standalone appenders, including Log4j under Spring Boot, use
+  `structuredAttributesIncluded` and `structuredAttributesExcluded` in XML, or
+  `setStructuredAttributes(IncludeExclude)` programmatically.
+  Log4j `MapMessage` keys are emitted as their original log attribute names.
 - RPC and service-peer semantic conventions now require `otel.semconv-stability.preview=rpc`
   and `otel.semconv-stability.preview=service.peer`, respectively (or `rpc/dup` and
   `service.peer/dup` for dual emission). The `rpc`, `rpc/dup`, `service.peer`, and `service.peer/dup`
@@ -116,6 +138,17 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Remove the deprecated standalone appender boolean setters and XML settings:
+  Log4j `setCaptureMapMessageAttributes` / `captureMapMessageAttributes`, and Logback
+  `setCaptureKeyValuePairAttributes` / `captureKeyValuePairAttributes`,
+  `setCaptureLogstashMarkerAttributes` / `captureLogstashMarkerAttributes`, and
+  `setCaptureLogstashStructuredArguments` / `captureLogstashStructuredArguments`.
+  Replace the source-specific `setMapMessageAttributes`, `setKeyValuePairAttributes`,
+  `setLogstashMarkerAttributes`, and `setLogstashStructuredArgumentAttributes` selectors and their
+  XML included/excluded settings with `setStructuredAttributes(IncludeExclude)` and
+  `structuredAttributesIncluded` / `structuredAttributesExcluded`. One selector filters all
+  supported structured sources. Absent or empty selectors capture all structured attributes;
+  an excluded `*` captures none. MDC and logger context capture remain separate and opt-in.
 - Rename `Experimental.setCaptureEnduserId` to `setCaptureUserName` in the Servlet 3.0 and 5.0
   libraries. Remove `UserAttributesCapturer.setScopeEnabled(boolean)` and
   `UserAttributesCapturer.setScopeGrantedAuthorityPrefix(String)`, and remove
