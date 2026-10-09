@@ -113,9 +113,6 @@ class AwsLambdaApiGatewayHandlerTest {
                     span.hasAttributesSatisfyingExactly(
                         equalTo(FAAS_INVOCATION_ID, "1-22-2024"),
                         equalTo(FAAS_TRIGGER, "http"),
-                        equalTo(URL_PATH, null),
-                        equalTo(URL_SCHEME, null),
-                        equalTo(HTTP_ROUTE, null),
                         equalTo(HTTP_RESPONSE_STATUS_CODE, 201L))));
   }
 
