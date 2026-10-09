@@ -129,13 +129,22 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, COUCHBASE),
                             equalTo(DB_OPERATION_NAME, "ClusterManager.hasBucket"),
-                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
                                 stringKey("couchbase.local.address"),
-                                experimentalLocalAddress()))));
+                                includesExperimentalAttributes()
+                                        && includesExperimentalLocalAddressAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()))));
   }
 
   @ParameterizedTest
@@ -182,14 +191,28 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             equalTo(DB_SYSTEM_NAME, COUCHBASE),
                             equalTo(DB_NAMESPACE, bucketSettings.name()),
                             equalTo(DB_OPERATION_NAME, "Bucket.upsert"),
-                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalLocalAddress()),
+                                stringKey("couchbase.local.address"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalLocalAddressAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), experimentalOperationId()))));
+                                stringKey("couchbase.operation_id"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalOperationIdAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()))));
   }
 
   @ParameterizedTest
@@ -243,14 +266,28 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             equalTo(DB_SYSTEM_NAME, COUCHBASE),
                             equalTo(DB_NAMESPACE, bucketSettings.name()),
                             equalTo(DB_OPERATION_NAME, "Bucket.upsert"),
-                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalLocalAddress()),
+                                stringKey("couchbase.local.address"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalLocalAddressAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), experimentalOperationId())),
+                                stringKey("couchbase.operation_id"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalOperationIdAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull())),
                 span ->
                     span.hasName("Bucket.get " + bucketSettings.name())
                         .hasKind(SpanKind.CLIENT)
@@ -259,14 +296,28 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             equalTo(DB_SYSTEM_NAME, COUCHBASE),
                             equalTo(DB_NAMESPACE, bucketSettings.name()),
                             equalTo(DB_OPERATION_NAME, "Bucket.get"),
-                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalLocalAddress()),
+                                stringKey("couchbase.local.address"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalLocalAddressAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), experimentalOperationId()))));
+                                stringKey("couchbase.operation_id"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalOperationIdAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()))));
   }
 
   @Test
@@ -318,14 +369,28 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             equalTo(DB_OPERATION_NAME, "SELECT"),
                             satisfies(DB_QUERY_TEXT, val -> val.startsWith("SELECT mockrow")),
                             equalTo(DB_QUERY_SUMMARY, "SELECT"),
-                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalLocalAddress()),
+                                stringKey("couchbase.local.address"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalLocalAddressAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), experimentalOperationId()))));
+                                stringKey("couchbase.operation_id"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalOperationIdAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()))));
   }
 
   @ParameterizedTest
@@ -372,14 +437,28 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             equalTo(DB_SYSTEM_NAME, COUCHBASE),
                             equalTo(DB_NAMESPACE, bucketSettings.name()),
                             equalTo(DB_OPERATION_NAME, "Bucket.upsert"),
-                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalLocalAddress()),
+                                stringKey("couchbase.local.address"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalLocalAddressAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), experimentalOperationId())),
+                                stringKey("couchbase.operation_id"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalOperationIdAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull())),
                 span ->
                     span.hasName("Bucket.upsert " + bucketSettings.name())
                         .hasKind(SpanKind.CLIENT)
@@ -388,13 +467,27 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             equalTo(DB_SYSTEM_NAME, COUCHBASE),
                             equalTo(DB_NAMESPACE, bucketSettings.name()),
                             equalTo(DB_OPERATION_NAME, "Bucket.upsert"),
-                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalLocalAddress()),
+                                stringKey("couchbase.local.address"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalLocalAddressAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), experimentalOperationId()))));
+                                stringKey("couchbase.operation_id"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalOperationIdAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()))));
   }
 }

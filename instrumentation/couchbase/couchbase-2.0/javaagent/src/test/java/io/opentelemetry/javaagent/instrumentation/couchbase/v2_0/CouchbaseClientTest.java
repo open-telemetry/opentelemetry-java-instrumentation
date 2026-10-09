@@ -73,13 +73,22 @@ class CouchbaseClientTest extends AbstractCouchbaseClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, COUCHBASE),
                             equalTo(DB_OPERATION_NAME, "ClusterManager.hasBucket"),
-                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
                                 stringKey("couchbase.local.address"),
-                                experimentalLocalAddress()))));
+                                includesExperimentalAttributes()
+                                        && includesExperimentalLocalAddressAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()))));
 
     assertDurationMetric(
         testing,

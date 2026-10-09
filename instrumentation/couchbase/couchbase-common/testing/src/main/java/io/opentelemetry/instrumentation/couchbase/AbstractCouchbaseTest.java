@@ -15,8 +15,6 @@ import com.couchbase.mock.CouchbaseMock;
 import com.couchbase.mock.http.query.QueryServer;
 import com.couchbase.mock.httpio.HttpServer;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.LongAssertConsumer;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.StringAssertConsumer;
 import java.lang.reflect.Field;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -133,14 +131,6 @@ public abstract class AbstractCouchbaseTest {
     return EXPERIMENTAL_TELEMETRY;
   }
 
-  protected String networkPeerAddress() {
-    return includesNetworkAttributes() ? "127.0.0.1" : null;
-  }
-
-  protected LongAssertConsumer networkPeerPort() {
-    return includesNetworkAttributes() ? val -> val.isNotNull() : val -> val.isNull();
-  }
-
   protected String configuredServerAddress() {
     return "127.0.0.1";
   }
@@ -155,17 +145,5 @@ public abstract class AbstractCouchbaseTest {
 
   protected String spanName(String operation) {
     return operation + " " + configuredServerAddress();
-  }
-
-  protected StringAssertConsumer experimentalOperationId() {
-    return includesExperimentalAttributes() && includesExperimentalOperationIdAttribute()
-        ? val -> val.isNotNull()
-        : val -> val.isNull();
-  }
-
-  protected StringAssertConsumer experimentalLocalAddress() {
-    return includesExperimentalAttributes() && includesExperimentalLocalAddressAttribute()
-        ? val -> val.isNotNull()
-        : val -> val.isNull();
   }
 }

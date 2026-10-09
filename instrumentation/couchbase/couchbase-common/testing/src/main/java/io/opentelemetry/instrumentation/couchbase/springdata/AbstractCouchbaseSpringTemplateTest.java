@@ -113,14 +113,28 @@ public abstract class AbstractCouchbaseSpringTemplateTest extends AbstractCouchb
                             equalTo(DB_SYSTEM_NAME, COUCHBASE),
                             equalTo(DB_NAMESPACE, template.getCouchbaseBucket().name()),
                             equalTo(DB_OPERATION_NAME, "Bucket.upsert"),
-                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalLocalAddress()),
+                                stringKey("couchbase.local.address"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalLocalAddressAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), experimentalOperationId())),
+                                stringKey("couchbase.operation_id"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalOperationIdAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull())),
                 span ->
                     span.hasName("Bucket.get " + template.getCouchbaseBucket().name())
                         .hasKind(SpanKind.CLIENT)
@@ -129,14 +143,28 @@ public abstract class AbstractCouchbaseSpringTemplateTest extends AbstractCouchb
                             equalTo(DB_SYSTEM_NAME, COUCHBASE),
                             equalTo(DB_NAMESPACE, template.getCouchbaseBucket().name()),
                             equalTo(DB_OPERATION_NAME, "Bucket.get"),
-                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalLocalAddress()),
+                                stringKey("couchbase.local.address"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalLocalAddressAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), experimentalOperationId()))));
+                                stringKey("couchbase.operation_id"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalOperationIdAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()))));
   }
 
   @ParameterizedTest
@@ -162,14 +190,28 @@ public abstract class AbstractCouchbaseSpringTemplateTest extends AbstractCouchb
                             equalTo(DB_SYSTEM_NAME, COUCHBASE),
                             equalTo(DB_NAMESPACE, template.getCouchbaseBucket().name()),
                             equalTo(DB_OPERATION_NAME, "Bucket.upsert"),
-                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalLocalAddress()),
+                                stringKey("couchbase.local.address"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalLocalAddressAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), experimentalOperationId())),
+                                stringKey("couchbase.operation_id"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalOperationIdAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull())),
                 span ->
                     span.hasName("Bucket.remove " + template.getCouchbaseBucket().name())
                         .hasKind(SpanKind.CLIENT)
@@ -178,14 +220,28 @@ public abstract class AbstractCouchbaseSpringTemplateTest extends AbstractCouchb
                             equalTo(DB_SYSTEM_NAME, COUCHBASE),
                             equalTo(DB_NAMESPACE, template.getCouchbaseBucket().name()),
                             equalTo(DB_OPERATION_NAME, "Bucket.remove"),
-                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalLocalAddress()),
+                                stringKey("couchbase.local.address"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalLocalAddressAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), experimentalOperationId()))));
+                                stringKey("couchbase.operation_id"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalOperationIdAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()))));
 
     testing.clearData();
 
@@ -203,13 +259,27 @@ public abstract class AbstractCouchbaseSpringTemplateTest extends AbstractCouchb
                             equalTo(DB_SYSTEM_NAME, COUCHBASE),
                             equalTo(DB_NAMESPACE, template.getCouchbaseBucket().name()),
                             equalTo(DB_OPERATION_NAME, "Bucket.get"),
-                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalLocalAddress()),
+                                stringKey("couchbase.local.address"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalLocalAddressAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), experimentalOperationId()))));
+                                stringKey("couchbase.operation_id"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalOperationIdAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()))));
   }
 }

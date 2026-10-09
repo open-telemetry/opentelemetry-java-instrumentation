@@ -106,13 +106,22 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                             satisfies(
                                 DB_QUERY_TEXT,
                                 val -> val.startsWith("ViewQuery(testDocument/all)")),
-                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
                                 stringKey("couchbase.local.address"),
-                                experimentalLocalAddress()))));
+                                includesExperimentalAttributes()
+                                        && includesExperimentalLocalAddressAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()))));
   }
 
   @Test
@@ -134,14 +143,28 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                             equalTo(DB_SYSTEM_NAME, COUCHBASE),
                             equalTo(DB_NAMESPACE, bucketCouchbase.name()),
                             equalTo(DB_OPERATION_NAME, "Bucket.upsert"),
-                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalLocalAddress()),
+                                stringKey("couchbase.local.address"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalLocalAddressAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), experimentalOperationId()))));
+                                stringKey("couchbase.operation_id"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalOperationIdAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()))));
   }
 
   @Test
@@ -170,14 +193,28 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                             equalTo(DB_SYSTEM_NAME, COUCHBASE),
                             equalTo(DB_NAMESPACE, bucketCouchbase.name()),
                             equalTo(DB_OPERATION_NAME, "Bucket.upsert"),
-                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalLocalAddress()),
+                                stringKey("couchbase.local.address"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalLocalAddressAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), experimentalOperationId())),
+                                stringKey("couchbase.operation_id"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalOperationIdAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull())),
                 span ->
                     span.hasName("Bucket.get " + bucketCouchbase.name())
                         .hasKind(SpanKind.CLIENT)
@@ -186,14 +223,28 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                             equalTo(DB_SYSTEM_NAME, COUCHBASE),
                             equalTo(DB_NAMESPACE, bucketCouchbase.name()),
                             equalTo(DB_OPERATION_NAME, "Bucket.get"),
-                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalLocalAddress()),
+                                stringKey("couchbase.local.address"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalLocalAddressAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), experimentalOperationId()))));
+                                stringKey("couchbase.operation_id"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalOperationIdAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()))));
   }
 
   @Test
@@ -220,14 +271,28 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                             equalTo(DB_SYSTEM_NAME, COUCHBASE),
                             equalTo(DB_NAMESPACE, bucketCouchbase.name()),
                             equalTo(DB_OPERATION_NAME, "Bucket.upsert"),
-                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalLocalAddress()),
+                                stringKey("couchbase.local.address"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalLocalAddressAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), experimentalOperationId())),
+                                stringKey("couchbase.operation_id"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalOperationIdAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull())),
                 span ->
                     span.hasName("Bucket.upsert " + bucketCouchbase.name())
                         .hasKind(SpanKind.CLIENT)
@@ -236,14 +301,28 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                             equalTo(DB_SYSTEM_NAME, COUCHBASE),
                             equalTo(DB_NAMESPACE, bucketCouchbase.name()),
                             equalTo(DB_OPERATION_NAME, "Bucket.upsert"),
-                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalLocalAddress()),
+                                stringKey("couchbase.local.address"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalLocalAddressAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), experimentalOperationId()))));
+                                stringKey("couchbase.operation_id"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalOperationIdAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()))));
   }
 
   @Test
@@ -272,14 +351,28 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                             equalTo(DB_SYSTEM_NAME, COUCHBASE),
                             equalTo(DB_NAMESPACE, bucketCouchbase.name()),
                             equalTo(DB_OPERATION_NAME, "Bucket.upsert"),
-                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalLocalAddress()),
+                                stringKey("couchbase.local.address"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalLocalAddressAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), experimentalOperationId())),
+                                stringKey("couchbase.operation_id"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalOperationIdAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull())),
                 span ->
                     span.hasName("Bucket.remove " + bucketCouchbase.name())
                         .hasKind(SpanKind.CLIENT)
@@ -288,14 +381,28 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                             equalTo(DB_SYSTEM_NAME, COUCHBASE),
                             equalTo(DB_NAMESPACE, bucketCouchbase.name()),
                             equalTo(DB_OPERATION_NAME, "Bucket.remove"),
-                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
-                                stringKey("couchbase.local.address"), experimentalLocalAddress()),
+                                stringKey("couchbase.local.address"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalLocalAddressAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(
-                                stringKey("couchbase.operation_id"), experimentalOperationId())),
+                                stringKey("couchbase.operation_id"),
+                                includesExperimentalAttributes()
+                                        && includesExperimentalOperationIdAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull())),
                 span ->
                     span.hasName(bucketCouchbase.name())
                         .hasKind(SpanKind.CLIENT)
@@ -306,12 +413,21 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                             satisfies(
                                 DB_QUERY_TEXT,
                                 val -> val.startsWith("ViewQuery(testDocument/all)")),
-                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
                             satisfies(SERVER_ADDRESS, serverAddress()),
                             satisfies(SERVER_PORT, serverPort()),
                             satisfies(
                                 stringKey("couchbase.local.address"),
-                                experimentalLocalAddress()))));
+                                includesExperimentalAttributes()
+                                        && includesExperimentalLocalAddressAttribute()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()))));
   }
 }
