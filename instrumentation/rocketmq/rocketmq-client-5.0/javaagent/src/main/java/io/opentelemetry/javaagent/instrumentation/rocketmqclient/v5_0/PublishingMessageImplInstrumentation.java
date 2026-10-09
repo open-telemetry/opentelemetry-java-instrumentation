@@ -9,7 +9,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -39,8 +38,7 @@ final class PublishingMessageImplInstrumentation implements TypeInstrumentation 
     transformer.applyAdviceToMethod(
         isConstructor().and(isPublic()), getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
-        named("getProperties").and(isPublic()).and(returns(Map.class)),
-        getClass().getName() + "$GetPropertiesAdvice");
+        named("getProperties").and(isPublic()), getClass().getName() + "$GetPropertiesAdvice");
   }
 
   @SuppressWarnings("unused")

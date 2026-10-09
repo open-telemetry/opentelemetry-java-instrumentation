@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.jsf.mojarra.v3_0;
 
 import static io.opentelemetry.javaagent.instrumentation.jsf.mojarra.v3_0.MojarraSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -30,8 +29,7 @@ class ActionListenerImplInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("processAction").and(takesArgument(0, named("jakarta.faces.event.ActionEvent"))),
-        getClass().getName() + "$ProcessActionAdvice");
+        named("processAction"), getClass().getName() + "$ProcessActionAdvice");
   }
 
   @SuppressWarnings("unused")

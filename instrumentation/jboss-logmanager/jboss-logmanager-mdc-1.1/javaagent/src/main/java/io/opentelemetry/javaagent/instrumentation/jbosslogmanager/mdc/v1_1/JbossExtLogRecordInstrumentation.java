@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.jbosslogmanager.mdc.v1_1;
 
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -33,16 +32,12 @@ class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     // available since jboss-logmanager 1.1
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(named("getMdc"))
-            .and(takesArguments(1))
-            .and(takesArgument(0, String.class))
-            .and(returns(String.class)),
+        isPublic().and(named("getMdc")).and(takesArguments(1)).and(takesArgument(0, String.class)),
         getClass().getName() + "$GetMdcAdvice");
 
     // available since jboss-logmanager 1.3
     transformer.applyAdviceToMethod(
-        isPublic().and(takesArguments(0)).and(named("getMdcCopy")).and(returns(Map.class)),
+        isPublic().and(takesArguments(0)).and(named("getMdcCopy")),
         getClass().getName() + "$GetMdcCopyAdvice");
   }
 

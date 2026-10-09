@@ -6,9 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.thrift.v0_13;
 
 import static io.opentelemetry.javaagent.instrumentation.thrift.v0_13.ThriftSingletons.getProtocolDecorator;
-import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
 import io.opentelemetry.instrumentation.thrift.v0_13.internal.ServerCallContext;
@@ -35,15 +33,11 @@ class ThriftFrameBufferInstrumentation implements TypeInstrumentation {
         namedOneOf("invoke").and(takesNoArguments()), getClass().getName() + "$InvokeAdvice");
 
     transformer.applyAdviceToMethod(
-        namedOneOf("getInputProtocol")
-            .and(takesNoArguments())
-            .and(returns(named("org.apache.thrift.protocol.TProtocol"))),
+        namedOneOf("getInputProtocol").and(takesNoArguments()),
         getClass().getName() + "$InputProtocolAdvice");
 
     transformer.applyAdviceToMethod(
-        namedOneOf("getOutputProtocol")
-            .and(takesNoArguments())
-            .and(returns(named("org.apache.thrift.protocol.TProtocol"))),
+        namedOneOf("getOutputProtocol").and(takesNoArguments()),
         getClass().getName() + "$OutputProtocolAdvice");
   }
 

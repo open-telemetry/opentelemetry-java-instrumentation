@@ -43,7 +43,6 @@ class ProducerImplInstrumentation implements TypeInstrumentation {
 
     transformer.applyAdviceToMethod(
         named("sendAsync")
-            .and(takesArgument(0, named("org.apache.pulsar.client.api.Message")))
             .and(takesArgument(1, named("org.apache.pulsar.client.impl.SendCallback"))),
         getClass().getName() + "$ProducerSendAsyncMethodAdvice");
   }

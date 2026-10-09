@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.oracleucp.v11_2;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -28,9 +27,7 @@ class PoolDataSourceInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("createUniversalConnectionPool")
-            .and(takesArguments(0))
-            .and(returns(named("oracle.ucp.UniversalConnectionPool"))),
+        named("createUniversalConnectionPool").and(takesArguments(0)),
         getClass().getName() + "$CreatePoolAdvice");
   }
 

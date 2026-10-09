@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -32,10 +31,7 @@ class SendProcessorInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("process")
-            .and(takesArguments(2))
-            .and(takesArgument(0, named("org.apache.camel.Exchange")))
-            .and(returns(boolean.class)),
+        named("process").and(takesArguments(2)).and(returns(boolean.class)),
         getClass().getName() + "$ProcessAdvice");
   }
 

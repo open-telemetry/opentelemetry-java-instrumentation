@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v3_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v3_0.VertxClientSingletons.CONTEXTS;
 import static io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v3_0.VertxClientSingletons.REQUEST_INFO;
@@ -64,13 +63,10 @@ class HttpRequestInstrumentation implements TypeInstrumentation {
         nameStartsWith("end").or(named("sendHead")), getClass().getName() + "$EndRequestAdvice");
 
     transformer.applyAdviceToMethod(
-        named("handleException").and(takesArgument(0, Throwable.class)),
-        getClass().getName() + "$HandleExceptionAdvice");
+        named("handleException"), getClass().getName() + "$HandleExceptionAdvice");
 
     transformer.applyAdviceToMethod(
-        named("handleResponse")
-            .and(takesArgument(0, hasSuperType(named("io.vertx.core.http.HttpClientResponse")))),
-        getClass().getName() + "$HandleResponseAdvice");
+        named("handleResponse"), getClass().getName() + "$HandleResponseAdvice");
 
     transformer.applyAdviceToMethod(
         isPrivate().and(nameStartsWith("write").or(nameStartsWith("connected"))),

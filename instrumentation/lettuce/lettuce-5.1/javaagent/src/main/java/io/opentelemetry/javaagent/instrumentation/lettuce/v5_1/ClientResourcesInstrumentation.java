@@ -6,13 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_1.TracingHolder.tracing;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.lettuce.core.resource.ClientResources;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -35,11 +33,7 @@ class ClientResourcesInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(isStatic())
-            .and(named("builder"))
-            .and(returns(hasSuperType(named("io.lettuce.core.resource.ClientResources$Builder")))),
-        getClass().getName() + "$BuilderAdvice");
+        isPublic().and(isStatic()).and(named("builder")), getClass().getName() + "$BuilderAdvice");
   }
 
   @SuppressWarnings("unused")

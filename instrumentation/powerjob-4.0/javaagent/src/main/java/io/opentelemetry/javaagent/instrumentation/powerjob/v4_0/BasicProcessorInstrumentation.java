@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.instrumentation.powerjob.v4_0.PowerJobSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -45,8 +44,8 @@ class BasicProcessorInstrumentation implements TypeInstrumentation {
             .and(
                 takesArguments(1)
                     .and(
-                        takesArgument(0, named("tech.powerjob.worker.core.processor.TaskContext"))))
-            .and(returns(named("tech.powerjob.worker.core.processor.ProcessResult"))),
+                        takesArgument(
+                            0, named("tech.powerjob.worker.core.processor.TaskContext")))),
         getClass().getName() + "$ProcessAdvice");
   }
 

@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.client;
 import static io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.client.PekkoHttpClientSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.client.PekkoHttpClientSingletons.setter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
@@ -35,8 +34,7 @@ class HttpExtClientInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("singleRequest")
-            .and(takesArgument(0, named("org.apache.pekko.http.scaladsl.model.HttpRequest")))
-            .and(returns(named("scala.concurrent.Future"))),
+            .and(takesArgument(0, named("org.apache.pekko.http.scaladsl.model.HttpRequest"))),
         getClass().getName() + "$SingleRequestAdvice");
   }
 

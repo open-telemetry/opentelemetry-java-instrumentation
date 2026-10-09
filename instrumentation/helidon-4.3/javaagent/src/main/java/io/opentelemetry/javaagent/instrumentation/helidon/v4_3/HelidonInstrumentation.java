@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.instrumentation.helidon.v4_3.HelidonSin
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.helidon.webserver.http.HttpRouting;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -28,11 +27,7 @@ class HelidonInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(isStatic())
-            .and(named("builder"))
-            .and(returns(named("io.helidon.webserver.http.HttpRouting$Builder"))),
-        getClass().getName() + "$BuildAdvice");
+        isPublic().and(isStatic()).and(named("builder")), getClass().getName() + "$BuildAdvice");
   }
 
   @SuppressWarnings("unused")

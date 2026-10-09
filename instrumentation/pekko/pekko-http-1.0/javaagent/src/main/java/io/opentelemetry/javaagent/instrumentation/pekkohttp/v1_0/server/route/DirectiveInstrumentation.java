@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -29,8 +28,7 @@ class DirectiveInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("tapply").and(takesArguments(1)).and(returns(named("scala.Function1"))),
-        getClass().getName() + "$ApplyAdvice");
+        named("tapply").and(takesArguments(1)), getClass().getName() + "$ApplyAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.instrumentation.servlet.v2_2.Servlet2Singletons.RESPONSE_STATUS;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -46,7 +45,7 @@ class Servlet2HttpServletResponseInstrumentation implements TypeInstrumentation 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        namedOneOf("sendError", "setStatus").and(takesArgument(0, int.class)),
+        namedOneOf("sendError", "setStatus"),
         getClass().getName() + "$Servlet2ResponseStatusAdvice");
     transformer.applyAdviceToMethod(
         named("sendRedirect"), getClass().getName() + "$Servlet2ResponseRedirectAdvice");

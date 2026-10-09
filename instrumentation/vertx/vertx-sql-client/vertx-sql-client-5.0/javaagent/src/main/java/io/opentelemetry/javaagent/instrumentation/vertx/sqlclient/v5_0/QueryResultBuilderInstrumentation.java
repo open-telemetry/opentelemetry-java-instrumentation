@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.endQuerySpan;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -28,9 +27,7 @@ class QueryResultBuilderInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("complete").and(takesArgument(1, Throwable.class)),
-        getClass().getName() + "$CompleteAdvice");
+    transformer.applyAdviceToMethod(named("complete"), getClass().getName() + "$CompleteAdvice");
   }
 
   @SuppressWarnings("unused")

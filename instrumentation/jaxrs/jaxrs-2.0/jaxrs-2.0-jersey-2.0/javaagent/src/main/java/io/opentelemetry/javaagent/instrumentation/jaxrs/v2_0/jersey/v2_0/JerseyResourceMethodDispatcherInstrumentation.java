@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.jersey.v2_0;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -26,7 +26,13 @@ class JerseyResourceMethodDispatcherInstrumentation implements TypeInstrumentati
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("dispatch").and(takesArgument(1, hasSuperType(named("javax.ws.rs.core.Request")))),
+        named("dispatch")
+            .and(
+                takesArgument(
+                    1,
+                    namedOneOf(
+                        "javax.ws.rs.core.Request",
+                        "org.glassfish.jersey.server.ContainerRequest"))),
         getClass().getName() + "$DispatchAdvice");
   }
 

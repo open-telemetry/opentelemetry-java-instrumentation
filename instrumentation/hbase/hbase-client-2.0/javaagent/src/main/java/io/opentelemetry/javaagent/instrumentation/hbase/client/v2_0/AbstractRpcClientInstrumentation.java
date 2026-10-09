@@ -51,7 +51,6 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
                     0,
                     named(
                         "org.apache.hbase.thirdparty.com.google.protobuf.Descriptors$MethodDescriptor")))
-            .and(takesArgument(2, named("org.apache.hbase.thirdparty.com.google.protobuf.Message")))
             .and(takesArgument(4, named("org.apache.hadoop.hbase.security.User"))),
         getClass().getName() + "$CallMethodAdvice");
   }

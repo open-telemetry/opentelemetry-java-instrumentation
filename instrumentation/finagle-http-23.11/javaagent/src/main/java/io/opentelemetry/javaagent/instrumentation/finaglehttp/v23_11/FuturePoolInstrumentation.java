@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -30,9 +29,7 @@ class FuturePoolInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("apply").and(takesArgument(0, named("scala.Function0"))),
-        getClass().getName() + "$ApplyAdvice");
+    transformer.applyAdviceToMethod(named("apply"), getClass().getName() + "$ApplyAdvice");
   }
 
   @SuppressWarnings("unused")

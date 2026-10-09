@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.mongo.v4_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -49,10 +48,7 @@ class ClusterSettingsBuilderInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("com.mongodb.connection.ClusterSettings"))),
         getClass().getName() + "$ApplySettingsAdvice");
     transformer.applyAdviceToMethod(
-        named("build")
-            .and(takesArguments(0))
-            .and(returns(named("com.mongodb.connection.ClusterSettings"))),
-        getClass().getName() + "$BuildAdvice");
+        named("build").and(takesArguments(0)), getClass().getName() + "$BuildAdvice");
   }
 
   @SuppressWarnings("unused")

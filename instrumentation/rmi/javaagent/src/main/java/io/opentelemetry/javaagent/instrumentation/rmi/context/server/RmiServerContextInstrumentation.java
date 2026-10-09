@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.rmi.context.server;
 import static io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPropagator.CONTEXT_CALL_ID;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -32,8 +31,7 @@ public class RmiServerContextInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isStatic()
             .and(named("getTarget"))
-            .and(takesArgument(0, named("sun.rmi.transport.ObjectEndpoint")))
-            .and(returns(named("sun.rmi.transport.Target"))),
+            .and(takesArgument(0, named("sun.rmi.transport.ObjectEndpoint"))),
         getClass().getName() + "$ObjectTableAdvice");
   }
 

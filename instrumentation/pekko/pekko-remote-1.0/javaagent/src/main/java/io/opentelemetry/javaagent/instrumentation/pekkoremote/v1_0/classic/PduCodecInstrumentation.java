@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.classic;
 
 import static io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.classic.VirtualFields.SERIALIZED_MESSAGE_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
@@ -33,12 +32,9 @@ class PduCodecInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("constructMessage").and(returns(named("org.apache.pekko.util.ByteString"))),
-        getClass().getName() + "$ConstructMessageAdvice");
+        named("constructMessage"), getClass().getName() + "$ConstructMessageAdvice");
     transformer.applyAdviceToMethod(
-        named("decodeMessage")
-            .and(takesArgument(0, named("org.apache.pekko.util.ByteString")))
-            .and(returns(named("scala.Tuple2"))),
+        named("decodeMessage").and(takesArgument(0, named("org.apache.pekko.util.ByteString"))),
         getClass().getName() + "$DecodeMessageAdvice");
   }
 

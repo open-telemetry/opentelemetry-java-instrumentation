@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.client.A
 import static io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.client.AkkaHttpClientSingletons.setter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import akka.actor.ActorSystem;
@@ -39,8 +38,7 @@ class HttpExtClientInstrumentation implements TypeInstrumentation {
     // singleRequestImpl is only present in 10.1.x
     transformer.applyAdviceToMethod(
         namedOneOf("singleRequest", "singleRequestImpl")
-            .and(takesArgument(0, named("akka.http.scaladsl.model.HttpRequest")))
-            .and(returns(named("scala.concurrent.Future"))),
+            .and(takesArgument(0, named("akka.http.scaladsl.model.HttpRequest"))),
         getClass().getName() + "$SingleRequestAdvice");
   }
 

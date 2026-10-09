@@ -33,8 +33,7 @@ class LettuceConnectInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("connectStandalone").and(takesArgument(1, named("com.lambdaworks.redis.RedisURI"))),
-        getClass().getName() + "$ConnectAdvice");
+        named("connectStandalone"), getClass().getName() + "$ConnectAdvice");
     // connectStateful in lettuce 4.0-4.3, connectStatefulAsync in lettuce 4.4+
     transformer.applyAdviceToMethod(
         nameStartsWith("connectStateful")

@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.producerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -37,8 +36,7 @@ class SendCallbackInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("sendComplete").and(takesArgument(0, hasSuperType(named(Throwable.class.getName())))),
-        getClass().getName() + "$SendCallbackSendCompleteAdvice");
+        named("sendComplete"), getClass().getName() + "$SendCallbackSendCompleteAdvice");
   }
 
   @SuppressWarnings("unused")

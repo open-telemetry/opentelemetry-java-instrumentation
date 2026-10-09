@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -33,37 +32,22 @@ public class CouchbaseCoreInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isStatic()
-            .and(named("create"))
-            .and(takesArguments(3))
-            .and(takesArgument(0, named("com.couchbase.client.core.env.CoreEnvironment")))
-            .and(takesArgument(2, Set.class))
-            .and(returns(named("com.couchbase.client.core.Core"))),
+        isStatic().and(named("create")).and(takesArguments(3)).and(takesArgument(2, Set.class)),
         getClass().getName() + "$SeedNodesFactoryAdvice");
     transformer.applyAdviceToMethod(
-        isConstructor()
-            .and(takesArguments(3))
-            .and(takesArgument(0, named("com.couchbase.client.core.env.CoreEnvironment")))
-            .and(takesArgument(2, Set.class)),
+        isConstructor().and(takesArguments(3)).and(takesArgument(2, Set.class)),
         getClass().getName() + "$SeedNodesConstructorAdvice");
     transformer.applyAdviceToMethod(
-        isConstructor()
-            .and(takesArguments(4))
-            .and(takesArgument(0, named("com.couchbase.client.core.env.CoreEnvironment")))
-            .and(takesArgument(2, Set.class))
-            .and(takesArgument(3, String.class)),
+        isConstructor().and(takesArguments(4)).and(takesArgument(3, String.class)),
         getClass().getName() + "$TextConstructorAdvice");
     transformer.applyAdviceToMethod(
         isConstructor()
             .and(takesArguments(4))
-            .and(takesArgument(0, named("com.couchbase.client.core.env.CoreEnvironment")))
-            .and(takesArgument(2, Set.class))
             .and(takesArgument(3, named("com.couchbase.client.core.util.ConnectionString"))),
         getClass().getName() + "$ParsedSeedNodesConstructorAdvice");
     transformer.applyAdviceToMethod(
         isConstructor()
             .and(takesArguments(3))
-            .and(takesArgument(0, named("com.couchbase.client.core.env.CoreEnvironment")))
             .and(takesArgument(2, named("com.couchbase.client.core.util.ConnectionString"))),
         getClass().getName() + "$ParsedConstructorAdvice");
   }

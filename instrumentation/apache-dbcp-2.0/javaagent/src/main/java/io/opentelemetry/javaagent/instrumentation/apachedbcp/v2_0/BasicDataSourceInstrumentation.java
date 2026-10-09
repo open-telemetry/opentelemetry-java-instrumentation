@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0.ApacheD
 import static io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0.ApacheDbcpSingletons.telemetry;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Scope;
@@ -46,7 +45,7 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$CloseAdvice");
 
     typeTransformer.applyAdviceToMethod(
-        isPublic().and(named("preRegister")).and(takesArguments(2)).and(returns(ObjectName.class)),
+        isPublic().and(named("preRegister")).and(takesArguments(2)),
         getClass().getName() + "$PreRegisterAdvice");
   }
 

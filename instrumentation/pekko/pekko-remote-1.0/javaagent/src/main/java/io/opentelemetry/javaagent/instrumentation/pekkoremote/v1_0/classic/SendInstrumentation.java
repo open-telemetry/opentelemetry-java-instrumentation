@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.classic;
 import static io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.classic.VirtualFields.SEND_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
@@ -36,10 +35,7 @@ class SendInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
-        named("copy")
-            .and(takesArguments(4))
-            .and(returns(named("org.apache.pekko.remote.EndpointManager$Send"))),
-        getClass().getName() + "$CopyAdvice");
+        named("copy").and(takesArguments(4)), getClass().getName() + "$CopyAdvice");
   }
 
   @SuppressWarnings("unused")

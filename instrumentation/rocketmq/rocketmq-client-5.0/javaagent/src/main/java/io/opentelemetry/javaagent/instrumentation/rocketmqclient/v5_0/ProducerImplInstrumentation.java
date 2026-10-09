@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0.RocketMqSingletons.producerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -55,7 +54,9 @@ final class ProducerImplInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$SendAdvice");
 
     transformer.applyAdviceToMethod(
-        named("sendAsync").and(takesArguments(1)).and(returns(CompletableFuture.class)),
+        named("sendAsync")
+            .and(takesArguments(1))
+            .and(takesArgument(0, named("org.apache.rocketmq.client.apis.message.Message"))),
         getClass().getName() + "$SendAsyncAdvice");
   }
 

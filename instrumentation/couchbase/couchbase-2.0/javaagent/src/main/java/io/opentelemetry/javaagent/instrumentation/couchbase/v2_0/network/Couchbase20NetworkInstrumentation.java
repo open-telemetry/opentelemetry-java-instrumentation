@@ -15,6 +15,7 @@ import com.couchbase.client.deps.io.netty.channel.ChannelHandlerContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseRequestInfo;
+import java.util.List;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -34,7 +35,7 @@ class Couchbase20NetworkInstrumentation implements TypeInstrumentation {
             .and(
                 takesArgument(
                     0, named("com.couchbase.client.deps.io.netty.channel.ChannelHandlerContext")))
-            .and(takesArgument(1, named("com.couchbase.client.core.message.CouchbaseRequest"))),
+            .and(takesArgument(2, List.class)),
         getClass().getName() + "$CouchbaseNetworkAdvice");
   }
 

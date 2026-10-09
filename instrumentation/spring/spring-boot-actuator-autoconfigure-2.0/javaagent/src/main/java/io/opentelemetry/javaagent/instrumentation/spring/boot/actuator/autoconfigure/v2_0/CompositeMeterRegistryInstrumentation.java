@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.spring.boot.actuator.autoconfigure.v2_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
 import io.micrometer.core.instrument.MeterRegistry;
@@ -29,7 +28,7 @@ class CompositeMeterRegistryInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("getRegistries").and(takesNoArguments()).and(returns(Set.class)),
+        named("getRegistries").and(takesNoArguments()),
         getClass().getName() + "$GetRegistriesAdvice");
   }
 
