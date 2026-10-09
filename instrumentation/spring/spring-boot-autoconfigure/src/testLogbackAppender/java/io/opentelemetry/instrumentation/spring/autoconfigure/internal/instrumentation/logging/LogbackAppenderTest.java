@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import javax.annotation.Nullable;
 import net.logstash.logback.argument.StructuredArguments;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -204,10 +203,10 @@ class LogbackAppenderTest {
   }
 
   private static final class CapturingOpenTelemetryAppender extends OpenTelemetryAppender {
-    @Nullable private IncludeExclude structuredAttributes;
+    private IncludeExclude structuredAttributes;
 
     @Override
-    public void setStructuredAttributes(@Nullable IncludeExclude structuredAttributes) {
+    public void setStructuredAttributes(IncludeExclude structuredAttributes) {
       this.structuredAttributes = structuredAttributes;
     }
   }
