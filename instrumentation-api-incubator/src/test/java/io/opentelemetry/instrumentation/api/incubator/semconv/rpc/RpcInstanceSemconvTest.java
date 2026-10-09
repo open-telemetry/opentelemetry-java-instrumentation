@@ -132,6 +132,32 @@ class RpcInstanceSemconvTest {
     }
   }
 
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void nestedOldOnlyOperationDoesNotInheritParentMethod(boolean client) {
+    ConfiguredInstrumenter parent = createInstrumenter(!client, true, true);
+    ConfiguredInstrumenter child = createInstrumenter(client, false, false);
+    Context parentContext = parent.instrumenter.start(Context.root(), "parent");
+    Context childContext = child.instrumenter.start(parentContext, "request");
+    child.instrumenter.end(childContext, "request", null, null);
+    parent.instrumenter.end(parentContext, "parent", null, null);
+
+    assertThat(child.metricReader.collectAllMetrics())
+        .singleElement()
+        .satisfies(
+            metric ->
+                assertThat(metric)
+                    .hasName(client ? "rpc.client.duration" : "rpc.server.duration")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point.hasAttributesSatisfyingExactly(
+                                        equalTo(RPC_SYSTEM, "test"),
+                                        equalTo(RPC_SERVICE, "package.Service"),
+                                        equalTo(RPC_METHOD, "Method")))));
+  }
+
   private ConfiguredInstrumenter createInstrumenter(
       boolean client, boolean preview, boolean dualEmit) {
     InMemorySpanExporter spanExporter = InMemorySpanExporter.create();
@@ -189,7 +215,7 @@ class RpcInstanceSemconvTest {
 
           @Override
           public String getMethod(String request) {
-            return "Method";
+            return request.equals("parent") ? "ParentMethod" : "Method";
           }
 
           @Override
@@ -199,7 +225,7 @@ class RpcInstanceSemconvTest {
 
           @Override
           public String getRpcMethod(String request) {
-            return "Service/Method";
+            return "Service/" + getMethod(request);
           }
         };
     InstrumenterBuilder<String, Void> builder =

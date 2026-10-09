@@ -48,8 +48,10 @@ public final class RpcServerMetrics implements OperationListener {
   @Nullable private final DoubleHistogram stableServerDurationHistogram;
   @Nullable private final LongHistogram oldServerRequestSize;
   @Nullable private final LongHistogram oldServerResponseSize;
+  private final boolean dualEmit;
 
   private RpcServerMetrics(Meter meter, boolean emitOldRpcSemconv, boolean emitPreviewRpcSemconv) {
+    dualEmit = emitOldRpcSemconv && emitPreviewRpcSemconv;
     // Old metric (milliseconds)
     if (emitOldRpcSemconv) {
       DoubleHistogramBuilder oldDurationBuilder =
@@ -125,7 +127,9 @@ public final class RpcServerMetrics implements OperationListener {
     return context.with(
         RPC_SERVER_REQUEST_METRICS_STATE,
         new AutoValue_RpcServerMetrics_State(
-            startAttributes, startNanos, context.get(OLD_RPC_METHOD_CONTEXT_KEY)));
+            startAttributes,
+            startNanos,
+            dualEmit ? context.get(OLD_RPC_METHOD_CONTEXT_KEY) : null));
   }
 
   @Override
