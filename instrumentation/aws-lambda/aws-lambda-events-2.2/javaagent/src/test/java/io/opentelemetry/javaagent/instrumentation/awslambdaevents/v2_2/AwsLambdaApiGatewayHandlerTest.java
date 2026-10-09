@@ -12,6 +12,7 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
+import static io.opentelemetry.semconv.UrlAttributes.URL_QUERY;
 import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
@@ -28,6 +29,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.SchemaUrls;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -66,6 +68,9 @@ class AwsLambdaApiGatewayHandlerTest {
     headers.put("User-Agent", "Clever Client");
     headers.put("host", "localhost:2024");
     headers.put("X-FORWARDED-PROTO", "http");
+    Map<String, String> query = new LinkedHashMap<>();
+    query.put("q", "value");
+    query.put("sig", "secret");
 
     APIGatewayProxyRequestEvent input =
         new APIGatewayProxyRequestEvent()
@@ -74,6 +79,7 @@ class AwsLambdaApiGatewayHandlerTest {
             .withPath("/hello/world")
             .withBody("hello")
             .withHeaders(headers);
+    input.setQueryStringParameters(query);
 
     APIGatewayProxyResponseEvent result =
         new TestRequestHandlerApiGateway().handleRequest(input, context);
@@ -97,7 +103,9 @@ class AwsLambdaApiGatewayHandlerTest {
                             equalTo(URL_SCHEME, "http"),
                             equalTo(HTTP_ROUTE, "/hello/{param}"),
                             equalTo(USER_AGENT_ORIGINAL, "Clever Client"),
-                            equalTo(URL_FULL, "http://localhost:2024/hello/world"),
+                            equalTo(
+                                URL_FULL, "http://localhost:2024/hello/world?q=value&sig=REDACTED"),
+                            equalTo(URL_QUERY, "q=value&sig=REDACTED"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 201L))));
   }
 

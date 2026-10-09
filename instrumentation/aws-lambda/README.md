@@ -9,3 +9,6 @@ We provide two packages for instrumenting AWS lambda functions.
 
 - [aws-lambda-events-3.11](./aws-lambda-events-3.11/library) provides instrumentation of the Lambda library, including standard and custom event
   types, from `aws-lambda-java-events` 3.11+.
+
+API Gateway proxy request spans include `url.query` when query parameters are present.
+Sensitive query parameter values are redacted using the same configuration as `url.full`.
