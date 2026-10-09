@@ -215,6 +215,8 @@ The attributes reported on the memory metrics (`jvm.memory.*`) and gc metrics (`
 
 The following lists attributes reported for a variety of garbage collectors. Notice that attributes are not necessarily constant across `*.used`, `*.committed`, and `*.limit` since not all memory pools report a limit.
 
+Every `jvm.gc.duration` point also includes `jvm.gc.cause`, omitted from the examples below because its value varies by collection (for example, `Allocation Failure` or `System.gc()`).
+
 - CMS Garbage Collector
   - `jvm.memory.used`: {jvm.memory.pool.name=Compressed Class Space,jvm.memory.type=non_heap}, {jvm.memory.pool.name=Par Eden Space,jvm.memory.type=heap}, {jvm.memory.pool.name=Tenured Gen,jvm.memory.type=heap}, {jvm.memory.pool.name=Par Survivor Space,jvm.memory.type=heap}, {jvm.memory.pool.name=Code Cache,jvm.memory.type=non_heap}, {jvm.memory.pool.name=Metaspace,jvm.memory.type=non_heap}
   - `jvm.memory.committed`: {jvm.memory.pool.name=Compressed Class Space,jvm.memory.type=non_heap}, {jvm.memory.pool.name=Par Eden Space,jvm.memory.type=heap}, {jvm.memory.pool.name=Tenured Gen,jvm.memory.type=heap}, {jvm.memory.pool.name=Par Survivor Space,jvm.memory.type=heap}, {jvm.memory.pool.name=Code Cache,jvm.memory.type=non_heap}, {jvm.memory.pool.name=Metaspace,jvm.memory.type=non_heap}
