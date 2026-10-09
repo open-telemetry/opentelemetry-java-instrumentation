@@ -30,9 +30,7 @@ class JerseyServletContainerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("service")
-            .and(takesArgument(0, named("jakarta.servlet.http.HttpServletRequest")))
-            .and(takesArgument(1, named("jakarta.servlet.http.HttpServletResponse"))),
+        named("service").and(takesArgument(0, named("jakarta.servlet.http.HttpServletRequest"))),
         getClass().getName() + "$ServiceAdvice");
   }
 

@@ -30,11 +30,8 @@ class ClientCallableRpcInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("invokeMethod")
-            .and(takesArgument(0, named("com.vaadin.flow.component.Component")))
             .and(takesArgument(1, named(Class.class.getName())))
-            .and(takesArgument(2, named(String.class.getName())))
-            .and(takesArgument(3, named("elemental.json.JsonArray")))
-            .and(takesArgument(4, named(int.class.getName()))),
+            .and(takesArgument(2, named(String.class.getName()))),
         getClass().getName() + "$InvokeMethodAdvice");
   }
 

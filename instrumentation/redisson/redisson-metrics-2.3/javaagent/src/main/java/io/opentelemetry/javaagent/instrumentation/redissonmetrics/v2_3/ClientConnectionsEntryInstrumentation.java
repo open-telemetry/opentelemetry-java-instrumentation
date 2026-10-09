@@ -36,8 +36,7 @@ class ClientConnectionsEntryInstrumentation implements TypeInstrumentation {
             .and(takesArgument(2, int.class))
             .and(takesArgument(3, int.class))
             .and(takesArgument(4, int.class))
-            .and(takesArgument(5, named("org.redisson.connection.ConnectionManager")))
-            .and(takesArgument(6, named("org.redisson.api.NodeType"))),
+            .and(takesArgument(5, named("org.redisson.connection.ConnectionManager"))),
         getClass().getName() + "$ConstructorAdvice");
   }
 

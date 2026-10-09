@@ -71,7 +71,6 @@ class SessionInstrumentation implements TypeInstrumentation {
     // Handle the non-generic 'get' separately.
     transformer.applyAdviceToMethod(
         namedOneOf("get", "find")
-            .and(returns(Object.class))
             .and(takesArgument(0, String.class).or(takesArgument(0, Class.class))),
         getClass().getName() + "$SessionMethodAdvice");
 

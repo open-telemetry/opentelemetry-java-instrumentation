@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.httpclient;
 import static io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.httpclient.RatpackSingletons.httpClient;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -27,7 +27,7 @@ class HttpClientInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isStatic().and(named("of")).and(takesArgument(0, named("ratpack.func.Action"))),
+        isStatic().and(named("of")).and(returns(named("ratpack.http.client.HttpClient"))),
         getClass().getName() + "$OfAdvice");
   }
 

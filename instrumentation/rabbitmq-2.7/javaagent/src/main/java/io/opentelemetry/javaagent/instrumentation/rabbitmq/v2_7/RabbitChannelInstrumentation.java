@@ -21,6 +21,7 @@ import static net.bytebuddy.matcher.ElementMatchers.nameEndsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.not;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -86,14 +87,23 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
             .and(canThrow(IOException.class).or(canThrow(InterruptedException.class))),
         getClass().getName() + "$ChannelMethodAdvice");
     transformer.applyAdviceToMethod(
-        named("basicPublish").and(takesArguments(6)),
+        named("basicPublish")
+            .and(takesArguments(6))
+            .and(takesArgument(0, String.class))
+            .and(takesArgument(1, String.class))
+            .and(takesArgument(4, named("com.rabbitmq.client.AMQP$BasicProperties"))),
         getClass().getName() + "$ChannelPublishAdvice");
     // amqp-client 5.30.0 added a ByteBuffer overload that ChannelN implements directly instead of
     // delegating to the byte array one, so it needs its own advice; the trailing WriteListener
     // argument is deliberately neither bound nor referenced, so that this stays loadable on the
     // older versions that the instrumentation still supports
     transformer.applyAdviceToMethod(
-        named("basicPublish").and(takesArguments(7)).and(takesArgument(5, ByteBuffer.class)),
+        named("basicPublish")
+            .and(takesArguments(7))
+            .and(takesArgument(0, String.class))
+            .and(takesArgument(1, String.class))
+            .and(takesArgument(4, named("com.rabbitmq.client.AMQP$BasicProperties")))
+            .and(takesArgument(5, ByteBuffer.class)),
         getClass().getName() + "$ChannelPublishByteBufferAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf("basicAck", "basicNack", "basicReject")
@@ -101,7 +111,9 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, long.class)),
         getClass().getName() + "$ChannelSettleAdvice");
     transformer.applyAdviceToMethod(
-        named("basicGet").and(takesArgument(0, String.class)),
+        named("basicGet")
+            .and(takesArgument(0, String.class))
+            .and(returns(named("com.rabbitmq.client.GetResponse"))),
         getClass().getName() + "$ChannelGetAdvice");
     transformer.applyAdviceToMethod(
         named("basicConsume")

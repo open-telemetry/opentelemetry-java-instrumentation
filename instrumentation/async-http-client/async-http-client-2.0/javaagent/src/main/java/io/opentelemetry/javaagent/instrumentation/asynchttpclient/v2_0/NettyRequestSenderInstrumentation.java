@@ -36,21 +36,17 @@ class NettyRequestSenderInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("sendRequest")
             .and(takesArgument(0, named("org.asynchttpclient.Request")))
-            .and(takesArgument(1, named("org.asynchttpclient.AsyncHandler")))
             .and(isPublic()),
         getClass().getName() + "$AttachContextAdvice");
 
     transformer.applyAdviceToMethod(
         named("writeRequest")
             .and(takesArgument(0, named("org.asynchttpclient.netty.NettyResponseFuture")))
-            .and(takesArgument(1, named("io.netty.channel.Channel")))
             .and(isPublic()),
         getClass().getName() + "$MountContextAdvice");
 
     transformer.applyAdviceToMethod(
         named("newNettyRequestAndResponseFuture")
-            .and(takesArgument(0, named("org.asynchttpclient.Request")))
-            .and(takesArgument(1, named("org.asynchttpclient.AsyncHandler")))
             .and(returns(named("org.asynchttpclient.netty.NettyResponseFuture"))),
         getClass().getName() + "$RememberNettyRequestAdvice");
   }

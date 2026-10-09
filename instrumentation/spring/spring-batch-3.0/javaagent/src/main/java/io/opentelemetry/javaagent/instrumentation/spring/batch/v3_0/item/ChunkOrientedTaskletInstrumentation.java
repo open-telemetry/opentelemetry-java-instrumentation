@@ -35,7 +35,6 @@ public class ChunkOrientedTaskletInstrumentation implements TypeInstrumentation 
         isPublic()
             .and(named("execute"))
             .and(takesArguments(2))
-            .and(takesArgument(0, named("org.springframework.batch.core.StepContribution")))
             .and(
                 takesArgument(
                     1, named("org.springframework.batch.core.scope.context.ChunkContext"))),

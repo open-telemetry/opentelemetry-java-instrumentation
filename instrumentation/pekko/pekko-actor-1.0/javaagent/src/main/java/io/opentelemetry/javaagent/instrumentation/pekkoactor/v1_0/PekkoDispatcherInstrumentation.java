@@ -31,9 +31,7 @@ class PekkoDispatcherInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("dispatch")
-            .and(takesArgument(0, named("org.apache.pekko.actor.ActorCell")))
-            .and(takesArgument(1, named("org.apache.pekko.dispatch.Envelope"))),
+        named("dispatch").and(takesArgument(1, named("org.apache.pekko.dispatch.Envelope"))),
         getClass().getName() + "$DispatchEnvelopeAdvice");
   }
 

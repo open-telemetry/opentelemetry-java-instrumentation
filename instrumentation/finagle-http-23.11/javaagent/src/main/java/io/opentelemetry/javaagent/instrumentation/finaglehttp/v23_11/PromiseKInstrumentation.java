@@ -34,9 +34,7 @@ class PromiseKInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isConstructor().and(takesArgument(0, named("com.twitter.util.Local$Context"))),
-        getClass().getName() + "$TrapContextAdvice");
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$TrapContextAdvice");
     transformer.applyAdviceToMethod(
         named("apply").and(takesArgument(0, named("com.twitter.util.Try"))),
         getClass().getName() + "$ApplyAdvice");

@@ -37,10 +37,7 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
-        named("setHost")
-            .and(takesArguments(1))
-            .and(takesArgument(0, String.class))
-            .or(named("setPort").and(takesArguments(1)).and(takesArgument(0, int.class))),
+        named("setHost").and(takesArguments(1)).or(named("setPort").and(takesArguments(1))),
         getClass().getName() + "$SetTargetAdvice");
 
     transformer.applyAdviceToMethod(

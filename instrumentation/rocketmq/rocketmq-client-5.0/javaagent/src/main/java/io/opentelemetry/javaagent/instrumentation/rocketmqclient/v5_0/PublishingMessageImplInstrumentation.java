@@ -9,7 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -37,16 +37,10 @@ final class PublishingMessageImplInstrumentation implements TypeInstrumentation 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor()
-            .and(isPublic())
-            .and(takesArgument(0, named("org.apache.rocketmq.client.apis.message.Message")))
-            .and(
-                takesArgument(
-                    1, named("org.apache.rocketmq.client.java.impl.producer.PublishingSettings")))
-            .and(takesArgument(2, boolean.class)),
-        getClass().getName() + "$ConstructorAdvice");
+        isConstructor().and(isPublic()), getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
-        named("getProperties").and(isPublic()), getClass().getName() + "$GetPropertiesAdvice");
+        named("getProperties").and(isPublic()).and(returns(Map.class)),
+        getClass().getName() + "$GetPropertiesAdvice");
   }
 
   @SuppressWarnings("unused")

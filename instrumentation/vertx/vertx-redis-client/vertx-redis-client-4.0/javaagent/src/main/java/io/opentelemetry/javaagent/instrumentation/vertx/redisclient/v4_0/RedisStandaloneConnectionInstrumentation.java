@@ -9,6 +9,8 @@ import static io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0.
 import static io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0.VertxRedisClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -37,8 +39,16 @@ class RedisStandaloneConnectionInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(named("send"), getClass().getName() + "$SendAdvice");
-    transformer.applyAdviceToMethod(named("batch"), getClass().getName() + "$BatchAdvice");
+    transformer.applyAdviceToMethod(
+        named("send")
+            .and(takesArgument(0, named("io.vertx.redis.client.Request")))
+            .and(returns(named("io.vertx.core.Future"))),
+        getClass().getName() + "$SendAdvice");
+    transformer.applyAdviceToMethod(
+        named("batch")
+            .and(takesArgument(0, List.class))
+            .and(returns(named("io.vertx.core.Future"))),
+        getClass().getName() + "$BatchAdvice");
     transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
   }
 

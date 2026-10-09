@@ -26,10 +26,7 @@ class SoapFaultBuilderInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("createSOAPFaultMessage")
-            .and(takesArgument(0, named("com.sun.xml.ws.api.SOAPVersion")))
-            .and(takesArgument(1, named("com.sun.xml.ws.model.CheckedExceptionImpl")))
-            .and(takesArgument(2, named(Throwable.class.getName()))),
+        named("createSOAPFaultMessage").and(takesArgument(2, named(Throwable.class.getName()))),
         getClass().getName() + "$CaptureThrowableAdvice");
   }
 

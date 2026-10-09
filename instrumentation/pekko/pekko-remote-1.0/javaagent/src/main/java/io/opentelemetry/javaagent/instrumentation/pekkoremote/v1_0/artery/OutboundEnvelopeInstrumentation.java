@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.artery;
 
 import static io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.artery.VirtualFields.OUTBOUND_ENVELOPE_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
@@ -34,7 +35,10 @@ class OutboundEnvelopeInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("init").and(takesArguments(3)), getClass().getName() + "$InitAdvice");
     transformer.applyAdviceToMethod(
-        named("copy").and(takesArguments(0)), getClass().getName() + "$CopyAdvice");
+        named("copy")
+            .and(takesArguments(0))
+            .and(returns(named("org.apache.pekko.remote.artery.OutboundEnvelope"))),
+        getClass().getName() + "$CopyAdvice");
     transformer.applyAdviceToMethod(
         named("clear").and(takesArguments(0)), getClass().getName() + "$ClearAdvice");
   }

@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.resteasy.v6_0;
 
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.resteasy.v6_0.ResteasySingletons.INVOKER_NAME;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -26,11 +25,7 @@ class ResteasyResourceMethodInvokerInstrumentation implements TypeInstrumentatio
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("invokeOnTarget")
-            .and(takesArgument(0, named("org.jboss.resteasy.spi.HttpRequest")))
-            .and(takesArgument(1, named("org.jboss.resteasy.spi.HttpResponse")))
-            .and(takesArgument(2, Object.class)),
-        getClass().getName() + "$InvokeOnTargetAdvice");
+        named("invokeOnTarget"), getClass().getName() + "$InvokeOnTargetAdvice");
   }
 
   @SuppressWarnings("unused")

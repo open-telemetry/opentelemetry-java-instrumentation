@@ -13,6 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -50,8 +51,8 @@ class HandlerAdapterInstrumentation implements TypeInstrumentation {
         isPublic()
             .and(named("handle"))
             .and(takesArgument(0, named("org.springframework.web.server.ServerWebExchange")))
-            .and(takesArgument(1, Object.class))
-            .and(takesArguments(2)),
+            .and(takesArguments(2))
+            .and(returns(named("reactor.core.publisher.Mono"))),
         getClass().getName() + "$HandleAdvice");
   }
 

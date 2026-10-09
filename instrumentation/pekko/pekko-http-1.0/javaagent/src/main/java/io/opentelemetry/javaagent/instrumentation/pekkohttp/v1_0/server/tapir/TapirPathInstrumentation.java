@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.tapir;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -27,7 +28,9 @@ class TapirPathInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("pekkoHttpServerOptions").and(takesArguments(0)),
+        named("pekkoHttpServerOptions")
+            .and(takesArguments(0))
+            .and(returns(named("sttp.tapir.server.pekkohttp.PekkoHttpServerOptions"))),
         getClass().getName() + "$ApplyAdvice");
   }
 

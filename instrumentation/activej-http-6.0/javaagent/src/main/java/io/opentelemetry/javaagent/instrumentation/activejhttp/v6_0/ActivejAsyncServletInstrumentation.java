@@ -11,6 +11,7 @@ import static io.opentelemetry.javaagent.instrumentation.activejhttp.v6_0.Active
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -43,7 +44,8 @@ class ActivejAsyncServletInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("serve")
-            .and(takesArguments(1).and(takesArgument(0, named("io.activej.http.HttpRequest")))),
+            .and(takesArguments(1).and(takesArgument(0, named("io.activej.http.HttpRequest"))))
+            .and(returns(named("io.activej.promise.Promise"))),
         getClass().getName() + "$ServeAdvice");
   }
 

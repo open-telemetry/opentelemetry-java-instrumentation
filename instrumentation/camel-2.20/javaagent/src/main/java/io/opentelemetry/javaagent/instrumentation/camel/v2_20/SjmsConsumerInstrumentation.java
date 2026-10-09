@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -32,7 +31,6 @@ class SjmsConsumerInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("createMessageHandler")
             .and(takesArguments(1))
-            .and(takesArgument(0, named("javax.jms.Session")))
             .and(returns(named("javax.jms.MessageListener")))
             .and(isProtected()),
         getClass().getName() + "$CreateMessageHandlerAdvice");

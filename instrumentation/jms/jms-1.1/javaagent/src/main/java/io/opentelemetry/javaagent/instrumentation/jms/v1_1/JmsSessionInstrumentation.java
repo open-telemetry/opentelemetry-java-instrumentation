@@ -6,10 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.jms.v1_1;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -41,6 +43,7 @@ class JmsSessionInstrumentation implements TypeInstrumentation {
                 "createSharedConsumer",
                 "createSharedDurableConsumer")
             .and(takesArgument(1, String.class))
+            .and(returns(hasSuperType(named("javax.jms.MessageConsumer"))))
             .and(isPublic()),
         getClass().getName() + "$CreateDurableConsumerAdvice");
   }

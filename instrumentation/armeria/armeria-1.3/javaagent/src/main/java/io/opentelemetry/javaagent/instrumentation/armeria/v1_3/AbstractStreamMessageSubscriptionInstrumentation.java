@@ -32,21 +32,11 @@ class AbstractStreamMessageSubscriptionInstrumentation implements TypeInstrument
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor()
-            .and(
-                takesArgument(
-                    0,
-                    namedOneOf(
-                        "com.linecorp.armeria.common.stream.AbstractStreamMessage",
-                        "com.linecorp.armeria.common.stream.CancellableStreamMessage")))
-            .and(takesArgument(1, named("org.reactivestreams.Subscriber"))),
+        isConstructor().and(takesArgument(1, named("org.reactivestreams.Subscriber"))),
         getClass().getName() + "$WrapSubscriberAdvice");
     // from 1.9.0 to 1.9.2
     transformer.applyAdviceToMethod(
-        isConstructor()
-            .and(
-                takesArgument(0, named("com.linecorp.armeria.common.stream.AbstractStreamMessage")))
-            .and(takesArgument(4, CompletableFuture.class)),
+        isConstructor().and(takesArgument(4, CompletableFuture.class)),
         getClass().getName() + "$WrapCompletableFutureAdvice");
   }
 

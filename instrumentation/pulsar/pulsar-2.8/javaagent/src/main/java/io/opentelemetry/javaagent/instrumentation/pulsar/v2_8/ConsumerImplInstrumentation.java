@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.internalReceiveSpanSuppression;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.startAndEndConsumerReceive;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.wrap;
@@ -13,6 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -21,7 +23,6 @@ import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
@@ -45,7 +46,10 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor(), getClass().getName() + "$ConsumerConstructorAdvice");
+        isConstructor()
+            .and(
+                takesArgument(0, hasSuperType(named("org.apache.pulsar.client.api.PulsarClient")))),
+        getClass().getName() + "$ConsumerConstructorAdvice");
 
     // internalReceive will apply to Consumer#receive(long,TimeUnit)
     // and called before MessageListener#receive.
@@ -53,20 +57,29 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
         isProtected()
             .and(named("internalReceive"))
             .and(takesArguments(2))
-            .and(takesArgument(1, TimeUnit.class)),
+            .and(returns(named("org.apache.pulsar.client.api.Message"))),
         getClass().getName() + "$ConsumerInternalReceiveAdvice");
     // internalReceive will apply to Consumer#receive()
     transformer.applyAdviceToMethod(
-        isProtected().and(named("internalReceive")).and(takesArguments(0)),
+        isProtected()
+            .and(named("internalReceive"))
+            .and(takesArguments(0))
+            .and(returns(named("org.apache.pulsar.client.api.Message"))),
         getClass().getName() + "$ConsumerSyncReceiveAdvice");
     // internalReceiveAsync will apply to Consumer#receiveAsync()
     transformer.applyAdviceToMethod(
-        isProtected().and(named("internalReceiveAsync")).and(takesArguments(0)),
+        isProtected()
+            .and(named("internalReceiveAsync"))
+            .and(takesArguments(0))
+            .and(returns(CompletableFuture.class)),
         getClass().getName() + "$ConsumerAsyncReceiveAdvice");
     // internalBatchReceiveAsync will apply to Consumer#batchReceive() and
     // Consumer#batchReceiveAsync()
     transformer.applyAdviceToMethod(
-        isProtected().and(named("internalBatchReceiveAsync")).and(takesArguments(0)),
+        isProtected()
+            .and(named("internalBatchReceiveAsync"))
+            .and(takesArguments(0))
+            .and(returns(CompletableFuture.class)),
         getClass().getName() + "$ConsumerBatchAsyncReceiveAdvice");
 
     // only in MultiTopicsConsumerImpl

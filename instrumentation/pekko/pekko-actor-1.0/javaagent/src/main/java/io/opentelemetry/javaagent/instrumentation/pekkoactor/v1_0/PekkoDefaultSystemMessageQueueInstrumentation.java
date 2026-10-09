@@ -38,7 +38,6 @@ class PekkoDefaultSystemMessageQueueInstrumentation implements TypeInstrumentati
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("systemEnqueue")
-            .and(takesArgument(0, named("org.apache.pekko.actor.ActorRef")))
             .and(takesArgument(1, named("org.apache.pekko.dispatch.sysmsg.SystemMessage"))),
         getClass().getName() + "$DispatchSystemAdvice");
   }

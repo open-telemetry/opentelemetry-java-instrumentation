@@ -27,6 +27,14 @@ dependencies {
 
 testing {
   suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":javaagent-extension-api"))
+        implementation("io.lettuce:lettuce-core:5.1.0.RELEASE")
+      }
+    }
+
     register<JvmTestSuite>("testCompatibility") {
       dependencies {
         implementation("io.lettuce:lettuce-core:6.1.10.RELEASE")

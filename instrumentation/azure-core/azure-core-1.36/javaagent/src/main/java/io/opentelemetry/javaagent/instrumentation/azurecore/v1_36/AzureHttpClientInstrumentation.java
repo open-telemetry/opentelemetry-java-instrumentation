@@ -49,8 +49,7 @@ class AzureHttpClientInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("sendSync"))
-            .and(takesArgument(1, named("com.azure.core.util.Context")))
-            .and(returns(named("com.azure.core.http.HttpResponse"))),
+            .and(takesArgument(1, named("com.azure.core.util.Context"))),
         getClass().getName() + "$SuppressNestedClientSyncAdvice");
   }
 

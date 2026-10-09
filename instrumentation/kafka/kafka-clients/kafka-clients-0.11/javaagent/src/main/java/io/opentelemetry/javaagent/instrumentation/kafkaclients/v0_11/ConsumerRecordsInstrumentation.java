@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.Kafk
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
@@ -41,16 +40,10 @@ class ConsumerRecordsInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(named("records"))
-            .and(takesArgument(0, String.class))
-            .and(returns(Iterable.class)),
+        isPublic().and(named("records")).and(returns(Iterable.class)),
         getClass().getName() + "$IterableAdvice");
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(named("records"))
-            .and(takesArgument(0, named("org.apache.kafka.common.TopicPartition")))
-            .and(returns(List.class)),
+        isPublic().and(named("records")).and(returns(List.class)),
         getClass().getName() + "$ListAdvice");
     transformer.applyAdviceToMethod(
         isPublic().and(named("iterator")).and(takesArguments(0)).and(returns(Iterator.class)),

@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.AwsSdkSingletons.telemetry;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -26,7 +27,8 @@ class DefaultSqsClientBuilderInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("buildClient"), getClass().getName() + "$BuildClientAdvice");
+        named("buildClient").and(returns(named("software.amazon.awssdk.services.sqs.SqsClient"))),
+        getClass().getName() + "$BuildClientAdvice");
   }
 
   @SuppressWarnings("unused")

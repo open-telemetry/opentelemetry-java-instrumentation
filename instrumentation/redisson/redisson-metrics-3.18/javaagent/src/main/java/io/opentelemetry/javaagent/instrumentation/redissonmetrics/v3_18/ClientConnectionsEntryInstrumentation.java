@@ -36,9 +36,7 @@ class ClientConnectionsEntryInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, int.class))
             .and(takesArgument(2, int.class))
             .and(takesArgument(3, int.class))
-            .and(takesArgument(4, int.class))
-            .and(takesArgument(5, named("org.redisson.connection.ConnectionManager")))
-            .and(takesArgument(6, named("org.redisson.api.NodeType"))),
+            .and(takesArgument(4, int.class)),
         getClass().getName() + "$SevenArgumentConstructorAdvice");
     transformer.applyAdviceToMethod(
         isConstructor()
@@ -47,7 +45,6 @@ class ClientConnectionsEntryInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, int.class))
             .and(takesArgument(2, int.class))
             .and(takesArgument(3, named("org.redisson.connection.IdleConnectionWatcher")))
-            .and(takesArgument(4, named("org.redisson.api.NodeType")))
             .and(takesArgument(5, named("org.redisson.config.MasterSlaveServersConfig"))),
         getClass().getName() + "$SixArgumentConstructorAdvice");
   }

@@ -6,12 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.time.Duration;
 import java.util.List;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
@@ -33,8 +32,10 @@ final class SimpleConsumerImplInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("receive0")
             .and(takesArguments(2))
-            .and(takesArgument(0, int.class))
-            .and(takesArgument(1, Duration.class)),
+            .and(
+                returns(
+                    named(
+                        "org.apache.rocketmq.shaded.com.google.common.util.concurrent.ListenableFuture"))),
         getClass().getName() + "$ReceiveAdvice");
   }
 

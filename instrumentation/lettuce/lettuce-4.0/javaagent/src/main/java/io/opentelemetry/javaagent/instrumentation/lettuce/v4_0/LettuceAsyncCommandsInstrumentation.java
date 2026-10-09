@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentCo
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.COMMAND_CONTEXT_KEY;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -35,10 +36,11 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("dispatch")
-            .and(takesArgument(0, named("com.lambdaworks.redis.protocol.RedisCommand"))),
+            .and(takesArgument(0, named("com.lambdaworks.redis.protocol.RedisCommand")))
+            .and(returns(named("com.lambdaworks.redis.protocol.AsyncCommand"))),
         getClass().getName() + "$DispatchAdvice");
     transformer.applyAdviceToMethod(
-        named("setAutoFlushCommands").and(takesArguments(1)),
+        named("setAutoFlushCommands").and(takesArguments(1)).and(takesArgument(0, boolean.class)),
         getClass().getName() + "$SetAutoFlushAdvice");
     transformer.applyAdviceToMethod(
         named("flushCommands").and(takesArguments(0)), getClass().getName() + "$FlushAdvice");

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.zio.v2_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -24,7 +25,8 @@ class ZioRuntimeInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("defaultSupervisor"), getClass().getName() + "$DefaultSupervisorAdvice");
+        named("defaultSupervisor").and(returns(named("zio.Supervisor"))),
+        getClass().getName() + "$DefaultSupervisorAdvice");
   }
 
   @SuppressWarnings("unused")

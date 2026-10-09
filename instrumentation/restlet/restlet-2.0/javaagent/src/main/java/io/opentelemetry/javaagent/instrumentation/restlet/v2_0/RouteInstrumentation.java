@@ -30,9 +30,7 @@ class RouteInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("beforeHandle")
-            .and(takesArgument(0, named("org.restlet.Request")))
-            .and(takesArgument(1, named("org.restlet.Response"))),
+        named("beforeHandle").and(takesArgument(0, named("org.restlet.Request"))),
         getClass().getName() + "$RouteBeforeHandleAdvice");
   }
 

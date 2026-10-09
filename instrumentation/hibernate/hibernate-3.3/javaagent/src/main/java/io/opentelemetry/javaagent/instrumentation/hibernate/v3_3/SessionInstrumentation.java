@@ -67,7 +67,7 @@ class SessionInstrumentation implements TypeInstrumentation {
 
     // Handle the non-generic 'get' separately.
     transformer.applyAdviceToMethod(
-        named("get").and(returns(Object.class)).and(takesArgument(0, String.class)),
+        named("get").and(takesArgument(0, String.class)),
         getClass().getName() + "$SessionMethodAdvice");
 
     // These methods return some object that we want to instrument, and so the Advice will pin the

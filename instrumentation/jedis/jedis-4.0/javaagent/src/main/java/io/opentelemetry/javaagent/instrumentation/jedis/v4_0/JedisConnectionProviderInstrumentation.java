@@ -9,7 +9,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
@@ -78,15 +77,13 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$TopologyRefreshAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf(
-                "getConnection",
-                "getConnectionFromSlot",
-                "getReplicaConnection",
-                "getReplicaConnectionFromSlot")
-            .and(returns(named("redis.clients.jedis.Connection"))),
+            "getConnection",
+            "getConnectionFromSlot",
+            "getReplicaConnection",
+            "getReplicaConnectionFromSlot"),
         getClass().getName() + "$ProviderTargetScopeAdvice");
     transformer.applyAdviceToMethod(
-        named("initMaster").and(takesArgument(0, named("redis.clients.jedis.HostAndPort"))),
-        getClass().getName() + "$ProviderTargetScopeAdvice");
+        named("initMaster"), getClass().getName() + "$ProviderTargetScopeAdvice");
     transformer.applyAdviceToMethod(
         named("renewSlotCache"), getClass().getName() + "$ProviderTargetScopeAdvice");
   }

@@ -30,10 +30,7 @@ class NettyRpcDuplexHandlerInstrumentation implements TypeInstrumentation {
             .and(
                 takesArgument(
                     0, named("org.apache.hbase.thirdparty.io.netty.channel.ChannelHandlerContext")))
-            .and(takesArgument(1, Object.class))
-            .and(
-                takesArgument(
-                    2, named("org.apache.hbase.thirdparty.io.netty.channel.ChannelPromise"))),
+            .and(takesArgument(1, Object.class)),
         getClass().getName() + "$WriteAdvice");
   }
 

@@ -44,8 +44,7 @@ class LibertyWebAppInstrumentation implements TypeInstrumentation {
 
     // isForbidden is called from handleRequest
     transformer.applyAdviceToMethod(
-        named("isForbidden").and(takesArgument(0, named(String.class.getName()))),
-        getClass().getName() + "$IsForbiddenAdvice");
+        named("isForbidden"), getClass().getName() + "$IsForbiddenAdvice");
   }
 
   @SuppressWarnings("unused")

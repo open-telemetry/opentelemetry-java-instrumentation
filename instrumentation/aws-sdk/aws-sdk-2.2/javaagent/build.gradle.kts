@@ -122,6 +122,13 @@ dependencies {
 
 testing {
   suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":javaagent-extension-api"))
+      }
+    }
+
     register<JvmTestSuite>("s3PresignerTest") {
       dependencies {
         val version = baseVersion("2.10.12").orLatest()

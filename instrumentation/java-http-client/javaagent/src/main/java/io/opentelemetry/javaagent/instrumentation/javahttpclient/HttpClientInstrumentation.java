@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -53,13 +54,15 @@ class HttpClientInstrumentation implements TypeInstrumentation {
         named("send")
             .and(isPublic())
             .and(takesArguments(2))
-            .and(takesArgument(0, named("java.net.http.HttpRequest"))),
+            .and(takesArgument(0, named("java.net.http.HttpRequest")))
+            .and(returns(named("java.net.http.HttpResponse"))),
         getClass().getName() + "$SendAdvice");
 
     transformer.applyAdviceToMethod(
         named("sendAsync")
             .and(isPublic())
-            .and(takesArgument(0, named("java.net.http.HttpRequest"))),
+            .and(takesArgument(0, named("java.net.http.HttpRequest")))
+            .and(returns(CompletableFuture.class)),
         getClass().getName() + "$SendAsyncAdvice");
   }
 

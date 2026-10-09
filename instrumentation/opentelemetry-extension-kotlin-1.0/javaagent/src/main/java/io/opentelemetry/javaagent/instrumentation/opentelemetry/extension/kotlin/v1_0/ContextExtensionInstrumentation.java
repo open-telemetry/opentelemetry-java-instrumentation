@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetry.extension.kotlin.v1_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
@@ -31,19 +32,22 @@ class ContextExtensionInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("asContextElement")
-            .and(takesArgument(0, named("application.io.opentelemetry.context.Context"))),
+            .and(takesArgument(0, named("application.io.opentelemetry.context.Context")))
+            .and(returns(named("kotlin.coroutines.CoroutineContext"))),
         getClass().getName() + "$ContextAdvice");
 
     transformer.applyAdviceToMethod(
         named("asContextElement")
             .and(
                 takesArgument(
-                    0, named("application.io.opentelemetry.context.ImplicitContextKeyed"))),
+                    0, named("application.io.opentelemetry.context.ImplicitContextKeyed")))
+            .and(returns(named("kotlin.coroutines.CoroutineContext"))),
         getClass().getName() + "$ImplicitContextKeyedAdvice");
 
     transformer.applyAdviceToMethod(
         named("getOpenTelemetryContext")
-            .and(takesArgument(0, named("kotlin.coroutines.CoroutineContext"))),
+            .and(takesArgument(0, named("kotlin.coroutines.CoroutineContext")))
+            .and(returns(named("application.io.opentelemetry.context.Context"))),
         getClass().getName() + "$GetOpenTelemetryContextAdvice");
   }
 

@@ -28,15 +28,12 @@ class AkkaScheduleInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("schedule")
             .and(takesArgument(0, named("scala.concurrent.duration.FiniteDuration")))
-            .and(takesArgument(1, named("scala.concurrent.duration.FiniteDuration")))
-            .and(takesArgument(2, Runnable.class))
-            .and(takesArgument(3, named("scala.concurrent.ExecutionContext"))),
+            .and(takesArgument(2, Runnable.class)),
         getClass().getName() + "$ScheduleAdvice");
     transformer.applyAdviceToMethod(
         named("scheduleOnce")
             .and(takesArgument(0, named("scala.concurrent.duration.FiniteDuration")))
-            .and(takesArgument(1, Runnable.class))
-            .and(takesArgument(2, named("scala.concurrent.ExecutionContext"))),
+            .and(takesArgument(1, Runnable.class)),
         getClass().getName() + "$ScheduleOnceAdvice");
   }
 

@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.reactor.v3_1.operator;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -47,14 +46,7 @@ class ContextPropagationOperatorInstrumentation implements TypeInstrumentation {
             .and(returns(named("application.io.opentelemetry.context.Context"))),
         getClass().getName() + "$GetAdvice");
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(isStatic())
-            .and(named("runWithContext"))
-            .and(
-                takesArgument(
-                    0, namedOneOf("reactor.core.publisher.Mono", "reactor.core.publisher.Flux")))
-            .and(takesArgument(1, named("application.io.opentelemetry.context.Context")))
-            .and(returns(namedOneOf("reactor.core.publisher.Mono", "reactor.core.publisher.Flux"))),
+        isPublic().and(isStatic()).and(named("runWithContext")),
         getClass().getName() + "$RunWithAdvice");
   }
 

@@ -34,9 +34,7 @@ class HttpServerFilterInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("prepareResponse")
             .and(takesArgument(0, named("org.glassfish.grizzly.filterchain.FilterChainContext")))
-            .and(takesArgument(1, named("org.glassfish.grizzly.http.HttpRequestPacket")))
             .and(takesArgument(2, named("org.glassfish.grizzly.http.HttpResponsePacket")))
-            .and(takesArgument(3, named("org.glassfish.grizzly.http.HttpContent")))
             .and(isPrivate()),
         getClass().getName() + "$PrepareResponseAdvice");
   }

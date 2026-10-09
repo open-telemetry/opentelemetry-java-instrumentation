@@ -41,9 +41,7 @@ class LibertyDispatcherLinkInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("sendResponse")
             .and(takesArgument(0, named("com.ibm.wsspi.http.channel.values.StatusCodes")))
-            .and(takesArgument(1, named(String.class.getName())))
-            .and(takesArgument(2, named(Exception.class.getName())))
-            .and(takesArgument(3, named(boolean.class.getName()))),
+            .and(takesArgument(2, named(Exception.class.getName()))),
         getClass().getName() + "$SendResponseAdvice");
   }
 

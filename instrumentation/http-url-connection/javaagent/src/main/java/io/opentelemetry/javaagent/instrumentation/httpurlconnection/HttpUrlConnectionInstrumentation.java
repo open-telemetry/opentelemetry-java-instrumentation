@@ -14,6 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.not;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -50,7 +51,8 @@ class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
             .or(isProtected().and(named("plainConnect"))),
         getClass().getName() + "$HttpUrlConnectionAdvice");
     transformer.applyAdviceToMethod(
-        isPublic().and(named("getResponseCode")), getClass().getName() + "$GetResponseCodeAdvice");
+        isPublic().and(named("getResponseCode")).and(returns(int.class)),
+        getClass().getName() + "$GetResponseCodeAdvice");
   }
 
   @SuppressWarnings("unused")
