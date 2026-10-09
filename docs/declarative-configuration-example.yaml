@@ -45,9 +45,7 @@ instrumentation/development:
           - sig
           - X-Goog-Signature
 
-    # A comma-separated list of semantic convention groups to opt into, such as `rpc` and
-    # `service.peer`. Use `<group>/dup` to emit both old and new conventions. Under v3 preview the
-    # preview groups use `otel.semconv-stability.preview` instead.
+    # A comma-separated list of stable semantic convention groups to opt into.
     stability_opt_in_list: ''
   java:
     apache_elasticjob:
@@ -95,19 +93,6 @@ instrumentation/development:
           # [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. WARNING:
           # augmenting queries with tracing context will make query texts unique, which may have
           # adverse impact on database performance.
-          enabled: false
-      enduser:
-        id:
-          # Enables capturing the enduser.id attribute. This property and the associated attribute
-          # are not supported when v3 preview is enabled.
-          enabled: false
-        role:
-          # Enables capturing the enduser.role attribute. This property and the associated attribute
-          # are not supported when v3 preview is enabled.
-          enabled: false
-        scope:
-          # Enables capturing the enduser.scope attribute when v3 preview is not enabled. This
-          # property is not honored when v3 preview is enabled.
           enabled: false
       gen_ai:
         # Determines whether Generative AI events include full content of user and assistant
@@ -222,12 +207,12 @@ instrumentation/development:
       span_suppression_strategy: semconv
       user:
         name:
-          # Enables capturing the user.name attribute when v3 preview is enabled. This property and
-          # the associated attribute are not supported when v3 preview is disabled.
+          # Enables capturing the `user.name` identity attribute. Identity attributes are not
+          # captured by default.
           enabled: false
         roles:
-          # Enables capturing the user.roles attribute when v3 preview is enabled. This property and
-          # the associated attribute are not supported when v3 preview is disabled.
+          # Enables capturing the `user.roles` identity attribute. Identity attributes are not
+          # captured by default.
           enabled: false
 
       # Enables a preview of the behavior planned for version 3.0 of the agent, such as ignoring
@@ -669,22 +654,10 @@ instrumentation/development:
       # Adds the experimental span attribute `job.system` with the value `spring_scheduling`.
       experimental_span_attributes/development: false
     spring_security:
-      enduser:
-        role:
-          # Prefix of granted authorities identifying roles to capture in the `enduser.role`
-          # semantic attribute. This property is not honored when v3 preview is enabled; use the
-          # `user.roles` variant instead.
-          granted_authority_prefix: ROLE_
-        scope:
-          # Prefix of granted authorities identifying scopes to capture in the `enduser.scope`
-          # semantic attribute. This property and the associated attribute are not supported when v3
-          # preview is enabled.
-          granted_authority_prefix: SCOPE_
       user:
         roles:
           # Prefix of granted authorities identifying roles to capture in the `user.roles` semantic
-          # attribute when v3 preview is enabled. This property is not honored when v3 preview is
-          # disabled; use the `enduser.role` variant instead.
+          # attribute.
           granted_authority_prefix: ROLE_
     spring_webmvc:
       # Enables the capture of experimental span attributes `spring-webmvc.view.name` and

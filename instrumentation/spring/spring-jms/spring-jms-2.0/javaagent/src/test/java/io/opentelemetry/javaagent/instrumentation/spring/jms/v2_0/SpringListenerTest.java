@@ -9,6 +9,7 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertHistogram;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
@@ -123,12 +124,12 @@ class SpringListenerTest extends AbstractJmsTest {
                     span.hasName("receive SpringListenerJms2")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext())),
+                        .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext()))),
                 span ->
                     span.hasName("process SpringListenerJms2")
                         .hasKind(CONSUMER)
                         .hasParent(trace.getSpan(0))
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))));
+                        .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))));
   }
 
   @ParameterizedTest

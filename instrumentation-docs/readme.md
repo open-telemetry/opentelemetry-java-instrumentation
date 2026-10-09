@@ -37,7 +37,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testPreviewSemconv by registering(Test::class) {
     jvmArgs("-Dotel.semconv-stability.preview=rpc")
 
     systemProperty("collectMetadata", otelProps.collectMetadata)
@@ -45,7 +45,7 @@ tasks {
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testPreviewSemconv)
   }
 }
 ```

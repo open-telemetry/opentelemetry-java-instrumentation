@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -319,7 +320,7 @@ abstract class AbstractPulsarClientTest {
 
   private static LinkData batchLink(SpanData producerSpan, String messageId) {
     return LinkData.create(
-        producerSpan.getSpanContext(), Attributes.of(MESSAGING_MESSAGE_ID, messageId));
+        asRemote(producerSpan.getSpanContext()), Attributes.of(MESSAGING_MESSAGE_ID, messageId));
   }
 
   static List<AttributeAssertion> receiveAttributes(

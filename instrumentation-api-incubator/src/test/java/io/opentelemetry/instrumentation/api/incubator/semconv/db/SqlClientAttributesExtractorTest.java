@@ -373,6 +373,29 @@ class SqlClientAttributesExtractorTest {
     assertThat(endAttributes.build().isEmpty()).isTrue();
   }
 
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void shouldExtractSingleOperationAndCollection(boolean sanitizationEnabled) {
+    String queryText = "SELECT * FROM potato WHERE id=12345";
+    Map<String, Object> request = singletonMap("db.query.text", queryText);
+    AttributesExtractor<Map<String, Object>, Void> extractor =
+        SqlClientAttributesExtractor.builder(new TestAttributesGetter())
+            .setQuerySanitizationEnabled(sanitizationEnabled)
+            .setSingleOperationAndCollection(true)
+            .build();
+    AttributesBuilder attributes = Attributes.builder();
+
+    extractor.onStart(attributes, Context.root(), request);
+
+    assertThat(attributes.build())
+        .containsOnly(
+            entry(
+                DB_QUERY_TEXT, sanitizationEnabled ? "SELECT * FROM potato WHERE id=?" : queryText),
+            entry(DB_QUERY_SUMMARY, "SELECT potato"),
+            entry(DB_OPERATION_NAME, "SELECT"),
+            entry(DB_COLLECTION_NAME, "potato"));
+  }
+
   @Test
   void shouldExtractMultiQueryBatchOperationNameWhenSingleOperationAndCollection() {
     // given

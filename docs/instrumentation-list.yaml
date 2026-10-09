@@ -55,15 +55,6 @@ definitions:
         Enables augmenting queries with a comment containing tracing information. An instrumentation-specific setting takes precedence. See [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. WARNING: augmenting queries with tracing context will make query texts unique, which may have adverse impact on database performance.
       type: boolean
       default: false
-    common.deprecated-controller-telemetry.enabled:
-      name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-      declarative_name: java.common.controller_telemetry/development.enabled
-      description: 'Deprecated: use `otel.instrumentation.common.controller-telemetry.enabled`
-        instead. This setting is ignored under v3-preview and will be removed in 3.0.'
-      type: boolean
-      default: false
-      deprecated: true
-      replaced_by: otel.instrumentation.common.controller-telemetry.enabled
     common.logging.span-id:
       name: otel.instrumentation.common.logging.span-id
       declarative_name: java.common.logging.span_id
@@ -430,15 +421,6 @@ definitions:
         not enabled. This property is not honored when v3 preview is enabled.
       type: boolean
       default: false
-    otel.instrumentation.common.experimental.view-telemetry.enabled:
-      name: otel.instrumentation.common.experimental.view-telemetry.enabled
-      declarative_name: java.common.view_telemetry/development.enabled
-      description: |
-        Deprecated: use `otel.instrumentation.common.view-telemetry.enabled` instead. This setting is ignored under v3-preview and will be removed in 3.0.
-      type: boolean
-      default: false
-      deprecated: true
-      replaced_by: otel.instrumentation.common.view-telemetry.enabled
     otel.instrumentation.common.logging.structured-attributes.excluded:
       name: otel.instrumentation.common.logging.structured-attributes.excluded
       declarative_name: java.common.logging.structured_attributes.excluded
@@ -528,14 +510,6 @@ definitions:
       type: boolean
       deprecated: true
       replaced_by: otel.instrumentation.couchbase.query-sanitization.enabled
-    otel.instrumentation.elasticsearch.capture-search-query:
-      name: otel.instrumentation.elasticsearch.capture-search-query
-      declarative_name: java.elasticsearch.capture_search_query
-      description: |
-        Deprecated for removal in 3.0 with no replacement. Outside v3-preview, explicitly set this to capture or omit search query bodies. Under v3-preview and in 3.0, the setting is ignored and search query bodies are always captured. Sanitization remains separately configurable with otel.instrumentation.elasticsearch.query-sanitization.enabled.
-      type: boolean
-      default: false
-      deprecated: true
     otel.instrumentation.elasticsearch.experimental-span-attributes-4728abdb:
       name: otel.instrumentation.elasticsearch.experimental-span-attributes
       declarative_name: java.elasticsearch.experimental_span_attributes/development
@@ -637,15 +611,6 @@ definitions:
       type: boolean
       deprecated: true
       replaced_by: otel.instrumentation.geode.query-sanitization.enabled
-    otel.instrumentation.graphql.add-operation-name-to-span-name.enabled:
-      name: otel.instrumentation.graphql.add-operation-name-to-span-name.enabled
-      declarative_name: java.graphql.add_operation_name_to_span_name.enabled
-      description: 'Deprecated: use `otel.instrumentation.graphql.operation-name-in-span-name.enabled`
-        instead. It is ignored under v3 preview and will be removed in 3.0.'
-      type: boolean
-      default: false
-      deprecated: true
-      replaced_by: otel.instrumentation.graphql.operation-name-in-span-name.enabled
     otel.instrumentation.graphql.capture-query:
       name: otel.instrumentation.graphql.capture-query
       declarative_name: java.graphql.capture_query
@@ -672,15 +637,6 @@ definitions:
         aren't added as span attributes.
       type: boolean
       default: true
-    otel.instrumentation.graphql.query-sanitizer.enabled:
-      name: otel.instrumentation.graphql.query-sanitizer.enabled
-      declarative_name: java.graphql.query_sanitizer.enabled
-      description: 'Deprecated: use `otel.instrumentation.graphql.query-sanitization.enabled`
-        instead. It is ignored under v3 preview and will be removed in 3.0.'
-      type: boolean
-      default: true
-      deprecated: true
-      replaced_by: otel.instrumentation.graphql.query-sanitization.enabled
     otel.instrumentation.graphql.trivial-data-fetcher.enabled:
       name: otel.instrumentation.graphql.trivial-data-fetcher.enabled
       declarative_name: java.graphql.trivial_data_fetcher.enabled
@@ -1444,14 +1400,6 @@ definitions:
       description: Enable SSL telemetry.
       type: boolean
       default: false
-    otel.instrumentation.opensearch.capture-search-query:
-      name: otel.instrumentation.opensearch.capture-search-query
-      declarative_name: java.opensearch.capture_search_query
-      description: |
-        Deprecated and will be removed in 3.0, when search query bodies are always captured. There is no replacement. Until then, set this to false to disable capture. Search queries may contain personal or sensitive information.
-      type: boolean
-      default: true
-      deprecated: true
     otel.instrumentation.opensearch.query-sanitization.enabled:
       name: otel.instrumentation.opensearch.query-sanitization.enabled
       declarative_name: java.opensearch.query_sanitization.enabled
@@ -1488,14 +1436,6 @@ definitions:
       examples:
       - com.example.MyClass[method1,method2]
       - com.example.MyClass[method1];com.example.OtherClass[method2]
-    otel.instrumentation.oshi.experimental-metrics.enabled:
-      name: otel.instrumentation.oshi.experimental-metrics.enabled
-      declarative_name: java.oshi.experimental_metrics/development.enabled
-      description: |
-        Deprecated. Outside v3 preview, enables the experimental `runtime.java.memory` and `runtime.java.cpu_time` metrics. This setting is ignored when `otel.instrumentation.common.v3-preview=true`. Will be removed in 3.0. Use the standard JVM metrics `jvm.memory.used` and `jvm.cpu.time` instead. These are not exact replacements: `jvm.memory.used` measures JVM memory pools rather than process RSS or virtual memory, and `jvm.cpu.time` does not separate user and system CPU time.
-      type: boolean
-      default: false
-      deprecated: true
     otel.instrumentation.powerjob.experimental-span-attributes:
       name: otel.instrumentation.powerjob.experimental-span-attributes
       declarative_name: java.powerjob.experimental_span_attributes/development
@@ -8903,7 +8843,6 @@ libraries:
   javaagent_target_versions:
   - io.dropwizard:dropwizard-views:(,3.0.0)
   configuration_refs:
-  - otel.instrumentation.common.experimental.view-telemetry.enabled
   - otel.instrumentation.common.view-telemetry.enabled
   telemetry:
   - when: otel.instrumentation.common.view-telemetry.enabled=true
@@ -8934,6 +8873,8 @@ libraries:
       - name: db.operation.parameter.id
         type: STRING
       - name: db.operation.parameter.index
+        type: STRING
+      - name: db.query.text
         type: STRING
       - name: db.system.name
         type: STRING
@@ -8966,7 +8907,6 @@ libraries:
   - common.db-statement-sanitizer.enabled
   - common.db.query-sanitization.enabled
   - http.known-methods
-  - otel.instrumentation.elasticsearch.capture-search-query
   - otel.instrumentation.elasticsearch.query-sanitization.enabled
   - otel.instrumentation.elasticsearch.statement-sanitizer.enabled
   telemetry:
@@ -8976,6 +8916,8 @@ libraries:
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: db.query.text
+        type: STRING
       - name: db.system.name
         type: STRING
       - name: http.request.method
@@ -9006,7 +8948,6 @@ libraries:
   - common.db-statement-sanitizer.enabled
   - common.db.query-sanitization.enabled
   - http.known-methods
-  - otel.instrumentation.elasticsearch.capture-search-query
   - otel.instrumentation.elasticsearch.query-sanitization.enabled
   - otel.instrumentation.elasticsearch.statement-sanitizer.enabled
   telemetry:
@@ -9016,6 +8957,8 @@ libraries:
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: db.query.text
+        type: STRING
       - name: db.system.name
         type: STRING
       - name: http.request.method
@@ -9046,7 +8989,6 @@ libraries:
   - common.db-statement-sanitizer.enabled
   - common.db.query-sanitization.enabled
   - http.known-methods
-  - otel.instrumentation.elasticsearch.capture-search-query
   - otel.instrumentation.elasticsearch.query-sanitization.enabled
   - otel.instrumentation.elasticsearch.statement-sanitizer.enabled
   telemetry:
@@ -9271,6 +9213,8 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
+      - name: server.port
+        type: LONG
   - when: otel.instrumentation.elasticsearch.experimental-span-attributes=true
     metric_refs:
     - db.client.operation.duration-55295033
@@ -9378,7 +9322,6 @@ libraries:
   - com.twitter:finatra-http_2.12:[2.9.0,]
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
   telemetry:
   - when: otel.instrumentation.common.controller-telemetry.enabled=true
     spans:
@@ -9506,7 +9449,6 @@ libraries:
   - org.grails:grails-web-url-mappings:[3.0,)
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
   telemetry:
   - when: otel.instrumentation.common.controller-telemetry.enabled=true
     spans:
@@ -9529,11 +9471,9 @@ libraries:
   javaagent_target_versions:
   - com.graphql-java:graphql-java:[12,20)
   configuration_refs:
-  - otel.instrumentation.graphql.add-operation-name-to-span-name.enabled
   - otel.instrumentation.graphql.capture-query
   - otel.instrumentation.graphql.operation-name-in-span-name.enabled
   - otel.instrumentation.graphql.query-sanitization.enabled
-  - otel.instrumentation.graphql.query-sanitizer.enabled
   telemetry:
   - when: default
     spans:
@@ -9560,12 +9500,10 @@ libraries:
   javaagent_target_versions:
   - com.graphql-java:graphql-java:[20,)
   configuration_refs:
-  - otel.instrumentation.graphql.add-operation-name-to-span-name.enabled
   - otel.instrumentation.graphql.capture-query
   - otel.instrumentation.graphql.data-fetcher.enabled
   - otel.instrumentation.graphql.operation-name-in-span-name.enabled
   - otel.instrumentation.graphql.query-sanitization.enabled
-  - otel.instrumentation.graphql.query-sanitizer.enabled
   - otel.instrumentation.graphql.trivial-data-fetcher.enabled
   telemetry:
   - when: default
@@ -10594,7 +10532,6 @@ libraries:
   - javax.ws.rs:jsr311-api:[0.5,)
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
   telemetry:
   - when: otel.instrumentation.common.controller-telemetry.enabled=true,otel.instrumentation.common.v3-preview=true
     spans:
@@ -10619,7 +10556,6 @@ libraries:
   - javax.ws.rs:javax.ws.rs-api:[,]
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
   - otel.instrumentation.jaxrs.experimental-span-attributes
   telemetry:
   - when: default
@@ -10645,7 +10581,6 @@ libraries:
   - org.apache.tomee:openejb-cxf-rs:(8,)
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
   - otel.instrumentation.jaxrs.experimental-span-attributes
   telemetry:
   - when: default
@@ -10679,7 +10614,6 @@ libraries:
   - org.glassfish.jersey.core:jersey-server:[2.0,3.0.0)
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
   - otel.instrumentation.jaxrs.experimental-span-attributes
   telemetry:
   - when: default
@@ -10713,7 +10647,6 @@ libraries:
   - org.jboss.resteasy:resteasy-jaxrs:[3.5.0.Final,4)
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
   - otel.instrumentation.jaxrs.experimental-span-attributes
   telemetry:
   - when: default
@@ -10747,7 +10680,6 @@ libraries:
   - org.jboss.resteasy:resteasy-jaxrs:[3.1.0.Final,3.5.0.Final)
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
   - otel.instrumentation.jaxrs.experimental-span-attributes
   telemetry:
   - when: default
@@ -10781,7 +10713,6 @@ libraries:
   - jakarta.ws.rs:jakarta.ws.rs-api:[3.0.0,)
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
   - otel.instrumentation.jaxrs.experimental-span-attributes
   telemetry:
   - when: default
@@ -10807,7 +10738,6 @@ libraries:
   - org.glassfish.jersey.core:jersey-server:[3.0.0,)
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
   - otel.instrumentation.jaxrs.experimental-span-attributes
   telemetry:
   - when: default
@@ -10841,7 +10771,6 @@ libraries:
   - org.jboss.resteasy:resteasy-core:[6.0.0.Final,)
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
   - otel.instrumentation.jaxrs.experimental-span-attributes
   telemetry:
   - when: otel.instrumentation.common.controller-telemetry.enabled=true
@@ -10873,7 +10802,6 @@ libraries:
   - javax.xml.ws:jaxws-api:[2.0,]
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
   telemetry:
   - when: otel.instrumentation.common.controller-telemetry.enabled=true
     spans:
@@ -10897,7 +10825,6 @@ libraries:
   - org.apache.axis2:axis2-jaxws:[1.6.0,)
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
   telemetry:
   - when: otel.instrumentation.common.controller-telemetry.enabled=true
     spans:
@@ -10919,7 +10846,6 @@ libraries:
   - org.apache.cxf:cxf-rt-frontend-jaxws:[3.0.0,)
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
 - name: jaxws-2.0-metro-2.2
   display_name: Metro JAX-WS
   description: |
@@ -10936,7 +10862,6 @@ libraries:
   - com.sun.xml.ws:jaxws-rt:[2.2,)
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
 - name: jaxws-jws-api-1.1
   display_name: JWS API
   description: |
@@ -10953,7 +10878,6 @@ libraries:
   - javax.jws:javax.jws-api:[1.1,]
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
   telemetry:
   - when: otel.instrumentation.common.controller-telemetry.enabled=true
     spans:
@@ -11720,7 +11644,6 @@ libraries:
   - com.jfinal:jfinal:[3.2,)
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
   telemetry:
   - when: otel.instrumentation.common.controller-telemetry.enabled=true
     spans:
@@ -11968,7 +11891,6 @@ libraries:
   - org.glassfish:javax.faces:[2.0.7,3)
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
   telemetry:
   - when: otel.instrumentation.common.controller-telemetry.enabled=true
     spans:
@@ -11990,7 +11912,6 @@ libraries:
   - org.glassfish:jakarta.faces:[3,)
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
   telemetry:
   - when: otel.instrumentation.common.controller-telemetry.enabled=true
     spans:
@@ -12011,7 +11932,6 @@ libraries:
   - org.apache.myfaces.core:myfaces-impl:[1.2,3)
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
   telemetry:
   - when: otel.instrumentation.common.controller-telemetry.enabled=true
     spans:
@@ -12033,7 +11953,6 @@ libraries:
   - org.apache.myfaces.core:myfaces-impl:[3,)
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
   telemetry:
   - when: otel.instrumentation.common.controller-telemetry.enabled=true
     spans:
@@ -12053,7 +11972,6 @@ libraries:
   javaagent_target_versions:
   - org.apache.tomcat:tomcat-jasper:[7.0.19,10)
   configuration_refs:
-  - otel.instrumentation.common.experimental.view-telemetry.enabled
   - otel.instrumentation.common.view-telemetry.enabled
   - otel.instrumentation.jsp.experimental-span-attributes
   telemetry:
@@ -15017,7 +14935,6 @@ libraries:
   - common.database.statement_sanitizer.enabled
   - common.db-statement-sanitizer.enabled
   - common.db.query-sanitization.enabled
-  - otel.instrumentation.opensearch.capture-search-query
   - otel.instrumentation.opensearch.query-sanitization.enabled
   - otel.instrumentation.opensearch.statement-sanitizer.enabled
   telemetry:
@@ -15137,19 +15054,8 @@ libraries:
   has_javaagent: true
   javaagent_target_versions:
   - com.github.oshi:oshi-core:[5.0.0,)
-  configuration_refs:
-  - otel.instrumentation.oshi.experimental-metrics.enabled
   telemetry:
-  - when: otel.instrumentation.common.v3-preview=true
-    metric_refs:
-    - system.disk.io-7a80ac09
-    - system.disk.operations-d9d641b6
-    - system.memory.usage-0b523de7
-    - system.memory.utilization-36cec121
-    - system.network.errors-41e3be8a
-    - system.network.io-75693f94
-    - system.network.packet.count-53bc6d12
-  - when: otel.instrumentation.common.v3-preview=true,otel.instrumentation.oshi.experimental-metrics.enabled=true
+  - when: default
     metric_refs:
     - system.disk.io-7a80ac09
     - system.disk.operations-d9d641b6
@@ -15303,7 +15209,6 @@ libraries:
   - com.typesafe.play:play_2.11:[2.4.0,2.6)
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
   telemetry:
   - when: otel.instrumentation.common.controller-telemetry.enabled=true
     spans:
@@ -15328,7 +15233,6 @@ libraries:
   - org.playframework:play_3:[2.6.0,)
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
   telemetry:
   - when: otel.instrumentation.common.controller-telemetry.enabled=true
     spans:
@@ -16118,7 +16022,6 @@ libraries:
   - io.ratpack:ratpack-core:[1.4.0,)
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
   - common.peer-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
@@ -16225,7 +16128,6 @@ libraries:
   has_standalone_library: true
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
   - common.peer-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
@@ -18137,7 +18039,6 @@ libraries:
   - org.springframework:spring-webflux:[5.0.0.RELEASE,)
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
   telemetry:
   - when: default
     metric_refs:
@@ -18350,8 +18251,6 @@ libraries:
   - org.springframework:spring-webmvc:[3.1.0.RELEASE,6)
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
-  - otel.instrumentation.common.experimental.view-telemetry.enabled
   - otel.instrumentation.common.view-telemetry.enabled
   - otel.instrumentation.spring-webmvc.experimental-span-attributes
   telemetry:
@@ -18440,8 +18339,6 @@ libraries:
   - org.springframework:spring-webmvc:[6.0.0,)
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
-  - otel.instrumentation.common.experimental.view-telemetry.enabled
   - otel.instrumentation.common.view-telemetry.enabled
   - otel.instrumentation.spring-webmvc.experimental-span-attributes
   telemetry:
@@ -18475,7 +18372,6 @@ libraries:
   - org.springframework.ws:spring-ws-core:[2.0.0.RELEASE,]
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
   telemetry:
   - when: otel.instrumentation.common.controller-telemetry.enabled=true
     spans:
@@ -18561,7 +18457,6 @@ libraries:
   - org.apache.struts:struts2-core:[2.1.0,7)
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
   telemetry:
   - when: otel.instrumentation.common.controller-telemetry.enabled=true
     spans:
@@ -18586,7 +18481,6 @@ libraries:
   - org.apache.struts:struts2-core:[7.0.0,)
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
   telemetry:
   - when: otel.instrumentation.common.controller-telemetry.enabled=true
     spans:
@@ -18610,7 +18504,6 @@ libraries:
   - org.apache.tapestry:tapestry-core:[5.4.0,)
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
   telemetry:
   - when: otel.instrumentation.common.controller-telemetry.enabled=true
     spans:
@@ -19034,7 +18927,6 @@ libraries:
   - com.vaadin:flow-server:[3.1.0,25.0.0)
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.deprecated-controller-telemetry.enabled
 - name: vertx-http-client-3.0
   display_name: Vert.x HTTP Client
   description: |

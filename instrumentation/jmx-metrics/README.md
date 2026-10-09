@@ -28,13 +28,6 @@ This example will enable all stable metrics except the JMX-based `jvm` definitio
 
 The deprecated `otel.jmx.target.system` setting remains a fallback when `otel.jmx.metrics.experimental.included` is empty. It collects both stable and unstable metrics for the selected targets. For example, `otel.jmx.target.system=jetty,kafka-broker` retains its existing behavior. This setting will be removed in 3.0.
 
-To migrate, replace the target selection with metric-name patterns:
-
-```diff
--otel.jmx.target.system=tomcat
-+otel.jmx.metrics.experimental.included=tomcat.*
-```
-
 A nonempty experimental inclusion takes precedence over the deprecated target setting without a deprecation warning. Normal metric include/exclude filters apply in both modes.
 
 Metrics from custom YAML files do not require experimental opt-in, even if their names match unstable bundled metrics. They are controlled by the normal metric include/exclude filters.
