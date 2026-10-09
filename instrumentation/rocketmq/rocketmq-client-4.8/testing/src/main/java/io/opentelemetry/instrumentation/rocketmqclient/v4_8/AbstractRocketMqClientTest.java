@@ -324,9 +324,6 @@ abstract class AbstractRocketMqClientTest {
 
   private void runBatchConsumeTest(
       boolean failConsumption, boolean existingCreationContext, boolean async) throws Exception {
-    // context propagation doesn't work for batch messages in 5.3.4
-    Assumptions.assumeFalse(testLatestDeps());
-
     consumer.setConsumeMessageBatchMaxSize(2);
     // This test assumes that messages are sent and received as a batch. Occasionally it happens
     // that the messages are not received as a batch, but one by one. This doesn't match what the

@@ -38,6 +38,7 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
       return;
     }
     CONTEXT_FIELD.set(context, instrumenter.start(parentContext, context));
+    RocketMqMessageUtil.reencodeBatch(context.getMessage());
   }
 
   @Override
