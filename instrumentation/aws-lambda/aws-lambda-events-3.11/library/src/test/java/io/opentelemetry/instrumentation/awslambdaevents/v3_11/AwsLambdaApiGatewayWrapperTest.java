@@ -152,10 +152,7 @@ class AwsLambdaApiGatewayWrapperTest {
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
                             equalTo(CLOUD_ACCOUNT_ID, "123456789"),
                             equalTo(FAAS_INVOCATION_ID, "1-22-333"),
-                            equalTo(FAAS_TRIGGER, "http"),
-                            equalTo(URL_PATH, null),
-                            equalTo(URL_SCHEME, null),
-                            equalTo(HTTP_ROUTE, null))));
+                            equalTo(FAAS_TRIGGER, "http"))));
   }
 
   @Test
