@@ -113,8 +113,7 @@ public final class AwsLambdaFunctionAttributesExtractor
     String functionArnPrefix = ":function:";
     int functionNameStart = arn.indexOf(functionArnPrefix);
     int qualifierStart = arn.lastIndexOf(':');
-    if (functionNameStart < 0
-        || qualifierStart <= functionNameStart + functionArnPrefix.length()) {
+    if (functionNameStart < 0 || qualifierStart <= functionNameStart + functionArnPrefix.length()) {
       return arn;
     }
     String qualifier = arn.substring(qualifierStart + 1);
