@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server;
 
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -32,11 +33,13 @@ class DispatcherHandlerInstrumentation implements TypeInstrumentation {
         isPublic()
             .and(named("handle"))
             .and(takesArgument(0, named("org.springframework.web.server.ServerWebExchange")))
-            .and(takesArguments(1)),
+            .and(takesArguments(1))
+            .and(returns(named("reactor.core.publisher.Mono"))),
         getClass().getName() + "$HandleAdvice");
     transformer.applyAdviceToMethod(
         named("handleResult")
-            .and(takesArgument(0, named("org.springframework.web.server.ServerWebExchange"))),
+            .and(takesArgument(0, named("org.springframework.web.server.ServerWebExchange")))
+            .and(returns(named("reactor.core.publisher.Mono"))),
         getClass().getName() + "$HandleResultAdvice");
   }
 

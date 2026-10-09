@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1;
 
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.couchbase.client.core.env.SeedNode;
@@ -27,7 +28,10 @@ public class CouchbaseSeedNodesInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isStatic().and(named("seedNodesFromConnectionString")).and(takesArgument(0, String.class)),
+        isStatic()
+            .and(named("seedNodesFromConnectionString"))
+            .and(takesArgument(0, String.class))
+            .and(returns(Set.class)),
         getClass().getName() + "$SeedNodesAdvice");
   }
 

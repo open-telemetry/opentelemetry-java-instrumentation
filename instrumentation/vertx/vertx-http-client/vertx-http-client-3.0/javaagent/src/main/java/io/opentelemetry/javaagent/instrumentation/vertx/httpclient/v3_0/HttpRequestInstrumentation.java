@@ -63,7 +63,8 @@ class HttpRequestInstrumentation implements TypeInstrumentation {
         nameStartsWith("end").or(named("sendHead")), getClass().getName() + "$EndRequestAdvice");
 
     transformer.applyAdviceToMethod(
-        named("handleException"), getClass().getName() + "$HandleExceptionAdvice");
+        named("handleException").and(takesArgument(0, Throwable.class)),
+        getClass().getName() + "$HandleExceptionAdvice");
 
     transformer.applyAdviceToMethod(
         named("handleResponse"), getClass().getName() + "$HandleResponseAdvice");

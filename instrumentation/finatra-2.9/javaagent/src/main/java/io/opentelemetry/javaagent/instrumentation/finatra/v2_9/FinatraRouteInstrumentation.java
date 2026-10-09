@@ -37,7 +37,8 @@ class FinatraRouteInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("handleMatch")
             .and(takesArguments(2))
-            .and(takesArgument(0, named("com.twitter.finagle.http.Request"))),
+            .and(takesArgument(0, named("com.twitter.finagle.http.Request")))
+            .and(returns(named("scala.Some"))),
         getClass().getName() + "$HandleMatchAdvice");
     transformer.applyAdviceToMethod(
         named("copy").and(returns(named("com.twitter.finatra.http.internal.routing.Route"))),

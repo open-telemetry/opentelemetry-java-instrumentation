@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentCo
 import static io.opentelemetry.javaagent.instrumentation.kubernetesclient.v7_0.KubernetesClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -37,13 +38,16 @@ class ApiClientInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isPublic().and(named("buildRequest")).and(takesArguments(10).or(takesArguments(11))),
+        isPublic()
+            .and(named("buildRequest"))
+            .and(takesArguments(10).or(takesArguments(11)))
+            .and(returns(named("okhttp3.Request"))),
         getClass().getName() + "$BuildRequestAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("execute"))
             .and(takesArguments(2))
-            .and(takesArgument(0, named("okhttp3.Call"))),
+            .and(returns(named("io.kubernetes.client.openapi.ApiResponse"))),
         getClass().getName() + "$ExecuteAdvice");
     transformer.applyAdviceToMethod(
         isPublic()

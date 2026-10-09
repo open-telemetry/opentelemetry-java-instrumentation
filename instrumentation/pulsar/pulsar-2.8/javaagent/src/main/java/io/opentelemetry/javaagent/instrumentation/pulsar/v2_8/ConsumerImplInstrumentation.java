@@ -13,6 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -53,20 +54,30 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
         isProtected()
             .and(named("internalReceive"))
             .and(takesArguments(2))
-            .and(takesArgument(1, TimeUnit.class)),
+            .and(takesArgument(1, TimeUnit.class))
+            .and(returns(named("org.apache.pulsar.client.api.Message"))),
         getClass().getName() + "$ConsumerInternalReceiveAdvice");
     // internalReceive will apply to Consumer#receive()
     transformer.applyAdviceToMethod(
-        isProtected().and(named("internalReceive")).and(takesArguments(0)),
+        isProtected()
+            .and(named("internalReceive"))
+            .and(takesArguments(0))
+            .and(returns(named("org.apache.pulsar.client.api.Message"))),
         getClass().getName() + "$ConsumerSyncReceiveAdvice");
     // internalReceiveAsync will apply to Consumer#receiveAsync()
     transformer.applyAdviceToMethod(
-        isProtected().and(named("internalReceiveAsync")).and(takesArguments(0)),
+        isProtected()
+            .and(named("internalReceiveAsync"))
+            .and(takesArguments(0))
+            .and(returns(CompletableFuture.class)),
         getClass().getName() + "$ConsumerAsyncReceiveAdvice");
     // internalBatchReceiveAsync will apply to Consumer#batchReceive() and
     // Consumer#batchReceiveAsync()
     transformer.applyAdviceToMethod(
-        isProtected().and(named("internalBatchReceiveAsync")).and(takesArguments(0)),
+        isProtected()
+            .and(named("internalBatchReceiveAsync"))
+            .and(takesArguments(0))
+            .and(returns(CompletableFuture.class)),
         getClass().getName() + "$ConsumerBatchAsyncReceiveAdvice");
 
     // only in MultiTopicsConsumerImpl

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jfinal.v3_2;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.jfinal.core.Action;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -24,7 +25,9 @@ class ActionMappingInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(named("getAction"), getClass().getName() + "$GetActionAdvice");
+    transformer.applyAdviceToMethod(
+        named("getAction").and(returns(named("com.jfinal.core.Action"))),
+        getClass().getName() + "$GetActionAdvice");
   }
 
   @SuppressWarnings("unused")

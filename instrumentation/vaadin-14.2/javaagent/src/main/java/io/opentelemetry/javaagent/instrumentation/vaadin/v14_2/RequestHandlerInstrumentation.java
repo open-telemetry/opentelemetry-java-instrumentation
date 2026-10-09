@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.vaadin.v14_2.VaadinSingletons.helper;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.vaadin.flow.server.RequestHandler;
@@ -40,7 +41,8 @@ class RequestHandlerInstrumentation implements TypeInstrumentation {
         named("handleRequest")
             .and(takesArgument(0, named("com.vaadin.flow.server.VaadinSession")))
             .and(takesArgument(1, named("com.vaadin.flow.server.VaadinRequest")))
-            .and(takesArgument(2, named("com.vaadin.flow.server.VaadinResponse"))),
+            .and(takesArgument(2, named("com.vaadin.flow.server.VaadinResponse")))
+            .and(returns(boolean.class)),
         getClass().getName() + "$HandleRequestAdvice");
   }
 

@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSin
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.lambdaworks.redis.protocol.AsyncCommand;
 import com.lambdaworks.redis.protocol.RedisCommand;
@@ -32,7 +33,9 @@ class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$SaveContextAdvice");
+    transformer.applyAdviceToMethod(
+        isConstructor().and(takesArgument(0, named("com.lambdaworks.redis.protocol.RedisCommand"))),
+        getClass().getName() + "$SaveContextAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf("complete", "completeExceptionally", "cancel"),
         getClass().getName() + "$RestoreContextAdvice");

@@ -9,6 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -36,7 +37,9 @@ class HttpClientInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isStatic().and(namedOneOf("create", "newConnection", "from")),
+        isStatic()
+            .and(namedOneOf("create", "newConnection", "from"))
+            .and(returns(named("reactor.netty.http.client.HttpClient"))),
         getClass().getName() + "$CreateAdvice");
 
     // advice classes below expose current context in doOn*/doAfter* callbacks

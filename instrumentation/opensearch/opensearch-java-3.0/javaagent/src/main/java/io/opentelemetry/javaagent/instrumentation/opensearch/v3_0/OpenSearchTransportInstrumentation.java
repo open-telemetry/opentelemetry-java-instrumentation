@@ -11,6 +11,7 @@ import static io.opentelemetry.javaagent.instrumentation.opensearch.v3_0.OpenSea
 import static io.opentelemetry.javaagent.instrumentation.opensearch.v3_0.OpenSearchSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
@@ -52,7 +53,8 @@ class OpenSearchTransportInstrumentation implements TypeInstrumentation {
         isPublic()
             .and(named("performRequestAsync"))
             .and(takesArgument(0, Object.class))
-            .and(takesArgument(1, named("org.opensearch.client.transport.Endpoint"))),
+            .and(takesArgument(1, named("org.opensearch.client.transport.Endpoint")))
+            .and(returns(CompletableFuture.class)),
         getClass().getName() + "$PerformRequestAsyncAdvice");
   }
 

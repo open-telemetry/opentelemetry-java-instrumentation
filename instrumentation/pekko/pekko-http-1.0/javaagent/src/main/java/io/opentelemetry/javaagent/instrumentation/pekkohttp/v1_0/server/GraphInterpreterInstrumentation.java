@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -24,7 +25,12 @@ class GraphInterpreterInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(named("processPush"), getClass().getName() + "$PushAdvice");
+    transformer.applyAdviceToMethod(
+        named("processPush")
+            .and(
+                takesArgument(
+                    0, named("org.apache.pekko.stream.impl.fusing.GraphInterpreter$Connection"))),
+        getClass().getName() + "$PushAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.ratpack.v1_4;
 
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -27,7 +28,8 @@ class ServerRegistryInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isStatic().and(named("buildBaseRegistry")), getClass().getName() + "$BuildAdvice");
+        isStatic().and(named("buildBaseRegistry")).and(returns(named("ratpack.registry.Registry"))),
+        getClass().getName() + "$BuildAdvice");
   }
 
   @SuppressWarnings("unused")

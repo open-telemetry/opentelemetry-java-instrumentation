@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -28,7 +29,9 @@ class SimpleMessageListenerContainerInstrumentation implements TypeInstrumentati
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("createBlockingQueueConsumer").and(takesArguments(0)),
+        named("createBlockingQueueConsumer")
+            .and(takesArguments(0))
+            .and(returns(named("org.springframework.amqp.rabbit.listener.BlockingQueueConsumer"))),
         getClass().getName() + "$CreateConsumerAdvice");
     transformer.applyAdviceToMethod(
         named("setConsumerBatchEnabled").and(takesArguments(boolean.class)),

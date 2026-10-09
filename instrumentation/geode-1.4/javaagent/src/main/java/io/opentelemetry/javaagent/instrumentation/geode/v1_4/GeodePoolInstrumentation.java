@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.geode.v1_4;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -35,10 +36,16 @@ class GeodePoolInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("addServer").and(takesArguments(2)).and(takesArgument(0, String.class)),
+        named("addServer")
+            .and(takesArguments(2))
+            .and(takesArgument(0, String.class))
+            .and(takesArgument(1, int.class)),
         getClass().getName() + "$AddServerAdvice");
     transformer.applyAdviceToMethod(
-        named("addLocator").and(takesArguments(2)).and(takesArgument(0, String.class)),
+        named("addLocator")
+            .and(takesArguments(2))
+            .and(takesArgument(0, String.class))
+            .and(takesArgument(1, int.class)),
         getClass().getName() + "$AddLocatorAdvice");
     transformer.applyAdviceToMethod(
         named("setServerGroup").and(takesArguments(1)).and(takesArgument(0, String.class)),
@@ -51,7 +58,9 @@ class GeodePoolInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("org.apache.geode.cache.client.Pool"))),
         getClass().getName() + "$InitAdvice");
     transformer.applyAdviceToMethod(
-        named("create").and(takesArguments(1)).and(takesArgument(0, String.class)),
+        named("create")
+            .and(takesArguments(1))
+            .and(returns(named("org.apache.geode.cache.client.Pool"))),
         getClass().getName() + "$CreateAdvice");
   }
 

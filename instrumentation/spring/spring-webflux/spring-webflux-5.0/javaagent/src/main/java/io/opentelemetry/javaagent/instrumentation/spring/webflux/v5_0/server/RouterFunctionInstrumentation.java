@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -49,7 +50,8 @@ class RouterFunctionInstrumentation implements TypeInstrumentation {
             .and(
                 takesArgument(
                     0, named("org.springframework.web.reactive.function.server.ServerRequest")))
-            .and(takesArguments(1)),
+            .and(takesArguments(1))
+            .and(returns(named("reactor.core.publisher.Mono"))),
         getClass().getName() + "$RouteAdvice");
   }
 

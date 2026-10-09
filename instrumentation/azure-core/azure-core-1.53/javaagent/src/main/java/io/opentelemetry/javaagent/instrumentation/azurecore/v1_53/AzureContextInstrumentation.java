@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.azurecore.v1_53;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -36,7 +37,8 @@ class AzureContextInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("getData").and(takesArguments(1)), getClass().getName() + "$GetDataAdvice");
+        named("getData").and(takesArguments(1)).and(returns(Optional.class)),
+        getClass().getName() + "$GetDataAdvice");
   }
 
   @SuppressWarnings("unused")
