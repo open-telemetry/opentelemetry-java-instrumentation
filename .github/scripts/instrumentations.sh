@@ -225,6 +225,7 @@ readonly INSTRUMENTATIONS=(
   "powerjob-4.0:javaagent:testExperimental"
   "pulsar:pulsar-2.8:javaagent:test"
   "pulsar:pulsar-2.8:javaagent:testExperimental"
+  "pulsar:pulsar-2.8:javaagent:version5Test"
   "quartz-2.0:javaagent:test"
   "quartz-2.0:javaagent:testExperimental"
   "r2dbc-1.0:javaagent:test"
