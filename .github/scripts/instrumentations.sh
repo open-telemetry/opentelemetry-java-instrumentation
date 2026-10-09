@@ -57,7 +57,6 @@ readonly INSTRUMENTATIONS=(
   "clickhouse:clickhouse-client-v1-0.5:javaagent:test"
   "clickhouse:clickhouse-client-v2-0.8:javaagent:test"
   "couchbase:couchbase-2.0:javaagent:test"
-  "couchbase:couchbase-2.0:javaagent:testCommonQuerySanitizationDisabled"
   "couchbase:couchbase-2.0:javaagent:testExperimental"
   "couchbase:couchbase-2.0:javaagent:testQuerySanitizationDisabled"
   "couchbase:couchbase-2.0:javaagent:version26Test"
