@@ -161,8 +161,10 @@ public final class AwsSdkInstrumenterFactory {
           new AwsSdkHttpClientSuppressionAttributesExtractor();
 
   private final OpenTelemetry openTelemetry;
-  private final List<AttributesExtractor<ExecutionAttributes, Response>> defaultAttributesExtractors;
-  private final List<AttributesExtractor<ExecutionAttributes, Response>> extendedAttributesExtractors;
+  private final List<AttributesExtractor<ExecutionAttributes, Response>>
+      defaultAttributesExtractors;
+  private final List<AttributesExtractor<ExecutionAttributes, Response>>
+      extendedAttributesExtractors;
   private final List<AttributesExtractor<ExecutionAttributes, Response>>
       defaultConsumerAttributesExtractors;
   private final List<AttributesExtractor<ExecutionAttributes, Response>>
@@ -182,7 +184,7 @@ public final class AwsSdkInstrumenterFactory {
       boolean useXrayPropagator) {
     this.openTelemetry = openTelemetry;
     AttributesExtractor<ExecutionAttributes, Response> rpcAttributesExtractor =
-        RpcClientAttributesExtractor.create(openTelemetry, new AwsSdkRpcAttributesGetter());
+        RpcClientAttributesExtractor.create(new AwsSdkRpcAttributesGetter(), openTelemetry);
     defaultAttributesExtractors =
         asList(rpcAttributesExtractor, httpClientSuppressionAttributesExtractor);
     extendedAttributesExtractors =

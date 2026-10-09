@@ -28,9 +28,9 @@ public class RmiServerSingletons {
         Instrumenter.<ClassAndMethod, Void>builder(
                 openTelemetry,
                 "io.opentelemetry.rmi",
-                RpcSpanNameExtractor.create(openTelemetry, rpcAttributesGetter))
+                RpcSpanNameExtractor.create(rpcAttributesGetter, openTelemetry))
             .addAttributesExtractor(
-                RpcServerAttributesExtractor.create(openTelemetry, rpcAttributesGetter));
+                RpcServerAttributesExtractor.create(rpcAttributesGetter, openTelemetry));
     setRpcServerExceptionEventExtractor(builder);
 
     instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysServer());

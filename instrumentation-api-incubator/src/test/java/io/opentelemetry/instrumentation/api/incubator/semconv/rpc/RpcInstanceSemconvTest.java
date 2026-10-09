@@ -230,11 +230,11 @@ class RpcInstanceSemconvTest {
         };
     InstrumenterBuilder<String, Void> builder =
         Instrumenter.<String, Void>builder(
-                openTelemetry, "test", RpcSpanNameExtractor.create(openTelemetry, getter))
+                openTelemetry, "test", RpcSpanNameExtractor.create(getter, openTelemetry))
             .addAttributesExtractor(
                 client
-                    ? RpcClientAttributesExtractor.create(openTelemetry, getter)
-                    : RpcServerAttributesExtractor.create(openTelemetry, getter))
+                    ? RpcClientAttributesExtractor.create(getter, openTelemetry)
+                    : RpcServerAttributesExtractor.create(getter, openTelemetry))
             .addAttributesExtractor(
                 ServicePeerAttributesExtractor.create(
                     new ServerAttributesGetter<String>() {
@@ -245,7 +245,7 @@ class RpcInstanceSemconvTest {
                     },
                     openTelemetry))
             .addContextCustomizer(
-                RpcMetricsContextCustomizers.dualEmitContextCustomizer(openTelemetry, getter))
+                RpcMetricsContextCustomizers.dualEmitContextCustomizer(getter, openTelemetry))
             .addOperationMetrics(
                 client ? RpcClientMetrics.get(openTelemetry) : RpcServerMetrics.get(openTelemetry));
     return new ConfiguredInstrumenter(

@@ -26,7 +26,7 @@ public final class RpcSpanNameExtractor<REQUEST> implements SpanNameExtractor<RE
   // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
   // via openTelemetry.getConfigProvider()
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
-      OpenTelemetry openTelemetry, RpcAttributesGetter<REQUEST, ?> getter) {
+      RpcAttributesGetter<REQUEST, ?> getter, OpenTelemetry openTelemetry) {
     return new RpcSpanNameExtractor<>(getter, emitPreviewRpcSemconv(openTelemetry));
   }
 

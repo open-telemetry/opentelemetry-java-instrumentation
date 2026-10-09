@@ -85,7 +85,7 @@ public final class SofaRpcTelemetryBuilder {
   public SofaRpcTelemetry build() {
     SofaRpcAttributesGetter rpcAttributesGetter = new SofaRpcAttributesGetter();
     SpanNameExtractor<SofaRpcRequest> spanNameExtractor =
-        RpcSpanNameExtractor.create(openTelemetry, rpcAttributesGetter);
+        RpcSpanNameExtractor.create(rpcAttributesGetter, openTelemetry);
     SofaRpcClientNetworkAttributesGetter netClientAttributesGetter =
         new SofaRpcClientNetworkAttributesGetter();
     SofaRpcNetworkServerAttributesGetter netServerAttributesGetter =
@@ -95,21 +95,21 @@ public final class SofaRpcTelemetryBuilder {
         Instrumenter.<SofaRpcRequest, SofaResponse>builder(
                 openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractor(
-                RpcServerAttributesExtractor.create(openTelemetry, rpcAttributesGetter))
+                RpcServerAttributesExtractor.create(rpcAttributesGetter, openTelemetry))
             .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
             .addAttributesExtractors(additionalExtractors)
             .addAttributesExtractors(additionalServerExtractors)
             .addOperationMetrics(RpcServerMetrics.get(openTelemetry))
             .addContextCustomizer(
                 RpcMetricsContextCustomizers.dualEmitContextCustomizer(
-                    openTelemetry, rpcAttributesGetter));
+                    rpcAttributesGetter, openTelemetry));
     setRpcServerExceptionEventExtractor(serverInstrumenterBuilder);
 
     InstrumenterBuilder<SofaRpcRequest, SofaResponse> clientInstrumenterBuilder =
         Instrumenter.<SofaRpcRequest, SofaResponse>builder(
                 openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractor(
-                RpcClientAttributesExtractor.create(openTelemetry, rpcAttributesGetter))
+                RpcClientAttributesExtractor.create(rpcAttributesGetter, openTelemetry))
             .addAttributesExtractor(ServerAttributesExtractor.create(netClientAttributesGetter))
             .addAttributesExtractor(NetworkAttributesExtractor.create(netClientAttributesGetter))
             .addAttributesExtractors(additionalExtractors)
@@ -117,7 +117,7 @@ public final class SofaRpcTelemetryBuilder {
             .addOperationMetrics(RpcClientMetrics.get(openTelemetry))
             .addContextCustomizer(
                 RpcMetricsContextCustomizers.dualEmitContextCustomizer(
-                    openTelemetry, rpcAttributesGetter));
+                    rpcAttributesGetter, openTelemetry));
     setRpcClientExceptionEventExtractor(clientInstrumenterBuilder);
 
     return new SofaRpcTelemetry(

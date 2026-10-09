@@ -34,7 +34,7 @@ public final class RpcServerAttributesExtractor<REQUEST, RESPONSE>
   // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
   // via openTelemetry.getConfigProvider()
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      OpenTelemetry openTelemetry, RpcAttributesGetter<REQUEST, RESPONSE> getter) {
+      RpcAttributesGetter<REQUEST, RESPONSE> getter, OpenTelemetry openTelemetry) {
     return new RpcServerAttributesExtractor<>(
         getter, emitOldRpcSemconv(openTelemetry), emitPreviewRpcSemconv(openTelemetry));
   }

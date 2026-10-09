@@ -36,9 +36,9 @@ public class SpringRmiSingletons {
         Instrumenter.<Method, Void>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                RpcSpanNameExtractor.create(openTelemetry, rpcAttributesGetter))
+                RpcSpanNameExtractor.create(rpcAttributesGetter, openTelemetry))
             .addAttributesExtractor(
-                RpcClientAttributesExtractor.create(openTelemetry, rpcAttributesGetter));
+                RpcClientAttributesExtractor.create(rpcAttributesGetter, openTelemetry));
     setRpcClientExceptionEventExtractor(builder);
     return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
@@ -51,9 +51,9 @@ public class SpringRmiSingletons {
         Instrumenter.<ClassAndMethod, Void>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                RpcSpanNameExtractor.create(openTelemetry, rpcAttributesGetter))
+                RpcSpanNameExtractor.create(rpcAttributesGetter, openTelemetry))
             .addAttributesExtractor(
-                RpcServerAttributesExtractor.create(openTelemetry, rpcAttributesGetter));
+                RpcServerAttributesExtractor.create(rpcAttributesGetter, openTelemetry));
     setRpcServerExceptionEventExtractor(builder);
     return builder.buildInstrumenter(SpanKindExtractor.alwaysServer());
   }

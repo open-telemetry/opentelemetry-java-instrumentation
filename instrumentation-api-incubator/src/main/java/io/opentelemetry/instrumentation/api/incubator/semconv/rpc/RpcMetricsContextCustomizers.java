@@ -35,7 +35,7 @@ public final class RpcMetricsContextCustomizers {
 
   /** Creates the dual-emission customizer using the supplied instance's configuration. */
   public static <REQUEST> ContextCustomizer<REQUEST> dualEmitContextCustomizer(
-      OpenTelemetry openTelemetry, RpcAttributesGetter<REQUEST, ?> getter) {
+      RpcAttributesGetter<REQUEST, ?> getter, OpenTelemetry openTelemetry) {
     return dualEmitContextCustomizer(
         getter, emitOldRpcSemconv(openTelemetry) && emitPreviewRpcSemconv(openTelemetry));
   }
