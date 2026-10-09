@@ -33,6 +33,7 @@ public final class AwsLambdaFunctionAttributesExtractor
       AttributeKey.stringKey("cloud.resource_id");
 
   @Nullable private static final MethodHandle GET_FUNCTION_ARN;
+  @Nullable private static final MethodHandle GET_FUNCTION_VERSION;
 
   static {
     MethodHandles.Lookup lookup = MethodHandles.publicLookup();
@@ -45,6 +46,16 @@ public final class AwsLambdaFunctionAttributesExtractor
       getFunctionArn = null;
     }
     GET_FUNCTION_ARN = getFunctionArn;
+
+    MethodHandle getFunctionVersion;
+    try {
+      getFunctionVersion =
+          lookup.findVirtual(
+              Context.class, "getFunctionVersion", MethodType.methodType(String.class));
+    } catch (NoSuchMethodException | IllegalAccessException e) {
+      getFunctionVersion = null;
+    }
+    GET_FUNCTION_VERSION = getFunctionVersion;
   }
 
   // cached accountId value
@@ -58,7 +69,7 @@ public final class AwsLambdaFunctionAttributesExtractor
     Context awsContext = request.getAwsContext();
     attributes.put(FAAS_INVOCATION_ID, awsContext.getAwsRequestId());
     String arn = getFunctionArn(awsContext);
-    attributes.put(CLOUD_RESOURCE_ID, arn);
+    attributes.put(CLOUD_RESOURCE_ID, resolveFunctionArn(arn, getFunctionVersion(awsContext)));
     attributes.put(CLOUD_ACCOUNT_ID, getAccountId(arn));
   }
 
@@ -80,6 +91,48 @@ public final class AwsLambdaFunctionAttributesExtractor
     } catch (Throwable ignored) {
       return null;
     }
+  }
+
+  @Nullable
+  private static String getFunctionVersion(Context awsContext) {
+    if (GET_FUNCTION_VERSION == null) {
+      return null;
+    }
+    try {
+      return (String) GET_FUNCTION_VERSION.invoke(awsContext);
+    } catch (Throwable ignored) {
+      return null;
+    }
+  }
+
+  @Nullable
+  private static String resolveFunctionArn(@Nullable String arn, @Nullable String functionVersion) {
+    if (arn == null || functionVersion == null || functionVersion.isEmpty()) {
+      return arn;
+    }
+    String functionArnPrefix = ":function:";
+    int functionNameStart = arn.indexOf(functionArnPrefix);
+    int qualifierStart = arn.lastIndexOf(':');
+    if (functionNameStart < 0 || qualifierStart <= functionNameStart + functionArnPrefix.length()) {
+      return arn;
+    }
+    String qualifier = arn.substring(qualifierStart + 1);
+    if (isNumeric(qualifier)) {
+      return arn;
+    }
+    return arn.substring(0, qualifierStart + 1) + functionVersion;
+  }
+
+  private static boolean isNumeric(String value) {
+    if (value.isEmpty()) {
+      return false;
+    }
+    for (int i = 0; i < value.length(); i++) {
+      if (value.charAt(i) < '0' || value.charAt(i) > '9') {
+        return false;
+      }
+    }
+    return true;
   }
 
   @Nullable

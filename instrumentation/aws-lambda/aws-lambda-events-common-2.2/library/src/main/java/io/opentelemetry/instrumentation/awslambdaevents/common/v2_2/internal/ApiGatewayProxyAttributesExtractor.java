@@ -11,7 +11,10 @@ import static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUt
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
+import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -68,6 +71,9 @@ final class ApiGatewayProxyAttributesExtractor
     String userAgent = headers.get("user-agent");
     attributes.put(USER_AGENT_ORIGINAL, userAgent);
 
+    attributes.put(URL_PATH, request.getPath());
+    attributes.put(URL_SCHEME, headers.get("x-forwarded-proto"));
+    attributes.put(HTTP_ROUTE, request.getResource());
     attributes.put(URL_FULL, getHttpUrl(request, headers, sensitiveQueryParameters));
   }
 

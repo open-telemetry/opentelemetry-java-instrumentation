@@ -9,7 +9,10 @@ import static io.opentelemetry.instrumentation.testing.util.InstrumentationScope
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
+import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_ACCOUNT_ID;
 import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_RESOURCE_ID;
@@ -112,6 +115,9 @@ class AwsLambdaApiGatewayWrapperTest {
                             equalTo(FAAS_INVOCATION_ID, "1-22-333"),
                             equalTo(FAAS_TRIGGER, "http"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(URL_PATH, "/hello/world"),
+                            equalTo(URL_SCHEME, "http"),
+                            equalTo(HTTP_ROUTE, "/hello/{param}"),
                             equalTo(USER_AGENT_ORIGINAL, "Test Client"),
                             equalTo(URL_FULL, "http://localhost:123/hello/world?a=b&c=d"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
@@ -146,7 +152,10 @@ class AwsLambdaApiGatewayWrapperTest {
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
                             equalTo(CLOUD_ACCOUNT_ID, "123456789"),
                             equalTo(FAAS_INVOCATION_ID, "1-22-333"),
-                            equalTo(FAAS_TRIGGER, "http"))));
+                            equalTo(FAAS_TRIGGER, "http"),
+                            equalTo(URL_PATH, null),
+                            equalTo(URL_SCHEME, null),
+                            equalTo(HTTP_ROUTE, null))));
   }
 
   @Test

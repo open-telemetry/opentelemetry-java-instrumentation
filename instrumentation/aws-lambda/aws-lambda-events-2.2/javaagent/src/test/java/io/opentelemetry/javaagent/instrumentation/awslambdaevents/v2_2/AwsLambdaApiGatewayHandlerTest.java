@@ -9,7 +9,10 @@ import static io.opentelemetry.instrumentation.testing.util.InstrumentationScope
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
+import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
 import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_TRIGGER;
@@ -90,9 +93,30 @@ class AwsLambdaApiGatewayHandlerTest {
                             equalTo(FAAS_INVOCATION_ID, "1-22-2024"),
                             equalTo(FAAS_TRIGGER, "http"),
                             equalTo(HTTP_REQUEST_METHOD, "PUT"),
+                            equalTo(URL_PATH, "/hello/world"),
+                            equalTo(URL_SCHEME, "http"),
+                            equalTo(HTTP_ROUTE, "/hello/{param}"),
                             equalTo(USER_AGENT_ORIGINAL, "Clever Client"),
                             equalTo(URL_FULL, "http://localhost:2024/hello/world"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 201L))));
+  }
+
+  @Test
+  void tracedWithoutOptionalHttpAttributes() {
+    APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent().withBody("hello");
+    new TestRequestHandlerApiGateway().handleRequest(input, context);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasAttributesSatisfyingExactly(
+                        equalTo(FAAS_INVOCATION_ID, "1-22-2024"),
+                        equalTo(FAAS_TRIGGER, "http"),
+                        equalTo(URL_PATH, null),
+                        equalTo(URL_SCHEME, null),
+                        equalTo(HTTP_ROUTE, null),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 201L))));
   }
 
   private static class TestRequestHandlerApiGateway
