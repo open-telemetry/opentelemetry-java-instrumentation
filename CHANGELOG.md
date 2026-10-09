@@ -162,9 +162,7 @@
   Use `SqlQuery.create(queryText, null, null, storedProcedureName, querySummary)` instead.
   The existing three-argument `SqlQuery.create(queryText, operationName, target)` retains its
   operation/collection and stored-procedure semantics; it is not a replacement for
-  `createWithSummary`. `SqlQuery.getOperationName()` and `getCollectionName()` remain public
-  and are no longer deprecated, so direct consumers of parsed operation and collection names
-  require no migration.
+  `createWithSummary`.
 - Remove `MessageOperation` and its overloads in the messaging attribute, span-name and span-kind
   extractors from `opentelemetry-instrumentation-api-incubator`.
   `MessagingAttributesGetter` no longer requires or exposes `getMessageBodySize()` or
