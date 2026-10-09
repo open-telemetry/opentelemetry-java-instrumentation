@@ -239,6 +239,7 @@ public final class KafkaUtil {
    * Caches this client's holder, publishing it before the metadata is read so a concurrent send
    * finds it rather than starting its own lookup.
    */
+  // visible for testing
   @Nullable
   static <T> String initializeClusterId(
       T client, VirtualField<T, KafkaClusterId> field, @Nullable Object holder) {
@@ -252,6 +253,7 @@ public final class KafkaUtil {
     return readClusterId(created);
   }
 
+  // visible for testing
   @Nullable
   static String readClusterId(KafkaClusterId cached) {
     String id = cached.clusterId();
@@ -294,6 +296,7 @@ public final class KafkaUtil {
     return metadataFieldCache.get(holderClass).orElse(null);
   }
 
+  // visible for testing
   @Nullable
   static Metadata extractMetadataFromHolder(@Nullable Object holder) {
     if (holder == null) {
@@ -311,6 +314,7 @@ public final class KafkaUtil {
     }
   }
 
+  // visible for testing
   @Nullable
   public static String clusterIdFromMetadata(@Nullable Metadata metadata) {
     if (metadata == null) {

@@ -47,6 +47,7 @@ public class SpringConfigProperties implements ConfigProperties {
         env, otlpExporterProperties, resourceProperties, otelSpringProperties, fallback);
   }
 
+  // visible for testing
   public SpringConfigProperties(
       Environment environment,
       OtlpExporterProperties otlpExporterProperties,

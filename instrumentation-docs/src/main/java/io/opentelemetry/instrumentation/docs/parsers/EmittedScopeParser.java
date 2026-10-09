@@ -170,6 +170,7 @@ public class EmittedScopeParser {
    * @param instrumentationDirectory the instrumentation directory relative to root
    * @return set of all unique scopes found in scope files
    */
+  // visible for testing
   public static Set<EmittedScope.Scope> getScopesFromFiles(
       Path rootDir, String instrumentationDirectory) {
     Path telemetryDir = rootDir.resolve(instrumentationDirectory).resolve(".telemetry");

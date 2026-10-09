@@ -147,6 +147,7 @@ public class JedisConfiguredTargets {
     }
   }
 
+  // visible for testing
   public static void setConnectionTarget(
       @Nullable Connection connection, @Nullable RedisServerTarget target) {
     if (connection == null) {

@@ -26,6 +26,7 @@ public class Metric extends MetricStructure {
 
   public Metric() {}
 
+  // visible for testing
   @Nullable
   public String getMetric() {
     return metric;
@@ -41,6 +42,7 @@ public class Metric extends MetricStructure {
     return name;
   }
 
+  // visible for testing
   @Nullable
   public String getDesc() {
     return desc;

@@ -16,6 +16,7 @@ public final class InjectionState {
     this.wrapper = wrapper;
   }
 
+  // visible for testing
   public int getHeadTagBytesSeen() {
     return headTagBytesSeen;
   }

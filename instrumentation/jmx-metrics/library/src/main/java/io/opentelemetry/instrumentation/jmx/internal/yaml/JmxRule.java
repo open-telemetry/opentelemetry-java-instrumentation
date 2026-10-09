@@ -59,6 +59,7 @@ public class JmxRule extends MetricStructure {
     return !handlers.isEmpty();
   }
 
+  // visible for testing
   public Collection<String> getBeans() {
     return beans;
   }
@@ -95,6 +96,7 @@ public class JmxRule extends MetricStructure {
     return prefix;
   }
 
+  // visible for testing
   public Map<String, Metric> getMapping() {
     return mapping;
   }

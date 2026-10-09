@@ -57,6 +57,7 @@ class KubernetesResource {
         matcher.group("name"));
   }
 
+  // visible for testing
   KubernetesResource(
       String apiGroup,
       String apiVersion,

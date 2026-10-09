@@ -100,6 +100,7 @@ public class CassandraCompactionProgressHandler implements ExperimentalJmxMetric
     return asList(METRIC_CURRENT, METRIC_TOTAL);
   }
 
+  // visible for testing
   static Map<Attributes, long[]> queryGroups(Supplier<Detector> detectorSupplier) {
     Map<Attributes, long[]> groups = new HashMap<>();
     Detector detector = detectorSupplier.get();
@@ -116,6 +117,7 @@ public class CassandraCompactionProgressHandler implements ExperimentalJmxMetric
     return groups;
   }
 
+  // visible for testing
   static Map<Attributes, long[]> queryCompactions(
       MBeanServerConnection connection, ObjectName objectName) {
     Map<Attributes, long[]> groups = new HashMap<>();

@@ -41,6 +41,7 @@ public final class ReferenceMatcher {
         instrumentationModule::isHelperClass);
   }
 
+  // visible for testing
   ReferenceMatcher(
       List<String> helperClassNames,
       Map<String, ClassRef> references,

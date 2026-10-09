@@ -27,6 +27,7 @@ public final class LettuceConnectionState {
   @Nullable final Integer databaseIndex;
   @Nullable final RedisServerTarget serverTarget;
 
+  // visible for testing
   LettuceConnectionState(
       @Nullable Integer databaseIndex, @Nullable RedisServerTarget serverTarget) {
     this.databaseIndex = databaseIndex;

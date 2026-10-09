@@ -62,20 +62,28 @@ public final class Constants {
 
   public static final AttributeKey<String> ATTR_ARENA_NAME = AttributeKey.stringKey("arena");
   public static final AttributeKey<String> ATTR_NETWORK_MODE = AttributeKey.stringKey("mode");
+  // visible for testing
   public static final Attributes ATTR_PS_EDEN_SPACE =
       Attributes.of(JVM_MEMORY_TYPE, HEAP, JVM_MEMORY_POOL_NAME, "PS Eden Space");
+  // visible for testing
   public static final Attributes ATTR_PS_SURVIVOR_SPACE =
       Attributes.of(JVM_MEMORY_TYPE, HEAP, JVM_MEMORY_POOL_NAME, "PS Survivor Space");
+  // visible for testing
   public static final Attributes ATTR_PS_OLD_GEN =
       Attributes.of(JVM_MEMORY_TYPE, HEAP, JVM_MEMORY_POOL_NAME, "PS Old Gen");
+  // visible for testing
   public static final Attributes ATTR_G1_SURVIVOR_SPACE =
       Attributes.of(JVM_MEMORY_TYPE, HEAP, JVM_MEMORY_POOL_NAME, "G1 Survivor Space");
+  // visible for testing
   public static final Attributes ATTR_G1_EDEN_SPACE =
       Attributes.of(JVM_MEMORY_TYPE, HEAP, JVM_MEMORY_POOL_NAME, "G1 Eden Space");
+  // visible for testing
   public static final Attributes ATTR_METASPACE =
       Attributes.of(JVM_MEMORY_TYPE, NON_HEAP, JVM_MEMORY_POOL_NAME, "Metaspace");
+  // visible for testing
   public static final Attributes ATTR_COMPRESSED_CLASS_SPACE =
       Attributes.of(JVM_MEMORY_TYPE, NON_HEAP, JVM_MEMORY_POOL_NAME, "Compressed Class Space");
+  // visible for testing
   public static final Attributes ATTR_CODE_CACHE =
       Attributes.of(JVM_MEMORY_TYPE, NON_HEAP, JVM_MEMORY_POOL_NAME, "CodeCache");
 

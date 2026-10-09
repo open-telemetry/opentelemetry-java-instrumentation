@@ -55,6 +55,7 @@ public record FileManager(Path rootDir) {
         instrumentationType);
   }
 
+  // visible for testing
   public static boolean isValidInstrumentationPath(String filePath) {
     if (filePath == null || filePath.isEmpty()) {
       return false;

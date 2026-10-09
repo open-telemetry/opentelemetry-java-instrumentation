@@ -46,14 +46,21 @@ final class JarAnalyzer implements ClassFileTransformer {
       java.util.logging.Logger.getLogger(JarAnalyzer.class.getName());
 
   private static final String EVENT_NAME_INFO = "package.info";
+  // visible for testing
   static final AttributeKey<String> PACKAGE_NAME = AttributeKey.stringKey("package.name");
+  // visible for testing
   static final AttributeKey<String> PACKAGE_VERSION = AttributeKey.stringKey("package.version");
+  // visible for testing
   static final AttributeKey<String> PACKAGE_TYPE = AttributeKey.stringKey("package.type");
+  // visible for testing
   static final AttributeKey<String> PACKAGE_DESCRIPTION =
       AttributeKey.stringKey("package.description");
+  // visible for testing
   static final AttributeKey<String> PACKAGE_CHECKSUM = AttributeKey.stringKey("package.checksum");
+  // visible for testing
   static final AttributeKey<String> PACKAGE_CHECKSUM_ALGORITHM =
       AttributeKey.stringKey("package.checksum_algorithm");
+  // visible for testing
   static final AttributeKey<String> PACKAGE_PATH = AttributeKey.stringKey("package.path");
 
   private final Set<URI> seenUris = ConcurrentHashMap.newKeySet();
@@ -205,6 +212,7 @@ final class JarAnalyzer implements ClassFileTransformer {
    * Process the {@code archiveUrl}, extracting metadata from it and emitting an event with the
    * content.
    */
+  // visible for testing
   static void processUrl(Logger logger, URL archiveUrl) {
     JarDetails jarDetails;
     try {

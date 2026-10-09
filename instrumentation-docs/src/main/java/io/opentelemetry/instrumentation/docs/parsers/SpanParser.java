@@ -74,8 +74,10 @@ public class SpanParser {
   }
 
   /** Helper class to aggregate span attributes by scope and kind. */
+  // visible for testing
   static class SpanAggregator {
 
+    // visible for testing
     public static Map<String, Map<String, Set<TelemetryAttribute>>> aggregateSpans(
         String when, EmittedSpans spans, String targetScopeName) {
       Map<String, Map<String, Set<TelemetryAttribute>>> aggregatedAttributes = new HashMap<>();
@@ -113,6 +115,7 @@ public class SpanParser {
       }
     }
 
+    // visible for testing
     public static Map<String, List<EmittedSpans.Span>> buildFilteredSpans(
         Map<String, Map<String, Set<TelemetryAttribute>>> aggregatedAttributes) {
       Map<String, List<EmittedSpans.Span>> result = new HashMap<>();

@@ -19,6 +19,7 @@ final class CgroupV1ContainerIdExtractor {
 
   private static final Logger logger =
       Logger.getLogger(CgroupV1ContainerIdExtractor.class.getName());
+  // visible for testing
   static final Path V1_CGROUP_PATH = Paths.get("/proc/self/cgroup");
   private final ContainerResource.Filesystem filesystem;
   private final Path inputFilePath;

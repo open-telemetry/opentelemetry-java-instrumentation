@@ -209,6 +209,7 @@ class JarDetails {
     }
   }
 
+  // visible for testing
   static String toHex(byte[] bytes) {
     char[] chars = new char[bytes.length * 2];
     for (int i = 0; i < bytes.length; i++) {

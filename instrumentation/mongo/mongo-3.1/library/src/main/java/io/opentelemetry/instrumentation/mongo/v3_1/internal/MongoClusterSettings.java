@@ -123,6 +123,7 @@ public class MongoClusterSettings {
     return scope;
   }
 
+  // visible for testing
   @Nullable
   static MongoServerTarget srvConnectionString(@Nullable String connectionString) {
     if (connectionString == null || !isSrvConnectionString(connectionString)) {

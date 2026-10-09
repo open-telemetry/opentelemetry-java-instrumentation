@@ -45,6 +45,7 @@ public class GarbageCollector {
 
   private static final double MILLIS_PER_S = SECONDS.toMillis(1);
 
+  // visible for testing
   public static final List<Double> GC_DURATION_BUCKETS =
       unmodifiableList(asList(0.01, 0.1, 1., 10.));
 

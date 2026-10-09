@@ -64,6 +64,7 @@ public final class ElasticsearchEndpointDefinition {
     }
   }
 
+  // visible for testing
   public List<Route> getRoutes() {
     return routes;
   }

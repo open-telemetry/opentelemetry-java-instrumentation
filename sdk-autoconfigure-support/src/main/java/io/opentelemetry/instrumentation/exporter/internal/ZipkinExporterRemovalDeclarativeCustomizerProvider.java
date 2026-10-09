@@ -45,6 +45,7 @@ public class ZipkinExporterRemovalDeclarativeCustomizerProvider
     return Integer.MAX_VALUE;
   }
 
+  // visible for testing
   static void checkZipkinExporter(OpenTelemetryConfigurationModel model) {
     if (!DeclarativeConfigV3Preview.isEnabled(model)) {
       return;

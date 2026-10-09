@@ -55,6 +55,7 @@ final class ApiGatewayProxyAttributesExtractor
     }
   }
 
+  // visible for testing
   void onRequest(AttributesBuilder attributes, APIGatewayProxyRequestEvent request) {
     String method = request.getHttpMethod();
     if (method == null || knownMethods.contains(method)) {

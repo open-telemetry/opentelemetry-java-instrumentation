@@ -61,7 +61,9 @@ public class ResourceProviderPropertiesCustomizer implements AutoConfigurationCu
         "test");
   }
 
+  // visible for testing
   static final String DISABLED_KEY = "otel.java.disabled.resource.providers";
+  // visible for testing
   static final String ENABLED_KEY = "otel.java.enabled.resource.providers";
 
   @Override

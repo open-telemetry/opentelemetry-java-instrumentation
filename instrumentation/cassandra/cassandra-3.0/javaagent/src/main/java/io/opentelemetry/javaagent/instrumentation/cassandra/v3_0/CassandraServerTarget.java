@@ -54,6 +54,7 @@ public class CassandraServerTarget {
     return CLUSTER_TARGET.get(cluster);
   }
 
+  // visible for testing
   @Nullable
   static DbServerTarget create(Object contactPoints, int configuredPort) {
     ContactPoints captured = new ContactPoints();

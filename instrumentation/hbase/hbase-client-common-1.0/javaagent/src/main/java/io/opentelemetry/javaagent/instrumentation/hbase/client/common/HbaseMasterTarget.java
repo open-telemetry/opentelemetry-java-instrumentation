@@ -36,6 +36,7 @@ final class HbaseMasterTarget {
     return from(configuration, USES_CONFIGURED_MASTER_PORT);
   }
 
+  // visible for testing
   @Nullable
   static String from(Configuration configuration, boolean usesConfiguredMasterPort) {
     Integer defaultPort = defaultPort(configuration, usesConfiguredMasterPort);

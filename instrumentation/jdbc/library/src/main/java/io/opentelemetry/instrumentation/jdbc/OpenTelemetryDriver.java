@@ -190,6 +190,7 @@ public final class OpenTelemetryDriver implements Driver {
    * Find driver that accepts {@code realUrl}. Drivers registered against {@link #driverCandidates}
    * are preferred over {@link DriverManager} drivers.
    */
+  // visible for testing
   static Driver findDriver(String realUrl) {
     Driver driver = null;
     if (!driverCandidates.isEmpty()) {

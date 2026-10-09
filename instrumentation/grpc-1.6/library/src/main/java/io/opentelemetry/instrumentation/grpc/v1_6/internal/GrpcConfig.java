@@ -27,6 +27,7 @@ public class GrpcConfig {
     return new GrpcConfig(DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "grpc"));
   }
 
+  // visible for testing
   GrpcConfig(DeclarativeConfigProperties config) {
     clientRequestMetadata = getRequestMetadata(config, "client");
     serverRequestMetadata = getRequestMetadata(config, "server");

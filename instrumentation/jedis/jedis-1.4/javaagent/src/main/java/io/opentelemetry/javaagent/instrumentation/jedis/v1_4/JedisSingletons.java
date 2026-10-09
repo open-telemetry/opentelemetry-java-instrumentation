@@ -86,6 +86,7 @@ public class JedisSingletons {
     return CONNECTION_TARGET.get(connection);
   }
 
+  // visible for testing
   @Nullable
   public static RedisServerTarget createServerTarget(@Nullable List<JedisShardInfo> shards) {
     if (shards == null) {

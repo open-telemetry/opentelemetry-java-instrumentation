@@ -52,6 +52,7 @@ public class RuleParser {
 
   private RuleParser() {}
 
+  // visible for testing
   @SuppressWarnings("unchecked") // for casting yaml parsed objects
   public JmxConfig loadConfig(InputStream is) {
     LoadSettings settings = LoadSettings.builder().build();

@@ -63,6 +63,7 @@ public class SpymemcachedSingletons {
     CONFIGURED_TARGETS.set(connection, createServerTarget(nodes));
   }
 
+  // visible for testing
   @Nullable
   static DbServerTarget createServerTarget(@Nullable List<InetSocketAddress> nodes) {
     if (nodes == null) {

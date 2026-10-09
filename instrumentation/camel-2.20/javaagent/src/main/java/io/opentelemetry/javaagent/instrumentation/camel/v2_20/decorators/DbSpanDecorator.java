@@ -138,6 +138,7 @@ public class DbSpanDecorator extends BaseSpanDecorator {
     attributes.put(DB_NAMESPACE, namespace);
   }
 
+  // visible for testing
   void setQueryAttributes(AttributesBuilder attributes, Exchange exchange) {
     String rawQueryText = getRawQueryText(exchange);
     if (rawQueryText != null) {

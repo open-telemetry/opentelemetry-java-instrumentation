@@ -59,6 +59,7 @@ class KubernetesRequestDigest {
     return new KubernetesRequestDigest(urlPath, /* isNonResourceRequest= */ true, null, null);
   }
 
+  // visible for testing
   public static boolean isResourceRequest(String urlPath) {
     return RESOURCE_URL_PATH_PATTERN.matcher(urlPath).matches();
   }

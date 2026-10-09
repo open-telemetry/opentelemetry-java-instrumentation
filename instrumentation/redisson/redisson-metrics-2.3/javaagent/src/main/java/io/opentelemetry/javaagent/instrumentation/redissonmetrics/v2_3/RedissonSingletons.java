@@ -15,6 +15,7 @@ import org.redisson.connection.ConnectionManager;
 
 public class RedissonSingletons {
 
+  // visible for testing
   static final String INSTRUMENTATION_NAME = "io.opentelemetry.redisson-metrics-2.3";
 
   @SuppressWarnings("TooManyParameters")

@@ -77,6 +77,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     forEachAppender(appender -> appender.setOpenTelemetry(openTelemetry));
   }
 
+  // visible for testing
   static void resetForTest() {
     forEachAppender(OpenTelemetryAppender::resetAppenderForTest);
   }

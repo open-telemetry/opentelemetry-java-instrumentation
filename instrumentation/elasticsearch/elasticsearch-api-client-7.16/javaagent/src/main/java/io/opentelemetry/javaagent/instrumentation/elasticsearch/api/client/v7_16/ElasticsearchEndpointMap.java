@@ -875,6 +875,7 @@ public class ElasticsearchEndpointMap {
     return ROUTES_MAP.get(endpointId);
   }
 
+  // visible for testing
   public static Collection<ElasticsearchEndpointDefinition> getAllEndpoints() {
     return ROUTES_MAP.values();
   }

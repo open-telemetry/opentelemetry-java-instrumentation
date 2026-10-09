@@ -69,6 +69,7 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
   @Nullable private final MongoConnectionPeerResolver connectionPeerResolver;
   @Nullable private final JsonWriterSettings jsonWriterSettings;
 
+  // visible for testing
   MongoDbAttributesGetter(boolean querySanitizationEnabled, int maxNormalizedQueryLength) {
     this(querySanitizationEnabled, maxNormalizedQueryLength, null);
   }
@@ -186,6 +187,7 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
     return null;
   }
 
+  // visible for testing
   String sanitizeQuery(BsonDocument command) {
     StringBuilderWriter stringWriter = new StringBuilderWriter(128);
     // jsonWriterSettings is generally not null but could be due to security manager or unknown

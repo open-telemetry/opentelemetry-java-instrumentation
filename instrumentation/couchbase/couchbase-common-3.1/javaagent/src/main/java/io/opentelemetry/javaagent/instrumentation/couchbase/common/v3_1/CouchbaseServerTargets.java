@@ -71,6 +71,7 @@ public class CouchbaseServerTargets {
     register(core, target, environment);
   }
 
+  // visible for testing
   @Nullable
   static CouchbaseServerTarget target(Set<SeedNode> seedNodes, boolean tlsEnabled) {
     int defaultPort = CouchbaseServerTarget.defaultPort(tlsEnabled ? "couchbases" : "couchbase");

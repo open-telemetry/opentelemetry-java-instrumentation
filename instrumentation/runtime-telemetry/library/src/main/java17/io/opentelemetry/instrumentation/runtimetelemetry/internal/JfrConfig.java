@@ -99,6 +99,7 @@ public class JfrConfig {
    * This class is internal and is hence not for public use. Its APIs are unstable and can change at
    * any time.
    */
+  // visible for testing
   public static class JfrRuntimeMetrics implements Closeable {
     private final List<RecordedEventHandler> recordedEventHandlers;
     private final Set<String> metricNames;

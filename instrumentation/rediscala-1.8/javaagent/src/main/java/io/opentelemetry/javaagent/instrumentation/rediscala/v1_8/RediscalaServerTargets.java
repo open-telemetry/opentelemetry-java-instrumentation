@@ -142,6 +142,7 @@ public class RediscalaServerTargets {
     CLIENT_TARGET.set(client, RedisServerTarget.ofHostAndPort(host, port));
   }
 
+  // visible for testing
   @Nullable
   static RedisServerTarget of(@Nullable Object client) {
     if (client instanceof SentinelMonitored) {
@@ -345,6 +346,7 @@ public class RediscalaServerTargets {
     return RedisServerTarget.endpoint(redisServer.host(), redisServer.port());
   }
 
+  // visible for testing
   static final class MutablePoolState {
     // Requests may race pool updates, so only complete immutable snapshots are published.
     @Nullable private volatile RedisServerTarget target;
@@ -364,10 +366,12 @@ public class RediscalaServerTargets {
       return target;
     }
 
+    // visible for testing
     void markUnavailable() {
       target = null;
     }
 
+    // visible for testing
     void refresh(HashMap<?, ?> map) {
       try {
         target = snapshot(map);

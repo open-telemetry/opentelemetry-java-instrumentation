@@ -33,6 +33,7 @@ final class InstrumentedKafkaFlux<R extends ConsumerRecord<?, ?>> extends FluxOp
     source.subscribe(new InstrumentedSubscriber((CoreSubscriber<ConsumerRecord<?, ?>>) actual));
   }
 
+  // visible for testing
   static final class InstrumentedSubscriber
       implements CoreSubscriber<ConsumerRecord<?, ?>>, Subscription, Scannable {
 
@@ -40,6 +41,7 @@ final class InstrumentedKafkaFlux<R extends ConsumerRecord<?, ?>> extends FluxOp
     private final Context currentContext;
     private Subscription subscription;
 
+    // visible for testing
     InstrumentedSubscriber(CoreSubscriber<ConsumerRecord<?, ?>> actual) {
       this.actual = actual;
       currentContext =

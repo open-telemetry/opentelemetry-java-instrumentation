@@ -38,6 +38,7 @@ class SemconvSelectionResolver {
         resolvePreviewValues(openTelemetry));
   }
 
+  // visible for testing
   SemconvSelectionResolver(
       DeclarativeConfigProperties structuredConfig,
       Set<String> stableFlags,
@@ -173,6 +174,7 @@ class SemconvSelectionResolver {
     return resolveStableOptInValues(generalConfig, resolveOptInValues(openTelemetry));
   }
 
+  // visible for testing
   static Set<String> resolveStableOptInValues(
       DeclarativeConfigProperties generalConfig, Set<String> fallbackValues) {
     if (generalConfig.getPropertyKeys().contains("stability_opt_in_list")) {
@@ -181,6 +183,7 @@ class SemconvSelectionResolver {
     return fallbackValues;
   }
 
+  // visible for testing
   static Set<String> resolveGeneralStableFlags(DeclarativeConfigProperties generalConfig) {
     String value = generalConfig.getString("stability_opt_in_list");
     if (value == null || value.trim().isEmpty()) {
@@ -205,6 +208,7 @@ class SemconvSelectionResolver {
         config, key, SystemProperty.getString(fallbackProperty));
   }
 
+  // visible for testing
   static Set<String> resolveStringListWithFallbackValue(
       DeclarativeConfigProperties config, String key, @Nullable String fallbackValue) {
     if (config.getPropertyKeys().contains(key)) {
@@ -213,6 +217,7 @@ class SemconvSelectionResolver {
     return fallbackValue == null ? emptySet() : parseCommaSeparatedSet(fallbackValue);
   }
 
+  // visible for testing
   static Set<String> parseCommaSeparatedSet(String value) {
     return asList(value.split(",")).stream()
         .map(String::trim)

@@ -53,6 +53,7 @@ final class ParameterizedClass {
   }
 
   /** Gets the raw class of the parameterized class. */
+  // visible for testing
   public Class<?> getRawClass() {
     return rawClass;
   }
@@ -63,12 +64,14 @@ final class ParameterizedClass {
   }
 
   /** Gets the parameterized superclass of the current parameterized class. */
+  // visible for testing
   @Nullable
   public ParameterizedClass getParameterizedSuperclass() {
     return resolveSuperTypeActualTypeArguments(rawClass.getGenericSuperclass());
   }
 
   /** Gets an array of the parameterized interfaces of the current parameterized class. */
+  // visible for testing
   public ParameterizedClass[] getParameterizedInterfaces() {
     Type[] interfaceTypes = rawClass.getGenericInterfaces();
     ParameterizedClass[] parameterizedClasses = new ParameterizedClass[interfaceTypes.length];

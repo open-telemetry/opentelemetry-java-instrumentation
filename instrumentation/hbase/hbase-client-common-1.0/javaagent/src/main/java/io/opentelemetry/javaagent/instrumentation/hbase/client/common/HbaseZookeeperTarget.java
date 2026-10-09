@@ -54,6 +54,7 @@ final class HbaseZookeeperTarget {
     return from(configuration, SUPPORTS_CLIENT_ZK_CONFIG, SUPPORTS_ZK_CONFIG_FILE);
   }
 
+  // visible for testing
   @Nullable
   static String from(
       Configuration configuration, boolean supportsClientZkConfig, boolean supportsZkConfigFile) {

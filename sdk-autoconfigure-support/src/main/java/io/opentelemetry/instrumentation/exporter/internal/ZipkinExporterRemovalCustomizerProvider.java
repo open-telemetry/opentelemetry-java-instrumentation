@@ -31,6 +31,7 @@ public class ZipkinExporterRemovalCustomizerProvider
         ZipkinExporterRemovalCustomizerProvider::customize);
   }
 
+  // visible for testing
   static Map<String, String> customize(ConfigProperties config) {
     if (!config.getBoolean(DeclarativeConfigV3Preview.V3_PREVIEW_PROPERTY, false)) {
       return emptyMap();

@@ -111,6 +111,7 @@ class EmbeddedConfigFile {
    * and "otel.instrumentation.java.list[1]" = "two" becomes: {otel: {instrumentation: {java: {list:
    * ["one", "two"]}}}}
    */
+  // visible for testing
   @SuppressWarnings("unchecked")
   static Map<String, Object> convertFlatPropsToNested(Map<String, String> flatProps) {
     Map<String, Object> result = new HashMap<>();
