@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v3_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v3_0.VertxClientSingletons.CONTEXTS;
 import static io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v3_0.VertxClientSingletons.REQUEST_INFO;
@@ -14,6 +13,7 @@ import static io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v3_0.V
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
@@ -68,7 +68,12 @@ class HttpRequestInstrumentation implements TypeInstrumentation {
 
     transformer.applyAdviceToMethod(
         named("handleResponse")
-            .and(takesArgument(0, hasSuperType(named("io.vertx.core.http.HttpClientResponse")))),
+            .and(
+                takesArgument(
+                    0,
+                    namedOneOf(
+                        "io.vertx.core.http.HttpClientResponse",
+                        "io.vertx.core.http.impl.HttpClientResponseImpl"))),
         getClass().getName() + "$HandleResponseAdvice");
 
     transformer.applyAdviceToMethod(

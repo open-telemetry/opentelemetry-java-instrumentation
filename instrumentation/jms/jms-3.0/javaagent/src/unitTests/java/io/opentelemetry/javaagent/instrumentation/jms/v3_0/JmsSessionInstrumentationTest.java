@@ -46,6 +46,12 @@ class JmsSessionInstrumentationTest {
   }
 
   @Test
+  void matchesProviderCovariantReturns() {
+    assertThat(consumerMatcher().matches(consumerMethod(CustomConsumer.class, String.class)))
+        .isTrue();
+  }
+
+  @Test
   void rejectsIncompatibleReturnsAndSubscriptionNames() {
     ElementMatcher<? super MethodDescription> matcher = consumerMatcher();
 
@@ -88,4 +94,6 @@ class JmsSessionInstrumentationTest {
         .filter(named("createDurableConsumer"))
         .getOnly();
   }
+
+  abstract static class CustomConsumer implements MessageConsumer {}
 }

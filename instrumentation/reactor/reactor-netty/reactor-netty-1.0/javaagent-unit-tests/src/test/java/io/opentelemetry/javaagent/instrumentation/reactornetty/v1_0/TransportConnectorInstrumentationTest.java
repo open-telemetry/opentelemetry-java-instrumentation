@@ -5,17 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
+import static net.bytebuddy.matcher.ElementMatchers.named;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
-import io.netty.channel.ChannelPromise;
-import io.netty.channel.DefaultChannelPromise;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.net.SocketAddress;
 import java.util.List;
 import java.util.stream.Stream;
+import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.description.modifier.Visibility;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.StubMethod;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,50 +47,40 @@ class TransportConnectorInstrumentationTest {
 
   @ParameterizedTest
   @MethodSource("connectionSignatures")
-  void matchesCompatiblePromiseSignatures(Class<?>[] parameterTypes, boolean expected)
-      throws Exception {
+  void matchesKnownPromiseSignatures(
+      Class<?> addressType, String promiseType, Class<?> indexType, boolean expected) {
+    TypeDescription promise =
+        new ByteBuddy().makeInterface().name(promiseType).make().getTypeDescription();
     MethodDescription method =
-        new MethodDescription.ForLoadedMethod(
-            ConnectionSignatures.class.getDeclaredMethod("doConnect", parameterTypes));
+        new ByteBuddy()
+            .subclass(Object.class)
+            .defineMethod("doConnect", void.class, Visibility.PACKAGE_PRIVATE)
+            .withParameters(
+                new TypeDescription.ForLoadedType(addressType),
+                new TypeDescription.ForLoadedType(Object.class),
+                promise,
+                new TypeDescription.ForLoadedType(indexType))
+            .intercept(StubMethod.INSTANCE)
+            .make()
+            .getTypeDescription()
+            .getDeclaredMethods()
+            .filter(named("doConnect"))
+            .getOnly();
 
     assertThat(matcherCaptor.getValue().matches(method)).isEqualTo(expected);
   }
 
   private static Stream<Arguments> connectionSignatures() {
     return Stream.of(
+        Arguments.of(List.class, "io.netty.channel.ChannelPromise", int.class, true),
         Arguments.of(
-            new Class<?>[] {List.class, Object.class, ChannelPromise.class, int.class}, true),
-        Arguments.of(
-            new Class<?>[] {List.class, Object.class, MonoChannelPromise.class, int.class}, true),
-        Arguments.of(
-            new Class<?>[] {List.class, Object.class, DefaultChannelPromise.class, int.class},
+            List.class,
+            "reactor.netty.transport.TransportConnector$MonoChannelPromise",
+            int.class,
             true),
-        Arguments.of(new Class<?>[] {List.class, Object.class, Object.class, int.class}, false),
-        Arguments.of(
-            new Class<?>[] {SocketAddress.class, Object.class, ChannelPromise.class, int.class},
-            false),
-        Arguments.of(
-            new Class<?>[] {List.class, Object.class, ChannelPromise.class, long.class}, false));
-  }
-
-  // Models the concrete ChannelPromise parameter introduced in reactor-netty 1.0.34.
-  private abstract static class MonoChannelPromise implements ChannelPromise {}
-
-  @SuppressWarnings({"UnusedMethod", "UnusedVariable", "MethodCanBeStatic"})
-  private static class ConnectionSignatures {
-    void doConnect(List<SocketAddress> addresses, Object bind, ChannelPromise promise, int index) {}
-
-    void doConnect(
-        List<SocketAddress> addresses, Object bind, MonoChannelPromise promise, int index) {}
-
-    void doConnect(
-        List<SocketAddress> addresses, Object bind, DefaultChannelPromise promise, int index) {}
-
-    void doConnect(List<SocketAddress> addresses, Object bind, Object promise, int index) {}
-
-    void doConnect(SocketAddress address, Object bind, ChannelPromise promise, int index) {}
-
-    void doConnect(
-        List<SocketAddress> addresses, Object bind, ChannelPromise promise, long index) {}
+        Arguments.of(List.class, "io.netty.channel.DefaultChannelPromise", int.class, false),
+        Arguments.of(List.class, "java.lang.Object", int.class, false),
+        Arguments.of(SocketAddress.class, "io.netty.channel.ChannelPromise", int.class, false),
+        Arguments.of(List.class, "io.netty.channel.ChannelPromise", long.class, false));
   }
 }

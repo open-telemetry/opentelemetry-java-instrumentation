@@ -43,6 +43,11 @@ class ClientResourcesInstrumentationTest {
   }
 
   @Test
+  void matchesCustomBuilderReturns() {
+    assertThat(builderMatcher().matches(builderMethod(CustomBuilder.class))).isTrue();
+  }
+
+  @Test
   void rejectsIncompatibleBuilderReturns() {
     ElementMatcher<? super MethodDescription> matcher = builderMatcher();
 
@@ -82,4 +87,6 @@ class ClientResourcesInstrumentationTest {
         .filter(named("builder"))
         .getOnly();
   }
+
+  interface CustomBuilder extends ClientResources.Builder {}
 }

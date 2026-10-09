@@ -12,6 +12,7 @@ import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_1.TracingHol
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.lettuce.core.resource.ClientResources;
@@ -38,7 +39,14 @@ class ClientResourcesInstrumentation implements TypeInstrumentation {
         isPublic()
             .and(isStatic())
             .and(named("builder"))
-            .and(returns(hasSuperType(named("io.lettuce.core.resource.ClientResources$Builder")))),
+            .and(
+                returns(
+                    namedOneOf(
+                            "io.lettuce.core.resource.ClientResources$Builder",
+                            "io.lettuce.core.resource.DefaultClientResources$Builder")
+                        .or(
+                            hasSuperType(
+                                named("io.lettuce.core.resource.ClientResources$Builder"))))),
         getClass().getName() + "$BuilderAdvice");
   }
 

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.internalReceiveSpanSuppression;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.startAndEndConsumerReceive;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.wrap;
@@ -47,8 +46,7 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isConstructor()
-            .and(
-                takesArgument(0, hasSuperType(named("org.apache.pulsar.client.api.PulsarClient")))),
+            .and(takesArgument(0, named("org.apache.pulsar.client.impl.PulsarClientImpl"))),
         getClass().getName() + "$ConsumerConstructorAdvice");
 
     // internalReceive will apply to Consumer#receive(long,TimeUnit)

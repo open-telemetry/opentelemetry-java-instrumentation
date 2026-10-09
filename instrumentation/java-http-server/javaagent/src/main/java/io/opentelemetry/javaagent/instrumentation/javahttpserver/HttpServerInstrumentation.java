@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.instrumentation.javahttpserver.JavaHttpServerSingletons.instrumentationFilters;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.sun.net.httpserver.HttpContext;
@@ -31,7 +32,12 @@ class HttpServerInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("createContext"))
-            .and(returns(hasSuperType(named("com.sun.net.httpserver.HttpContext")))),
+            .and(
+                returns(
+                    namedOneOf(
+                            "com.sun.net.httpserver.HttpContext",
+                            "sun.net.httpserver.HttpContextImpl")
+                        .or(hasSuperType(named("com.sun.net.httpserver.HttpContext"))))),
         getClass().getName() + "$BuildAdvice");
   }
 

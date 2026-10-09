@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 class PathMatcherStaticInstrumentationTest {
 
   @Test
-  void matchesMatchingAndConcreteMatchedReturns() {
+  void matchesSealedMatchingReturns() {
     ElementMatcher<? super MethodDescription> matcher = applyMatcher();
     TypeDescription matching =
         new ByteBuddy()
@@ -40,10 +40,17 @@ class PathMatcherStaticInstrumentationTest {
             .name("akka.http.scaladsl.server.PathMatcher$Matched")
             .make()
             .getTypeDescription();
+    TypeDescription unmatched =
+        new ByteBuddy()
+            .subclass(matching)
+            .name("akka.http.scaladsl.server.PathMatcher$Unmatched$")
+            .make()
+            .getTypeDescription();
 
     // Remaining.apply declares Matched rather than Matching in Akka HTTP 10.0.0.
     assertThat(matcher.matches(applyMethod(matching))).isTrue();
     assertThat(matcher.matches(applyMethod(matched))).isTrue();
+    assertThat(matcher.matches(applyMethod(unmatched))).isTrue();
   }
 
   @Test

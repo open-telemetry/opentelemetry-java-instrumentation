@@ -54,7 +54,7 @@ class SendCallbackInstrumentationTest {
         Arguments.of("sendComplete", new Class<?>[] {Exception.class}, true),
         Arguments.of("sendComplete", new Class<?>[] {Throwable.class}, true),
         Arguments.of("sendComplete", new Class<?>[] {Throwable.class, Object.class}, true),
-        Arguments.of("sendComplete", new Class<?>[] {RuntimeException.class}, true),
+        Arguments.of("sendComplete", new Class<?>[] {RuntimeException.class}, false),
         Arguments.of("sendComplete", new Class<?>[] {String.class}, false),
         Arguments.of("sendComplete", new Class<?>[] {Object.class}, false),
         Arguments.of("sendComplete", new Class<?>[0], false),

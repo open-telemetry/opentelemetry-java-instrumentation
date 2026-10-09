@@ -43,7 +43,10 @@ class JmsSessionInstrumentation implements TypeInstrumentation {
                 "createSharedConsumer",
                 "createSharedDurableConsumer")
             .and(takesArgument(1, String.class))
-            .and(returns(hasSuperType(named("javax.jms.MessageConsumer"))))
+            .and(
+                returns(
+                    namedOneOf("javax.jms.MessageConsumer", "javax.jms.TopicSubscriber")
+                        .or(hasSuperType(named("javax.jms.MessageConsumer")))))
             .and(isPublic()),
         getClass().getName() + "$CreateDurableConsumerAdvice");
   }
