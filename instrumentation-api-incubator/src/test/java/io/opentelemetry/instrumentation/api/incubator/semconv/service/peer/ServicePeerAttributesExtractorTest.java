@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.service.peer;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldServicePeerSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewServicePeerSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.emitOldServicePeerSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.emitPreviewServicePeerSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;

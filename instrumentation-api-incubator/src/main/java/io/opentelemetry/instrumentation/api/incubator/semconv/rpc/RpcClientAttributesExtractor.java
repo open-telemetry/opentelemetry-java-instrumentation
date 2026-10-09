@@ -22,7 +22,13 @@ import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 public final class RpcClientAttributesExtractor<REQUEST, RESPONSE>
     extends RpcCommonAttributesExtractor<REQUEST, RESPONSE> implements SpanKeyProvider {
 
-  /** Creates the RPC client attributes extractor using the global instance's configuration. */
+  /**
+   * Creates the RPC client attributes extractor using the global instance's configuration.
+   *
+   * @deprecated Use {@link #create(RpcAttributesGetter, OpenTelemetry)} instead. May be removed in
+   *     the next minor release.
+   */
+  @Deprecated // may be removed in the next minor release
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       RpcAttributesGetter<REQUEST, RESPONSE> getter) {
     return create(getter, GlobalOpenTelemetry.getOrNoop());

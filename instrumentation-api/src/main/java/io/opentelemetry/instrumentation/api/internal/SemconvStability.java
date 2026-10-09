@@ -59,6 +59,11 @@ public final class SemconvStability {
     return v3Preview;
   }
 
+  /**
+   * @deprecated Use {@link #emitOldServicePeerSemconv(OpenTelemetry)} instead. Will be removed in
+   *     3.0.
+   */
+  @Deprecated // to be removed in 3.0
   public static boolean emitOldServicePeerSemconv() {
     return emitOldServicePeerSemconv;
   }
@@ -69,6 +74,11 @@ public final class SemconvStability {
     return emitOld(selectionResolver(openTelemetry).servicePeer());
   }
 
+  /**
+   * @deprecated Use {@link #emitPreviewServicePeerSemconv(OpenTelemetry)} instead. Will be removed
+   *     in 3.0.
+   */
+  @Deprecated // to be removed in 3.0
   public static boolean emitPreviewServicePeerSemconv() {
     return emitPreviewServicePeerSemconv;
   }
@@ -79,6 +89,10 @@ public final class SemconvStability {
     return emitStable(selectionResolver(openTelemetry).servicePeer());
   }
 
+  /**
+   * @deprecated Use {@link #emitOldRpcSemconv(OpenTelemetry)} instead. Will be removed in 3.0.
+   */
+  @Deprecated // to be removed in 3.0
   public static boolean emitOldRpcSemconv() {
     return emitOldRpcSemconv;
   }
@@ -89,6 +103,10 @@ public final class SemconvStability {
     return emitOld(selectionResolver(openTelemetry).rpc());
   }
 
+  /**
+   * @deprecated Use {@link #emitPreviewRpcSemconv(OpenTelemetry)} instead. Will be removed in 3.0.
+   */
+  @Deprecated // to be removed in 3.0
   public static boolean emitPreviewRpcSemconv() {
     return emitPreviewRpcSemconv;
   }
@@ -99,8 +117,18 @@ public final class SemconvStability {
     return emitStable(selectionResolver(openTelemetry).rpc());
   }
 
+  /**
+   * @deprecated Use {@link #rpcSchemaUrl(OpenTelemetry)} instead. Will be removed in 3.0.
+   */
+  @Deprecated // to be removed in 3.0
   public static String rpcSchemaUrl() {
     return emitPreviewRpcSemconv ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0;
+  }
+
+  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
+  // via openTelemetry.getConfigProvider()
+  public static String rpcSchemaUrl(OpenTelemetry openTelemetry) {
+    return emitPreviewRpcSemconv(openTelemetry) ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0;
   }
 
   private static SemconvSelectionResolver selectionResolver(OpenTelemetry openTelemetry) {

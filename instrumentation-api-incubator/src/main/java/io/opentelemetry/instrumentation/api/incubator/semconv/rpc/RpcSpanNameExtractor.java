@@ -19,7 +19,11 @@ public final class RpcSpanNameExtractor<REQUEST> implements SpanNameExtractor<RE
    * conventions: {@code <rpc.service>/<rpc.method>}.
    *
    * <p>Uses the global instance's configuration.
+   *
+   * @deprecated Use {@link #create(RpcAttributesGetter, OpenTelemetry)} instead. May be removed in
+   *     the next minor release.
    */
+  @Deprecated // may be removed in the next minor release
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
       RpcAttributesGetter<REQUEST, ?> attributesExtractor) {
     return create(attributesExtractor, GlobalOpenTelemetry.getOrNoop());

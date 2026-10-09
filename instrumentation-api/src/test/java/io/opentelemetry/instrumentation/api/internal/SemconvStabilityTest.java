@@ -302,6 +302,8 @@ class SemconvStabilityTest {
     assertThat(emitOldRpcSemconv(openTelemetry))
         .isEqualTo(expected.version() == 0 || expected.dualEmit());
     assertThat(emitPreviewRpcSemconv(openTelemetry)).isEqualTo(expected.version() >= 1);
+    assertThat(SemconvStability.rpcSchemaUrl(openTelemetry))
+        .isEqualTo(expected.version() >= 1 ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0);
   }
 
   private static Stream<Arguments> structuredRpcSelections() {

@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.testing.junit.rpc;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,6 +24,14 @@ public class SemconvRpcStabilityUtil {
   }
 
   private SemconvRpcStabilityUtil() {}
+
+  public static boolean emitOldRpcSemconv() {
+    return SemconvStability.emitOldRpcSemconv();
+  }
+
+  public static boolean emitPreviewRpcSemconv() {
+    return SemconvStability.emitPreviewRpcSemconv();
+  }
 
   @SuppressWarnings("unchecked")
   public static <T> AttributeKey<T> maybeStable(AttributeKey<T> oldKey) {

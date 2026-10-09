@@ -76,6 +76,8 @@ class StaticImportFormatter : FormatterFunc.NeedsFile, Serializable {
         "SemconvStability",
         "io.opentelemetry.instrumentation.api.internal.SemconvStability",
         "emit[a-zA-Z0-9]*",
+        // Selection wrappers define these names and must keep qualified calls.
+        contentExcludePattern = "public static boolean emit",
       ),
       Rule(
         "TestLatestDeps",

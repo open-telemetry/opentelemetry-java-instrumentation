@@ -46,7 +46,6 @@ import java.util.Collection;
 import java.util.List;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 @SuppressWarnings("deprecation") // old semconv and dual-emission customizer
@@ -55,18 +54,11 @@ class RpcInstanceSemconvTest {
   @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @ParameterizedTest
-  @CsvSource({"true, false", "false, false", "true, true", "false, true"})
-  void instancesEmitIndependentSemconv(boolean client, boolean useGlobalFactories) {
-    if (useGlobalFactories) {
-      GlobalOpenTelemetry.resetForTest();
-      cleanup.deferCleanup(GlobalOpenTelemetry::resetForTest);
-      RpcClientMetrics.get();
-      RpcServerMetrics.get();
-      assertThat(GlobalOpenTelemetry.isSet()).isFalse();
-    }
+  @ValueSource(booleans = {true, false})
+  void instancesEmitIndependentSemconv(boolean client) {
     List<ConfiguredInstrumenter> instances = new ArrayList<>();
     for (int mode = 0; mode < 3; mode++) {
-      instances.add(createInstrumenter(client, mode != 0, mode == 2, useGlobalFactories));
+      instances.add(createInstrumenter(client, mode != 0, mode == 2, false));
     }
 
     for (int mode = 0; mode < instances.size(); mode++) {
@@ -139,6 +131,46 @@ class RpcInstanceSemconvTest {
                   assertThat(metric.getInstrumentationScopeInfo().getSchemaUrl())
                       .isEqualTo(schemaUrl));
     }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void deprecatedFactoriesUseGlobalConfiguration(boolean client) {
+    GlobalOpenTelemetry.resetForTest();
+    cleanup.deferCleanup(GlobalOpenTelemetry::resetForTest);
+    RpcClientMetrics.get();
+    RpcServerMetrics.get();
+    assertThat(GlobalOpenTelemetry.isSet()).isFalse();
+
+    ConfiguredInstrumenter instance = createInstrumenter(client, true, true, true);
+    Context context = instance.instrumenter.start(Context.root(), "request");
+    instance.instrumenter.end(context, "request", null, null);
+
+    assertThat(instance.spanExporter.getFinishedSpanItems())
+        .singleElement()
+        .satisfies(
+            span -> {
+              assertThat(span).hasName("Service/Method");
+              assertThat(span.getAttributes().get(RPC_METHOD)).isEqualTo("Service/Method");
+            });
+    String prefix = client ? "rpc.client" : "rpc.server";
+    Collection<MetricData> metrics = instance.metricReader.collectAllMetrics();
+    assertThat(metrics)
+        .extracting(MetricData::getName)
+        .containsExactlyInAnyOrder(prefix + ".duration", prefix + ".call.duration");
+    assertThat(metrics)
+        .anySatisfy(
+            metric ->
+                assertThat(metric)
+                    .hasName(prefix + ".duration")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point.hasAttributesSatisfyingExactly(
+                                        equalTo(RPC_SYSTEM, "test"),
+                                        equalTo(RPC_SERVICE, "package.Service"),
+                                        equalTo(RPC_METHOD, "Method")))));
   }
 
   @ParameterizedTest

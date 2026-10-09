@@ -109,7 +109,10 @@ public final class RpcClientMetrics implements OperationListener {
    * io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder}.
    *
    * <p>Uses the global instance's configuration.
+   *
+   * @deprecated Use {@link #get(OpenTelemetry)} instead. May be removed in the next minor release.
    */
+  @Deprecated // may be removed in the next minor release
   public static OperationMetrics get() {
     return get(GlobalOpenTelemetry.getOrNoop());
   }

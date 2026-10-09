@@ -30,7 +30,11 @@ public final class RpcMetricsContextCustomizers {
    * so that RPC metrics can use it when both old and stable semantic conventions are active.
    *
    * <p>Uses the global instance's configuration.
+   *
+   * @deprecated Use {@link #dualEmitContextCustomizer(RpcAttributesGetter, OpenTelemetry)} instead.
+   *     Will be removed in 3.0.
    */
+  @Deprecated // to be removed in 3.0
   public static <REQUEST> ContextCustomizer<REQUEST> dualEmitContextCustomizer(
       RpcAttributesGetter<REQUEST, ?> getter) {
     return dualEmitContextCustomizer(getter, GlobalOpenTelemetry.getOrNoop());
