@@ -85,6 +85,7 @@ class JmsSessionInstrumentationTest {
       Class<?> returnType, Class<?> subscriptionNameType) {
     return new ByteBuddy()
         .subclass(Object.class)
+        .name(JmsSessionInstrumentationTest.class.getName() + "$Provider")
         .defineMethod("createDurableConsumer", returnType, Visibility.PUBLIC)
         .withParameters(Object.class, subscriptionNameType)
         .intercept(StubMethod.INSTANCE)
