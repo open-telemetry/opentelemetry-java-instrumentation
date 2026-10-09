@@ -53,15 +53,23 @@ class ExperimentalConfigTest {
                 new ExperimentalConfig(yamlConfig(yaml + "    common: {}\n")), telemetry))
         .isFalse();
 
-    String key = "    common:\n      " + telemetry + "_telemetry:\n";
+    String commonConfig = yaml + "    common:\n";
     assertThat(
             telemetryEnabled(
-                new ExperimentalConfig(yamlConfig(yaml + key + "        enabled: false\n")),
+                new ExperimentalConfig(
+                    yamlConfig(commonConfig + "      " + telemetry + "_telemetry: {}\n")),
+                telemetry))
+        .isFalse();
+
+    String telemetryConfig = commonConfig + "      " + telemetry + "_telemetry:\n";
+    assertThat(
+            telemetryEnabled(
+                new ExperimentalConfig(yamlConfig(telemetryConfig + "        enabled: false\n")),
                 telemetry))
         .isFalse();
     assertThat(
             telemetryEnabled(
-                new ExperimentalConfig(yamlConfig(yaml + key + "        enabled: true\n")),
+                new ExperimentalConfig(yamlConfig(telemetryConfig + "        enabled: true\n")),
                 telemetry))
         .isTrue();
   }
