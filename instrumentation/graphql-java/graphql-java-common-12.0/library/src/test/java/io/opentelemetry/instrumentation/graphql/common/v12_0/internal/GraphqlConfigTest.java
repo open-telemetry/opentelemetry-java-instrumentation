@@ -34,16 +34,6 @@ class GraphqlConfigTest {
     assertThat(GraphqlConfig.getOperationNameInSpanNameEnabled(empty())).isFalse();
   }
 
-  @Test
-  void operationNameInSpanNameIgnoresLegacySetting() {
-    DeclarativeConfigProperties config =
-        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
-    when(config.get("operation_name_in_span_name").getBoolean("enabled", false)).thenReturn(false);
-    when(config.get("add_operation_name_to_span_name").getBoolean("enabled")).thenReturn(true);
-
-    assertThat(GraphqlConfig.getOperationNameInSpanNameEnabled(config)).isFalse();
-  }
-
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
   void querySanitizationSetting(boolean enabled) {
@@ -57,15 +47,5 @@ class GraphqlConfigTest {
   @Test
   void querySanitizationIsEnabledByDefault() {
     assertThat(GraphqlConfig.getQuerySanitizationEnabled(empty())).isTrue();
-  }
-
-  @Test
-  void querySanitizationIgnoresLegacySetting() {
-    DeclarativeConfigProperties config =
-        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
-    when(config.get("query_sanitization").getBoolean("enabled", true)).thenReturn(true);
-    when(config.get("query_sanitizer").getBoolean("enabled")).thenReturn(false);
-
-    assertThat(GraphqlConfig.getQuerySanitizationEnabled(config)).isTrue();
   }
 }

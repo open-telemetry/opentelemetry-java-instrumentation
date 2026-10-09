@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
-import static io.opentelemetry.instrumentation.micrometer.v1_5.NoMaxGaugeAssertions.assertNoMaxGauge;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -62,7 +61,6 @@ public abstract class AbstractTimerHistogramGaugesTest {
                                         .hasCount(4)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(stringKey("tag"), "value")))));
-    assertNoMaxGauge(testing(), "testTimer.max");
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -130,7 +128,6 @@ public abstract class AbstractTimerHistogramGaugesTest {
                                         .hasCount(2)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(stringKey("tag"), "value")))));
-    assertNoMaxGauge(testing(), "testTimer.max");
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,

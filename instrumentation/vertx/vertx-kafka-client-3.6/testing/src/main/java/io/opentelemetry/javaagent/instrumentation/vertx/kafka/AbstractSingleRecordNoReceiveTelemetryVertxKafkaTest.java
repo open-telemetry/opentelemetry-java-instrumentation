@@ -55,12 +55,12 @@ public abstract class AbstractSingleRecordNoReceiveTelemetryVertxKafkaTest
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("producer"),
                     span ->
-                        span.hasName(spanName("testSingleTopic", "send"))
+                        span.hasName("send testSingleTopic")
                             .hasKind(SpanKind.PRODUCER)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(sendAttributes(record)),
                     span -> {
-                      span.hasName(spanName("testSingleTopic", "process"))
+                      span.hasName("process testSingleTopic")
                           .hasKind(SpanKind.CONSUMER)
                           .hasParent(trace.getSpan(1))
                           .hasAttributesSatisfyingExactly(processAttributes(record));
@@ -94,12 +94,12 @@ public abstract class AbstractSingleRecordNoReceiveTelemetryVertxKafkaTest
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("producer"),
                     span ->
-                        span.hasName(spanName("testSingleTopic", "send"))
+                        span.hasName("send testSingleTopic")
                             .hasKind(SpanKind.PRODUCER)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(sendAttributes(record)),
                     span -> {
-                      span.hasName(spanName("testSingleTopic", "process"))
+                      span.hasName("process testSingleTopic")
                           .hasKind(SpanKind.CONSUMER)
                           .hasParent(trace.getSpan(1))
                           .hasStatus(StatusData.error())

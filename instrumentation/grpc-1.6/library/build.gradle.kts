@@ -24,18 +24,18 @@ tasks {
     jvmArgs("-Djava.net.preferIPv4Stack=true")
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
+  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=rpc")
+    jvmArgs("-Dotel.semconv-stability.preview=rpc")
   }
 
   val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=rpc/dup")
+    jvmArgs("-Dotel.semconv-stability.preview=rpc/dup")
   }
 
   val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
@@ -46,7 +46,7 @@ tasks {
   }
 
   check {
-    dependsOn(testStableSemconv, testBothSemconv, testExceptionSignalLogs)
+    dependsOn(testPreviewSemconv, testBothSemconv, testExceptionSignalLogs)
   }
 }
 

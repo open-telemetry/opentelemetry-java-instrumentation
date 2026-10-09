@@ -53,7 +53,7 @@ testing {
       }
     }
 
-    register<JvmTestSuite>("stableSemconvUnitTests") {
+    register<JvmTestSuite>("previewSemconvUnitTests") {
       sources {
         java {
           srcDir("src/unitTests/java")
@@ -69,7 +69,7 @@ testing {
       targets {
         all {
           testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+            jvmArgs("-Dotel.semconv-stability.preview=service.peer")
           }
         }
       }
@@ -110,24 +110,24 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+  val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
     .filter { !it.name.endsWith("unitTests", true) }
     .associate { suite ->
-      suite.name to register<Test>("${suite.name}StableSemconv") {
+      suite.name to register<Test>("${suite.name}PreviewSemconv") {
         testClassesDirs = suite.sources.output.classesDirs
         classpath = suite.sources.runtimeClasspath
 
-        jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
-        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
+        jvmArgs("-Dotel.semconv-stability.preview=service.peer")
+        systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
       }
     }
 
   check {
-    dependsOn(testing.suites.named("unitTests"), testing.suites.named("stableSemconvUnitTests"))
+    dependsOn(testing.suites.named("unitTests"), testing.suites.named("previewSemconvUnitTests"))
     if (otelProps.testLatestDeps) {
-      dependsOn(stableSemconvSuites.getValue("test"))
+      dependsOn(previewSemconvSuites.getValue("test"))
     } else {
-      dependsOn(testing.suites, stableSemconvSuites.values)
+      dependsOn(testing.suites, previewSemconvSuites.values)
     }
   }
 }
