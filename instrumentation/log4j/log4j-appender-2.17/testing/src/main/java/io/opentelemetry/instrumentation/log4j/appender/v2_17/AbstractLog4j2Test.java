@@ -20,7 +20,6 @@ import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THR
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanContext;
@@ -47,8 +46,7 @@ public abstract class AbstractLog4j2Test {
 
   private static final Logger logger = LogManager.getLogger("abc");
 
-  private static final boolean V3_PREVIEW =
-      Boolean.getBoolean("otel.instrumentation.common.v3-preview");
+  static final boolean V3_PREVIEW = Boolean.getBoolean("otel.instrumentation.common.v3-preview");
 
   protected abstract InstrumentationExtension testing();
 
@@ -182,8 +180,8 @@ public abstract class AbstractLog4j2Test {
 
     List<AttributeAssertion> assertions = addCodeLocationAttributes("testStringMapMessage");
     assertions.addAll(threadAttributesAssertions());
-    assertions.add(equalTo(mapMessageKey("key1"), "val1"));
-    assertions.add(equalTo(mapMessageKey("key2"), "val2"));
+    assertions.add(equalTo(stringKey(V3_PREVIEW ? "key1" : "log4j.map_message.key1"), "val1"));
+    assertions.add(equalTo(stringKey(V3_PREVIEW ? "key2" : "log4j.map_message.key2"), "val2"));
 
     testing()
         .waitAndAssertLogRecords(
@@ -206,7 +204,7 @@ public abstract class AbstractLog4j2Test {
     List<AttributeAssertion> assertions =
         addCodeLocationAttributes("testStringMapMessageWithSpecialAttribute");
     assertions.addAll(threadAttributesAssertions());
-    assertions.add(equalTo(mapMessageKey("key1"), "val1"));
+    assertions.add(equalTo(stringKey(V3_PREVIEW ? "key1" : "log4j.map_message.key1"), "val1"));
 
     testing()
         .waitAndAssertLogRecords(
@@ -228,8 +226,8 @@ public abstract class AbstractLog4j2Test {
 
     List<AttributeAssertion> assertions = addCodeLocationAttributes("testStructuredDataMapMessage");
     assertions.addAll(threadAttributesAssertions());
-    assertions.add(equalTo(mapMessageKey("key1"), "val1"));
-    assertions.add(equalTo(mapMessageKey("key2"), "val2"));
+    assertions.add(equalTo(stringKey(V3_PREVIEW ? "key1" : "log4j.map_message.key1"), "val1"));
+    assertions.add(equalTo(stringKey(V3_PREVIEW ? "key2" : "log4j.map_message.key2"), "val2"));
 
     testing()
         .waitAndAssertLogRecords(
@@ -259,7 +257,8 @@ public abstract class AbstractLog4j2Test {
     List<AttributeAssertion> assertions =
         addCodeLocationAttributes("testStringMapMessageWinsOverContextData");
     assertions.addAll(threadAttributesAssertions());
-    assertions.add(equalTo(mapMessageKey("key1"), "message-value"));
+    assertions.add(
+        equalTo(stringKey(V3_PREVIEW ? "key1" : "log4j.map_message.key1"), "message-value"));
     if (!V3_PREVIEW) {
       assertions.add(equalTo(stringKey("key1"), "context-value"));
     }
@@ -300,7 +299,7 @@ public abstract class AbstractLog4j2Test {
     List<AttributeAssertion> assertions =
         addCodeLocationAttributes("testOtelEventNameInMapMessage");
     assertions.addAll(threadAttributesAssertions());
-    assertions.add(equalTo(mapMessageKey("key1"), "val1"));
+    assertions.add(equalTo(stringKey(V3_PREVIEW ? "key1" : "log4j.map_message.key1"), "val1"));
 
     testing()
         .waitAndAssertLogRecords(
@@ -331,10 +330,6 @@ public abstract class AbstractLog4j2Test {
     result.add(equalTo(CODE_FILE_PATH, "AbstractLog4j2Test.java"));
     result.add(satisfies(CODE_LINE_NUMBER, val -> val.isPositive()));
     return result;
-  }
-
-  static AttributeKey<String> mapMessageKey(String key) {
-    return stringKey(V3_PREVIEW ? key : "log4j.map_message." + key);
   }
 
   @FunctionalInterface

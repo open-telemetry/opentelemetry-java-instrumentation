@@ -5,7 +5,8 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
-import static io.opentelemetry.instrumentation.log4j.appender.v2_17.AbstractLog4j2Test.mapMessageKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.log4j.appender.v2_17.AbstractLog4j2Test.V3_PREVIEW;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
@@ -102,8 +103,9 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
                         "twoLogsStringMapMessage",
                         equalTo(THREAD_NAME, Thread.currentThread().getName()),
                         equalTo(THREAD_ID, Thread.currentThread().getId()),
-                        equalTo(mapMessageKey("key1"), "val1"),
-                        equalTo(mapMessageKey("key2"), "val2"))));
+                        equalTo(stringKey(V3_PREVIEW ? "key1" : "log4j.map_message.key1"), "val1"),
+                        equalTo(
+                            stringKey(V3_PREVIEW ? "key2" : "log4j.map_message.key2"), "val2"))));
   }
 
   @Test
@@ -137,8 +139,9 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
                         "twoLogsStructuredDataMessage",
                         equalTo(THREAD_NAME, Thread.currentThread().getName()),
                         equalTo(THREAD_ID, Thread.currentThread().getId()),
-                        equalTo(mapMessageKey("key1"), "val1"),
-                        equalTo(mapMessageKey("key2"), "val2"))));
+                        equalTo(stringKey(V3_PREVIEW ? "key1" : "log4j.map_message.key1"), "val1"),
+                        equalTo(
+                            stringKey(V3_PREVIEW ? "key2" : "log4j.map_message.key2"), "val2"))));
   }
 
   private static List<AttributeAssertion> addLocationAttributes(

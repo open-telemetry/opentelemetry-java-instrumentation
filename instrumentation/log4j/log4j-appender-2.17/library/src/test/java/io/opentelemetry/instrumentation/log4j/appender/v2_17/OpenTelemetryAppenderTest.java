@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.log4j.appender.v2_17.AbstractLog4j2Test.V3_PREVIEW;
 import static io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataKeys.OTEL_CONTEXT_DATA_KEY;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.emptyList;
@@ -388,7 +389,9 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
     testing.waitAndAssertLogRecords(
         logRecord ->
             logRecord.hasAttributesSatisfyingExactly(
-                equalTo(AbstractLog4j2Test.mapMessageKey("order-id"), "captured")));
+                equalTo(
+                    stringKey(V3_PREVIEW ? "order-id" : "log4j.map_message.order-id"),
+                    "captured")));
   }
 
   @Test
@@ -417,7 +420,9 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
     testing.waitAndAssertLogRecords(
         logRecord ->
             logRecord.hasAttributesSatisfyingExactly(
-                equalTo(AbstractLog4j2Test.mapMessageKey("order-id"), "captured")));
+                equalTo(
+                    stringKey(V3_PREVIEW ? "order-id" : "log4j.map_message.order-id"),
+                    "captured")));
   }
 
   @Test
@@ -449,8 +454,11 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
     testing.waitAndAssertLogRecords(
         logRecord ->
             logRecord.hasAttributesSatisfyingExactly(
-                equalTo(AbstractLog4j2Test.mapMessageKey("order-id"), "captured"),
-                equalTo(AbstractLog4j2Test.mapMessageKey("order-secret"), "captured")));
+                equalTo(
+                    stringKey(V3_PREVIEW ? "order-id" : "log4j.map_message.order-id"), "captured"),
+                equalTo(
+                    stringKey(V3_PREVIEW ? "order-secret" : "log4j.map_message.order-secret"),
+                    "captured")));
   }
 
   @Test
@@ -477,8 +485,9 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
     testing.waitAndAssertLogRecords(
         logRecord ->
             logRecord.hasAttributesSatisfyingExactly(
-                equalTo(AbstractLog4j2Test.mapMessageKey("order-id"), "captured"),
-                equalTo(AbstractLog4j2Test.mapMessageKey("other"), "captured")));
+                equalTo(
+                    stringKey(V3_PREVIEW ? "order-id" : "log4j.map_message.order-id"), "captured"),
+                equalTo(stringKey(V3_PREVIEW ? "other" : "log4j.map_message.other"), "captured")));
   }
 
   @Test
@@ -515,7 +524,10 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
     testing.waitAndAssertLogRecords(
         logRecord ->
             logRecord.hasAttributesSatisfyingExactly(
-                equalTo(AbstractLog4j2Test.mapMessageKey("selector-included"), "captured")));
+                equalTo(
+                    stringKey(
+                        V3_PREVIEW ? "selector-included" : "log4j.map_message.selector-included"),
+                    "captured")));
   }
 
   @Test
@@ -530,7 +542,10 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
     testing.waitAndAssertLogRecords(
         logRecord ->
             logRecord.hasAttributesSatisfyingExactly(
-                equalTo(AbstractLog4j2Test.mapMessageKey("selector-included"), "captured")));
+                equalTo(
+                    stringKey(
+                        V3_PREVIEW ? "selector-included" : "log4j.map_message.selector-included"),
+                    "captured")));
   }
 
   @Test

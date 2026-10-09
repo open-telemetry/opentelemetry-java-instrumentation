@@ -5,7 +5,8 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
-import static io.opentelemetry.instrumentation.log4j.appender.v2_17.AbstractLog4j2Test.mapMessageKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.log4j.appender.v2_17.AbstractLog4j2Test.V3_PREVIEW;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -60,7 +61,8 @@ class Log4jMapMessageSelectorTest {
     Map<String, String> captured = new HashMap<>();
     MAP_MESSAGE_ENTRIES.forEach(
         (key, value) -> {
-          String attributeValue = attributes.get(mapMessageKey(key));
+          String attributeValue =
+              attributes.get(stringKey(V3_PREVIEW ? key : "log4j.map_message." + key));
           if (attributeValue != null) {
             captured.put(key, attributeValue);
           }
