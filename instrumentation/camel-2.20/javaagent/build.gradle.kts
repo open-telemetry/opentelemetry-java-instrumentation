@@ -123,7 +123,7 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.camel.experimental-span-attributes=true")
   }
 
-  val testSemconv = register<Test>("testSemconv") {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -131,8 +131,8 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.experimental.span-suppression-strategy=semconv")
   }
 
-  val testSemconvWithReceiveTelemetry =
-    register<Test>("testSemconvWithReceiveTelemetry") {
+  val testStableSemconvWithReceiveTelemetry =
+    register<Test>("testStableSemconvWithReceiveTelemetry") {
       testClassesDirs = sourceSets.test.get().output.classesDirs
       classpath = sourceSets.test.get().runtimeClasspath
 
@@ -157,7 +157,7 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
   }
 
-  val testSemconvNoLowerMessaging = register<Test>("testSemconvNoLowerMessaging") {
+  val testStableSemconvNoLowerMessaging = register<Test>("testStableSemconvNoLowerMessaging") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -175,8 +175,8 @@ tasks {
     }
   }
 
-  val testSemconvSjmsWithoutCamelJms =
-    register<Test>("testSemconvSjmsWithoutCamelJms") {
+  val testStableSemconvSjmsWithoutCamelJms =
+    register<Test>("testStableSemconvSjmsWithoutCamelJms") {
       testClassesDirs = sourceSets.test.get().output.classesDirs
       classpath =
         sourceSets.test.get().runtimeClasspath.filter {
@@ -191,7 +191,7 @@ tasks {
       }
     }
 
-  val testSemconvCamelDisabled = register<Test>("testSemconvCamelDisabled") {
+  val testStableSemconvCamelDisabled = register<Test>("testStableSemconvCamelDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -210,7 +210,7 @@ tasks {
     }
   }
 
-  val testSemconvAdaptersDisabled = register<Test>("testSemconvAdaptersDisabled") {
+  val testStableSemconvAdaptersDisabled = register<Test>("testStableSemconvAdaptersDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -235,14 +235,14 @@ tasks {
 
   check {
     dependsOn(
-      testSemconv,
-      testSemconvWithReceiveTelemetry,
+      testStableSemconv,
+      testStableSemconvWithReceiveTelemetry,
       testExperimental,
       testV3Preview,
-      testSemconvNoLowerMessaging,
-      testSemconvSjmsWithoutCamelJms,
-      testSemconvCamelDisabled,
-      testSemconvAdaptersDisabled,
+      testStableSemconvNoLowerMessaging,
+      testStableSemconvSjmsWithoutCamelJms,
+      testStableSemconvCamelDisabled,
+      testStableSemconvAdaptersDisabled,
     )
   }
 
