@@ -50,9 +50,9 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
   // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
   // via openTelemetry.getConfigProvider()
   GrpcAttributesExtractor(
-      OpenTelemetry openTelemetry,
       GrpcRpcAttributesGetter getter,
-      @Nullable IncludeExclude requestMetadata) {
+      @Nullable IncludeExclude requestMetadata,
+      OpenTelemetry openTelemetry) {
     emitOldRpcSemconv = emitOldRpcSemconv(openTelemetry);
     emitPreviewRpcSemconv = emitPreviewRpcSemconv(openTelemetry);
     this.getter = getter;

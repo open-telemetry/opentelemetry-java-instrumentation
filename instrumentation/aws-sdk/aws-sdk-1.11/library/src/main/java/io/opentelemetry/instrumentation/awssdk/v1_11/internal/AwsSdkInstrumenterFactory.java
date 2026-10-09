@@ -81,15 +81,15 @@ public final class AwsSdkInstrumenterFactory {
       boolean captureExperimentalSpanAttributes,
       boolean messagingReceiveInstrumentationEnabled) {
     this.openTelemetry = openTelemetry;
-    defaultAttributesExtractors = createAttributesExtractors(openTelemetry, false);
-    extendedAttributesExtractors = createAttributesExtractors(openTelemetry, true);
+    defaultAttributesExtractors = createAttributesExtractors(false, openTelemetry);
+    extendedAttributesExtractors = createAttributesExtractors(true, openTelemetry);
     this.headers = headers;
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
   }
 
   private static List<AttributesExtractor<Request<?>, Response<?>>> createAttributesExtractors(
-      OpenTelemetry openTelemetry, boolean includeExperimental) {
+      boolean includeExperimental, OpenTelemetry openTelemetry) {
     List<AttributesExtractor<Request<?>, Response<?>>> extractors =
         new ArrayList<>(
             asList(

@@ -240,7 +240,7 @@ public final class GrpcTelemetryBuilder {
         .addAttributesExtractor(NetworkAttributesExtractor.create(netClientAttributesGetter))
         .addAttributesExtractors(additionalClientExtractors)
         .addAttributesExtractor(
-            new GrpcAttributesExtractor(openTelemetry, rpcAttributesGetter, clientRequestMetadata))
+            new GrpcAttributesExtractor(rpcAttributesGetter, clientRequestMetadata, openTelemetry))
         .addOperationMetrics(RpcClientMetrics.get(openTelemetry))
         .addContextCustomizer(
             RpcMetricsContextCustomizers.dualEmitContextCustomizer(
@@ -256,7 +256,7 @@ public final class GrpcTelemetryBuilder {
         .addAttributesExtractor(ServerAttributesExtractor.create(netServerAttributesGetter))
         .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
         .addAttributesExtractor(
-            new GrpcAttributesExtractor(openTelemetry, rpcAttributesGetter, serverRequestMetadata))
+            new GrpcAttributesExtractor(rpcAttributesGetter, serverRequestMetadata, openTelemetry))
         .addAttributesExtractors(additionalServerExtractors)
         .addOperationMetrics(RpcServerMetrics.get(openTelemetry))
         .addContextCustomizer(
