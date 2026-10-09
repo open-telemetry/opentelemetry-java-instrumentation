@@ -199,6 +199,7 @@ testing {
 
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
         implementation(project(":instrumentation:logback:logback-mdc-1.0:library"))
+        implementation("net.logstash.logback:logstash-logback-encoder:6.6")
         // using the same versions as in the spring-boot-autoconfigure
         implementation("ch.qos.logback:logback-classic") {
           version {

@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.logging;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,6 +36,7 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
+import net.logstash.logback.argument.StructuredArguments;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -129,6 +131,59 @@ class LogbackAppenderTest {
           assertThat(selector.matches("key1")).isFalse();
           assertThat(selector.matches("key2")).isFalse();
         });
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "logback-test-no-mdc.xml, false",
+    "logback-no-otel-appenders.xml, false",
+    "logback-test-no-mdc.xml, true",
+    "logback-no-otel-appenders.xml, true"
+  })
+  void shouldApplyStructuredSelectorToEmittedLogs(
+      String configurationFile, boolean declarativeConfig) {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("logging.config", "classpath:" + configurationFile);
+    if (declarativeConfig) {
+      properties.put("otel.file_format", "1.1");
+      properties.put(
+          "otel.instrumentation/development.java.common.logging.structured_attributes.included[0]",
+          "key*");
+      properties.put(
+          "otel.instrumentation/development.java.common.logging.structured_attributes.excluded[0]",
+          "key2");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_code_attributes/development",
+          false);
+    } else {
+      properties.put("otel.instrumentation.common.logging.structured-attributes.included", "key*");
+      properties.put("otel.instrumentation.common.logging.structured-attributes.excluded", "key2");
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-code-attributes", false);
+    }
+
+    SpringApplication app =
+        new SpringApplication(
+            TestingOpenTelemetryConfiguration.class, OpenTelemetryAppenderAutoConfiguration.class);
+    app.setDefaultProperties(properties);
+    ConfigurableApplicationContext context = app.run();
+    cleanup.deferCleanup(context);
+    testing.clearData();
+
+    assertThat(countAppenders(openTelemetryAppenderClass)).isEqualTo(1);
+
+    LoggerFactory.getLogger("test")
+        .info(
+            "structured log message",
+            StructuredArguments.keyValue("key1", "val1"),
+            StructuredArguments.keyValue("key2", "val2"),
+            StructuredArguments.keyValue("other", "val3"));
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasBody("structured log message")
+                .hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "val1")));
   }
 
   private static CapturingOpenTelemetryAppender structuredAttributes(
