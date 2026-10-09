@@ -11,7 +11,6 @@
   
   <appender name="OpenTelemetry"
     class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
-    <logstashMarkerAttributesIncluded>*</logstashMarkerAttributesIncluded>
   </appender>
 
   <root level="INFO">

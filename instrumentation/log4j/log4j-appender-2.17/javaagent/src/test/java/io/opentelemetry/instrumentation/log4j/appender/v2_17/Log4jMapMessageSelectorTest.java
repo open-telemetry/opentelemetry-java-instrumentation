@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 import static io.opentelemetry.instrumentation.log4j.appender.v2_17.AbstractLog4j2Test.mapMessageKey;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
@@ -71,13 +70,6 @@ class Log4jMapMessageSelectorTest {
   private static Map<String, String> expectedMapMessageAttributes() {
     List<String> expectedKeys;
     switch (System.getProperty("testMapMessageConfiguration", "new")) {
-      case "legacy":
-        // the deprecated boolean captures every attribute
-        expectedKeys = asList("order-id", "order-secret", "user-1", "user-22", "other");
-        break;
-      case "precedence":
-        expectedKeys = singletonList("order-id");
-        break;
       case "exclude-only":
         expectedKeys = asList("order-id", "user-1", "user-22", "other");
         break;
