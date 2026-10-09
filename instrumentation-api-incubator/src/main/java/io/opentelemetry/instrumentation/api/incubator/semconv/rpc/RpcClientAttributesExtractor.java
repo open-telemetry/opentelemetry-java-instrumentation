@@ -31,6 +31,8 @@ public final class RpcClientAttributesExtractor<REQUEST, RESPONSE>
   }
 
   /** Creates the RPC client attributes extractor using the supplied instance's configuration. */
+  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
+  // via openTelemetry.getConfigProvider()
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       OpenTelemetry openTelemetry, RpcAttributesGetter<REQUEST, RESPONSE> getter) {
     return new RpcClientAttributesExtractor<>(

@@ -47,6 +47,8 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
   private final Map<String, AttributeKey<List<String>>> literalRequestAttributeKeys;
   private final Map<String, AttributeKey<List<String>>> literalStableRequestAttributeKeys;
 
+  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
+  // via openTelemetry.getConfigProvider()
   GrpcAttributesExtractor(
       OpenTelemetry openTelemetry,
       GrpcRpcAttributesGetter getter,
