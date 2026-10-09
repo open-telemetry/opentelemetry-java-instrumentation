@@ -45,7 +45,7 @@ public class AgentDistributionConfig {
     return instance;
   }
 
-  // visible for testing
+  // only used by tests
   public static void resetForTest() {
     instance = new AgentDistributionConfig();
     initialized = false;
