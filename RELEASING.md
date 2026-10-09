@@ -59,8 +59,8 @@ and deadlocks.
     `<!-- towncrier release notes start -->` marker in `CHANGELOG.md`) still use the legacy
     workflow: backport pull requests must update `CHANGELOG.md` manually, and `changelog.d`
     fragments are ignored on those branches. The patch preparation workflow skips Towncrier
-    when `towncrier.toml` is absent and replaces the `## Unreleased` heading with the release
-    version and date.
+    when `towncrier.toml` is absent and uses the branch's legacy changelog updater to replace
+    the `## Unreleased` heading with the release version, date, and standard SDK/alpha preamble.
 
 ## Making the release
 

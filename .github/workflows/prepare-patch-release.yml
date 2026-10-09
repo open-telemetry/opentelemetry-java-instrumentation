@@ -61,11 +61,7 @@ jobs:
       - name: Update the change log with the approximate release date
         run: |
           date=$(date "+%Y-%m-%d")
-          if [[ -f towncrier.toml ]]; then
-            .github/scripts/update-changelog-for-release.sh "$VERSION" "$date"
-          else
-            sed -Ei "s/^## Unreleased$/## Version $VERSION ($date)/" CHANGELOG.md
-          fi
+          .github/scripts/update-changelog-for-release.sh "$VERSION" "$date"
 
       - name: Use CLA approved bot
         run: .github/scripts/use-cla-approved-bot.sh

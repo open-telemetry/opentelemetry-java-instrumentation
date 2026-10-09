@@ -10,6 +10,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 WORKFLOW = ROOT / ".github/workflows/prepare-patch-release.yml"
 MARKER = "<!-- towncrier release notes start -->"
+PREAMBLE = (
+    "This release targets the OpenTelemetry SDK 1.66.0.\n\n"
+    "Note that many artifacts have the `-alpha` suffix attached to their version\n"
+    "number, reflecting that they will continue to have breaking changes. Please see\n"
+    "[VERSIONING.md](https://github.com/open-telemetry/opentelemetry-java-instrumentation/"
+    "blob/main/VERSIONING.md#opentelemetry-java-instrumentation-versioning)\n"
+    "for more details."
+)
 
 
 def workflow_script(name):
@@ -27,6 +35,17 @@ class PatchReleaseTest(unittest.TestCase):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)
         self.root = Path(self.directory.name)
+        scripts = self.root / ".github/scripts"
+        scripts.mkdir(parents=True)
+        shutil.copy2(
+            ROOT / ".github/scripts/changelog/fixtures/update-changelog-for-release-legacy.sh",
+            scripts / "update-changelog-for-release.sh",
+        )
+        dependency_management = self.root / "dependencyManagement"
+        dependency_management.mkdir()
+        (dependency_management / "build.gradle.kts").write_text(
+            'val otelSdkVersion = "1.66.0"\n', encoding="utf-8"
+        )
         self.changelog = self.root / "CHANGELOG.md"
         self.changelog.write_text(
             "# Changelog\n\n## Unreleased\n\n### Bug fixes\n\n- Fix missing spans.\n",
@@ -59,11 +78,6 @@ class PatchReleaseTest(unittest.TestCase):
         shutil.copy2(
             ROOT / ".github/scripts/update-changelog-for-release.sh",
             scripts / "update-changelog-for-release.sh",
-        )
-        dependency_management = self.root / "dependencyManagement"
-        dependency_management.mkdir()
-        (dependency_management / "build.gradle.kts").write_text(
-            'val otelSdkVersion = "1.66.0"\n', encoding="utf-8"
         )
         self.changelog.write_text(
             f"# Changelog\n\n## Unreleased\n\n{MARKER}\n\n"
@@ -122,12 +136,27 @@ class PatchReleaseTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         updated = self.changelog.read_text(encoding="utf-8")
         self.assertRegex(updated, r"## Version 2\.32\.1 \(\d{4}-\d{2}-\d{2}\)")
+        self.assertIn(PREAMBLE, updated)
         self.assertEqual(
-            re.sub(r"## Version 2\.32\.1 \(\d{4}-\d{2}-\d{2}\)", "## Unreleased", updated),
+            re.sub(
+                r"## Version 2\.32\.1 \(\d{4}-\d{2}-\d{2}\)\n\n" + re.escape(PREAMBLE),
+                "## Unreleased",
+                updated,
+            ),
             original,
         )
         self.assertTrue(fragment.is_file())
         self.assertNotIn("Do not render this fragment.", updated)
+
+    def test_legacy_release_requires_sdk_version(self):
+        (self.root / "dependencyManagement/build.gradle.kts").write_text(
+            "", encoding="utf-8"
+        )
+        original = self.changelog.read_text(encoding="utf-8")
+        result = self.run_step("Update the change log with the approximate release date")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("could not determine otelSdkVersion", result.stderr)
+        self.assertEqual(self.changelog.read_text(encoding="utf-8"), original)
 
     def test_towncrier_release_renders_and_consumes_fragments(self):
         self.enable_towncrier()
@@ -140,7 +169,7 @@ class PatchReleaseTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         updated = self.changelog.read_text(encoding="utf-8")
         self.assertRegex(updated, r"## Version 2\.32\.1 \(\d{4}-\d{2}-\d{2}\)")
-        self.assertIn("This release targets the OpenTelemetry SDK 1.66.0.", updated)
+        self.assertIn(PREAMBLE, updated)
         self.assertIn("- Fix missing spans.", updated)
         self.assertIn("## Version 2.32.0 (2026-10-03)\n\nPrevious release.", updated)
         self.assertIn("## Unreleased", updated)
