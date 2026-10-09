@@ -15,6 +15,8 @@ import com.couchbase.mock.CouchbaseMock;
 import com.couchbase.mock.http.query.QueryServer;
 import com.couchbase.mock.httpio.HttpServer;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.LongAssertConsumer;
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.StringAssertConsumer;
 import java.lang.reflect.Field;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
