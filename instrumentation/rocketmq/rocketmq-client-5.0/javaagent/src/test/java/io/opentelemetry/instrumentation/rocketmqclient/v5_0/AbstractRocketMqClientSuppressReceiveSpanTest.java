@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CONSUMER_GROUP_NAME;
@@ -130,7 +131,7 @@ abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                           .hasName("process " + topic)
                           .hasParent(trace.getSpan(1))
                           .hasStatus(StatusData.unset())
-                          .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
+                          .hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())))
                           .hasAttributesSatisfyingExactly(
                               equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
                               equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),

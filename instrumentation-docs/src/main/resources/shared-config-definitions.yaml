@@ -120,51 +120,16 @@ configurations:
   messaging.headers.included:
     name: otel.instrumentation.common.messaging.headers.included
     declarative_name: java.common.messaging.headers.included
-    description: "A comma-separated list of case-sensitive message header name glob patterns to capture as span attributes. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. An absent or empty selector captures no headers; an exclude-only selector captures every header not excluded."
+    description: "A comma-separated list of case-sensitive message header name glob patterns to capture as span attributes. Captured attribute keys preserve the header name's original spelling, including dashes. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. An absent or empty selector captures no headers; an exclude-only selector captures every header not excluded."
     type: list
     default: ""
 
   messaging.headers.excluded:
     name: otel.instrumentation.common.messaging.headers.excluded
     declarative_name: java.common.messaging.headers.excluded
-    description: "A comma-separated list of case-sensitive message header name glob patterns to exclude from span attributes. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. An absent or empty selector captures no headers; an exclude-only selector captures every header not excluded, which may expose sensitive information."
+    description: "A comma-separated list of case-sensitive message header name glob patterns to exclude from span attributes. Captured attribute keys preserve the header name's original spelling, including dashes. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. An absent or empty selector captures no headers; an exclude-only selector captures every header not excluded, which may expose sensitive information."
     type: list
     default: ""
-
-  messaging.capture-headers:
-    name: otel.instrumentation.messaging.experimental.capture-headers
-    declarative_name: java.common.messaging.capture_headers/development
-    description: "Deprecated: use `otel.instrumentation.common.messaging.headers.included` instead. Ignored without a warning under v3-preview; may be removed in a later minor release and will be removed no later than 3.0. A comma-separated list of header names to capture as span attributes. It does not support glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other entry is matched as a literal header name."
-    type: list
-    default: ""
-    deprecated: true
-    replaced_by: otel.instrumentation.common.messaging.headers.included
-
-  # The deprecated names below are flat properties only: the declarative configuration schema keeps
-  # them under `java.common.messaging`, so they declare no declarative_name.
-  messaging.deprecated-headers.included:
-    name: otel.instrumentation.messaging.experimental.headers.included
-    description: "Deprecated: use `otel.instrumentation.common.messaging.headers.included` instead. Ignored without a warning under v3-preview; may be removed in a later minor release and will be removed no later than 3.0."
-    type: list
-    default: ""
-    deprecated: true
-    replaced_by: otel.instrumentation.common.messaging.headers.included
-
-  messaging.deprecated-headers.excluded:
-    name: otel.instrumentation.messaging.experimental.headers.excluded
-    description: "Deprecated: use `otel.instrumentation.common.messaging.headers.excluded` instead. Ignored without a warning under v3-preview; may be removed in a later minor release and will be removed no later than 3.0."
-    type: list
-    default: ""
-    deprecated: true
-    replaced_by: otel.instrumentation.common.messaging.headers.excluded
-
-  messaging.deprecated-receive-telemetry.enabled:
-    name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
-    description: "Deprecated: use `otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled` instead. It may be removed in the next minor release."
-    type: boolean
-    default: false
-    deprecated: true
-    replaced_by: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
 
   messaging.batch-send.message-creation-spans.enabled:
     name: otel.instrumentation.common.messaging.message-create-spans.enabled
@@ -206,6 +171,20 @@ configurations:
     type: string
     default: trace_id
 
+  common.user.name.enabled:
+    name: otel.instrumentation.common.user.name.enabled
+    declarative_name: java.common.user.name.enabled
+    description: "Enables capturing the `user.name` identity attribute. Identity attributes are not captured by default."
+    type: boolean
+    default: false
+
+  common.user.roles.enabled:
+    name: otel.instrumentation.common.user.roles.enabled
+    declarative_name: java.common.user.roles.enabled
+    description: "Enables capturing the `user.roles` identity attribute. Identity attributes are not captured by default."
+    type: boolean
+    default: false
+
   common.logging.span-id-key:
     name: otel.instrumentation.common.logging.span-id-key
     declarative_name: java.common.logging.span_id_key
@@ -219,33 +198,6 @@ configurations:
     description: "Specifies the key name used to store the trace flags in the logging context."
     type: string
     default: trace_flags
-
-  common.logging.trace-id:
-    name: otel.instrumentation.common.logging.trace-id
-    declarative_name: java.common.logging.trace_id
-    description: "Deprecated: use `otel.instrumentation.common.logging.trace-id-key` instead. It is ignored under v3 preview and will be removed in 3.0."
-    type: string
-    default: trace_id
-    deprecated: true
-    replaced_by: otel.instrumentation.common.logging.trace-id-key
-
-  common.logging.span-id:
-    name: otel.instrumentation.common.logging.span-id
-    declarative_name: java.common.logging.span_id
-    description: "Deprecated: use `otel.instrumentation.common.logging.span-id-key` instead. It is ignored under v3 preview and will be removed in 3.0."
-    type: string
-    default: span_id
-    deprecated: true
-    replaced_by: otel.instrumentation.common.logging.span-id-key
-
-  common.logging.trace-flags:
-    name: otel.instrumentation.common.logging.trace-flags
-    declarative_name: java.common.logging.trace_flags
-    description: "Deprecated: use `otel.instrumentation.common.logging.trace-flags-key` instead. It is ignored under v3 preview and will be removed in 3.0."
-    type: string
-    default: trace_flags
-    deprecated: true
-    replaced_by: otel.instrumentation.common.logging.trace-flags-key
 
 # Global configurations are read by the agent or the instrumentation API itself, on behalf of every
 # instrumentation rather than any particular one, so no module's metadata.yaml declares them and

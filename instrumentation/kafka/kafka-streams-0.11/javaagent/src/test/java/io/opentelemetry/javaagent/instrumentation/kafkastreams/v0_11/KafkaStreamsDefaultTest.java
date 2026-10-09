@@ -10,6 +10,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -148,7 +149,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                 span.hasName("process " + STREAM_PENDING)
                     .hasKind(SpanKind.CONSUMER)
                     .hasParent(trace.getSpan(0))
-                    .hasLinks(LinkData.create(trace.getSpan(0).getSpanContext()))
+                    .hasLinks(LinkData.create(asRemote(trace.getSpan(0).getSpanContext())))
                     .hasAttributesSatisfyingExactly(assertions);
               },
               // kafka-clients PRODUCER
@@ -190,7 +191,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                 span.hasName("process " + STREAM_PROCESSED)
                     .hasKind(SpanKind.CONSUMER)
                     .hasParent(trace.getSpan(2))
-                    .hasLinks(LinkData.create(trace.getSpan(2).getSpanContext()))
+                    .hasLinks(LinkData.create(asRemote(trace.getSpan(2).getSpanContext())))
                     .hasAttributesSatisfyingExactly(assertions);
               });
           producerPendingRef.set(trace.getSpan(0));
@@ -298,7 +299,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
   private static LinkData receiveRecordLink(SpanData producerSpan, @Nullable String messageKey) {
 
     return LinkData.create(
-        producerSpan.getSpanContext(),
+        asRemote(producerSpan.getSpanContext()),
         Attributes.builder()
             .put(MESSAGING_KAFKA_OFFSET, 0)
             .put(MESSAGING_KAFKA_MESSAGE_KEY, messageKey)

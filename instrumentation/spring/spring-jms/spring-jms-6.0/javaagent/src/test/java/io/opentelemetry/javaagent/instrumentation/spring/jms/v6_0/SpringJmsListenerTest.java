@@ -11,6 +11,7 @@ import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertHistogram;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -160,12 +161,12 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
                     span.hasName("receive spring-jms-listener")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext())),
+                        .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext()))),
                 span ->
                     span.hasName("process spring-jms-listener")
                         .hasKind(CONSUMER)
                         .hasParent(trace.getSpan(0))
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))));
+                        .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))));
   }
 
   @Override
@@ -194,7 +195,7 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
                   span.hasName("process " + destinationName)
                       .hasKind(CONSUMER)
                       .hasParent(trace.getSpan(1))
-                      .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
+                      .hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())))
                       .hasAttributesSatisfyingExactly(
                           equalTo(MESSAGING_SYSTEM, "jms"),
                           equalTo(MESSAGING_DESTINATION_NAME, destinationName),
@@ -211,7 +212,7 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
                     span.hasName("receive " + destinationName)
                         .hasKind(CLIENT)
                         .hasNoParent()
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, destinationName),
@@ -281,7 +282,7 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
                   span.hasName("process spring-jms-listener")
                       .hasKind(CONSUMER)
                       .hasParent(trace.getSpan(1))
-                      .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
+                      .hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())))
                       .hasAttributesSatisfyingExactly(
                           equalTo(MESSAGING_SYSTEM, "jms"),
                           equalTo(MESSAGING_DESTINATION_NAME, "spring-jms-listener"),
@@ -304,7 +305,7 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
                     span.hasName("receive spring-jms-listener")
                         .hasKind(CLIENT)
                         .hasNoParent()
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, "spring-jms-listener"),

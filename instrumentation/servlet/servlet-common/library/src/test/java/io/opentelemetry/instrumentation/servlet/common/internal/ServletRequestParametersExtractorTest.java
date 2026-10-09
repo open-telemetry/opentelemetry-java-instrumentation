@@ -76,6 +76,28 @@ class ServletRequestParametersExtractorTest {
   }
 
   @Test
+  void preservesParameterNameCasingAndMatchesCaseSensitively() {
+    when(accessor.getRequestParameterNames(request))
+        .thenReturn(asList("User-Id", "user-Id", "User-secret"));
+    when(accessor.getRequestParameterValues(request, "User-Id")).thenReturn(singletonList("value"));
+    IncludeExclude selector =
+        IncludeExclude.builder()
+            .setIncluded(singletonList("User-*"))
+            .setExcluded(singletonList("User-secret"))
+            .build();
+    AttributesBuilder attributes = Attributes.builder();
+
+    new ServletRequestParametersExtractor<>(accessor, selector)
+        .setAttributes(request, attributes::put);
+
+    assertThat(attributes.build().asMap())
+        .containsOnly(
+            entry(stringArrayKey("servlet.request.parameter.User-Id"), singletonList("value")));
+    verify(accessor, never()).getRequestParameterValues(request, "user-Id");
+    verify(accessor, never()).getRequestParameterValues(request, "User-secret");
+  }
+
+  @Test
   void doesNotTouchRequestParametersForEmptySelector() {
     IncludeExclude selector =
         IncludeExclude.builder().setIncluded(emptyList()).setExcluded(emptyList()).build();

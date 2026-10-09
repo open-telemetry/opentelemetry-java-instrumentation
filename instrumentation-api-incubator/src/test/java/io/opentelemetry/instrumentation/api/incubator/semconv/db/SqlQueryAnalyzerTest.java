@@ -367,7 +367,6 @@ class SqlQueryAnalyzerTest {
 
   @Test
   void querySummaryIsTruncated() {
-
     // Build a query with many tables to exceed 255 character limit
     StringBuilder sql = new StringBuilder("SELECT * FROM ");
     for (int i = 0; i < 50; i++) {
@@ -399,7 +398,6 @@ class SqlQueryAnalyzerTest {
   @ParameterizedTest
   @MethodSource("operationCaseArgs")
   void querySummaryPreservesOperationCase(String original, String expectedQuerySummary) {
-
     SqlQuery result = analyze(original, DOUBLE_QUOTES_ARE_STRING_LITERALS);
     assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
   }
