@@ -17,26 +17,7 @@ import java.io.ByteArrayInputStream;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/**
- * Verifies that the deprecated boolean settings of the appender are still configurable from {@code
- * logback.xml}. Joran converts the element text with {@code Boolean.valueOf}, so these settings
- * remain configurable through their primitive {@code boolean} setters.
- */
 class OpenTelemetryAppenderXmlConfigurationTest {
-
-  @Test
-  void deprecatedKeyValuePairSettingIsAppliedFromXml() throws JoranException {
-    assertThat(
-            deprecationWarnings(
-                "<captureKeyValuePairAttributes>true</captureKeyValuePairAttributes>",
-                "capture-key-value-pair-attributes"))
-        .hasSize(1);
-  }
-
-  @Test
-  void deprecatedKeyValuePairSettingIsAbsentByDefault() throws JoranException {
-    assertThat(deprecationWarnings("", "capture-key-value-pair-attributes")).isEmpty();
-  }
 
   @Test
   void deprecatedLoggerContextSettingIsAppliedFromXml() throws JoranException {
@@ -50,34 +31,6 @@ class OpenTelemetryAppenderXmlConfigurationTest {
   @Test
   void deprecatedLoggerContextSettingIsAbsentByDefault() throws JoranException {
     assertThat(deprecationWarnings("", "capture-logger-context-attributes")).isEmpty();
-  }
-
-  @Test
-  void deprecatedLogstashMarkerSettingIsAppliedFromXml() throws JoranException {
-    assertThat(
-            deprecationWarnings(
-                "<captureLogstashMarkerAttributes>true</captureLogstashMarkerAttributes>",
-                "capture-logstash-marker-attributes"))
-        .hasSize(1);
-  }
-
-  @Test
-  void deprecatedLogstashMarkerSettingIsAbsentByDefault() throws JoranException {
-    assertThat(deprecationWarnings("", "capture-logstash-marker-attributes")).isEmpty();
-  }
-
-  @Test
-  void deprecatedLogstashStructuredArgumentSettingIsAppliedFromXml() throws JoranException {
-    assertThat(
-            deprecationWarnings(
-                "<captureLogstashStructuredArguments>true</captureLogstashStructuredArguments>",
-                "capture-logstash-structured-arguments"))
-        .hasSize(1);
-  }
-
-  @Test
-  void deprecatedLogstashStructuredArgumentSettingIsAbsentByDefault() throws JoranException {
-    assertThat(deprecationWarnings("", "capture-logstash-structured-arguments")).isEmpty();
   }
 
   /**

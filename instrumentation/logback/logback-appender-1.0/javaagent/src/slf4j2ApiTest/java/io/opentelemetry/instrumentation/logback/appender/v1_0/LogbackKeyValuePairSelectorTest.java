@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import ch.qos.logback.classic.Level;
@@ -67,8 +68,11 @@ class LogbackKeyValuePairSelectorTest {
 
   private static Map<String, String> expectedKeyValuePairAttributes() {
     String configuration = System.getProperty("testKeyValuePairConfiguration");
-    if ("legacy".equals(configuration) || "all".equals(configuration)) {
+    if ("all".equals(configuration)) {
       return new HashMap<>(KEY_VALUE_PAIRS);
+    }
+    if ("none".equals(configuration)) {
+      return emptyMap();
     }
     Map<String, String> expected = new HashMap<>();
     expected.put("key1", "key1-value");

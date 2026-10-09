@@ -178,6 +178,18 @@ val testSpring3 =
 
 testing {
   suites {
+    register<JvmTestSuite>("testLog4jAppender") {
+      dependencies {
+        implementation(project())
+        implementation("io.opentelemetry:opentelemetry-sdk")
+        implementation("io.opentelemetry:opentelemetry-sdk-testing")
+        implementation("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
+
+        implementation(project(":instrumentation:log4j:log4j-appender-2.17:library"))
+        implementation("org.apache.logging.log4j:log4j-core:2.17.0")
+      }
+    }
+
     register<JvmTestSuite>("testLogbackAppender") {
       dependencies {
         implementation(project())
@@ -187,6 +199,7 @@ testing {
 
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
         implementation(project(":instrumentation:logback:logback-mdc-1.0:library"))
+        implementation("net.logstash.logback:logstash-logback-encoder:6.6")
         // using the same versions as in the spring-boot-autoconfigure
         implementation("ch.qos.logback:logback-classic") {
           version {
@@ -368,4 +381,8 @@ tasks {
   check {
     dependsOn(testing.suites)
   }
+}
+
+configurations.named("testLog4jAppenderRuntimeClasspath") {
+  exclude(group = "ch.qos.logback")
 }
