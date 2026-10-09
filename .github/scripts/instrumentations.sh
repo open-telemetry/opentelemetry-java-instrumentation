@@ -51,7 +51,6 @@ readonly INSTRUMENTATIONS=(
   "camel-2.20:javaagent:testCamelDisabled"
   "camel-2.20:javaagent:testJmsDisabled"
   "camel-2.20:javaagent:testReceiveTelemetry"
-  "camel-2.20:javaagent:testSjmsWithoutCamelJms"
   "camel-2.20:javaagent:testSpanKindBasedSuppression"
   "camel-2.20:javaagent:testV3Preview"
   "cassandra:cassandra-3.0:javaagent:test"
