@@ -34,7 +34,7 @@ public final class SemconvStability {
     DeclarativeConfigProperties generalConfig = getGeneralInstrumentationConfig(openTelemetry);
     v3Preview = v3Preview(openTelemetry);
     SemconvSelectionResolver semconvSelection =
-        new SemconvSelectionResolver(openTelemetry, generalConfig, v3Preview);
+        new SemconvSelectionResolver(openTelemetry, generalConfig);
 
     SemconvMode servicePeerSelection = semconvSelection.servicePeer();
     emitOldServicePeerSemconv = emitOld(servicePeerSelection);

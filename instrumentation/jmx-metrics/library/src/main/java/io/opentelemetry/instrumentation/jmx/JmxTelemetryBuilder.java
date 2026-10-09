@@ -224,7 +224,7 @@ public final class JmxTelemetryBuilder {
     for (String metric : metricNames.stream().sorted().collect(toList())) {
       logger.log(
           FINE,
-          "JMX {0} metric '{1}' {2} by configuration",
+          "JMX {0} metric ''{1}'' {2} by configuration",
           new Object[] {source, metric, included.test(metric) ? "included" : "excluded"});
     }
   }

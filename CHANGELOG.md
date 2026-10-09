@@ -28,6 +28,13 @@
     selections in `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included`, or
     declarative `java.runtime_telemetry.jfr_metrics/development.included`.
 - Remove the legacy JFR metric name `jvm.cpu.limit`. Use `jvm.cpu.count` instead.
+- RPC and service-peer semantic conventions now require `otel.semconv-stability.preview=rpc`
+  and `otel.semconv-stability.preview=service.peer`, respectively (or `rpc/dup` and
+  `service.peer/dup` for dual emission). The `rpc`, `rpc/dup`, `service.peer`, and `service.peer/dup`
+  values in `otel.semconv-stability.opt-in` no longer select them.
+  For declarative configuration, move these values from `general.stability_opt_in_list` to
+  `java.common.semconv_stability.preview`. Default telemetry and explicit `general.rpc.semconv`
+  configuration are unchanged.
 - Micrometer timers and distribution summaries no longer emit separate `.max` gauge metrics; use the
   maximum from their histogram instead. Custom meter statistic suffixes are appended after the base
   name passes through the naming convention (for example, Prometheus mode changes
@@ -183,7 +190,13 @@
 - Remove `SqlQueryAnalyzer.analyzeWithSummary` from
   `io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-incubator` for 3.0.
   Use `SqlQueryAnalyzer.analyze`, which now always produces query summaries when sanitization is
-  enabled. The public `SqlQuery` factory signatures are unchanged.
+  enabled.
+- Remove `SqlQuery.createWithSummary(queryText, storedProcedureName, querySummary)` from
+  `io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-incubator`.
+  Use `SqlQuery.create(queryText, null, null, storedProcedureName, querySummary)` instead.
+  The existing three-argument `SqlQuery.create(queryText, operationName, target)` retains its
+  operation/collection and stored-procedure semantics; it is not a replacement for
+  `createWithSummary`.
 - Remove `MessageOperation` and its overloads in the messaging attribute, span-name and span-kind
   extractors from `opentelemetry-instrumentation-api-incubator`.
   `MessagingAttributesGetter` no longer requires or exposes `getMessageBodySize()` or
