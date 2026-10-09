@@ -442,9 +442,9 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(DB_QUERY_TEXT, sanitizedQuery),
                                 equalTo(
                                     DB_QUERY_SUMMARY,
-                                    (isCallStatement
+                                    isCallStatement
                                         ? "CALL ABS"
-                                        : (table != null ? "SELECT " + table : "SELECT"))),
+                                        : table != null ? "SELECT " + table : "SELECT"),
                                 equalTo(
                                     DB_STORED_PROCEDURE_NAME, isCallStatement ? "ABS" : null))));
 
@@ -664,9 +664,9 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(DB_QUERY_TEXT, sanitizedQuery),
                                 equalTo(
                                     DB_QUERY_SUMMARY,
-                                    (isCallStatement
+                                    isCallStatement
                                         ? "CALL ABS"
-                                        : (table != null ? "SELECT " + table : "SELECT"))),
+                                        : table != null ? "SELECT " + table : "SELECT"),
                                 equalTo(
                                     DB_STORED_PROCEDURE_NAME, isCallStatement ? "ABS" : null))));
   }
@@ -708,9 +708,9 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(DB_QUERY_TEXT, sanitizedQuery),
                                 equalTo(
                                     DB_QUERY_SUMMARY,
-                                    (isCallStatement
+                                    isCallStatement
                                         ? "CALL ABS"
-                                        : (table != null ? "SELECT " + table : "SELECT"))),
+                                        : table != null ? "SELECT " + table : "SELECT"),
                                 equalTo(
                                     DB_STORED_PROCEDURE_NAME, isCallStatement ? "ABS" : null))));
   }
@@ -755,9 +755,9 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(DB_QUERY_TEXT, sanitizedQuery),
                                 equalTo(
                                     DB_QUERY_SUMMARY,
-                                    (isCallStatement
+                                    isCallStatement
                                         ? "CALL ABS"
-                                        : (table != null ? "SELECT " + table : "SELECT"))),
+                                        : table != null ? "SELECT " + table : "SELECT"),
                                 equalTo(
                                     DB_STORED_PROCEDURE_NAME, isCallStatement ? "ABS" : null))));
   }
@@ -1279,7 +1279,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(DB_QUERY_TEXT, sanitizedQuery),
                                 equalTo(
                                     DB_QUERY_SUMMARY,
-                                    (table == null ? "SELECT" : "SELECT " + table)))));
+                                    table == null ? "SELECT" : "SELECT " + table))));
   }
 
   static Stream<Arguments> getConnectionStream() {
@@ -1489,7 +1489,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(DB_QUERY_TEXT, sanitizedQuery),
                                 equalTo(
                                     DB_QUERY_SUMMARY,
-                                    (table != null ? operation + " " + table : operation)),
+                                    table != null ? operation + " " + table : operation),
                                 equalTo(maybeStablePeerService(), testing().expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, "localhost"))));
   }
