@@ -34,6 +34,9 @@ tasks {
   }
   test {
     jvmArgs("-Djava.rmi.server.hostname=127.0.0.1")
+    if ((otelProps.testJavaVersion ?: JavaVersion.current()).isJava9Compatible) {
+      jvmArgs("--add-opens=java.rmi/sun.rmi.server=ALL-UNNAMED")
+    }
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 }
