@@ -374,6 +374,12 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
     assertThat(mappings.get(0).getString("service_name")).isEqualTo("FooService");
     // service_namespace is not supported in flat config
     assertThat(mappings.get(0).getString("service_namespace")).isNull();
+    assertThat(mappings.get(0).isString("peer")).isTrue();
+    assertThat(mappings.get(0).isString("service_namespace")).isFalse();
+    assertThat(mappings.get(0).isBoolean("peer")).isFalse();
+    assertThat(mappings.get(0).isInt("peer")).isFalse();
+    assertThat(mappings.get(0).isLong("peer")).isFalse();
+    assertThat(mappings.get(0).isDouble("peer")).isFalse();
   }
 
   @Test
@@ -383,6 +389,12 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
 
     assertThat(config.getStructured("java").getStructured("aws_lambda").getInt("flush_timeout"))
         .isEqualTo(5000);
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("aws_lambda")
+                .isInt("flush_timeout"))
+        .isTrue();
   }
 
   @Test
@@ -415,8 +427,12 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   void testGetDouble() {
     DeclarativeConfigProperties config = createConfig("otel.instrumentation.test.ratio", "0.5");
 
-    assertThat(config.getStructured("java").getStructured("test").getDouble("ratio"))
-        .isEqualTo(0.5);
+    DeclarativeConfigProperties test = config.getStructured("java").getStructured("test");
+
+    assertThat(test.getDouble("ratio")).isEqualTo(0.5);
+    assertThat(test.isString("ratio")).isTrue();
+    assertThat(test.isDouble("ratio")).isTrue();
+    assertThat(test.isDouble("missing")).isFalse();
   }
 
   @Test

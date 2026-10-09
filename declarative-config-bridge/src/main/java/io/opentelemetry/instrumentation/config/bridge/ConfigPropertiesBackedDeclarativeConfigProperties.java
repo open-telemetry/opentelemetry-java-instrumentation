@@ -182,6 +182,31 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
     return configProperties.getDouble(resolvePropertyKey(name));
   }
 
+  @Override
+  public boolean isString(String name) {
+    return getString(name) != null;
+  }
+
+  @Override
+  public boolean isBoolean(String name) {
+    return getBoolean(name) != null;
+  }
+
+  @Override
+  public boolean isInt(String name) {
+    return getInt(name) != null;
+  }
+
+  @Override
+  public boolean isLong(String name) {
+    return getLong(name) != null;
+  }
+
+  @Override
+  public boolean isDouble(String name) {
+    return getDouble(name) != null;
+  }
+
   /**
    * Important: this method should return null if there is no structured child with the given name,
    * but unfortunately that is not implementable on top of ConfigProperties.
