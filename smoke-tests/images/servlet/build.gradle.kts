@@ -109,7 +109,13 @@ val targets = mapOf(
       listOf("openj9"),
       listOf("11", "17", "21"),
       war = "servlet-5.0"
-    )
+    ),
+    ImageTarget(
+      listOf("payara/server-full:7.2026.9@sha256:0fc31d7985e4bc6951581df2014a0c609ee93fa09cd03e51dd27a3f2d6f62c9d"),
+      listOf("hotspot", "openj9"),
+      listOf("25"),
+      war = "servlet-5.0"
+    ),
   ),
   "tomcat" to listOf(
     ImageTarget(
@@ -182,6 +188,13 @@ val targets = mapOf(
       listOf("28.0.1.Final", "29.0.1.Final", "30.0.1.Final"),
       listOf("hotspot", "openj9"),
       listOf("11", "17", "21"),
+      war = "servlet-5.0"
+    ),
+    ImageTarget(
+      listOf("41.0.1.Final"),
+      listOf("hotspot", "openj9"),
+      listOf("25"),
+      mapOf("archiveExtension" to "zip"),
       war = "servlet-5.0"
     ),
   ),
