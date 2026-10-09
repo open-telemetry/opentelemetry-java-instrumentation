@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
@@ -21,18 +20,6 @@ import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
  */
 public final class RpcServerAttributesExtractor<REQUEST, RESPONSE>
     extends RpcCommonAttributesExtractor<REQUEST, RESPONSE> implements SpanKeyProvider {
-
-  /**
-   * Creates the RPC server attributes extractor using the global instance's configuration.
-   *
-   * @deprecated Use {@link #create(RpcAttributesGetter, OpenTelemetry)} instead. May be removed in
-   *     the next minor release.
-   */
-  @Deprecated // may be removed in the next minor release
-  public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      RpcAttributesGetter<REQUEST, RESPONSE> getter) {
-    return create(getter, GlobalOpenTelemetry.getOrNoop());
-  }
 
   /** Creates the RPC server attributes extractor using the supplied instance's configuration. */
   // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available

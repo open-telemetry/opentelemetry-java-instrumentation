@@ -14,7 +14,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
@@ -101,20 +100,6 @@ public final class RpcServerMetrics implements OperationListener {
       oldServerRequestSize = null;
       oldServerResponseSize = null;
     }
-  }
-
-  /**
-   * Returns a {@link OperationMetrics} which can be used to enable recording of {@link
-   * RpcServerMetrics} on an {@link
-   * io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder}.
-   *
-   * <p>Uses the global instance's configuration.
-   *
-   * @deprecated Use {@link #get(OpenTelemetry)} instead. May be removed in the next minor release.
-   */
-  @Deprecated // may be removed in the next minor release
-  public static OperationMetrics get() {
-    return get(GlobalOpenTelemetry.getOrNoop());
   }
 
   /** Returns RPC server metrics using the supplied instance's configuration. */

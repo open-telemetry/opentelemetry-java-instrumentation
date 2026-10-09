@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,7 +18,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings("deprecation") // testing global factories
 class RpcSpanNameExtractorTest {
 
   @Mock RpcAttributesGetter<RpcRequest, Object> getter;
@@ -34,7 +34,8 @@ class RpcSpanNameExtractorTest {
       when(getter.getMethod(request)).thenReturn("Method");
     }
 
-    SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
+    SpanNameExtractor<RpcRequest> extractor =
+        RpcSpanNameExtractor.create(getter, OpenTelemetry.noop());
     assertThat(extractor.extract(request)).isEqualTo("my.Service/Method");
   }
 
@@ -47,7 +48,8 @@ class RpcSpanNameExtractorTest {
 
     when(getter.getMethod(request)).thenReturn("Method");
 
-    SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
+    SpanNameExtractor<RpcRequest> extractor =
+        RpcSpanNameExtractor.create(getter, OpenTelemetry.noop());
     assertThat(extractor.extract(request)).isEqualTo("RPC request");
   }
 
@@ -59,7 +61,8 @@ class RpcSpanNameExtractorTest {
 
     when(getter.getService(request)).thenReturn("my.Service");
 
-    SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
+    SpanNameExtractor<RpcRequest> extractor =
+        RpcSpanNameExtractor.create(getter, OpenTelemetry.noop());
     assertThat(extractor.extract(request)).isEqualTo("RPC request");
   }
 
@@ -71,7 +74,8 @@ class RpcSpanNameExtractorTest {
 
     when(getter.getRpcSystemName(request)).thenReturn("grpc");
 
-    SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
+    SpanNameExtractor<RpcRequest> extractor =
+        RpcSpanNameExtractor.create(getter, OpenTelemetry.noop());
     assertThat(extractor.extract(request)).isEqualTo("grpc");
   }
 
@@ -85,7 +89,8 @@ class RpcSpanNameExtractorTest {
     when(getter.getRpcSystemName(request)).thenCallRealMethod();
     when(getter.getSystem(request)).thenReturn("grpc");
 
-    SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
+    SpanNameExtractor<RpcRequest> extractor =
+        RpcSpanNameExtractor.create(getter, OpenTelemetry.noop());
     assertThat(extractor.extract(request)).isEqualTo("grpc");
   }
 

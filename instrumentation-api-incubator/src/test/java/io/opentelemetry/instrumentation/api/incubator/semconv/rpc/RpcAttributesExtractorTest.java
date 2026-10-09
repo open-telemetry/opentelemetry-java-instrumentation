@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
-import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -16,17 +15,11 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SE
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 import static org.assertj.core.api.Assertions.entry;
-import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
-import io.opentelemetry.api.incubator.config.ConfigProvider;
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
@@ -37,8 +30,6 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class RpcAttributesExtractorTest {
@@ -92,56 +83,12 @@ class RpcAttributesExtractorTest {
 
   @Test
   void server() {
-    testExtractor(RpcServerAttributesExtractor.create(new TestGetter()));
+    testExtractor(RpcServerAttributesExtractor.create(new TestGetter(), OpenTelemetry.noop()));
   }
 
   @Test
   void client() {
-    testExtractor(RpcClientAttributesExtractor.create(new TestGetter()));
-  }
-
-  @ParameterizedTest
-  @ValueSource(booleans = {true, false})
-  void globalInstanceRegisteredAfterExtractorCreation(boolean client) {
-    GlobalOpenTelemetry.resetForTest();
-    try {
-      AttributesExtractor<Map<String, String>, Void> beforeRegistration =
-          client
-              ? RpcClientAttributesExtractor.create(new TestGetter())
-              : RpcServerAttributesExtractor.create(new TestGetter());
-      assertThat(GlobalOpenTelemetry.isSet()).isFalse();
-
-      DeclarativeConfigProperties general =
-          mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
-      DeclarativeConfigProperties semconv = general.get("rpc").get("semconv");
-      when(semconv.getInt("version")).thenReturn(1);
-      when(semconv.getBoolean("experimental", false)).thenReturn(true);
-      ConfigProvider configProvider = mock(ConfigProvider.class);
-      when(configProvider.getGeneralInstrumentationConfig()).thenReturn(general);
-      when(configProvider.getInstrumentationConfig("common")).thenReturn(empty());
-      ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
-      when(openTelemetry.getConfigProvider()).thenReturn(configProvider);
-      GlobalOpenTelemetry.set(openTelemetry);
-
-      AttributesExtractor<Map<String, String>, Void> afterRegistration =
-          client
-              ? RpcClientAttributesExtractor.create(new TestGetter())
-              : RpcServerAttributesExtractor.create(new TestGetter());
-      Map<String, String> request = new HashMap<>();
-      request.put("service", "my.Service");
-      request.put("method", "Method");
-      AttributesBuilder attributes = Attributes.builder();
-      afterRegistration.onStart(attributes, Context.root(), request);
-      afterRegistration.onEnd(attributes, Context.root(), request, null, null);
-
-      assertThat(attributes.build())
-          .containsOnly(entry(RPC_SYSTEM_NAME, "test"), entry(RPC_METHOD, "my.Service/Method"));
-      assertThat(((SchemaUrlProvider) afterRegistration).internalGetSchemaUrl())
-          .isEqualTo(SchemaUrls.V1_44_0);
-      testExtractor(beforeRegistration);
-    } finally {
-      GlobalOpenTelemetry.resetForTest();
-    }
+    testExtractor(RpcClientAttributesExtractor.create(new TestGetter(), OpenTelemetry.noop()));
   }
 
   private static void testExtractor(AttributesExtractor<Map<String, String>, Void> extractor) {
@@ -193,7 +140,7 @@ class RpcAttributesExtractorTest {
     request.put("errorType", "CANCELLED");
 
     AttributesExtractor<Map<String, String>, Void> extractor =
-        RpcServerAttributesExtractor.create(new TestGetter());
+        RpcServerAttributesExtractor.create(new TestGetter(), OpenTelemetry.noop());
 
     Context context = Context.root();
     AttributesBuilder attributes = Attributes.builder();
@@ -212,7 +159,7 @@ class RpcAttributesExtractorTest {
     request.put("method", "Method");
 
     AttributesExtractor<Map<String, String>, Void> extractor =
-        RpcServerAttributesExtractor.create(new TestGetter());
+        RpcServerAttributesExtractor.create(new TestGetter(), OpenTelemetry.noop());
 
     Context context = Context.root();
     AttributesBuilder attributes = Attributes.builder();
@@ -232,7 +179,7 @@ class RpcAttributesExtractorTest {
     request.put("method", "Method");
 
     AttributesExtractor<Map<String, String>, Void> extractor =
-        RpcServerAttributesExtractor.create(new TestGetter());
+        RpcServerAttributesExtractor.create(new TestGetter(), OpenTelemetry.noop());
 
     Context context = Context.root();
     AttributesBuilder attributes = Attributes.builder();

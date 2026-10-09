@@ -19,8 +19,8 @@ class StaticImportFormatterTest {
     String source =
         "import io.opentelemetry.instrumentation.api.internal.SemconvStability;\n"
             + "class Wrapper {\n"
-            + "  public static boolean emitOldRpcSemconv() {\n"
-            + "    return SemconvStability.emitOldRpcSemconv();\n"
+            + "  public static boolean emitOldRpcSemconv(OpenTelemetry openTelemetry) {\n"
+            + "    return SemconvStability.emitOldRpcSemconv(openTelemetry);\n"
             + "  }\n"
             + "}\n";
 
@@ -32,15 +32,15 @@ class StaticImportFormatterTest {
     String source =
         "import io.opentelemetry.instrumentation.api.internal.SemconvStability;\n"
             + "class Caller {\n"
-            + "  boolean preview() {\n"
-            + "    return SemconvStability.emitPreviewRpcSemconv();\n"
+            + "  boolean preview(OpenTelemetry openTelemetry) {\n"
+            + "    return SemconvStability.emitPreviewRpcSemconv(openTelemetry);\n"
             + "  }\n"
             + "}\n";
 
     assertThat(formatter.applyWithFile(source, new File("Caller.java")))
         .contains(
             "import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;",
-            "return emitPreviewRpcSemconv();")
-        .doesNotContain("return SemconvStability.emitPreviewRpcSemconv();");
+            "return emitPreviewRpcSemconv(openTelemetry);")
+        .doesNotContain("return SemconvStability.emitPreviewRpcSemconv(openTelemetry);");
   }
 }

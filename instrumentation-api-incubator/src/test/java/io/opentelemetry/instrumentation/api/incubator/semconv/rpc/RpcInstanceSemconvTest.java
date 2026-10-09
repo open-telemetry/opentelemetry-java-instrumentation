@@ -22,7 +22,6 @@ import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
@@ -58,7 +57,7 @@ class RpcInstanceSemconvTest {
   void instancesEmitIndependentSemconv(boolean client) {
     List<ConfiguredInstrumenter> instances = new ArrayList<>();
     for (int mode = 0; mode < 3; mode++) {
-      instances.add(createInstrumenter(client, mode != 0, mode == 2, false));
+      instances.add(createInstrumenter(client, mode != 0, mode == 2));
     }
 
     for (int mode = 0; mode < instances.size(); mode++) {
@@ -135,49 +134,9 @@ class RpcInstanceSemconvTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
-  void deprecatedFactoriesUseGlobalConfiguration(boolean client) {
-    GlobalOpenTelemetry.resetForTest();
-    cleanup.deferCleanup(GlobalOpenTelemetry::resetForTest);
-    RpcClientMetrics.get();
-    RpcServerMetrics.get();
-    assertThat(GlobalOpenTelemetry.isSet()).isFalse();
-
-    ConfiguredInstrumenter instance = createInstrumenter(client, true, true, true);
-    Context context = instance.instrumenter.start(Context.root(), "request");
-    instance.instrumenter.end(context, "request", null, null);
-
-    assertThat(instance.spanExporter.getFinishedSpanItems())
-        .singleElement()
-        .satisfies(
-            span -> {
-              assertThat(span).hasName("Service/Method");
-              assertThat(span.getAttributes().get(RPC_METHOD)).isEqualTo("Service/Method");
-            });
-    String prefix = client ? "rpc.client" : "rpc.server";
-    Collection<MetricData> metrics = instance.metricReader.collectAllMetrics();
-    assertThat(metrics)
-        .extracting(MetricData::getName)
-        .containsExactlyInAnyOrder(prefix + ".duration", prefix + ".call.duration");
-    assertThat(metrics)
-        .anySatisfy(
-            metric ->
-                assertThat(metric)
-                    .hasName(prefix + ".duration")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point.hasAttributesSatisfyingExactly(
-                                        equalTo(RPC_SYSTEM, "test"),
-                                        equalTo(RPC_SERVICE, "package.Service"),
-                                        equalTo(RPC_METHOD, "Method")))));
-  }
-
-  @ParameterizedTest
-  @ValueSource(booleans = {true, false})
   void nestedOldOnlyOperationDoesNotInheritParentMethod(boolean client) {
-    ConfiguredInstrumenter parent = createInstrumenter(!client, true, true, false);
-    ConfiguredInstrumenter child = createInstrumenter(client, false, false, false);
+    ConfiguredInstrumenter parent = createInstrumenter(!client, true, true);
+    ConfiguredInstrumenter child = createInstrumenter(client, false, false);
     Context parentContext = parent.instrumenter.start(Context.root(), "parent");
     Context childContext = child.instrumenter.start(parentContext, "request");
     child.instrumenter.end(childContext, "request", null, null);
@@ -200,7 +159,7 @@ class RpcInstanceSemconvTest {
   }
 
   private ConfiguredInstrumenter createInstrumenter(
-      boolean client, boolean preview, boolean dualEmit, boolean useGlobalFactories) {
+      boolean client, boolean preview, boolean dualEmit) {
     InMemorySpanExporter spanExporter = InMemorySpanExporter.create();
     InMemoryMetricReader metricReader = InMemoryMetricReader.create();
     OpenTelemetrySdk sdk =
@@ -243,11 +202,6 @@ class RpcInstanceSemconvTest {
     when(openTelemetry.getGeneralInstrumentationConfig()).thenReturn(general);
     when(openTelemetry.getInstrumentationConfig("common")).thenReturn(common);
 
-    if (useGlobalFactories) {
-      GlobalOpenTelemetry.resetForTest();
-      GlobalOpenTelemetry.set(openTelemetry);
-    }
-
     RpcAttributesGetter<String, Void> getter =
         new RpcAttributesGetter<String, Void>() {
           @Override
@@ -277,30 +231,16 @@ class RpcInstanceSemconvTest {
         };
     InstrumenterBuilder<String, Void> builder =
         Instrumenter.<String, Void>builder(
-            openTelemetry,
-            "test",
-            useGlobalFactories
-                ? RpcSpanNameExtractor.create(getter)
-                : RpcSpanNameExtractor.create(getter, openTelemetry));
-    if (useGlobalFactories) {
-      builder
-          .addAttributesExtractor(
-              client
-                  ? RpcClientAttributesExtractor.create(getter)
-                  : RpcServerAttributesExtractor.create(getter))
-          .addContextCustomizer(RpcMetricsContextCustomizers.dualEmitContextCustomizer(getter))
-          .addOperationMetrics(client ? RpcClientMetrics.get() : RpcServerMetrics.get());
-    } else {
-      builder
-          .addAttributesExtractor(
-              client
-                  ? RpcClientAttributesExtractor.create(getter, openTelemetry)
-                  : RpcServerAttributesExtractor.create(getter, openTelemetry))
-          .addContextCustomizer(
-              RpcMetricsContextCustomizers.dualEmitContextCustomizer(getter, openTelemetry))
-          .addOperationMetrics(
-              client ? RpcClientMetrics.get(openTelemetry) : RpcServerMetrics.get(openTelemetry));
-    }
+            openTelemetry, "test", RpcSpanNameExtractor.create(getter, openTelemetry));
+    builder
+        .addAttributesExtractor(
+            client
+                ? RpcClientAttributesExtractor.create(getter, openTelemetry)
+                : RpcServerAttributesExtractor.create(getter, openTelemetry))
+        .addContextCustomizer(
+            RpcMetricsContextCustomizers.dualEmitContextCustomizer(getter, openTelemetry))
+        .addOperationMetrics(
+            client ? RpcClientMetrics.get(openTelemetry) : RpcServerMetrics.get(openTelemetry));
     builder.addAttributesExtractor(
         ServicePeerAttributesExtractor.create(
             new ServerAttributesGetter<String>() {

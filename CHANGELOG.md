@@ -4,6 +4,8 @@
 
 ### ⚠️ Breaking changes
 
+- Remove the no-argument RPC and service-peer selection accessors and `rpcSchemaUrl()` in
+  `SemconvStability`; pass the instrumentation's `OpenTelemetry` instance instead.
 - RPC and service-peer semantic conventions now require `otel.semconv-stability.preview=rpc`
   and `otel.semconv-stability.preview=service.peer`, respectively (or `rpc/dup` and
   `service.peer/dup` for dual emission). The `rpc`, `rpc/dup`, `service.peer`, and `service.peer/dup`
@@ -108,6 +110,9 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Remove the global-backed factories in `RpcClientAttributesExtractor`,
+  `RpcServerAttributesExtractor`, `RpcSpanNameExtractor`, `RpcClientMetrics`, `RpcServerMetrics`,
+  and `RpcMetricsContextCustomizers`; pass the instrumentation's `OpenTelemetry` instance instead.
 - Rename `Experimental.setCaptureEnduserId` to `setCaptureUserName` in the Servlet 3.0 and 5.0
   libraries. Remove `UserAttributesCapturer.setScopeEnabled(boolean)` and
   `UserAttributesCapturer.setScopeGrantedAuthorityPrefix(String)`, and remove
@@ -198,11 +203,6 @@ for more details.
 
 ### 🚫 Deprecations
 
-- Deprecate the global RPC and service-peer selection accessors and `rpcSchemaUrl()` in
-  `SemconvStability`; use the overloads accepting `OpenTelemetry` instead.
-- Deprecate the global-backed factories in `RpcClientAttributesExtractor`,
-  `RpcServerAttributesExtractor`, `RpcSpanNameExtractor`, `RpcClientMetrics`, `RpcServerMetrics`,
-  and `RpcMetricsContextCustomizers`; use the overloads accepting `OpenTelemetry` instead.
 - Deprecate `otel.jmx.target.system` in favor of `otel.jmx.metrics.experimental.included`.
   ([#19783](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19783))
 - Deprecate `otel.instrumentation.elasticsearch.capture-search-query`. It will be removed in 3.0,

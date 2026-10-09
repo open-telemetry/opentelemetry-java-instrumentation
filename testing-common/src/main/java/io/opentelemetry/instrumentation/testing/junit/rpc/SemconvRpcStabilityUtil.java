@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.testing.junit.rpc;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.HashMap;
@@ -15,6 +16,10 @@ import java.util.Map;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 public class SemconvRpcStabilityUtil {
+  private static final boolean EMIT_OLD_RPC_SEMCONV =
+      SemconvStability.emitOldRpcSemconv(GlobalOpenTelemetry.getOrNoop());
+  private static final boolean EMIT_PREVIEW_RPC_SEMCONV =
+      SemconvStability.emitPreviewRpcSemconv(GlobalOpenTelemetry.getOrNoop());
   private static final Map<AttributeKey<?>, AttributeKey<?>> oldToNewMap = buildMap();
 
   private static Map<AttributeKey<?>, AttributeKey<?>> buildMap() {
@@ -26,11 +31,11 @@ public class SemconvRpcStabilityUtil {
   private SemconvRpcStabilityUtil() {}
 
   public static boolean emitOldRpcSemconv() {
-    return SemconvStability.emitOldRpcSemconv();
+    return EMIT_OLD_RPC_SEMCONV;
   }
 
   public static boolean emitPreviewRpcSemconv() {
-    return SemconvStability.emitPreviewRpcSemconv();
+    return EMIT_PREVIEW_RPC_SEMCONV;
   }
 
   @SuppressWarnings("unchecked")
