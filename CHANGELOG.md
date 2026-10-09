@@ -10,8 +10,7 @@
   query-derived span names are still produced, matching other SQL instrumentations. This applies
   to both `otel.instrumentation.couchbase.query-sanitization.enabled=false` and declarative
   `java.couchbase.query_sanitization.enabled: false`, including when inherited from the common
-  database setting. Non-query operations, Couchbase view queries, and existing configuration names
-  and precedence are unchanged.
+  database setting.
 - The Java agent, Spring Boot setup, and standalone appenders now capture structured log attributes from Log4j
   `MapMessage` entries, SLF4J key-value pairs, Logback Logstash markers, and Logstash structured
   arguments by default. Replace the former flat settings for Log4j MapMessage
