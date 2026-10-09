@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal;
 
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
@@ -27,7 +28,10 @@ class SqsEventSpanLinksExtractor implements SpanLinksExtractor<SQSEvent> {
     SqsEventRecordAttributes attributes = SqsEventRecordAttributes.create(event);
     for (SQSMessage record : records) {
       SpanContext creationSpanContext = creationSpanContext(record);
-      spanLinks.addLink(creationSpanContext, attributes.getLinkAttributes(record));
+      Attributes linkAttributes = attributes.getLinkAttributes(record);
+      if (creationSpanContext.isValid() || !linkAttributes.isEmpty()) {
+        spanLinks.addLink(creationSpanContext, linkAttributes);
+      }
     }
   }
 
