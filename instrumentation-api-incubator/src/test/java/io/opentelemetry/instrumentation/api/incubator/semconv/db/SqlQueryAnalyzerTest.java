@@ -18,7 +18,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-@SuppressWarnings("deprecation") // testing deprecated SqlQuery operation and collection accessors
 class SqlQueryAnalyzerTest {
 
   private static final SqlQueryAnalyzer ANALYZER = SqlQueryAnalyzer.create(true);
@@ -237,8 +236,7 @@ class SqlQueryAnalyzerTest {
     }
     String query = sb.toString();
 
-    String analyzedQuery =
-        query.replace("=123", "=?").substring(0, AutoSqlSanitizerWithSummary.LIMIT);
+    String analyzedQuery = query.replace("=123", "=?").substring(0, AutoSqlSanitizer.LIMIT);
 
     SqlQuery result = analyze(query);
 
@@ -287,7 +285,7 @@ class SqlQueryAnalyzerTest {
       s += String.valueOf(i);
     }
     SqlQuery result = SqlQueryAnalyzer.create(true).analyze(s, DOUBLE_QUOTES_ARE_STRING_LITERALS);
-    assertThat(result.getQueryText()).isEqualTo(s.substring(0, AutoSqlSanitizerWithSummary.LIMIT));
+    assertThat(result.getQueryText()).isEqualTo(s.substring(0, AutoSqlSanitizer.LIMIT));
   }
 
   @Test
@@ -297,15 +295,14 @@ class SqlQueryAnalyzerTest {
       s.append("SELECT * FROM TABLE WHERE FIELD = 1234 AND ");
     }
     SqlQuery result = analyze(s.toString());
-    assertThat(result.getQueryText().length())
-        .isLessThanOrEqualTo(AutoSqlSanitizerWithSummary.LIMIT);
+    assertThat(result.getQueryText().length()).isLessThanOrEqualTo(AutoSqlSanitizer.LIMIT);
     assertThat(result.getQueryText()).doesNotContain("1234");
     assertThat(result.getQuerySummary()).startsWith("SELECT TABLE SELECT TABLE SELECT TABLE");
   }
 
   @Test
   void queryTextTruncationDoesNotSplitSurrogatePair() {
-    String beforePair = repeat('A', AutoSqlSanitizerWithSummary.LIMIT - 1);
+    String beforePair = repeat('A', AutoSqlSanitizer.LIMIT - 1);
 
     SqlQuery result = analyze(beforePair + "😀");
 
@@ -390,7 +387,7 @@ class SqlQueryAnalyzerTest {
   void querySummaryTruncationDoesNotSplitSurrogatePair() {
     String beforePair = repeat('A', 254);
 
-    String summary = SqlQuery.createWithSummary(null, null, beforePair + "😀").getQuerySummary();
+    String summary = SqlQuery.create(null, null, null, null, beforePair + "😀").getQuerySummary();
 
     assertThat(summary).isEqualTo(beforePair);
   }
@@ -556,25 +553,22 @@ class SqlQueryAnalyzerTest {
 
   private static Function<String, SqlQuery> expect(
       String operation, String collectionName, String querySummary) {
-    return sql -> SqlQuery.createWithSummary(sql, operation, collectionName, null, querySummary);
+    return sql -> SqlQuery.create(sql, operation, collectionName, null, querySummary);
   }
 
   private static Function<String, SqlQuery> expect(
       String sql, String operation, String collectionName, String querySummary) {
-    return ignored ->
-        SqlQuery.createWithSummary(sql, operation, collectionName, null, querySummary);
+    return ignored -> SqlQuery.create(sql, operation, collectionName, null, querySummary);
   }
 
   private static Function<String, SqlQuery> expectStoredProcedure(
       String operation, String storedProcedureName, String querySummary) {
-    return sql ->
-        SqlQuery.createWithSummary(sql, operation, null, storedProcedureName, querySummary);
+    return sql -> SqlQuery.create(sql, operation, null, storedProcedureName, querySummary);
   }
 
   private static Function<String, SqlQuery> expectStoredProcedure(
       String sql, String operation, String storedProcedureName, String querySummary) {
-    return ignored ->
-        SqlQuery.createWithSummary(sql, operation, null, storedProcedureName, querySummary);
+    return ignored -> SqlQuery.create(sql, operation, null, storedProcedureName, querySummary);
   }
 
   private static Stream<Arguments> simplifyArgs() {

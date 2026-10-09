@@ -39,7 +39,7 @@ public final class SqlQueryAnalyzer {
    */
   public SqlQuery analyze(@Nullable String query, SqlDialect dialect) {
     if (!querySanitizationEnabled || query == null) {
-      return SqlQuery.createWithSummary(query, null, null);
+      return SqlQuery.create(query, null, null);
     }
     // sanitization result will not be cached for queries larger than the threshold to avoid
     // cache growing too large
@@ -53,7 +53,7 @@ public final class SqlQueryAnalyzer {
 
   private static SqlQuery analyzeImpl(String query, SqlDialect dialect) {
     supportability.incrementCounter(SQL_SANITIZER_CACHE_MISS);
-    return AutoSqlSanitizerWithSummary.sanitize(query, dialect);
+    return AutoSqlSanitizer.sanitize(query, dialect);
   }
 
   // visible for tests

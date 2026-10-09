@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
 %%
 
 %final
-%class AutoSqlSanitizerWithSummary
+%class AutoSqlSanitizer
 %apiprivate
 %int
 %buffer 2048
@@ -51,7 +51,7 @@ WHITESPACE           = [ \t\r\n]+
 
 %{
   static SqlQuery sanitize(String statement, SqlDialect dialect) {
-    AutoSqlSanitizerWithSummary sanitizer = new AutoSqlSanitizerWithSummary(new java.io.StringReader(statement));
+    AutoSqlSanitizer sanitizer = new AutoSqlSanitizer(new java.io.StringReader(statement));
     sanitizer.dialect = dialect;
     try {
       while (!sanitizer.yyatEOF()) {
@@ -64,7 +64,7 @@ WHITESPACE           = [ \t\r\n]+
       return sanitizer.getResult();
     } catch (java.io.IOException e) {
       // should never happen
-      return SqlQuery.createWithSummary(null, null, null);
+      return SqlQuery.create(null, null, null);
     }
   }
 
@@ -760,7 +760,7 @@ WHITESPACE           = [ \t\r\n]+
       summary = summary.substring(0, summary.length() - 1);
     }
 
-    return SqlQuery.createWithSummary(
+    return SqlQuery.create(
       normalizedStatement,
       operationName,
       collectionName,

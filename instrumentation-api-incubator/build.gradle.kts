@@ -42,9 +42,12 @@ val generateJflex = tasks.register<JavaExec>("generateJflex") {
 
   doFirst {
     val outputDir = outputDirProvider.get().asFile
+    check(outputDir.deleteRecursively()) {
+      "Failed to clear generated JFlex sources: $outputDir"
+    }
     outputDir.mkdirs()
     val specFiles = listOf(
-      sourceDir.asFile.resolve("SqlSanitizerWithSummary.jflex"),
+      sourceDir.asFile.resolve("SqlSanitizer.jflex"),
     )
     args(
       listOf("-d", outputDir.absolutePath, "--nobak") + specFiles.map { it.absolutePath },
@@ -65,7 +68,7 @@ tasks.compileJava {
 tasks {
   // exclude auto-generated code
   named<Checkstyle>("checkstyleMain") {
-    exclude("**/AutoSqlSanitizerWithSummary.java")
+    exclude("**/AutoSqlSanitizer.java")
   }
 
   // Work around https://github.com/jflex-de/jflex/issues/762
