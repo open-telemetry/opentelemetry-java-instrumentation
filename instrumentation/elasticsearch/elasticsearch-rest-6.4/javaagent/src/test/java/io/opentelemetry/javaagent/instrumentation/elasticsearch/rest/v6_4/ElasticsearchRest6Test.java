@@ -287,9 +287,7 @@ class ElasticsearchRest6Test {
         trace ->
             assertThat(trace.getSpan(0))
                 .hasName(
-                    (hostList != null
-                        ? hostList
-                        : httpHost.getHostName() + ":" + httpHost.getPort()))
+                    hostList != null ? hostList : httpHost.getHostName() + ":" + httpHost.getPort())
                 .hasKind(SpanKind.CLIENT)
                 .hasAttributesSatisfyingExactly(
                     equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
