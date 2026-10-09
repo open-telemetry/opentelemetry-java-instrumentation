@@ -5,39 +5,32 @@
 
 package io.opentelemetry.javaagent.instrumentation.hbase.client.common;
 
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import javax.annotation.Nullable;
 import org.apache.hadoop.hbase.TableName;
 
 public class HbaseClientState {
 
-  private static final ThreadLocal<TableName> tableNameThreadLocal = new ThreadLocal<>();
-  private static final ThreadLocal<RequestAndContext> requestAndContextThreadLocal =
-      new ThreadLocal<>();
+  private static final ScopedThreadValue<TableName> currentTableName = new ScopedThreadValue<>();
+  private static final ScopedThreadValue<RequestAndContext> currentRequestAndContext =
+      new ScopedThreadValue<>();
 
-  public static void setTableName(TableName tableName) {
-    tableNameThreadLocal.set(tableName);
+  public static ScopedThreadValue<TableName> currentTableName() {
+    return currentTableName;
   }
 
   @Nullable
   public static TableName getTableName() {
-    return tableNameThreadLocal.get();
+    return currentTableName.get();
   }
 
-  public static void resetTableName() {
-    tableNameThreadLocal.remove();
-  }
-
-  public static void setRequestAndContext(RequestAndContext requestAndContext) {
-    requestAndContextThreadLocal.set(requestAndContext);
+  public static ScopedThreadValue<RequestAndContext> currentRequestAndContext() {
+    return currentRequestAndContext;
   }
 
   @Nullable
   public static RequestAndContext getRequestAndContext() {
-    return requestAndContextThreadLocal.get();
-  }
-
-  public static void resetRequestAndContext() {
-    requestAndContextThreadLocal.remove();
+    return currentRequestAndContext.get();
   }
 
   private HbaseClientState() {}

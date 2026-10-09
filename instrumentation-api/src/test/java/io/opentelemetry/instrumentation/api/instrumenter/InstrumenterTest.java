@@ -35,6 +35,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
+import io.opentelemetry.instrumentation.api.internal.InstrumenterContext;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
@@ -800,6 +801,110 @@ class InstrumenterTest {
 
     // then
     assertThat(context.get(testKey)).isEqualTo("testVal");
+  }
+
+  @Test
+  void nestedStartIsolatesAndRestoresInstrumenterContext() {
+    Instrumenter<String, String> inner =
+        Instrumenter.<String, String>builder(
+                otelTesting.getOpenTelemetry(),
+                "test",
+                request -> InstrumenterContext.computeIfAbsent("name", unused -> request))
+            .addContextCustomizer(
+                (context, request, attributes) -> {
+                  assertThat(
+                          InstrumenterContext.<String>computeIfAbsent(
+                              "name", unused -> "unexpected"))
+                      .isEqualTo("inner");
+                  InstrumenterContext.computeIfAbsent("inner-only", unused -> "inner");
+                  return context;
+                })
+            .buildInstrumenter();
+    Instrumenter<String, String> outer =
+        Instrumenter.<String, String>builder(
+                otelTesting.getOpenTelemetry(),
+                "test",
+                request -> InstrumenterContext.computeIfAbsent("name", unused -> request))
+            .addContextCustomizer(
+                (context, request, attributes) -> {
+                  Context innerContext = inner.start(context, "inner");
+                  inner.end(innerContext, "inner", null, null);
+                  assertThat(
+                          InstrumenterContext.<String>computeIfAbsent(
+                              "name", unused -> "unexpected"))
+                      .isEqualTo("outer");
+                  assertThat(
+                          InstrumenterContext.<String>computeIfAbsent(
+                              "inner-only", unused -> "outer"))
+                      .isEqualTo("outer");
+                  return context;
+                })
+            .buildInstrumenter();
+
+    try {
+      Context context = outer.start(Context.root(), "outer");
+      outer.end(context, "outer", null, null);
+
+      assertThat(InstrumenterContext.<String>computeIfAbsent("name", unused -> "after"))
+          .isEqualTo("after");
+      otelTesting
+          .assertTraces()
+          .hasTracesSatisfyingExactly(
+              trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("inner")),
+              trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("outer")));
+    } finally {
+      InstrumenterContext.reset();
+    }
+  }
+
+  @Test
+  void exceptionalNestedStartRestoresInstrumenterContext() {
+    Instrumenter<String, String> inner =
+        Instrumenter.<String, String>builder(
+                otelTesting.getOpenTelemetry(),
+                "test",
+                request -> {
+                  assertThat(InstrumenterContext.<String>computeIfAbsent("name", unused -> request))
+                      .isEqualTo("inner");
+                  InstrumenterContext.computeIfAbsent("inner-only", unused -> "inner");
+                  throw new IllegalStateException("nested start failed");
+                })
+            .buildInstrumenter();
+    Instrumenter<String, String> outer =
+        Instrumenter.<String, String>builder(
+                otelTesting.getOpenTelemetry(),
+                "test",
+                request -> InstrumenterContext.computeIfAbsent("name", unused -> request))
+            .addContextCustomizer(
+                (context, request, attributes) -> {
+                  assertThatThrownBy(() -> inner.start(context, "inner"))
+                      .isInstanceOf(IllegalStateException.class)
+                      .hasMessage("nested start failed");
+                  assertThat(
+                          InstrumenterContext.<String>computeIfAbsent(
+                              "name", unused -> "unexpected"))
+                      .isEqualTo("outer");
+                  assertThat(
+                          InstrumenterContext.<String>computeIfAbsent(
+                              "inner-only", unused -> "outer"))
+                      .isEqualTo("outer");
+                  return context;
+                })
+            .buildInstrumenter();
+
+    try {
+      Context context = outer.start(Context.root(), "outer");
+      outer.end(context, "outer", null, null);
+
+      assertThat(InstrumenterContext.<String>computeIfAbsent("name", unused -> "after"))
+          .isEqualTo("after");
+      otelTesting
+          .assertTraces()
+          .hasTracesSatisfyingExactly(
+              trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("outer")));
+    } finally {
+      InstrumenterContext.reset();
+    }
   }
 
   @Test

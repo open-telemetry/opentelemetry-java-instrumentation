@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.test.AnnotatedTestClass;
 import java.io.IOException;
@@ -20,6 +21,42 @@ import net.bytebuddy.pool.TypePool;
 import org.junit.jupiter.api.Test;
 
 class AgentCachingPoolStrategyTest {
+
+  @Test
+  void restoresNestedAnnotationLoading() {
+    ClassLoader classLoader = getClass().getClassLoader();
+    AgentCachingPoolStrategy.AgentTypePool pool =
+        (AgentCachingPoolStrategy.AgentTypePool)
+            AgentTooling.poolStrategy()
+                .typePool(ClassFileLocator.ForClassLoader.of(classLoader), classLoader);
+
+    assertThat(pool.isLoadingAnnotations()).isFalse();
+    Boolean beforeOuter = pool.enterLoadAnnotations();
+    try {
+      Boolean beforeInner = pool.enterLoadAnnotations();
+      try {
+        assertThat(pool.isLoadingAnnotations()).isTrue();
+      } finally {
+        pool.exitLoadAnnotations(beforeInner);
+      }
+      assertThat(pool.isLoadingAnnotations()).isTrue();
+
+      assertThatThrownBy(
+              () -> {
+                Boolean beforeFailure = pool.enterLoadAnnotations();
+                try {
+                  throw new IllegalStateException("annotation loading failed");
+                } finally {
+                  pool.exitLoadAnnotations(beforeFailure);
+                }
+              })
+          .isInstanceOf(IllegalStateException.class);
+      assertThat(pool.isLoadingAnnotations()).isTrue();
+    } finally {
+      pool.exitLoadAnnotations(beforeOuter);
+    }
+    assertThat(pool.isLoadingAnnotations()).isFalse();
+  }
 
   @Test
   void testSkipResourceLookupForAnnotations() {

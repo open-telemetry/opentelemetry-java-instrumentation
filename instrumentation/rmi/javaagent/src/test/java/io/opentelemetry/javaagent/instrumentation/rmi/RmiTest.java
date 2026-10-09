@@ -14,15 +14,23 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.RemoteCall;
 import java.rmi.server.UnicastRemoteObject;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -101,6 +109,45 @@ class RmiTest {
     server.getClass();
 
     assertThat(testing.waitForTraces(0)).isEmpty();
+  }
+
+  @Test
+  void failedDispatchClearsPendingContext() throws Exception {
+    Class<?> holderClass =
+        Class.forName("io.opentelemetry.javaagent.bootstrap.rmi.ThreadLocalContext");
+    Object holder = holderClass.getField("INSTANCE").get(null);
+    Method consume = holderClass.getMethod("getAndResetContext");
+    Class<?> contextClass = consume.getReturnType();
+    Object context = contextClass.getMethod("root").invoke(null);
+
+    Class<?> serverRefClass = Class.forName("sun.rmi.server.UnicastServerRef");
+    Constructor<?> constructor = serverRefClass.getConstructor();
+    constructor.setAccessible(true);
+    Object serverRef = constructor.newInstance();
+    Method dispatch = serverRefClass.getMethod("dispatch", Remote.class, RemoteCall.class);
+    dispatch.setAccessible(true);
+    RemoteCall call =
+        (RemoteCall)
+            Proxy.newProxyInstance(
+                RemoteCall.class.getClassLoader(),
+                new Class<?>[] {RemoteCall.class},
+                (proxy, method, arguments) -> {
+                  if (method.getName().equals("getInputStream")
+                      || method.getName().equals("getResultStream")) {
+                    throw new IOException("failed call");
+                  }
+                  return null;
+                });
+
+    holderClass.getMethod("set", contextClass).invoke(holder, context);
+    try {
+      assertThatThrownBy(() -> dispatch.invoke(serverRef, serverRegistry, call))
+          .isInstanceOf(InvocationTargetException.class)
+          .hasCauseInstanceOf(IOException.class);
+      assertThat(consume.invoke(holder)).isNull();
+    } finally {
+      consume.invoke(holder);
+    }
   }
 
   @Test

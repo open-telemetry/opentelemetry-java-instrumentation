@@ -20,11 +20,14 @@ import org.springframework.kafka.listener.BatchInterceptor;
 @SuppressWarnings("ThreadLocalUsage") // invocation state and retry tracking
 final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V> {
 
+  // Retry tracking persists beyond callbacks; it is not temporary invocation state.
   private static final ThreadLocal<WeakReference<ConsumerRecords<?, ?>>> lastProcessed =
       new ThreadLocal<>();
 
   private final Instrumenter<KafkaReceiveRequest, Void> batchProcessInstrumenter;
   @Nullable private final BatchInterceptor<K, V> decorated;
+  // intercept produces this handoff; success/failure consumes it. A rejected/throwing intercept
+  // ends it immediately. Completion restores the preceding invocation, including callback failures.
   private final ThreadLocal<ProcessingInvocation<KafkaReceiveRequest>> currentInvocation =
       new ThreadLocal<>();
 

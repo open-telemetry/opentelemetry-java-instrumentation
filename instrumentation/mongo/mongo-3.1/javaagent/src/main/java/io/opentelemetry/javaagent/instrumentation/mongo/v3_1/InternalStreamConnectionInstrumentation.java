@@ -51,10 +51,12 @@ final class InternalStreamConnectionInstrumentation implements TypeInstrumentati
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Enter MongoConnectionPeer.OpenState state,
+        @Advice.Enter @Nullable MongoConnectionPeer.OpenState state,
         @Advice.FieldValue("description") @Nullable ConnectionDescription connectionDescription,
         @Advice.Thrown @Nullable Throwable error) {
-      MongoConnectionPeer.endOpen(state, connectionDescription, error);
+      if (state != null) {
+        MongoConnectionPeer.endOpen(state, connectionDescription, error);
+      }
     }
   }
 

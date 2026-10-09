@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
+import static io.opentelemetry.javaagent.instrumentation.jedis.v4_0.JedisSingletons.currentBatch;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v4_0.JedisSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -18,6 +19,8 @@ import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.Transaction;
 
 class JedisPipelineInstrumentation implements TypeInstrumentation {
   @Override
@@ -45,16 +48,21 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class QueueCommandAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(@Advice.This Object pipeline) {
+    public static Object onEnter(@Advice.This Object pipeline) {
       // Attaches a thread-local pipeline that the nested Connection.sendCommand advice uses to
       // collect captured requests; sync() then consumes them to build the batch span.
-      JedisPipelineContext.enter(pipeline);
+      // Other batch subtypes have no flush point and keep their per-command spans.
+      if (pipeline instanceof Pipeline || pipeline instanceof Transaction) {
+        return currentBatch().set(pipeline);
+      }
+      return currentBatch().get();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void stopCollecting() {
-      JedisPipelineContext.exit();
+    public static void stopCollecting(@Advice.Enter @Nullable Object previous) {
+      currentBatch().restore(previous);
     }
   }
 

@@ -39,7 +39,7 @@ class StreamTaskInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static StateHolder onEnter() {
       StateHolder holder = new StateHolder();
-      holder().set(holder);
+      holder.setPrevious(holder().set(holder));
       return holder;
     }
 
@@ -47,10 +47,10 @@ class StreamTaskInstrumentation implements TypeInstrumentation {
     public static void stopSpan(
         @Advice.Enter @Nullable StateHolder stateHolder,
         @Advice.Thrown @Nullable Throwable throwable) {
-      holder().remove();
       if (stateHolder == null) {
         return;
       }
+      holder().restore(stateHolder.getPrevious());
 
       Context context = stateHolder.getContext();
       if (context != null) {

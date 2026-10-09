@@ -15,11 +15,16 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.Servi
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
+import redis.clients.jedis.PipelineBase;
 
 public class JedisSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jedis-3.0";
 
   private static final Instrumenter<JedisRequest, Void> instrumenter;
+  private static final ScopedThreadValue<PipelineBase> currentPipeline = new ScopedThreadValue<>();
+  private static final ScopedThreadValue<Boolean> currentTransactionFraming =
+      new ScopedThreadValue<>();
 
   static {
     JedisDbAttributesGetter dbAttributesGetter = new JedisDbAttributesGetter();
@@ -41,6 +46,14 @@ public class JedisSingletons {
 
   public static Instrumenter<JedisRequest, Void> instrumenter() {
     return instrumenter;
+  }
+
+  public static ScopedThreadValue<PipelineBase> currentPipeline() {
+    return currentPipeline;
+  }
+
+  public static ScopedThreadValue<Boolean> currentTransactionFraming() {
+    return currentTransactionFraming;
   }
 
   private JedisSingletons() {}

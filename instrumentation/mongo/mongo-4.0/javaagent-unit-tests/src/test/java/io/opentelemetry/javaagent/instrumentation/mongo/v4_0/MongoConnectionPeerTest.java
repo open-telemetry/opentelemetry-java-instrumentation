@@ -22,8 +22,48 @@ import java.nio.file.Paths;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledForJreRange;
 import org.junit.jupiter.api.condition.JRE;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class MongoConnectionPeerTest {
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void nestedOpenRestoresOuterCapture(boolean failNested) {
+    ConnectionDescription outerDescription = connectionDescription(1);
+    ConnectionDescription nestedDescription = connectionDescription(2);
+    InetSocketAddress outerPeer = new InetSocketAddress(InetAddress.getLoopbackAddress(), 27017);
+    InetSocketAddress nestedPeer = new InetSocketAddress(InetAddress.getLoopbackAddress(), 27018);
+    MongoConnectionPeer.OpenState outer = MongoConnectionPeer.startOpen();
+    try {
+      MongoConnectionPeer.OpenState nested = MongoConnectionPeer.startOpen();
+      try {
+        MongoConnectionPeer.capture(socketConnectedTo(nestedPeer));
+      } finally {
+        MongoConnectionPeer.endOpen(
+            nested,
+            nestedDescription,
+            failNested ? new IOException("nested handshake failed") : null);
+      }
+      MongoConnectionPeer.capture(socketConnectedTo(outerPeer));
+    } finally {
+      MongoConnectionPeer.endOpen(outer, outerDescription, null);
+    }
+
+    assertThat(MongoConnectionPeer.resolve(outerDescription).getInetSocketAddress())
+        .isEqualTo(outerPeer);
+    if (failNested) {
+      assertThat(MongoConnectionPeer.resolve(nestedDescription)).isNull();
+    } else {
+      assertThat(MongoConnectionPeer.resolve(nestedDescription).getInetSocketAddress())
+          .isEqualTo(nestedPeer);
+    }
+
+    MongoConnectionPeer.OpenState next = MongoConnectionPeer.startOpen();
+    ConnectionDescription nextDescription = connectionDescription(3);
+    MongoConnectionPeer.endOpen(next, nextDescription, null);
+    assertThat(MongoConnectionPeer.resolve(nextDescription)).isNull();
+  }
 
   @Test
   void correlatesEachConnectedSocketWithItsConnectionDescription() throws IOException {

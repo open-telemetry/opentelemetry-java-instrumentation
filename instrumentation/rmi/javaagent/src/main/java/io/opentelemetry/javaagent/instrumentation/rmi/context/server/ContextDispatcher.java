@@ -44,18 +44,18 @@ public class ContextDispatcher implements Dispatcher {
   // Instrumenting deprecated class
   @SuppressWarnings("deprecation")
   public void dispatch(Remote obj, RemoteCall call) throws IOException {
+    ThreadLocalContext.INSTANCE.set(null);
+    Context context = null;
     ObjectInput in = call.getInputStream();
     int operationId = in.readInt();
     in.readLong(); // skip 8 bytes
 
     if (propagator().isOperationWithPayload(operationId)) {
       ContextPayload payload = ContextPayload.read(in);
-      if (payload == null) {
-        ThreadLocalContext.INSTANCE.set(null);
-      } else {
-        Context context = payload.extract();
-        SpanContext spanContext = Span.fromContext(context).getSpanContext();
-        ThreadLocalContext.INSTANCE.set(spanContext.isValid() ? context : null);
+      if (payload != null) {
+        Context extracted = payload.extract();
+        SpanContext spanContext = Span.fromContext(extracted).getSpanContext();
+        context = spanContext.isValid() ? extracted : null;
       }
     }
 
@@ -66,6 +66,7 @@ public class ContextDispatcher implements Dispatcher {
     call.releaseInputStream();
     call.releaseOutputStream();
     call.done();
+    ThreadLocalContext.INSTANCE.set(context);
   }
 
   private static class NoopRemote implements Remote {}

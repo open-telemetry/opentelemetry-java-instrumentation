@@ -190,10 +190,11 @@ public class Instrumenter<REQUEST, RESPONSE> {
   }
 
   private Context doStart(Context parentContext, REQUEST request, @Nullable Instant startTime) {
+    InstrumenterContext previous = InstrumenterContext.enter();
     try {
       return doStartImpl(parentContext, request, startTime);
     } finally {
-      InstrumenterContext.reset();
+      InstrumenterContext.restore(previous);
     }
   }
 

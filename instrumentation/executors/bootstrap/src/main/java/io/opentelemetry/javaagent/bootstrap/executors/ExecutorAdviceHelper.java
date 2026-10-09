@@ -17,6 +17,11 @@ import javax.annotation.Nullable;
  */
 public final class ExecutorAdviceHelper {
 
+  // A carrier-switch handoff, not lexical advice state: switchToCarrierThread exit sets this flag
+  // on the carrier thread; switchToVirtualThread entry clears it before switching back. If
+  // switching
+  // to the carrier fails, exit advice does not run and no flag is installed.
+  @SuppressWarnings("ThreadLocalUsage")
   private static final ThreadLocal<Boolean> propagationDisabled = new ThreadLocal<>();
 
   /**

@@ -364,11 +364,12 @@ public class AgentBuilderUtil {
   }
 
   private static class TransformContext extends AgentBuilder.Listener.Adapter {
-    private static final ThreadLocal<String> transformedName = new ThreadLocal<>();
+    private static final ThreadLocal<TransformState> currentTransform = new ThreadLocal<>();
 
     @Nullable
     static String getTransformedClassName() {
-      return transformedName.get();
+      TransformState state = currentTransform.get();
+      return state == null ? null : state.name;
     }
 
     @Override
@@ -377,19 +378,8 @@ public class AgentBuilderUtil {
         @Nullable ClassLoader classLoader,
         @Nullable JavaModule module,
         boolean loaded) {
-      if (classLoader != null) {
-        transformedName.set(typeName);
-      }
-    }
-
-    @Override
-    public void onError(
-        String typeName,
-        @Nullable ClassLoader classLoader,
-        @Nullable JavaModule module,
-        boolean loaded,
-        Throwable throwable) {
-      transformedName.remove();
+      currentTransform.set(
+          new TransformState(classLoader == null ? null : typeName, currentTransform.get()));
     }
 
     @Override
@@ -398,7 +388,23 @@ public class AgentBuilderUtil {
         @Nullable ClassLoader classLoader,
         @Nullable JavaModule module,
         boolean loaded) {
-      transformedName.remove();
+      // Byte Buddy also invokes onComplete after onError, so pop the state only here.
+      TransformState state = currentTransform.get();
+      if (state == null || state.previous == null) {
+        currentTransform.remove();
+      } else {
+        currentTransform.set(state.previous);
+      }
+    }
+
+    private static class TransformState {
+      @Nullable private final String name;
+      @Nullable private final TransformState previous;
+
+      private TransformState(@Nullable String name, @Nullable TransformState previous) {
+        this.name = name;
+        this.previous = previous;
+      }
     }
   }
 }

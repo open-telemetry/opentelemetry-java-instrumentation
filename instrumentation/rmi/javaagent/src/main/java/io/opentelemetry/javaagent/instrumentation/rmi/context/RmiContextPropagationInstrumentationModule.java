@@ -14,6 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.instrumentation.rmi.context.client.RmiClientContextInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.rmi.context.server.RmiServerContextInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.rmi.context.server.ServerContextCleanupInstrumentation;
 import java.rmi.Remote;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +29,10 @@ public class RmiContextPropagationInstrumentationModule extends InstrumentationM
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new RmiClientContextInstrumentation(), new RmiServerContextInstrumentation());
+    return asList(
+        new RmiClientContextInstrumentation(),
+        new RmiServerContextInstrumentation(),
+        new ServerContextCleanupInstrumentation());
   }
 
   @Override

@@ -6,8 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.hbase.client.v1_4;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.resetRequestAndContext;
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.setRequestAndContext;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.currentRequestAndContext;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientUtil.createRequest;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.v1_4.HbaseSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
@@ -78,7 +77,8 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
     public static RequestAndContext onEnter(
         @Advice.This AbstractRpcClient<?> client,
         @Advice.Argument(0) Object md,
-        @Advice.Argument(2) Object param) {
+        @Advice.Argument(2) Object param)
+        throws Throwable {
       HbaseRequest request = createRequest(md, param, HbaseServerTarget.get(client));
       Context parentContext = Java8BytecodeBridge.currentContext();
       if (!instrumenter().shouldStart(parentContext, request)) {
@@ -86,20 +86,27 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
       }
       Context context = instrumenter().start(parentContext, request);
       Scope scope = context.makeCurrent();
-      RequestAndContext requestAndContext = RequestAndContext.create(request, scope, context);
-      setRequestAndContext(requestAndContext);
-      return requestAndContext;
+      try {
+        RequestAndContext requestAndContext = RequestAndContext.create(request, scope, context);
+        requestAndContext.setPrevious(currentRequestAndContext().set(requestAndContext));
+        return requestAndContext;
+      } catch (Throwable t) {
+        scope.close();
+        instrumenter().end(context, request, null, t);
+        throw t;
+      }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable RequestAndContext requestAndContext) {
-      resetRequestAndContext();
       if (requestAndContext == null) {
         return;
       }
 
+      currentRequestAndContext().restore(requestAndContext.getPrevious());
+      requestAndContext.setPrevious(null);
       requestAndContext.getScope().close();
 
       if (throwable != null) {

@@ -27,6 +27,9 @@ final class MessageInvocation {
   private static final ContextKey<Identity> CURRENT_INVOCATION =
       ContextKey.named("opentelemetry-spring-integration-current-invocation");
 
+  // preSend/beforeHandle produce entries consumed by afterSendCompletion/afterMessageHandled,
+  // including failed sends/handlers and sends vetoed by a later interceptor. Completion removes
+  // only its matching entry, preserving nested invocations; the last completion clears the holder.
   private static final ThreadLocal<Deque<Callback>> currentCallbacks = new ThreadLocal<>();
 
   private final Identity identity;

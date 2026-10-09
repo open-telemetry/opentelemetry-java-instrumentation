@@ -65,6 +65,8 @@ public class ServerInstrumentation implements TypeInstrumentation {
           return new AdviceScope(callDepth, null, null, null);
         }
 
+        // Consume the RMI ContextDispatcher handoff before any fallible server setup, so an
+        // invocation failure cannot leave its parent context attached to this thread.
         Context parentContext = ThreadLocalContext.INSTANCE.getAndResetContext();
         if (parentContext == null) {
           return new AdviceScope(callDepth, null, null, null);

@@ -6,12 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.hbase.client.common;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.resetTableName;
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.setTableName;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.currentTableName;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -33,15 +33,15 @@ public class RetryingCallableInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RpcCallAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(@Advice.FieldValue(value = "tableName") TableName tableName) {
-      if (tableName != null) {
-        setTableName(tableName);
-      }
+    @Nullable
+    public static TableName onEnter(
+        @Advice.FieldValue(value = "tableName") @Nullable TableName tableName) {
+      return tableName == null ? currentTableName().get() : currentTableName().set(tableName);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit() {
-      resetTableName();
+    public static void onExit(@Advice.Enter @Nullable TableName previous) {
+      currentTableName().restore(previous);
     }
   }
 }

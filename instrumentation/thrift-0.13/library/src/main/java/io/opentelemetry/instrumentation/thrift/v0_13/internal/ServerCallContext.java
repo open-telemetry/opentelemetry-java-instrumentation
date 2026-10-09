@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.thrift.v0_13.internal;
 
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import javax.annotation.Nullable;
 import org.apache.thrift.transport.TTransport;
 
@@ -13,9 +14,10 @@ import org.apache.thrift.transport.TTransport;
  * any time.
  */
 public final class ServerCallContext {
-  private static final ThreadLocal<ServerCallContext> current = new ThreadLocal<>();
+  private static final ScopedThreadValue<ServerCallContext> current = new ScopedThreadValue<>();
 
   private final TTransport transport;
+  @Nullable private ServerCallContext previous;
 
   private ServerCallContext(TTransport transport) {
     this.transport = transport;
@@ -23,7 +25,7 @@ public final class ServerCallContext {
 
   public static ServerCallContext start(TTransport transport) {
     ServerCallContext context = new ServerCallContext(transport);
-    current.set(context);
+    context.previous = current.set(context);
     return context;
   }
 
@@ -34,6 +36,6 @@ public final class ServerCallContext {
   }
 
   public void end() {
-    current.remove();
+    current.restore(previous);
   }
 }

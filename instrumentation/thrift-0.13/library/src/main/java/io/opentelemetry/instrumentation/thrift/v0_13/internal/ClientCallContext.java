@@ -9,6 +9,7 @@ import static java.util.Collections.emptyMap;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import io.opentelemetry.instrumentation.thrift.v0_13.ThriftRequest;
 import io.opentelemetry.instrumentation.thrift.v0_13.ThriftResponse;
 import java.net.Socket;
@@ -20,9 +21,10 @@ import javax.annotation.Nullable;
  * any time.
  */
 public final class ClientCallContext {
-  private static final ThreadLocal<ClientCallContext> current = new ThreadLocal<>();
+  private static final ScopedThreadValue<ClientCallContext> current = new ScopedThreadValue<>();
 
   private final Instrumenter<ThriftRequest, ThriftResponse> instrumenter;
+  @Nullable private ClientCallContext previous;
   @Nullable ThriftRequest request;
   @Nullable Context context;
   boolean contextPropagated;
@@ -47,8 +49,6 @@ public final class ClientCallContext {
       @Nullable SocketAddress localAddress,
       @Nullable SocketAddress remoteAddress) {
     ClientCallContext callContext = new ClientCallContext(instrumenter);
-    current.set(callContext);
-
     Context parentContext = Context.current();
     ThriftRequest request =
         new ThriftRequest(
@@ -58,6 +58,7 @@ public final class ClientCallContext {
       callContext.context = instrumenter.start(parentContext, request);
     }
 
+    callContext.previous = current.set(callContext);
     return callContext;
   }
 
@@ -87,6 +88,6 @@ public final class ClientCallContext {
   }
 
   public void close() {
-    current.remove();
+    current.restore(previous);
   }
 }

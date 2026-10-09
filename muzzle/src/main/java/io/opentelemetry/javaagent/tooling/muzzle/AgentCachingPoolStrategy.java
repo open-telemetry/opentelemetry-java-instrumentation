@@ -12,6 +12,7 @@ import static java.util.Collections.singletonMap;
 import static java.util.Objects.requireNonNull;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
 import java.lang.instrument.Instrumentation;
@@ -321,9 +322,10 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
   }
 
   /** Based on TypePool.Default.WithLazyResolution */
-  private class AgentTypePool extends TypePool.Default {
+  // visible for testing
+  class AgentTypePool extends TypePool.Default {
     // ThreadLocal used for detecting loading of annotation types
-    private final ThreadLocal<Boolean> loadingAnnotations = new ThreadLocal<>();
+    private final ScopedThreadValue<Boolean> loadingAnnotations = new ScopedThreadValue<>();
     private final WeakReference<ClassLoader> classLoaderRef;
 
     AgentTypePool(
@@ -362,12 +364,13 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
       return resolution;
     }
 
-    void enterLoadAnnotations() {
-      loadingAnnotations.set(true);
+    @Nullable
+    Boolean enterLoadAnnotations() {
+      return loadingAnnotations.set(true);
     }
 
-    void exitLoadAnnotations() {
-      loadingAnnotations.set(null);
+    void exitLoadAnnotations(@Nullable Boolean previous) {
+      loadingAnnotations.restore(previous);
     }
 
     boolean isLoadingAnnotations() {
@@ -440,11 +443,11 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
           TypeDescription delegate = delegate();
           // Run getDeclaredAnnotations with ThreadLocal. ThreadLocal helps us detect types looked
           // up by getDeclaredAnnotations and treat them specially.
-          enterLoadAnnotations();
+          Boolean previous = enterLoadAnnotations();
           try {
             annotations = delegate.getDeclaredAnnotations();
           } finally {
-            exitLoadAnnotations();
+            exitLoadAnnotations(previous);
           }
         }
         return annotations;
@@ -542,11 +545,11 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
         public AnnotationList getDeclaredAnnotations() {
           // Run getDeclaredAnnotations with ThreadLocal. ThreadLocal helps us detect types looked
           // up by getDeclaredAnnotations and treat them specially.
-          enterLoadAnnotations();
+          Boolean previous = enterLoadAnnotations();
           try {
             return method.getDeclaredAnnotations();
           } finally {
-            exitLoadAnnotations();
+            exitLoadAnnotations(previous);
           }
         }
       }

@@ -18,6 +18,8 @@ import com.github.tomakehurst.wiremock.standalone.MappingFileException;
 import com.github.tomakehurst.wiremock.standalone.MappingsSource;
 import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 import com.github.tomakehurst.wiremock.stubbing.StubMappings;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import io.opentelemetry.testing.internal.jackson.annotation.JsonInclude.Include;
 import io.opentelemetry.testing.internal.jackson.core.JsonGenerator;
 import io.opentelemetry.testing.internal.jackson.core.JsonParser;
@@ -64,12 +66,13 @@ class YamlFileMappingsSource implements MappingsSource {
           .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
           .enable(JsonParser.Feature.INCLUDE_SOURCE_IN_LOCATION);
 
-  private static final ThreadLocal<ExtensionContext> currentTest = new ThreadLocal<>();
+  private static final ScopedThreadValue<ExtensionContext> currentTest = new ScopedThreadValue<>();
 
   private static final Pattern NON_ALPHANUMERIC = Pattern.compile("[^\\w-.]");
 
-  static void setCurrentTest(ExtensionContext context) {
-    currentTest.set(context);
+  static Scope setCurrentTest(ExtensionContext context) {
+    ExtensionContext previous = currentTest.set(context);
+    return () -> currentTest.restore(previous);
   }
 
   private final FileSource mappingsFileSource;

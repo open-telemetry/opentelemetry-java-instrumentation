@@ -13,6 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.rabbitmq.client.Command;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -40,7 +41,8 @@ class RabbitCommandInstrumentation implements TypeInstrumentation {
 
   public static final class SpanHolder {
 
-    public static final ThreadLocal<Context> CURRENT_RABBIT_CONTEXT = new ThreadLocal<>();
+    public static final ScopedThreadValue<Context> CURRENT_RABBIT_CONTEXT =
+        new ScopedThreadValue<>();
 
     private SpanHolder() {}
   }

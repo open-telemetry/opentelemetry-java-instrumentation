@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0;
 
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0.VertxSqlClientSingletons.currentClientInfoReference;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -13,6 +14,7 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.vertx.sqlclient.impl.SqlClientBase;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -36,31 +38,32 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This SqlClientBase<?> sqlClientBase) {
       VertxSqlClientSingletons.attachClientInfoReference(
-          sqlClientBase, VertxSqlClientSingletons.getClientInfoReference());
+          sqlClientBase, currentClientInfoReference().get());
     }
   }
 
   @SuppressWarnings("unused")
   public static class QueryAdvice {
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static CallDepth onEnter(@Advice.This SqlClientBase<?> sqlClientBase) {
+    public static VertxSqlClientInfoReference onEnter(@Advice.This SqlClientBase<?> sqlClientBase) {
       CallDepth callDepth = CallDepth.forClass(SqlClientBase.class);
       if (callDepth.getAndIncrement() > 0) {
-        return callDepth;
+        return currentClientInfoReference().get();
       }
 
-      VertxSqlClientSingletons.setClientInfoReference(
-          VertxSqlClientSingletons.getClientInfoReference(sqlClientBase));
-      return callDepth;
+      return currentClientInfoReference()
+          .set(VertxSqlClientSingletons.getClientInfoReference(sqlClientBase));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter CallDepth callDepth) {
+    public static void onExit(@Advice.Enter @Nullable VertxSqlClientInfoReference previous) {
+      CallDepth callDepth = CallDepth.forClass(SqlClientBase.class);
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
 
-      VertxSqlClientSingletons.setClientInfoReference(null);
+      currentClientInfoReference().restore(previous);
     }
   }
 }

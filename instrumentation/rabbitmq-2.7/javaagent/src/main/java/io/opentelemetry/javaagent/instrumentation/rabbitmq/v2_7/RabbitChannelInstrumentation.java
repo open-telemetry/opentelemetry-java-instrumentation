@@ -118,22 +118,25 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
       @Nullable private final Context context;
       @Nullable private final Scope scope;
       @Nullable private final ChannelAndMethod request;
+      @Nullable private final Context previousContext;
 
       private ChannelMethodAdviceScope(
           CallDepth callDepth,
           @Nullable Context context,
           @Nullable Scope scope,
-          @Nullable ChannelAndMethod request) {
+          @Nullable ChannelAndMethod request,
+          @Nullable Context previousContext) {
         this.callDepth = callDepth;
         this.context = context;
         this.scope = scope;
         this.request = request;
+        this.previousContext = previousContext;
       }
 
       public static ChannelMethodAdviceScope start(
           CallDepth callDepth, Channel channel, String method, @Nullable Long deliveryTag) {
         if (callDepth.getAndIncrement() > 0) {
-          return new ChannelMethodAdviceScope(callDepth, null, null, null);
+          return new ChannelMethodAdviceScope(callDepth, null, null, null, null);
         }
 
         Context parentContext = Context.current();
@@ -143,14 +146,15 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
                 : ChannelAndMethod.createSettle(channel, method, deliveryTag);
 
         if (!channelInstrumenter(request).shouldStart(parentContext, request)) {
-          return new ChannelMethodAdviceScope(callDepth, null, null, null);
+          return new ChannelMethodAdviceScope(callDepth, null, null, null, null);
         }
 
         Context context = channelInstrumenter(request).start(parentContext, request);
-        CURRENT_RABBIT_CONTEXT.set(context);
         helper().setChannelAndMethod(context, request);
 
-        return new ChannelMethodAdviceScope(callDepth, context, context.makeCurrent(), request);
+        Scope scope = context.makeCurrent();
+        return new ChannelMethodAdviceScope(
+            callDepth, context, scope, request, CURRENT_RABBIT_CONTEXT.set(context));
       }
 
       public void end(@Nullable Throwable throwable) {
@@ -161,9 +165,8 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
           return;
         }
 
+        CURRENT_RABBIT_CONTEXT.restore(previousContext);
         scope.close();
-
-        CURRENT_RABBIT_CONTEXT.remove();
         channelInstrumenter(request).end(context, request, null, throwable);
       }
     }
@@ -211,16 +214,19 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
       @Nullable private final Context context;
       @Nullable private final Scope scope;
       @Nullable private final ChannelAndMethod request;
+      @Nullable private final Context previousContext;
 
       private ChannelPublishAdviceScope(
           CallDepth callDepth,
           @Nullable Context context,
           @Nullable Scope scope,
-          @Nullable ChannelAndMethod request) {
+          @Nullable ChannelAndMethod request,
+          @Nullable Context previousContext) {
         this.callDepth = callDepth;
         this.context = context;
         this.scope = scope;
         this.request = request;
+        this.previousContext = previousContext;
       }
 
       @Nullable
@@ -232,21 +238,22 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
           Channel channel, String exchange, String routingKey) {
         CallDepth callDepth = CallDepth.forClass(Channel.class);
         if (callDepth.getAndIncrement() > 0) {
-          return new ChannelPublishAdviceScope(callDepth, null, null, null);
+          return new ChannelPublishAdviceScope(callDepth, null, null, null, null);
         }
 
         Context parentContext = Context.current();
         ChannelAndMethod request = ChannelAndMethod.createPublish(channel, exchange, routingKey);
 
         if (!channelInstrumenter(request).shouldStart(parentContext, request)) {
-          return new ChannelPublishAdviceScope(callDepth, null, null, null);
+          return new ChannelPublishAdviceScope(callDepth, null, null, null, null);
         }
 
         Context context = channelInstrumenter(request).start(parentContext, request);
-        CURRENT_RABBIT_CONTEXT.set(context);
         helper().setChannelAndMethod(context, request);
 
-        return new ChannelPublishAdviceScope(callDepth, context, context.makeCurrent(), request);
+        Scope scope = context.makeCurrent();
+        return new ChannelPublishAdviceScope(
+            callDepth, context, scope, request, CURRENT_RABBIT_CONTEXT.set(context));
       }
 
       public void end(@Nullable Throwable throwable) {
@@ -257,9 +264,8 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
           return;
         }
 
+        CURRENT_RABBIT_CONTEXT.restore(previousContext);
         scope.close();
-
-        CURRENT_RABBIT_CONTEXT.remove();
         channelInstrumenter(request).end(context, request, null, throwable);
       }
     }

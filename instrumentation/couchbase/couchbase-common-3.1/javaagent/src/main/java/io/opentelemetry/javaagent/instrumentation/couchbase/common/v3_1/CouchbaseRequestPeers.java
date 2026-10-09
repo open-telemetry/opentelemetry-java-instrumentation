@@ -6,13 +6,14 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1;
 
 import com.couchbase.client.core.cnc.RequestSpan;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 public class CouchbaseRequestPeers {
 
-  private static final ThreadLocal<RequestPeerScope> current = new ThreadLocal<>();
+  private static final ScopedThreadValue<RequestPeerScope> current = new ScopedThreadValue<>();
 
   @Nullable
   public static RequestPeerScope open(
@@ -25,7 +26,7 @@ public class CouchbaseRequestPeers {
       return null;
     }
     RequestPeerScope scope = new RequestPeerScope(parent, socketAddress);
-    current.set(scope);
+    scope.previous = current.set(scope);
     return scope;
   }
 
@@ -66,6 +67,7 @@ public class CouchbaseRequestPeers {
 
     private final RequestSpan parent;
     private final InetSocketAddress remoteAddress;
+    @Nullable private RequestPeerScope previous;
     private boolean consumed;
 
     private RequestPeerScope(RequestSpan parent, InetSocketAddress remoteAddress) {
@@ -75,7 +77,8 @@ public class CouchbaseRequestPeers {
 
     public void close() {
       if (current.get() == this) {
-        current.remove();
+        current.restore(previous);
+        previous = null;
       }
     }
   }

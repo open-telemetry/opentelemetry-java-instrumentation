@@ -27,6 +27,7 @@ import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.counting;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -43,11 +44,14 @@ import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
 import io.vertx.sqlclient.PreparedQuery;
 import io.vertx.sqlclient.PreparedStatement;
+import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.Tuple;
+import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.ServiceConfigurationError;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -121,6 +125,40 @@ class VertxSqlClientTest {
         .toCompletionStage()
         .toCompletableFuture()
         .get(30, SECONDS);
+  }
+
+  @Test
+  void restoresAmbientMetadataAcrossQueriesAndPoolFactories() throws Exception {
+    Class<?> singletons =
+        Class.forName(
+            "io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0.VertxSqlClientSingletons");
+    Object outerReference =
+        singletons.getMethod("getPoolClientInfoReference", Pool.class).invoke(null, pool);
+    assertThat(outerReference).isNotNull();
+    Object currentReference = singletons.getMethod("currentClientInfoReference").invoke(null);
+    Method get = currentReference.getClass().getMethod("get");
+    Method set = currentReference.getClass().getMethod("set", Object.class);
+    Method restore = currentReference.getClass().getMethod("restore", Object.class);
+    Object previous = set.invoke(currentReference, outerReference);
+    try {
+      pool.query("select 1");
+      assertThat(get.invoke(currentReference)).isSameAs(outerReference);
+      pool.preparedQuery("select 1");
+      assertThat(get.invoke(currentReference)).isSameAs(outerReference);
+
+      Pool nestedPool = Pool.pool(vertx, new PgConnectOptions(), new PoolOptions());
+      try {
+        assertThat(get.invoke(currentReference)).isSameAs(outerReference);
+      } finally {
+        nestedPool.close().toCompletionStage().toCompletableFuture().get(30, SECONDS);
+      }
+
+      assertThatThrownBy(() -> Pool.pool(vertx, new SqlConnectOptions(), new PoolOptions()))
+          .isInstanceOf(ServiceConfigurationError.class);
+      assertThat(get.invoke(currentReference)).isSameAs(outerReference);
+    } finally {
+      restore.invoke(currentReference, previous);
+    }
   }
 
   @Test

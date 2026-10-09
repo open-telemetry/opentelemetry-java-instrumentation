@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfo;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientRequest;
@@ -23,8 +24,8 @@ public class VertxSqlClientSingletons {
   private static final Instrumenter<VertxSqlClientRequest, Void> instrumenter =
       VertxSqlInstrumenterFactory.createInstrumenter(INSTRUMENTATION_NAME);
 
-  private static final ThreadLocal<VertxSqlClientInfoReference> clientInfoReference =
-      new ThreadLocal<>();
+  private static final ScopedThreadValue<VertxSqlClientInfoReference> currentClientInfoReference =
+      new ScopedThreadValue<>();
   private static final VirtualField<Pool, VertxSqlClientInfoReference> POOL_CLIENT_INFO_REFERENCE =
       VirtualField.find(Pool.class, VertxSqlClientInfoReference.class);
   private static final VirtualField<PreparedStatement, VertxSqlClientInfoReference>
@@ -39,17 +40,8 @@ public class VertxSqlClientSingletons {
     return instrumenter;
   }
 
-  public static void setClientInfoReference(@Nullable VertxSqlClientInfoReference value) {
-    if (value == null) {
-      clientInfoReference.remove();
-    } else {
-      clientInfoReference.set(value);
-    }
-  }
-
-  @Nullable
-  public static VertxSqlClientInfoReference getClientInfoReference() {
-    return clientInfoReference.get();
+  public static ScopedThreadValue<VertxSqlClientInfoReference> currentClientInfoReference() {
+    return currentClientInfoReference;
   }
 
   @Nullable

@@ -8,8 +8,12 @@ package io.opentelemetry.javaagent.bootstrap.rmi;
 import io.opentelemetry.context.Context;
 import javax.annotation.Nullable;
 
+@SuppressWarnings("ThreadLocalUsage")
 public final class ThreadLocalContext {
   public static final ThreadLocalContext INSTANCE = new ThreadLocalContext();
+  // ContextDispatcher publishes the payload for the next remote call on the same connection worker.
+  // RemoteServerInstrumentation consumes it once; server dispatch and connection-handler exit clear
+  // abandoned payloads before the worker is reused. A failed ContextDispatcher never publishes one.
   private final ThreadLocal<Context> local;
 
   private ThreadLocalContext() {

@@ -52,7 +52,8 @@ class LibertyWebAppInstrumentation implements TypeInstrumentation {
   public static class HandleRequestAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static boolean onEnter(
+    @Nullable
+    public static ThreadLocalContext onEnter(
         @Advice.Argument(value = 0) ServletRequest request,
         @Advice.Argument(value = 1) ServletResponse response) {
 
@@ -62,15 +63,14 @@ class LibertyWebAppInstrumentation implements TypeInstrumentation {
       if (!handled
           || !(request instanceof HttpServletRequest)
           || !(response instanceof HttpServletResponse)) {
-        return false;
+        return null;
       }
 
       HttpServletRequest httpServletRequest = (HttpServletRequest) request;
       // it is a bit too early to start span at this point because calling
       // some methods on HttpServletRequest will give a NPE
       // just remember the request and use it a bit later to start the span
-      ThreadLocalContext.startRequest(httpServletRequest, (HttpServletResponse) response);
-      return true;
+      return ThreadLocalContext.startRequest(httpServletRequest, (HttpServletResponse) response);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -78,14 +78,11 @@ class LibertyWebAppInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) ServletRequest servletRequest,
         @Advice.Argument(1) ServletResponse servletResponse,
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter boolean handled) {
-      if (!handled) {
-        return;
-      }
-      ThreadLocalContext requestInfo = ThreadLocalContext.endRequest();
+        @Advice.Enter @Nullable ThreadLocalContext requestInfo) {
       if (requestInfo == null) {
         return;
       }
+      requestInfo.endRequest();
 
       HttpServletRequest request = (HttpServletRequest) servletRequest;
       HttpServletResponse response = (HttpServletResponse) servletResponse;

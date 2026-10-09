@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.liberty.v20_0;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestContext;
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
@@ -14,10 +15,11 @@ import javax.servlet.http.HttpServletResponse;
 
 public class ThreadLocalContext {
 
-  private static final ThreadLocal<ThreadLocalContext> local = new ThreadLocal<>();
+  private static final ScopedThreadValue<ThreadLocalContext> local = new ScopedThreadValue<>();
 
   private final HttpServletResponse response;
   private final ServletRequestContext<HttpServletRequest> requestContext;
+  @Nullable private ThreadLocalContext previous;
   @Nullable private Context context;
   @Nullable private Scope scope;
   private boolean started;
@@ -64,9 +66,11 @@ public class ThreadLocalContext {
     return !alreadyStarted;
   }
 
-  public static void startRequest(HttpServletRequest request, HttpServletResponse response) {
+  public static ThreadLocalContext startRequest(
+      HttpServletRequest request, HttpServletResponse response) {
     ThreadLocalContext ctx = new ThreadLocalContext(request, response);
-    local.set(ctx);
+    ctx.previous = local.set(ctx);
+    return ctx;
   }
 
   @Nullable
@@ -74,12 +78,7 @@ public class ThreadLocalContext {
     return local.get();
   }
 
-  @Nullable
-  public static ThreadLocalContext endRequest() {
-    ThreadLocalContext ctx = local.get();
-    if (ctx != null) {
-      local.remove();
-    }
-    return ctx;
+  public void endRequest() {
+    local.restore(previous);
   }
 }

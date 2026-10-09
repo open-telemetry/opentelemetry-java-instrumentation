@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
+import static io.opentelemetry.javaagent.instrumentation.jedis.v4_0.JedisSingletons.currentTransactionFraming;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
@@ -74,16 +75,17 @@ class JedisInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class MultiAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter() {
+    public static Boolean onEnter() {
       // The MULTI command frames a transaction that is reported as a single batch span at exec(),
       // so its own command span is suppressed.
-      JedisPipelineContext.enterTransactionFraming();
+      return currentTransactionFraming().set(Boolean.TRUE);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit() {
-      JedisPipelineContext.exitTransactionFraming();
+    public static void onExit(@Advice.Enter @Nullable Boolean previous) {
+      currentTransactionFraming().restore(previous);
     }
   }
 }

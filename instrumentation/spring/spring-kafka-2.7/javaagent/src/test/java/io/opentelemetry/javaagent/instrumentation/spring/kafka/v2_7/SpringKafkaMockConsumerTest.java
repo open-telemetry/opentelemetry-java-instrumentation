@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.kafka.v2_7;
 import static java.util.Collections.singletonMap;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -16,6 +17,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.Iterator;
 import java.util.concurrent.CountDownLatch;
@@ -39,6 +41,39 @@ class SpringKafkaMockConsumerTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  @SuppressWarnings("unchecked")
+  void restoresSchedulingAfterConsumerConstructionFailure(boolean wrappingEnabled)
+      throws ReflectiveOperationException {
+    Class<?> taskTracing =
+        Class.forName("io.opentelemetry.javaagent.bootstrap.spring.SpringSchedulingTaskTracing");
+    Method isWrappingEnabled = taskTracing.getMethod("isWrappingEnabled");
+    Method setWrappingEnabled = taskTracing.getMethod("setWrappingEnabled", boolean.class);
+    ConsumerFactory<String, String> factory = mock(ConsumerFactory.class);
+    RuntimeException failure = new RuntimeException("consumer construction failed");
+    when(factory.createConsumer(any(), any(), any(), any()))
+        .thenAnswer(
+            invocation -> {
+              assertThat(isWrappingEnabled.invoke(null))
+                  .isEqualTo(Boolean.getBoolean("springDisabled") && wrappingEnabled);
+              throw failure;
+            });
+    ContainerProperties properties = new ContainerProperties(new TopicPartitionOffset("orders", 0));
+    properties.setGroupId("group");
+    properties.setMessageListener((MessageListener<String, String>) record -> {});
+    KafkaMessageListenerContainer<String, String> container =
+        new KafkaMessageListenerContainer<>(factory, properties);
+
+    boolean previous = (Boolean) setWrappingEnabled.invoke(null, wrappingEnabled);
+    try {
+      assertThatThrownBy(container::start).isSameAs(failure);
+      assertThat(isWrappingEnabled.invoke(null)).isEqualTo(wrappingEnabled);
+    } finally {
+      setWrappingEnabled.invoke(null, previous);
+    }
+  }
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})

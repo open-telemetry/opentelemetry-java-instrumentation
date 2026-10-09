@@ -12,6 +12,7 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import com.github.tomakehurst.wiremock.common.SingleRootFileSource;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
+import io.opentelemetry.context.Scope;
 import org.junit.jupiter.api.extension.AfterTestExecutionCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
@@ -69,7 +70,14 @@ public class RecordingExtension extends WireMockExtension implements AfterTestEx
   }
 
   @Override
+  @SuppressWarnings(
+      "deprecation") // CloseableResource also cleans up with store auto-close disabled.
   public void afterTestExecution(ExtensionContext context) {
-    YamlFileMappingsSource.setCurrentTest(context);
+    // The mappings writer consumes this during stopRecording() in onAfterEach. The test store
+    // restores the previous test after teardown, including when recording or teardown fails.
+    Scope scope = YamlFileMappingsSource.setCurrentTest(context);
+    context
+        .getStore(ExtensionContext.Namespace.create(RecordingExtension.class))
+        .put(this, (ExtensionContext.Store.CloseableResource) scope::close);
   }
 }

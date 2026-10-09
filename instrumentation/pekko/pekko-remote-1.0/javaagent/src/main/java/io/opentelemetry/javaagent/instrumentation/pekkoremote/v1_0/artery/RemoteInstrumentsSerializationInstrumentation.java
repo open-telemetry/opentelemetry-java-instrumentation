@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.artery;
 
+import static io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.artery.RemoteMessageState.inboundEnvelope;
+import static io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.artery.RemoteMessageState.outboundContext;
 import static io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.artery.VirtualFields.OUTBOUND_ENVELOPE_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -12,6 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -44,17 +47,19 @@ class RemoteInstrumentsSerializationInstrumentation implements TypeInstrumentati
   public static class SerializeAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(@Advice.Argument(0) Object outboundEnvelope) {
+    @Nullable
+    public static Context onEnter(@Advice.Argument(0) Object outboundEnvelope) {
       // pekko passes an OptionVal, a value class that erases to the envelope, null when empty
-      if (outboundEnvelope instanceof OutboundEnvelope) {
-        Context context = OUTBOUND_ENVELOPE_CONTEXT.get((OutboundEnvelope) outboundEnvelope);
-        RemoteMessageState.startWrite(context);
-      }
+      Context context =
+          outboundEnvelope instanceof OutboundEnvelope
+              ? OUTBOUND_ENVELOPE_CONTEXT.get((OutboundEnvelope) outboundEnvelope)
+              : null;
+      return outboundContext().set(context);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit() {
-      RemoteMessageState.endWrite();
+    public static void onExit(@Advice.Enter @Nullable Context previous) {
+      outboundContext().restore(previous);
     }
   }
 
@@ -62,13 +67,14 @@ class RemoteInstrumentsSerializationInstrumentation implements TypeInstrumentati
   public static class DeserializeAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(@Advice.Argument(0) InboundEnvelope inboundEnvelope) {
-      RemoteMessageState.startRead(inboundEnvelope);
+    @Nullable
+    public static InboundEnvelope onEnter(@Advice.Argument(0) InboundEnvelope envelope) {
+      return inboundEnvelope().set(envelope);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit() {
-      RemoteMessageState.endRead();
+    public static void onExit(@Advice.Enter @Nullable InboundEnvelope previous) {
+      inboundEnvelope().restore(previous);
     }
   }
 }

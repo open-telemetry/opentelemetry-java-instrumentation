@@ -81,23 +81,31 @@ public final class AgentTooling {
     @Override
     public void onDiscovery(
         String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {
-      CURRENT_TRANSFORM.set(new CurrentTransform(classLoader, typeName));
+      CURRENT_TRANSFORM.set(new CurrentTransform(classLoader, typeName, CURRENT_TRANSFORM.get()));
     }
 
     @Override
     public void onComplete(
         String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {
-      CURRENT_TRANSFORM.remove();
+      CurrentTransform currentTransform = CURRENT_TRANSFORM.get();
+      if (currentTransform == null || currentTransform.previous == null) {
+        CURRENT_TRANSFORM.remove();
+      } else {
+        CURRENT_TRANSFORM.set(currentTransform.previous);
+      }
     }
   }
 
   private static class CurrentTransform {
     private final ClassLoader classLoader;
     private final String className;
+    @Nullable private final CurrentTransform previous;
 
-    CurrentTransform(ClassLoader classLoader, String className) {
+    CurrentTransform(
+        ClassLoader classLoader, String className, @Nullable CurrentTransform previous) {
       this.classLoader = classLoader;
       this.className = className;
+      this.previous = previous;
     }
   }
 
