@@ -1,5 +1,6 @@
 import io.opentelemetry.instrumentation.gradle.OtelJavaExtension
 import io.opentelemetry.instrumentation.gradle.OtelPropsExtension
+import io.opentelemetry.instrumentation.gradle.findInheritedExtraProperty
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import java.time.Duration
 
@@ -19,7 +20,7 @@ val otelProps = the<OtelPropsExtension>()
 
 afterEvaluate {
   val previousBaseArchiveName = base.archivesName.get()
-  if (findProperty("mavenGroupId") == "io.opentelemetry.javaagent.instrumentation") {
+  if (findInheritedExtraProperty("mavenGroupId") == "io.opentelemetry.javaagent.instrumentation") {
     base.archivesName.set("opentelemetry-javaagent-$previousBaseArchiveName")
   } else if (!previousBaseArchiveName.startsWith("opentelemetry-")) {
     base.archivesName.set("opentelemetry-$previousBaseArchiveName")
