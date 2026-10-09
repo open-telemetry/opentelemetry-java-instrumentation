@@ -4,6 +4,13 @@
 
 ### ⚠️ Breaking changes
 
+- RPC and service-peer semantic conventions now require `otel.semconv-stability.preview=rpc`
+  and `otel.semconv-stability.preview=service.peer`, respectively (or `rpc/dup` and
+  `service.peer/dup` for dual emission). The `rpc`, `rpc/dup`, `service.peer`, and `service.peer/dup`
+  values in `otel.semconv-stability.opt-in` no longer select them.
+  For declarative configuration, move these values from `general.stability_opt_in_list` to
+  `java.common.semconv_stability.preview`. Default telemetry and explicit `general.rpc.semconv`
+  configuration are unchanged.
 - Micrometer timers and distribution summaries no longer emit separate `.max` gauge metrics; use the
   maximum from their histogram instead. Custom meter statistic suffixes are appended after the base
   name passes through the naming convention (for example, Prometheus mode changes

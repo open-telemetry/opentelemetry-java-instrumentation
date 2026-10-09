@@ -87,17 +87,17 @@ tasks {
     }
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
+  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer,rpc")
+    jvmArgs("-Dotel.semconv-stability.preview=rpc,service.peer")
     inputs.dir(jflexOutputDir)
   }
 
   val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer/dup,rpc/dup")
+    jvmArgs("-Dotel.semconv-stability.preview=rpc/dup,service.peer/dup")
     inputs.dir(jflexOutputDir)
   }
 
@@ -117,7 +117,7 @@ tasks {
 
   check {
     dependsOn(
-      testStableSemconv,
+      testPreviewSemconv,
       testBothSemconv,
       testExceptionSignalLogs,
       testExceptionSignalLogsDup,
