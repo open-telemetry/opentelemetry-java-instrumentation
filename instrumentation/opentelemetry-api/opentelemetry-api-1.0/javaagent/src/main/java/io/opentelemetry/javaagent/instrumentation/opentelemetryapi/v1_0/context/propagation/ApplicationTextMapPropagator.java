@@ -60,6 +60,7 @@ class ApplicationTextMapPropagator
       this.applicationGetter = applicationGetter;
     }
 
+    @SuppressWarnings("deprecation") // The application API 1.0 getter only exposes keys.
     @Override
     public Iterable<String> keys(C c) {
       return applicationGetter.keys(c);
