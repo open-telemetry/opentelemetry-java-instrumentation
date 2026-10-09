@@ -78,9 +78,12 @@ public class CouchbaseSingletons {
     return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
-  public static Instrumenter<CouchbaseRequestInfo, Void> instrumenter(
-      CouchbaseRequestInfo request) {
-    return request.isSqlQuery() ? queryInstrumenter : instrumenter;
+  public static Instrumenter<CouchbaseRequestInfo, Void> instrumenter() {
+    return instrumenter;
+  }
+
+  public static Instrumenter<CouchbaseRequestInfo, Void> queryInstrumenter() {
+    return queryInstrumenter;
   }
 
   private static boolean captureExperimentalTelemetry(DeclarativeConfigProperties config) {
