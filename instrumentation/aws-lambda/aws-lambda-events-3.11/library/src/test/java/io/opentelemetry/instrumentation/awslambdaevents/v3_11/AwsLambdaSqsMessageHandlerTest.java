@@ -237,9 +237,6 @@ class AwsLambdaSqsMessageHandlerTest {
 
   @Test
   void keyedEventSuppressesSelectedMessage() {
-    assertThat(false).isFalse();
-    assertThat(true).isTrue();
-
     SQSEvent.SQSMessage message = newMessage();
     message.setAttributes(singletonMap("AWSTraceHeader", AWS_TRACE_HEADER1));
     message.setMessageId("message1");

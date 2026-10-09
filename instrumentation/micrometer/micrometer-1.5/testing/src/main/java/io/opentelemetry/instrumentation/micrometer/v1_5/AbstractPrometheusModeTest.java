@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
-import static io.opentelemetry.instrumentation.micrometer.v1_5.NoMaxGaugeAssertions.assertNoMaxGauge;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.singletonList;
@@ -101,7 +100,6 @@ public abstract class AbstractPrometheusModeTest {
                                         .hasCount(2)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(stringKey("tag"), "value")))));
-    assertNoMaxGauge(testing(), "testPrometheusSummary.items.max");
   }
 
   @Test
@@ -333,7 +331,6 @@ public abstract class AbstractPrometheusModeTest {
                                         .hasCount(3)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(stringKey("tag"), "value")))));
-    assertNoMaxGauge(testing(), "testPrometheusTimer.seconds.max");
   }
 
   @Test

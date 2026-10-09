@@ -84,12 +84,8 @@ class SlickTest {
                   .hasKind(SpanKind.CLIENT)
                   .hasParent(trace.getSpan(0))
                   .hasAttributesSatisfyingExactly(
-                    equalTo(
-                      DB_SYSTEM_NAME,
-                      "h2database"
-                    ),
+                    equalTo(DB_SYSTEM_NAME, "h2database"),
                     equalTo(DB_NAMESPACE, Db),
-
                     equalTo(DB_QUERY_TEXT, "SELECT 3"),
                     equalTo(DB_QUERY_SUMMARY, "SELECT")
                   )
