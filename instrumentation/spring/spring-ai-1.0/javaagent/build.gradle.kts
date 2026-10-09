@@ -11,7 +11,7 @@ muzzle {
   pass {
     group.set("org.springframework.ai")
     module.set("spring-ai-model")
-    versions.set("[1.0.0,3)")
+    versions.set("[1.0.0,)")
     assertInverse.set(true)
   }
 }
@@ -19,11 +19,14 @@ muzzle {
 dependencies {
   library("org.springframework.ai:spring-ai-model:1.0.0")
   testLibrary("org.springframework.ai:spring-ai-openai:1.0.0")
-  latestDepTestLibrary("org.springframework.ai:spring-ai-model:1.+") // documented limitation
-  latestDepTestLibrary("org.springframework.ai:spring-ai-openai:1.+") // documented limitation
+
   implementation(project(":instrumentation:reactor:reactor-3.1:library"))
 
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
+
+  // current tests don't build with spring-ai 2
+  latestDepTestLibrary("org.springframework.ai:spring-ai-model:1.+") // documented limitation
+  latestDepTestLibrary("org.springframework.ai:spring-ai-openai:1.+") // documented limitation
 }
 
 testing {

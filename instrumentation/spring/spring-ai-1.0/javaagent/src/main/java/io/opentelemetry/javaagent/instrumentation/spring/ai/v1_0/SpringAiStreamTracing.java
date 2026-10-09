@@ -12,7 +12,6 @@ import static java.util.Collections.emptyMap;
 import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINE;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
@@ -115,7 +114,6 @@ class SpringAiStreamTracing {
     try {
       instrumenter.end(context, request, response, error);
     } catch (Throwable t) {
-      Span.fromContext(context).end();
       logger.log(FINE, "Failed to end Spring AI stream instrumentation", t);
     }
   }

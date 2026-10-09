@@ -488,7 +488,7 @@
     "org.slf4j:slf4j-api#+": "2.0.20",
     "org.springframework.ai:spring-ai-model#+": "2.0.1",
     "org.springframework.ai:spring-ai-model#1.+": "1.1.8",
-    "org.springframework.ai:spring-ai-openai#+": "1.1.8",
+    "org.springframework.ai:spring-ai-openai#+": "2.0.1",
     "org.springframework.ai:spring-ai-openai#1.+": "1.1.8",
     "org.springframework.amqp:spring-rabbit#+": "4.1.1",
     "org.springframework.batch:spring-batch-core#+": "6.0.5",

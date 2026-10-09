@@ -59,6 +59,7 @@ class ChatModelInstrumentation implements TypeInstrumentation {
 
     public static class AdviceScope {
       private static final Logger logger = Logger.getLogger(AdviceScope.class.getName());
+
       private final Context context;
       private final Scope scope;
       private final SpringAiRequest request;
@@ -121,35 +122,12 @@ class ChatModelInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class StreamAdvice {
-    public static class StreamAdviceScope {
-      private final CallDepth callDepth;
-      private final boolean suppressed;
-
-      private StreamAdviceScope(CallDepth callDepth, boolean suppressed) {
-        this.callDepth = callDepth;
-        this.suppressed = suppressed;
-      }
-
-      public static StreamAdviceScope start() {
-        CallDepth callDepth = CallDepth.forClass(ChatModel.class);
-        boolean nested = callDepth.getAndIncrement() > 0;
-        return new StreamAdviceScope(callDepth, nested);
-      }
-
-      public boolean shouldSuppress() {
-        return callDepth.decrementAndGet() > 0 || suppressed;
-      }
-
-      public static Flux<ChatResponse> wrap(
-          Flux<ChatResponse> publisher, Object chatModel, Prompt prompt) {
-        return SpringAiStreamTracing.wrap(
-            publisher, SpringAiRequest.create(prompt, chatModel, true));
-      }
-    }
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static StreamAdviceScope onEnter() {
-      return StreamAdviceScope.start();
+    public static CallDepth onEnter() {
+      CallDepth callDepth = CallDepth.forClass(ChatModel.class);
+      callDepth.getAndIncrement();
+      return callDepth;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -160,8 +138,8 @@ class ChatModelInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) Prompt prompt,
         @Advice.Return @Nullable Flux<ChatResponse> publisher,
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter @Nullable StreamAdviceScope adviceScope) {
-      if (adviceScope == null || adviceScope.shouldSuppress()) {
+        @Advice.Enter CallDepth callDepth) {
+      if (callDepth.decrementAndGet() > 0) {
         return publisher;
       }
       if (throwable != null) {
@@ -173,9 +151,9 @@ class ChatModelInstrumentation implements TypeInstrumentation {
         return publisher;
       }
       if (publisher == null) {
-        return publisher;
+        return null;
       }
-      return StreamAdviceScope.wrap(publisher, chatModel, prompt);
+      return SpringAiStreamTracing.wrap(publisher, SpringAiRequest.create(prompt, chatModel, true));
     }
   }
 }
