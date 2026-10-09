@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
+import io.opentelemetry.semconv.SchemaUrls;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -25,6 +26,7 @@ public final class AwsLambdaFunctionInstrumenterFactory {
                 openTelemetry,
                 "io.opentelemetry.aws-lambda-core-1.0",
                 AwsLambdaFunctionInstrumenterFactory::spanName)
+            .setSchemaUrl(SchemaUrls.V1_44_0)
             .addAttributesExtractor(new AwsLambdaFunctionAttributesExtractor());
     setFaasInvocationExceptionEventExtractor(builder);
 

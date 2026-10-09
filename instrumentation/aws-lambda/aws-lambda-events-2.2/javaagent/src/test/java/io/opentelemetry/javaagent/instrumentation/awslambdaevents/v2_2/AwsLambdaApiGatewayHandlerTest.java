@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2;
 
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -22,6 +23,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
@@ -80,6 +82,7 @@ class AwsLambdaApiGatewayHandlerTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("PUT /hello/{param}")
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                         .hasKind(SpanKind.SERVER)
                         .hasTraceId("ee13e7026227ebf4c74278ae29691d7a")
                         .hasParentSpanId("0000000000000456")

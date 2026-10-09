@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.v3_11;
 
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -25,6 +26,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrappedLambda;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
@@ -98,6 +100,7 @@ class AwsLambdaApiGatewayWrapperTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("GET /hello/{param}")
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                         .hasKind(SpanKind.SERVER)
                         .hasTraceId("4fd0b6131f19f39af59518d127b0cafe")
                         .hasParentSpanId("0000000000000456")
@@ -135,6 +138,7 @@ class AwsLambdaApiGatewayWrapperTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("my_function")
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                         .hasKind(SpanKind.SERVER)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
