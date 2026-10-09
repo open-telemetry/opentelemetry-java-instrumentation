@@ -25,6 +25,8 @@ class UrlSanitizerTest {
 
   @Test
   void defaultSensitiveQueryParameters() {
+    // Default sensitive query parameters from semantic conventions:
+    // https://opentelemetry.io/docs/specs/semconv/attributes-registry/url/#url-full
     assertThat(HttpConstants.SENSITIVE_QUERY_PARAMETERS)
         .containsExactlyInAnyOrder(
             "X-Amz-Signature",
@@ -48,6 +50,8 @@ class UrlSanitizerTest {
     "user1:secret@github.com, user1:secret@github.com",
     "https://github.com@, https://github.com@",
     "https://service.com?paramA=valA&paramB=valB, https://service.com?paramA=valA&paramB=valB",
+    // Default sensitive query parameters from semantic conventions:
+    // https://opentelemetry.io/docs/specs/semconv/attributes-registry/url/#url-full
     "https://service.com?AWSAccessKeyId=AKIAIOSFODNN7, https://service.com?AWSAccessKeyId=REDACTED",
     "https://service.com?Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0%3A377, https://service.com?Signature=REDACTED",
     "https://service.com?X-Amz-Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0, https://service.com?X-Amz-Signature=REDACTED",

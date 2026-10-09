@@ -561,6 +561,8 @@ class HttpServerAttributesExtractorTest {
   @ParameterizedTest
   @CsvSource({
     "paramA=valA&paramB=valB, paramA=valA&paramB=valB",
+    // Default sensitive query parameters from semantic conventions:
+    // https://opentelemetry.io/docs/specs/semconv/attributes-registry/url/#url-query
     "AWSAccessKeyId=AKIAIOSFODNN7, AWSAccessKeyId=REDACTED",
     "Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0%3A377, Signature=REDACTED",
     "X-Amz-Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0, X-Amz-Signature=REDACTED",

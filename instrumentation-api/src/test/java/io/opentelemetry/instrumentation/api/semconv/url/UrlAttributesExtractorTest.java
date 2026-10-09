@@ -84,6 +84,8 @@ class UrlAttributesExtractorTest {
   @ParameterizedTest
   @ValueSource(
       strings = {
+        // Default sensitive query parameters from semantic conventions:
+        // https://opentelemetry.io/docs/specs/semconv/attributes-registry/url/#url-query
         "AWSAccessKeyId",
         "Signature",
         "X-Amz-Signature",
