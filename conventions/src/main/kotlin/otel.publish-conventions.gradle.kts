@@ -1,5 +1,3 @@
-import io.opentelemetry.instrumentation.gradle.findInheritedExtraProperty
-
 plugins {
   `maven-publish`
   signing
@@ -24,7 +22,7 @@ publishing {
       }
 
       afterEvaluate {
-        val mavenGroupId = project.findInheritedExtraProperty("mavenGroupId") as String?
+        val mavenGroupId = project.extra.properties["mavenGroupId"] as String?
         if (mavenGroupId != null) {
           groupId = mavenGroupId
         }

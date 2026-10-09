@@ -1,5 +1,3 @@
-import io.opentelemetry.instrumentation.gradle.findInheritedExtraProperty
-
 plugins {
   id("otel.bom-conventions")
 }
@@ -26,4 +24,4 @@ dependencies {
   otelBom.addExtra(semconvConstraint.group, "opentelemetry-semconv-incubating", semconvAlphaVersion)
 }
 
-otelBom.projectFilter.set { it.findInheritedExtraProperty("otel.stable") != "true" }
+otelBom.projectFilter.set { it.extra.properties["otel.stable"] != "true" }
