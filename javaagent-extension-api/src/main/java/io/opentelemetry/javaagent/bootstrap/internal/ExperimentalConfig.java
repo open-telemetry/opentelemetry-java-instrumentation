@@ -31,6 +31,7 @@ public final class ExperimentalConfig {
     return instance;
   }
 
+  // visible for testing
   public ExperimentalConfig(OpenTelemetry openTelemetry) {
     DeclarativeConfigProperties commonConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");

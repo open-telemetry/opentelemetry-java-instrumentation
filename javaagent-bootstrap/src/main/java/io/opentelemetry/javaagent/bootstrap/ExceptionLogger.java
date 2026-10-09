@@ -27,7 +27,7 @@ public final class ExceptionLogger {
     counter.incrementAndGet();
   }
 
-  // only used by tests
+  // visible for testing
   public static int getAndReset() {
     return counter.getAndSet(0);
   }

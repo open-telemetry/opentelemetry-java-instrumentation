@@ -78,7 +78,7 @@ public class AgentClassLoader extends URLClassLoader {
   private final boolean isSecurityManagerSupportEnabled;
   private final Manifest manifest;
 
-  // Used by tests
+  // visible for testing
   public AgentClassLoader(File javaagentFile) {
     this(javaagentFile, "", false);
   }
@@ -299,7 +299,7 @@ public class AgentClassLoader extends URLClassLoader {
   }
 
   // suffix appended to class resource names
-  // this is in a protected method so that unit tests could override it
+  // visible for testing
   protected String getClassSuffix() {
     return "data";
   }

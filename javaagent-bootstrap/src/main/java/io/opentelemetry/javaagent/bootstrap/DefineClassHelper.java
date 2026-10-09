@@ -83,6 +83,7 @@ public class DefineClassHelper {
    * @param handler the handler to set
    * @return the previously active handler
    */
+  // visible for testing
   @Initializer
   public static Handler internalSetHandlerForTests(Handler handler) {
     Handler oldHandler = DefineClassHelper.handler;
