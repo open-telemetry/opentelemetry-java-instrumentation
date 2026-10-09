@@ -38,6 +38,8 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
   private final boolean emitOldRpcSemconv;
   private final boolean emitPreviewRpcSemconv;
 
+  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
+  // via openTelemetry.getConfigProvider()
   RpcCommonAttributesExtractor(
       RpcAttributesGetter<REQUEST, RESPONSE> getter, OpenTelemetry openTelemetry) {
     this.getter = getter;

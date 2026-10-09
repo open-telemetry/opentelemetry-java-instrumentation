@@ -88,6 +88,8 @@ public final class AwsSdkInstrumenterFactory {
     this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
   }
 
+  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
+  // via openTelemetry.getConfigProvider()
   private static List<AttributesExtractor<Request<?>, Response<?>>> createAttributesExtractors(
       boolean includeExperimental, OpenTelemetry openTelemetry) {
     List<AttributesExtractor<Request<?>, Response<?>>> extractors =

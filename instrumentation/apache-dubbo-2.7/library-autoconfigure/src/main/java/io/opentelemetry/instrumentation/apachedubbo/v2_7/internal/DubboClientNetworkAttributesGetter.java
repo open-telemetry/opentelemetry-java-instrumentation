@@ -26,6 +26,8 @@ public final class DubboClientNetworkAttributesGetter
 
   private final boolean emitPreviewRpcSemconv;
 
+  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
+  // via openTelemetry.getConfigProvider()
   public DubboClientNetworkAttributesGetter(OpenTelemetry openTelemetry) {
     emitPreviewRpcSemconv = emitPreviewRpcSemconv(openTelemetry);
   }

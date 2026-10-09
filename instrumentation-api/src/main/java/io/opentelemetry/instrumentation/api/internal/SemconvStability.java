@@ -63,6 +63,8 @@ public final class SemconvStability {
     return emitOldServicePeerSemconv;
   }
 
+  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
+  // via openTelemetry.getConfigProvider()
   public static boolean emitOldServicePeerSemconv(OpenTelemetry openTelemetry) {
     return emitOld(selectionResolver(openTelemetry).servicePeer());
   }
@@ -71,6 +73,8 @@ public final class SemconvStability {
     return emitPreviewServicePeerSemconv;
   }
 
+  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
+  // via openTelemetry.getConfigProvider()
   public static boolean emitPreviewServicePeerSemconv(OpenTelemetry openTelemetry) {
     return emitStable(selectionResolver(openTelemetry).servicePeer());
   }
@@ -79,6 +83,8 @@ public final class SemconvStability {
     return emitOldRpcSemconv;
   }
 
+  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
+  // via openTelemetry.getConfigProvider()
   public static boolean emitOldRpcSemconv(OpenTelemetry openTelemetry) {
     return emitOld(selectionResolver(openTelemetry).rpc());
   }
@@ -87,6 +93,8 @@ public final class SemconvStability {
     return emitPreviewRpcSemconv;
   }
 
+  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
+  // via openTelemetry.getConfigProvider()
   public static boolean emitPreviewRpcSemconv(OpenTelemetry openTelemetry) {
     return emitStable(selectionResolver(openTelemetry).rpc());
   }

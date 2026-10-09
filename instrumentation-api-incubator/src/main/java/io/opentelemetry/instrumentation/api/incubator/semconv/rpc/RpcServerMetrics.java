@@ -115,6 +115,8 @@ public final class RpcServerMetrics implements OperationListener {
   }
 
   /** Returns RPC server metrics using the supplied instance's configuration. */
+  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
+  // via openTelemetry.getConfigProvider()
   public static OperationMetrics get(OpenTelemetry openTelemetry) {
     boolean emitOldRpcSemconv = emitOldRpcSemconv(openTelemetry);
     boolean emitPreviewRpcSemconv = emitPreviewRpcSemconv(openTelemetry);

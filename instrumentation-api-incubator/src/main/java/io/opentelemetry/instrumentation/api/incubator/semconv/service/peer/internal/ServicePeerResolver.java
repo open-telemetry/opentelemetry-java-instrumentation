@@ -60,6 +60,8 @@ public class ServicePeerResolver {
   // Mappings resolved by matching the complete server.address value verbatim.
   private final Map<String, ServicePeer> servicePeersByExactAddress = new HashMap<>();
 
+  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
+  // via openTelemetry.getConfigProvider()
   public ServicePeerResolver(OpenTelemetry openTelemetry) {
     emitOldServicePeerSemconv = emitOldServicePeerSemconv(openTelemetry);
     emitPreviewServicePeerSemconv = emitPreviewServicePeerSemconv(openTelemetry);
