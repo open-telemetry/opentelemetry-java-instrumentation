@@ -29,7 +29,6 @@ class GeodeSingletons {
                 INSTRUMENTATION_NAME,
                 DbClientSpanNameExtractor.create(dbClientAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributesGetter))
-            .addAttributesExtractor(new GeodeQueryTextExtractor())
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(builder);
 

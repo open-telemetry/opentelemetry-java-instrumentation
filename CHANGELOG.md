@@ -6,8 +6,12 @@
 
 - Couchbase 2.x SQL queries now use the shared SQL attribute extractor and no longer emit
   `db.operation.name`. SQL query attributes and span names are derived from the raw query text.
-  Non-query operations, Couchbase view queries, and existing query-sanitization settings are
-  unchanged.
+  Disabling query sanitization now affects only `db.query.text`: `db.query.summary` and
+  query-derived span names are still produced, matching other SQL instrumentations. This applies
+  to both `otel.instrumentation.couchbase.query-sanitization.enabled=false` and declarative
+  `java.couchbase.query_sanitization.enabled: false`, including when inherited from the common
+  database setting. Non-query operations, Couchbase view queries, and existing configuration names
+  and precedence are unchanged.
 - RPC and service-peer semantic conventions now require `otel.semconv-stability.preview=rpc`
   and `otel.semconv-stability.preview=service.peer`, respectively (or `rpc/dup` and
   `service.peer/dup` for dual emission). The `rpc`, `rpc/dup`, `service.peer`, and `service.peer/dup`

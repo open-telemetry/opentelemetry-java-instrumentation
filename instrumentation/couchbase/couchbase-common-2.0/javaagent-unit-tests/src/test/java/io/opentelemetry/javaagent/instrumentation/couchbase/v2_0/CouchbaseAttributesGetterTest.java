@@ -69,6 +69,8 @@ class CouchbaseAttributesGetterTest {
         .onStart(attributes, Context.root(), request);
 
     assertThat(getter.getRawQueryTexts(request)).containsExactly(query);
+    assertThat(DbClientSpanNameExtractor.create(getter).extract(request))
+        .isEqualTo("SELECT `test`");
     assertThat(attributes.build().asMap())
         .containsOnly(
             entry(DB_SYSTEM_NAME, "couchbase"),
