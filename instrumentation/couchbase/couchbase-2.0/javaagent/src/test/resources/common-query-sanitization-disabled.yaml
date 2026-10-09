@@ -1,0 +1,7 @@
+file_format: "1.1"
+instrumentation/development:
+  java:
+    common:
+      db:
+        query_sanitization:
+          enabled: false
