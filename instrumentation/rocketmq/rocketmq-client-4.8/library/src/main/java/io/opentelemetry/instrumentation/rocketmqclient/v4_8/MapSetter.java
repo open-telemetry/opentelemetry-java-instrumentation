@@ -22,10 +22,5 @@ final class MapSetter implements TextMapSetter<SendMessageContext> {
       return;
     }
     message.getProperties().put(key, value);
-    if (RocketMqMessageUtil.isBatch(message)) {
-      for (Object item : (Iterable<?>) message) {
-        ((Message) item).getProperties().put(key, value);
-      }
-    }
   }
 }

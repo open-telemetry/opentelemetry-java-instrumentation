@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
+import org.apache.rocketmq.client.producer.MQProducer;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 @SuppressWarnings("deprecation") // testing instrumentation of deprecated class
@@ -24,19 +25,16 @@ class RocketMqClientTest extends AbstractRocketMqClientTest {
   }
 
   @Override
-  void configureMqProducer(DefaultMQProducer producer) {
-    producer
-        .getDefaultMQProducerImpl()
-        .registerSendMessageHook(
-            RocketMqTelemetry.builder(testing.getOpenTelemetry())
-                .setHeaders(
-                    IncludeExclude.builder()
-                        .setIncluded("Test-Message-*")
-                        .setExcluded("*-Excluded-Header")
-                        .build())
-                .setCaptureExperimentalSpanAttributes(true)
-                .build()
-                .createSendMessageHook());
+  MQProducer configureMqProducer(DefaultMQProducer producer) {
+    return RocketMqTelemetry.builder(testing.getOpenTelemetry())
+        .setHeaders(
+            IncludeExclude.builder()
+                .setIncluded("Test-Message-*")
+                .setExcluded("*-Excluded-Header")
+                .build())
+        .setCaptureExperimentalSpanAttributes(true)
+        .build()
+        .wrap(producer);
   }
 
   @Override

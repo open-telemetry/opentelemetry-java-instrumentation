@@ -33,17 +33,26 @@ final class TracingSendMessageHookImpl implements SendMessageHook {
     if (context == null) {
       return;
     }
+    RocketMqProducerWrapper.SendState state = RocketMqProducerWrapper.getState(context);
+    if (state != null) {
+      state.copyFrom(context);
+      return;
+    }
     Context parentContext = Context.current();
     if (!instrumenter.shouldStart(parentContext, context)) {
       return;
     }
     CONTEXT_FIELD.set(context, instrumenter.start(parentContext, context));
-    RocketMqMessageUtil.reencodeBatch(context.getMessage());
   }
 
   @Override
   public void sendMessageAfter(SendMessageContext context) {
     if (context == null) {
+      return;
+    }
+    RocketMqProducerWrapper.SendState state = RocketMqProducerWrapper.getState(context);
+    if (state != null) {
+      state.copyFrom(context);
       return;
     }
     Context otelContext = CONTEXT_FIELD.get(context);

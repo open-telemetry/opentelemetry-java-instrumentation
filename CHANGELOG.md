@@ -198,6 +198,9 @@ for more details.
 
 ### 🚫 Deprecations
 
+- Deprecate `RocketMqTelemetry.createSendMessageHook()` in favor of
+  `RocketMqTelemetry.wrap(DefaultMQProducer)` for single-message and batch producer instrumentation.
+  ([#20479](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20479))
 - Deprecate `otel.jmx.target.system` in favor of `otel.jmx.metrics.experimental.included`.
   ([#19783](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19783))
 - Deprecate `otel.instrumentation.elasticsearch.capture-search-query`. It will be removed in 3.0,
