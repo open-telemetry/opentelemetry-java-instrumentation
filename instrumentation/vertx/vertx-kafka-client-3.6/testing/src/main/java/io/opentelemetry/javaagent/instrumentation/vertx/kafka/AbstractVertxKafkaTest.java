@@ -28,7 +28,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -218,7 +217,6 @@ public abstract class AbstractVertxKafkaTest {
   // the offset and the message key stay on the links even when the batch carries a single record,
   // because they are only recommended on spans that describe a single message operation
   protected static LinkData batchRecordLink(SpanData producerSpan) {
-
     return LinkData.create(
         asRemote(producerSpan.getSpanContext()),
         Attributes.builder()
@@ -263,14 +261,6 @@ public abstract class AbstractVertxKafkaTest {
 
     assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith(clientIdPrefix)));
     return assertions;
-  }
-
-  protected static String spanName(String topic, String operationName) {
-    return operationName + " " + topic;
-  }
-
-  protected static SpanKind receiveKind() {
-    return SpanKind.CLIENT;
   }
 
   protected static List<AttributeAssertion> withErrorType(List<AttributeAssertion> assertions) {
