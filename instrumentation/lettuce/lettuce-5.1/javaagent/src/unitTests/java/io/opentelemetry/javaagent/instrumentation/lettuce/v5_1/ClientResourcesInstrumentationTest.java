@@ -79,6 +79,7 @@ class ClientResourcesInstrumentationTest {
   private static MethodDescription builderMethod(Class<?> returnType) {
     return new ByteBuddy()
         .subclass(Object.class)
+        .name(ClientResourcesInstrumentationTest.class.getName() + "$ResourceFactory")
         .defineMethod("builder", returnType, Visibility.PUBLIC, Ownership.STATIC)
         .intercept(StubMethod.INSTANCE)
         .make()
