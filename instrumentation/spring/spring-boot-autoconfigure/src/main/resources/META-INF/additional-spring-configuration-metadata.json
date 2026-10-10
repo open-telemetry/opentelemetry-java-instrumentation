@@ -566,12 +566,6 @@
       "defaultValue": true
     },
     {
-      "name": "otel.instrumentation.runtime-telemetry.capture-gc-cause",
-      "type": "java.lang.Boolean",
-      "description": "Enable the capture of the jvm.gc.cause attribute with the jvm.gc.duration metric.",
-      "defaultValue": false
-    },
-    {
       "name": "otel.instrumentation.runtime-telemetry.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable runtime telemetry metrics.",
@@ -588,17 +582,6 @@
       "type": "java.lang.Boolean",
       "description": "Enable the capture of experimental JFR-based metrics on Java 17+.",
       "defaultValue": false
-    },
-    {
-      "name": "otel.instrumentation.runtime-telemetry.experimental.prefer-jfr",
-      "type": "java.lang.Boolean",
-      "description": "Prefer JFR over JMX for metrics available from both sources, on Java 17+.",
-      "defaultValue": false,
-      "deprecation": {
-        "level": "warning",
-        "reason": "Use the JFR metric selectors instead.",
-        "replacement": "otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included"
-      }
     },
     {
       "name": "otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included",

@@ -4,6 +4,30 @@
 
 ### ⚠️ Breaking changes
 
+- Runtime telemetry metrics and package-emitter events now always use the
+  `io.opentelemetry.runtime-telemetry` instrumentation scope. Update views, dashboards, and filters
+  that match `io.opentelemetry.runtime-telemetry-java8` or
+  `io.opentelemetry.runtime-telemetry-java17`.
+- JMX `jvm.gc.duration` metrics always include `jvm.gc.cause`. Remove
+  `otel.instrumentation.runtime-telemetry.capture-gc-cause` or declarative
+  `java.runtime_telemetry.capture_gc_cause`; GC cause is no longer configurable.
+- Remove the deprecated runtime telemetry configuration properties and their declarative forms:
+  - Replace `otel.instrumentation.runtime-telemetry.emit-experimental-telemetry` with
+    `otel.instrumentation.runtime-telemetry.emit-experimental-metrics`, or declarative
+    `java.runtime_telemetry.emit_experimental_metrics/development`.
+  - Replace `otel.instrumentation.runtime-telemetry.package-emitter.*` with
+    `otel.instrumentation.runtime-telemetry.experimental.package-emitter.*`, or declarative
+    `java.runtime_telemetry.package_emitter/development`.
+  - Replace `otel.instrumentation.runtime-telemetry-java17.enabled` with
+    `otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics`, or declarative
+    `java.runtime_telemetry.emit_experimental_jfr_metrics/development`.
+  - Replace `otel.instrumentation.runtime-telemetry-java17.enable-all` with
+    `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included=*`, or declarative
+    `java.runtime_telemetry.jfr_metrics/development.included: ["*"]`.
+  - Replace `otel.instrumentation.runtime-telemetry.experimental.prefer-jfr` with explicit metric
+    selections in `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included`, or
+    declarative `java.runtime_telemetry.jfr_metrics/development.included`.
+- Remove the legacy JFR metric name `jvm.cpu.limit`. Use `jvm.cpu.count` instead.
 - The Java agent, Spring Boot setup, and standalone appenders now capture structured log attributes from Log4j
   `MapMessage` entries, SLF4J key-value pairs, Logback Logstash markers, and Logstash structured
   arguments by default. Replace the former flat settings for Log4j MapMessage
@@ -130,6 +154,9 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Remove `Experimental.setPreferJfrMetrics` and `Experimental.JMX_OVERLAPPING_JFR_METRICS` from the
+  runtime telemetry library. Use `Experimental.setJfrMetrics` with an `IncludeExclude` selector
+  specifying the metrics to source from JFR.
 - Remove the deprecated standalone appender boolean setters and XML settings:
   Log4j `setCaptureMapMessageAttributes` / `captureMapMessageAttributes`, and Logback
   `setCaptureKeyValuePairAttributes` / `captureKeyValuePairAttributes`,

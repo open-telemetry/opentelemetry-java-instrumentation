@@ -16,10 +16,7 @@ import java.util.function.Predicate;
  */
 public class JmxRuntimeMetricsFactory {
   public static List<AutoCloseable> buildObservables(
-      boolean emitExperimentalTelemetry,
-      boolean captureGcCause,
-      Predicate<String> metricNamePredicate,
-      Meter meter) {
+      boolean emitExperimentalMetrics, Predicate<String> metricNamePredicate, Meter meter) {
     List<AutoCloseable> observables = new ArrayList<>();
     observables.addAll(Classes.registerObservers(meter, metricNamePredicate));
     observables.addAll(Cpu.registerObservers(meter, metricNamePredicate));
@@ -27,13 +24,13 @@ public class JmxRuntimeMetricsFactory {
       observables.addAll(CpuCount.registerObservers(meter));
     }
     if (metricNamePredicate.test("jvm.gc.duration")) {
-      observables.addAll(GarbageCollector.registerObservers(meter, captureGcCause));
+      observables.addAll(GarbageCollector.registerObservers(meter));
     }
     observables.addAll(MemoryPools.registerObservers(meter, metricNamePredicate));
     if (metricNamePredicate.test("jvm.thread.count")) {
       observables.addAll(Threads.registerObservers(meter));
     }
-    if (emitExperimentalTelemetry) {
+    if (emitExperimentalMetrics) {
       observables.addAll(BufferPools.registerObservers(meter, metricNamePredicate));
       observables.addAll(SystemCpu.registerObservers(meter, metricNamePredicate));
       if (metricNamePredicate.test("jvm.memory.init")) {

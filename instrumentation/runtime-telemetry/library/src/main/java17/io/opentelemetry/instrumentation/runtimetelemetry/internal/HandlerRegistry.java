@@ -57,7 +57,6 @@ final class HandlerRegistry {
   static List<RecordedEventHandler> getHandlers(
       Meter meter,
       Predicate<String> metricNamePredicate,
-      boolean useLegacyCpuCountMetric,
       boolean requireCompleteJmxReplacement,
       boolean emitExperimentalJmxMetrics) {
     Set<String> availableEventNames = new HashSet<>();
@@ -67,7 +66,6 @@ final class HandlerRegistry {
     return getHandlers(
         meter,
         metricNamePredicate,
-        useLegacyCpuCountMetric,
         requireCompleteJmxReplacement,
         emitExperimentalJmxMetrics,
         availableEventNames);
@@ -76,7 +74,6 @@ final class HandlerRegistry {
   static List<RecordedEventHandler> getHandlers(
       Meter meter,
       Predicate<String> metricNamePredicate,
-      boolean useLegacyCpuCountMetric,
       boolean requireCompleteJmxReplacement,
       boolean emitExperimentalJmxMetrics,
       Set<String> availableEventNames) {
@@ -175,9 +172,7 @@ final class HandlerRegistry {
         handlers,
         availableEventNames,
         "jdk.ContainerConfiguration",
-        () ->
-            ContainerConfigurationHandler.create(
-                meter, effectiveMetricNamePredicate, useLegacyCpuCountMetric));
+        () -> ContainerConfigurationHandler.create(meter, effectiveMetricNamePredicate));
     addIfAvailable(
         handlers,
         availableEventNames,
