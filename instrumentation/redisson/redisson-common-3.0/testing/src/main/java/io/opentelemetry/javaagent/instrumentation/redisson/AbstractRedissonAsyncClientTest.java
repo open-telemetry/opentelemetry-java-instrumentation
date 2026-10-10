@@ -159,7 +159,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace()),
+                            equalTo(DB_NAMESPACE, hasDatabaseIndex() ? "0" : null),
                             equalTo(DB_QUERY_TEXT, "SET foo ?"),
                             equalTo(DB_OPERATION_NAME, "SET"))));
   }
@@ -195,7 +195,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace()),
+                            equalTo(DB_NAMESPACE, hasDatabaseIndex() ? "0" : null),
                             equalTo(DB_QUERY_TEXT, "SADD set1 ?"),
                             equalTo(DB_OPERATION_NAME, "SADD"))
                         .hasParent(trace.getSpan(0)),
@@ -313,7 +313,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace()),
+                            equalTo(DB_NAMESPACE, hasDatabaseIndex() ? "0" : null),
                             equalTo(DB_OPERATION_NAME, "MULTI SET"),
                             // db.operation.batch.size is not emitted because MULTI transaction
                             // telemetry is split across wrapper and command spans, so this span
@@ -329,7 +329,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace()),
+                            equalTo(DB_NAMESPACE, hasDatabaseIndex() ? "0" : null),
                             equalTo(DB_QUERY_TEXT, "SET batch2 ?"),
                             equalTo(DB_OPERATION_NAME, "SET"))
                         .hasParent(trace.getSpan(0)),
@@ -342,7 +342,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace()),
+                            equalTo(DB_NAMESPACE, hasDatabaseIndex() ? "0" : null),
                             equalTo(DB_QUERY_TEXT, "EXEC"),
                             equalTo(DB_OPERATION_NAME, "EXEC"))
                         .hasParent(trace.getSpan(0)),
@@ -356,10 +356,6 @@ public abstract class AbstractRedissonAsyncClientTest {
   /** Whether the instrumented redisson version can report the Redis database index. */
   protected boolean hasDatabaseIndex() {
     return false;
-  }
-
-  private String dbNamespace() {
-    return hasDatabaseIndex() ? "0" : null;
   }
 
   private static class MyCallable implements Serializable, Callable<Object> {
