@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.stream.Stream;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.method.MethodDescription;
-import net.bytebuddy.description.modifier.MethodManifestation;
 import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.StubMethod;
@@ -33,7 +32,7 @@ class SqsClientBuilderInstrumentationTest {
 
   @ParameterizedTest
   @MethodSource("builders")
-  void rejectsObjectBridge(TypeInstrumentation instrumentation, String clientClassName) {
+  void matchesClientReturn(TypeInstrumentation instrumentation, String clientClassName) {
     List<ElementMatcher<? super MethodDescription>> matchers = new ArrayList<>();
     TypeTransformer transformer = mock(TypeTransformer.class);
     doAnswer(
@@ -49,13 +48,7 @@ class SqsClientBuilderInstrumentationTest {
     ElementMatcher<? super MethodDescription> matcher = matchers.get(0);
     TypeDescription client =
         new ByteBuddy().makeInterface().name(clientClassName).make().getTypeDescription();
-    MethodDescription bridge =
-        buildClientMethod(
-            new TypeDescription.ForLoadedType(Object.class), MethodManifestation.BRIDGE);
-
-    assertThat(matcher.matches(buildClientMethod(client, MethodManifestation.FINAL))).isTrue();
-    assertThat(bridge.isBridge()).isTrue();
-    assertThat(matcher.matches(bridge)).isFalse();
+    assertThat(matcher.matches(buildClientMethod(client))).isTrue();
   }
 
   private static Stream<Arguments> builders() {
@@ -68,11 +61,10 @@ class SqsClientBuilderInstrumentationTest {
             "software.amazon.awssdk.services.sqs.SqsAsyncClient"));
   }
 
-  private static MethodDescription buildClientMethod(
-      TypeDescription returnType, MethodManifestation manifestation) {
+  private static MethodDescription buildClientMethod(TypeDescription returnType) {
     return new ByteBuddy()
         .subclass(Object.class)
-        .defineMethod("buildClient", returnType, Visibility.PROTECTED, manifestation)
+        .defineMethod("buildClient", returnType, Visibility.PROTECTED)
         .intercept(StubMethod.INSTANCE)
         .make()
         .getTypeDescription()

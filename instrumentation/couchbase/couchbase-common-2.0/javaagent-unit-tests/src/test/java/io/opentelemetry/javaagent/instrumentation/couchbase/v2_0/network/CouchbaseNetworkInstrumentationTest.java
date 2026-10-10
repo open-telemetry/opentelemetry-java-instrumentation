@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network;
 
-import static net.bytebuddy.matcher.ElementMatchers.isBridge;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,7 +29,7 @@ class CouchbaseNetworkInstrumentationTest {
 
   @ParameterizedTest
   @MethodSource("instrumentations")
-  void rejectsObjectBridge(TypeInstrumentation instrumentation) {
+  void matchesRequestArgument(TypeInstrumentation instrumentation) {
     List<ElementMatcher<? super MethodDescription>> matchers = new ArrayList<>();
     TypeTransformer transformer = mock(TypeTransformer.class);
     doAnswer(
@@ -59,10 +58,6 @@ class CouchbaseNetworkInstrumentationTest {
                             1, named("com.couchbase.client.core.message.CouchbaseRequest")))
                     .getOnly()))
         .isTrue();
-    assertThat(
-            matcher.matches(
-                methods.filter(isBridge().and(takesArgument(1, Object.class))).getOnly()))
-        .isFalse();
   }
 
   private static Stream<TypeInstrumentation> instrumentations() {

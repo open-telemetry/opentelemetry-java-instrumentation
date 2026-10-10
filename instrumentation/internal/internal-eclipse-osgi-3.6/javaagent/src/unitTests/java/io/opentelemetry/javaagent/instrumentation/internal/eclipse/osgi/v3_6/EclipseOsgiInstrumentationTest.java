@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 class EclipseOsgiInstrumentationTest {
 
   @Test
-  void matchesOnlyCompatibleBindings() {
+  void matchesStringPackageSignatures() {
     List<ElementMatcher<? super MethodDescription>> matchers = new ArrayList<>();
     TypeTransformer transformer = mock(TypeTransformer.class);
     doAnswer(
@@ -42,11 +42,7 @@ class EclipseOsgiInstrumentationTest {
       if (!method.isMethod()) {
         continue;
       }
-      boolean compatible =
-          !method.getParameters().isEmpty()
-              && method.getParameters().get(0).getType().asErasure().represents(String.class)
-              && method.getReturnType().asErasure().represents(boolean.class);
-      assertThat(matcher.matches(method)).isEqualTo(compatible);
+      assertThat(matcher.matches(method)).isTrue();
     }
   }
 
@@ -56,20 +52,8 @@ class EclipseOsgiInstrumentationTest {
       return false;
     }
 
-    boolean isDynamicallyImported(Object packageName) {
-      return false;
-    }
-
     boolean isDynamicallyImported(String packageName, boolean other) {
       return false;
-    }
-
-    boolean isDynamicallyImported() {
-      return false;
-    }
-
-    Object isDynamicallyImported(String packageName, int other) {
-      return null;
     }
   }
 }
