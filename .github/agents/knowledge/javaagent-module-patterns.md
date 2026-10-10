@@ -538,19 +538,17 @@ sufficient for optimization.
 
 ### Method matchers and advice bindings
 
-The method matcher must prove compatibility for every non-optional, statically typed value that the
-advice reads. For each `@Advice.Argument(n)`, normally include a compatible
-`takesArgument(n, ...)` matcher or an equivalent matcher for the complete typed signature. Apply the
-same rule to a concretely typed `@Advice.Return` with `returns(...)`.
+The method matcher must prove compatibility for every non-optional, statically typed argument that
+the advice reads. For each `@Advice.Argument(n)`, normally include a compatible
+`takesArgument(n, ...)` matcher or an equivalent matcher for the complete typed signature.
 
-When supported signatures use different concrete subtypes accepted by the advice's common
-supertype, match the hierarchy:
+When supported argument types use different concrete subtypes accepted by the advice's common
+supertype, match the argument hierarchy:
 
 ```java
 named("pool")
     .and(takesArguments(3))
     .and(takesArgument(1, hasSuperType(named("io.vertx.sqlclient.SqlConnectOptions"))))
-    .and(returns(hasSuperType(named("io.vertx.sqlclient.Pool"))))
 ```
 
 Match argument positions that the advice does not bind only when they distinguish an intended
@@ -566,6 +564,25 @@ instead permits otherwise-incompatible assignment by inserting a runtime cast. U
 explicit type constraint only when every matched signature has a separate runtime contract that
 guarantees the value is assignable to the advice parameter. Otherwise, constrain the matcher to
 prevent `ClassCastException`.
+
+Omit return-type predicates by default, including for statically and dynamically typed
+`@Advice.Return`. A typed return parameter alone does not justify `returns(...)`; the target type,
+method and argument selection, and supported API contract can already establish compatibility.
+Keep or add a return predicate only for a concrete, necessary selection or compatibility distinction
+under supported usage, including selecting operations by return type. Synthetic negative matcher
+tests are not required to justify that distinction. Do not mechanically replace an unnecessary
+predicate with a hierarchy check or known-name fast path. Exact return names can exclude legitimate
+covariant returns.
+
+For `@Advice.Return(readOnly = false)` or `@AssignReturned.ToReturned`, verify that replacement values
+fit each instrumented method's declared return type. Writing the return value is not an automatic
+reason for a predicate; both reads and writes need the same justification. Dynamic typing does not
+permit unsafe casts, but a supported runtime contract can establish safety without a predicate.
+
+For bridge-method exclusion claims, inspect the actual agent pipeline, not standalone
+`matcher.matches(...)` results. `AgentInstaller` uses `MethodGraph.Compiler.ForDeclaredMethods` and
+`TypeStrategy.DECORATE`; Byte Buddy 1.18.14 excludes virtual bridges on this path before applying
+advice. This does not mean all synthetic methods or other bridge paths are ignored.
 
 ### Rules
 

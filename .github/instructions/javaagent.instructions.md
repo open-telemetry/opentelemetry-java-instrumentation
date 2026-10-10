@@ -64,6 +64,22 @@ Public enablement names describe selectable behavior, not Muzzle implementation 
   signature matchers may use accessible `java.base` types available at the minimum
   supported Java version; keep `named(...)` for instrumented-library types.
   With dynamic advice typing, match only signatures that guarantee assignability.
+- Omit return-type predicates by default, including for statically and dynamically typed
+  `@Advice.Return`. A typed return parameter alone does not justify `returns(...)`; the target type,
+  method and argument selection, and supported API contract can already establish compatibility.
+  Keep or add a return predicate only for a concrete, necessary selection or compatibility distinction
+  under supported usage, including selecting operations by return type. Synthetic negative matcher
+  tests are not required to justify that distinction. Do not mechanically replace an unnecessary
+  predicate with a hierarchy check or known-name fast path. Exact return names can exclude legitimate
+  covariant returns.
+- For `@Advice.Return(readOnly = false)` or `@AssignReturned.ToReturned`, verify that replacement values
+  fit each instrumented method's declared return type. Writing the return value is not an automatic
+  reason for a predicate; both reads and writes need the same justification. Dynamic typing does not
+  permit unsafe casts, but a supported runtime contract can establish safety without a predicate.
+- For bridge-method exclusion claims, inspect the actual agent pipeline, not standalone
+  `matcher.matches(...)` results. `AgentInstaller` uses `MethodGraph.Compiler.ForDeclaredMethods` and
+  `TypeStrategy.DECORATE`; Byte Buddy 1.18.14 excludes virtual bridges on this path before applying
+  advice. This does not mean all synthetic methods or other bridge paths are ignored.
 - Do not require `isDeclaredBy` on a Byte Buddy method matcher by default. Use it only
   when a type matcher covers several types but advice targets a member declared by one
   specific type; a name and signature that already identify the method need no extra
