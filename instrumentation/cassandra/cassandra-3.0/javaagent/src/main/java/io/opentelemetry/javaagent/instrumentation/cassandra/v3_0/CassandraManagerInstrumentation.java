@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.datastax.driver.core.Session;
@@ -29,10 +28,7 @@ class CassandraManagerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isPrivate()
-            .and(named("newSession"))
-            .and(takesArguments(0))
-            .and(returns(named("com.datastax.driver.core.Session"))),
+        isPrivate().and(named("newSession")).and(takesArguments(0)),
         getClass().getName() + "$NewSessionAdvice");
   }
 

@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.datastax.oss.driver.api.core.metadata.EndPoint;
@@ -33,10 +32,7 @@ class SessionBuilderInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(named("buildAsync"))
-            .and(takesArguments(0))
-            .and(returns(CompletionStage.class)),
+        isPublic().and(named("buildAsync")).and(takesArguments(0)),
         getClass().getName() + "$BuildAdvice");
   }
 

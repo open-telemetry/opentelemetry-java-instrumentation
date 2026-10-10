@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -32,8 +31,7 @@ class TransactionImplInstrumentation implements TypeInstrumentation {
         named("registerProducedTopic")
             .and(isPublic())
             .and(takesArguments(1))
-            .and(takesArgument(0, String.class))
-            .and(returns(CompletableFuture.class)),
+            .and(takesArgument(0, String.class)),
         getClass().getName() + "$RegisterProducedTopicAdvice");
   }
 

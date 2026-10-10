@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0.metro.v2_2;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.sun.xml.ws.api.pipe.ServerTubeAssemblerContext;
@@ -27,9 +26,7 @@ class ServerTubeAssemblerContextInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("createMonitoringTube")
-            .and(takesArgument(0, named("com.sun.xml.ws.api.pipe.Tube")))
-            .and(returns(named("com.sun.xml.ws.api.pipe.Tube"))),
+        named("createMonitoringTube").and(takesArgument(0, named("com.sun.xml.ws.api.pipe.Tube"))),
         getClass().getName() + "$AddTracingAdvice");
   }
 

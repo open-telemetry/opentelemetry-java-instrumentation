@@ -11,7 +11,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -47,7 +46,6 @@ class LoadInjectedClassInstrumentation implements TypeInstrumentation {
                             .and(takesArgument(0, String.class))
                             .and(takesArgument(1, boolean.class))))
             .and(isPublic().or(isProtected()))
-            .and(returns(Class.class))
             .and(not(isStatic()));
     // Inline instrumentation to prevent problems with invokedynamic-recursion
     transformer.applyAdviceToMethod(methodMatcher, getClass().getName() + "$LoadClassAdvice");

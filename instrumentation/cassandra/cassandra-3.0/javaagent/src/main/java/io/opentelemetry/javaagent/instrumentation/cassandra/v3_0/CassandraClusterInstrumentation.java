@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.datastax.driver.core.Cluster;
@@ -27,8 +26,7 @@ class CassandraClusterInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("buildFrom")
-            .and(takesArgument(0, named("com.datastax.driver.core.Cluster$Initializer")))
-            .and(returns(named("com.datastax.driver.core.Cluster"))),
+            .and(takesArgument(0, named("com.datastax.driver.core.Cluster$Initializer"))),
         getClass().getName() + "$BuildFromAdvice");
   }
 

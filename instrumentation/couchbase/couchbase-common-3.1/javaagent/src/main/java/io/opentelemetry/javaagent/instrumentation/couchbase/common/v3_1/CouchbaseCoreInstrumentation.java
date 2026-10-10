@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -37,8 +36,7 @@ public class CouchbaseCoreInstrumentation implements TypeInstrumentation {
             .and(named("create"))
             .and(takesArguments(3))
             .and(takesArgument(0, named("com.couchbase.client.core.env.CoreEnvironment")))
-            .and(takesArgument(2, Set.class))
-            .and(returns(named("com.couchbase.client.core.Core"))),
+            .and(takesArgument(2, Set.class)),
         getClass().getName() + "$SeedNodesFactoryAdvice");
     transformer.applyAdviceToMethod(
         isConstructor()

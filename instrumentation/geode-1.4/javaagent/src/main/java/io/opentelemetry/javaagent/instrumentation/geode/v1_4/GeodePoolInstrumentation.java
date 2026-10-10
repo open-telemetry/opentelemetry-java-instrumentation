@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.geode.v1_4;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -58,9 +57,7 @@ class GeodePoolInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("org.apache.geode.cache.client.Pool"))),
         getClass().getName() + "$InitAdvice");
     transformer.applyAdviceToMethod(
-        named("create")
-            .and(takesArguments(1))
-            .and(returns(named("org.apache.geode.cache.client.Pool"))),
+        named("create").and(takesArguments(1)).and(takesArgument(0, String.class)),
         getClass().getName() + "$CreateAdvice");
   }
 

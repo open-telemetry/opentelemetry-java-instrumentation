@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.instrumentation.javahttpclient.JavaHttpClientSingletons.setter;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -37,9 +36,7 @@ class HttpHeadersInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("headers").and(returns(named("java.net.http.HttpHeaders"))),
-        getClass().getName() + "$HeadersAdvice");
+    transformer.applyAdviceToMethod(named("headers"), getClass().getName() + "$HeadersAdvice");
   }
 
   @SuppressWarnings("unused")

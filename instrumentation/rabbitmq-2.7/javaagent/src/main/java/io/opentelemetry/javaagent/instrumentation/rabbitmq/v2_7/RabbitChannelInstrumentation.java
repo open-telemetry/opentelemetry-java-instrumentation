@@ -21,7 +21,6 @@ import static net.bytebuddy.matcher.ElementMatchers.nameEndsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.not;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -111,9 +110,7 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, long.class)),
         getClass().getName() + "$ChannelSettleAdvice");
     transformer.applyAdviceToMethod(
-        named("basicGet")
-            .and(takesArgument(0, String.class))
-            .and(returns(named("com.rabbitmq.client.GetResponse"))),
+        named("basicGet").and(takesArgument(0, String.class)),
         getClass().getName() + "$ChannelGetAdvice");
     transformer.applyAdviceToMethod(
         named("basicConsume")

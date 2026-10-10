@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.tomcat.dbcp.v8_0;
 import static io.opentelemetry.javaagent.instrumentation.tomcat.dbcp.v8_0.TomcatDbcpSingletons.getDataSourceName;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -37,7 +36,7 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$CloseAdvice");
 
     typeTransformer.applyAdviceToMethod(
-        isPublic().and(named("preRegister")).and(takesArguments(2)).and(returns(ObjectName.class)),
+        isPublic().and(named("preRegister")).and(takesArguments(2)),
         getClass().getName() + "$PreRegisterAdvice");
   }
 

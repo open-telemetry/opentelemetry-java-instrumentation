@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.thrift.v0_13;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.instrumentation.thrift.v0_13.internal.AsyncMethodCallbackUtil;
@@ -41,8 +40,7 @@ public final class ThriftAsyncProcessFunctionInstrumentation implements TypeInst
             .and(
                 takesArgument(
                     0,
-                    named("org.apache.thrift.server.AbstractNonblockingServer$AsyncFrameBuffer")))
-            .and(returns(named("org.apache.thrift.async.AsyncMethodCallback"))),
+                    named("org.apache.thrift.server.AbstractNonblockingServer$AsyncFrameBuffer"))),
         getClass().getName() + "$GetResultHandlerAdvice");
   }
 

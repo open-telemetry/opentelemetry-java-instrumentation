@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.opensearch.rest.v1_0;
 
 import static io.opentelemetry.javaagent.instrumentation.opensearch.rest.v1_0.OpenSearchRestSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -40,8 +39,7 @@ class RestClientInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("performRequest")
             .and(takesArguments(1))
-            .and(takesArgument(0, named("org.opensearch.client.Request")))
-            .and(returns(named("org.opensearch.client.Response"))),
+            .and(takesArgument(0, named("org.opensearch.client.Request"))),
         getClass().getName() + "$PerformRequestAdvice");
     transformer.applyAdviceToMethod(
         named("performRequestAsync")

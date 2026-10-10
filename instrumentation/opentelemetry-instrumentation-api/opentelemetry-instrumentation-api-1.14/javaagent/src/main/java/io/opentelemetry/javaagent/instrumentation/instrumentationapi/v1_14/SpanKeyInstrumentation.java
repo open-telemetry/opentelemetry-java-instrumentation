@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.instrumentationapi.v1_14;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.api.trace.Span;
@@ -34,13 +33,11 @@ final class SpanKeyInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("storeInContext")
             .and(takesArgument(0, named("application.io.opentelemetry.context.Context")))
-            .and(takesArgument(1, named("application.io.opentelemetry.api.trace.Span")))
-            .and(returns(named("application.io.opentelemetry.context.Context"))),
+            .and(takesArgument(1, named("application.io.opentelemetry.api.trace.Span"))),
         getClass().getName() + "$StoreInContextAdvice");
     transformer.applyAdviceToMethod(
         named("fromContextOrNull")
-            .and(takesArgument(0, named("application.io.opentelemetry.context.Context")))
-            .and(returns(named("application.io.opentelemetry.api.trace.Span"))),
+            .and(takesArgument(0, named("application.io.opentelemetry.context.Context"))),
         getClass().getName() + "$FromContextOrNullAdvice");
   }
 

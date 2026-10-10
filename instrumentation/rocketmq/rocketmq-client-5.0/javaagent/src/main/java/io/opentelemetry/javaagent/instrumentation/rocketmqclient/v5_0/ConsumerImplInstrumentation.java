@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -36,11 +35,7 @@ final class ConsumerImplInstrumentation implements TypeInstrumentation {
             .and(takesArguments(3))
             .and(takesArgument(0, named("apache.rocketmq.v2.ReceiveMessageRequest")))
             .and(takesArgument(1, named("org.apache.rocketmq.client.java.route.MessageQueueImpl")))
-            .and(takesArgument(2, Duration.class))
-            .and(
-                returns(
-                    named(
-                        "org.apache.rocketmq.shaded.com.google.common.util.concurrent.ListenableFuture"))),
+            .and(takesArgument(2, Duration.class)),
         getClass().getName() + "$ReceiveMessageAdvice");
   }
 

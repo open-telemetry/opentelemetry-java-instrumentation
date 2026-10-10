@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.twitter.finagle.http.Request;
@@ -30,13 +29,11 @@ class BijectionsNettyInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("fullRequestToFinagle")
-            .and(takesArgument(0, named("io.netty.handler.codec.http.FullHttpRequest")))
-            .and(returns(named("com.twitter.finagle.http.Request"))),
+            .and(takesArgument(0, named("io.netty.handler.codec.http.FullHttpRequest"))),
         getClass().getName() + "$FullRequestAdvice");
     transformer.applyAdviceToMethod(
         named("chunkedRequestToFinagle")
-            .and(takesArgument(0, named("io.netty.handler.codec.http.HttpRequest")))
-            .and(returns(named("com.twitter.finagle.http.Request"))),
+            .and(takesArgument(0, named("io.netty.handler.codec.http.HttpRequest"))),
         getClass().getName() + "$ChunkedRequestAdvice");
   }
 
