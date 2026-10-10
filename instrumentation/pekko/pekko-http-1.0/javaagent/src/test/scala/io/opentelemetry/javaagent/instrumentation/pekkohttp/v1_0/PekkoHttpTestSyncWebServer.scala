@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0
 
 import org.apache.pekko.actor.ActorSystem
-import org.apache.pekko.http.scaladsl.Http
 import org.apache.pekko.http.scaladsl.Http.ServerBinding
 import org.apache.pekko.http.scaladsl.model.HttpMethods.GET
 import org.apache.pekko.http.scaladsl.model._
@@ -60,7 +59,7 @@ object PekkoHttpTestSyncWebServer {
     if (binding == null) {
       import scala.concurrent.duration._
       binding = Await.result(
-        Http().bindAndHandleSync(syncHandler, "localhost", port),
+        PekkoHttpTestBinding.bindSync(syncHandler, "localhost", port),
         10.seconds
       )
     }

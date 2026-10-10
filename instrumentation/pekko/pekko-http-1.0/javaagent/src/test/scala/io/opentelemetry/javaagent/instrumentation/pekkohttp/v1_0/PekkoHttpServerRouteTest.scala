@@ -13,7 +13,6 @@ import io.opentelemetry.testing.internal.armeria.common.{
   HttpMethod
 }
 import org.apache.pekko.actor.ActorSystem
-import org.apache.pekko.http.scaladsl.Http
 import org.apache.pekko.http.scaladsl.server.Directives._
 import org.apache.pekko.http.scaladsl.server.Route
 import org.assertj.core.api.Assertions.assertThat
@@ -308,7 +307,10 @@ class PekkoHttpServerRouteTest {
       expectedMsg: String = "ok"
   ): Unit = {
     val binding =
-      Await.result(Http().bindAndHandle(route, "localhost", 0), 10.seconds)
+      Await.result(
+        PekkoHttpTestBinding.bindRoute(route, "localhost", 0),
+        10.seconds
+      )
     val address: URI = buildAddress(binding.localAddress.getPort)
     try {
       val request = AggregatedHttpRequest.of(
