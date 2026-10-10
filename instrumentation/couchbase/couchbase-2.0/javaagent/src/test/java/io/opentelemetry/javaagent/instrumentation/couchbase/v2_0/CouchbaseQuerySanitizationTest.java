@@ -20,6 +20,7 @@ import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.java.CouchbaseAsyncBucket;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.query.N1qlQuery;
+import com.couchbase.client.java.search.SearchQuery;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -61,5 +62,35 @@ class CouchbaseQuerySanitizationTest {
                                     ? "SELECT * FROM `test` WHERE field1 = ? AND field2 = ?"
                                     : query),
                             equalTo(DB_QUERY_SUMMARY, "SELECT `test`"))));
+  }
+
+  @Test
+  void unrecognizedQueryUsesGenericInstrumenter() {
+    ClusterFacade core = mock(ClusterFacade.class);
+    when(core.send(any())).thenReturn(Observable.empty());
+    CouchbaseEnvironment environment = mock(CouchbaseEnvironment.class);
+    when(environment.searchTimeout()).thenReturn(1000L);
+    CouchbaseAsyncBucket bucket =
+        new CouchbaseAsyncBucket(core, environment, "test", "", emptyList());
+
+    assertThat(
+            bucket
+                .query(new SearchQuery("index", SearchQuery.match("search text")))
+                .toList()
+                .toBlocking()
+                .single())
+        .isEmpty();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("test")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, "couchbase"),
+                            equalTo(DB_NAMESPACE, "test"),
+                            equalTo(DB_QUERY_TEXT, "SearchQuery"))));
   }
 }
