@@ -6,6 +6,7 @@ on:
       cache-read-only:
         type: boolean
         required: false
+        default: true
       no-build-cache:
         type: boolean
         required: false
@@ -28,6 +29,7 @@ permissions:
 jobs:
   spotless:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -43,7 +45,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
         with:
           cache-read-only: true
 
@@ -56,6 +58,7 @@ jobs:
 
   license-check:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -71,7 +74,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
         with:
           cache-read-only: true
 
@@ -99,6 +102,7 @@ jobs:
 
   fossa-configuration-check:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -114,7 +118,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
         with:
           cache-read-only: true
 
@@ -136,16 +140,18 @@ jobs:
             exit 1
           fi
 
-  # this is needed because we don't auto-update dependencies in instrumentation/**
-  # and so we want to enforce that all "real" dependencies are dependency managed
-  extra-dependency-management-enforcement:
-    runs-on: ubuntu-latest
+  # shell-only checks; every check runs even if an earlier one fails so all failures are visible
+  repo-checks:
+    runs-on: ubuntu-slim
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - id: checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - name: Dependency check
+      # this is needed because we don't auto-update dependencies in instrumentation/**
+      # and so we want to enforce that all "real" dependencies are dependency managed
+      - name: Extra dependency management enforcement
         run: |
           set +e
           grep '^  implementation(".*:.*:[0-9].*")\|^  api(".*:.*:[0-9].*")' \
@@ -163,33 +169,16 @@ jobs:
             exit 1
           fi
 
-  check-javaagent-suppression-keys:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
+      - name: Check latest dep test overrides
+        if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
+        run: .github/scripts/check-latest-dep-test-overrides.sh
 
-      - run: .github/scripts/check-javaagent-suppression-keys.sh
+      - name: Check package names
+        if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
+        run: .github/scripts/check-package-names.sh
 
-  check-latest-dep-test-overrides:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - run: .github/scripts/check-latest-dep-test-overrides.sh
-
-  check-package-names:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - run: .github/scripts/check-package-names.sh
-
+  # kept on ubuntu-latest: `gh aw validate` checks container images with `docker pull` and silently
+  # skips that when no Docker daemon is available, as on ubuntu-slim
   check-gh-aw-lockfiles:
     runs-on: ubuntu-latest
     steps:
@@ -210,6 +199,7 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -229,7 +219,7 @@ jobs:
           sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx4g /" gradle.properties
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
           gradle-home-cache-excludes: >-
@@ -275,8 +265,9 @@ jobs:
           path: "sboms/*.json"
 
   test:
-    name: test${{ matrix.test-partition }} (${{ matrix.test-java-version }}, ${{ matrix.vm }}, indy ${{ matrix.test-indy }})
+    name: test${{ matrix.test-partition }} (${{ matrix.test-java-version }}, ${{ matrix.vm }})
     runs-on: ubuntu-latest
+    timeout-minutes: 135
     strategy:
       matrix:
         test-java-version:
@@ -286,7 +277,7 @@ jobs:
           - 21
           - 25
           - 25-deny-unsafe
-          - 26 # renovate(java-version)
+          - 27 # renovate(java-version)
         vm:
           - hotspot
           - openj9
@@ -295,12 +286,11 @@ jobs:
           - 1
           - 2
           - 3
-        test-indy:
-          - false
-          - true
         exclude:
           - vm: ${{ inputs.skip-openj9-tests && 'openj9' || '' }}
           - test-java-version: 25-deny-unsafe
+            vm: openj9
+          - test-java-version: 27
             vm: openj9
       fail-fast: false
     steps:
@@ -339,7 +329,7 @@ jobs:
         run: .github/scripts/deadlock-detector.sh
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
         with:
           cache-read-only: true
 
@@ -369,7 +359,6 @@ jobs:
           ${test_tasks}
           -PtestJavaVersion=${{ matrix.test-java-version != '25-deny-unsafe' && matrix.test-java-version || '25' }}
           -PtestJavaVM=${{ matrix.vm }}
-          -PtestIndy=${{ matrix.test-indy }}
           -PdenyUnsafe=${{ matrix.test-java-version == '25-deny-unsafe' && 'true' || 'false' }}
           -Porg.gradle.java.installations.paths=${STEPS_SETUP_TEST_JAVA_OUTPUTS_PATH}
           -Porg.gradle.java.installations.auto-download=false
@@ -383,7 +372,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: deadlock-detector-test-${{ matrix.test-java-version }}-${{ matrix.vm }}-${{ matrix.test-partition }}-indy-${{ matrix.test-indy }}
+          name: deadlock-detector-test-${{ matrix.test-java-version }}-${{ matrix.vm }}-${{ matrix.test-partition }}
           path: /tmp/deadlock-detector-*
           if-no-files-found: ignore
 
@@ -402,6 +391,7 @@ jobs:
 
   smoke-test:
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 135
     strategy:
       matrix:
         os:
@@ -453,7 +443,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Set up Gradle cache
-        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
         with:
           cache-read-only: true
 
@@ -502,6 +492,7 @@ jobs:
 
   gradle-plugins:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -517,7 +508,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
         with:
           cache-read-only: true
 
@@ -527,6 +518,7 @@ jobs:
 
   examples:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -542,7 +534,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Set up Gradle cache
-        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
         with:
           cache-read-only: true
 

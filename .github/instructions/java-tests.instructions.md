@@ -1,15 +1,55 @@
 ---
-applyTo: "**/*.java"
+applyTo: "**/*.java,**/*.kt,**/*.scala"
 ---
 
-# Java Test Rules (first-pass review)
+# Java, Kotlin, and Scala tests
 
-This file is loaded for all Java changes, but the rules below apply only when
-reviewing test code (e.g. `src/test/**`, `src/*Test/**`, and `testing/`
-modules). Skip them on production sources.
+This file is loaded for all Java, Kotlin, and Scala changes. Apply the behavior-coverage
+checks when the corresponding production behavior changes. Apply the
+remaining sections only to test code and shared testing modules. Comment
+only on a changed line for a substantive coverage gap or an explicit
+convention not caught by CI.
+
+## Behavior coverage
+
+- Test supported behavior. Do not add or request tests that only prove
+  removed settings are ignored, or preview variants that repeat the same behavior.
+  When configuration wiring changes, test the real initialization path and emitted
+  telemetry, not just helpers.
+- For a javaagent change supporting multiple runtime library versions,
+  look for tests with the installed agent against the required versions.
+  Direct helper tests and `javaagent-unit-tests` do not exercise class
+  transformation or the actual library; do not count them as integration
+  coverage.
+- For a module whose default enablement changes, the same representative
+  operation must emit instrumentation telemetry in an enabled JVM and no
+  instrumentation telemetry in a disabled JVM. A `DefaultEnablementTest`
+  can run in both modes through `testDisabled`. In the negative mode,
+  wait for operation completion and assert exactly a manually created
+  parent span; an immediate `spans().isEmpty()` can pass before export.
+- Instrumentation selectors such as `otel.instrumentation.<name>.enabled`
+  are escape hatches for buggy instrumentation, not general telemetry-tuning
+  settings. Do not add or request per-instrumentation selector tests for new
+  modules, aliases, renames, or consolidations. This includes module name-list
+  assertions, enable/disable matrices, precedence, legacy/v3-preview handling,
+  flat/YAML parity, warning checks, and dedicated JVM variants or test projects.
+  Test shared enablement or alias-helper changes centrally. Keep coverage for
+  actual default-enablement changes as described above, feature settings, and
+  instrumentation behavior; tests may use selectors to isolate that behavior.
+- For starter tests, check `smoke-tests-otel-starter/` for real Spring
+  starter coverage; `smoke-tests/images/spring-boot` tests the javaagent
+  instead. Declarative mode uses separate `testDeclarativeConfig` source
+  sets, not a flag toggled inside the normal tests.
+- When changed tests exercise behavior behind an experimental feature or
+  telemetry flag, including experimental metrics, check assertions in both
+  default-off and flag-on JVMs. Run the flag-on assertions through a separate
+  `testExperimental` task or an existing equivalent variant; either must be
+  wired into `check` or CI. Do not request one for tests unrelated to the flag.
 
 ## [Testing] General Patterns
 
+- In Java, keep JUnit test classes and test methods package-private unless broader visibility is
+  required.
 - Use AssertJ (`assertThat(...)`) for assertions in new test code. Do not
   use JUnit `Assert.*` or Hamcrest `assertThat`.
 - Do not add AssertJ `.as(...)` descriptions or `.withFailMessage(...)` in
@@ -18,8 +58,31 @@ modules). Skip them on production sources.
 - Test methods do not need `throws Exception` clauses unless actually required.
 - Prefer the nearest common parent in `catch` (including `Exception` /
   `Throwable`) over multi-catch.
-- Use `e` / `f` / `t` / `ignored` for catch variables (per the catch-variable
-  naming rule in `.github/copilot-instructions.md`).
+- Allocate test ports through `PortUtils` so allocations are coordinated across
+  the test process. Use `findOpenPorts(count)` when a service needs a consecutive
+  range instead of assuming ports adjacent to a separately allocated port are
+  available.
+- Prefer plain `@AfterEach` or `@AfterAll` teardown when direct cleanup is
+  safe. Introduce `AutoCleanupExtension` when deferred cleanup improves
+  clarity or protects partially completed setup. Register it with the
+  lifecycle that owns the resource: use `deferCleanup` for per-test resources
+  and `deferAfterAll` for class-scoped resources. Do not replace deferred
+  cleanup with an earlier lifecycle cleanup that can leak on test failure; its
+  outermost-container handling intentionally prevents duplicate
+  `deferAfterAll` cleanup for nested tests.
+- Keep fixture state that depends on a concrete test subclass on that subclass
+  or initialize it separately for each subclass. Do not cache subclass-specific
+  state in a shared static field on an abstract test base.
+- In Scala tests, import `org.assertj.core.api.Assertions.assertThat` for
+  ordinary values and call `OpenTelemetryAssertions.assertThat(...)` explicitly
+  for telemetry data. Do not statically import both `assertThat` methods.
+- Assert complete exported traces with `waitAndAssertTraces(...)` and metrics
+  with `waitAndAssertMetrics(...)`; do not use fixed sleeps to wait for telemetry.
+  Direct assertions are appropriate only when the test intentionally inspects
+  telemetry already synchronized or captured at an intermediate point.
+- Preserve span order in expected traces when execution order is deterministic.
+  Use unordered assertions only when supported concurrency or asynchronous
+  execution makes the order nondeterministic.
 
 ## [Testing] Trace Clearing After Asynchronous Operations
 
@@ -66,31 +129,42 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
 - Metric points are different: there is no `hasTotalAttributeCount(...)` on
   metric points, so use `point.hasAttributes(Attributes.empty())` for empty
   metric-point checks.
+- In test assertions, use stable or incubating semconv `AttributeKey` constants
+  when both the name and type match. Tests can import either artifact directly.
+  For non-semconv keys used only in assertions, keep factory calls such as
+  `stringKey("name")` and `longKey("name")` inline in `equalTo(...)` rather than
+  introducing static key constants.
 - Do not introduce redundant `(long)` casts in `equalTo(longKey(...), value)`
   when `value` is already an `int` — the `equalTo(AttributeKey<Long>, int)`
-  overload exists.
+  overload exists. Keep the cast when a nullable conditional expression such
+  as `condition ? (long) intValue : null` must produce a boxed `Long`; removing
+  it can select the primitive overload and unbox `null`.
 
 ## [Testing] Mode-Dependent Expected Values
 
-- Database instrumentation tests run either the default or stable database
-  semconv mode. Do not add `database/dup` test tasks or expand assertions to
-  cover both modes at once.
-- Use `SemconvStabilityUtil.maybeStable(...)` when old and stable database keys
-  carry the same expected value:
+- Use the shared static `TestLatestDeps.testLatestDeps()` and
+  `SemconvStability.emitOld*Semconv()`, `emitStable*Semconv()`, or `emitPreview*Semconv()` accessors,
+  preferably via static imports, rather than repeating inline
+  `Boolean.getBoolean(...)` calls with the mode property names. A
+  module-specific experimental flag may use a per-class constant such as
+  `EXPERIMENTAL_ATTRIBUTES`; keep the conventional `experimental(value)`
+  helper for attribute values absent when the flag is off.
+- Name stable-selection accessors `emitStable*Semconv()` and preview-selection
+  accessors `emitPreview*Semconv()`.
+- Assert keys and values directly when expectations do not depend on a mode:
 
   ```java
-  equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH);
-  equalTo(maybeStable(DB_OPERATION), "info");
+  equalTo(DB_SYSTEM_NAME, ELASTICSEARCH);
+  equalTo(DB_OPERATION_NAME, "info");
+  equalTo(ERROR_TYPE, "42601");
   ```
 
-  Do not replace these with separate null-gated assertions for the old and
-  stable keys.
 - Keep short conditional expected values directly in the assertion when the
   expected values differ by mode or an attribute exists in only one mode:
 
   ```java
-  span.hasName(emitStableMessagingSemconv() ? "send orders" : "orders publish");
-  equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "42601" : null);
+  span.hasName(emitPreviewRpcSemconv() ? "Greeter/SayHello" : "helloworld.Greeter/SayHello");
+  equalTo(RPC_RESPONSE_STATUS_CODE, emitPreviewRpcSemconv() ? "OK" : null);
   ```
 
 - Do not extract the ternary into a helper such as `spanName(...)`,
@@ -104,22 +178,22 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
 
   ```java
   // Bad: the helper conditionally builds a list and hides the expected shape.
-  private static List<AttributeAssertion> databaseAttributes() {
+  private static List<AttributeAssertion> rpcAttributes() {
     List<AttributeAssertion> attributes = new ArrayList<>();
-    if (emitOldDatabaseSemconv()) {
-      attributes.add(equalTo(DB_USER, USER_DB));
+    if (emitOldRpcSemconv()) {
+      attributes.add(equalTo(RPC_GRPC_STATUS_CODE, 0L));
     }
-    if (emitStableDatabaseSemconv()) {
-      attributes.add(equalTo(ERROR_TYPE, "42601"));
+    if (emitPreviewRpcSemconv()) {
+      attributes.add(equalTo(RPC_RESPONSE_STATUS_CODE, "OK"));
     }
     return attributes;
   }
-  span.hasAttributesSatisfyingExactly(databaseAttributes());
+  span.hasAttributesSatisfyingExactly(rpcAttributes());
 
   // Good: pass each assertion directly and keep its mode check visible.
   span.hasAttributesSatisfyingExactly(
-      equalTo(DB_USER, emitOldDatabaseSemconv() ? USER_DB : null),
-      equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "42601" : null));
+      equalTo(RPC_GRPC_STATUS_CODE, emitOldRpcSemconv() ? 0L : null),
+      equalTo(RPC_RESPONSE_STATUS_CODE, emitPreviewRpcSemconv() ? "OK" : null));
   ```
 
 - The conventional `experimental(value)` helper is the one exception: keep it.
@@ -140,8 +214,8 @@ value. Fluent calls like `taskId.contains(jobName)` are already proper
 assertions — do **not** wrap them in `assertThat(value.contains(x)).isTrue()`,
 which degrades the failure message.
 
-Name the outer parameter `val` in Java (or `value` in Scala, where `val` is
-reserved). Use `v` only for a nested inner-lambda parameter.
+Name the outer parameter `val` in Java (or `value` in Kotlin and Scala, where
+`val` is reserved). Use `v` only for a nested inner-lambda parameter.
 
 This guidance applies only to attribute-assertion `satisfies(...)`; for
 `span.satisfies(...)`, `point.satisfies(...)`, etc. use a descriptive name

@@ -5,13 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import javax.annotation.Nullable;
 import org.redisson.client.RedisConnection;
 import org.redisson.client.codec.Codec;
 import org.redisson.client.protocol.CommandData;
@@ -43,20 +40,12 @@ public final class RedissonBatchContext {
     return context.with(KEY, false).with(CAPTURE_KEY, null);
   }
 
-  @Nullable
   public static Scope startCapture() {
-    if (!emitStableDatabaseSemconv()) {
-      return null;
-    }
     return mark(Context.current()).makeCurrent();
   }
 
-  @Nullable
   static Scope startCapture(
       RedissonBatchState state, RedisCommand<?> command, Codec codec, Object[] parameters) {
-    if (!emitStableDatabaseSemconv()) {
-      return null;
-    }
     Context context =
         Context.current()
             .with(KEY, true)
@@ -65,9 +54,6 @@ public final class RedissonBatchContext {
   }
 
   public static void captureCommand(Object batchCommand, Object future, int index) {
-    if (!emitStableDatabaseSemconv()) {
-      return;
-    }
     CommandCapture capture = Context.current().get(CAPTURE_KEY);
     if (capture != null) {
       capture.capture(batchCommand, future, index);
@@ -75,9 +61,7 @@ public final class RedissonBatchContext {
   }
 
   public static void markCommand(Object command) {
-    if (emitStableDatabaseSemconv()
-        && command instanceof CommandData
-        && isActive(Context.current())) {
+    if (command instanceof CommandData && isActive(Context.current())) {
       markCapturedCommand(command);
     }
   }
@@ -110,9 +94,6 @@ public final class RedissonBatchContext {
 
   public static boolean shouldSuppress(
       RedisConnection connection, RedissonRequest request, RedissonFutureMarker futureMarker) {
-    if (!emitStableDatabaseSemconv()) {
-      return false;
-    }
     Object channel = connection.getChannel();
     RedissonBatchMarker connectionMarker = CONNECTION_MARKER_FIELD.get(connection);
     boolean connectionMarked = connectionMarker != null && connectionMarker.matches(channel);

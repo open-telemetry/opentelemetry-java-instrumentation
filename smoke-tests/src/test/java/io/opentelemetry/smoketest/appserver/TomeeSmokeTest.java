@@ -70,6 +70,12 @@ abstract class TomeeSmokeTest extends AppServerTest {
   @AppServer(version = "8.0.16", jdk = "25-openj9", inReducedMatrix = true)
   static class Tomee8Jdk25Openj9 extends TomeeSmokeTest {}
 
+  @AppServer(version = "8.0.16", jdk = "27")
+  static class Tomee8Jdk27 extends TomeeSmokeTest {}
+
+  @AppServer(version = "8.0.16", jdk = "27-openj9", inReducedMatrix = true)
+  static class Tomee8Jdk27Openj9 extends TomeeSmokeTest {}
+
   @AppServer(version = "9.1.3", jdk = "11")
   static class Tomee9Jdk11 extends TomeeSmokeTest {}
 
@@ -93,4 +99,10 @@ abstract class TomeeSmokeTest extends AppServerTest {
 
   @AppServer(version = "9.1.3", jdk = "25-openj9", inReducedMatrix = true)
   static class Tomee9Jdk25Openj9 extends TomeeSmokeTest {}
+
+  @AppServer(version = "9.1.3", jdk = "27")
+  static class Tomee9Jdk27 extends TomeeSmokeTest {}
+
+  @AppServer(version = "9.1.3", jdk = "27-openj9", inReducedMatrix = true)
+  static class Tomee9Jdk27Openj9 extends TomeeSmokeTest {}
 }

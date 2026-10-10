@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
 import io.opentelemetry.api.trace.Span;
@@ -23,16 +21,6 @@ class SqsEventSpanLinksExtractor implements SpanLinksExtractor<SQSEvent> {
   public void extract(SpanLinksBuilder spanLinks, Context parentContext, SQSEvent event) {
     List<SQSMessage> records = event.getRecords();
     if (records == null) {
-      return;
-    }
-
-    if (!emitStableMessagingSemconv()) {
-      for (SQSMessage record : records) {
-        SpanContext creationSpanContext = creationSpanContext(record);
-        if (creationSpanContext.isValid()) {
-          spanLinks.addLink(creationSpanContext);
-        }
-      }
       return;
     }
 

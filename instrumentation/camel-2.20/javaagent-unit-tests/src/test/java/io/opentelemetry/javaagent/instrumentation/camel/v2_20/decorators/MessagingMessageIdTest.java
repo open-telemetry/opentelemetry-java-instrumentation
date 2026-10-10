@@ -21,23 +21,21 @@ class MessagingMessageIdTest {
 
   @ParameterizedTest
   @MethodSource("jmsComponents")
-  void jmsMessageId(String component, String system, boolean legacyMessageIdExpected) {
+  void jmsMessageId(String component, String system) {
     MessagingSpanDecorator decorator = MessagingSpanDecorator.create(component, system);
     Exchange exchange = mock(Exchange.class);
     Message message = mock(Message.class);
     when(exchange.getIn()).thenReturn(message);
     when(message.getHeader("JMSMessageID")).thenReturn("ID:123");
 
-    assertThat(decorator.getMessageId(exchange))
-        .isEqualTo(legacyMessageIdExpected ? "ID:123" : null);
-    assertThat(decorator.getStableMessageId(exchange)).isEqualTo("ID:123");
+    assertThat(decorator.getMessageId(exchange)).isEqualTo("ID:123");
   }
 
   private static Stream<Arguments> jmsComponents() {
     return Stream.of(
-        argumentSet("JMS", "jms", "jms", true),
-        argumentSet("simple JMS", "sjms", "jms", false),
-        argumentSet("AMQP", "amqp", "amqp", false),
-        argumentSet("legacy AMQP alias", "ampq", "amqp", false));
+        argumentSet("JMS", "jms", "jms"),
+        argumentSet("simple JMS", "sjms", "jms"),
+        argumentSet("AMQP", "amqp", "amqp"),
+        argumentSet("legacy AMQP alias", "ampq", "amqp"));
   }
 }

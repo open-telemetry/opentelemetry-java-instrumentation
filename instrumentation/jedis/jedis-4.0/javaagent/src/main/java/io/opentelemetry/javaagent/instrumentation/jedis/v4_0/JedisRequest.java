@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.util.ArrayList;
@@ -42,8 +42,7 @@ public abstract class JedisRequest {
     JedisConnectionInfo connectionInfo = getConnectionInfo(connection);
     String operationName = operationName(command);
     return new AutoValue_JedisRequest(
-        connectionInfo != null ? connectionInfo.getServerAddress() : null,
-        connectionInfo != null ? connectionInfo.getServerPort() : null,
+        connectionInfo != null ? connectionInfo.getServerTarget() : null,
         connectionInfo != null ? connectionInfo.getDatabaseIndex() : null,
         operationName,
         sanitizer.sanitize(operationName, args),
@@ -81,8 +80,7 @@ public abstract class JedisRequest {
     JedisRequest first = requests.get(0);
     JedisRequest request =
         new AutoValue_JedisRequest(
-            first.getServerAddress(),
-            first.getServerPort(),
+            first.getServerTarget(),
             first.getDatabaseIndex(),
             batchOperationName(requests, prefix),
             pipelineQueryText(requests),
@@ -99,10 +97,7 @@ public abstract class JedisRequest {
   }
 
   @Nullable
-  public abstract String getServerAddress();
-
-  @Nullable
-  public abstract Integer getServerPort();
+  public abstract RedisServerTarget getServerTarget();
 
   @Nullable
   public abstract Long getDatabaseIndex();
@@ -141,17 +136,13 @@ public abstract class JedisRequest {
     StringBuilder builder = new StringBuilder();
     for (JedisRequest request : requests) {
       String queryText = request.getQueryText();
-      String separator = builder.length() == 0 ? "" : batchQuerySeparator();
+      String separator = builder.length() == 0 ? "" : "; ";
       if (builder.length() + separator.length() + queryText.length() > LIMIT) {
         break;
       }
       builder.append(separator).append(queryText);
     }
     return builder.toString();
-  }
-
-  private static String batchQuerySeparator() {
-    return emitStableDatabaseSemconv() ? "; " : ";";
   }
 
   public void setSocket(@Nullable Socket socket) {

@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -43,9 +41,6 @@ public class RedissonBatchAdviceScope {
   @Nullable
   public static Scope capture(
       CommandBatchService service, RedisCommand<?> command, Codec codec, Object[] parameters) {
-    if (!emitStableDatabaseSemconv()) {
-      return null;
-    }
     RedissonBatchState state = BATCH_STATE_FIELD.get(service);
     if (state == null) {
       return null;
@@ -64,7 +59,7 @@ public class RedissonBatchAdviceScope {
       CommandBatchService service,
       RedissonFutureMarker futureMarker,
       @Nullable Long databaseIndex) {
-    if (emitStableDatabaseSemconv() && BATCH_STATE_FIELD.get(service) == null) {
+    if (BATCH_STATE_FIELD.get(service) == null) {
       BATCH_STATE_FIELD.set(service, new RedissonBatchState(futureMarker, databaseIndex));
     }
   }
@@ -82,9 +77,6 @@ public class RedissonBatchAdviceScope {
       Object options,
       Instrumenter<RedissonBatchRequest, Void> instrumenter,
       RedissonFutureMarker futureMarker) {
-    if (!emitStableDatabaseSemconv()) {
-      return null;
-    }
     RedissonBatchState state = BATCH_STATE_FIELD.get(service);
     if (state == null) {
       return null;

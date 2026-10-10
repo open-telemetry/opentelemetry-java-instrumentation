@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getDbSystemNameFromClassName;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.resolveDbSystemName;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.wrapContext;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.currentConstructionState;
 import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -21,7 +22,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientInfo;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.SqlConnectOptions;
@@ -68,14 +68,14 @@ class PoolInstrumentation implements TypeInstrumentation {
         @Advice.Origin("#t") String declaringTypeName) {
       CallDepth callDepth = CallDepth.forClass(Pool.class);
       if (callDepth.getAndIncrement() > 0) {
-        return new PoolConstructionState(callDepth, null);
+        return new PoolConstructionState(callDepth, null, null);
       }
 
       String dbSystemName = resolveDbSystemName(sqlConnectOptions, declaringTypeName);
       VertxSqlClientConstructionState constructionState =
           new VertxSqlClientConstructionState(singletonList(sqlConnectOptions), dbSystemName);
-      VertxSqlClientSingletons.setConstructionState(constructionState);
-      return new PoolConstructionState(callDepth, constructionState);
+      VertxSqlClientConstructionState previous = currentConstructionState().set(constructionState);
+      return new PoolConstructionState(callDepth, constructionState, previous);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -86,10 +86,11 @@ class PoolInstrumentation implements TypeInstrumentation {
       }
 
       VertxSqlClientConstructionState constructionState = state.getConstructionState();
-      VertxSqlClientSingletons.setConstructionState(null);
+      currentConstructionState().restore(state.getPreviousConstructionState());
       if (constructionState != null) {
         if (pool != null) {
-          constructionState.setDbSystemName(getDbSystemNameFromClassName(pool));
+          constructionState.setDbSystemName(
+              getDbSystemNameFromClassName(VertxSqlClientSingletons.unwrapPool(pool)));
         }
         constructionState.complete(pool);
       }
@@ -98,11 +99,15 @@ class PoolInstrumentation implements TypeInstrumentation {
     public static final class PoolConstructionState {
       private final CallDepth callDepth;
       @Nullable private final VertxSqlClientConstructionState constructionState;
+      @Nullable private final VertxSqlClientConstructionState previousConstructionState;
 
       public PoolConstructionState(
-          CallDepth callDepth, @Nullable VertxSqlClientConstructionState constructionState) {
+          CallDepth callDepth,
+          @Nullable VertxSqlClientConstructionState constructionState,
+          @Nullable VertxSqlClientConstructionState previousConstructionState) {
         this.callDepth = callDepth;
         this.constructionState = constructionState;
+        this.previousConstructionState = previousConstructionState;
       }
 
       public boolean isNested() {
@@ -113,6 +118,11 @@ class PoolInstrumentation implements TypeInstrumentation {
       public VertxSqlClientConstructionState getConstructionState() {
         return constructionState;
       }
+
+      @Nullable
+      public VertxSqlClientConstructionState getPreviousConstructionState() {
+        return previousConstructionState;
+      }
     }
   }
 
@@ -122,8 +132,8 @@ class PoolInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Future<SqlConnection> onExit(
         @Advice.This Pool pool, @Advice.Return Future<SqlConnection> future) {
-      VertxSqlClientInfo info = VertxSqlClientSingletons.getPoolClientInfo(pool);
-      return wrapContext(VertxSqlClientSingletons.attachClientInfo(future, info));
+      VertxSqlClientState state = VertxSqlClientSingletons.getPoolClientState(pool);
+      return wrapContext(VertxSqlClientSingletons.attachClientState(future, state));
     }
   }
 }

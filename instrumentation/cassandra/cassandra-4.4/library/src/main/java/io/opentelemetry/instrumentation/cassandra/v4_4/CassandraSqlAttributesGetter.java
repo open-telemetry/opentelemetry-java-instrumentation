@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.cassandra.v4_4;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
@@ -76,11 +75,9 @@ final class CassandraSqlAttributesGetter
     if (executionInfo == null) {
       return null;
     }
-    if (emitStableDatabaseSemconv()) {
-      InetSocketAddress peer = CassandraNetworkPeer.getExecutionInfoPeer(executionInfo);
-      if (peer != null) {
-        return peer;
-      }
+    InetSocketAddress peer = CassandraNetworkPeer.getExecutionInfoPeer(executionInfo);
+    if (peer != null) {
+      return peer;
     }
     Node coordinator = executionInfo.getCoordinator();
     if (coordinator == null) {
@@ -90,7 +87,7 @@ final class CassandraSqlAttributesGetter
     if (endPoint instanceof DefaultEndPoint) {
       // resolve() returns an existing InetSocketAddress, it does not do a dns resolve,
       InetSocketAddress coordinatorAddress = (InetSocketAddress) endPoint.resolve();
-      if (emitStableDatabaseSemconv() && coordinatorAddress.isUnresolved()) {
+      if (coordinatorAddress.isUnresolved()) {
         return null;
       }
       return coordinatorAddress;

@@ -22,6 +22,7 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
@@ -42,32 +43,32 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.lettuce.connection-telemetry.enabled=true")
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
+  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
+    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
   }
 
-  val testConnectionTelemetryEnabledStableSemconv =
-    register<Test>("testConnectionTelemetryEnabledStableSemconv") {
+  val testConnectionTelemetryEnabledPreviewSemconv =
+    register<Test>("testConnectionTelemetryEnabledPreviewSemconv") {
       testClassesDirs = sourceSets.test.get().output.classesDirs
       classpath = sourceSets.test.get().runtimeClasspath
       jvmArgs(
         "-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true",
-        "-Dotel.semconv-stability.opt-in=database,service.peer"
+        "-Dotel.semconv-stability.preview=service.peer"
       )
       systemProperty(
         "metadataConfig",
-        "otel.instrumentation.lettuce.connection-telemetry.enabled=true,otel.semconv-stability.opt-in=database,service.peer"
+        "otel.instrumentation.lettuce.connection-telemetry.enabled=true,otel.semconv-stability.preview=service.peer"
       )
     }
 
   check {
     dependsOn(
       testConnectionTelemetryEnabled,
-      testConnectionTelemetryEnabledStableSemconv,
-      testStableSemconv,
+      testConnectionTelemetryEnabledPreviewSemconv,
+      testPreviewSemconv,
       testExperimental
     )
   }

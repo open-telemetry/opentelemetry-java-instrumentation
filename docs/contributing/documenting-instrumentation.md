@@ -124,7 +124,7 @@ Display name is mostly used for UI purposes, and has two main uses:
 - Providing a more user-friendly name for the instrumentation than the module name
   (e.g., "Apache CXF JAX-RS 2.x" instead of "jaxrs-2.0-cxf-3.2").
 - Collapsing multiple related modules into a single display name
-  (e.g., "Akka Actors" for both "akka-actor-2.3" and "akka-actor-forkjoin-2.5").
+  (e.g., "Play WS" for both "play-ws-1.0" and "play-ws-2.0").
 
 ### Description (required)
 
@@ -230,7 +230,36 @@ Each configuration should include:
 - `description`: A brief description of what the configuration does.
 - `type`: The data type of the configuration value. Supported types are: `boolean`, `string`, `list`,
   and `map`. This describes the **flat** (system property) form.
-- `default`: The default value for the configuration.
+- `default`: The value used when the configuration is unset. Leave it out when an unset value falls
+  back to another setting, such as a per-module override of a common setting, and describe the
+  fallback in the `description` instead. The module must then also reference the setting it falls
+  back to (see below).
+- `deprecated` (optional): Set to `true` for a deprecated configuration. It is required exactly when
+  the description starts with "Deprecated".
+- `replaced_by` (optional): For a deprecated configuration, the name of the configuration that
+  replaces it.
+
+Configurations that many modules share are defined once in
+`instrumentation-docs/src/main/resources/shared-config-definitions.yaml` and referenced by id:
+
+```yaml
+configurations:
+  - name: otel.instrumentation.jedis.query-sanitization.enabled
+    declarative_name: java.jedis.query_sanitization.enabled
+    description: >
+      Enables query sanitization for Jedis queries. Overrides
+      `otel.instrumentation.common.db.query-sanitization.enabled` for this instrumentation; when
+      unset, that setting applies.
+    type: boolean
+  - ref: common.db.query-sanitization.enabled
+```
+
+The same file's `global_configurations` section documents settings read on behalf of every
+instrumentation, such as `otel.instrumentation.common.v3-preview`. Modules don't reference those.
+
+The generated `docs/declarative-configuration-example.yaml` sets each configuration to its default,
+so any entry can be copied on its own. It leaves out deprecated configurations and configurations
+without a `default`, because setting those can change behavior even to the value shown.
 
 If a configuration enables experimental attributes, list them, for example:
 

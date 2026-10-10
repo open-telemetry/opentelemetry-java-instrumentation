@@ -11,8 +11,17 @@
   
   <appender name="OpenTelemetry"
     class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
-    <logstashStructuredArgumentAttributesIncluded>*</logstashStructuredArgumentAttributesIncluded>
   </appender>
+
+  <appender name="StructuredSelector"
+    class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
+    <structuredAttributesIncluded>request-*</structuredAttributesIncluded>
+    <structuredAttributesExcluded>*-secret</structuredAttributesExcluded>
+  </appender>
+
+  <logger name="structured-selector-xml-test" level="INFO" additivity="false">
+    <appender-ref ref="StructuredSelector"/>
+  </logger>
 
   <root level="INFO">
     <appender-ref ref="console"/>

@@ -22,10 +22,4 @@ class SystemMetricsTest extends AbstractSystemMetricsTest {
   protected InstrumentationExtension testing() {
     return testing;
   }
-
-  @Override
-  @SuppressWarnings("deprecation") // overriding a deprecated abstract method
-  protected String scopeName() {
-    return "io.opentelemetry.oshi";
-  }
 }

@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
@@ -72,19 +72,17 @@ class LogbackLogstashStructuredArgsSelectorTest {
   private static Map<String, String> expectedStructuredArguments() {
     List<String> expectedKeys;
     switch (System.getProperty("testLogstashStructuredArgsConfiguration", "new")) {
-      case "legacy":
-        // the deprecated setting captures every structured argument
-        return new HashMap<>(STRUCTURED_ARGUMENTS);
-      case "precedence":
-        expectedKeys = singletonList("key1");
-        break;
       case "exclude-only":
         // an empty included list captures everything not excluded
         expectedKeys = asList("key1", "key2", "keyLong");
         break;
+      case "all":
+        return new HashMap<>(STRUCTURED_ARGUMENTS);
+      case "none":
+        expectedKeys = emptyList();
+        break;
       default:
-        // the default test task configures
-        // logstash-structured-argument-attributes.included=key?
+        // the default test task configures structured-attributes.included=key?
         expectedKeys = asList("key1", "key2");
         break;
     }

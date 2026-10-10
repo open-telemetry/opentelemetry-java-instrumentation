@@ -38,7 +38,6 @@ class AkkaHttpServerInstrumentationTest
   override protected def configure(
       options: HttpServerTestOptions
   ): Unit = {
-    super.configure(options)
     configureRouteServer(options)
   }
 

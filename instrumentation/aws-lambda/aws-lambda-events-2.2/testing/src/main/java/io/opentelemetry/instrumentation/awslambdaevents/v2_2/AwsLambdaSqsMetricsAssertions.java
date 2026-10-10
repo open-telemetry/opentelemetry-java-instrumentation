@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.v2_2;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -26,18 +25,6 @@ public class AwsLambdaSqsMetricsAssertions {
       long processCount,
       long consumedMessageCount,
       String errorType) {
-    if (!emitStableMessagingSemconv()) {
-      assertMetricNamesAbsent(
-          testing,
-          "messaging.process.duration",
-          "messaging.client.consumed.messages",
-          "messaging.publish.duration",
-          "messaging.publish.messages",
-          "messaging.receive.duration",
-          "messaging.receive.messages");
-      return;
-    }
-
     testing.waitAndAssertMetrics(
         instrumentationName,
         "messaging.process.duration",
@@ -83,17 +70,12 @@ public class AwsLambdaSqsMetricsAssertions {
                                                 equalTo(MESSAGING_SYSTEM, AWS_SQS),
                                                 equalTo(MESSAGING_DESTINATION_NAME, destination),
                                                 equalTo(ERROR_TYPE, errorType))))));
-    assertMetricNamesAbsent(
-        testing,
-        "messaging.publish.duration",
-        "messaging.publish.messages",
-        "messaging.receive.duration",
-        "messaging.receive.messages");
-  }
-
-  private static void assertMetricNamesAbsent(
-      InstrumentationExtension testing, String... metricNames) {
-    assertThat(testing.metrics()).extracting(MetricData::getName).doesNotContain(metricNames);
+    assertThat(testing.metrics())
+        .filteredOn(
+            metric -> metric.getInstrumentationScopeInfo().getName().equals(instrumentationName))
+        .extracting(MetricData::getName)
+        .containsExactlyInAnyOrder(
+            "messaging.process.duration", "messaging.client.consumed.messages");
   }
 
   private AwsLambdaSqsMetricsAssertions() {}

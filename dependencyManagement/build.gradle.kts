@@ -7,7 +7,7 @@ data class DependencySet(val group: String, val version: String, val modules: Li
 // this line is managed by .github/scripts/update-sdk-version.sh
 val otelSdkVersion = "1.66.0"
 val otelZipkinVersion = "1.64.0" // last published version, remove with Zipkin support in 3.0
-val otelContribVersion = "1.60.0-alpha"
+val otelContribVersion = "1.61.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
@@ -28,8 +28,8 @@ val DEPENDENCY_BOMS = listOf(
   // for some reason boms show up as runtime dependencies in license and vulnerability scans
   // even if they are only used by test dependencies, so not using junit bom since it is LGPL
 
-  "com.fasterxml.jackson:jackson-bom:2.22.2",
-  "com.google.guava:guava-bom:33.7.1-jre",
+  "com.fasterxml.jackson:jackson-bom:2.22.3",
+  "com.google.guava:guava-bom:33.7.2-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
@@ -39,11 +39,11 @@ val DEPENDENCY_BOMS = listOf(
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.1"
 val errorProneVersion = "2.50.0"
-val byteBuddyVersion = "1.18.13"
+val byteBuddyVersion = "1.18.14"
 val asmVersion = "9.10.1"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
-val slf4jVersion = "2.0.19"
+val slf4jVersion = "2.0.20"
 val semConvVersion = "1.44.0"
 val semConvAlphaVersion =  semConvVersion.replaceFirst("(-rc.*)?$".toRegex(), "-alpha$1")
 
@@ -86,7 +86,7 @@ val DEPENDENCIES = listOf(
   "io.r2dbc:r2dbc-proxy:1.1.6.RELEASE",
   "ch.qos.logback:logback-classic:1.3.16", // 1.4+ requires Java 11+
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
-  "com.uber.nullaway:nullaway:0.14.1",
+  "com.uber.nullaway:nullaway:0.14.2",
   "commons-beanutils:commons-beanutils:1.11.0",
   "commons-cli:commons-cli:1.11.0",
   "commons-codec:commons-codec:1.22.1",
@@ -105,7 +105,7 @@ val DEPENDENCIES = listOf(
   "io.opentelemetry.contrib:opentelemetry-cloudfoundry-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-baggage-processor:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-samplers:${otelContribVersion}",
-  "io.opentelemetry.proto:opentelemetry-proto:1.11.0-alpha",
+  "io.opentelemetry.proto:opentelemetry-proto:1.11.1-alpha",
   "io.opentelemetry:opentelemetry-exporter-zipkin:${otelZipkinVersion}",
   "io.opentelemetry:opentelemetry-extension-annotations:1.18.0", // deprecated, no longer part of bom
   "org.assertj:assertj-core:3.27.7",
@@ -124,7 +124,7 @@ val DEPENDENCIES = listOf(
 
   // OSGi runtime verification (see :smoke-tests-osgi). Versions track opentelemetry-java's osgi tests.
   "org.apache.felix:org.apache.felix.framework:7.0.5",
-  "org.apache.aries.spifly:org.apache.aries.spifly.dynamic.bundle:1.3.7",
+  "org.apache.aries.spifly:org.apache.aries.spifly.dynamic.bundle:1.3.8",
   "org.osgi:osgi.core:8.0.0",
   "org.osgi:org.osgi.test.junit5:1.3.0"
 )

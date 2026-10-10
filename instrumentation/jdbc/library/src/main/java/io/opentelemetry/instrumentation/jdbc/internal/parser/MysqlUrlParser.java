@@ -5,9 +5,14 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractAuthority;
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractAuthorityWithQueryAt;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractSubtype;
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.hasMultipleTargets;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parsePort;
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parseServerTargetGroup;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -31,7 +36,6 @@ import java.util.regex.Pattern;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-@SuppressWarnings("deprecation") // supporting old semconv until 3.0
 public final class MysqlUrlParser implements JdbcUrlParser {
 
   // copied from DbAttributes.DbSystemNameValues
@@ -65,8 +69,8 @@ public final class MysqlUrlParser implements JdbcUrlParser {
       system = OTHER_SQL;
     }
     ctx.system(system);
-    ctx.host(DEFAULT_HOST);
-    ctx.port(DEFAULT_PORT);
+    ctx.defaultHost(DEFAULT_HOST);
+    ctx.defaultPort(DEFAULT_PORT);
 
     ctx.applyUserProperty();
 
@@ -76,11 +80,10 @@ public final class MysqlUrlParser implements JdbcUrlParser {
 
     if (subtype != null) {
       // Has subprotocol (e.g., mysql:aurora://...)
-      ctx.subtype(subtype);
       parseMariaSubProtocol(jdbcUrl.substring(protoLoc + 3), ctx);
     } else if (protoLoc > 0) {
       // Standard URL format - delegate to GenericUrlParser
-      GenericUrlParser.INSTANCE.parse(jdbcUrl, ctx);
+      GenericUrlParser.INSTANCE.parse(jdbcUrl, ctx, DEFAULT_PORT);
     } else {
       // Non-standard format: type/host:port/db?params
       parseNonStandardUrl(jdbcUrl, ctx);
@@ -145,6 +148,12 @@ public final class MysqlUrlParser implements JdbcUrlParser {
   }
 
   private static void parseMariaSubProtocol(String jdbcUrl, ParseContext ctx) {
+    if (!applyHostGroup(jdbcUrl, ctx)) {
+      ctx.host(null);
+      ctx.port(null);
+      return;
+    }
+
     int hostEndLoc;
     int ipv6End = jdbcUrl.startsWith("[") ? jdbcUrl.indexOf("]") : -1;
     int sectionEnd = indexOf(jdbcUrl, Math.max(0, ipv6End), ':', '/', '?', ',');
@@ -211,12 +220,25 @@ public final class MysqlUrlParser implements JdbcUrlParser {
     ctx.applyCommonParams(jdbcUrl, "?", "&");
   }
 
+  private static boolean applyHostGroup(String jdbcUrl, ParseContext ctx) {
+    String authority = extractAuthority("mariadb://" + jdbcUrl);
+    if (authority == null) {
+      authority = extractAuthorityWithQueryAt(jdbcUrl);
+      if (authority == null) {
+        return false;
+      }
+    }
+    DbServerTarget target = parseServerTargetGroup(authority, DEFAULT_PORT);
+    if (target != null || hasMultipleTargets(jdbcUrl)) {
+      ctx.resolveConfiguredServerTarget(target);
+    }
+    return true;
+  }
+
   private static final Pattern HOST_PATTERN =
       Pattern.compile("\\(\\s*host\\s*=\\s*([^ )]+)\\s*\\)");
   private static final Pattern PORT_PATTERN =
       Pattern.compile("\\(\\s*port\\s*=\\s*([\\d]+)\\s*\\)");
-  private static final Pattern USER_PATTERN =
-      Pattern.compile("\\(\\s*user\\s*=\\s*([^ )]+)\\s*\\)");
 
   private static void parseMariaAddress(String jdbcUrl, ParseContext ctx) {
     int addressEnd = jdbcUrl.indexOf(",address=");
@@ -230,11 +252,6 @@ public final class MysqlUrlParser implements JdbcUrlParser {
     Matcher portMatcher = PORT_PATTERN.matcher(addressUrl);
     if (portMatcher.find()) {
       ctx.port(Integer.parseInt(portMatcher.group(1)));
-    }
-
-    Matcher userMatcher = USER_PATTERN.matcher(addressUrl);
-    if (userMatcher.find()) {
-      ctx.user(userMatcher.group(1));
     }
   }
 }

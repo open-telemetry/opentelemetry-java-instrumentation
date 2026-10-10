@@ -28,7 +28,7 @@ differentiate between these configurations by using the `metadataConfig` system 
 telemetry is written to a file, the value of this property will be included, or it will default to
 a `default` attribution.
 
-For example, to collect and write metadata for the `otel.semconv-stability.opt-in=database` option
+For example, to collect and write metadata for the `otel.semconv-stability.preview=rpc` option
 set for an instrumentation:
 
 ```kotlin
@@ -37,15 +37,15 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  val testPreviewSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.preview=rpc")
 
     systemProperty("collectMetadata", otelProps.collectMetadata)
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc")
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testPreviewSemconv)
   }
 }
 ```
@@ -66,41 +66,41 @@ or use the helper script that will run only the currently supported tests (recom
 
 ## Instrumentation Hierarchy
 
-An "InstrumentationModule" represents a module that targets specific code in a
-framework/library/technology. Each module will have a name, a namespace, and a group.
+The repository contains flat modules, version groups, and nested framework groups. For example:
 
-Using these structures as examples:
-
-```
-├── instrumentation
-│   ├── clickhouse-client-05
-│   ├── jaxrs
-│   │   ├── jaxrs-1.0
-│   │   ├── jaxrs-2.0
-│   ├── spring
-│   │   ├── spring-cloud-gateway
-│   │   │   ├── spring-cloud-gateway-2.0
-│   │   │   ├── spring-cloud-gateway-2.2
-│   │   │   └── spring-cloud-gateway-common
+```text
+instrumentation/
+├── grpc-1.6/
+├── netty/
+│   ├── netty-3.8/
+│   └── netty-4.1/
+└── spring/
+    └── spring-webmvc/
+        ├── spring-webmvc-3.1/
+        └── spring-webmvc-6.0/
 ```
 
-Results in the following:
+The doc generator uses the full module-directory name as the module's name. Namespace and group
+currently both use the prefix before the first hyphen in that name, regardless of directory nesting:
 
-- Name - the full name of the instrumentation module
-  - `clickhouse-client-05`, `jaxrs-1.0`, `spring-cloud-gateway-2.0`
-- Namespace - direct parent. if none, use name and strip version
-  - `clickhouse-client`, `jaxrs`, `spring-cloud-gateway`
-- Group - top most parent
-  - `clickhouse-client`, `jaxrs`, `spring`
+| Module name         | Namespace | Group    |
+| ------------------- | --------- | -------- |
+| `grpc-1.6`          | `grpc`    | `grpc`   |
+| `netty-4.1`         | `netty`   | `netty`  |
+| `spring-webmvc-3.1` | `spring`  | `spring` |
 
-This information is also referenced in `InstrumentationModule` code for each module:
+Namespace and group are documentation groupings, not javaagent enablement selectors.
+The names registered by a javaagent `InstrumentationModule` determine its selectors. In v3 preview,
+the primary normally matches the full module-directory name, followed by a versionless secondary:
 
 ```java
-public class SpringWebInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
-  public SpringWebInstrumentationModule() {
-    super("spring-web", "spring-web-3.1");
-  }
+public SpringWebMvcInstrumentationModule() {
+  super(
+      AgentCommonConfig.get().isV3Preview() ? "spring-webmvc-3.1" : "spring-webmvc",
+      AgentCommonConfig.get().isV3Preview()
+          ? new String[] {"spring-webmvc"}
+          : new String[] {"spring-webmvc-3.1"});
+}
 ```
 
 ## Instrumentation metadata
@@ -110,8 +110,7 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
   - `internal` - Instrumentation that is used internally by the OpenTelemetry Java Agent
   - `custom` - Utilities that are used to create custom instrumentation
 - name
-  - Identifier for instrumentation module, used to enable/disable
-  - Configured in `InstrumentationModule` code for each module
+  - Identifier derived from the full instrumentation module-directory name
 - semantic_conventions
   - The semantic conventions that the instrumentation module adheres to
   - Options are:
@@ -184,6 +183,15 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
   - List of span kinds the instrumentation module generates, including the attributes and their types.
   - Emitted inline under each telemetry `when` block (spans are not yet part of the definitions catalog).
   - Separate `when` blocks distinguish spans emitted by default vs via configuration options.
+- events (referenced via `event_refs`)
+  - Each telemetry `when` block lists `event_refs`: the ids of event definitions the module emits.
+  - Each id resolves to an entry in the top-level `definitions.events` catalog.
+  - An event is a log record carrying an event name, for example the GenAI message events or the
+    exception events emitted when `otel.semconv.exception.signal.preview=logs` is set.
+  - Each definition records the event `name`, its `severity` (omitted when the instrumentation does
+    not set one) and its attributes.
+  - This is the _generated_ representation, produced automatically from collected telemetry. There is
+    no author-time catalog and no manual authoring path for events.
 
 ### Definitions catalog
 
@@ -207,6 +215,11 @@ definitions:
       data_type: HISTOGRAM
       unit: s
       attributes: [...]
+  events:
+    db.client.operation.exception-1a2b3c4d:  # <event name>-<short content hash>
+      name: db.client.operation.exception
+      severity: WARN
+      attributes: [...]
 libraries:
 - name: java-http-client
   configuration_refs:
@@ -215,6 +228,8 @@ libraries:
   - when: default
     metric_refs:
     - http.client.request.duration-1a2b3c4d
+    event_refs:
+    - db.client.operation.exception-1a2b3c4d
 ```
 
 Configuration ids are the curated ids from the shared registry (see below) for shared options, or the
@@ -370,19 +385,41 @@ name is determined by the instrumentation module name: `io.opentelemetry.{instru
 We will implement gatherers for the schemaUrl and scope attributes when instrumentations start
 implementing them.
 
-### Spans and Metrics
+### Spans, Metrics and Events
 
 In order to identify what telemetry is emitted from instrumentations, we can hook into the
-`InstrumentationTestRunner` class and collect the metrics and spans generated during runs. We can then
-leverage the `afterTestClass()` in the Agent and library test runners to then write this information
-into temporary files. When we analyze the instrumentation modules, we can read these files and
-generate the telemetry section of the instrumentation-list.yaml file.
+`InstrumentationTestRunner` class and collect the metrics, spans and events generated during runs. We
+can then leverage the `afterTestClass()` in the Agent and library test runners to then write this
+information into temporary files. When we analyze the instrumentation modules, we can read these
+files and generate the telemetry section of the instrumentation-list.yaml file.
 
-The data is written into a `.telemetry` directory in the root of each instrumentation module. This
-data will be excluded from git and just generated on demand.
+The data is written into a `.telemetry` directory in the root of each instrumentation module, as
+`metrics-*.yaml`, `spans-*.yaml`, `events-*.yaml` and `scope-*.yaml`. This data will be excluded from
+git and just generated on demand.
 
 Each file has a `when` value along with the list of metrics that indicates whether the telemetry is
 emitted by default or via a configuration option.
+
+Spans and metrics are collected inside the `waitAndAssertTraces` / `waitAndAssertMetrics` assertion
+helpers. A successful metric assertion collects all currently exported metrics, accumulating the
+union of attribute names and types across every data point and collected snapshot for each scope
+and metric name. Tests should wait for operations with distinct attribute sets before completing
+their assertions so that those attributes are observed. Events are instead swept up after
+every test, so they are captured regardless of how the test asserted on them. A log record counts as
+an event when it carries an event name, set either via `LogRecordBuilder.setEventName(...)` or via an
+`event.name` attribute; ordinary log records, such as those produced by the logging library bridges,
+are ignored.
+
+An event is keyed by its name together with its severity, so an instrumentation that emits the same
+event at two severities is documented as two shapes. The default `exception` event does exactly
+this: `ERROR` for server and consumer operations, `WARN` for client and producer ones.
+
+Telemetry only reaches the generated list for test tasks listed in
+`.github/scripts/instrumentations.sh`. A task that sets a non-default configuration must also set
+the `metadataConfig` system property to that configuration, otherwise its telemetry is recorded
+under `when: default`. The exception events, for example, are collected by the
+`testExceptionSignalLogs` tasks, which set
+`metadataConfig` to `otel.semconv.exception.signal.preview=logs`.
 
 #### Manual Telemetry Documentation
 

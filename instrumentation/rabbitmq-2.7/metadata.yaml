@@ -8,17 +8,9 @@ configurations:
     declarative_name: java.rabbitmq.experimental_span_attributes/development
     description: >
       Enables experimental span attributes `rabbitmq.command`, `rabbitmq.delivery_mode`,
-      `rabbitmq.queue`, and `rabbitmq.record.queue_time_ms`.
-    type: boolean
-    default: false
-  - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
-    declarative_name: java.common.messaging.receive_telemetry/development.enabled
-    description: >
-      Enables consumer spans for RabbitMQ `basicGet` receive operations when legacy messaging
-      semantic conventions are emitted. Stable messaging semantic conventions emit these spans
-      regardless of this setting.
+      `rabbitmq.queue`, `rabbitmq.record.queue_time_ms`, `messaging.rabbitmq.vhost.name`, and
+      `messaging.rabbitmq.cluster.name`.
     type: boolean
     default: false
   - ref: messaging.headers.included
   - ref: messaging.headers.excluded
-  - ref: messaging.capture-headers

@@ -113,6 +113,7 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
   testImplementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
   testImplementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
+  testImplementation("io.opentelemetry.contrib:opentelemetry-samplers")
   testImplementation("io.opentelemetry:opentelemetry-exporter-logging")
   testImplementation("io.opentelemetry:opentelemetry-exporter-otlp")
   testImplementation("io.opentelemetry:opentelemetry-exporter-zipkin")
@@ -177,6 +178,18 @@ val testSpring3 =
 
 testing {
   suites {
+    register<JvmTestSuite>("testLog4jAppender") {
+      dependencies {
+        implementation(project())
+        implementation("io.opentelemetry:opentelemetry-sdk")
+        implementation("io.opentelemetry:opentelemetry-sdk-testing")
+        implementation("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
+
+        implementation(project(":instrumentation:log4j:log4j-appender-2.17:library"))
+        implementation("org.apache.logging.log4j:log4j-core:2.17.0")
+      }
+    }
+
     register<JvmTestSuite>("testLogbackAppender") {
       dependencies {
         implementation(project())
@@ -186,6 +199,7 @@ testing {
 
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
         implementation(project(":instrumentation:logback:logback-mdc-1.0:library"))
+        implementation("net.logstash.logback:logstash-logback-encoder:6.6")
         // using the same versions as in the spring-boot-autoconfigure
         implementation("ch.qos.logback:logback-classic") {
           version {
@@ -364,19 +378,11 @@ tasks {
     from(sourceSets["javaSpring4"].java)
   }
 
-  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .matching { it.name == "test" || it.name == "testSpring2" || it.name == "testSpring4" }
-    .map { suite ->
-      register<Test>("${suite.name}StableSemconv") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        jvmArgs("-Dotel.semconv-stability.opt-in=database")
-        isEnabled = project.tasks.named(suite.name).get().enabled
-      }
-    }
-
   check {
-    dependsOn(testing.suites, stableSemconvSuites)
+    dependsOn(testing.suites)
   }
+}
+
+configurations.named("testLog4jAppenderRuntimeClasspath") {
+  exclude(group = "ch.qos.logback")
 }

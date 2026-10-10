@@ -38,7 +38,7 @@ class DruidInstrumentationTest extends AbstractDruidInstrumentationTest {
     DruidDataSource dataSource = createDataSource();
     dataSource.setUrl("jdbc:postgresql://db.example:5432/orders");
 
-    assertDataSourceName(dataSource, "db.example:5432/orders");
+    assertDataSourceName(dataSource, "orders");
   }
 
   @Test
@@ -46,7 +46,7 @@ class DruidInstrumentationTest extends AbstractDruidInstrumentationTest {
     DruidDataSource dataSource = createDataSource();
     dataSource.setUrl("jdbc:postgresql://[2001:db8::1]:5432/orders");
 
-    assertDataSourceName(dataSource, "[2001:db8::1]:5432/orders");
+    assertDataSourceName(dataSource, "orders");
   }
 
   @Test
@@ -57,7 +57,7 @@ class DruidInstrumentationTest extends AbstractDruidInstrumentationTest {
     dataSource.addConnectionProperty("portNumber", "5433");
     dataSource.addConnectionProperty("databaseName", "inventory");
 
-    assertDataSourceName(dataSource, "properties.example:5433/inventory");
+    assertDataSourceName(dataSource, "inventory");
   }
 
   @Test

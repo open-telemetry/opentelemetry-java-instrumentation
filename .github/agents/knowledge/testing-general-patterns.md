@@ -1,9 +1,48 @@
 # [Testing] General Test Patterns
 
-## Quick Reference
+Consult this article when changing test structure, assertions, resource
+cleanup, or mode-dependent expectations. It gives the setup and API details
+behind the shorter Java test instructions.
 
-- Use when: test files (`**/src/test/**`) are in scope
-- Review focus: assertion style, test class visibility, test method signatures and throws clauses, resource cleanup patterns, attribute assertion patterns
+## Javaagent integration coverage versus unit coverage
+
+Unit suites and legacy `javaagent-unit-tests` projects exercise helper or instrumentation classes
+directly without installing the javaagent against a live target library. They do not verify agent
+loading, class transformation, or runtime behavior of clients, pools, clusters, sentinels, and
+other integrations.
+
+When a change must support multiple runtime versions, retain real agent-backed integration tests
+for each required version. Keep tests that run on the baseline in the default `test` suite and
+place only newer-version-specific tests in a dedicated `JvmTestSuite`; do not count a unit suite
+as coverage for the missing integration runtime.
+
+## Instrumentation enablement selectors
+
+Javaagent selectors such as `otel.instrumentation.<name>.enabled` are escape
+hatches for disabling buggy instrumentation until a fix is available, not a
+recommended way to tune telemetry.
+
+Do not add per-instrumentation selector tests, including for new modules,
+renames, aliases, or consolidations:
+
+- No `instrumentationNames()` or name-order assertions.
+- No enable/disable matrices, precedence, fallback, legacy/v3-preview, flat/YAML
+  parity, or deprecation-warning checks.
+- No test projects, source sets, JVM variants, fixtures, or dependencies solely
+  for those checks.
+
+This applies to unit tests and installed-agent tests alike. Test shared
+enablement and alias-helper changes centrally, not in every caller. Existing
+coverage includes `InstrumentationModuleInstallerTest` for flat resolution and
+`AgentDistributionConfigTest` for declarative resolution.
+
+Keep instrumentation behavior and compatibility coverage, including propagation,
+scopes, runtime versions, and Muzzle. Tests may use selectors to disable unrelated
+instrumentation without testing the selectors themselves.
+
+Changes to [default enablement](testing-default-enablement.md), feature settings,
+and experimental telemetry still need behavior coverage. An `.enabled` suffix
+alone does not make a setting an instrumentation selector.
 
 ## Assertion Framework
 
@@ -292,7 +331,8 @@ expected:
 
 - Experimental attributes (`-Dotel.instrumentation.<module>.experimental-*=true`) — see
   [testing-experimental-flags.md](testing-experimental-flags.md).
-- Semconv stability (`-Dotel.semconv-stability.opt-in=...`) — see
+- Semconv selection (`-Dotel.semconv-stability.opt-in=<domain>` for selectable stable
+  conventions or `-Dotel.semconv-stability.preview=<domain>` for preview conventions), see
   [testing-semconv-stability.md](testing-semconv-stability.md).
 - `testLatestDeps` Gradle property — runs against the newest supported library versions
   instead of the pinned earliest-supported ones.
@@ -306,33 +346,24 @@ site.
 | Flag                                           | Shared accessor                                                                                                    | Where it lives                                                                  |
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
 | `-PtestLatestDeps=true`                        | `testLatestDeps()`                                                                                                 | `io.opentelemetry.instrumentation.testing.util.TestLatestDeps` (testing-common) |
-| `otel.semconv-stability.opt-in=…`              | `emitStableDatabaseSemconv()`, `emitOldDatabaseSemconv()`, `emitStableCodeSemconv()`, etc.                         | `io.opentelemetry.instrumentation.api.internal.SemconvStability`                |
+| `otel.semconv-stability.opt-in=<domain>`       | the domain's `emitOld*Semconv()` / `emitStable*Semconv()` accessors                                                | `io.opentelemetry.instrumentation.api.internal.SemconvStability`                |
+| `otel.semconv-stability.preview=<domain>`      | the domain's `emitOld*Semconv()` / `emitPreview*Semconv()` accessors                                               | `io.opentelemetry.instrumentation.api.internal.SemconvStability`                |
 | `otel.instrumentation.<module>.experimental-*` | per-module `EXPERIMENTAL_ATTRIBUTES` constant — see [testing-experimental-flags.md](testing-experimental-flags.md) | within the test class                                                           |
+
+Replace `<domain>` with a supported selector. Use `emitStable*Semconv()` for stable selection
+and `emitPreview*Semconv()` for preview selection.
 
 ### Mode-dependent expected values
 
-Database instrumentation tests run either the default or stable database
-semconv mode. Do not add `database/dup` test tasks or expand assertions to
-cover both modes at once. Duplicate-mode coverage belongs in tests for the
-semconv stability API itself.
-
-Use `SemconvStabilityUtil.maybeStable(...)` when old and stable database keys
-carry the same expected value:
+Assert keys and values directly when expectations do not depend on a mode:
 
 ```java
-equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH)
-equalTo(maybeStable(DB_OPERATION), "info")
+equalTo(DB_SYSTEM_NAME, ELASTICSEARCH)
+equalTo(DB_OPERATION_NAME, "info")
+equalTo(ERROR_TYPE, "42601")
 ```
 
-Do not replace these with separate null-gated assertions for the old and stable
-keys:
-
-```java
-equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? ELASTICSEARCH : null)
-equalTo(DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? ELASTICSEARCH : null)
-```
-
-When no established semconv utility applies, put the ternary inside the
+For selectable domains, when no established semconv utility applies, put the ternary inside the
 `equalTo` value or single attribute key. Do not duplicate two whole
 `hasAttributesSatisfyingExactly(...)` blocks under a `flag ? a : b`. This
 includes attributes that exist in only one mode and attributes whose expected
@@ -340,8 +371,8 @@ values differ by mode. The assertion API treats `null` as "expect attribute
 absent":
 
 ```java
-equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB)
-equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "42601" : null)
+equalTo(RPC_GRPC_STATUS_CODE, emitOldRpcSemconv() ? 0L : null)
+equalTo(RPC_RESPONSE_STATUS_CODE, emitPreviewRpcSemconv() ? "OK" : null)
 equalTo(SOME_KEY, experimental("value"))
 span.hasName(testLatestDeps() ? "GET" : "HTTP GET")
 .hasParent(trace.getSpan(testLatestDeps() ? 0 : 1))
@@ -365,20 +396,20 @@ derivation only:
 
 ```java
 // Bad: the helper conditionally builds a list and hides the expected shape.
-private static List<AttributeAssertion> databaseAttributes() {
+private static List<AttributeAssertion> rpcAttributes() {
   List<AttributeAssertion> attributes = new ArrayList<>();
-  if (emitOldDatabaseSemconv()) {
-    attributes.add(equalTo(DB_USER, USER_DB));
+  if (emitOldRpcSemconv()) {
+    attributes.add(equalTo(RPC_GRPC_STATUS_CODE, 0L));
   }
-  if (emitStableDatabaseSemconv()) {
-    attributes.add(equalTo(ERROR_TYPE, "42601"));
+  if (emitPreviewRpcSemconv()) {
+    attributes.add(equalTo(RPC_RESPONSE_STATUS_CODE, "OK"));
   }
   return attributes;
 }
-span.hasAttributesSatisfyingExactly(databaseAttributes());
+span.hasAttributesSatisfyingExactly(rpcAttributes());
 
 // Good: pass each assertion directly and keep its mode check visible.
 span.hasAttributesSatisfyingExactly(
-    equalTo(DB_USER, emitOldDatabaseSemconv() ? USER_DB : null),
-    equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "42601" : null));
+    equalTo(RPC_GRPC_STATUS_CODE, emitOldRpcSemconv() ? 0L : null),
+    equalTo(RPC_RESPONSE_STATUS_CODE, emitPreviewRpcSemconv() ? "OK" : null));
 ```

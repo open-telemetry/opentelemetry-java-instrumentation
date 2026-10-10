@@ -6,21 +6,25 @@
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+import org.springframework.amqp.core.Message;
 
 public class SpringRabbitSingletons {
 
@@ -48,18 +52,34 @@ public class SpringRabbitSingletons {
             .addAttributesExtractor(NetworkAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(new SpringRabbitExtraAttributesExtractor())
             .addOperationMetrics(MessagingProcessMetrics.get())
-            .addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
-    if (emitStableMessagingSemconv()) {
-      builder.addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter));
-    }
+            .addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages())
+            .addContextCustomizer(
+                (context, request, startAttributes) -> SpringRabbitErrorHolder.init(context));
+    builder.addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter));
     setMessagingProcessExceptionEventExtractor(builder);
 
-    instrumenter =
-        MessagingProcessInstrumenterFactory.create(
-            builder,
-            openTelemetry.getPropagators().getTextMapPropagator(),
-            new MessageHeaderGetter(),
-            false);
+    MessageHeaderGetter headerGetter = new MessageHeaderGetter();
+    builder.addSpanLinksExtractor(
+        (links, parentContext, request) -> {
+          for (Message message : request.getMessages()) {
+            SpanContext creationContext =
+                Span.fromContext(
+                        openTelemetry
+                            .getPropagators()
+                            .getTextMapPropagator()
+                            .extract(Context.root(), message, headerGetter))
+                    .getSpanContext();
+            links.addLink(creationContext);
+          }
+        });
+    builder.addContextCustomizer(
+        MessagingProcessContextCustomizer.create(
+            (parentContext, request) ->
+                openTelemetry
+                    .getPropagators()
+                    .getTextMapPropagator()
+                    .extract(parentContext, request.getMessage(), headerGetter)));
+    instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
   public static Instrumenter<SpringRabbitRequest, Void> instrumenter() {

@@ -27,13 +27,11 @@ import java.util.Map;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-@SuppressWarnings("deprecation") // supporting old semconv until 3.0
 public final class DerbyUrlParser implements JdbcUrlParser {
 
   // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String DERBY = "derby";
 
-  private static final String DEFAULT_USER = "APP";
   private static final int DEFAULT_PORT = 1527;
   private static final String[] SIMPLE_MODES = {"memory", "classpath", "jar"};
 
@@ -44,7 +42,6 @@ public final class DerbyUrlParser implements JdbcUrlParser {
   @Override
   public void parse(String jdbcUrl, ParseContext ctx) {
     ctx.system(DERBY);
-    ctx.user(DEFAULT_USER);
 
     ctx.applyUserProperty();
 
@@ -72,9 +69,6 @@ public final class DerbyUrlParser implements JdbcUrlParser {
    */
   private static void applyParamsAsFallback(String paramString, ParseContext ctx) {
     Map<String, String> params = splitQuery(paramString, ";");
-    if (params.containsKey("user")) {
-      ctx.user(params.get("user"));
-    }
     // databaseName attribute is fallback only — subname (path) takes priority
     if (ctx.databaseName() == null) {
       String databaseName = params.get("databasename");
@@ -88,7 +82,6 @@ public final class DerbyUrlParser implements JdbcUrlParser {
     // Handle network mode (starts with //)
     if (details.startsWith("//")) {
       parseNetworkMode(details, ctx);
-      ctx.subtype("network");
       return;
     }
 
@@ -102,7 +95,6 @@ public final class DerbyUrlParser implements JdbcUrlParser {
       if (databaseName != null && !databaseName.isEmpty()) {
         ctx.databaseName(databaseName);
       }
-      ctx.subtype("directory");
       return;
     }
 
@@ -114,7 +106,6 @@ public final class DerbyUrlParser implements JdbcUrlParser {
         if (!databaseName.isEmpty()) {
           ctx.databaseName(databaseName);
         }
-        ctx.subtype(mode);
         return;
       }
     }
@@ -123,7 +114,6 @@ public final class DerbyUrlParser implements JdbcUrlParser {
     if (!details.isEmpty()) {
       ctx.databaseName(details);
     }
-    ctx.subtype("directory");
   }
 
   private static String parseDirectoryName(String urlInstance) {
@@ -138,6 +128,7 @@ public final class DerbyUrlParser implements JdbcUrlParser {
   }
 
   private static void parseNetworkMode(String details, ParseContext ctx) {
+    ctx.defaultPort(DEFAULT_PORT);
     String url = details.substring("//".length());
 
     int instanceLoc = url.indexOf("/");
@@ -161,7 +152,6 @@ public final class DerbyUrlParser implements JdbcUrlParser {
       }
     } else {
       ctx.host(url);
-      ctx.port(DEFAULT_PORT);
     }
   }
 }

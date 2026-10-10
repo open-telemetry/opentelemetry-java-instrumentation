@@ -6,10 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONNECTION_ADDRESS;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONNECTION_DATABASE_INDEX;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_ADDRESS;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_DATABASE_INDEX;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.connectInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.nameEndsWith;
@@ -24,9 +20,9 @@ import io.lettuce.core.RedisURI;
 import io.lettuce.core.protocol.DefaultEndpoint;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -89,20 +85,9 @@ class LettuceClientInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      int databaseIndex = redisUri.getDatabase();
-      ENDPOINT_DATABASE_INDEX.set(endpoint, databaseIndex);
-      if (connection != null) {
-        CONNECTION_DATABASE_INDEX.set(connection, databaseIndex);
-      }
-
-      String host = redisUri.getHost();
-      if (host != null) {
-        InetSocketAddress address = InetSocketAddress.createUnresolved(host, redisUri.getPort());
-        ENDPOINT_ADDRESS.set(endpoint, address);
-        if (connection != null) {
-          CONNECTION_ADDRESS.set(connection, address);
-        }
-      }
+      RedisServerTarget target = LettuceServerTargets.of(redisUri);
+      LettuceConnectionState.captureEndpointAndConnection(
+          endpoint, connection, redisUri.getDatabase(), target);
     }
   }
 

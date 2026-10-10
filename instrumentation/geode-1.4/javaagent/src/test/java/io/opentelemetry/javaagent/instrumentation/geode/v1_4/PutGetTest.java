@@ -5,20 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.geode.v1_4;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
-import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.GEODE;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,6 +21,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.nio.file.Path;
 import java.util.stream.Stream;
 import org.apache.geode.cache.Region;
 import org.apache.geode.cache.client.ClientCache;
@@ -43,30 +38,15 @@ import org.apache.geode.pdx.PdxWriter;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.images.builder.ImageFromDockerfile;
-import org.testcontainers.utility.MountableFile;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class PutGetTest {
-  private static final int GEODE_PORT = 40404;
-
-  private static final GenericContainer<?> geodeServer =
-      createGeodeServer()
-          .withExposedPorts(GEODE_PORT)
-          .withCopyFileToContainer(
-              MountableFile.forClasspathResource("geode-cache.xml"), "/geode-cache.xml")
-          .withCommand(
-              "sh",
-              "-c",
-              "gfsh -e \"start server --name=test-server"
-                  + " --cache-xml-file=/geode-cache.xml"
-                  + " --max-heap=256m\""
-                  + " && tail -F /test-server/test-server.log");
+  private static final String SERVER_HOST = "localhost";
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -76,24 +56,16 @@ class PutGetTest {
 
   private static ClientCache cache;
   private static Region<Object, Object> region;
-
-  private static GenericContainer<?> createGeodeServer() {
-    if (testLatestDeps()) {
-      return new GenericContainer<>(
-          new ImageFromDockerfile().withFileFromClasspath("Dockerfile", "geode-2.0.2.Dockerfile"));
-    }
-    return new GenericContainer<>("apachegeode/geode:1.4.0");
-  }
+  private static int serverPort;
 
   @BeforeAll
-  static void setUp() {
-    cleanup.deferAfterAll(geodeServer::stop);
-    geodeServer.start();
+  static void setUp(@TempDir Path tempDir) {
+    // Geode 2.x does not publish a Docker image, so run the resolved test version in a child JVM.
+    GeodeServerProcess geodeServer = GeodeServerProcess.start(tempDir);
+    cleanup.deferAfterAll(geodeServer);
+    serverPort = geodeServer.getPort();
 
-    cache =
-        new ClientCacheFactory()
-            .addPoolServer(geodeServer.getHost(), geodeServer.getMappedPort(GEODE_PORT))
-            .create();
+    cache = new ClientCacheFactory().addPoolServer(SERVER_HOST, serverPort).create();
     cleanup.deferAfterAll(cache);
 
     ClientRegionFactory<Object, Object> regionFactory =
@@ -128,10 +100,10 @@ class PutGetTest {
   void testConfiguredEndpointTargets(int serverCount) {
     PoolFactory poolFactory = PoolManager.createFactory();
     if (serverCount == 0) {
-      poolFactory.addLocator(geodeServer.getHost(), 1);
+      poolFactory.addLocator(SERVER_HOST, 1);
     }
     for (int i = 0; i < serverCount; i++) {
-      poolFactory.addServer(geodeServer.getHost(), geodeServer.getMappedPort(GEODE_PORT) + i);
+      poolFactory.addServer(SERVER_HOST, serverPort + i);
     }
     String suffix = Integer.toString(serverCount);
     poolFactory.create("test-pool-" + suffix);
@@ -145,16 +117,9 @@ class PutGetTest {
 
     String target;
     if (serverCount == 0) {
-      target = geodeServer.getHost() + ":1";
+      target = SERVER_HOST + ":1";
     } else {
-      target =
-          geodeServer.getHost()
-              + ":"
-              + geodeServer.getMappedPort(GEODE_PORT)
-              + ","
-              + geodeServer.getHost()
-              + ":"
-              + (geodeServer.getMappedPort(GEODE_PORT) + 1);
+      target = SERVER_HOST + ":" + serverPort + "," + SERVER_HOST + ":" + (serverPort + 1);
     }
     testing.waitAndAssertTraces(
         trace ->
@@ -163,16 +128,10 @@ class PutGetTest {
                     span.hasName("putAll test-region-" + suffix)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), GEODE),
-                            equalTo(
-                                DB_COLLECTION_NAME,
-                                emitStableDatabaseSemconv() ? "test-region-" + suffix : null),
-                            equalTo(
-                                DB_NAME,
-                                emitStableDatabaseSemconv() ? null : "test-region-" + suffix),
-                            equalTo(maybeStable(DB_OPERATION), "putAll"),
-                            equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? target : null),
-                            equalTo(SERVER_PORT, null))));
+                            equalTo(DB_SYSTEM_NAME, GEODE),
+                            equalTo(DB_COLLECTION_NAME, "test-region-" + suffix),
+                            equalTo(DB_OPERATION_NAME, "putAll"),
+                            equalTo(SERVER_ADDRESS, target))));
 
     assertDurationMetric(
         testing,
@@ -203,38 +162,29 @@ class PutGetTest {
                     span.hasName("clear test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), GEODE),
-                            equalTo(
-                                DB_COLLECTION_NAME,
-                                emitStableDatabaseSemconv() ? "test-region" : null),
-                            equalTo(DB_NAME, emitStableDatabaseSemconv() ? null : "test-region"),
-                            equalTo(maybeStable(DB_OPERATION), "clear"),
-                            equalTo(SERVER_ADDRESS, geodeServer.getHost()),
-                            equalTo(SERVER_PORT, geodeServer.getMappedPort(GEODE_PORT))),
+                            equalTo(DB_SYSTEM_NAME, GEODE),
+                            equalTo(DB_COLLECTION_NAME, "test-region"),
+                            equalTo(DB_OPERATION_NAME, "clear"),
+                            equalTo(SERVER_ADDRESS, SERVER_HOST),
+                            equalTo(SERVER_PORT, serverPort)),
                 span ->
                     span.hasName("put test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), GEODE),
-                            equalTo(
-                                DB_COLLECTION_NAME,
-                                emitStableDatabaseSemconv() ? "test-region" : null),
-                            equalTo(DB_NAME, emitStableDatabaseSemconv() ? null : "test-region"),
-                            equalTo(maybeStable(DB_OPERATION), "put"),
-                            equalTo(SERVER_ADDRESS, geodeServer.getHost()),
-                            equalTo(SERVER_PORT, geodeServer.getMappedPort(GEODE_PORT))),
+                            equalTo(DB_SYSTEM_NAME, GEODE),
+                            equalTo(DB_COLLECTION_NAME, "test-region"),
+                            equalTo(DB_OPERATION_NAME, "put"),
+                            equalTo(SERVER_ADDRESS, SERVER_HOST),
+                            equalTo(SERVER_PORT, serverPort)),
                 span ->
                     span.hasName("get test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), GEODE),
-                            equalTo(
-                                DB_COLLECTION_NAME,
-                                emitStableDatabaseSemconv() ? "test-region" : null),
-                            equalTo(DB_NAME, emitStableDatabaseSemconv() ? null : "test-region"),
-                            equalTo(maybeStable(DB_OPERATION), "get"),
-                            equalTo(SERVER_ADDRESS, geodeServer.getHost()),
-                            equalTo(SERVER_PORT, geodeServer.getMappedPort(GEODE_PORT)))));
+                            equalTo(DB_SYSTEM_NAME, GEODE),
+                            equalTo(DB_COLLECTION_NAME, "test-region"),
+                            equalTo(DB_OPERATION_NAME, "get"),
+                            equalTo(SERVER_ADDRESS, SERVER_HOST),
+                            equalTo(SERVER_PORT, serverPort))));
   }
 
   @ParameterizedTest
@@ -256,38 +206,29 @@ class PutGetTest {
                     span.hasName("clear test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), GEODE),
-                            equalTo(
-                                DB_COLLECTION_NAME,
-                                emitStableDatabaseSemconv() ? "test-region" : null),
-                            equalTo(DB_NAME, emitStableDatabaseSemconv() ? null : "test-region"),
-                            equalTo(maybeStable(DB_OPERATION), "clear"),
-                            equalTo(SERVER_ADDRESS, geodeServer.getHost()),
-                            equalTo(SERVER_PORT, geodeServer.getMappedPort(GEODE_PORT))),
+                            equalTo(DB_SYSTEM_NAME, GEODE),
+                            equalTo(DB_COLLECTION_NAME, "test-region"),
+                            equalTo(DB_OPERATION_NAME, "clear"),
+                            equalTo(SERVER_ADDRESS, SERVER_HOST),
+                            equalTo(SERVER_PORT, serverPort)),
                 span ->
                     span.hasName("put test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), GEODE),
-                            equalTo(
-                                DB_COLLECTION_NAME,
-                                emitStableDatabaseSemconv() ? "test-region" : null),
-                            equalTo(DB_NAME, emitStableDatabaseSemconv() ? null : "test-region"),
-                            equalTo(maybeStable(DB_OPERATION), "put"),
-                            equalTo(SERVER_ADDRESS, geodeServer.getHost()),
-                            equalTo(SERVER_PORT, geodeServer.getMappedPort(GEODE_PORT))),
+                            equalTo(DB_SYSTEM_NAME, GEODE),
+                            equalTo(DB_COLLECTION_NAME, "test-region"),
+                            equalTo(DB_OPERATION_NAME, "put"),
+                            equalTo(SERVER_ADDRESS, SERVER_HOST),
+                            equalTo(SERVER_PORT, serverPort)),
                 span ->
                     span.hasName("remove test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), GEODE),
-                            equalTo(
-                                DB_COLLECTION_NAME,
-                                emitStableDatabaseSemconv() ? "test-region" : null),
-                            equalTo(DB_NAME, emitStableDatabaseSemconv() ? null : "test-region"),
-                            equalTo(maybeStable(DB_OPERATION), "remove"),
-                            equalTo(SERVER_ADDRESS, geodeServer.getHost()),
-                            equalTo(SERVER_PORT, geodeServer.getMappedPort(GEODE_PORT)))));
+                            equalTo(DB_SYSTEM_NAME, GEODE),
+                            equalTo(DB_COLLECTION_NAME, "test-region"),
+                            equalTo(DB_OPERATION_NAME, "remove"),
+                            equalTo(SERVER_ADDRESS, SERVER_HOST),
+                            equalTo(SERVER_PORT, serverPort))));
   }
 
   @ParameterizedTest
@@ -310,39 +251,30 @@ class PutGetTest {
                     span.hasName("clear test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), GEODE),
-                            equalTo(
-                                DB_COLLECTION_NAME,
-                                emitStableDatabaseSemconv() ? "test-region" : null),
-                            equalTo(DB_NAME, emitStableDatabaseSemconv() ? null : "test-region"),
-                            equalTo(maybeStable(DB_OPERATION), "clear"),
-                            equalTo(SERVER_ADDRESS, geodeServer.getHost()),
-                            equalTo(SERVER_PORT, geodeServer.getMappedPort(GEODE_PORT))),
+                            equalTo(DB_SYSTEM_NAME, GEODE),
+                            equalTo(DB_COLLECTION_NAME, "test-region"),
+                            equalTo(DB_OPERATION_NAME, "clear"),
+                            equalTo(SERVER_ADDRESS, SERVER_HOST),
+                            equalTo(SERVER_PORT, serverPort)),
                 span ->
                     span.hasName("put test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), GEODE),
-                            equalTo(
-                                DB_COLLECTION_NAME,
-                                emitStableDatabaseSemconv() ? "test-region" : null),
-                            equalTo(DB_NAME, emitStableDatabaseSemconv() ? null : "test-region"),
-                            equalTo(maybeStable(DB_OPERATION), "put"),
-                            equalTo(SERVER_ADDRESS, geodeServer.getHost()),
-                            equalTo(SERVER_PORT, geodeServer.getMappedPort(GEODE_PORT))),
+                            equalTo(DB_SYSTEM_NAME, GEODE),
+                            equalTo(DB_COLLECTION_NAME, "test-region"),
+                            equalTo(DB_OPERATION_NAME, "put"),
+                            equalTo(SERVER_ADDRESS, SERVER_HOST),
+                            equalTo(SERVER_PORT, serverPort)),
                 span ->
                     span.hasName("query test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), GEODE),
-                            equalTo(
-                                DB_COLLECTION_NAME,
-                                emitStableDatabaseSemconv() ? "test-region" : null),
-                            equalTo(DB_NAME, emitStableDatabaseSemconv() ? null : "test-region"),
-                            equalTo(maybeStable(DB_OPERATION), "query"),
-                            equalTo(maybeStable(DB_STATEMENT), "SELECT * FROM /test-region"),
-                            equalTo(SERVER_ADDRESS, geodeServer.getHost()),
-                            equalTo(SERVER_PORT, geodeServer.getMappedPort(GEODE_PORT)))));
+                            equalTo(DB_SYSTEM_NAME, GEODE),
+                            equalTo(DB_COLLECTION_NAME, "test-region"),
+                            equalTo(DB_OPERATION_NAME, "query"),
+                            equalTo(DB_QUERY_TEXT, "SELECT * FROM /test-region"),
+                            equalTo(SERVER_ADDRESS, SERVER_HOST),
+                            equalTo(SERVER_PORT, serverPort))));
   }
 
   @ParameterizedTest
@@ -365,39 +297,30 @@ class PutGetTest {
                     span.hasName("clear test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), GEODE),
-                            equalTo(
-                                DB_COLLECTION_NAME,
-                                emitStableDatabaseSemconv() ? "test-region" : null),
-                            equalTo(DB_NAME, emitStableDatabaseSemconv() ? null : "test-region"),
-                            equalTo(maybeStable(DB_OPERATION), "clear"),
-                            equalTo(SERVER_ADDRESS, geodeServer.getHost()),
-                            equalTo(SERVER_PORT, geodeServer.getMappedPort(GEODE_PORT))),
+                            equalTo(DB_SYSTEM_NAME, GEODE),
+                            equalTo(DB_COLLECTION_NAME, "test-region"),
+                            equalTo(DB_OPERATION_NAME, "clear"),
+                            equalTo(SERVER_ADDRESS, SERVER_HOST),
+                            equalTo(SERVER_PORT, serverPort)),
                 span ->
                     span.hasName("put test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), GEODE),
-                            equalTo(
-                                DB_COLLECTION_NAME,
-                                emitStableDatabaseSemconv() ? "test-region" : null),
-                            equalTo(DB_NAME, emitStableDatabaseSemconv() ? null : "test-region"),
-                            equalTo(maybeStable(DB_OPERATION), "put"),
-                            equalTo(SERVER_ADDRESS, geodeServer.getHost()),
-                            equalTo(SERVER_PORT, geodeServer.getMappedPort(GEODE_PORT))),
+                            equalTo(DB_SYSTEM_NAME, GEODE),
+                            equalTo(DB_COLLECTION_NAME, "test-region"),
+                            equalTo(DB_OPERATION_NAME, "put"),
+                            equalTo(SERVER_ADDRESS, SERVER_HOST),
+                            equalTo(SERVER_PORT, serverPort)),
                 span ->
                     span.hasName("existsValue test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), GEODE),
-                            equalTo(
-                                DB_COLLECTION_NAME,
-                                emitStableDatabaseSemconv() ? "test-region" : null),
-                            equalTo(DB_NAME, emitStableDatabaseSemconv() ? null : "test-region"),
-                            equalTo(maybeStable(DB_OPERATION), "existsValue"),
-                            equalTo(maybeStable(DB_STATEMENT), "SELECT * FROM /test-region"),
-                            equalTo(SERVER_ADDRESS, geodeServer.getHost()),
-                            equalTo(SERVER_PORT, geodeServer.getMappedPort(GEODE_PORT)))));
+                            equalTo(DB_SYSTEM_NAME, GEODE),
+                            equalTo(DB_COLLECTION_NAME, "test-region"),
+                            equalTo(DB_OPERATION_NAME, "existsValue"),
+                            equalTo(DB_QUERY_TEXT, "SELECT * FROM /test-region"),
+                            equalTo(SERVER_ADDRESS, SERVER_HOST),
+                            equalTo(SERVER_PORT, serverPort))));
   }
 
   @Test
@@ -421,41 +344,31 @@ class PutGetTest {
                     span.hasName("clear test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), GEODE),
-                            equalTo(
-                                DB_COLLECTION_NAME,
-                                emitStableDatabaseSemconv() ? "test-region" : null),
-                            equalTo(DB_NAME, emitStableDatabaseSemconv() ? null : "test-region"),
-                            equalTo(maybeStable(DB_OPERATION), "clear"),
-                            equalTo(SERVER_ADDRESS, geodeServer.getHost()),
-                            equalTo(SERVER_PORT, geodeServer.getMappedPort(GEODE_PORT))),
+                            equalTo(DB_SYSTEM_NAME, GEODE),
+                            equalTo(DB_COLLECTION_NAME, "test-region"),
+                            equalTo(DB_OPERATION_NAME, "clear"),
+                            equalTo(SERVER_ADDRESS, SERVER_HOST),
+                            equalTo(SERVER_PORT, serverPort)),
                 span ->
                     span.hasName("put test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), GEODE),
-                            equalTo(
-                                DB_COLLECTION_NAME,
-                                emitStableDatabaseSemconv() ? "test-region" : null),
-                            equalTo(DB_NAME, emitStableDatabaseSemconv() ? null : "test-region"),
-                            equalTo(maybeStable(DB_OPERATION), "put"),
-                            equalTo(SERVER_ADDRESS, geodeServer.getHost()),
-                            equalTo(SERVER_PORT, geodeServer.getMappedPort(GEODE_PORT))),
+                            equalTo(DB_SYSTEM_NAME, GEODE),
+                            equalTo(DB_COLLECTION_NAME, "test-region"),
+                            equalTo(DB_OPERATION_NAME, "put"),
+                            equalTo(SERVER_ADDRESS, SERVER_HOST),
+                            equalTo(SERVER_PORT, serverPort)),
                 span ->
                     span.hasName("query test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), GEODE),
+                            equalTo(DB_SYSTEM_NAME, GEODE),
+                            equalTo(DB_COLLECTION_NAME, "test-region"),
+                            equalTo(DB_OPERATION_NAME, "query"),
                             equalTo(
-                                DB_COLLECTION_NAME,
-                                emitStableDatabaseSemconv() ? "test-region" : null),
-                            equalTo(DB_NAME, emitStableDatabaseSemconv() ? null : "test-region"),
-                            equalTo(maybeStable(DB_OPERATION), "query"),
-                            equalTo(
-                                maybeStable(DB_STATEMENT),
-                                "SELECT * FROM /test-region p WHERE p.expDate = ?"),
-                            equalTo(SERVER_ADDRESS, geodeServer.getHost()),
-                            equalTo(SERVER_PORT, geodeServer.getMappedPort(GEODE_PORT)))));
+                                DB_QUERY_TEXT, "SELECT * FROM /test-region p WHERE p.expDate = ?"),
+                            equalTo(SERVER_ADDRESS, SERVER_HOST),
+                            equalTo(SERVER_PORT, serverPort))));
   }
 
   public static class Card implements PdxSerializable {

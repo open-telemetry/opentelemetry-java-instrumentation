@@ -5,14 +5,24 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.params.provider.Arguments.argumentSet;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
+import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.common.ComponentLoader;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfiguration;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryConfigurationModel;
+import io.opentelemetry.sdk.internal.SdkConfigProvider;
+import io.opentelemetry.semconv.SchemaUrls;
+import java.io.ByteArrayInputStream;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,23 +31,24 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junitpioneer.jupiter.SetSystemProperty;
 
 class SemconvStabilityTest {
 
   @Test
   void resolveGeneralStableFlags_parsesCommaSeparatedList() {
     // general:
-    //   stability_opt_in_list: "database/dup, code, messaging"
+    //   stability_opt_in_list: "database/dup, code, service.peer"
     DeclarativeConfigProperties general =
-        general(stabilityOptInList(" database/dup, code , messaging "));
+        general(stabilityOptInList(" database/dup, code , service.peer "));
 
     assertThat(SemconvSelectionResolver.resolveGeneralStableFlags(general))
-        .containsExactlyInAnyOrder("database/dup", "code", "messaging");
+        .containsExactlyInAnyOrder("database/dup", "code", "service.peer");
   }
 
   @Test
@@ -109,44 +120,24 @@ class SemconvStabilityTest {
 
   @Test
   void parseCommaSeparatedSet_ignoresBlankEntries() {
-    assertThat(SemconvSelectionResolver.parseCommaSeparatedSet("rpc, messaging, ,database/dup,"))
-        .containsExactlyInAnyOrder("rpc", "messaging", "database/dup");
+    assertThat(SemconvSelectionResolver.parseCommaSeparatedSet("rpc, service.peer, ,database/dup,"))
+        .containsExactlyInAnyOrder("rpc", "service.peer", "database/dup");
   }
 
   @Test
-  void explicitDomainConfigTakesPrecedenceWhenV3PreviewIsDisabled() {
+  void explicitDomainConfigTakesPrecedenceOverPreview() {
     // general:
-    //   stability_opt_in_list: "database"
-    //   db:
-    //     semconv:
-    //       version: 1
-    //       dual_emit: true
-    DeclarativeConfigProperties general =
-        general(stabilityOptInList("database"), domainSemconv("db", 1, true));
-    boolean v3Preview = false;
-
-    // otel.semconv-stability.opt-in=database
-    SemconvMode database =
-        new SemconvSelectionResolver(general, v3Preview, stableOptIn("database"), noPreview())
-            .database();
-
-    assertThat(database).isEqualTo(SemconvMode.V1_STABLE.withDualEmit());
-  }
-
-  @Test
-  void experimentalIsTreatedAsStableForSupportedDomainVersion() {
-    // general:
-    //   db:
+    //   rpc:
     //     semconv:
     //       version: 1
     //       experimental: true
-    DeclarativeConfigProperties general = general(domainSemconv("db", 1, true, false));
-    boolean v3Preview = false;
+    //       dual_emit: true
+    DeclarativeConfigProperties general = general(domainSemconv("rpc", 1, true, true));
 
-    SemconvMode database =
-        new SemconvSelectionResolver(general, v3Preview, noStableOptIn(), noPreview()).database();
+    // otel.semconv-stability.preview=rpc
+    SemconvMode rpc = new SemconvSelectionResolver(general, noStableOptIn(), preview("rpc")).rpc();
 
-    assertThat(database).isEqualTo(SemconvMode.V1_STABLE);
+    assertThat(rpc).isEqualTo(SemconvMode.V1_EXPERIMENTAL.withDualEmit());
   }
 
   @Test
@@ -155,20 +146,12 @@ class SemconvStabilityTest {
     //   rpc:
     //     semconv:
     //       version: 1
-    //   messaging:
-    //     semconv:
-    //       version: 1
-    DeclarativeConfigProperties general =
-        general(domainSemconv("rpc", 1), domainSemconv("messaging", 1));
-    boolean v3Preview = false;
-
+    DeclarativeConfigProperties general = general(domainSemconv("rpc", 1));
     SemconvSelectionResolver resolver =
-        new SemconvSelectionResolver(general, v3Preview, noStableOptIn(), noPreview());
+        new SemconvSelectionResolver(general, noStableOptIn(), noPreview());
     SemconvMode rpc = resolver.rpc();
-    SemconvMode messaging = resolver.messaging();
 
     assertThat(rpc).isEqualTo(SemconvMode.V0_STABLE);
-    assertThat(messaging).isEqualTo(SemconvMode.V0_STABLE);
   }
 
   @Test
@@ -178,277 +161,165 @@ class SemconvStabilityTest {
     //     semconv:
     //       version: 1
     //       experimental: true
-    //   messaging:
-    //     semconv:
-    //       version: 1
-    //       experimental: true
-    DeclarativeConfigProperties general =
-        general(domainSemconv("rpc", 1, true, false), domainSemconv("messaging", 1, true, false));
-    boolean v3Preview = true;
-
+    DeclarativeConfigProperties general = general(domainSemconv("rpc", 1, true, false));
     SemconvSelectionResolver resolver =
-        new SemconvSelectionResolver(general, v3Preview, noStableOptIn(), noPreview());
+        new SemconvSelectionResolver(general, noStableOptIn(), noPreview());
     SemconvMode rpc = resolver.rpc();
-    SemconvMode messaging = resolver.messaging();
 
     assertThat(rpc).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
-    assertThat(messaging).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
-  }
-
-  @Test
-  void unsupportedExplicitDomainVersionZeroFallsBackWhenV3PreviewIsEnabled() {
-    // general:
-    //   db:
-    //     semconv:
-    //       version: 0
-    //       dual_emit: true
-    // java:
-    //   common:
-    //     v3_preview: true
-    DeclarativeConfigProperties general = general(domainSemconv("db", 0, true));
-    boolean v3Preview = true;
-
-    SemconvMode database =
-        new SemconvSelectionResolver(general, v3Preview, noStableOptIn(), noPreview()).database();
-
-    assertThat(database).isEqualTo(SemconvMode.V1_STABLE);
-  }
-
-  @Test
-  void unsupportedExplicitDomainDualEmitFallsBackWhenV3PreviewIsEnabled() {
-    // general:
-    //   db:
-    //     semconv:
-    //       version: 1
-    //       dual_emit: true
-    // java:
-    //   common:
-    //     v3_preview: true
-    DeclarativeConfigProperties general = general(domainSemconv("db", 1, true));
-    boolean v3Preview = true;
-
-    SemconvMode dualEmitDatabase =
-        new SemconvSelectionResolver(general, v3Preview, noStableOptIn(), noPreview()).database();
-
-    assertThat(dualEmitDatabase).isEqualTo(SemconvMode.V1_STABLE);
   }
 
   @Test
   void explicitDomainVersionZeroMeansOldOnlyEvenWithDualEmit() {
     // general:
-    //   db:
+    //   rpc:
     //     semconv:
     //       version: 0
     //       dual_emit: true
-    DeclarativeConfigProperties general = general(domainSemconv("db", 0, true));
-    boolean v3Preview = false;
-
-    SemconvMode database =
-        new SemconvSelectionResolver(general, v3Preview, noStableOptIn(), noPreview()).database();
-
-    assertThat(database).isEqualTo(SemconvMode.V0_STABLE);
-  }
-
-  @Test
-  void stableOptInAppliesToDatabaseAndCode() {
-    // general:
-    //   stability_opt_in_list: "database, code"
-    //
-    // Same resolver input is also produced by bridged otel.semconv-stability.opt-in=database,code.
-    DeclarativeConfigProperties general = general(stabilityOptInList("database, code"));
-    boolean v3Preview = false;
-    // otel.semconv-stability.opt-in=database,code
-    Set<String> stableOptIn = stableOptIn("database", "code");
-
-    SemconvSelectionResolver resolver =
-        new SemconvSelectionResolver(general, v3Preview, stableOptIn, noPreview());
-    SemconvMode database = resolver.database();
-    SemconvMode code = resolver.code();
-
-    assertThat(database).isEqualTo(SemconvMode.V1_STABLE);
-    assertThat(code).isEqualTo(SemconvMode.V1_STABLE);
-  }
-
-  @Test
-  void stableOptInDupDualEmitsDatabaseAndCodeWhenV3PreviewIsDisabled() {
-    // general:
-    //   stability_opt_in_list: "database/dup, code/dup"
-    // java:
-    //   common:
-    //     v3_preview: false
-    DeclarativeConfigProperties general = general(stabilityOptInList("database/dup, code/dup"));
-    boolean v3Preview = false;
-    // otel.semconv-stability.opt-in=database/dup,code/dup
-    Set<String> stableOptIn = stableOptIn("database/dup", "code/dup");
-
-    SemconvSelectionResolver resolver =
-        new SemconvSelectionResolver(general, v3Preview, stableOptIn, noPreview());
-    SemconvMode database = resolver.database();
-    SemconvMode code = resolver.code();
-
-    assertThat(database).isEqualTo(SemconvMode.V1_STABLE.withDualEmit());
-    assertThat(code).isEqualTo(SemconvMode.V1_STABLE.withDualEmit());
-  }
-
-  @Test
-  void stableOptInDupEmitsStableDatabaseAndCodeWhenV3PreviewIsEnabled() {
-    // general:
-    //   stability_opt_in_list: "database/dup, code/dup"
-    // java:
-    //   common:
-    //     v3_preview: true
-    DeclarativeConfigProperties general = general(stabilityOptInList("database/dup, code/dup"));
-    boolean v3Preview = true;
-    // otel.semconv-stability.opt-in=database/dup,code/dup
-    Set<String> stableOptIn = stableOptIn("database/dup", "code/dup");
-
-    SemconvSelectionResolver resolver =
-        new SemconvSelectionResolver(general, v3Preview, stableOptIn, noPreview());
-    SemconvMode database = resolver.database();
-    SemconvMode code = resolver.code();
-
-    assertThat(database).isEqualTo(SemconvMode.V1_STABLE);
-    assertThat(code).isEqualTo(SemconvMode.V1_STABLE);
-  }
-
-  @Test
-  void stableOptInAppliesToPreviewDomainsWhenV3PreviewIsDisabled() {
-    // general:
-    //   stability_opt_in_list: "rpc, service.peer, messaging"
-    // java:
-    //   common:
-    //     v3_preview: false
-    DeclarativeConfigProperties general =
-        general(stabilityOptInList("rpc, service.peer, messaging"));
-    boolean v3Preview = false;
-    // otel.semconv-stability.opt-in=rpc,service.peer,messaging
-    Set<String> stableOptIn = stableOptIn("rpc", "service.peer", "messaging");
-
-    SemconvSelectionResolver resolver =
-        new SemconvSelectionResolver(general, v3Preview, stableOptIn, noPreview());
-    SemconvMode rpc = resolver.rpc();
-    SemconvMode servicePeer = resolver.servicePeer();
-    SemconvMode messaging = resolver.messaging();
-
-    assertThat(rpc).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
-    assertThat(servicePeer).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
-    assertThat(messaging).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
-  }
-
-  @Test
-  void v3PreviewIgnoresStableOptInForPreviewDomains() {
-    // general:
-    //   stability_opt_in_list: "rpc, service.peer, messaging"
-    // java:
-    //   common:
-    //     v3_preview: true
-    DeclarativeConfigProperties general =
-        general(stabilityOptInList("rpc, service.peer, messaging"));
-    boolean v3Preview = true;
-    // otel.semconv-stability.opt-in=rpc,service.peer,messaging
-    Set<String> stableOptIn = stableOptIn("rpc", "service.peer", "messaging");
-
-    SemconvSelectionResolver resolver =
-        new SemconvSelectionResolver(general, v3Preview, stableOptIn, noPreview());
-    SemconvMode rpc = resolver.rpc();
-    SemconvMode servicePeer = resolver.servicePeer();
-    SemconvMode messaging = resolver.messaging();
+    DeclarativeConfigProperties general = general(domainSemconv("rpc", 0, true));
+    SemconvMode rpc =
+        new SemconvSelectionResolver(general, noStableOptIn(), preview("rpc/dup")).rpc();
 
     assertThat(rpc).isEqualTo(SemconvMode.V0_STABLE);
-    assertThat(servicePeer).isEqualTo(SemconvMode.V0_STABLE);
-    assertThat(messaging).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
   }
 
-  @ParameterizedTest
-  @ValueSource(booleans = {true, false})
-  void previewFallbackAppliesToPreviewDomains(boolean v3Preview) {
+  @Test
+  void previewFallbackAppliesToPreviewDomains() {
     // java:
     //   common:
-    //     v3_preview: <v3Preview>
     //     semconv_stability:
-    //       preview: [rpc, service.peer, messaging]
+    //       preview: [rpc, service.peer]
     DeclarativeConfigProperties general = general();
-    // otel.semconv-stability.preview=rpc,service.peer,messaging
-    Set<String> preview = preview("rpc", "service.peer", "messaging");
+    // otel.semconv-stability.preview=rpc,service.peer
+    Set<String> preview = preview("rpc", "service.peer");
 
     SemconvSelectionResolver resolver =
-        new SemconvSelectionResolver(general, v3Preview, noStableOptIn(), preview);
+        new SemconvSelectionResolver(general, noStableOptIn(), preview);
     SemconvMode rpc = resolver.rpc();
     SemconvMode servicePeer = resolver.servicePeer();
-    SemconvMode messaging = resolver.messaging();
 
     assertThat(rpc).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
     assertThat(servicePeer).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
-    assertThat(messaging).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
+  }
+
+  @Test
+  void messagingUsesAdoptedSchemaUrl() {
+    assertThat(SemconvStability.messagingSchemaUrl()).isEqualTo(SchemaUrls.V1_43_0);
+  }
+
+  @Test
+  void domainsResolveIndependently() {
+    SemconvSelectionResolver resolver =
+        new SemconvSelectionResolver(
+            general(), stableOptIn("rpc", "service.peer"), preview("rpc/dup", "service.peer/dup"));
+
+    assertThat(resolver.rpc()).isEqualTo(SemconvMode.V1_EXPERIMENTAL.withDualEmit());
+    assertThat(resolver.servicePeer()).isEqualTo(SemconvMode.V1_EXPERIMENTAL.withDualEmit());
   }
 
   @ParameterizedTest
-  @MethodSource("messagingSelectionModes")
-  void messagingSelectionMatrix(
-      boolean v3Preview, Set<String> stableOptIn, Set<String> preview, SemconvMode expectedMode) {
-    SemconvMode messaging =
-        new SemconvSelectionResolver(general(), v3Preview, stableOptIn, preview).messaging();
+  @MethodSource("previewSelections")
+  @SetSystemProperty(key = "otel.semconv-stability.opt-in", value = "")
+  @SetSystemProperty(key = "otel.semconv-stability.preview", value = "")
+  void previewSelectionFromFlatConfig(
+      String domain, String optIn, String preview, SemconvMode expected) {
+    System.setProperty("otel.semconv-stability.opt-in", optIn);
+    System.setProperty("otel.semconv-stability.preview", preview);
+    OpenTelemetry openTelemetry = OpenTelemetry.noop();
+    SemconvSelectionResolver resolver = new SemconvSelectionResolver(openTelemetry, general());
 
-    assertThat(messaging).isEqualTo(expectedMode);
+    assertThat(domain.equals("rpc") ? resolver.rpc() : resolver.servicePeer()).isEqualTo(expected);
   }
 
-  private static List<Arguments> messagingSelectionModes() {
-    return asList(
-        argumentSet("legacy default", false, noStableOptIn(), noPreview(), SemconvMode.V0_STABLE),
-        argumentSet(
-            "legacy opt-in property",
-            false,
-            stableOptIn("messaging"),
-            noPreview(),
-            SemconvMode.V1_EXPERIMENTAL),
-        argumentSet(
-            "preview property",
-            false,
-            noStableOptIn(),
-            preview("messaging"),
-            SemconvMode.V1_EXPERIMENTAL),
-        argumentSet(
-            "legacy opt-in dual emit",
-            false,
-            stableOptIn("messaging/dup"),
-            noPreview(),
-            SemconvMode.V1_EXPERIMENTAL.withDualEmit()),
-        argumentSet(
-            "preview dual emit",
-            false,
-            noStableOptIn(),
-            preview("messaging/dup"),
-            SemconvMode.V1_EXPERIMENTAL.withDualEmit()),
-        argumentSet(
-            "v3 activates messaging preview",
-            true,
-            noStableOptIn(),
-            noPreview(),
-            SemconvMode.V1_EXPERIMENTAL),
-        argumentSet(
-            "v3 ignores legacy opt-in property",
-            true,
-            stableOptIn("messaging"),
-            noPreview(),
-            SemconvMode.V1_EXPERIMENTAL),
-        argumentSet(
-            "v3 ignores legacy opt-in dual emit",
-            true,
-            stableOptIn("messaging/dup"),
-            noPreview(),
-            SemconvMode.V1_EXPERIMENTAL),
-        argumentSet(
-            "v3 with explicit preview",
-            true,
-            noStableOptIn(),
-            preview("messaging"),
-            SemconvMode.V1_EXPERIMENTAL),
-        argumentSet(
-            "v3 ignores explicit preview dual emit",
-            true,
-            noStableOptIn(),
-            preview("messaging/dup"),
-            SemconvMode.V1_EXPERIMENTAL));
+  @ParameterizedTest
+  @MethodSource("previewSelections")
+  void previewSelectionFromDeclarativeConfig(
+      String domain, String optIn, String preview, SemconvMode expected) {
+    String yaml =
+        "file_format: 1.1\n"
+            + "instrumentation/development:\n"
+            + "  general:\n"
+            + "    stability_opt_in_list: '"
+            + optIn
+            + "'\n"
+            + "  java:\n"
+            + "    common:\n"
+            + "      semconv_stability:\n"
+            + "        preview: ["
+            + preview
+            + "]\n";
+    OpenTelemetryConfigurationModel model =
+        DeclarativeConfiguration.parse(new ByteArrayInputStream(yaml.getBytes(UTF_8)));
+    ConfigProvider configProvider =
+        SdkConfigProvider.create(DeclarativeConfiguration.toConfigProperties(model));
+
+    SemconvSelectionResolver resolver = resolver(configProvider);
+    assertThat(domain.equals("rpc") ? resolver.rpc() : resolver.servicePeer()).isEqualTo(expected);
+  }
+
+  @ParameterizedTest
+  @MethodSource("structuredRpcSelections")
+  void structuredRpcSelectionFromDeclarativeConfig(
+      int version, boolean experimental, boolean dualEmit, SemconvMode expected) {
+    String yaml =
+        "file_format: 1.1\n"
+            + "instrumentation/development:\n"
+            + "  general:\n"
+            + "    rpc:\n"
+            + "      semconv:\n"
+            + "        version: "
+            + version
+            + "\n"
+            + "        experimental: "
+            + experimental
+            + "\n"
+            + "        dual_emit: "
+            + dualEmit
+            + "\n"
+            + "  java:\n"
+            + "    common:\n"
+            + "      semconv_stability:\n"
+            + "        preview: [rpc/dup]\n";
+    OpenTelemetryConfigurationModel model =
+        DeclarativeConfiguration.parse(new ByteArrayInputStream(yaml.getBytes(UTF_8)));
+    ConfigProvider configProvider =
+        SdkConfigProvider.create(DeclarativeConfiguration.toConfigProperties(model));
+
+    assertThat(resolver(configProvider).rpc()).isEqualTo(expected);
+  }
+
+  private static Stream<Arguments> structuredRpcSelections() {
+    return Stream.of(
+        Arguments.of(0, false, true, SemconvMode.V0_STABLE),
+        Arguments.of(1, true, false, SemconvMode.V1_EXPERIMENTAL),
+        Arguments.of(1, true, true, SemconvMode.V1_EXPERIMENTAL.withDualEmit()));
+  }
+
+  private static Stream<Arguments> previewSelections() {
+    return Stream.of("rpc", "service.peer")
+        .flatMap(
+            domain ->
+                Stream.of(
+                    Arguments.of(domain, "", "", SemconvMode.V0_STABLE),
+                    Arguments.of(domain, "", domain, SemconvMode.V1_EXPERIMENTAL),
+                    Arguments.of(
+                        domain, "", domain + "/dup", SemconvMode.V1_EXPERIMENTAL.withDualEmit()),
+                    Arguments.of(domain, domain + "/dup", domain, SemconvMode.V1_EXPERIMENTAL),
+                    Arguments.of(
+                        domain,
+                        domain,
+                        domain + "/dup",
+                        SemconvMode.V1_EXPERIMENTAL.withDualEmit())));
+  }
+
+  private static SemconvSelectionResolver resolver(ConfigProvider configProvider) {
+    ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
+    when(openTelemetry.getGeneralInstrumentationConfig())
+        .thenReturn(configProvider.getGeneralInstrumentationConfig());
+    when(openTelemetry.getInstrumentationConfig("common"))
+        .thenReturn(configProvider.getInstrumentationConfig("common"));
+    return new SemconvSelectionResolver(
+        openTelemetry, configProvider.getGeneralInstrumentationConfig());
   }
 
   @SafeVarargs

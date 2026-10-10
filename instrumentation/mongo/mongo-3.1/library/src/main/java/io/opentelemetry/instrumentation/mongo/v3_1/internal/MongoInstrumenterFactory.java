@@ -11,10 +11,10 @@ import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import javax.annotation.Nullable;
 
 /**
@@ -71,14 +71,12 @@ public final class MongoInstrumenterFactory {
     MongoDbAttributesGetter dbAttributesGetter =
         new MongoDbAttributesGetter(
             querySanitizationEnabled, maxNormalizedQueryLength, connectionPeerResolver);
-    SpanNameExtractor<CommandStartedEvent> spanNameExtractor =
-        new MongoSpanNameExtractor(dbAttributesGetter);
-
     InstrumenterBuilder<CommandStartedEvent, Void> builder =
         Instrumenter.<CommandStartedEvent, Void>builder(
-                openTelemetry, instrumentationName, spanNameExtractor)
+                openTelemetry,
+                instrumentationName,
+                DbClientSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
-            .addAttributesExtractor(new MongoAttributesExtractor(dbAttributesGetter))
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(builder);
     return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());

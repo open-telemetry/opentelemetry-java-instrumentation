@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -14,62 +15,129 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.ResourceLock;
+import org.junit.jupiter.api.parallel.Resources;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+@ResourceLock(Resources.SYSTEM_PROPERTIES)
 class MessagingConfigTest {
 
   @Test
   void readsSelectorFromCommonMessagingConfig() {
     ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
-    when(messagingConfig(openTelemetry)
-            .get("headers/development")
-            .getScalarList("included", String.class))
+    when(messagingConfig(openTelemetry).get("headers").getScalarList("included", String.class))
         .thenReturn(singletonList("Test-*"));
 
     assertThat(MessagingConfig.getHeaders(openTelemetry).getIncluded()).containsExactly("Test-*");
   }
 
   @Test
-  void readsDeprecatedSelectorFromCommonMessagingConfig() {
+  void stableSelectorUsesCaseSensitiveGlobsAndExclusionPrecedence() {
     ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
-    when(messagingConfig(openTelemetry).getScalarList("capture_headers/development", String.class))
-        .thenReturn(singletonList("deprecated"));
+    when(messagingConfig(openTelemetry).get("headers").getScalarList("included", String.class))
+        .thenReturn(singletonList("Test-?*"));
+    when(messagingConfig(openTelemetry).get("headers").getScalarList("excluded", String.class))
+        .thenReturn(singletonList("Test-secret"));
 
-    assertThat(MessagingConfig.getHeaders(openTelemetry).getIncluded())
-        .containsExactly("deprecated");
+    IncludeExclude headers = MessagingConfig.getHeaders(openTelemetry);
+
+    assertThat(headers.matches("Test-public")).isTrue();
+    assertThat(headers.matches("test-public")).isFalse();
+    assertThat(headers.matches("Test-secret")).isFalse();
   }
 
   @Test
-  void absentSelectorCapturesNothing() {
-    assertThat(MessagingConfig.getHeaders(mockOpenTelemetry()).isEmpty()).isTrue();
+  void stableExcludeOnlySelectorCapturesAllOtherHeaders() {
+    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
+    when(messagingConfig(openTelemetry).get("headers").getScalarList("excluded", String.class))
+        .thenReturn(singletonList("Secret-*"));
+
+    IncludeExclude headers = MessagingConfig.getHeaders(openTelemetry);
+
+    assertThat(headers.matches("public")).isTrue();
+    assertThat(headers.matches("Secret-token")).isFalse();
+  }
+
+  @Test
+  void emptyStableSelectorCapturesNothing() {
+    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
+    when(messagingConfig(openTelemetry).get("headers").getScalarList("included", String.class))
+        .thenReturn(emptyList());
+
+    assertThat(MessagingConfig.getHeaders(openTelemetry).isEmpty()).isTrue();
   }
 
   @Test
   void systemPropertyFallbackIsOnlyUsedWhenEnabled() {
     ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
-    System.setProperty("otel.instrumentation.messaging.experimental.headers.included", "from-prop");
+    String property = "otel.instrumentation.common.messaging.headers.included";
+    System.setProperty(property, "from-prop");
     try {
       assertThat(MessagingConfig.getHeaders(openTelemetry, false).isEmpty()).isTrue();
       assertThat(MessagingConfig.getHeaders(openTelemetry, true).getIncluded())
           .containsExactly("from-prop");
     } finally {
-      System.clearProperty("otel.instrumentation.messaging.experimental.headers.included");
+      System.clearProperty(property);
+    }
+  }
+
+  @Test
+  void flatSelectorLeavesResolveIndependently() {
+    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
+    String stableIncluded = "otel.instrumentation.common.messaging.headers.included";
+    String stableExcluded = "otel.instrumentation.common.messaging.headers.excluded";
+    System.setProperty(stableIncluded, "*");
+    System.setProperty(stableExcluded, "excluded");
+    try {
+      IncludeExclude headers = MessagingConfig.getHeaders(openTelemetry, true);
+      assertThat(headers.getIncluded()).containsExactly("*");
+      assertThat(headers.getExcluded()).containsExactly("excluded");
+    } finally {
+      System.clearProperty(stableIncluded);
+      System.clearProperty(stableExcluded);
+    }
+  }
+
+  @Test
+  void resolvesReceiveTelemetryConfig() {
+    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
+    when(messagingConfig(openTelemetry).get("receive_telemetry/development").getBoolean("enabled"))
+        .thenReturn(true);
+
+    assertThat(MessagingConfig.isReceiveTelemetryEnabled(openTelemetry, false)).isTrue();
+  }
+
+  @Test
+  void receiveTelemetryIsDisabledByDefault() {
+    assertThat(MessagingConfig.isReceiveTelemetryEnabled(mockOpenTelemetry(), false)).isFalse();
+  }
+
+  @Test
+  void readsReceiveTelemetrySystemProperty() {
+    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
+    String property =
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled";
+    System.setProperty(property, "true");
+    try {
+      assertThat(MessagingConfig.isReceiveTelemetryEnabled(openTelemetry, true)).isTrue();
+    } finally {
+      System.clearProperty(property);
     }
   }
 
   @ParameterizedTest
-  @MethodSource("batchSendMessageCreationSpansCases")
-  void resolvesBatchSendMessageCreationSpans(
+  @MethodSource("messageCreateSpansCases")
+  void resolvesMessageCreateSpans(
       Boolean instrumentationValue, Boolean commonValue, boolean expected) {
     ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
-    when(batchSendMessageCreationSpansConfig(instrumentationConfig(openTelemetry))
-            .getBoolean("enabled"))
+    when(messageCreateSpansConfig(instrumentationConfig(openTelemetry)).getBoolean("enabled"))
         .thenReturn(instrumentationValue);
-    when(batchSendMessageCreationSpansConfig(messagingConfig(openTelemetry)).getBoolean("enabled"))
+    when(messageCreateSpansConfig(messagingConfig(openTelemetry)).getBoolean("enabled"))
         .thenReturn(commonValue);
 
     assertThat(MessagingConfig.isBatchSendMessageCreationSpansEnabled(openTelemetry, "aws_sdk"))
@@ -77,10 +145,10 @@ class MessagingConfigTest {
   }
 
   @Test
-  void batchSendMessageCreationSpansSystemPropertyFallbackIsOnlyUsedWhenEnabled() {
+  void messageCreateSpansSystemPropertyFallbackIsOnlyUsedWhenEnabled() {
     ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
-    System.setProperty(
-        "otel.instrumentation.messaging.batch-send.message-creation-spans.enabled", "false");
+    String property = "otel.instrumentation.common.messaging.message-create-spans.enabled";
+    System.setProperty(property, "false");
     try {
       assertThat(
               MessagingConfig.isBatchSendMessageCreationSpansEnabled(
@@ -91,26 +159,24 @@ class MessagingConfigTest {
                   openTelemetry, "aws_sdk", true))
           .isFalse();
     } finally {
-      System.clearProperty(
-          "otel.instrumentation.messaging.batch-send.message-creation-spans.enabled");
+      System.clearProperty(property);
     }
   }
 
   @Test
   void instrumentationSystemPropertyOverridesCommonDeclarativeConfig() {
     ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
-    when(batchSendMessageCreationSpansConfig(messagingConfig(openTelemetry)).getBoolean("enabled"))
+    when(messageCreateSpansConfig(messagingConfig(openTelemetry)).getBoolean("enabled"))
         .thenReturn(true);
-    System.setProperty(
-        "otel.instrumentation.aws-sdk.batch-send.message-creation-spans.enabled", "false");
+    String property = "otel.instrumentation.aws-sdk.message-create-spans.enabled";
+    System.setProperty(property, "false");
     try {
       assertThat(
               MessagingConfig.isBatchSendMessageCreationSpansEnabled(
                   openTelemetry, "aws_sdk", true))
           .isFalse();
     } finally {
-      System.clearProperty(
-          "otel.instrumentation.aws-sdk.batch-send.message-creation-spans.enabled");
+      System.clearProperty(property);
     }
   }
 
@@ -123,20 +189,16 @@ class MessagingConfigTest {
         mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
     when(openTelemetry.getInstrumentationConfig("aws_sdk")).thenReturn(instrumentationConfig);
     DeclarativeConfigProperties messagingConfig = commonConfig.get("messaging");
-    when(batchSendMessageCreationSpansConfig(instrumentationConfig).getBoolean("enabled"))
+    when(messagingConfig.get("receive_telemetry/development").getBoolean("enabled"))
         .thenReturn(null);
-    when(batchSendMessageCreationSpansConfig(messagingConfig).getBoolean("enabled"))
-        .thenReturn(null);
-    when(messagingConfig.get("headers/development").getScalarList("included", String.class))
-        .thenReturn(null);
-    when(messagingConfig.get("headers/development").getScalarList("excluded", String.class))
-        .thenReturn(null);
-    when(messagingConfig.getScalarList("capture_headers/development", String.class))
-        .thenReturn(null);
+    when(messageCreateSpansConfig(instrumentationConfig).getBoolean("enabled")).thenReturn(null);
+    when(messageCreateSpansConfig(messagingConfig).getBoolean("enabled")).thenReturn(null);
+    when(messagingConfig.get("headers").getScalarList("included", String.class)).thenReturn(null);
+    when(messagingConfig.get("headers").getScalarList("excluded", String.class)).thenReturn(null);
     return openTelemetry;
   }
 
-  private static Stream<Arguments> batchSendMessageCreationSpansCases() {
+  private static Stream<Arguments> messageCreateSpansCases() {
     return Stream.of(
         argumentSet("default", null, null, true),
         argumentSet("common fallback", null, false, false),
@@ -144,9 +206,9 @@ class MessagingConfigTest {
         argumentSet("instrumentation false overrides common true", false, true, false));
   }
 
-  private static DeclarativeConfigProperties batchSendMessageCreationSpansConfig(
+  private static DeclarativeConfigProperties messageCreateSpansConfig(
       DeclarativeConfigProperties config) {
-    return config.get("batch_send").get("message_creation_spans");
+    return config.get("message_create_spans");
   }
 
   private static DeclarativeConfigProperties instrumentationConfig(

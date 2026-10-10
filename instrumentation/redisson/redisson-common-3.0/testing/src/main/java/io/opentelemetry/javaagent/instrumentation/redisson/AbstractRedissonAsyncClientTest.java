@@ -7,9 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.redisson;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -17,16 +14,11 @@ import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
-import static io.opentelemetry.semconv.NetworkAttributes.NetworkTypeValues.IPV4;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -169,18 +161,17 @@ public abstract class AbstractRedissonAsyncClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + address : "SET")
+                    span.hasName("SET " + address)
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
                             equalTo(DB_NAMESPACE, dbNamespace()),
-                            equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"))));
+                            equalTo(DB_QUERY_TEXT, "SET foo ?"),
+                            equalTo(DB_OPERATION_NAME, "SET"))));
   }
 
   @Test
@@ -206,18 +197,17 @@ public abstract class AbstractRedissonAsyncClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SADD " + address : "SADD")
+                    span.hasName("SADD " + address)
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
                             equalTo(DB_NAMESPACE, dbNamespace()),
-                            equalTo(maybeStable(DB_STATEMENT), "SADD set1 ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SADD"))
+                            equalTo(DB_QUERY_TEXT, "SADD set1 ?"),
+                            equalTo(DB_OPERATION_NAME, "SADD"))
                         .hasParent(trace.getSpan(0)),
                 span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(0))));
   }
@@ -321,109 +311,44 @@ public abstract class AbstractRedissonAsyncClientTest {
             });
     assertThat(result.toCompletableFuture()).succeedsWithin(TIMEOUT);
 
-    if (emitStableDatabaseSemconv()) {
-      // Verify that completing the atomic batch clears suppression state from the pooled
-      // connection, allowing this bucket GET to produce a span.
-      redisson.getBucket("after-batch").get();
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
-                  span ->
-                      span.hasName(hasDatabaseIndex() ? "MULTI SET 0" : "MULTI SET")
-                          .hasKind(CLIENT)
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(DB_SYSTEM_NAME, REDIS),
-                              equalTo(DB_OPERATION_NAME, "MULTI SET"),
-                              equalTo(DB_OPERATION_BATCH_SIZE, 2L),
-                              equalTo(DB_QUERY_TEXT, "SET batch1 ?; SET batch2 ?"),
-                              equalTo(DB_NAMESPACE, dbNamespace()),
-                              equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? REDIS : null),
-                              equalTo(DB_OPERATION, emitOldDatabaseSemconv() ? "MULTI SET" : null),
-                              equalTo(
-                                  DB_STATEMENT,
-                                  emitOldDatabaseSemconv() ? "SET batch1 ?; SET batch2 ?" : null)),
-                  span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(0))),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("GET " + address)
-                          .hasKind(CLIENT)
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(NETWORK_PEER_ADDRESS, ip),
-                              equalTo(NETWORK_PEER_PORT, port),
-                              equalTo(SERVER_ADDRESS, host),
-                              equalTo(SERVER_PORT, port),
-                              equalTo(DB_SYSTEM_NAME, REDIS),
-                              equalTo(DB_NAMESPACE, dbNamespace()),
-                              equalTo(DB_OPERATION_NAME, "GET"),
-                              equalTo(DB_QUERY_TEXT, "GET after-batch"))));
-      return;
-    }
+    // Verify that completing the atomic batch clears suppression state from the pooled
+    // connection, allowing this bucket GET to produce a span.
+    redisson.getBucket("after-batch").get();
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("DB Query")
+                    span.hasName("MULTI SET")
                         .hasKind(CLIENT)
+                        .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace()),
-                            equalTo(
-                                DB_OPERATION_NAME,
-                                emitStableDatabaseSemconv() ? "MULTI SET" : null),
-                            // db.operation.batch.size is not emitted because MULTI transaction
-                            // telemetry is split across wrapper and command spans, so this span
-                            // does not represent the full logical batch.
-                            equalTo(
-                                maybeStable(DB_STATEMENT),
-                                emitStableDatabaseSemconv()
-                                    ? "MULTI; SET batch1 ?"
-                                    : "MULTI;SET batch1 ?"))
-                        .hasParent(trace.getSpan(0)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_OPERATION_NAME, "MULTI SET"),
+                            equalTo(DB_OPERATION_BATCH_SIZE, 2L),
+                            equalTo(DB_QUERY_TEXT, "SET batch1 ?; SET batch2 ?"),
+                            equalTo(DB_NAMESPACE, dbNamespace())),
+                span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(0))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SET")
+                    span.hasName("GET " + address)
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
                             equalTo(DB_NAMESPACE, dbNamespace()),
-                            equalTo(maybeStable(DB_STATEMENT), "SET batch2 ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"))
-                        .hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("EXEC")
-                        .hasKind(CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace()),
-                            equalTo(maybeStable(DB_STATEMENT), "EXEC"),
-                            equalTo(maybeStable(DB_OPERATION), "EXEC"))
-                        .hasParent(trace.getSpan(0)),
-                span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(0))));
+                            equalTo(DB_OPERATION_NAME, "GET"),
+                            equalTo(DB_QUERY_TEXT, "GET after-batch"))));
   }
 
   // A callback attached to a queued atomic-batch command must inherit the parent trace context but
   // not the internal batch marker; otherwise the callback-issued GET is incorrectly suppressed.
   @Test
   void atomicBatchCommandCallback() throws ReflectiveOperationException {
-    Assumptions.assumeTrue(emitStableDatabaseSemconv());
     boolean usesRPromise;
     Class<?> executionModeClass;
     try {
@@ -485,7 +410,7 @@ public abstract class AbstractRedissonAsyncClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(hasDatabaseIndex() ? "MULTI SET 0" : "MULTI SET")
+                    span.hasName("MULTI SET")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -519,7 +444,7 @@ public abstract class AbstractRedissonAsyncClientTest {
   }
 
   private String dbNamespace() {
-    return emitStableDatabaseSemconv() && hasDatabaseIndex() ? "0" : null;
+    return hasDatabaseIndex() ? "0" : null;
   }
 
   private static class MyCallable implements Serializable, Callable<Object> {

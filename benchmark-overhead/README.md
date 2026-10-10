@@ -80,14 +80,12 @@ Currently, we test:
 - no agent versus latest released agent
 - no agent versus latest snapshot
 - latest release vs. latest snapshot
-- latest snapshot with indy enabled
 
 Additional configurations can be created by submitting a PR against the `Configs` class.
 
 ### Agents
 
-An agent is defined in code as a name, description, optional URL, and optional additional
-arguments to be passed to the JVM (not including `-javaagent:`). New agents may be defined
+An agent is defined in code as a name, description, and optional URL. New agents may be defined
 by creating new instances of the `Agent` class. The `AgentResolver` is used to download
 the relevant agent jar for an `Agent` definition.
 

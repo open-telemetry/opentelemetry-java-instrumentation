@@ -9,6 +9,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.HelperResourceBuilder;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -18,7 +19,11 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class AwsSdkInstrumentationModule extends AbstractAwsSdkInstrumentationModule {
   public AwsSdkInstrumentationModule() {
-    super("aws-sdk-2.2-core");
+    super(
+        AgentCommonConfig.get().isV3Preview() ? "aws-sdk-2.2" : "aws-sdk",
+        AgentCommonConfig.get().isV3Preview()
+            ? new String[] {"aws-sdk"}
+            : new String[] {"aws-sdk-2.2", "aws-sdk-2.2-core"});
   }
 
   /**

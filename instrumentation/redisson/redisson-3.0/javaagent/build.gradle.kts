@@ -47,8 +47,6 @@ testing {
               languageVersion = JavaLanguageVersion.of(8)
             }
           )
-          jvmArgs("-Dotel.semconv-stability.opt-in=database")
-          systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
         }
       }
     }
@@ -73,8 +71,6 @@ testing {
               languageVersion = JavaLanguageVersion.of(8)
             }
           )
-          jvmArgs("-Dotel.semconv-stability.opt-in=database")
-          systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
         }
       }
     }
@@ -94,12 +90,6 @@ testing {
         implementation("org.redisson:redisson:3.11.1")
         implementation(project(":instrumentation:redisson:redisson-common-3.0:testing"))
       }
-      targets.configureEach {
-        testTask.configure {
-          jvmArgs("-Dotel.semconv-stability.opt-in=database")
-          systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-        }
-      }
     }
   }
 }
@@ -109,13 +99,6 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
   named<Test>("testRedisson365") {
@@ -133,6 +116,6 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, testStableSemconv)
+    dependsOn(testing.suites)
   }
 }

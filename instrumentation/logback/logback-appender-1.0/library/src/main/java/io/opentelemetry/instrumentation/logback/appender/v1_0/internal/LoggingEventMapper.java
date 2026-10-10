@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldCodeSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableCodeSemconv;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
@@ -49,12 +47,6 @@ import org.slf4j.event.KeyValuePair;
  * any time.
  */
 public final class LoggingEventMapper {
-  // copied from CodeIncubatingAttributes
-  private static final AttributeKey<String> CODE_FILEPATH = AttributeKey.stringKey("code.filepath");
-  private static final AttributeKey<String> CODE_NAMESPACE =
-      AttributeKey.stringKey("code.namespace");
-  private static final AttributeKey<String> CODE_FUNCTION = AttributeKey.stringKey("code.function");
-  private static final AttributeKey<Long> CODE_LINENO = AttributeKey.longKey("code.lineno");
   // copied from ThreadIncubatingAttributes
   private static final AttributeKey<Long> THREAD_ID = AttributeKey.longKey("thread.id");
   private static final AttributeKey<String> THREAD_NAME = AttributeKey.stringKey("thread.name");
@@ -78,23 +70,19 @@ public final class LoggingEventMapper {
   @Nullable private final Predicate<String> mdcAttributes;
   private final boolean captureCodeAttributes;
   private final boolean captureMarkerAttribute;
-  @Nullable private final Predicate<String> keyValuePairAttributes;
+  @Nullable private final Predicate<String> structuredAttributes;
   @Nullable private final Predicate<String> loggerContextAttributes;
   private final boolean captureTemplate;
   private final boolean captureArguments;
-  @Nullable private final Predicate<String> logstashMarkerAttributes;
-  @Nullable private final Predicate<String> logstashStructuredArgumentAttributes;
 
   private LoggingEventMapper(Builder builder) {
     this.captureExperimentalAttributes = builder.captureExperimentalAttributes;
     this.captureCodeAttributes = builder.captureCodeAttributes;
     this.captureMarkerAttribute = builder.captureMarkerAttribute;
-    this.keyValuePairAttributes = builder.keyValuePairAttributes;
+    this.structuredAttributes = builder.structuredAttributes;
     this.loggerContextAttributes = builder.loggerContextAttributes;
     this.captureTemplate = builder.captureTemplate;
     this.captureArguments = builder.captureArguments;
-    this.logstashMarkerAttributes = builder.logstashMarkerAttributes;
-    this.logstashStructuredArgumentAttributes = builder.logstashStructuredArgumentAttributes;
     this.mdcAttributes = builder.mdcAttributes;
   }
 
@@ -163,28 +151,18 @@ public final class LoggingEventMapper {
         String fileName = firstStackElement.getFileName();
         int lineNumber = firstStackElement.getLineNumber();
 
-        if (emitOldCodeSemconv()) {
-          builder.setAttribute(CODE_FILEPATH, fileName);
-          builder.setAttribute(CODE_NAMESPACE, firstStackElement.getClassName());
-          builder.setAttribute(CODE_FUNCTION, firstStackElement.getMethodName());
-          if (lineNumber > 0) {
-            builder.setAttribute(CODE_LINENO, (long) lineNumber);
-          }
-        }
-        if (emitStableCodeSemconv()) {
-          builder.setAttribute(CODE_FILE_PATH, fileName);
-          builder.setAttribute(
-              CODE_FUNCTION_NAME,
-              firstStackElement.getClassName() + "." + firstStackElement.getMethodName());
-          if (lineNumber > 0) {
-            builder.setAttribute(CODE_LINE_NUMBER, (long) lineNumber);
-          }
+        builder.setAttribute(CODE_FILE_PATH, fileName);
+        builder.setAttribute(
+            CODE_FUNCTION_NAME,
+            firstStackElement.getClassName() + "." + firstStackElement.getMethodName());
+        if (lineNumber > 0) {
+          builder.setAttribute(CODE_LINE_NUMBER, (long) lineNumber);
         }
       }
     }
 
     if (captureMarkerAttribute) {
-      boolean skipLogstashMarkers = supportsLogstashMarkers && logstashMarkerAttributes != null;
+      boolean skipLogstashMarkers = supportsLogstashMarkers && structuredAttributes != null;
       captureMarkerAttribute(builder, loggingEvent, skipLogstashMarkers);
     }
 
@@ -221,8 +199,8 @@ public final class LoggingEventMapper {
 
     captureMdcAttributes(builder, loggingEvent.getMDCPropertyMap());
 
-    if (supportsKeyValuePairs && keyValuePairAttributes != null) {
-      captureKeyValuePairAttributes(builder, loggingEvent, keyValuePairAttributes);
+    if (supportsKeyValuePairs && structuredAttributes != null) {
+      captureKeyValuePairAttributes(builder, loggingEvent, structuredAttributes);
     }
 
     if (supportsKeyValuePairs) {
@@ -517,7 +495,7 @@ public final class LoggingEventMapper {
   @NoMuzzle
   private void captureLogstashMarkerAndReferences(LogRecordBuilder builder, Marker marker) {
     LogstashMarker logstashMarker = (LogstashMarker) marker;
-    captureLogstashMarker(builder, logstashMarker, logstashMarkerAttributes);
+    captureLogstashMarker(builder, logstashMarker, structuredAttributes);
 
     if (logstashMarker.hasReferences()) {
       for (Iterator<Marker> it = logstashMarker.iterator(); it.hasNext(); ) {
@@ -660,7 +638,7 @@ public final class LoggingEventMapper {
   private void processLogstashStructuredArguments(LogRecordBuilder builder, Object[] arguments) {
     for (Object argument : arguments) {
       if (isLogstashStructuredArgument(argument)) {
-        captureLogstashMarker(builder, argument, logstashStructuredArgumentAttributes);
+        captureLogstashMarker(builder, argument, structuredAttributes);
       }
     }
   }
@@ -697,12 +675,10 @@ public final class LoggingEventMapper {
     @Nullable private Predicate<String> mdcAttributes;
     private boolean captureCodeAttributes;
     private boolean captureMarkerAttribute;
-    @Nullable private Predicate<String> keyValuePairAttributes;
+    @Nullable private Predicate<String> structuredAttributes;
     @Nullable private Predicate<String> loggerContextAttributes;
     private boolean captureTemplate;
     private boolean captureArguments;
-    @Nullable private Predicate<String> logstashMarkerAttributes;
-    @Nullable private Predicate<String> logstashStructuredArgumentAttributes;
 
     Builder() {}
 
@@ -735,12 +711,15 @@ public final class LoggingEventMapper {
     }
 
     /**
-     * Sets the selector that decides which key value pair keys are captured as log attributes. A
-     * {@code null} selector captures no key value pair attributes.
+     * Sets the selector for SLF4J key value pairs, Logstash markers, and Logstash structured
+     * arguments. A {@code null} selector captures no structured attributes.
      */
     @CanIgnoreReturnValue
-    public Builder setKeyValuePairAttributes(@Nullable Predicate<String> keyValuePairAttributes) {
-      this.keyValuePairAttributes = keyValuePairAttributes;
+    public Builder setStructuredAttributes(@Nullable Predicate<String> structuredAttributes) {
+      this.structuredAttributes =
+          structuredAttributes == null
+              ? null
+              : key -> key != null && !key.isEmpty() && structuredAttributes.test(key);
       return this;
     }
 
@@ -763,20 +742,6 @@ public final class LoggingEventMapper {
     @CanIgnoreReturnValue
     public Builder setCaptureArguments(boolean captureArguments) {
       this.captureArguments = captureArguments;
-      return this;
-    }
-
-    @CanIgnoreReturnValue
-    public Builder setLogstashMarkerAttributes(
-        @Nullable Predicate<String> logstashMarkerAttributes) {
-      this.logstashMarkerAttributes = logstashMarkerAttributes;
-      return this;
-    }
-
-    @CanIgnoreReturnValue
-    public Builder setLogstashStructuredArgumentAttributes(
-        @Nullable Predicate<String> logstashStructuredArgumentAttributes) {
-      this.logstashStructuredArgumentAttributes = logstashStructuredArgumentAttributes;
       return this;
     }
 

@@ -36,12 +36,6 @@ public interface MessagingAttributesGetter<REQUEST, RESPONSE> {
   String getConversationId(REQUEST request);
 
   @Nullable
-  Long getMessageBodySize(REQUEST request);
-
-  @Nullable
-  Long getMessageEnvelopeSize(REQUEST request);
-
-  @Nullable
   String getMessageId(REQUEST request, @Nullable RESPONSE response);
 
   @Nullable
@@ -58,8 +52,6 @@ public interface MessagingAttributesGetter<REQUEST, RESPONSE> {
   /**
    * Returns the name of the destination subscription from which a message is consumed, or {@code
    * null} if there is none.
-   *
-   * <p>This attribute only exists in the v1.43 messaging semantic conventions.
    */
   @Nullable
   default String getDestinationSubscriptionName(REQUEST request) {

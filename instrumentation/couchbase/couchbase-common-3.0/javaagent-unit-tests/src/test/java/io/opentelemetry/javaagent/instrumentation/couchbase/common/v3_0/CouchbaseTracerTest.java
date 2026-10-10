@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_0;
 
-import static io.opentelemetry.api.common.AttributeKey.longKey;
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
-import static org.assertj.core.api.Assertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
@@ -102,9 +102,7 @@ class CouchbaseTracerTest {
     SpanData spanData = findSpan("get");
     assertThat(spanData.getKind()).isEqualTo(CLIENT);
     assertThat(spanData.getStatus().getStatusCode()).isEqualTo(StatusCode.ERROR);
-    assertThat(spanData.getAttributes().asMap())
-        .containsEntry(stringKey("db.system"), "couchbase")
-        .containsEntry(longKey("db.couchbase.retries"), 2L);
+    assertThat(spanData).hasAttributesSatisfyingExactly(equalTo(DB_SYSTEM_NAME, "couchbase"));
     assertThat(spanData.getEvents()).extracting(event -> event.getName()).contains("dispatched");
     assertThat(spanData.getEvents()).extracting(event -> event.getName()).contains("exception");
   }

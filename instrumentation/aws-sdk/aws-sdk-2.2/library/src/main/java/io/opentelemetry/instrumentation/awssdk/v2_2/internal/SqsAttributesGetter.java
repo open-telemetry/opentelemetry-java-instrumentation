@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
@@ -62,18 +61,6 @@ class SqsAttributesGetter implements MessagingAttributesGetter<ExecutionAttribut
     return null;
   }
 
-  @Nullable
-  @Override
-  public Long getMessageBodySize(ExecutionAttributes request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(ExecutionAttributes request) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String getMessageId(ExecutionAttributes request, @Nullable Response response) {
@@ -94,7 +81,7 @@ class SqsAttributesGetter implements MessagingAttributesGetter<ExecutionAttribut
   @Override
   public Long getBatchMessageCount(ExecutionAttributes request, @Nullable Response response) {
     SdkRequest sdkRequest = request.getAttribute(TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE);
-    return emitStableMessagingSemconv() ? SqsAccess.getBatchMessageCount(sdkRequest) : null;
+    return SqsAccess.getBatchMessageCount(sdkRequest);
   }
 
   @Override

@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {
@@ -64,8 +65,8 @@ testing {
         all {
           testTask.configure {
             jvmArgs(
-              "-Dotel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included=key*",
-              "-Dotel.instrumentation.logback-appender.experimental.key-value-pair-attributes.excluded=*2",
+              "-Dotel.instrumentation.common.logging.structured-attributes.included=key*",
+              "-Dotel.instrumentation.common.logging.structured-attributes.excluded=*2",
             )
           }
         }
@@ -125,16 +126,6 @@ tasks {
   }
 
   val slf4j2ApiTestSourceSet = sourceSets.named("slf4j2ApiTest")
-
-  val testLegacyKeyValuePairAttributes = register<Test>("testLegacyKeyValuePairAttributes") {
-    testClassesDirs = slf4j2ApiTestSourceSet.get().output.classesDirs
-    classpath = slf4j2ApiTestSourceSet.get().runtimeClasspath
-
-    jvmArgs(
-      "-Dotel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes=true"
-    )
-    systemProperty("testKeyValuePairConfiguration", "legacy")
-  }
 
   val testMdcAttributeExclusionsOnly = register<Test>("testMdcAttributeExclusionsOnly") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
@@ -208,71 +199,91 @@ tasks {
   }
 
   val logstashMarkerTest = named<Test>("logstashMarkerTest") {
-    jvmArgs("-Dotel.instrumentation.logback-appender.experimental.logstash-marker-attributes.included=key?")
+    jvmArgs("-Dotel.instrumentation.common.logging.structured-attributes.included=key?")
   }
 
   val testLogstashMarkerAttributeExclusionsOnly = register<Test>("testLogstashMarkerAttributeExclusionsOnly") {
     testClassesDirs = sourceSets["logstashMarkerTest"].output.classesDirs
     classpath = sourceSets["logstashMarkerTest"].runtimeClasspath
 
-    jvmArgs("-Dotel.instrumentation.logback-appender.experimental.logstash-marker-attributes.excluded=other")
+    jvmArgs("-Dotel.instrumentation.common.logging.structured-attributes.excluded=other")
     systemProperty("testLogstashMarkerConfiguration", "exclude-only")
   }
 
-  val testLegacyLogstashMarkerAttributes = register<Test>("testLegacyLogstashMarkerAttributes") {
-    testClassesDirs = sourceSets["logstashMarkerTest"].output.classesDirs
-    classpath = sourceSets["logstashMarkerTest"].runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes=true")
-    systemProperty("testLogstashMarkerConfiguration", "legacy")
-  }
-
-  val testLogstashMarkerAttributePrecedence = register<Test>("testLogstashMarkerAttributePrecedence") {
-    testClassesDirs = sourceSets["logstashMarkerTest"].output.classesDirs
-    classpath = sourceSets["logstashMarkerTest"].runtimeClasspath
-
-    jvmArgs(
-      "-Dotel.instrumentation.logback-appender.experimental.logstash-marker-attributes.included=key1",
-      "-Dotel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes=true",
-    )
-    systemProperty("testLogstashMarkerConfiguration", "precedence")
-  }
-
   val logstashStructuredArgsTest = named<Test>("logstashStructuredArgsTest") {
-    jvmArgs("-Dotel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included=key?")
+    jvmArgs("-Dotel.instrumentation.common.logging.structured-attributes.included=key?")
   }
 
   val testLogstashStructuredArgumentAttributeExclusionsOnly = register<Test>("testLogstashStructuredArgumentAttributeExclusionsOnly") {
     testClassesDirs = sourceSets["logstashStructuredArgsTest"].output.classesDirs
     classpath = sourceSets["logstashStructuredArgsTest"].runtimeClasspath
 
-    jvmArgs("-Dotel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.excluded=other")
+    jvmArgs("-Dotel.instrumentation.common.logging.structured-attributes.excluded=other")
     systemProperty("testLogstashStructuredArgsConfiguration", "exclude-only")
   }
 
-  val testLegacyLogstashStructuredArguments = register<Test>("testLegacyLogstashStructuredArguments") {
-    testClassesDirs = sourceSets["logstashStructuredArgsTest"].output.classesDirs
-    classpath = sourceSets["logstashStructuredArgsTest"].runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments=true")
-    systemProperty("testLogstashStructuredArgsConfiguration", "legacy")
-  }
-
-  val testLogstashStructuredArgumentPrecedence = register<Test>("testLogstashStructuredArgumentPrecedence") {
-    testClassesDirs = sourceSets["logstashStructuredArgsTest"].output.classesDirs
-    classpath = sourceSets["logstashStructuredArgsTest"].runtimeClasspath
-
-    jvmArgs(
-      "-Dotel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included=key1",
-      "-Dotel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments=true",
+  val structuredAttributeTestSuites =
+    listOf(
+      listOf(
+        "KeyValuePairs",
+        "slf4j2ApiTest",
+        "*LogbackKeyValuePairSelectorTest",
+        "testKeyValuePairConfiguration",
+      ),
+      listOf(
+        "LogstashMarkers",
+        "logstashMarkerTest",
+        "*LogbackLogstashMarkerSelectorTest",
+        "testLogstashMarkerConfiguration",
+      ),
+      listOf(
+        "LogstashStructuredArguments",
+        "logstashStructuredArgsTest",
+        "*LogbackLogstashStructuredArgsSelectorTest",
+        "testLogstashStructuredArgsConfiguration",
+      ),
     )
-    systemProperty("testLogstashStructuredArgsConfiguration", "precedence")
-  }
+
+  val structuredAttributeDefaultTests =
+    structuredAttributeTestSuites.flatMap { (name, sourceSetName, testName, configurationProperty) ->
+      listOf("Absent", "Empty").map { configuration ->
+        register<Test>("testStructuredAttributes${configuration}For$name") {
+          testClassesDirs = sourceSets[sourceSetName].output.classesDirs
+          classpath = sourceSets[sourceSetName].runtimeClasspath
+          filter.includeTestsMatching(testName)
+
+          jvmArgs("-Dotel.instrumentation.common.v3-preview=false")
+          if (configuration == "Empty") {
+            jvmArgs(
+              "-Dotel.instrumentation.common.logging.structured-attributes.included=",
+              "-Dotel.instrumentation.common.logging.structured-attributes.excluded=",
+            )
+          }
+          systemProperty(configurationProperty, "all")
+        }
+      }
+    }
+
+  val testStructuredAttributesExcludedAll =
+    structuredAttributeTestSuites.map { (_, sourceSetName, testName, configurationProperty) ->
+      register<Test>("testStructuredAttributesExcludedAllFor$sourceSetName") {
+        testClassesDirs = sourceSets[sourceSetName].output.classesDirs
+        classpath = sourceSets[sourceSetName].runtimeClasspath
+        filter.includeTestsMatching(testName)
+
+        jvmArgs(
+          "-Dotel.instrumentation.common.v3-preview=false",
+          "-Dotel.instrumentation.common.logging.structured-attributes.excluded=*",
+        )
+        systemProperty(configurationProperty, "none")
+      }
+    }
 
   check {
     dependsOn(
+      structuredAttributeDefaultTests,
+      testStructuredAttributesExcludedAll,
       testing.suites,
-      testLegacyKeyValuePairAttributes,
       testMdcAttributeExclusionsOnly,
       testLegacyMdcAttributes,
       testLegacyMdcAttributesCaptureAll,
@@ -282,12 +293,8 @@ tasks {
       testLoggerContextAttributePrecedence,
       logstashMarkerTest,
       testLogstashMarkerAttributeExclusionsOnly,
-      testLegacyLogstashMarkerAttributes,
-      testLogstashMarkerAttributePrecedence,
       logstashStructuredArgsTest,
       testLogstashStructuredArgumentAttributeExclusionsOnly,
-      testLegacyLogstashStructuredArguments,
-      testLogstashStructuredArgumentPrecedence,
     )
   }
 }

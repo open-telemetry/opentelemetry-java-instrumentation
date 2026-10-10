@@ -60,17 +60,6 @@ class NatsRequestMessagingAttributesGetter
     return null;
   }
 
-  @Override
-  public Long getMessageBodySize(NatsRequest request) {
-    return request.getDataSize();
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(NatsRequest request) {
-    return null;
-  }
-
   @Nullable
   @Override
   public String getMessageId(NatsRequest request, @Nullable Object unused) {

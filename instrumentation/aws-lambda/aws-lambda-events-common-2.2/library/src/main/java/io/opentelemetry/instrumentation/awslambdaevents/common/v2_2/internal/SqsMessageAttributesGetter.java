@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
 import javax.annotation.Nullable;
 
@@ -15,7 +13,7 @@ final class SqsMessageAttributesGetter extends SqsAttributesGetter<SQSMessage> {
   @Nullable
   @Override
   public String getDestination(SQSMessage message) {
-    return emitStableMessagingSemconv() ? queueName(message) : message.getEventSource();
+    return queueName(message);
   }
 
   @Nullable

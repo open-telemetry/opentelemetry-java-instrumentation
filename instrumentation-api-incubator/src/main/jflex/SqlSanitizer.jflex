@@ -6,6 +6,10 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import io.opentelemetry.instrumentation.api.internal.StringUtils;
+import java.util.ArrayDeque;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 %%
@@ -28,25 +32,27 @@ OPEN_COMMENT         = "/*"
 CLOSE_COMMENT        = "*/"
 LINE_COMMENT         = "--" [^\r\n]*
 UNQUOTED_IDENTIFIER  = ([:letter:] | "_") ([:letter:] | [0-9] | "_")*
-IDENTIFIER_PART      = {UNQUOTED_IDENTIFIER} | {DOUBLE_QUOTED_STR} | {BACKTICK_QUOTED_STR}
+IDENTIFIER_PART      = {UNQUOTED_IDENTIFIER} | {DOUBLE_QUOTED_STR} | {BACKTICK_QUOTED_STR} | {BRACKET_QUOTED_STR}
 // We are using {UNQUOTED_IDENTIFIER} instead of {IDENTIFIER_PART} here because DOUBLE_QUOTED_STR
 // and BACKTICK_QUOTED_STR are handled separately. Depending on the context they appear in they will
 // either be recorded as the identifier or replaced with ?.
-IDENTIFIER           = {UNQUOTED_IDENTIFIER} | ({IDENTIFIER_PART} ("." {IDENTIFIER_PART})+)
+// The optional "@" {UNQUOTED_IDENTIFIER} suffix supports Oracle database link syntax (table@dblink).
+IDENTIFIER           = ({UNQUOTED_IDENTIFIER} | ({IDENTIFIER_PART} ("." {IDENTIFIER_PART})+)) ("@" {UNQUOTED_IDENTIFIER})?
 BASIC_NUM            = [.+-]* [0-9] ([0-9] | [eE.+-])*
 HEX_NUM              = "0x" ([a-f] | [A-F] | [0-9])+
 QUOTED_STR           = "'" ("''" | [^'])* "'"
 DOUBLE_QUOTED_STR    = "\"" ("\"\"" | [^\"])* "\""
 DOLLAR_QUOTED_STR    = "$$" [^$]* "$$"
 DOLLAR_TAG_START     = "$" {UNQUOTED_IDENTIFIER} "$"
-BACKTICK_QUOTED_STR  = "`" [^`]* "`"
+BACKTICK_QUOTED_STR  = "`" ("``" | [^`])* "`"
+BRACKET_QUOTED_STR   = "[" [^\]]* "]"
 POSTGRE_PARAM_MARKER = "$"[0-9]*
 WHITESPACE           = [ \t\r\n]+
 
 %{
   static SqlQuery sanitize(String statement, SqlDialect dialect) {
     AutoSqlSanitizer sanitizer = new AutoSqlSanitizer(new java.io.StringReader(statement));
-    sanitizer.doubleQuotesAreIdentifiers = dialect.doubleQuotesAreIdentifiers();
+    sanitizer.dialect = dialect;
     try {
       while (!sanitizer.yyatEOF()) {
         int token = sanitizer.yylex();
@@ -70,6 +76,10 @@ WHITESPACE           = [ \t\r\n]+
   private static final String IN_STATEMENT_NORMALIZED = "$1(?)";
 
   private final StringBuilder builder = new StringBuilder();
+  private final StringBuilder querySummaryBuilder = new StringBuilder();
+  private String operationName = null;
+  private String collectionName = null;
+  private String storedProcedureName = null;
   private String dollarTag = null;
 
   private void appendCurrentFragment() {
@@ -80,145 +90,180 @@ WHITESPACE           = [ \t\r\n]+
     return builder.length() > LIMIT;
   }
 
-  private String removeQuotes(String identifierName, String quote) {
-    // remove quotes from the start and end of the identifier ("table" is transformed to table), if
-    // identifier contains quote anywhere else besides start and end leave it as is (quotes are not
-    // removed from "schema"."table")
-    if (identifierName.startsWith(quote) && identifierName.endsWith(quote)) {
-      String s = identifierName.substring(1, identifierName.length() - 1);
-      if (!s.contains(quote)) {
-        return s;
-      }
+  /** Appends an operation name (SELECT, INSERT, etc.) to the query summary. */
+  private void appendOperationToSummary() {
+    if (querySummaryBuilder.length() > 0) {
+      querySummaryBuilder.append(' ');
     }
-    return identifierName;
+    // yytext() allocates a String; append directly from JFlex's buffer.
+    querySummaryBuilder.append(zzBuffer, zzStartRead, zzMarkedPos - zzStartRead);
   }
 
-  /** @return text matched by current token without enclosing double quotes or backticks */
-  private String readIdentifierName() {
-    String identifierName = yytext();
-    if (identifierName != null) {
-      String result = removeQuotes(identifierName, "\"");
-      if (!result.equals(identifierName)) {
-        return result;
-      }
-      result = removeQuotes(identifierName, "`");
-      if (!result.equals(identifierName)) {
-        return result;
-      }
+  private void appendOperationToSummary(String operationName) {
+    if (querySummaryBuilder.length() > 0) {
+      querySummaryBuilder.append(' ');
     }
-    return identifierName;
+    querySummaryBuilder.append(operationName);
   }
 
-  // you can reference a table in the FROM clause in one of the following ways:
-  //   table
-  //   table t
-  //   table as t
-  // in other words, you need max 3 identifiers to reference a table
-  private static final int FROM_TABLE_REF_MAX_IDENTIFIERS = 3;
+  /** Appends a target (table name, procedure name, etc.) to the query summary using current token text. */
+  private void appendTargetToSummary() {
+    if (querySummaryBuilder.length() > 0) {
+      querySummaryBuilder.append(' ');
+    }
+    querySummaryBuilder.append(yytext());
+  }
+
+  private void recordOperationName(String operationName) {
+    if (this.operationName == null) {
+      this.operationName = operationName;
+    }
+  }
+
+  private void recordOperationName() {
+    recordOperationName(yytext());
+  }
+
+  private void refineOperationName(String operationTarget) {
+    if (operationName != null) {
+      operationName = operationName + " " + operationTarget;
+    }
+  }
+
+  private void recordCollectionName() {
+    if (collectionName == null) {
+      collectionName = yytext();
+    }
+  }
 
   private int parenLevel = 0;
   private boolean insideComment = false;
-  private Operation operation = NoOp.INSTANCE;
-  private boolean extractionDone = false;
-  private boolean doubleQuotesAreIdentifiers;
-  private boolean statementStart = true;
-  private boolean passwordSanitizationEnabled = false;
-  private boolean identifiedBySanitizationEnabled = false;
+  // using special "none" Operation instead of null to avoid null checking it everywhere
+  private final Operation none = new Operation() {};
+  private Operation operation = none;
+  private SqlDialect dialect;
 
-  private void setOperation(Operation operation) {
-    if (this.operation == NoOp.INSTANCE) {
-      this.operation = operation;
-    }
+  // Global set of CTE names defined in the current statement (for filtering CTE references)
+  private final Set<String> cteNames = new HashSet<>();
+
+  // Stack to save outer operations when entering subqueries
+  private final ArrayDeque<Operation> operationStack = new ArrayDeque<>();
+  // Track the paren levels where we pushed operations (to know when to pop)
+  private final ArrayDeque<Integer> subqueryStartLevels = new ArrayDeque<>();
+
+  // Pending subquery: when we see ( that might start a subquery, we don't push immediately.
+  // Instead, we wait to see if an operation keyword (SELECT, etc.) appears inside.
+  // If it does, we do the push. If we see an identifier first, it's a parenthesized table name.
+  private boolean pendingSubqueryPush = false;
+
+  private boolean shouldStartNewOperation() {
+    return !insideComment && operation == none;
   }
 
-  private void markStatementStarted() {
-    statementStart = false;
+  /** Returns true if we should start a main query operation (no operation yet, or With at main query level). */
+  private boolean shouldStartMainOperation() {
+    return !insideComment
+        && (operation == none || (operation instanceof With && ((With) operation).isMainQueryLevel()));
+  }
+
+  private void setOperation(Operation operation) {
+    this.operation = operation;
   }
 
   private boolean shouldSanitizeRemainderAfterPassword() {
-    return !insideComment
-      && (passwordSanitizationEnabled
-        || operation.shouldSanitizeRemainderAfterPassword());
+    return !insideComment && operation.shouldSanitizeRemainderAfterPassword();
   }
 
   private boolean shouldSanitizeRemainderAfterIdentifiedBy() {
-    return !insideComment
-      && (identifiedBySanitizationEnabled
-        || operation.shouldSanitizeRemainderAfterIdentifiedBy());
+    return !insideComment && operation.shouldSanitizeRemainderAfterIdentifiedBy();
   }
 
-  private static abstract class Operation {
-    String mainIdentifier = null;
+  /** Push current operation onto stack and reset to none for subquery processing. */
+  private void pushOperation() {
+    operationStack.push(operation);
+    subqueryStartLevels.push(parenLevel);
+    operation = none;
+  }
 
-    /** @return true if all statement info is gathered */
-    boolean handleFrom() {
-      return false;
+  /** Called when an operation keyword is seen - confirms pending subquery if any. */
+  private void confirmPendingSubqueryIfNeeded() {
+    if (pendingSubqueryPush) {
+      pushOperation();
+      pendingSubqueryPush = false;
     }
+  }
 
-    /** @return true if all statement info is gathered */
-    boolean handleInto() {
-      return false;
+  /** Called when an identifier is seen - cancels pending subquery (it's a parenthesized table name). */
+  private void cancelPendingSubqueryIfNeeded() {
+    pendingSubqueryPush = false;
+  }
+
+  /** Pop operation from stack if we're exiting a subquery. */
+  private void popOperationIfNeeded() {
+    // Cancel pending subquery - any ) while pending means exiting the potential subquery
+    pendingSubqueryPush = false;
+    if (!subqueryStartLevels.isEmpty() && parenLevel < subqueryStartLevels.peek()) {
+      subqueryStartLevels.pop();
+      operation = operationStack.pop();
+      // Signal to the restored operation that a subquery was processed
+      operation.handleSubqueryComplete();
     }
+  }
 
-    /** @return true if all statement info is gathered */
-    boolean handleJoin() {
-      return false;
-    }
-
-    /** @return true if all statement info is gathered */
-    boolean handleIdentifier() {
-      return false;
-    }
-
-    /** @return true if all statement info is gathered */
-    boolean handleComma() {
-      return false;
-    }
-
-    /** @return true if all statement info is gathered */
-    boolean handleNext() {
-      return false;
-    }
-
-    /** @return true if all statement info is gathered */
-    boolean handleOperationTarget(String target) {
-      return false;
-    }
-
+  private abstract class Operation {
+    void handleFrom() {}
+    void handleInto() {}
+    void handleJoin() {}
+    void handleIdentifier() {}
+    void handleComma() {}
+    void handleNext() {}
+    void handleAs() {}
+    void handleOperationTarget(String target) {}
+    void handleOpenParen() {}
+    void handleCloseParen() {}
+    void handleSelect() {}
     boolean expectingOperationTarget() {
       return false;
     }
-
+    boolean isCapturingIdentifier() {
+      return false;
+    }
     boolean shouldSanitizeRemainderAfterPassword() {
       return false;
     }
-
     boolean shouldSanitizeRemainderAfterIdentifiedBy() {
+      return shouldSanitizeRemainderAfterPassword();
+    }
+    /** Returns true if open paren should start a subquery context. */
+    boolean isEnteringSubquery() {
       return false;
     }
-
-    SqlQuery getResult(String fullStatement) {
-      return SqlQuery.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT), mainIdentifier);
-    }
+    /** Called after a subquery completes and this operation is restored. */
+    void handleSubqueryComplete() {}
   }
 
   private abstract class DdlOperation extends Operation {
     private String operationTarget = "";
     private boolean expectingOperationTarget = true;
+    private boolean identifierCaptured = false;
+    private boolean inEmbeddedSelect = false;
+    private boolean expectingTableName = false;
+    private int selectParenLevel = -1;
 
     boolean expectingOperationTarget() {
       return expectingOperationTarget;
     }
 
-    boolean handleOperationTarget(String target) {
+    void handleOperationTarget(String target) {
       operationTarget = target;
       expectingOperationTarget = false;
-      return false;
+      appendOperationToSummary(operationTarget);
+      refineOperationName(operationTarget);
     }
 
-    boolean shouldHandleIdentifier() {
-      // Return true only if the provided value corresponds to a table, as it will be used to set the attribute `db.sql.table`.
-      return operationTarget.equalsIgnoreCase("TABLE");
+    boolean isCapturingIdentifier() {
+      return (!identifierCaptured && !inEmbeddedSelect)
+          || (inEmbeddedSelect && expectingTableName && parenLevel == selectParenLevel);
     }
 
     /** Returns true for DDL targets where PASSWORD is treated as an identifier, not a secret clause. */
@@ -233,165 +278,474 @@ WHITESPACE           = [ \t\r\n]+
       return !hasSafeDdlTarget();
     }
 
-    boolean shouldSanitizeRemainderAfterIdentifiedBy() {
-      return !hasSafeDdlTarget();
-    }
-
-    boolean handleIdentifier() {
-      if (shouldHandleIdentifier()) {
-        mainIdentifier = readIdentifierName();
+    void handleIdentifier() {
+      if (!identifierCaptured && !inEmbeddedSelect) {
+        appendTargetToSummary();
+        if (operationTarget.equalsIgnoreCase("TABLE")) {
+          recordCollectionName();
+        }
+        identifierCaptured = true;
+      } else if (inEmbeddedSelect && expectingTableName && parenLevel == selectParenLevel) {
+        appendTargetToSummary();
+        recordCollectionName();
+        expectingTableName = false;
       }
-      return true;
     }
 
-    SqlQuery getResult(String fullStatement) {
-      if (!"".equals(operationTarget)) {
-        return SqlQuery.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT) + " " + operationTarget, mainIdentifier);
+    void handleSelect() {
+      inEmbeddedSelect = true;
+      selectParenLevel = parenLevel;
+      appendOperationToSummary();
+    }
+
+    void handleFrom() {
+      if (inEmbeddedSelect) {
+        expectingTableName = true;
       }
-      return super.getResult(fullStatement);
-    }
-  }
-
-  private static class NoOp extends Operation {
-    static final Operation INSTANCE = new NoOp();
-
-    SqlQuery getResult(String fullStatement) {
-      return SqlQuery.create(fullStatement, null, null);
     }
   }
 
   private class Select extends Operation {
-    // you can reference a table in the FROM clause in one of the following ways:
-    //   table
-    //   table t
-    //   table as t
-    // in other words, you need max 3 identifiers to reference a table
-    private static final int FROM_TABLE_REF_MAX_IDENTIFIERS = 3;
+    // Max identifiers in a table reference: "table", "table alias", or "table as alias"
+    private static final int TABLE_REF_MAX_IDENTIFIERS = 3;
 
-    boolean expectingTableName = false;
-    boolean mainTableSetAlready = false;
-    int identifiersAfterMainFromClause = 0;
+    // Table capture modes (mutually exclusive)
+    boolean captureTableList = false;   // FROM clause: capture tables, comma restarts capture
+    boolean captureSingleTable = false; // JOIN clause: capture one table then stop
 
-    boolean handleFrom() {
-      if (parenLevel == 0) {
-        // main query FROM clause
-        expectingTableName = true;
-        return false;
-      }
+    // Counts identifiers since we started expecting a table (after FROM/JOIN/comma)
+    // Used for: (1) capturing first identifier as table name, (2) detecting implicit joins via comma
+    int identifierCount = 0;
 
-      // subquery in WITH or SELECT clause, before main FROM clause; skipping
-      mainIdentifier = null;
-      return true;
+    // FROM clause context - tracks paren level where FROM appeared (-1 if not in FROM clause)
+    int fromClauseParenLevel = -1;
+
+    // AS keyword tracking: set when AS seen, cleared after alias identifier or open paren
+    boolean sawAsKeyword = false;
+
+    // Column alias list paren level: >= 0 means inside "AS alias(col1, col2)" syntax
+    int columnAliasListParenLevel = -1;
+
+    void handleFrom() {
+      // Enter table list capture mode for FROM clause
+      captureTableList = true;
+      // Track the paren level where FROM clause started
+      // This allows nested SELECTs to track their own FROM clause level
+      fromClauseParenLevel = parenLevel;
+      identifierCount = 0;
+      sawAsKeyword = false;
     }
 
-    boolean handleJoin() {
-      // for SELECT statements with joined tables there's no main table
-      mainIdentifier = null;
-      return true;
+    void handleJoin() {
+      // Enter single table capture mode for JOIN clause
+      captureSingleTable = true;
+      identifierCount = 0;
+      sawAsKeyword = false;
     }
 
-    boolean handleIdentifier() {
-      if (identifiersAfterMainFromClause > 0) {
-        ++identifiersAfterMainFromClause;
-      }
-
-      if (!expectingTableName) {
-        return false;
-      }
-
-      // SELECT FROM (subquery) case
-      if (parenLevel != 0) {
-        mainIdentifier = null;
-        return true;
-      }
-
-      // whenever >1 table is used there is no main table (e.g. unions)
-      if (mainTableSetAlready) {
-        mainIdentifier = null;
-        return true;
-      }
-
-      mainIdentifier = readIdentifierName();
-      mainTableSetAlready = true;
-      expectingTableName = false;
-      // start counting identifiers after encountering main from clause
-      identifiersAfterMainFromClause = 1;
-
-      // continue scanning the query, there may be more than one table (e.g. joins)
-      return false;
+    void handleApply() {
+      // APPLY is similar to JOIN in SQL Server (CROSS APPLY, OUTER APPLY)
+      captureSingleTable = true;
+      identifierCount = 0;
+      sawAsKeyword = false;
     }
 
-    boolean handleComma() {
-      // comma was encountered in the FROM clause, i.e. implicit join
-      // (if less than 3 identifiers have appeared before first comma then it means that it's a table list;
-      // any other list that can appear later needs at least 4 idents)
-      if (identifiersAfterMainFromClause > 0
-          && identifiersAfterMainFromClause <= FROM_TABLE_REF_MAX_IDENTIFIERS) {
-        mainIdentifier = null;
-        return true;
+    void handleAs() {
+      // Mark that we saw AS keyword
+      // Next identifier is an alias, and open paren after alias might be column alias list
+      sawAsKeyword = true;
+    }
+
+    boolean isEnteringSubquery() {
+      // Entering subquery if we're in table capture mode and haven't seen an identifier yet
+      // sawAsKeyword check prevents "AS alias(" from being treated as subquery
+      return !sawAsKeyword && (captureTableList || captureSingleTable) && identifierCount == 0;
+    }
+
+    void handleOpenParen() {
+      // "AS alias(" starts a column alias list for derived tables
+      // e.g., SELECT * FROM (SELECT a, b FROM t) AS sub(col1, col2)
+      if (sawAsKeyword) {
+        columnAliasListParenLevel = parenLevel;
+        sawAsKeyword = false;
       }
-      return false;
+      // Note: subquery push is handled at the global level before this is called
+    }
+
+    void handleCloseParen() {
+      // Exit column alias list when its paren closes
+      // Note: parenLevel has already been decremented when this is called
+      if (columnAliasListParenLevel >= 0 && parenLevel < columnAliasListParenLevel) {
+        columnAliasListParenLevel = -1;
+      }
+      // Note: subquery state restoration is handled at the global level via operation stack
+    }
+
+    void handleSubqueryComplete() {
+      // A subquery counts as one table reference in the FROM clause
+      captureTableList = false;
+      captureSingleTable = false;
+      if (identifierCount == 0) {
+        identifierCount = 1;
+      }
+    }
+
+    void handleSelect() {
+      // Reset FROM clause tracking for nested SELECT (e.g., after UNION/INTERSECT/EXCEPT)
+      // This prevents column commas from being treated as implicit joins
+      // Called when SELECT keyword is encountered while already in a Select operation
+      fromClauseParenLevel = -1;
+      captureTableList = false;
+      captureSingleTable = false;
+      identifierCount = 0;
+      sawAsKeyword = false;
+      columnAliasListParenLevel = -1;
+    }
+
+    void handleIdentifier() {
+      // Don't capture identifiers if we're inside a column alias list or after AS (alias name)
+      if (columnAliasListParenLevel >= 0 || sawAsKeyword) {
+        return;
+      }
+
+      ++identifierCount;
+
+      // Check if this is a CTE reference (should be filtered from table list)
+      boolean isCteReference = isCteReference(yytext());
+
+      // Handle single table capture (JOIN): capture first identifier then stop
+      if (captureSingleTable && identifierCount == 1) {
+        if (!isCteReference) {
+          appendTargetToSummary();
+          recordCollectionName();
+        }
+        captureSingleTable = false;
+        identifierCount = 0;
+        return;
+      }
+
+      // Handle table list capture (FROM): capture first identifier after FROM or comma
+      if (captureTableList && identifierCount == 1) {
+        if (!isCteReference) {
+          appendTargetToSummary();
+          recordCollectionName();
+        }
+        captureTableList = false;
+        // Don't reset identifierCount - keep counting for implicit join detection
+      }
+    }
+
+    void handleComma() {
+      // Don't process commas if we're inside a column alias list
+      if (columnAliasListParenLevel >= 0) {
+        return;
+      }
+
+      // Reset sawAsKeyword - comma indicates we're not entering a column alias list
+      sawAsKeyword = false;
+
+      // Detect implicit join: comma in FROM clause after seeing 1-3 identifiers (a table reference)
+      // A table reference can be: "table", "table alias", or "table as alias" (max 3 identifiers)
+      // If we see more than 3 identifiers before comma, it's not a table list (e.g., column list)
+      // Only treat comma as table separator if we're at the same paren level as the FROM clause
+      if (fromClauseParenLevel >= 0 && parenLevel == fromClauseParenLevel
+          && identifierCount > 0
+          && identifierCount <= TABLE_REF_MAX_IDENTIFIERS) {
+        // Comma in FROM clause - restart table list capture for next table
+        captureTableList = true;
+        identifierCount = 0;
+      }
     }
   }
 
   private class Insert extends Operation {
     boolean expectingTableName = false;
 
-    boolean handleInto() {
+    void handleInto() {
       expectingTableName = true;
-      return false;
     }
 
-    boolean handleIdentifier() {
-      if (!expectingTableName) {
-        return false;
-      }
+    void handleSelect() {
+      operation = new Select();
+      appendOperationToSummary();
+    }
 
-      mainIdentifier = readIdentifierName();
-      return true;
+    void handleIdentifier() {
+      if (expectingTableName) {
+        appendTargetToSummary();
+        recordCollectionName();
+        expectingTableName = false;
+      }
     }
   }
 
   private class Delete extends Operation {
     boolean expectingTableName = false;
+    boolean identifierCaptured = false;
 
-    boolean handleFrom() {
+    void handleFrom() {
       expectingTableName = true;
-      return false;
     }
 
-    boolean handleIdentifier() {
-      if (!expectingTableName) {
-        return false;
+    void handleSelect() {
+      // Once we've captured the DELETE table, any SELECT is a subquery
+      if (identifierCaptured) {
+        operation = new Select();
+        appendOperationToSummary();
       }
+    }
 
-      mainIdentifier = readIdentifierName();
-      return true;
+    void handleIdentifier() {
+      if (expectingTableName) {
+        appendTargetToSummary();
+        recordCollectionName();
+        expectingTableName = false;
+        identifierCaptured = true;
+      }
     }
   }
 
-  /** Operation that extracts the first identifier as the main identifier. */
+  /** Operation that extracts the first identifier as the target. */
   private class SimpleOperation extends Operation {
-    boolean handleIdentifier() {
-      mainIdentifier = readIdentifierName();
+    boolean identifierCaptured = false;
+
+    void handleIdentifier() {
+      if (!identifierCaptured) {
+        appendTargetToSummary();
+        identifierCaptured = true;
+      }
+    }
+  }
+
+  private class Update extends Operation {
+    boolean identifierCaptured = false;
+
+    void handleSelect() {
+      // Once we've captured the UPDATE table, any SELECT is a subquery
+      if (identifierCaptured) {
+        operation = new Select();
+        appendOperationToSummary();
+      }
+    }
+
+    void handleIdentifier() {
+      if (!identifierCaptured) {
+        appendTargetToSummary();
+        recordCollectionName();
+        identifierCaptured = true;
+      }
+    }
+  }
+
+  private class Merge extends Operation {
+    boolean identifierCaptured = false;
+
+    void handleIdentifier() {
+      if (!identifierCaptured) {
+        appendTargetToSummary();
+        recordCollectionName();
+        identifierCaptured = true;
+      }
+    }
+  }
+
+  private class Call extends Operation {
+    boolean identifierCaptured = false;
+    // Track "NEXT VALUE FOR sequence" pattern - sequence name comes after FOR
+    boolean sawNext = false;
+    boolean sawValue = false;
+    boolean expectingSequenceName = false;
+
+    void handleIdentifier() {
+      if (expectingSequenceName) {
+        // This is the sequence name after "NEXT VALUE FOR"
+        appendTargetToSummary();
+        expectingSequenceName = false;
+        identifierCaptured = true;
+      } else if (!identifierCaptured && !sawNext) {
+        storedProcedureName = yytext();
+        appendTargetToSummary();
+        identifierCaptured = true;
+      } else if (sawNext && !sawValue && yytext().equalsIgnoreCase("value")) {
+        // This is "VALUE" in "NEXT VALUE FOR"
+        sawValue = true;
+      } else if (sawValue && yytext().equalsIgnoreCase("for")) {
+        // This is "FOR" in "NEXT VALUE FOR" - expect sequence name next
+        expectingSequenceName = true;
+      }
+    }
+
+    void handleNext() {
+      sawNext = true;
+      storedProcedureName = null;
+    }
+  }
+
+  /** VALUES operation - no table to capture. */
+  private class Values extends Operation {}
+
+  private class SensitivePhraseOperation extends Operation {
+    boolean shouldSanitizeRemainderAfterPassword() {
       return true;
     }
   }
 
-  private class Update extends SimpleOperation {}
-
-  private class Merge extends SimpleOperation {}
-
-  private class Call extends SimpleOperation {
-    boolean handleNext() {
-      mainIdentifier = null;
-      return true;
+  /** EXECUTE/EXEC operation for stored procedures. */
+  private class Execute extends SimpleOperation {
+    void handleIdentifier() {
+      if (!identifierCaptured) {
+        appendTargetToSummary();
+        identifierCaptured = true;
+        storedProcedureName = yytext();
+      }
     }
   }
 
   private class Create extends DdlOperation {}
   private class Drop extends DdlOperation {}
   private class Alter extends DdlOperation {}
+
+  /** TRUNCATE operation - captures TABLE keyword and table name. */
+  private class Truncate extends Operation {
+    boolean tableCaptured = false;
+    boolean identifierCaptured = false;
+
+    void handleIdentifier() {
+      String text = yytext();
+      // Include TABLE keyword in summary
+      if (text.equalsIgnoreCase("TABLE")) {
+        if (!tableCaptured) {
+          appendTargetToSummary();
+          refineOperationName(text);
+          tableCaptured = true;
+        }
+        return;
+      }
+      if (!identifierCaptured) {
+        appendTargetToSummary();
+        if (tableCaptured) {
+          recordCollectionName();
+        }
+        identifierCaptured = true;
+      }
+    }
+  }
+
+  /** REPLACE operation (MySQL) - like INSERT, captures table name. */
+  private class Replace extends Operation {
+    boolean expectingTableName = false;
+    boolean tableCaptured = false;
+
+    void handleInto() {
+      expectingTableName = true;
+    }
+
+    void handleIdentifier() {
+      if (!tableCaptured) {
+        appendTargetToSummary();
+        recordCollectionName();
+        tableCaptured = true;
+        expectingTableName = false;
+      }
+    }
+  }
+
+  /** LOCK operation - captures TABLE/TABLES keyword and table name. */
+  private class Lock extends Operation {
+    boolean tableCaptured = false;
+    boolean identifierCaptured = false;
+
+    void handleIdentifier() {
+      String text = yytext();
+      // Include TABLE/TABLES keywords in summary
+      if (text.equalsIgnoreCase("TABLE") || text.equalsIgnoreCase("TABLES")) {
+        if (!tableCaptured) {
+          appendTargetToSummary();
+          tableCaptured = true;
+        }
+        return;
+      }
+      if (!identifierCaptured) {
+        appendTargetToSummary();
+        recordCollectionName();
+        identifierCaptured = true;
+      }
+    }
+  }
+
+  /** USE operation - captures database name. */
+  private class Use extends SimpleOperation {}
+
+  /** Transaction control operations (BEGIN, COMMIT, ROLLBACK) - captures TRANSACTION if present. */
+  private class TransactionControl extends Operation {
+    boolean transactionCaptured = false;
+
+    void handleIdentifier() {
+      // Capture TRANSACTION keyword if present (e.g., BEGIN TRANSACTION, COMMIT TRANSACTION)
+      if (!transactionCaptured && yytext().equalsIgnoreCase("TRANSACTION")) {
+        appendTargetToSummary();
+        transactionCaptured = true;
+      }
+    }
+  }
+
+  /** GRANT operation - blocks other keywords from being parsed. */
+  private class Grant extends Operation {
+    boolean shouldSanitizeRemainderAfterIdentifiedBy() {
+      return true;
+    }
+  }
+
+  /** REVOKE operation - blocks other keywords from being parsed. */
+  private class Revoke extends Operation {}
+
+  /** SHOW operation - blocks other keywords from being parsed. */
+  private class Show extends Operation {}
+
+  /**
+   * WITH clause operation - handles CTE (Common Table Expression) definitions.
+   * CTEs have the form: WITH name AS (query), name2 AS (query2), ... main_query
+   */
+  private class With extends Operation {
+    // State: true when expecting a CTE name (after WITH or after comma between CTEs)
+    boolean expectingCteName = true;
+
+    // The paren level when WITH was seen - used to detect main query vs CTE body
+    final int baseParenLevel = parenLevel;
+
+    void handleIdentifier() {
+      if (expectingCteName) {
+        // This is the CTE name - record it in global set for filtering CTE references
+        cteNames.add(yytext().toLowerCase(Locale.ROOT));
+        expectingCteName = false;
+      }
+    }
+
+    boolean isEnteringSubquery() {
+      // After we've captured a CTE name, ( starts the CTE body
+      return !expectingCteName;
+    }
+
+    void handleComma() {
+      // Comma at base level means another CTE definition follows
+      if (isMainQueryLevel()) {
+        expectingCteName = true;
+      }
+    }
+
+    /** Returns true if we're at the main query level (outside any CTE body). */
+    boolean isMainQueryLevel() {
+      return parenLevel == baseParenLevel;
+    }
+  }
+
+  /**
+   * Check if an identifier is a CTE reference (should be filtered from table list).
+   * Uses global cteNames set populated by With operation.
+   */
+  private boolean isCteReference(String identifier) {
+    return cteNames.contains(identifier.toLowerCase(Locale.ROOT));
+  }
 
   private SqlQuery getResult() {
     StringUtils.truncate(builder, LIMIT);
@@ -400,7 +754,18 @@ WHITESPACE           = [ \t\r\n]+
     // Normalize all 'in (?, ?, ...)' statements to in (?) to reduce cardinality
     String normalizedStatement = IN_STATEMENT_PATTERN.matcher(fullStatement).replaceAll(IN_STATEMENT_NORMALIZED);
 
-    return operation.getResult(normalizedStatement);
+    String summary = querySummaryBuilder.length() > 0 ? querySummaryBuilder.toString() : null;
+    // Remove trailing semicolon if present (no statement after last ;)
+    if (summary != null && summary.endsWith(";")) {
+      summary = summary.substring(0, summary.length() - 1);
+    }
+
+    return SqlQuery.create(
+      normalizedStatement,
+      operationName,
+      collectionName,
+      storedProcedureName,
+      summary);
   }
 
 %}
@@ -409,133 +774,349 @@ WHITESPACE           = [ \t\r\n]+
 
 <YYINITIAL> {
 
+  "WITH" {
+          if (shouldStartNewOperation()) {
+            setOperation(new With());
+            // Don't append WITH to summary - only the main query operation will be appended
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "RECURSIVE" {
+          // Prevent RECURSIVE keyword from being captured as a CTE name
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
   "SELECT" {
           if (!insideComment) {
-            markStatementStarted();
-            setOperation(new Select());
+            // Confirm pending subquery if we see SELECT inside parens
+            confirmPendingSubqueryIfNeeded();
+            if (shouldStartMainOperation()) {
+              setOperation(new Select());
+              recordOperationName();
+              appendOperationToSummary();
+            } else if (operation instanceof Select) {
+              // nested SELECT (subquery) - append SELECT to summary
+              appendOperationToSummary();
+            }
+            operation.handleSelect();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   "INSERT" {
-          if (!insideComment) {
-            markStatementStarted();
+          if (shouldStartMainOperation()) {
             setOperation(new Insert());
+            recordOperationName();
+            appendOperationToSummary();
+          } else if (!insideComment) {
+            cancelPendingSubqueryIfNeeded();
+            operation.handleIdentifier();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   "DELETE" {
-          if (!insideComment) {
-            markStatementStarted();
+          if (shouldStartMainOperation()) {
             setOperation(new Delete());
+            recordOperationName();
+            appendOperationToSummary();
+          } else if (!insideComment) {
+            cancelPendingSubqueryIfNeeded();
+            operation.handleIdentifier();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   "UPDATE" {
-          if (!insideComment) {
-            markStatementStarted();
+          if (shouldStartMainOperation()) {
             setOperation(new Update());
+            recordOperationName();
+            appendOperationToSummary();
+          } else if (!insideComment) {
+            cancelPendingSubqueryIfNeeded();
+            operation.handleIdentifier();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   "CALL" {
-          if (!insideComment) {
-            markStatementStarted();
+          if (shouldStartNewOperation()) {
             setOperation(new Call());
+            recordOperationName();
+            appendOperationToSummary();
+          } else if (!insideComment) {
+            cancelPendingSubqueryIfNeeded();
+            operation.handleIdentifier();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   "MERGE" {
-          if (!insideComment) {
-            markStatementStarted();
+          if (shouldStartNewOperation()) {
             setOperation(new Merge());
+            recordOperationName();
+            appendOperationToSummary();
+          } else if (!insideComment) {
+            cancelPendingSubqueryIfNeeded();
+            operation.handleIdentifier();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   "CREATE" {
-          if (!insideComment) {
-            markStatementStarted();
+          if (shouldStartNewOperation()) {
             setOperation(new Create());
+            recordOperationName();
+            appendOperationToSummary();
+          } else if (!insideComment) {
+            cancelPendingSubqueryIfNeeded();
+            operation.handleIdentifier();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   "DROP" {
-          if (!insideComment) {
-            markStatementStarted();
+          if (shouldStartNewOperation()) {
             setOperation(new Drop());
+            recordOperationName();
+            appendOperationToSummary();
+          } else if (!insideComment) {
+            cancelPendingSubqueryIfNeeded();
+            operation.handleIdentifier();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   "ALTER" {
-          if (!insideComment) {
-            markStatementStarted();
+          if (shouldStartNewOperation()) {
             setOperation(new Alter());
+            recordOperationName();
+            appendOperationToSummary();
+          } else if (!insideComment) {
+            cancelPendingSubqueryIfNeeded();
+            operation.handleIdentifier();
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "VALUES" {
+          if (!insideComment) {
+            // Confirm pending subquery if we see VALUES inside parens (e.g., CTE body)
+            confirmPendingSubqueryIfNeeded();
+            if (shouldStartNewOperation()) {
+              setOperation(new Values());
+              // Only append VALUES to summary if at top level (not inside a subquery or CTE body)
+              if (operationStack.isEmpty()) {
+                recordOperationName();
+                appendOperationToSummary();
+              }
+            }
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "EXECUTE" | "EXEC" {
+          if (shouldStartNewOperation()) {
+            setOperation(new Execute());
+            recordOperationName();
+            appendOperationToSummary();
+          } else if (!insideComment) {
+            cancelPendingSubqueryIfNeeded();
+            operation.handleIdentifier();
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "TRUNCATE" {
+          if (shouldStartNewOperation()) {
+            setOperation(new Truncate());
+            recordOperationName();
+            appendOperationToSummary();
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "REPLACE" {
+          if (shouldStartNewOperation()) {
+            setOperation(new Replace());
+            recordOperationName();
+            appendOperationToSummary();
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "LOCK" {
+          if (shouldStartNewOperation()) {
+            setOperation(new Lock());
+            recordOperationName();
+            appendOperationToSummary();
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "USE" {
+          if (shouldStartNewOperation()) {
+            setOperation(new Use());
+            recordOperationName();
+            appendOperationToSummary();
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "BEGIN" {
+          if (shouldStartNewOperation()) {
+            setOperation(new TransactionControl());
+            recordOperationName();
+            appendOperationToSummary();
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "COMMIT" {
+          if (shouldStartNewOperation()) {
+            setOperation(new TransactionControl());
+            recordOperationName();
+            appendOperationToSummary();
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "ROLLBACK" {
+          if (shouldStartNewOperation()) {
+            setOperation(new TransactionControl());
+            recordOperationName();
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   "GRANT" {
-          if (!insideComment) {
-            if (statementStart) {
-              identifiedBySanitizationEnabled = true;
-            }
-            markStatementStarted();
+          if (shouldStartNewOperation()) {
+            setOperation(new Grant());
+            recordOperationName();
+            appendOperationToSummary();
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "REVOKE" {
+          if (shouldStartNewOperation()) {
+            setOperation(new Revoke());
+            recordOperationName();
+            appendOperationToSummary();
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "SHOW" {
+          if (shouldStartNewOperation()) {
+            setOperation(new Show());
+            recordOperationName();
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   "CONNECT" | "VALIDATE" | "CHECK" | "EXPORT" | "IMPORT" | "RECOVER" {
-          if (!insideComment) {
-            if (statementStart) {
-              passwordSanitizationEnabled = true;
-              identifiedBySanitizationEnabled = true;
-            }
-            markStatementStarted();
+          if (shouldStartNewOperation()) {
+            setOperation(new SensitivePhraseOperation());
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "EXPLAIN" {
+          // EXPLAIN is a prefix command - append to summary but don't set an operation,
+          // so the inner statement (SELECT, INSERT, etc.) gets processed normally.
+          if (!insideComment && operation == none) {
+            recordOperationName();
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   "FROM" {
-          if (!insideComment && !extractionDone) {
-            markStatementStarted();
-            if (operation == NoOp.INSTANCE) {
+          if (!insideComment) {
+            if (operation == none) {
               // hql/jpql queries may skip SELECT and start with FROM clause
               // treat such queries as SELECT queries
               setOperation(new Select());
+              // Derive the synthetic SELECT case from the matched FROM token.
+              String operationName = Character.isUpperCase(zzBuffer[zzStartRead]) ? "SELECT" : "select";
+              recordOperationName(operationName);
+              appendOperationToSummary(operationName);
             }
-            extractionDone = operation.handleFrom();
+            operation.handleFrom();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   "INTO" {
-          if (!insideComment && !extractionDone) {
-            markStatementStarted();
-            extractionDone = operation.handleInto();
+          if (!insideComment) {
+            operation.handleInto();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   "JOIN" {
-          if (!insideComment && !extractionDone) {
-            markStatementStarted();
-            extractionDone = operation.handleJoin();
+          if (!insideComment) {
+            operation.handleJoin();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
-  "NEXT" {
-          if (!insideComment && !extractionDone) {
-            markStatementStarted();
-            extractionDone = operation.handleNext();
+  "APPLY" {
+          if (!insideComment && operation instanceof Select) {
+            ((Select) operation).handleApply();
           }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "LATERAL" {
+          // LATERAL is a keyword used before derived tables - just recognize it, don't capture as identifier
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "NEXT" {
+          if (!insideComment) {
+            operation.handleNext();
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "AS" {
+          if (!insideComment) {
+            operation.handleAs();
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "ONLY" {
+          // PostgreSQL: FROM/UPDATE/DELETE ONLY - just skip, don't treat as table name
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  ";" {
+          if (!insideComment) {
+            // Statement separator - only append separator if we have content and not already ending with semicolon
+            if (querySummaryBuilder.length() > 0
+                && querySummaryBuilder.charAt(querySummaryBuilder.length() - 1) != ';') {
+              querySummaryBuilder.append(';');
+            }
+            // Reset operation state for next statement
+            operation = none;
+            parenLevel = 0;
+            operationStack.clear();
+            subqueryStartLevels.clear();
+            cteNames.clear();
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "UNION" | "INTERSECT" | "EXCEPT" | "MINUS" {
+          // UNION etc. don't reset operation - the next SELECT will be handled
+          // by the existing operation via handleSelect(), or if at top level,
+          // a new Select will be created.
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
@@ -544,12 +1125,13 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "TABLE" | "INDEX" | "DATABASE" | "PROCEDURE" | "VIEW" | "USER" {
-          if (!insideComment && !extractionDone) {
-            markStatementStarted();
+          if (!insideComment) {
+            // If we see a reserved word where we expected a subquery, it's a parenthesized name
+            cancelPendingSubqueryIfNeeded();
             if (operation.expectingOperationTarget()) {
-              extractionDone = operation.handleOperationTarget(yytext());
+              operation.handleOperationTarget(yytext());
             } else {
-              extractionDone = operation.handleIdentifier();
+              operation.handleIdentifier();
             }
           }
           appendCurrentFragment();
@@ -557,10 +1139,10 @@ WHITESPACE           = [ \t\r\n]+
       }
   "PASSWORD" {
           boolean passwordTokenIsIdentifier = false;
-          if (!insideComment && !extractionDone) {
-            markStatementStarted();
-            passwordTokenIsIdentifier = operation.handleIdentifier();
-            extractionDone = passwordTokenIsIdentifier;
+          if (!insideComment) {
+            cancelPendingSubqueryIfNeeded();
+            passwordTokenIsIdentifier = operation.isCapturingIdentifier();
+            operation.handleIdentifier();
           }
           appendCurrentFragment();
           if (!passwordTokenIsIdentifier && !insideComment && shouldSanitizeRemainderAfterPassword()) {
@@ -570,9 +1152,6 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "IDENTIFIED" {WHITESPACE}+ "BY" {
-          if (!insideComment) {
-            markStatementStarted();
-          }
           appendCurrentFragment();
           if (!insideComment && shouldSanitizeRemainderAfterIdentifiedBy()) {
             builder.append(" ?");
@@ -582,26 +1161,17 @@ WHITESPACE           = [ \t\r\n]+
       }
 
   {COMMA} {
-          if (!insideComment && !extractionDone) {
-            markStatementStarted();
-            extractionDone = operation.handleComma();
-          }
-          appendCurrentFragment();
-          if (isOverLimit()) return YYEOF;
-      }
-  ";" {
           if (!insideComment) {
-            statementStart = true;
-            passwordSanitizationEnabled = false;
-            identifiedBySanitizationEnabled = false;
+            operation.handleComma();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   {IDENTIFIER} {
-          if (!insideComment && !extractionDone) {
-            markStatementStarted();
-            extractionDone = operation.handleIdentifier();
+          if (!insideComment) {
+            // If we see an identifier where we expected a subquery, it's a parenthesized table name
+            cancelPendingSubqueryIfNeeded();
+            operation.handleIdentifier();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -609,16 +1179,25 @@ WHITESPACE           = [ \t\r\n]+
 
   {OPEN_PAREN}  {
           if (!insideComment) {
-            markStatementStarted();
+            // Check if we're entering a subquery BEFORE incrementing parenLevel
+            boolean enteringSubquery = operation.isEnteringSubquery();
             parenLevel += 1;
+            if (enteringSubquery) {
+              // Don't push immediately - mark as pending and wait to see if there's an operation keyword
+              pendingSubqueryPush = true;
+            } else {
+              operation.handleOpenParen();
+            }
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   {CLOSE_PAREN} {
           if (!insideComment) {
-            markStatementStarted();
             parenLevel -= 1;
+            operation.handleCloseParen();
+            // Pop operation from stack if we're exiting a subquery
+            popOperationIfNeeded();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -648,18 +1227,18 @@ WHITESPACE           = [ \t\r\n]+
       }
 
   {DOUBLE_QUOTED_STR} {
-          // Always notify the operation about double-quoted tokens regardless of dialect so
-          // that table name extraction works correctly even when the dialect treats them as
-          // string literals. For example, SELECT * FROM "my_table" should extract the table
-          // name "my_table" whether or not the dialect sanitizes the token.
-          //
-          // The extractionDone guard ensures handleIdentifier() is a no-op once extraction
-          // is complete, so there is no risk of leaking sensitive string content into the
-          // span name.
-          if (!insideComment && !extractionDone) {
-            extractionDone = operation.handleIdentifier();
+          if (!insideComment) {
+            // Always notify the operation about double-quoted tokens regardless of dialect so
+            // that summarization works correctly even when the dialect treats them as string
+            // literals. For example, SELECT * FROM "my_table" should produce the summary
+            // "SELECT my_table" whether or not the dialect sanitizes the token.
+            //
+            // The operation's own state guards (e.g. identifierCaptured, captureTableList)
+            // ensure handleIdentifier() is a no-op when not structurally expected, so there
+            // is no risk of leaking sensitive string content into the summary.
+            operation.handleIdentifier();
           }
-          if (doubleQuotesAreIdentifiers) {
+          if (dialect.doubleQuotesAreIdentifiers()) {
             appendCurrentFragment();
           } else {
             builder.append('?');
@@ -667,9 +1246,9 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
 
-  {BACKTICK_QUOTED_STR} | {POSTGRE_PARAM_MARKER} {
-        if (!insideComment && !extractionDone) {
-          extractionDone = operation.handleIdentifier();
+  {BACKTICK_QUOTED_STR} | {BRACKET_QUOTED_STR} | {POSTGRE_PARAM_MARKER} {
+        if (!insideComment) {
+          operation.handleIdentifier();
         }
         appendCurrentFragment();
         if (isOverLimit()) return YYEOF;

@@ -1,9 +1,8 @@
 # [Naming] Module and Package Naming Conventions
 
-## Quick Reference
-
-- Use when: reviewing module names, package layout, or `settings.gradle.kts` includes
-- Review focus: directory and module naming rules, common-module forms, package version segment conventions
+Use this article when changing instrumentation enablement selectors or adding or renaming
+an instrumentation module or package. It shows selector, directory, Gradle include, and Java
+package naming patterns for versioned and shared modules.
 
 ## Top-level instrumentation module directory
 
@@ -40,16 +39,56 @@ Special leaves: `bootstrap` (classes needed in the bootstrap class loader).
 
 ## `InstrumentationModule` name
 
-The first (main) name passed to `super()` must equal the Gradle module directory name,
-excluding any version suffix that comes after the library name:
+In v3 preview, the first (main) name passed to `super()` normally equals the full Gradle module
+directory name, including versions. The version-stripped component name is a secondary:
 
 ```java
 public MyLibraryInstrumentationModule() {
-  super("my-library", "my-library-1.0");
+  super(
+      AgentCommonConfig.get().isV3Preview() ? "my-library-1.0" : "my-library",
+      AgentCommonConfig.get().isV3Preview()
+          ? new String[] {"my-library"}
+          : new String[] {"my-library-1.0"});
 }
 ```
 
 Module names use `kebab-case`.
+
+Optional role and feature selectors are versionless, such as `ratpack-client` or `aws-sdk-sqs`,
+and precede component secondaries. Compatibility helpers share their parent's names.
+Incubator API integration uses the full `opentelemetry-api-<version>` primary,
+then `opentelemetry-api-incubator` and `opentelemetry-api`.
+Implementation splits such as `mongo-async-3.3` retain their directory primary but use only
+`mongo` as a secondary, without `mongo-async`.
+Spring Cloud Gateway's WebMVC implementation uses primary `spring-cloud-gateway-webmvc-4.3`
+and only `spring-cloud-gateway` as its secondary, without `spring-cloud-gateway-webmvc`.
+
+Compound API/provider modules keep the full compound primary, its version-stripped secondary,
+and the API umbrella. For example, `jaxrs-2.0-cxf-3.2`, `jaxrs-cxf`, `jaxrs`, without bare provider
+or API-generation aliases.
+
+Default-off features have independent names when the component family also contains default-on
+instrumentation. For example, JDBC's default-off DataSource instrumentation uses only
+`jdbc-datasource`, not the shared `jdbc` selector. Product umbrellas such as `vertx` come after
+the component's own selectors and must not mix default-on and default-off instrumentation.
+All-default-off groups may share selectors: `hibernate` groups telemetry-producing Hibernate
+instrumentation, including procedure calls, but excludes default-on Hibernate Reactive context
+propagation.
+Standalone default-off feature modules use their full directory name as the primary,
+followed by the versionless feature name. For example, `jaxrs-1.0-annotations` precedes
+`jaxrs-annotations`; neither shares `jaxrs` with default-on provider instrumentation.
+
+The `reactor` selector covers core context propagation, not Reactor Kafka or Reactor Netty clients.
+The `tomcat` selector covers server instrumentation, not DBCP or JDBC pools. Those integrations
+retain their own versioned primaries and versionless component selectors.
+
+The generic Reactor Netty server registration housed in `spring-webflux-5.0` uses primary
+`spring-webflux-5.0` and secondaries `reactor-netty-server`, `spring-webflux-server`, and
+`spring-webflux`, without `reactor-netty` or `reactor`. This cross-family selector exception applies
+only to that registration.
+Outside v3 preview, preserve existing names and their order.
+Enablement selectors are independent of emitted instrumentation scope names; changing selectors
+does not require renaming telemetry.
 
 ## Common modules (shared code across multiple versions)
 
@@ -87,11 +126,3 @@ General rules:
 - Javaagent packages use `io.opentelemetry.javaagent.instrumentation.<lib>...`
 - Library packages use `io.opentelemetry.instrumentation.<lib>...`
 - Internal-only classes go in a `.internal` subpackage
-
-## What to Flag in Review
-
-- **Module directory name missing the minimum version** for a third-party library.
-- **`InstrumentationModule` first `super()` name doesn't match the Gradle module directory**.
-- **`common` module name doesn't follow the `<lib>-common` / `<lib>-common-<version>` pattern**.
-- **Version in Java package uses dots instead of underscores** (e.g., `v3.0` instead of `v3_0`).
-- **`include(...)` entries in `settings.gradle.kts` not in alphabetical order**.

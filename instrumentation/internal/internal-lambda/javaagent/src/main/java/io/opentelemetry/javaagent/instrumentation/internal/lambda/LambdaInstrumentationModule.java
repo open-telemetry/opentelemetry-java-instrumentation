@@ -25,16 +25,10 @@ public class LambdaInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public List<String> injectedClassNames() {
+  public List<String> getAdditionalHelperClassNames() {
+    // The ASM-inserted call is not visible to Muzzle's advice scanning.
     return singletonList(
         "io.opentelemetry.javaagent.instrumentation.internal.lambda.LambdaTransformerHelper");
-  }
-
-  @Override
-  public List<String> getAdditionalHelperClassNames() {
-    // this instrumentation uses ASM not ByteBuddy so muzzle doesn't automatically add helper
-    // classes
-    return injectedClassNames();
   }
 
   @Override
