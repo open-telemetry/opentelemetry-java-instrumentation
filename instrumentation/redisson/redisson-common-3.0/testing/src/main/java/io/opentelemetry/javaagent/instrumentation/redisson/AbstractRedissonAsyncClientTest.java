@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.or
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
@@ -30,9 +31,11 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -57,6 +60,7 @@ import org.redisson.api.RScheduledFuture;
 import org.redisson.api.RSet;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.StringCodec;
+import org.redisson.codec.SerializationCodec;
 import org.redisson.config.Config;
 import org.redisson.config.SingleServerConfig;
 import org.testcontainers.containers.GenericContainer;
@@ -69,6 +73,7 @@ public abstract class AbstractRedissonAsyncClientTest {
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private static final String TEST_RECONNECT = "testReconnect";
+  private static final String TEST_SINGLE_CONNECTION = "testSingleConnection";
   private static final String TEST_CANCELLED_ACQUISITION = "testCancelledAcquisition";
   private static final Duration TIMEOUT = Duration.ofSeconds(30);
 
@@ -103,6 +108,7 @@ public abstract class AbstractRedissonAsyncClientTest {
       newAddress = "redis://" + address;
     }
     Config config = new Config();
+    config.setCodec(new SerializationCodec());
     SingleServerConfig singleServerConfig = config.useSingleServer();
     singleServerConfig.setAddress(newAddress);
     singleServerConfig.setTimeout(30_000);
@@ -110,6 +116,10 @@ public abstract class AbstractRedissonAsyncClientTest {
       // When verifying the futureCallback test case, simulate reconnection during Redis command
       // execution.
       singleServerConfig.setConnectionMinimumIdleSize(0);
+    }
+    if (testInfo.getTags().contains(TEST_SINGLE_CONNECTION)) {
+      singleServerConfig.setConnectionMinimumIdleSize(1);
+      singleServerConfig.setConnectionPoolSize(1);
     }
     if (testInfo.getTags().contains(TEST_CANCELLED_ACQUISITION)) {
       // Use a stable wire format so redis-cli can release the blocking command.
@@ -122,10 +132,10 @@ public abstract class AbstractRedissonAsyncClientTest {
     }
     try {
       // disable connection ping if it exists
-      singleServerConfig
-          .getClass()
-          .getMethod("setPingConnectionInterval", int.class)
-          .invoke(singleServerConfig, 0);
+      Method setPingConnectionInterval =
+          singleServerConfig.getClass().getMethod("setPingConnectionInterval", int.class);
+      setPingConnectionInterval.setAccessible(true);
+      setPingConnectionInterval.invoke(singleServerConfig, 0);
     } catch (NoSuchMethodException ignored) {
       // ignored
     }
@@ -272,6 +282,7 @@ public abstract class AbstractRedissonAsyncClientTest {
   }
 
   @Test
+  @Tag(TEST_SINGLE_CONNECTION)
   void atomicBatchCommand() {
     try {
       // available since 3.7.2
@@ -300,28 +311,28 @@ public abstract class AbstractRedissonAsyncClientTest {
             });
     assertThat(result.toCompletableFuture()).succeedsWithin(TIMEOUT);
 
+    // Verify that completing the atomic batch clears suppression state from the pooled
+    // connection, allowing this bucket GET to produce a span.
+    redisson.getBucket("after-batch").get();
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("MULTI SET " + address)
+                    span.hasName("MULTI SET")
                         .hasKind(CLIENT)
+                        .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace()),
                             equalTo(DB_OPERATION_NAME, "MULTI SET"),
-                            // db.operation.batch.size is not emitted because MULTI transaction
-                            // telemetry is split across wrapper and command spans, so this span
-                            // does not represent the full logical batch.
-                            equalTo(DB_QUERY_TEXT, "MULTI; SET batch1 ?"))
-                        .hasParent(trace.getSpan(0)),
+                            equalTo(DB_OPERATION_BATCH_SIZE, 2L),
+                            equalTo(DB_QUERY_TEXT, "SET batch1 ?; SET batch2 ?"),
+                            equalTo(DB_NAMESPACE, dbNamespace())),
+                span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(0))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SET " + address)
+                    span.hasName("GET " + address)
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_PEER_ADDRESS, ip),
@@ -330,12 +341,88 @@ public abstract class AbstractRedissonAsyncClientTest {
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
                             equalTo(DB_NAMESPACE, dbNamespace()),
-                            equalTo(DB_QUERY_TEXT, "SET batch2 ?"),
-                            equalTo(DB_OPERATION_NAME, "SET"))
-                        .hasParent(trace.getSpan(0)),
+                            equalTo(DB_OPERATION_NAME, "GET"),
+                            equalTo(DB_QUERY_TEXT, "GET after-batch"))));
+  }
+
+  // A callback attached to a queued atomic-batch command must inherit the parent trace context but
+  // not the internal batch marker; otherwise the callback-issued GET is incorrectly suppressed.
+  @Test
+  void atomicBatchCommandCallback() throws ReflectiveOperationException {
+    boolean usesRPromise;
+    Class<?> executionModeClass;
+    try {
+      executionModeClass = Class.forName("org.redisson.api.BatchOptions$ExecutionMode");
+      usesRPromise =
+          Arrays.stream(
+                  Class.forName("org.redisson.client.protocol.CommandData")
+                      .getDeclaredConstructors())
+              .anyMatch(
+                  constructor ->
+                      constructor.getParameterCount() > 0
+                          && constructor
+                              .getParameterTypes()[0]
+                              .getName()
+                              .equals("org.redisson.misc.RPromise"));
+    } catch (ClassNotFoundException ignored) {
+      Assumptions.abort();
+      return;
+    }
+    String executionModeName = usesRPromise ? "REDIS_WRITE_ATOMIC" : "IN_MEMORY_ATOMIC";
+    Object executionMode =
+        executionModeClass.getMethod("valueOf", String.class).invoke(null, executionModeName);
+    Class<?> batchOptionsClass = Class.forName("org.redisson.api.BatchOptions");
+    Object options = batchOptionsClass.getMethod("defaults").invoke(null);
+    batchOptionsClass.getMethod("executionMode", executionModeClass).invoke(options, executionMode);
+    RBatch batch =
+        (RBatch)
+            RedissonClient.class
+                .getMethod("createBatch", batchOptionsClass)
+                .invoke(redisson, options);
+
+    CompletableFuture<String> callbackResult = new CompletableFuture<>();
+    CompletionStage<?> result =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              RFuture<Void> commandFuture = batch.getBucket("batch1").setAsync("v1");
+              commandFuture.whenComplete(
+                  (unused, commandError) -> {
+                    RFuture<String> getFuture =
+                        redisson.<String>getBucket("callback-get").getAsync();
+                    getFuture.whenComplete(
+                        (value, getError) -> {
+                          if (getError != null) {
+                            callbackResult.completeExceptionally(getError);
+                          } else {
+                            callbackResult.complete(value);
+                          }
+                        });
+                  });
+              batch.getBucket("batch2").setAsync("v2");
+              batch.executeAsync();
+              return callbackResult;
+            });
+    assertThat(result.toCompletableFuture()).succeedsWithin(TIMEOUT);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("EXEC " + address)
+                    span.hasName("MULTI SET")
                         .hasKind(CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_OPERATION_NAME, "MULTI SET"),
+                            equalTo(DB_OPERATION_BATCH_SIZE, 2L),
+                            equalTo(DB_QUERY_TEXT, "SET batch1 ?; SET batch2 ?"),
+                            equalTo(DB_NAMESPACE, dbNamespace())),
+                span ->
+                    span.hasName("GET " + address)
+                        .hasKind(CLIENT)
+                        .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
@@ -343,10 +430,8 @@ public abstract class AbstractRedissonAsyncClientTest {
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
                             equalTo(DB_NAMESPACE, dbNamespace()),
-                            equalTo(DB_QUERY_TEXT, "EXEC"),
-                            equalTo(DB_OPERATION_NAME, "EXEC"))
-                        .hasParent(trace.getSpan(0)),
-                span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(0))));
+                            equalTo(DB_OPERATION_NAME, "GET"),
+                            equalTo(DB_QUERY_TEXT, "GET callback-get"))));
   }
 
   protected boolean useRedisProtocol() {
