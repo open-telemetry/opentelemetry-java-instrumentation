@@ -4,6 +4,5 @@ plugins {
 
 dependencies {
   testImplementation(project(":instrumentation:reactor:reactor-netty:reactor-netty-1.0:javaagent"))
-  testImplementation(project(":javaagent-extension-api"))
   testImplementation("io.projectreactor.netty:reactor-netty-http:1.0.0")
 }

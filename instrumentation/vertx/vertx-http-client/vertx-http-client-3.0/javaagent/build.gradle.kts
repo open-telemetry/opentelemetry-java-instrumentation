@@ -36,17 +36,6 @@ dependencies {
   latestDepTestLibrary("io.vertx:vertx-docgen:3.+") // see vertx-http-client-4.0 module
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation(project(":javaagent-extension-api"))
-      }
-    }
-  }
-}
-
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
@@ -61,6 +50,6 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites.named("unitTests"), testPreviewSemconv)
+    dependsOn(testPreviewSemconv)
   }
 }

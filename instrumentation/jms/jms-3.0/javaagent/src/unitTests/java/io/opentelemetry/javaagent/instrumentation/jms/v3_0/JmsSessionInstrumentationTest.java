@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.jms.v3_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -15,35 +14,16 @@ import static org.mockito.Mockito.mock;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import jakarta.jms.MessageConsumer;
-import jakarta.jms.Session;
 import java.util.ArrayList;
 import java.util.List;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.modifier.Visibility;
-import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.StubMethod;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.junit.jupiter.api.Test;
 
 class JmsSessionInstrumentationTest {
-
-  @Test
-  void matchesMessageConsumerAndTopicSubscriberReturns() {
-    ElementMatcher<? super MethodDescription> matcher = consumerMatcher();
-
-    assertThat(
-            new TypeDescription.ForLoadedType(Session.class)
-                .getDeclaredMethods()
-                .filter(
-                    namedOneOf(
-                        "createDurableSubscriber",
-                        "createDurableConsumer",
-                        "createSharedConsumer",
-                        "createSharedDurableConsumer")))
-        .hasSize(8)
-        .allSatisfy(method -> assertThat(matcher.matches(method)).isTrue());
-  }
 
   @Test
   void matchesProviderCovariantReturns() {

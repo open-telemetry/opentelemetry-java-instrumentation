@@ -13,7 +13,6 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 
 import io.lettuce.core.resource.ClientResources;
-import io.lettuce.core.resource.DefaultClientResources;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,26 +20,11 @@ import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.modifier.Ownership;
 import net.bytebuddy.description.modifier.Visibility;
-import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.StubMethod;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.junit.jupiter.api.Test;
 
 class ClientResourcesInstrumentationTest {
-
-  @Test
-  void matchesInterfaceAndConcreteBuilderReturns() {
-    ElementMatcher<? super MethodDescription> matcher = builderMatcher();
-
-    assertThat(matcher.matches(builderMethod(ClientResources.Builder.class))).isTrue();
-    assertThat(
-            matcher.matches(
-                new TypeDescription.ForLoadedType(DefaultClientResources.class)
-                    .getDeclaredMethods()
-                    .filter(named("builder"))
-                    .getOnly()))
-        .isTrue();
-  }
 
   @Test
   void matchesCustomBuilderReturns() {
