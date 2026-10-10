@@ -44,9 +44,7 @@ public class ChunkSingletons {
     Context parentContext = Context.current();
     if (shouldCreateRootSpanForChunk()) {
       SpanContext parentSpanContext = Span.fromContext(parentContext).getSpanContext();
-      if (parentSpanContext.isValid()) {
-        spanLinks.addLink(parentSpanContext);
-      }
+      spanLinks.addLink(parentSpanContext);
     }
   }
 

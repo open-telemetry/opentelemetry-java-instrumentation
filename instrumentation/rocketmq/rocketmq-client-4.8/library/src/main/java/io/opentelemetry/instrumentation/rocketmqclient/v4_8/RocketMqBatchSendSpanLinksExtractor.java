@@ -58,9 +58,7 @@ final class RocketMqBatchSendSpanLinksExtractor implements SpanLinksExtractor<Se
     }
     for (Context context : contexts.contexts) {
       SpanContext spanContext = Span.fromContext(context).getSpanContext();
-      if (spanContext.isValid()) {
-        spanLinks.addLink(spanContext);
-      }
+      spanLinks.addLink(spanContext);
     }
   }
 

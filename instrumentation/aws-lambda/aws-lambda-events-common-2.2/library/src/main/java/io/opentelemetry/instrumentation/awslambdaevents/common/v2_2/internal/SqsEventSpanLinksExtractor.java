@@ -27,9 +27,7 @@ class SqsEventSpanLinksExtractor implements SpanLinksExtractor<SQSEvent> {
     SqsEventRecordAttributes attributes = SqsEventRecordAttributes.create(event);
     for (SQSMessage record : records) {
       SpanContext creationSpanContext = creationSpanContext(record);
-      if (creationSpanContext.isValid()) {
-        spanLinks.addLink(creationSpanContext, attributes.getLinkAttributes(record));
-      }
+      spanLinks.addLink(creationSpanContext, attributes.getLinkAttributes(record));
     }
   }
 
