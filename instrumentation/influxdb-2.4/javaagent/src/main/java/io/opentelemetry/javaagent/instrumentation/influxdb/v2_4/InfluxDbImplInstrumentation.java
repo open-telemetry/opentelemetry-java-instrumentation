@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbSingletons.queryInstrumenter;
 import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbSingletons.requestInstrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isEnum;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -18,7 +17,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -49,17 +47,8 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
                 takesArguments(1)
                     .and(takesArgument(0, named("org.influxdb.dto.BatchPoints")))
                     .or(takesArguments(2).and(takesArgument(0, int.class)))
-                    .or(
-                        takesArguments(4)
-                            .and(takesArgument(0, String.class))
-                            .and(takesArgument(1, String.class))
-                            .and(takesArgument(2, isEnum())))
-                    .or(
-                        takesArguments(5)
-                            .and(takesArgument(0, String.class))
-                            .and(takesArgument(1, String.class))
-                            .and(takesArgument(2, isEnum()))
-                            .and(takesArgument(3, TimeUnit.class)))),
+                    .or(takesArguments(4).and(takesArgument(0, String.class)))
+                    .or(takesArguments(5).and(takesArgument(0, String.class)))),
         getClass().getName() + "$InfluxDbModifyAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf("createDatabase", "deleteDatabase"),

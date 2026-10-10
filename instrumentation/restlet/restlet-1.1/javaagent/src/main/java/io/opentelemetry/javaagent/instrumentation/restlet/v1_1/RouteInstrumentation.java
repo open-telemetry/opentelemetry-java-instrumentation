@@ -9,7 +9,6 @@ import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteS
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.restlet.v1_1.RestletSingletons.serverSpanName;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -28,10 +27,7 @@ class RouteInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("beforeHandle")
-            .and(takesArgument(0, named("org.restlet.data.Request")))
-            .and(takesArgument(1, named("org.restlet.data.Response"))),
-        getClass().getName() + "$RouteBeforeHandleAdvice");
+        named("beforeHandle"), getClass().getName() + "$RouteBeforeHandleAdvice");
   }
 
   @SuppressWarnings("unused")

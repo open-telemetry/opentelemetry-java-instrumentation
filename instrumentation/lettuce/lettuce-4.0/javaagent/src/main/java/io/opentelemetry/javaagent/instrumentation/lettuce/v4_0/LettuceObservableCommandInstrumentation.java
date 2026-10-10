@@ -34,12 +34,7 @@ class LettuceObservableCommandInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor()
-            .and(takesArguments(3))
-            .and(takesArgument(0, named("com.lambdaworks.redis.protocol.RedisCommand")))
-            .and(takesArgument(1, named("rx.Subscriber")))
-            .and(takesArgument(2, boolean.class)),
-        getClass().getName() + "$ConstructorAdvice");
+        isConstructor().and(takesArguments(3)), getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf("complete", "cancel")
             .and(takesArguments(0))

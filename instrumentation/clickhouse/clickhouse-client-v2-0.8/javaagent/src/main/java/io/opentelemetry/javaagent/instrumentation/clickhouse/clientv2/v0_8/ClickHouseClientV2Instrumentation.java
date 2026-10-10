@@ -23,7 +23,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseDbRequest;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseScope;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8.ClickHouseClientV2Singletons.CurrentServerInfo;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -43,7 +42,6 @@ class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
         isPublic()
             .and(named("query"))
             .and(takesArgument(0, String.class))
-            .and(takesArgument(1, isSubTypeOf(Map.class)))
             .and(takesArgument(2, named("com.clickhouse.client.api.query.QuerySettings")))
             .and(returns(isSubTypeOf(CompletableFuture.class))),
         getClass().getName() + "$QueryAdvice");

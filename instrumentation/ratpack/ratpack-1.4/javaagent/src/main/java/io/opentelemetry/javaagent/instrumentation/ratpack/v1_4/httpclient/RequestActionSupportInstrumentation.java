@@ -41,10 +41,7 @@ class RequestActionSupportInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isPrivate()
-            .and(named("send"))
-            .and(takesArgument(0, named("ratpack.exec.Downstream")))
-            .and(takesArgument(1, named("io.netty.channel.Channel"))),
+        isPrivate().and(named("send")).and(takesArgument(1, named("io.netty.channel.Channel"))),
         getClass().getName() + "$SendAdvice");
     transformer.applyAdviceToMethod(
         isPrivate()
@@ -54,9 +51,7 @@ class RequestActionSupportInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("connect").and(takesArgument(0, named("ratpack.exec.Downstream"))),
         getClass().getName() + "$ConnectDownstreamAdvice");
-    transformer.applyAdviceToMethod(
-        named("connect").and(takesArgument(0, named("ratpack.exec.Downstream"))),
-        getClass().getName() + "$ContextAdvice");
+    transformer.applyAdviceToMethod(named("connect"), getClass().getName() + "$ContextAdvice");
   }
 
   @SuppressWarnings("unused")

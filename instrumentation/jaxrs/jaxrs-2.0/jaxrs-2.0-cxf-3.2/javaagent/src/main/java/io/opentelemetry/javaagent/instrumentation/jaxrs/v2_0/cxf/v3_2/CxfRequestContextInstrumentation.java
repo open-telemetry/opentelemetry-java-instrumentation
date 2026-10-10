@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.cxf.v3_2;
 
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.cxf.v3_2.CxfSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
@@ -48,9 +47,7 @@ class CxfRequestContextInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("abortWith")
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("javax.ws.rs.core.Response"))),
+        named("abortWith").and(takesArguments(1)),
         getClass().getName() + "$ContainerRequestContextAdvice");
   }
 

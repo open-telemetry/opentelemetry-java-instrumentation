@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.common;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -29,11 +28,7 @@ public abstract class AbstractRequestContextInstrumentation implements TypeInstr
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("abortWith")
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("jakarta.ws.rs.core.Response"))),
-        abortAdviceName());
+    transformer.applyAdviceToMethod(named("abortWith").and(takesArguments(1)), abortAdviceName());
   }
 
   protected abstract String abortAdviceName();

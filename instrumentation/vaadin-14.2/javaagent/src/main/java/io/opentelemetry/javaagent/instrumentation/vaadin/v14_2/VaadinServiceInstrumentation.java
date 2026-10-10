@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.vaadin.v14_2;
 
 import static io.opentelemetry.javaagent.instrumentation.vaadin.v14_2.VaadinSingletons.helper;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.vaadin.flow.server.VaadinService;
 import io.opentelemetry.context.Context;
@@ -30,10 +29,7 @@ class VaadinServiceInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("handleRequest")
-            .and(takesArgument(0, named("com.vaadin.flow.server.VaadinRequest")))
-            .and(takesArgument(1, named("com.vaadin.flow.server.VaadinResponse"))),
-        getClass().getName() + "$HandleRequestAdvice");
+        named("handleRequest"), getClass().getName() + "$HandleRequestAdvice");
   }
 
   @SuppressWarnings("unused")

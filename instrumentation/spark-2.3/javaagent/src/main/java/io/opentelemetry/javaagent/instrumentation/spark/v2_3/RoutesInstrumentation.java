@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.spark.v2_3;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -27,10 +26,7 @@ class RoutesInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("find")
-            .and(takesArgument(0, named("spark.route.HttpMethod")))
-            .and(returns(named("spark.routematch.RouteMatch")))
-            .and(isPublic()),
+        named("find").and(returns(named("spark.routematch.RouteMatch"))).and(isPublic()),
         getClass().getName() + "$FindAdvice");
   }
 

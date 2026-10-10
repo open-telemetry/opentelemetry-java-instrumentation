@@ -40,8 +40,7 @@ class JedisSentinelPoolInstrumentation implements TypeInstrumentation {
         named("initSentinels").and(takesArgument(0, Set.class)).and(takesArgument(1, String.class)),
         getClass().getName() + "$InitializeAdvice");
     transformer.applyAdviceToMethod(
-        named("initMaster").and(takesArgument(0, named("redis.clients.jedis.HostAndPort"))),
-        getClass().getName() + "$PoolTargetScopeAdvice");
+        named("initMaster"), getClass().getName() + "$PoolTargetScopeAdvice");
     transformer.applyAdviceToMethod(
         named("run")
             .and(isDeclaredBy(named("redis.clients.jedis.JedisSentinelPool$MasterListener"))),

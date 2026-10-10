@@ -54,7 +54,6 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
         named("execute")
             .and(takesArguments(4))
             .and(takesArgument(0, named("org.apache.http.nio.protocol.HttpAsyncRequestProducer")))
-            .and(takesArgument(1, named("org.apache.http.nio.protocol.HttpAsyncResponseConsumer")))
             .and(takesArgument(2, named("org.apache.http.protocol.HttpContext")))
             .and(takesArgument(3, named("org.apache.http.concurrent.FutureCallback"))),
         getClass().getName() + "$ClientAdvice");

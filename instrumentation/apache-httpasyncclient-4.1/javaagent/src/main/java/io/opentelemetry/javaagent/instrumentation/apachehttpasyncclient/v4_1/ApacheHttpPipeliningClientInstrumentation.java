@@ -59,7 +59,6 @@ class ApacheHttpPipeliningClientInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("org.apache.http.HttpHost")))
             .and(takesArgument(1, named("java.util.List")))
             .and(takesArgument(2, named("java.util.List")))
-            .and(takesArgument(3, named("org.apache.http.protocol.HttpContext")))
             .and(takesArgument(4, named("org.apache.http.concurrent.FutureCallback"))),
         getClass().getName() + "$PipeliningClientAdvice");
   }

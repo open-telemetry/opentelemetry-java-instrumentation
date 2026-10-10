@@ -51,10 +51,7 @@ class ThriftServiceClientInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("org.apache.thrift.protocol.TProtocol"))),
         getClass().getName() + "$Constructor1Advice");
     transformer.applyAdviceToMethod(
-        isConstructor()
-            .and(
-                takesArgument(0, named("org.apache.thrift.protocol.TProtocol"))
-                    .and(takesArgument(1, named("org.apache.thrift.protocol.TProtocol")))),
+        isConstructor().and(takesArgument(1, named("org.apache.thrift.protocol.TProtocol"))),
         getClass().getName() + "$Constructor2Advice");
 
     transformer.applyAdviceToMethod(

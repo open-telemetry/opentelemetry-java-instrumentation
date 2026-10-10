@@ -39,7 +39,6 @@ class HttpJspPageInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("_jspService")
             .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest")))
-            .and(takesArgument(1, named("javax.servlet.http.HttpServletResponse")))
             .and(isPublic()),
         getClass().getName() + "$HttpJspPageAdvice");
   }

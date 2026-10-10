@@ -40,9 +40,7 @@ class AbstractMessageConvertingMessageSourceInstrumentation implements TypeInstr
             .and(returns(Collection.class)),
         getClass().getName() + "$ConvertMessagesAdvice");
     transformer.applyAdviceToMethod(
-        named("convertMessage")
-            .and(takesArgument(0, Object.class))
-            .and(returns(named("org.springframework.messaging.Message"))),
+        named("convertMessage").and(returns(named("org.springframework.messaging.Message"))),
         getClass().getName() + "$ConvertAdvice");
   }
 

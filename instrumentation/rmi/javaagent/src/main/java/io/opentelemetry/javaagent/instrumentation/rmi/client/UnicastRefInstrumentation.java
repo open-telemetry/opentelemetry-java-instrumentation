@@ -29,9 +29,7 @@ class UnicastRefInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("invoke")
-            .and(takesArgument(0, named("java.rmi.Remote")))
-            .and(takesArgument(1, Method.class)),
+        named("invoke").and(takesArgument(1, Method.class)),
         getClass().getName() + "$InvokeAdvice");
   }
 

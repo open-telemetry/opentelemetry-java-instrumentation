@@ -35,7 +35,6 @@ class Jetty12ServerInstrumentation implements TypeInstrumentation {
         named("handle")
             .and(takesArgument(0, named("org.eclipse.jetty.server.Request")))
             .and(takesArgument(1, named("org.eclipse.jetty.server.Response")))
-            .and(takesArgument(2, named("org.eclipse.jetty.util.Callback")))
             .and(isPublic()),
         getClass().getName() + "$HandlerAdvice");
   }

@@ -23,7 +23,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseRequest;
 import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseServerTarget;
 import io.opentelemetry.javaagent.instrumentation.hbase.client.common.RequestAndContext;
-import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -58,8 +57,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
                     namedOneOf(
                         "com.google.protobuf.Descriptors$MethodDescriptor",
                         "org.apache.hadoop.hbase.shaded.com.google.protobuf.Descriptors$MethodDescriptor")))
-            .and(takesArgument(4, named("org.apache.hadoop.hbase.security.User")))
-            .and(takesArgument(5, InetSocketAddress.class)),
+            .and(takesArgument(4, named("org.apache.hadoop.hbase.security.User"))),
         getClass().getName() + "$CallMethodAdvice");
   }
 

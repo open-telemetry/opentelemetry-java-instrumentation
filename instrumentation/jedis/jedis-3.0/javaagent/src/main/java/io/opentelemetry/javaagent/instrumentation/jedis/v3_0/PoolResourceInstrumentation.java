@@ -32,7 +32,6 @@ class PoolResourceInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isConstructor()
-            .and(takesArgument(0, named("org.apache.commons.pool2.impl.GenericObjectPoolConfig")))
             .and(takesArgument(1, named("org.apache.commons.pool2.PooledObjectFactory"))),
         getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(

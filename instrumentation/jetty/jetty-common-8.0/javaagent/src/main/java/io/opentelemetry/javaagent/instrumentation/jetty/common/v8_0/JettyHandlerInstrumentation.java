@@ -39,8 +39,6 @@ public class JettyHandlerInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("handle")
-            .and(takesArgument(0, String.class))
-            .and(takesArgument(1, named("org.eclipse.jetty.server.Request")))
             .and(takesArgument(2, named(servletBasePackage + ".http.HttpServletRequest")))
             .and(takesArgument(3, named(servletBasePackage + ".http.HttpServletResponse")))
             .and(isPublic()),

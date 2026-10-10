@@ -49,11 +49,8 @@ final class ProducerImplInstrumentation implements TypeInstrumentation {
                     0,
                     named(
                         "org.apache.rocketmq.shaded.com.google.common.util.concurrent.SettableFuture")))
-            .and(takesArgument(1, String.class))
-            .and(takesArgument(2, named("org.apache.rocketmq.client.java.message.MessageType")))
             .and(takesArgument(3, List.class))
-            .and(takesArgument(4, List.class))
-            .and(takesArgument(5, int.class)),
+            .and(takesArgument(4, List.class)),
         getClass().getName() + "$SendAdvice");
 
     transformer.applyAdviceToMethod(

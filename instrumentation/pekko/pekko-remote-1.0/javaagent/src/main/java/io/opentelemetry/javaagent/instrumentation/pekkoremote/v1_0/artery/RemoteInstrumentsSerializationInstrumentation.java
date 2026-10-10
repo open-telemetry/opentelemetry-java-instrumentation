@@ -31,9 +31,7 @@ class RemoteInstrumentsSerializationInstrumentation implements TypeInstrumentati
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("serialize").and(takesArgument(1, named("java.nio.ByteBuffer"))),
-        getClass().getName() + "$SerializeAdvice");
+    transformer.applyAdviceToMethod(named("serialize"), getClass().getName() + "$SerializeAdvice");
     transformer.applyAdviceToMethod(
         named("deserialize")
             .and(takesArgument(0, named("org.apache.pekko.remote.artery.InboundEnvelope"))),

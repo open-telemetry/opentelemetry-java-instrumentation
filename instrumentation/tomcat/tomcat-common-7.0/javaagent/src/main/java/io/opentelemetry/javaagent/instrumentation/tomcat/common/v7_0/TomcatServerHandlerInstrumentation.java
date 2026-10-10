@@ -41,7 +41,6 @@ public class TomcatServerHandlerInstrumentation implements TypeInstrumentation {
 
     transformer.applyAdviceToMethod(
         named("postParseRequest")
-            .and(takesArgument(0, named("org.apache.coyote.Request")))
             .and(takesArgument(2, named("org.apache.coyote.Response")))
             .and(returns(boolean.class)),
         attachResponseAdviceClassName);

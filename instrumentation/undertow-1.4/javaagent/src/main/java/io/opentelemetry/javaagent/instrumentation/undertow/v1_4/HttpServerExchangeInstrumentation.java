@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.undertow.v1_4;
 
 import static io.opentelemetry.javaagent.instrumentation.undertow.v1_4.UndertowSingletons.PROPAGATED_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
@@ -15,7 +16,6 @@ import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.util.concurrent.Executor;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -31,7 +31,7 @@ class HttpServerExchangeInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("dispatch").and(takesArguments(Executor.class, Runnable.class)),
+        named("dispatch").and(takesArguments(2)).and(takesArgument(1, Runnable.class)),
         getClass().getName() + "$DispatchAdvice");
   }
 

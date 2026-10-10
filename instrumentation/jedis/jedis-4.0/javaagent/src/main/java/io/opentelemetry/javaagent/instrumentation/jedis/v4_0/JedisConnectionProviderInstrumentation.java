@@ -85,8 +85,7 @@ class JedisConnectionProviderInstrumentation implements TypeInstrumentation {
             .and(returns(named("redis.clients.jedis.Connection"))),
         getClass().getName() + "$ProviderTargetScopeAdvice");
     transformer.applyAdviceToMethod(
-        named("initMaster").and(takesArgument(0, named("redis.clients.jedis.HostAndPort"))),
-        getClass().getName() + "$ProviderTargetScopeAdvice");
+        named("initMaster"), getClass().getName() + "$ProviderTargetScopeAdvice");
     transformer.applyAdviceToMethod(
         named("renewSlotCache"), getClass().getName() + "$ProviderTargetScopeAdvice");
   }

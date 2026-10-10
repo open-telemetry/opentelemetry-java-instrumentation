@@ -41,7 +41,6 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
         nameStartsWith("create")
             .and(nameEndsWith("Flux"))
             .and(isPublic())
-            .and(takesArgument(0, Supplier.class))
             .and(returns(named("reactor.core.publisher.Flux"))),
         getClass().getName() + "$CreateFluxAdvice");
   }

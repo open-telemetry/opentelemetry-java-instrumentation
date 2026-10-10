@@ -39,9 +39,7 @@ class RpcInvocationHandlerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("handle")
-            .and(takesArgument(0, named("com.vaadin.flow.component.UI")))
-            .and(takesArgument(1, named("elemental.json.JsonObject"))),
+        named("handle").and(takesArgument(1, named("elemental.json.JsonObject"))),
         getClass().getName() + "$HandleAdvice");
   }
 
