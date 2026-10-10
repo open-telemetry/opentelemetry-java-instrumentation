@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.amazonaws.AmazonClientException;
@@ -40,8 +39,7 @@ class AwsHttpClientInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         not(isAbstract())
             .and(named("doExecute"))
-            .and(takesArgument(0, named("com.amazonaws.Request")))
-            .and(returns(named("com.amazonaws.Response"))),
+            .and(takesArgument(0, named("com.amazonaws.Request"))),
         getClass().getName() + "$HttpClientAdvice");
   }
 

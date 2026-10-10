@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.bootstrap.HelperResources;
@@ -37,15 +36,13 @@ class ResourceInjectionInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("getResource").and(takesArguments(String.class)).and(returns(URL.class)),
+        named("getResource").and(takesArguments(String.class)),
         getClass().getName() + "$GetResourceAdvice");
     transformer.applyAdviceToMethod(
-        named("getResources").and(takesArguments(String.class)).and(returns(Enumeration.class)),
+        named("getResources").and(takesArguments(String.class)),
         getClass().getName() + "$GetResourcesAdvice");
     transformer.applyAdviceToMethod(
-        named("getResourceAsStream")
-            .and(takesArguments(String.class))
-            .and(returns(InputStream.class)),
+        named("getResourceAsStream").and(takesArguments(String.class)),
         getClass().getName() + "$GetResourceAsStreamAdvice");
   }
 

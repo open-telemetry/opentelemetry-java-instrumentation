@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.mongo.v4_0;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -31,7 +30,7 @@ class SocketStreamInstrumentation implements TypeInstrumentation {
     // Async and reactive clients use separate channel implementations and are intentionally not
     // covered.
     transformer.applyAdviceToMethod(
-        named("initializeSocket").and(isProtected()).and(returns(named("java.net.Socket"))),
+        named("initializeSocket").and(isProtected()),
         getClass().getName() + "$InitializeSocketAdvice");
   }
 

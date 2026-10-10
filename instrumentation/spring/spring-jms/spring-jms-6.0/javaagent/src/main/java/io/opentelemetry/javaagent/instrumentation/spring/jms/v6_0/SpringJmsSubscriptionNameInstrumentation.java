@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.spring.jms.v6_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -36,9 +35,7 @@ class SpringJmsSubscriptionNameInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, String.class)),
         getClass().getName() + "$SetSubscriptionNameAdvice");
     transformer.applyAdviceToMethod(
-        namedOneOf("getSubscriptionName", "getDurableSubscriptionName")
-            .and(takesArguments(0))
-            .and(returns(String.class)),
+        namedOneOf("getSubscriptionName", "getDurableSubscriptionName").and(takesArguments(0)),
         getClass().getName() + "$GetSubscriptionNameAdvice");
     transformer.applyAdviceToMethod(
         named("setSubscriptionDurable").and(takesArguments(1)).and(takesArgument(0, boolean.class)),

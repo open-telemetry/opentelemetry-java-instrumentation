@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -28,7 +27,6 @@ class MessageHeaderUtilsInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         namedOneOf("addHeaderIfAbsent", "addHeadersIfAbsent", "removeHeaderIfPresent")
-            .and(returns(named("org.springframework.messaging.Message")))
             .and(takesArgument(0, named("org.springframework.messaging.Message"))),
         getClass().getName() + "$PreserveContextAdvice");
   }

@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -30,10 +29,7 @@ class RediscalaClientActorLikeInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(named("reconnect"))
-            .and(takesArguments(String.class, int.class))
-            .and(returns(void.class)),
+        isPublic().and(named("reconnect")).and(takesArguments(String.class, int.class)),
         getClass().getName() + "$ReconnectAdvice");
   }
 

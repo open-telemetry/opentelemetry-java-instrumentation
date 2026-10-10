@@ -106,7 +106,7 @@ class InnerClassLambdaMetafactoryInstrumentation implements TypeInstrumentation 
       // code to the start and end of the method, but here we are modifying a call in the middle of
       // the method.
       if (("spinInnerClass".equals(name) || "generateInnerClass".equals(name))
-          && "()Ljava/lang/Class;".equals(descriptor)) {
+          && descriptor.startsWith("()")) {
         mv =
             new MethodVisitor(api, mv) {
               @Override
@@ -117,11 +117,9 @@ class InnerClassLambdaMetafactoryInstrumentation implements TypeInstrumentation 
                 // our lambda transformer
                 if ((opcode == Opcodes.INVOKEVIRTUAL
                         && "toByteArray".equals(name)
-                        && "()[B".equals(descriptor))
+                        && descriptor.startsWith("()"))
                     // jdk 24
-                    || (opcode == Opcodes.INVOKEINTERFACE
-                        && "build".equals(name)
-                        && descriptor.endsWith(")[B"))) {
+                    || (opcode == Opcodes.INVOKEINTERFACE && "build".equals(name))) {
                   mv.visitVarInsn(Opcodes.ALOAD, 0);
                   mv.visitFieldInsn(
                       Opcodes.GETFIELD, slashClassName, "lambdaClassName", "Ljava/lang/String;");

@@ -11,7 +11,6 @@ import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.Rediscal
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
@@ -50,10 +49,7 @@ class RequestInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(named("send"))
-            .and(takesArgument(0, named("redis.RedisCommand")))
-            .and(returns(named("scala.concurrent.Future"))),
+        isPublic().and(named("send")).and(takesArgument(0, named("redis.RedisCommand"))),
         getClass().getName() + "$SendAdvice");
   }
 

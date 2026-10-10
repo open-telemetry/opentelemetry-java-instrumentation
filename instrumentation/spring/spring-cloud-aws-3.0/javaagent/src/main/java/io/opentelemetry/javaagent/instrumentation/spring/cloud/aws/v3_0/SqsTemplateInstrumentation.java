@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -27,8 +26,7 @@ class SqsTemplateInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("getQueueAttributes").and(returns(CompletableFuture.class)),
-        getClass().getName() + "$GetQueueAttributesAdvice");
+        named("getQueueAttributes"), getClass().getName() + "$GetQueueAttributesAdvice");
   }
 
   @SuppressWarnings("unused")

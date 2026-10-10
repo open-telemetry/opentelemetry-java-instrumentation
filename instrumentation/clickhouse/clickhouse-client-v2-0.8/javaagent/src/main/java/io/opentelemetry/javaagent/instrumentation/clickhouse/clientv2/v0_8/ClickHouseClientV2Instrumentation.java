@@ -11,7 +11,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isSubTypeOf;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.clickhouse.client.api.Client;
@@ -44,8 +43,7 @@ class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
             .and(named("query"))
             .and(takesArgument(0, String.class))
             .and(takesArgument(1, isSubTypeOf(Map.class)))
-            .and(takesArgument(2, named("com.clickhouse.client.api.query.QuerySettings")))
-            .and(returns(isSubTypeOf(CompletableFuture.class))),
+            .and(takesArgument(2, named("com.clickhouse.client.api.query.QuerySettings"))),
         getClass().getName() + "$QueryAdvice");
   }
 

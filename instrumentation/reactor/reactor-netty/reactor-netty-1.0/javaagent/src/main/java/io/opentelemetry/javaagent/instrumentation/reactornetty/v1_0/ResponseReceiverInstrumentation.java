@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -46,30 +45,18 @@ class ResponseReceiverInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("response").and(takesArguments(0)).and(returns(named("reactor.core.publisher.Mono"))),
-        getClass().getName() + "$ResponseMonoAdvice");
+        named("response").and(takesArguments(0)), getClass().getName() + "$ResponseMonoAdvice");
     transformer.applyAdviceToMethod(
-        named("response")
-            .and(takesArguments(1))
-            .and(takesArgument(0, BiFunction.class))
-            .and(returns(named("reactor.core.publisher.Flux"))),
+        named("response").and(takesArguments(1)).and(takesArgument(0, BiFunction.class)),
         getClass().getName() + "$ResponseFluxAdvice");
     transformer.applyAdviceToMethod(
-        named("responseConnection")
-            .and(takesArguments(1))
-            .and(takesArgument(0, BiFunction.class))
-            .and(returns(named("reactor.core.publisher.Flux"))),
+        named("responseConnection").and(takesArguments(1)).and(takesArgument(0, BiFunction.class)),
         getClass().getName() + "$ResponseConnectionAdvice");
     transformer.applyAdviceToMethod(
-        named("responseContent")
-            .and(takesArguments(0))
-            .and(returns(named("reactor.netty.ByteBufFlux"))),
+        named("responseContent").and(takesArguments(0)),
         getClass().getName() + "$ResponseContentAdvice");
     transformer.applyAdviceToMethod(
-        named("responseSingle")
-            .and(takesArguments(1))
-            .and(takesArgument(0, BiFunction.class))
-            .and(returns(named("reactor.core.publisher.Mono"))),
+        named("responseSingle").and(takesArguments(1)).and(takesArgument(0, BiFunction.class)),
         getClass().getName() + "$ResponseSingleAdvice");
   }
 

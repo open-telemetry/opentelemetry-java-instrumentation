@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.TRANSACTION_STATE;
 import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -32,9 +31,7 @@ class TransactionInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("exec").and(returns(named("scala.concurrent.Future"))),
-        getClass().getName() + "$ExecAdvice");
+    transformer.applyAdviceToMethod(named("exec"), getClass().getName() + "$ExecAdvice");
   }
 
   @SuppressWarnings("unused")

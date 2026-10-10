@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.reactor.kafka.v1_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -27,8 +26,7 @@ class KafkaReceiverInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("create").and(isStatic()).and(returns(named("reactor.kafka.receiver.KafkaReceiver"))),
-        getClass().getName() + "$CreateAdvice");
+        named("create").and(isStatic()), getClass().getName() + "$CreateAdvice");
   }
 
   @SuppressWarnings("unused")

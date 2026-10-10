@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentCo
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -35,8 +34,7 @@ class RedisExecutorConnectionFutureInstrumentation implements TypeInstrumentatio
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("getConnection").and(returns(CompletableFuture.class)),
-        getClass().getName() + "$WrapConnectionFutureAdvice");
+        named("getConnection"), getClass().getName() + "$WrapConnectionFutureAdvice");
   }
 
   @SuppressWarnings("unused")

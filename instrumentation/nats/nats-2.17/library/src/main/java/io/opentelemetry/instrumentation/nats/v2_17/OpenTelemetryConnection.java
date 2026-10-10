@@ -64,7 +64,7 @@ final class OpenTelemetryConnection implements InvocationHandler {
 
   @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-    if ("publish".equals(method.getName()) && method.getReturnType().equals(Void.TYPE)) {
+    if ("publish".equals(method.getName())) {
       publish(method, args);
       return null;
     }
@@ -78,8 +78,7 @@ final class OpenTelemetryConnection implements InvocationHandler {
       return requestAsync(method, args);
     }
 
-    if ("createDispatcher".equals(method.getName())
-        && method.getReturnType().equals(Dispatcher.class)) {
+    if ("createDispatcher".equals(method.getName())) {
       return createDispatcher(method, args);
     }
 

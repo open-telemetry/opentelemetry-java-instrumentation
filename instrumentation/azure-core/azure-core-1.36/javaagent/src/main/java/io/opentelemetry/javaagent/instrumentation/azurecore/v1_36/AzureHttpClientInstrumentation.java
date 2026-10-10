@@ -11,7 +11,6 @@ import static io.opentelemetry.javaagent.instrumentation.azurecore.v1_36.Suppres
 import static io.opentelemetry.javaagent.instrumentation.azurecore.v1_36.SuppressNestedClientHelper.disallowNestedClientSpanSync;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.azure.core.http.HttpResponse;
@@ -41,16 +40,12 @@ class AzureHttpClientInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(named("send"))
-            .and(takesArgument(1, named("com.azure.core.util.Context")))
-            .and(returns(named("reactor.core.publisher.Mono"))),
+        isPublic().and(named("send")).and(takesArgument(1, named("com.azure.core.util.Context"))),
         getClass().getName() + "$SuppressNestedClientMonoAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("sendSync"))
-            .and(takesArgument(1, named("com.azure.core.util.Context")))
-            .and(returns(named("com.azure.core.http.HttpResponse"))),
+            .and(takesArgument(1, named("com.azure.core.util.Context"))),
         getClass().getName() + "$SuppressNestedClientSyncAdvice");
   }
 

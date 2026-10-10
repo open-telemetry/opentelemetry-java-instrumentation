@@ -80,7 +80,7 @@ class AbstractCompositeMeterInstrumentation implements TypeInstrumentation {
                               if (Opcodes.INVOKEINTERFACE == opcode
                                   && Type.getInternalName(Collection.class).equals(owner)
                                   && "iterator".equals(name)
-                                  && "()Ljava/util/Iterator;".equals(descriptor)) {
+                                  && descriptor.startsWith("()")) {
                                 // wrap the returned iterator to filter out our MeterRegistry
                                 super.visitMethodInsn(
                                     Opcodes.INVOKESTATIC,

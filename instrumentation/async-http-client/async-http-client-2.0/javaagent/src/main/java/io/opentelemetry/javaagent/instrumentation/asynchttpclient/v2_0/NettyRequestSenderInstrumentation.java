@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0.As
 import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0.AsyncHttpClientSingletons.REQUEST_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
@@ -50,8 +49,7 @@ class NettyRequestSenderInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("newNettyRequestAndResponseFuture")
             .and(takesArgument(0, named("org.asynchttpclient.Request")))
-            .and(takesArgument(1, named("org.asynchttpclient.AsyncHandler")))
-            .and(returns(named("org.asynchttpclient.netty.NettyResponseFuture"))),
+            .and(takesArgument(1, named("org.asynchttpclient.AsyncHandler"))),
         getClass().getName() + "$RememberNettyRequestAdvice");
   }
 

@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
@@ -31,11 +30,9 @@ class H2StreamChannelInitInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("initServer").and(returns(named("io.netty.channel.ChannelInitializer"))),
-        getClass().getName() + "$InitServerAdvice");
+        named("initServer"), getClass().getName() + "$InitServerAdvice");
     transformer.applyAdviceToMethod(
-        named("initClient").and(returns(named("io.netty.channel.ChannelInitializer"))),
-        getClass().getName() + "$InitClientAdvice");
+        named("initClient"), getClass().getName() + "$InitClientAdvice");
   }
 
   @SuppressWarnings("unused")

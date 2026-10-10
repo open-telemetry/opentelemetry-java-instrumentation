@@ -12,6 +12,7 @@ import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ErrorAttributes.ErrorTypeValues.OTHER;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -145,6 +146,68 @@ class JaxRs2AnnotationsInstrumentationTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(HTTP_REQUEST_METHOD, "GET"), equalTo(ERROR_TYPE, OTHER))));
+  }
+
+  private static Stream<ResponseResource> covariantResources() {
+    return Stream.of(new CovariantInterfaceResource(), new CovariantSuperclassResource());
+  }
+
+  @ParameterizedTest
+  @MethodSource("covariantResources")
+  void covariantReturnInheritsAnnotations(ResponseResource resource) {
+    testing.runWithHttpServerSpan(() -> assertThat(resource.response()).isEqualTo("response"));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET /covariant/response")
+                        .hasKind(SpanKind.SERVER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_ROUTE, "/covariant/response"),
+                            equalTo(ERROR_TYPE, OTHER)),
+                span ->
+                    span.hasName(getClassName(resource.getClass()) + ".response")
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME, resource.getClass().getName() + ".response"))));
+  }
+
+  interface ResponseResource {
+    Object response();
+  }
+
+  @Path("/covariant")
+  interface AnnotatedResponseResource extends ResponseResource {
+    @GET
+    @Path("/response")
+    @Override
+    Object response();
+  }
+
+  static class CovariantInterfaceResource implements AnnotatedResponseResource {
+    @Override
+    public String response() {
+      return "response";
+    }
+  }
+
+  @Path("/covariant")
+  abstract static class AbstractResponseResource implements ResponseResource {
+    @GET
+    @Path("/response")
+    @Override
+    public abstract Object response();
+  }
+
+  static class CovariantSuperclassResource extends AbstractResponseResource {
+    @Override
+    public String response() {
+      return "response";
+    }
   }
 
   @Path("/interface")

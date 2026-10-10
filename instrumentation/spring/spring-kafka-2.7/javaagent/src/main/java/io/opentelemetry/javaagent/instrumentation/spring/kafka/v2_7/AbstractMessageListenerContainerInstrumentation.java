@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.spring.kafka.v2_7;
 
 import static io.opentelemetry.javaagent.instrumentation.spring.kafka.v2_7.SpringKafkaSingletons.telemetry;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -34,9 +33,7 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
     // KafkaMessageListenerContainer$ListenerConsumer because spring doesn't always call the success
     // and failure methods on a batch interceptor
     transformer.applyAdviceToMethod(
-        named("getRecordInterceptor")
-            .and(takesArguments(0))
-            .and(returns(named("org.springframework.kafka.listener.RecordInterceptor"))),
+        named("getRecordInterceptor").and(takesArguments(0)),
         getClass().getName() + "$GetRecordInterceptorAdvice");
   }
 

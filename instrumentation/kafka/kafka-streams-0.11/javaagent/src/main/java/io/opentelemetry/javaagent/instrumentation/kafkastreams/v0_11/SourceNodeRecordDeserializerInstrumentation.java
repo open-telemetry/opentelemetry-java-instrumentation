@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11;
 
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
@@ -34,8 +33,7 @@ class SourceNodeRecordDeserializerInstrumentation implements TypeInstrumentation
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("deserialize"))
-            .and(takesArgument(0, named("org.apache.kafka.clients.consumer.ConsumerRecord")))
-            .and(returns(named("org.apache.kafka.clients.consumer.ConsumerRecord"))),
+            .and(takesArgument(0, named("org.apache.kafka.clients.consumer.ConsumerRecord"))),
         getClass().getName() + "$SaveHeadersAdvice");
   }
 

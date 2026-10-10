@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.tomcat.common.v7_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -42,8 +41,7 @@ public class TomcatServerHandlerInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("postParseRequest")
             .and(takesArgument(0, named("org.apache.coyote.Request")))
-            .and(takesArgument(2, named("org.apache.coyote.Response")))
-            .and(returns(boolean.class)),
+            .and(takesArgument(2, named("org.apache.coyote.Response"))),
         attachResponseAdviceClassName);
   }
 }

@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -37,10 +36,7 @@ class ConnectionFactoryInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("createConnection")
-            .and(takesArguments(1))
-            .and(takesArgument(0, List.class))
-            .and(returns(named("net.spy.memcached.MemcachedConnection"))),
+        named("createConnection").and(takesArguments(1)).and(takesArgument(0, List.class)),
         getClass().getName() + "$CreateConnectionAdvice");
   }
 

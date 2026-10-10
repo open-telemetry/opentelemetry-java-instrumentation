@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -28,9 +27,7 @@ class HttpClientConnectInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("connect").and(returns(named("reactor.core.publisher.Mono"))),
-        getClass().getName() + "$ConnectAdvice");
+    transformer.applyAdviceToMethod(named("connect"), getClass().getName() + "$ConnectAdvice");
   }
 
   @SuppressWarnings("unused")

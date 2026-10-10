@@ -56,9 +56,7 @@ class LettuceClientInstrumentation implements TypeInstrumentation {
     // an unrelated future overload from changing endpoint metadata when its arguments do not have
     // the expected structure.
     transformer.applyAdviceToMethod(
-        isPrivate()
-            .and(named("connectStatefulAsync"))
-            .and(returns(named("io.lettuce.core.ConnectionFuture"))),
+        isPrivate().and(named("connectStatefulAsync")),
         getClass().getName() + "$AttachEndpointAdvice");
   }
 

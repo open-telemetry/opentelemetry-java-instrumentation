@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0.cxf.v3_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -27,9 +26,7 @@ class JaxWsServerFactoryBeanInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("create")
-            .and(takesNoArguments().and(returns(named("org.apache.cxf.endpoint.Server")))),
-        getClass().getName() + "$CreateAdvice");
+        named("create").and(takesNoArguments()), getClass().getName() + "$CreateAdvice");
   }
 
   @SuppressWarnings("unused")

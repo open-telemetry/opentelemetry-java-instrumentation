@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.React
 import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.ReactorNettySingletons.connectionInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.netty.channel.Channel;
@@ -42,8 +41,7 @@ class TransportConnectorInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("doResolveAndConnect")
-            .and(takesArgument(3, named("io.netty.resolver.AddressResolverGroup")))
-            .and(returns(named("reactor.core.publisher.Mono"))),
+            .and(takesArgument(3, named("io.netty.resolver.AddressResolverGroup"))),
         getClass().getName() + "$ResolveAndConnectAdvice");
 
     // handles [1.0.0, 1.0.6)

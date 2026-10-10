@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.instrumentation.executors.VirtualFieldH
 import static java.util.Arrays.asList;
 import static java.util.logging.Level.FINE;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -90,8 +89,7 @@ class FutureInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("cancel").and(returns(boolean.class)),
-        getClass().getName() + "$CanceledFutureAdvice");
+        named("cancel"), getClass().getName() + "$CanceledFutureAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -33,12 +32,7 @@ class SessionFactoryInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        namedOneOf("openSession", "openStatelessSession")
-            .and(takesArguments(0))
-            .and(
-                returns(
-                    namedOneOf("org.hibernate.Session", "org.hibernate.StatelessSession")
-                        .or(implementsInterface(named("org.hibernate.Session"))))),
+        namedOneOf("openSession", "openStatelessSession").and(takesArguments(0)),
         getClass().getName() + "$SessionFactoryAdvice");
   }
 

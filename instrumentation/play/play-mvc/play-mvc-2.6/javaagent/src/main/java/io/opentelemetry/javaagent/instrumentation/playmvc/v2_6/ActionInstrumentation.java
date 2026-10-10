@@ -11,7 +11,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.instrumentation.playmvc.v2_6.Play26Singletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.playmvc.v2_6.Play26Singletons.updateSpan;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
@@ -41,9 +40,7 @@ class ActionInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("apply")
-            .and(takesArgument(0, named("play.api.mvc.Request")))
-            .and(returns(named("scala.concurrent.Future"))),
+        named("apply").and(takesArgument(0, named("play.api.mvc.Request"))),
         getClass().getName() + "$ApplyAdvice");
   }
 

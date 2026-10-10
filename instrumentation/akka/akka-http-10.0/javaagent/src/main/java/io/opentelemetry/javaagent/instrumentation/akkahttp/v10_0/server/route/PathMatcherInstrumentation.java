@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.server.route;
 
 import static io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.server.route.AkkaRouteUtil.PREFIX;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import akka.http.scaladsl.model.Uri;
@@ -27,9 +26,7 @@ class PathMatcherInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("apply")
-            .and(takesArgument(0, named("akka.http.scaladsl.model.Uri$Path")))
-            .and(returns(named("akka.http.scaladsl.server.PathMatcher"))),
+        named("apply").and(takesArgument(0, named("akka.http.scaladsl.model.Uri$Path"))),
         getClass().getName() + "$ApplyAdvice");
   }
 

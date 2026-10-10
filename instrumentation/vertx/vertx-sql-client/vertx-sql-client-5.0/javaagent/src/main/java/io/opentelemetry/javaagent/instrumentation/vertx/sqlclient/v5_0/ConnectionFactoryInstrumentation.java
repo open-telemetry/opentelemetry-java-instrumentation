@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.currentConnectionAttempt;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -50,8 +49,7 @@ class ConnectionFactoryInstrumentation implements TypeInstrumentation {
         named("connect")
             .and(takesArguments(2))
             .and(takesArgument(0, named("io.vertx.core.Context")))
-            .and(takesArgument(1, named("io.vertx.core.Future")))
-            .and(returns(named("io.vertx.core.Future"))),
+            .and(takesArgument(1, named("io.vertx.core.Future"))),
         getClass().getName() + "$ConnectAdvice");
   }
 

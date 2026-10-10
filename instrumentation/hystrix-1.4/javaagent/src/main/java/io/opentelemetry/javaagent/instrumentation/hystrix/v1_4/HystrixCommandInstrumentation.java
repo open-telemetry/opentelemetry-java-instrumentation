@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.instrumentation.hystrix.v1_4.HystrixSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.netflix.hystrix.HystrixInvokableInfo;
 import io.opentelemetry.instrumentation.rxjava.v1_0.TracedOnSubscribe;
@@ -40,11 +39,9 @@ class HystrixCommandInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("getExecutionObservable").and(returns(named("rx.Observable"))),
-        getClass().getName() + "$ExecuteAdvice");
+        named("getExecutionObservable"), getClass().getName() + "$ExecuteAdvice");
     transformer.applyAdviceToMethod(
-        named("getFallbackObservable").and(returns(named("rx.Observable"))),
-        getClass().getName() + "$FallbackAdvice");
+        named("getFallbackObservable"), getClass().getName() + "$FallbackAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_57;
 
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -27,13 +26,10 @@ class OpenTelemetryInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("isSet").and(isStatic()).and(takesArguments(0)).and(returns(boolean.class)),
+        named("isSet").and(isStatic()).and(takesArguments(0)),
         getClass().getName() + "$IsSetAdvice");
     transformer.applyAdviceToMethod(
-        named("getOrNoop")
-            .and(isStatic())
-            .and(takesArguments(0))
-            .and(returns(named("application.io.opentelemetry.api.OpenTelemetry"))),
+        named("getOrNoop").and(isStatic()).and(takesArguments(0)),
         getClass().getName() + "$GetOrNoopAdvice");
   }
 

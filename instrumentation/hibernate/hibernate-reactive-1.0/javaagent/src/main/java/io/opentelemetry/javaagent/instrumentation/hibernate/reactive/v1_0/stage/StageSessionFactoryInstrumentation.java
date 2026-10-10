@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.reactive.v1_0.stage
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -35,7 +34,7 @@ class StageSessionFactoryInstrumentation implements TypeInstrumentation {
         namedOneOf("withSession", "withStatelessSession").and(takesArgument(1, Function.class)),
         getClass().getName() + "$Function1Advice");
     transformer.applyAdviceToMethod(
-        namedOneOf("openSession", "openStatelessSession").and(returns(CompletionStage.class)),
+        namedOneOf("openSession", "openStatelessSession"),
         getClass().getName() + "$OpenSessionAdvice");
   }
 

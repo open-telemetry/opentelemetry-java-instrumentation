@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.awspring.cloud.sqs.listener.ContainerOptions;
@@ -35,14 +34,10 @@ class AbstractMessageConvertingMessageSourceInstrumentation implements TypeInstr
             .and(takesArgument(0, named("io.awspring.cloud.sqs.listener.ContainerOptions"))),
         getClass().getName() + "$ConfigureAdvice");
     transformer.applyAdviceToMethod(
-        named("convertMessages")
-            .and(takesArgument(0, Collection.class))
-            .and(returns(Collection.class)),
+        named("convertMessages").and(takesArgument(0, Collection.class)),
         getClass().getName() + "$ConvertMessagesAdvice");
     transformer.applyAdviceToMethod(
-        named("convertMessage")
-            .and(takesArgument(0, Object.class))
-            .and(returns(named("org.springframework.messaging.Message"))),
+        named("convertMessage").and(takesArgument(0, Object.class)),
         getClass().getName() + "$ConvertAdvice");
   }
 

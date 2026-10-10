@@ -71,15 +71,13 @@ class SessionInstrumentation implements TypeInstrumentation {
     // Handle the non-generic 'get' separately.
     transformer.applyAdviceToMethod(
         namedOneOf("get", "find")
-            .and(returns(Object.class))
             .and(takesArgument(0, String.class).or(takesArgument(0, Class.class))),
         getClass().getName() + "$SessionMethodAdvice");
 
     // These methods return some object that we want to instrument, and so the Advice will pin the
     // current SessionInfo to the returned object using a VirtualField.
     transformer.applyAdviceToMethod(
-        namedOneOf("beginTransaction", "getTransaction")
-            .and(returns(named("org.hibernate.Transaction"))),
+        namedOneOf("beginTransaction", "getTransaction"),
         getClass().getName() + "$GetTransactionAdvice");
 
     transformer.applyAdviceToMethod(

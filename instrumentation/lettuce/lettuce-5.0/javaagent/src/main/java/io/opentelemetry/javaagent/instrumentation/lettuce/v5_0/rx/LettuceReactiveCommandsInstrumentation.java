@@ -9,7 +9,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameEndsWith;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.lettuce.core.AbstractRedisReactiveCommands;
@@ -33,16 +32,13 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("createMono")
-            .and(takesArgument(0, Supplier.class))
-            .and(returns(named("reactor.core.publisher.Mono"))),
+        named("createMono").and(takesArgument(0, Supplier.class)),
         getClass().getName() + "$CreateMonoAdvice");
     transformer.applyAdviceToMethod(
         nameStartsWith("create")
             .and(nameEndsWith("Flux"))
             .and(isPublic())
-            .and(takesArgument(0, Supplier.class))
-            .and(returns(named("reactor.core.publisher.Flux"))),
+            .and(takesArgument(0, Supplier.class)),
         getClass().getName() + "$CreateFluxAdvice");
   }
 

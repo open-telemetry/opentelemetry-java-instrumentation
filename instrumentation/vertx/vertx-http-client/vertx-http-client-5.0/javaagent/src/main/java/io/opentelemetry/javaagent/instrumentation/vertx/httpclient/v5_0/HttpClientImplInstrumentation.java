@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v5_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -27,9 +26,7 @@ class HttpClientImplInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("request")
-            .and(takesArgument(0, named("io.vertx.core.http.RequestOptions")))
-            .and(returns(named("io.vertx.core.Future"))),
+        named("request").and(takesArgument(0, named("io.vertx.core.http.RequestOptions"))),
         getClass().getName() + "$WrapFutureAdvice");
   }
 

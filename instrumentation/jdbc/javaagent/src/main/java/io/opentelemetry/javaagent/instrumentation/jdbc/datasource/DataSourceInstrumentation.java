@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.jdbc.datasource;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcSingletons.dataSourceInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
@@ -35,8 +34,7 @@ class DataSourceInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("getConnection").and(returns(implementsInterface(named("java.sql.Connection")))),
-        getClass().getName() + "$GetConnectionAdvice");
+        named("getConnection"), getClass().getName() + "$GetConnectionAdvice");
   }
 
   @SuppressWarnings("unused")
