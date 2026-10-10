@@ -24,6 +24,8 @@ public final class HttpConstants {
               asList(
                   "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT", "TRACE")));
 
+  // Default sensitive query parameters from semantic conventions:
+  // https://opentelemetry.io/docs/specs/semconv/attributes-registry/url/#url-full
   public static final Set<String> SENSITIVE_QUERY_PARAMETERS =
       unmodifiableSet(
           new HashSet<>(

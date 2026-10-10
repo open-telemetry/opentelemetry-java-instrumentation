@@ -20,6 +20,8 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class UrlAttributesExtractorTest {
 
@@ -77,5 +79,32 @@ class UrlAttributesExtractorTest {
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), emptyMap(), null, null);
     assertThat(endAttributes.build()).isEmpty();
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        // Default sensitive query parameters from semantic conventions:
+        // https://opentelemetry.io/docs/specs/semconv/attributes-registry/url/#url-query
+        "AWSAccessKeyId",
+        "Signature",
+        "X-Amz-Signature",
+        "X-Amz-Credential",
+        "X-Amz-Security-Token",
+        "sig",
+        "X-Goog-Signature"
+      })
+  void shouldRedactSensitiveQueryParameters(String queryParameter) {
+    Map<String, String> request = new HashMap<>();
+    request.put("query", "before=keep&" + queryParameter + "=value&after=keep");
+
+    AttributesExtractor<Map<String, String>, Void> extractor =
+        UrlAttributesExtractor.create(new TestUrlAttributesGetter());
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+
+    assertThat(attributes.build())
+        .containsOnly(entry(URL_QUERY, "before=keep&" + queryParameter + "=REDACTED&after=keep"));
   }
 }
