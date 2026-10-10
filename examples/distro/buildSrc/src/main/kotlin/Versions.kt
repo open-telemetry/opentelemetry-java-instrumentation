@@ -1,5 +1,5 @@
 // this line is managed by .github/scripts/update-sdk-version.sh
-const val opentelemetrySdkVersion = "1.66.0"
+const val opentelemetrySdkVersion = "1.67.0"
 
 // these lines are managed by .github/scripts/update-version.sh
 const val opentelemetryJavaagentVersion = "3.0.0-SNAPSHOT"
