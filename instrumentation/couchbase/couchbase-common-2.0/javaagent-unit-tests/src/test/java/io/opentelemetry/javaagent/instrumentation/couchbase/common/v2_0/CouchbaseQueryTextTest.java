@@ -14,43 +14,41 @@ import com.couchbase.client.java.query.Select;
 import com.couchbase.client.java.query.dsl.Expression;
 import com.couchbase.client.java.view.SpatialViewQuery;
 import com.couchbase.client.java.view.ViewQuery;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-class CouchbaseQuerySanitizerTest {
+class CouchbaseQueryTextTest {
 
   @ParameterizedTest
   @MethodSource("providesArguments")
-  void testShouldNormalizeStringQuery(Parameter parameter) {
-    String normalized = CouchbaseQuerySanitizer.analyze(parameter.query).getQueryText();
+  void extractsRawQueryText(Parameter parameter) {
+    CouchbaseRequestInfo request = CouchbaseRequestInfo.create("test", null, parameter.query);
     // the analytics query ends up with trailing ';' in earlier couchbase version, but no trailing
     // ';' in later couchbase version
-    assertThat(normalized.replaceFirst(";$", "")).isEqualTo(parameter.expected);
+    assertThat(request.getQueryText().replaceFirst(";$", "")).isEqualTo(parameter.expected);
+    assertThat(request.isSqlQuery())
+        .isEqualTo(
+            !(parameter.query instanceof ViewQuery)
+                && !(parameter.query instanceof SpatialViewQuery));
   }
 
   @Test
-  void queryAnalysisIsPreservedInRequestCopies() {
+  void rawQueryIsPreservedInRequestCopies() {
     CouchbaseRequestInfo request =
         CouchbaseRequestInfo.create(
             "test", null, "SELECT field1 FROM `test` WHERE field2 = 'asdf'");
-    SqlQuery query = request.getSqlQuery();
-
-    assertThat(query).isNotNull();
-    assertThat(query.getQueryText()).isEqualTo("SELECT field1 FROM `test` WHERE field2 = ?");
-    assertThat(query.getQuerySummary()).isEqualTo("SELECT `test`");
-    assertThat(query.getOperationName()).isEqualTo("SELECT");
-    assertThat(query.getCollectionName()).isEqualTo("`test`");
-    assertThat(query.getStoredProcedureName()).isNull();
-    assertThat(request.getOperation()).isEqualTo("SELECT");
+    assertThat(request.getQueryText()).isEqualTo("SELECT field1 FROM `test` WHERE field2 = 'asdf'");
+    assertThat(request.isSqlQuery()).isTrue();
+    assertThat(request.getOperation()).isNull();
 
     CouchbaseRequestInfo copy = request.copySupplier().get();
     assertThat(copy).isNotSameAs(request);
-    assertThat(copy.getSqlQuery()).isSameAs(query);
-    assertThat(copy.getOperation()).isEqualTo("SELECT");
+    assertThat(copy.getQueryText()).isEqualTo(request.getQueryText());
+    assertThat(copy.isSqlQuery()).isTrue();
+    assertThat(copy.getOperation()).isNull();
     assertThat(copy.getBucket()).isEqualTo("test");
   }
 
@@ -61,7 +59,7 @@ class CouchbaseQuerySanitizerTest {
                 "plain string",
                 new Parameter(
                     "SELECT field1 FROM `test` WHERE field2 = 'asdf'",
-                    "SELECT field1 FROM `test` WHERE field2 = ?"))),
+                    "SELECT field1 FROM `test` WHERE field2 = 'asdf'"))),
         Arguments.of(
             named(
                 "Statement",
@@ -69,19 +67,19 @@ class CouchbaseQuerySanitizerTest {
                     Select.select("field1")
                         .from("test")
                         .where(Expression.path("field2").eq(Expression.s("asdf"))),
-                    "SELECT field1 FROM test WHERE field2 = ?"))),
+                    "SELECT field1 FROM test WHERE field2 = \"asdf\""))),
         Arguments.of(
             named(
                 "N1QL",
                 new Parameter(
                     N1qlQuery.simple("SELECT field1 FROM `test` WHERE field2 = 'asdf'"),
-                    "SELECT field1 FROM `test` WHERE field2 = ?"))),
+                    "SELECT field1 FROM `test` WHERE field2 = 'asdf'"))),
         Arguments.of(
             named(
                 "Analytics",
                 new Parameter(
                     AnalyticsQuery.simple("SELECT field1 FROM `test` WHERE field2 = 'asdf'"),
-                    "SELECT field1 FROM `test` WHERE field2 = ?"))),
+                    "SELECT field1 FROM `test` WHERE field2 = 'asdf'"))),
         Arguments.of(
             named(
                 "View",

@@ -21,9 +21,58 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class DbConfigTest {
+
+  @ParameterizedTest
+  @CsvSource(
+      value = {
+        "unset, unset, true",
+        "unset, false, false",
+        "unset, true, true",
+        "false, unset, false",
+        "false, false, false",
+        "false, true, false",
+        "true, unset, true",
+        "true, false, true",
+        "true, true, true"
+      },
+      nullValues = "unset")
+  void querySanitizationUsesInstrumentationSettingThenCommonThenDefault(
+      Boolean instrumentationEnabled, Boolean commonEnabled, boolean expected) {
+    ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
+    DeclarativeConfigProperties instrumentationConfig =
+        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
+    DeclarativeConfigProperties commonConfig =
+        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
+    when(openTelemetry.getInstrumentationConfig("jdbc")).thenReturn(instrumentationConfig);
+    when(openTelemetry.getInstrumentationConfig("common")).thenReturn(commonConfig);
+    when(instrumentationConfig.get("query_sanitization").getBoolean("enabled"))
+        .thenReturn(instrumentationEnabled);
+    when(instrumentationConfig.get("statement_sanitizer").getBoolean("enabled")).thenReturn(null);
+    when(commonConfig.get("db").get("query_sanitization").getBoolean("enabled"))
+        .thenReturn(commonEnabled);
+    when(commonConfig.get("database").get("statement_sanitizer").getBoolean("enabled"))
+        .thenReturn(null);
+    when(commonConfig.get("db_statement_sanitizer").getBoolean("enabled")).thenReturn(null);
+
+    assertThat(DbConfig.isQuerySanitizationEnabled(openTelemetry, "jdbc")).isEqualTo(expected);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void querySanitizationUsesSuppliedDefaultWhenSettingsAreUnset(boolean defaultValue) {
+    ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
+    when(openTelemetry.getInstrumentationConfig("jdbc"))
+        .thenReturn(DeclarativeConfigProperties.empty());
+    when(openTelemetry.getInstrumentationConfig("common"))
+        .thenReturn(DeclarativeConfigProperties.empty());
+
+    assertThat(DbConfig.isQuerySanitizationEnabled(openTelemetry, "jdbc", defaultValue))
+        .isEqualTo(defaultValue);
+  }
 
   @Test
   void newCommonQuerySanitizationTakesPrecedenceOverDeprecatedConfig() {

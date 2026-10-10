@@ -9,10 +9,13 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -26,33 +29,61 @@ public class CouchbaseSingletons {
   private static final Logger logger = Logger.getLogger(CouchbaseSingletons.class.getName());
 
   private static final Instrumenter<CouchbaseRequestInfo, Void> instrumenter;
+  private static final Instrumenter<CouchbaseRequestInfo, Void> queryInstrumenter;
 
   static {
+    DeclarativeConfigProperties config =
+        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "couchbase");
+    boolean captureExperimentalTelemetry = captureExperimentalTelemetry(config);
+
     CouchbaseAttributesGetter couchbaseAttributesGetter = new CouchbaseAttributesGetter();
     SpanNameExtractor<CouchbaseRequestInfo> spanNameExtractor =
         DbClientSpanNameExtractor.create(couchbaseAttributesGetter);
 
+    instrumenter =
+        buildInstrumenter(
+            spanNameExtractor,
+            DbClientAttributesExtractor.create(couchbaseAttributesGetter),
+            captureExperimentalTelemetry);
+
+    CouchbaseSqlAttributesGetter sqlAttributesGetter = new CouchbaseSqlAttributesGetter();
+    queryInstrumenter =
+        buildInstrumenter(
+            DbClientSpanNameExtractor.create(sqlAttributesGetter),
+            SqlClientAttributesExtractor.builder(sqlAttributesGetter)
+                .setQuerySanitizationEnabled(
+                    DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "couchbase"))
+                .build(),
+            captureExperimentalTelemetry);
+  }
+
+  private static Instrumenter<CouchbaseRequestInfo, Void> buildInstrumenter(
+      SpanNameExtractor<CouchbaseRequestInfo> spanNameExtractor,
+      AttributesExtractor<CouchbaseRequestInfo, Void> attributesExtractor,
+      boolean captureExperimentalTelemetry) {
     InstrumenterBuilder<CouchbaseRequestInfo, Void> builder =
         Instrumenter.<CouchbaseRequestInfo, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
-            .addAttributesExtractor(DbClientAttributesExtractor.create(couchbaseAttributesGetter))
+            .addAttributesExtractor(attributesExtractor)
             .addContextCustomizer(
                 (context, couchbaseRequest, startAttributes) ->
                     CouchbaseRequestInfo.init(context, couchbaseRequest))
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(builder);
 
-    DeclarativeConfigProperties config =
-        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "couchbase");
-    if (captureExperimentalTelemetry(config)) {
+    if (captureExperimentalTelemetry) {
       builder.addAttributesExtractor(new ExperimentalAttributesExtractor());
     }
 
-    instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
+    return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   public static Instrumenter<CouchbaseRequestInfo, Void> instrumenter() {
     return instrumenter;
+  }
+
+  public static Instrumenter<CouchbaseRequestInfo, Void> queryInstrumenter() {
+    return queryInstrumenter;
   }
 
   private static boolean captureExperimentalTelemetry(DeclarativeConfigProperties config) {

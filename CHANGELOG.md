@@ -4,6 +4,13 @@
 
 ### ⚠️ Breaking changes
 
+- Couchbase 2.x SQL queries now use the shared SQL attribute extractor and no longer emit
+  `db.operation.name`. SQL query attributes and span names are derived from the raw query text.
+  Disabling query sanitization now affects only `db.query.text`: `db.query.summary` and
+  query-derived span names are still produced, matching other SQL instrumentations. This applies
+  to both `otel.instrumentation.couchbase.query-sanitization.enabled=false` and declarative
+  `java.couchbase.query_sanitization.enabled: false`, including when inherited from the common
+  database setting.
 - The Java agent, Spring Boot setup, and standalone appenders now capture structured log attributes from Log4j
   `MapMessage` entries, SLF4J key-value pairs, Logback Logstash markers, and Logstash structured
   arguments by default. Replace the former flat settings for Log4j MapMessage
