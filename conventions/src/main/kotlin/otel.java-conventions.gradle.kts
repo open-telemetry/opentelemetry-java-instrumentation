@@ -19,7 +19,7 @@ val otelProps = the<OtelPropsExtension>()
 
 afterEvaluate {
   val previousBaseArchiveName = base.archivesName.get()
-  if (findProperty("mavenGroupId") == "io.opentelemetry.javaagent.instrumentation") {
+  if (extra.properties["mavenGroupId"] == "io.opentelemetry.javaagent.instrumentation") {
     base.archivesName.set("opentelemetry-javaagent-$previousBaseArchiveName")
   } else if (!previousBaseArchiveName.startsWith("opentelemetry-")) {
     base.archivesName.set("opentelemetry-$previousBaseArchiveName")
