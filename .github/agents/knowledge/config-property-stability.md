@@ -66,8 +66,8 @@ Examples:
 Config properties have no `@Deprecated` annotation and no automatic forwarding. Deprecation
 must be communicated through:
 
-1. A `🚫 Deprecations` CHANGELOG entry naming the old and new property, including instrumentation
-   enablement alias renames.
+1. A `deprecation` fragment in `changelog.d` naming the old and new property, including
+   instrumentation enablement alias renames.
 2. A comment in code near where the old property is read.
 3. **A `WARN`-level log message at startup** when the deprecated property is applied, naming the old
    and replacement flat properties, or the declarative paths when there is no flat form. Exact
