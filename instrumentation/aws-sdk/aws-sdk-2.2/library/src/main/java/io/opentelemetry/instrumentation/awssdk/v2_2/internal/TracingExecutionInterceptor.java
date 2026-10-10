@@ -21,6 +21,7 @@ import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -210,7 +211,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     AwsSdkRequest awsSdkRequest = AwsSdkRequest.ofSdkRequest(request);
     executionAttributes.putAttribute(AWS_SDK_REQUEST_ATTRIBUTE, awsSdkRequest);
     Instrumenter<ExecutionAttributes, Response> instrumenter =
-        getInstrumenter(request, awsSdkRequest);
+        getInstrumenter(parentOtelContext, request, awsSdkRequest);
 
     if (!instrumenter.shouldStart(parentOtelContext, executionAttributes)) {
       // NB: We also skip injection in case we don't start.
@@ -519,14 +520,18 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
   }
 
   private Instrumenter<ExecutionAttributes, Response> getInstrumenter(
-      SdkRequest request, AwsSdkRequest awsSdkRequest) {
+      io.opentelemetry.context.Context otelContext,
+      SdkRequest request,
+      AwsSdkRequest awsSdkRequest) {
     if (SqsAccess.isSqsProducerRequest(request)) {
       return producerInstrumenter;
     }
     if (SqsAccess.isSqsDeleteRequest(request)) {
       return settleInstrumenter;
     }
-    if (BedrockRuntimeAccess.isBedrockRuntimeRequest(request)) {
+    // if there already is an active gen-ai span create a regular aws request span instead of
+    // bedrock gen-ai span
+    if (shouldUseBedrockRuntimeInstrumenter(otelContext, request)) {
       return bedrockRuntimeInstrumenter;
     }
     if (awsSdkRequest != null && awsSdkRequest.type() == DYNAMODB) {
@@ -536,6 +541,13 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
       return rdsDataInstrumenter;
     }
     return requestInstrumenter;
+  }
+
+  // visible for testing
+  static boolean shouldUseBedrockRuntimeInstrumenter(
+      io.opentelemetry.context.Context otelContext, SdkRequest request) {
+    return BedrockRuntimeAccess.isBedrockRuntimeRequest(request)
+        && SpanKey.GEN_AI_CLIENT.fromContextOrNull(otelContext) == null;
   }
 
   private interface RequestSpanFinisher {
