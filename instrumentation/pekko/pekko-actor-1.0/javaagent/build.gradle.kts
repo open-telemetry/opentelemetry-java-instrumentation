@@ -46,17 +46,52 @@ testing {
         implementation(project(":instrumentation:executors:testing"))
       }
     }
+
+    // pekko 2.x has only milestone releases so far, which latest dep testing skips, run the tests
+    // against them explicitly, pekko 2.x requires java 17 and has no scala 2.12 artifacts
+    register<JvmTestSuite>("pekko2Test") {
+      dependencies {
+        implementation("org.apache.pekko:pekko-actor_2.13:${baseVersion("2.0.0-M4").orLatest("2.+")}")
+        implementation(project(":instrumentation:executors:testing"))
+      }
+    }
+
+    register<JvmTestSuite>("pekko2Scala3Test") {
+      dependencies {
+        implementation("org.scala-lang:scala3-library_3:3.3.8")
+        implementation("org.apache.pekko:pekko-actor_3:${baseVersion("2.0.0-M4").orLatest("2.+")}")
+        implementation(project(":instrumentation:executors:testing"))
+      }
+    }
   }
 }
 
-// the scala 3 suite runs the same tests as the scala 2 suite, against the _3 artifacts
-sourceSets.named("scala3Test") {
-  java.srcDir("src/test/java")
-  resources.srcDir("src/test/resources")
-  extensions.getByType(org.gradle.api.tasks.ScalaSourceDirectorySet::class.java).srcDir("src/test/scala")
+// the scala 3 and pekko 2 suites run the same tests as the scala 2 suite, against other artifacts
+listOf("scala3Test", "pekko2Test", "pekko2Scala3Test").forEach {
+  sourceSets.named(it) {
+    java.srcDir("src/test/java")
+    resources.srcDir("src/test/resources")
+    extensions.getByType(org.gradle.api.tasks.ScalaSourceDirectorySet::class.java).srcDir("src/test/scala")
+  }
 }
 
 tasks {
+  named<ScalaCompile>("compilePekko2Scala3TestScala") {
+    scalaCompileOptions.additionalParameters =
+      scalaCompileOptions.additionalParameters.orEmpty().filter { it != "-target:jvm-1.8" } +
+      "-release:17"
+  }
+
+  val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
+  if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
+    named<Test>("pekko2Test") {
+      enabled = false
+    }
+    named<Test>("pekko2Scala3Test") {
+      enabled = false
+    }
+  }
+
   check {
     dependsOn(testing.suites)
   }

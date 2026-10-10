@@ -16,6 +16,8 @@ import org.apache.pekko.http.scaladsl.model.HttpResponse;
 import scala.Function1;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
+import scala.concurrent.Promise;
+import scala.concurrent.Promise$;
 import scala.runtime.AbstractFunction1;
 import scala.util.Success;
 import scala.util.Try;
@@ -94,28 +96,44 @@ public class PekkoHttpServerHandlerWrapper
       return null;
     }
 
-    return responseFuture.transform(new EndSpanHandler(tracingRequest), executionContext);
+    // the response future is completed by application code, with the context of this request
+    // current, completing the future that is handed back to pekko with that context still current
+    // would let it flow into the stream callbacks that dispatch the next requests of the
+    // connection,
+    // whose handlers would then run as children of this request
+    Promise<HttpResponse> promise = Promise$.MODULE$.apply();
+    responseFuture.onComplete(new EndSpanHandler(tracingRequest, promise), executionContext);
+    return promise.future();
   }
 
   private static boolean isHttp2(HttpRequest request) {
     return request.getAttribute(Http2$.MODULE$.streamId()).isPresent();
   }
 
-  private static class EndSpanHandler
-      extends AbstractFunction1<Try<HttpResponse>, Try<HttpResponse>> {
+  private static class EndSpanHandler extends AbstractFunction1<Try<HttpResponse>, Object> {
     private final PekkoTracingRequest tracingRequest;
+    private final Promise<HttpResponse> promise;
 
-    EndSpanHandler(PekkoTracingRequest tracingRequest) {
+    EndSpanHandler(PekkoTracingRequest tracingRequest, Promise<HttpResponse> promise) {
       this.tracingRequest = tracingRequest;
+      this.promise = promise;
     }
 
     @Override
-    public Try<HttpResponse> apply(Try<HttpResponse> result) {
-      if (result.isSuccess()) {
-        return new Success<>(PekkoHttpServerSingletons.endSpan(tracingRequest, result.get()));
+    public Object apply(Try<HttpResponse> result) {
+      Try<HttpResponse> response = result;
+      try {
+        if (result.isSuccess()) {
+          response = new Success<>(PekkoHttpServerSingletons.endSpan(tracingRequest, result.get()));
+        } else {
+          PekkoHttpServerSingletons.endSpanWithError(tracingRequest, result.failed().get());
+        }
+      } finally {
+        try (Scope ignored = Context.root().makeCurrent()) {
+          promise.complete(response);
+        }
       }
-      PekkoHttpServerSingletons.endSpanWithError(tracingRequest, result.failed().get());
-      return result;
+      return null;
     }
   }
 }

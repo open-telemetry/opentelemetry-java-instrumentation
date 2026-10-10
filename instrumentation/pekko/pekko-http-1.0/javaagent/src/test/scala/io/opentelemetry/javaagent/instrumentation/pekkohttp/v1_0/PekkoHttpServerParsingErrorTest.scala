@@ -15,7 +15,6 @@ import io.opentelemetry.sdk.trace.data.StatusData
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
 import io.opentelemetry.semconv.{ErrorAttributes, HttpAttributes}
 import org.apache.pekko.actor.ActorSystem
-import org.apache.pekko.http.scaladsl.Http
 import org.apache.pekko.http.scaladsl.model.{HttpRequest, HttpResponse}
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -50,7 +49,7 @@ class PekkoHttpServerParsingErrorTest {
       // where another process can claim it before pekko binds
       val binding =
         Await.result(
-          Http().bindAndHandleSync(handler, "localhost", 0),
+          PekkoHttpTestBinding.bindSync(handler, "localhost", 0),
           10.seconds
         )
       val port = binding.localAddress.getPort
@@ -89,7 +88,7 @@ class PekkoHttpServerParsingErrorTest {
       val handler: HttpRequest => HttpResponse = _ => HttpResponse()
       val binding =
         Await.result(
-          Http().bindAndHandleSync(handler, "localhost", 0),
+          PekkoHttpTestBinding.bindSync(handler, "localhost", 0),
           10.seconds
         )
       val port = binding.localAddress.getPort
@@ -129,7 +128,7 @@ class PekkoHttpServerParsingErrorTest {
       val handler: HttpRequest => HttpResponse = _ => HttpResponse()
       val binding =
         Await.result(
-          Http().bindAndHandleSync(handler, "localhost", 0),
+          PekkoHttpTestBinding.bindSync(handler, "localhost", 0),
           10.seconds
         )
       val port = binding.localAddress.getPort
@@ -177,7 +176,7 @@ class PekkoHttpServerParsingErrorTest {
       val handler: HttpRequest => HttpResponse = _ => HttpResponse()
       val binding =
         Await.result(
-          Http().bindAndHandleSync(handler, "localhost", 0),
+          PekkoHttpTestBinding.bindSync(handler, "localhost", 0),
           10.seconds
         )
       val port = binding.localAddress.getPort
