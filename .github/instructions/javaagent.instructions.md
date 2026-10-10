@@ -64,6 +64,11 @@ Public enablement names describe selectable behavior, not Muzzle implementation 
   signature matchers may use accessible `java.base` types available at the minimum
   supported Java version; keep `named(...)` for instrumented-library types.
   With dynamic advice typing, match only signatures that guarantee assignability.
+- Omit return-type predicates unless needed to select supported methods or prevent a concrete
+  incompatibility. A typed `@Advice.Return` alone does not justify a predicate; consider the supported
+  API contract, covariant returns, and the actual transformation pipeline. If advice replaces the
+  return value, ensure the replacement fits the method's declared return type; replacement alone does
+  not require a predicate.
 - Do not require `isDeclaredBy` on a Byte Buddy method matcher by default. Use it only
   when a type matcher covers several types but advice targets a member declared by one
   specific type; a name and signature that already identify the method need no extra

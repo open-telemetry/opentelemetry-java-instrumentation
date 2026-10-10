@@ -538,20 +538,9 @@ sufficient for optimization.
 
 ### Method matchers and advice bindings
 
-The method matcher must prove compatibility for every non-optional, statically typed value that the
-advice reads. For each `@Advice.Argument(n)`, normally include a compatible
-`takesArgument(n, ...)` matcher or an equivalent matcher for the complete typed signature. Apply the
-same rule to a concretely typed `@Advice.Return` with `returns(...)`.
-
-When supported signatures use different concrete subtypes accepted by the advice's common
-supertype, match the hierarchy:
-
-```java
-named("pool")
-    .and(takesArguments(3))
-    .and(takesArgument(1, hasSuperType(named("io.vertx.sqlclient.SqlConnectOptions"))))
-    .and(returns(hasSuperType(named("io.vertx.sqlclient.Pool"))))
-```
+The method matcher must prove compatibility for every non-optional, statically typed argument that
+the advice reads. For each `@Advice.Argument(n)`, normally include a compatible
+`takesArgument(n, ...)` matcher or an equivalent matcher for the complete typed signature.
 
 Match argument positions that the advice does not bind only when they distinguish an intended
 overload or supported-version signature. Do not restate unrelated arguments, and do not bind unused
@@ -566,6 +555,12 @@ instead permits otherwise-incompatible assignment by inserting a runtime cast. U
 explicit type constraint only when every matched signature has a separate runtime contract that
 guarantees the value is assignable to the advice parameter. Otherwise, constrain the matcher to
 prevent `ClassCastException`.
+
+Omit return-type predicates unless needed to select supported methods or prevent a concrete
+incompatibility. A typed `@Advice.Return` alone does not justify a predicate; consider the supported
+API contract, covariant returns, and the actual transformation pipeline. If advice replaces the
+return value, ensure the replacement fits the method's declared return type; replacement alone does
+not require a predicate.
 
 ### Rules
 
