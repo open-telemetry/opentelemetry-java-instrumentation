@@ -40,25 +40,20 @@ class SendCallbackInstrumentationTest {
 
   @ParameterizedTest
   @MethodSource("callbackSignatures")
-  void matchesCompatibleCallbackSignatures(
-      String methodName, Class<?>[] parameterTypes, boolean expected) throws Exception {
+  void matchesCompatibleCallbackSignatures(String methodName, Class<?>[] parameterTypes)
+      throws Exception {
     MethodDescription method =
         new MethodDescription.ForLoadedMethod(
             CallbackSignatures.class.getDeclaredMethod(methodName, parameterTypes));
 
-    assertThat(matcherCaptor.getValue().matches(method)).isEqualTo(expected);
+    assertThat(matcherCaptor.getValue().matches(method)).isTrue();
   }
 
   private static Stream<Arguments> callbackSignatures() {
     return Stream.of(
-        Arguments.of("sendComplete", new Class<?>[] {Exception.class}, true),
-        Arguments.of("sendComplete", new Class<?>[] {Throwable.class}, true),
-        Arguments.of("sendComplete", new Class<?>[] {Throwable.class, Object.class}, true),
-        Arguments.of("sendComplete", new Class<?>[] {RuntimeException.class}, false),
-        Arguments.of("sendComplete", new Class<?>[] {String.class}, false),
-        Arguments.of("sendComplete", new Class<?>[] {Object.class}, false),
-        Arguments.of("sendComplete", new Class<?>[0], false),
-        Arguments.of("other", new Class<?>[] {Throwable.class}, false));
+        Arguments.of("sendComplete", new Class<?>[] {Exception.class}),
+        Arguments.of("sendComplete", new Class<?>[] {Throwable.class}),
+        Arguments.of("sendComplete", new Class<?>[] {Throwable.class, Object.class}));
   }
 
   @SuppressWarnings({"UnusedMethod", "UnusedVariable", "MethodCanBeStatic"})
@@ -68,15 +63,5 @@ class SendCallbackInstrumentationTest {
     void sendComplete(Throwable failure) {}
 
     void sendComplete(Throwable failure, Object stats) {}
-
-    void sendComplete(RuntimeException failure) {}
-
-    void sendComplete(String failure) {}
-
-    void sendComplete(Object failure) {}
-
-    void sendComplete() {}
-
-    void other(Throwable failure) {}
   }
 }

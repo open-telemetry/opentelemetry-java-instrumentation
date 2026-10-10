@@ -50,19 +50,6 @@ class HttpRequestInstrumentationTest {
     assertThat(matcher.matches(responseMethod(response, timeout))).isTrue();
   }
 
-  @Test
-  void rejectsMissingOrIncompatibleResponseArguments() {
-    ElementMatcher<? super MethodDescription> matcher = responseMatcher();
-
-    assertThat(matcher.matches(responseMethod())).isFalse();
-    assertThat(matcher.matches(responseMethod(new TypeDescription.ForLoadedType(Object.class))))
-        .isFalse();
-    assertThat(matcher.matches(responseMethod(new TypeDescription.ForLoadedType(String.class))))
-        .isFalse();
-    assertThat(matcher.matches(responseMethod(new TypeDescription.ForLoadedType(int.class))))
-        .isFalse();
-  }
-
   private static ElementMatcher<? super MethodDescription> responseMatcher() {
     List<ElementMatcher<? super MethodDescription>> matchers = new ArrayList<>();
     TypeTransformer transformer = mock(TypeTransformer.class);

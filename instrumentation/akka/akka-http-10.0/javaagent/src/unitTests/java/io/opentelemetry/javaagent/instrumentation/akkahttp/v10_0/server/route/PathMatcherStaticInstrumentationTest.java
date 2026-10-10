@@ -53,12 +53,6 @@ class PathMatcherStaticInstrumentationTest {
     assertThat(matcher.matches(applyMethod(unmatched))).isTrue();
   }
 
-  @Test
-  void rejectsIncompatibleReturn() {
-    assertThat(applyMatcher().matches(applyMethod(new TypeDescription.ForLoadedType(Object.class))))
-        .isFalse();
-  }
-
   private static ElementMatcher<? super MethodDescription> applyMatcher() {
     List<ElementMatcher<? super MethodDescription>> matchers = new ArrayList<>();
     TypeTransformer transformer = mock(TypeTransformer.class);

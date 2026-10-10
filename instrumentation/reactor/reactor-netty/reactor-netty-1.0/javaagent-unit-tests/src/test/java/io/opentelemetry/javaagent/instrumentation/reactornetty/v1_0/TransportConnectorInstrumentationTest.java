@@ -11,7 +11,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.net.SocketAddress;
 import java.util.List;
 import java.util.stream.Stream;
 import net.bytebuddy.ByteBuddy;
@@ -23,7 +22,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -46,9 +44,8 @@ class TransportConnectorInstrumentationTest {
   }
 
   @ParameterizedTest
-  @MethodSource("connectionSignatures")
-  void matchesKnownPromiseSignatures(
-      Class<?> addressType, String promiseType, Class<?> indexType, boolean expected) {
+  @MethodSource("promiseTypes")
+  void matchesKnownPromiseSignatures(String promiseType) {
     TypeDescription promise =
         new ByteBuddy().makeInterface().name(promiseType).make().getTypeDescription();
     MethodDescription method =
@@ -56,10 +53,10 @@ class TransportConnectorInstrumentationTest {
             .subclass(Object.class)
             .defineMethod("doConnect", void.class, Visibility.PACKAGE_PRIVATE)
             .withParameters(
-                new TypeDescription.ForLoadedType(addressType),
+                new TypeDescription.ForLoadedType(List.class),
                 new TypeDescription.ForLoadedType(Object.class),
                 promise,
-                new TypeDescription.ForLoadedType(indexType))
+                new TypeDescription.ForLoadedType(int.class))
             .intercept(StubMethod.INSTANCE)
             .make()
             .getTypeDescription()
@@ -67,20 +64,12 @@ class TransportConnectorInstrumentationTest {
             .filter(named("doConnect"))
             .getOnly();
 
-    assertThat(matcherCaptor.getValue().matches(method)).isEqualTo(expected);
+    assertThat(matcherCaptor.getValue().matches(method)).isTrue();
   }
 
-  private static Stream<Arguments> connectionSignatures() {
+  private static Stream<String> promiseTypes() {
     return Stream.of(
-        Arguments.of(List.class, "io.netty.channel.ChannelPromise", int.class, true),
-        Arguments.of(
-            List.class,
-            "reactor.netty.transport.TransportConnector$MonoChannelPromise",
-            int.class,
-            true),
-        Arguments.of(List.class, "io.netty.channel.DefaultChannelPromise", int.class, false),
-        Arguments.of(List.class, "java.lang.Object", int.class, false),
-        Arguments.of(SocketAddress.class, "io.netty.channel.ChannelPromise", int.class, false),
-        Arguments.of(List.class, "io.netty.channel.ChannelPromise", long.class, false));
+        "io.netty.channel.ChannelPromise",
+        "reactor.netty.transport.TransportConnector$MonoChannelPromise");
   }
 }

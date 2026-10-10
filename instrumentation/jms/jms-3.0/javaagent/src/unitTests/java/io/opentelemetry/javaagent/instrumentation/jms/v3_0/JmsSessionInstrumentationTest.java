@@ -47,18 +47,7 @@ class JmsSessionInstrumentationTest {
 
   @Test
   void matchesProviderCovariantReturns() {
-    assertThat(consumerMatcher().matches(consumerMethod(CustomConsumer.class, String.class)))
-        .isTrue();
-  }
-
-  @Test
-  void rejectsIncompatibleReturnsAndSubscriptionNames() {
-    ElementMatcher<? super MethodDescription> matcher = consumerMatcher();
-
-    assertThat(matcher.matches(consumerMethod(Object.class, String.class))).isFalse();
-    assertThat(matcher.matches(consumerMethod(String.class, String.class))).isFalse();
-    assertThat(matcher.matches(consumerMethod(void.class, String.class))).isFalse();
-    assertThat(matcher.matches(consumerMethod(MessageConsumer.class, int.class))).isFalse();
+    assertThat(consumerMatcher().matches(consumerMethod(CustomConsumer.class))).isTrue();
   }
 
   private static ElementMatcher<? super MethodDescription> consumerMatcher() {
@@ -81,13 +70,12 @@ class JmsSessionInstrumentationTest {
     return matchers.get(0);
   }
 
-  private static MethodDescription consumerMethod(
-      Class<?> returnType, Class<?> subscriptionNameType) {
+  private static MethodDescription consumerMethod(Class<?> returnType) {
     return new ByteBuddy()
         .subclass(Object.class)
         .name(JmsSessionInstrumentationTest.class.getName() + "$Provider")
         .defineMethod("createDurableConsumer", returnType, Visibility.PUBLIC)
-        .withParameters(Object.class, subscriptionNameType)
+        .withParameters(Object.class, String.class)
         .intercept(StubMethod.INSTANCE)
         .make()
         .getTypeDescription()

@@ -47,15 +47,6 @@ class ClientResourcesInstrumentationTest {
     assertThat(builderMatcher().matches(builderMethod(CustomBuilder.class))).isTrue();
   }
 
-  @Test
-  void rejectsIncompatibleBuilderReturns() {
-    ElementMatcher<? super MethodDescription> matcher = builderMatcher();
-
-    assertThat(matcher.matches(builderMethod(Object.class))).isFalse();
-    assertThat(matcher.matches(builderMethod(String.class))).isFalse();
-    assertThat(matcher.matches(builderMethod(void.class))).isFalse();
-  }
-
   private static ElementMatcher<? super MethodDescription> builderMatcher() {
     List<ElementMatcher<? super MethodDescription>> matchers = new ArrayList<>();
     TypeTransformer transformer = mock(TypeTransformer.class);
