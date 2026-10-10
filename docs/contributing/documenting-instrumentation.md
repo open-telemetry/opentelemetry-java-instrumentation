@@ -358,6 +358,16 @@ If an instrumentation is disabled by default, set `disabled_by_default: true`. T
 the instrumentation will not be active unless explicitly enabled by the user. If this field is omitted,
 it defaults to `false`, meaning the instrumentation is enabled by default.
 
+### Collecting telemetry from tests
+
+Collect default telemetry and supported telemetry modes, not every test configuration. Use
+`collectMetadata` to enable collection and `metadataConfig` to label non-default telemetry.
+Exclude unit tests and regression-only disablement, adapter-fallback, or classpath compatibility
+variants from collection.
+
+See the [telemetry collection convention](../../instrumentation-docs/readme.md#telemetry-collection)
+for task selection, configuration labels, and Gradle examples.
+
 ### Manual Telemetry Documentation (optional)
 
 You can manually document telemetry metadata (metrics and spans) directly in the `metadata.yaml` file
