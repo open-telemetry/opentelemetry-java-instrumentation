@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.hbase.client.v1_4;
 
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.v1_4.HbaseSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -30,7 +31,8 @@ class IpcCallInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("callComplete"), getClass().getName() + "$CallCompleteAdvice");
     transformer.applyAdviceToMethod(
-        named("setTimeout"), getClass().getName() + "$SetTimeoutAdvice");
+        named("setTimeout").and(takesArgument(0, IOException.class)),
+        getClass().getName() + "$SetTimeoutAdvice");
   }
 
   @SuppressWarnings("unused")

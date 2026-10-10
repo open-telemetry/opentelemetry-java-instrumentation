@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.playws.common.v1_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -29,7 +30,8 @@ public class HandlerPublisherInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("subscribe"), getClass().getName() + "$WrapSubscriberAdvice");
+        named("subscribe").and(takesArgument(0, named("org.reactivestreams.Subscriber"))),
+        getClass().getName() + "$WrapSubscriberAdvice");
   }
 
   @SuppressWarnings("unused")

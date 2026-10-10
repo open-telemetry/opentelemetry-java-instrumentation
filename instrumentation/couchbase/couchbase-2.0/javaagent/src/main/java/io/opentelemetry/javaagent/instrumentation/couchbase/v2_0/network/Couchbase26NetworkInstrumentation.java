@@ -36,6 +36,7 @@ class Couchbase26NetworkInstrumentation implements TypeInstrumentation {
             .and(
                 takesArgument(
                     0, named("com.couchbase.client.deps.io.netty.channel.ChannelHandlerContext")))
+            .and(takesArgument(1, named("com.couchbase.client.core.message.CouchbaseRequest")))
             .and(takesArgument(2, List.class)),
         getClass().getName() + "$CouchbaseNetworkAdvice");
   }
