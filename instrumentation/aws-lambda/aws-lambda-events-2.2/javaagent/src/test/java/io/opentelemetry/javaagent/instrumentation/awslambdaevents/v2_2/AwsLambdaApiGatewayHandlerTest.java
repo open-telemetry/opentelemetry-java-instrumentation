@@ -5,10 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2;
 
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
+import static io.opentelemetry.semconv.UrlAttributes.URL_QUERY;
+import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
 import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_TRIGGER;
@@ -22,7 +27,9 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,6 +68,9 @@ class AwsLambdaApiGatewayHandlerTest {
     headers.put("User-Agent", "Clever Client");
     headers.put("host", "localhost:2024");
     headers.put("X-FORWARDED-PROTO", "http");
+    Map<String, String> query = new LinkedHashMap<>();
+    query.put("q", "value");
+    query.put("sig", "secret");
 
     APIGatewayProxyRequestEvent input =
         new APIGatewayProxyRequestEvent()
@@ -69,6 +79,7 @@ class AwsLambdaApiGatewayHandlerTest {
             .withPath("/hello/world")
             .withBody("hello")
             .withHeaders(headers);
+    input.setQueryStringParameters(query);
 
     APIGatewayProxyResponseEvent result =
         new TestRequestHandlerApiGateway().handleRequest(input, context);
@@ -80,6 +91,7 @@ class AwsLambdaApiGatewayHandlerTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("PUT /hello/{param}")
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                         .hasKind(SpanKind.SERVER)
                         .hasTraceId("ee13e7026227ebf4c74278ae29691d7a")
                         .hasParentSpanId("0000000000000456")
@@ -87,9 +99,29 @@ class AwsLambdaApiGatewayHandlerTest {
                             equalTo(FAAS_INVOCATION_ID, "1-22-2024"),
                             equalTo(FAAS_TRIGGER, "http"),
                             equalTo(HTTP_REQUEST_METHOD, "PUT"),
+                            equalTo(URL_PATH, "/hello/world"),
+                            equalTo(URL_SCHEME, "http"),
+                            equalTo(HTTP_ROUTE, "/hello/{param}"),
                             equalTo(USER_AGENT_ORIGINAL, "Clever Client"),
-                            equalTo(URL_FULL, "http://localhost:2024/hello/world"),
+                            equalTo(
+                                URL_FULL, "http://localhost:2024/hello/world?q=value&sig=REDACTED"),
+                            equalTo(URL_QUERY, "q=value&sig=REDACTED"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 201L))));
+  }
+
+  @Test
+  void tracedWithoutOptionalHttpAttributes() {
+    APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent().withBody("hello");
+    new TestRequestHandlerApiGateway().handleRequest(input, context);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasAttributesSatisfyingExactly(
+                        equalTo(FAAS_INVOCATION_ID, "1-22-2024"),
+                        equalTo(FAAS_TRIGGER, "http"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 201L))));
   }
 
   private static class TestRequestHandlerApiGateway

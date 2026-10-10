@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal;
 
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.UrlAttributes.URL_QUERY;
 import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -17,29 +18,59 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 class ApiGatewayProxyAttributesExtractorTest {
 
   @Test
   void redactsSensitiveQueryParameters() {
-    assertThat(urlFull(HttpConstants.SENSITIVE_QUERY_PARAMETERS))
+    Attributes attributes = attributes(HttpConstants.SENSITIVE_QUERY_PARAMETERS);
+    assertThat(attributes.get(URL_FULL))
         .isEqualTo("https://localhost:123/hello?q=value&sig=REDACTED");
+    assertThat(attributes.get(URL_QUERY)).isEqualTo("q=value&sig=REDACTED");
   }
 
   @Test
   void redactsConfiguredQueryParameters() {
-    assertThat(urlFull(singleton("q")))
+    Attributes attributes = attributes(singleton("q"));
+    assertThat(attributes.get(URL_FULL))
         .isEqualTo("https://localhost:123/hello?q=REDACTED&sig=secret");
+    assertThat(attributes.get(URL_QUERY)).isEqualTo("q=REDACTED&sig=secret");
   }
 
-  private static String urlFull(Set<String> sensitiveQueryParameters) {
-    ApiGatewayProxyAttributesExtractor extractor =
-        new ApiGatewayProxyAttributesExtractor(
-            HttpConstants.KNOWN_METHODS, sensitiveQueryParameters);
+  @Test
+  void encodesQueryParameters() {
+    Map<String, String> query = new LinkedHashMap<>();
+    query.put("q name", "a b&c=d?e");
+    query.put("sig", "secret");
 
+    Attributes attributes = attributes(query, HttpConstants.SENSITIVE_QUERY_PARAMETERS);
+    assertThat(attributes.get(URL_QUERY)).isEqualTo("q+name=a+b%26c%3Dd%3Fe&sig=REDACTED");
+    assertThat(attributes.get(URL_FULL))
+        .isEqualTo("https://localhost:123/hello?q+name=a+b%26c%3Dd%3Fe&sig=REDACTED");
+  }
+
+  @ParameterizedTest
+  @NullAndEmptySource
+  void omitsAbsentQuery(Map<String, String> query) {
+    Attributes attributes = attributes(query, HttpConstants.SENSITIVE_QUERY_PARAMETERS);
+    assertThat(attributes.get(URL_QUERY)).isNull();
+    assertThat(attributes.get(URL_FULL)).isEqualTo("https://localhost:123/hello");
+  }
+
+  private static Attributes attributes(Set<String> sensitiveQueryParameters) {
     Map<String, String> query = new LinkedHashMap<>();
     query.put("q", "value");
     query.put("sig", "secret");
+    return attributes(query, sensitiveQueryParameters);
+  }
+
+  private static Attributes attributes(
+      Map<String, String> query, Set<String> sensitiveQueryParameters) {
+    ApiGatewayProxyAttributesExtractor extractor =
+        new ApiGatewayProxyAttributesExtractor(
+            HttpConstants.KNOWN_METHODS, sensitiveQueryParameters);
 
     Map<String, String> headers = new LinkedHashMap<>();
     headers.put("Host", "localhost:123");
@@ -54,6 +85,6 @@ class ApiGatewayProxyAttributesExtractorTest {
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onRequest(attributes, request);
-    return attributes.build().get(URL_FULL);
+    return attributes.build();
   }
 }
