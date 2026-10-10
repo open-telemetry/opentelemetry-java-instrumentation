@@ -91,6 +91,7 @@ class RuleParserTest {
         .containsEntry("LABEL_KEY2", "beanattr(ATTRIBUTE)");
 
     assertThat(def1.getDropNegativeValues()).isNull();
+    assertThat(def1.getDropExtremeValues()).isNull();
 
     Map<String, Metric> attr = def1.getMapping();
     assertThat(attr)
@@ -105,6 +106,7 @@ class RuleParserTest {
     assertThat(m1.getUnit()).isEqualTo("UNIT1");
     assertThat(m1.getMetricAttribute()).containsExactly(entry("LABEL_KEY3", "const(CONSTANT)"));
     assertThat(m1.getDropNegativeValues()).isNull();
+    assertThat(m1.getDropExtremeValues()).isNull();
 
     Metric m2 = attr.get("ATTRIBUTE2");
     assertThat(m2).isNotNull();
@@ -564,6 +566,76 @@ class RuleParserTest {
             .extractNumericalAttribute(mockConnection, objectName);
 
     if (value < 0) {
+      assertThat(filteredValue).isNull();
+      assertThat(unFilteredValue).isEqualTo(value);
+    } else {
+      assertThat(filteredValue).isEqualTo(unFilteredValue).isEqualTo(value);
+    }
+  }
+
+  private static final String CONF12 =
+      "---                                   # keep stupid spotlessJava at bay\n"
+          + "rules:\n"
+          + "  - bean: my-test:type=12_Hello\n"
+          + "    type: counter\n"
+          + "    unit: '{item}'\n"
+          + "    mapping:\n"
+          + "      extremeDropped:\n"
+          + "        dropExtremeValues: true\n"
+          + "        metric: extreme_drop\n"
+          + "      extremeKept:\n"
+          + "        dropExtremeValues: false\n"
+          + "        metric: extreme_keep\n";
+
+  @ParameterizedTest
+  @ValueSource(longs = {Long.MIN_VALUE, 0L, Long.MAX_VALUE})
+  void extremeValuesFiltering(long value) throws Exception {
+    JmxConfig config = parseConf(CONF12);
+
+    List<JmxRule> rules = config.getRules();
+    assertThat(rules).hasSize(1);
+    JmxRule rule = rules.get(0);
+
+    assertThat(rule.getBeans()).containsExactly("my-test:type=12_Hello");
+
+    // test that extreme filtering is being applied
+
+    MetricDef metricDef = rule.buildMetricDef();
+    assertThat(metricDef).isNotNull();
+
+    MBeanServerConnection mockConnection = mock(MBeanServerConnection.class);
+    assertThat(rule.getBeans()).containsExactly("my-test:type=12_Hello");
+    ObjectName objectName = new ObjectName(rule.getBeans().iterator().next());
+
+    // mock attribute values
+    when(mockConnection.getAttribute(objectName, "extremeDropped")).thenReturn(value);
+    when(mockConnection.getAttribute(objectName, "extremeKept")).thenReturn(value);
+
+    // mock attribute discovery
+    MBeanInfo mockBeanInfo = mock(MBeanInfo.class);
+    when(mockBeanInfo.getAttributes())
+        .thenReturn(
+            new MBeanAttributeInfo[] {
+              new MBeanAttributeInfo("extremeDropped", "java.lang.Integer", "", true, false, false),
+              new MBeanAttributeInfo("extremeKept", "java.lang.Integer", "", true, false, false)
+            });
+    when(mockConnection.getMBeanInfo(objectName)).thenReturn(mockBeanInfo);
+
+    assertThat(metricDef.getMetricExtractors()).hasSize(2);
+    Number filteredValue =
+        metricDef
+            .getMetricExtractors()
+            .get(0)
+            .getMetricValueExtractor()
+            .extractNumericalAttribute(mockConnection, objectName);
+    Number unFilteredValue =
+        metricDef
+            .getMetricExtractors()
+            .get(1)
+            .getMetricValueExtractor()
+            .extractNumericalAttribute(mockConnection, objectName);
+
+    if (value != 0L) {
       assertThat(filteredValue).isNull();
       assertThat(unFilteredValue).isEqualTo(value);
     } else {

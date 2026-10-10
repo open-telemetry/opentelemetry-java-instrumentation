@@ -51,34 +51,53 @@ class AttributeExtractorTest {
   private static class Test1 implements Test1MBean {
 
     boolean negativeValues;
+    boolean extremeValues;
 
     @Override
     public byte getByteAttribute() {
-      return 10;
+      if (extremeValues) {
+        return negativeValues ? Byte.MIN_VALUE : Byte.MAX_VALUE;
+      }
+      return negativeValues ? (byte) -10 : 10;
     }
 
     @Override
     public short getShortAttribute() {
-      return 11;
+      if (extremeValues) {
+        return negativeValues ? Short.MIN_VALUE : Short.MAX_VALUE;
+      }
+      return negativeValues ? (short) -11 : 11;
     }
 
     @Override
     public int getIntAttribute() {
+      if (extremeValues) {
+        return negativeValues ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+      }
       return negativeValues ? -12 : 12;
     }
 
     @Override
     public long getLongAttribute() {
+      if (extremeValues) {
+        return negativeValues ? Long.MIN_VALUE : Long.MAX_VALUE;
+      }
       return negativeValues ? -13 : 13;
     }
 
     @Override
     public float getFloatAttribute() {
+      if (extremeValues) {
+        return negativeValues ? -Float.MAX_VALUE : Float.MAX_VALUE;
+      }
       return negativeValues ? -14.0f : 14.0f;
     }
 
     @Override
     public double getDoubleAttribute() {
+      if (extremeValues) {
+        return negativeValues ? -Double.MAX_VALUE : Double.MAX_VALUE;
+      }
       return negativeValues ? -15.0 : 15.0;
     }
 
@@ -124,6 +143,7 @@ class AttributeExtractorTest {
   @BeforeEach
   void reset() {
     test1.negativeValues = false;
+    test1.extremeValues = false;
   }
 
   @Test
@@ -195,7 +215,15 @@ class AttributeExtractorTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"LongAttribute", "IntAttribute", "DoubleAttribute", "FloatAttribute"})
+  @ValueSource(
+      strings = {
+        "ByteAttribute",
+        "ShortAttribute",
+        "LongAttribute",
+        "IntAttribute",
+        "DoubleAttribute",
+        "FloatAttribute"
+      })
   void testNegativeFilter(String attributeName) {
     test1.negativeValues = false;
     BeanAttributeExtractor rawExtractor = BeanAttributeExtractor.fromName(attributeName);
@@ -209,6 +237,37 @@ class AttributeExtractorTest {
     Number rawValue = rawExtractor.extractNumericalAttribute(theServer, objectName);
     assertThat(rawValue).isNotNull();
     assertThat(rawValue.doubleValue()).isNegative();
+    assertThat(filteringExtractor.extractNumericalAttribute(theServer, objectName)).isNull();
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "ByteAttribute",
+        "ShortAttribute",
+        "LongAttribute",
+        "IntAttribute",
+        "DoubleAttribute",
+        "FloatAttribute"
+      })
+  void testExtremeFilter(String attributeName) {
+    testExtremeFilter(attributeName, false);
+    testExtremeFilter(attributeName, true);
+  }
+
+  void testExtremeFilter(String attributeName, boolean negative) {
+    test1.negativeValues = negative;
+    test1.extremeValues = false;
+    BeanAttributeExtractor rawExtractor = BeanAttributeExtractor.fromName(attributeName);
+    BeanAttributeExtractor filteringExtractor =
+        BeanAttributeExtractor.filterExtremeValues(rawExtractor);
+    assertThat(rawExtractor.extractNumericalAttribute(theServer, objectName))
+        .isNotNull()
+        .isEqualTo(filteringExtractor.extractNumericalAttribute(theServer, objectName));
+
+    test1.extremeValues = true;
+    Number rawValue = rawExtractor.extractNumericalAttribute(theServer, objectName);
+    assertThat(rawValue).isNotNull();
     assertThat(filteringExtractor.extractNumericalAttribute(theServer, objectName)).isNull();
   }
 }
