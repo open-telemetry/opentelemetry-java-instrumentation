@@ -12,6 +12,7 @@ import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.Ve
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -35,7 +36,10 @@ class DriverInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("newPool").and(not(isStatic())).and(takesArguments(6)),
+        named("newPool")
+            .and(not(isStatic()))
+            .and(takesArguments(6))
+            .and(returns(named("io.vertx.sqlclient.Pool"))),
         getClass().getName() + "$NewPoolAdvice");
   }
 

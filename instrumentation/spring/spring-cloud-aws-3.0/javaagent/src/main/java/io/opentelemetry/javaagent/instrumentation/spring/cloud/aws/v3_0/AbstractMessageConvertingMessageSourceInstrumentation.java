@@ -35,7 +35,9 @@ class AbstractMessageConvertingMessageSourceInstrumentation implements TypeInstr
             .and(takesArgument(0, named("io.awspring.cloud.sqs.listener.ContainerOptions"))),
         getClass().getName() + "$ConfigureAdvice");
     transformer.applyAdviceToMethod(
-        named("convertMessages").and(takesArgument(0, Collection.class)),
+        named("convertMessages")
+            .and(takesArgument(0, Collection.class))
+            .and(returns(Collection.class)),
         getClass().getName() + "$ConvertMessagesAdvice");
     transformer.applyAdviceToMethod(
         named("convertMessage").and(returns(named("org.springframework.messaging.Message"))),

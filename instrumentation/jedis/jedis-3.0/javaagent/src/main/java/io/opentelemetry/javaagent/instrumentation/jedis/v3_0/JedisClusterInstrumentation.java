@@ -9,6 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
@@ -43,7 +44,8 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
         named("initializeSlotsCache").and(takesArgument(0, Set.class)),
         getClass().getName() + "$InitializeAdvice");
     transformer.applyAdviceToMethod(
-        named("getConnectionFromNode"), getClass().getName() + "$ClusterTargetScopeAdvice");
+        named("getConnectionFromNode").and(returns(named("redis.clients.jedis.Jedis"))),
+        getClass().getName() + "$ClusterTargetScopeAdvice");
     transformer.applyAdviceToMethod(
         named("renewSlotCache"), getClass().getName() + "$ClusterTargetScopeAdvice");
   }

@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.jms.v6_0;
 import static io.opentelemetry.javaagent.instrumentation.spring.jms.v6_0.SpringJmsSingletons.RECEIVE_TELEMETRY_ENABLED;
 import static io.opentelemetry.javaagent.instrumentation.spring.jms.v6_0.SpringJmsSingletons.receiveInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
@@ -30,7 +31,8 @@ class JmsDestinationAccessorInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("receiveFromConsumer"), getClass().getName() + "$ReceiveAdvice");
+        named("receiveFromConsumer").and(returns(named("jakarta.jms.Message"))),
+        getClass().getName() + "$ReceiveAdvice");
   }
 
   @SuppressWarnings("unused")
