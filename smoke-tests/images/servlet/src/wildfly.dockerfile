@@ -4,7 +4,6 @@ ARG jdkImageHash
 FROM ${jdkImageName}@sha256:${jdkImageHash}
 ARG version
 ARG baseDownloadUrl
-ARG archiveFormat=tar.gz
 
 # Create a user and group used to launch processes
 # The user ID 1000 is the default for the first "regular" user on Fedora/RHEL,
@@ -25,7 +24,7 @@ USER jboss
 
 # Set the WILDFLY_VERSION env variable
 ENV WILDFLY_VERSION=${version}
-ENV DOWNLOAD_URL=${baseDownloadUrl}.${archiveFormat}
+ENV DOWNLOAD_URL=${baseDownloadUrl}.zip
 ENV JBOSS_HOME /opt/jboss/wildfly
 
 USER root
@@ -35,11 +34,7 @@ RUN echo curl -O -L $DOWNLOAD_URL
 RUN cd $HOME \
     && archive=$(basename "$DOWNLOAD_URL") \
     && wget -nv $DOWNLOAD_URL \
-    && case "$archiveFormat" in \
-        tar.gz) tar -xzf "$archive" ;; \
-        zip) unzip -q "$archive" ;; \
-        *) echo "Unsupported WildFly archive format: $archiveFormat" >&2; exit 1 ;; \
-    esac \
+    && unzip -q "$archive" \
     && mv $HOME/wildfly-$WILDFLY_VERSION $JBOSS_HOME \
     && rm "$archive" \
     && chown -R jboss:0 ${JBOSS_HOME} \
