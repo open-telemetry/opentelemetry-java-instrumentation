@@ -9,11 +9,13 @@ group = "io.opentelemetry.javaagent"
 dependencies {
   compileOnly(project(":instrumentation-api"))
   compileOnly(project(":javaagent-bootstrap"))
+  compileOnly(project(":javaagent-extension-api"))
   compileOnly(project(":javaagent-tooling"))
   compileOnly(project(":instrumentation:internal:internal-application-logger:bootstrap"))
 
   testImplementation(project(":instrumentation-api"))
   testImplementation(project(":javaagent-bootstrap"))
+  testImplementation(project(":javaagent-extension-api"))
   testImplementation(project(":javaagent-tooling"))
   testImplementation(project(":instrumentation:internal:internal-application-logger:bootstrap"))
 
