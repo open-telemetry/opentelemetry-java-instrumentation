@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
@@ -41,8 +40,7 @@ class DriverInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         nameStartsWith("connect")
             .and(takesArgument(0, String.class))
-            .and(takesArgument(1, Properties.class))
-            .and(returns(named("java.sql.Connection"))),
+            .and(takesArgument(1, Properties.class)),
         getClass().getName() + "$DriverAdvice");
   }
 

@@ -41,8 +41,7 @@ class CouchbaseBucketInstrumentation implements TypeInstrumentation {
         isPublic().and(returns(named("rx.Observable"))).and(not(named("query"))),
         getClass().getName() + "$CouchbaseClientAdvice");
     transformer.applyAdviceToMethod(
-        isPublic().and(returns(named("rx.Observable"))).and(named("query")),
-        getClass().getName() + "$CouchbaseClientQueryAdvice");
+        isPublic().and(named("query")), getClass().getName() + "$CouchbaseClientQueryAdvice");
   }
 
   @SuppressWarnings("unused")

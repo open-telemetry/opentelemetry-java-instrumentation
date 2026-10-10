@@ -97,10 +97,6 @@ public abstract class HandlerData {
   private static Method findMatchingMethod(Method baseMethod, Method[] methods) {
     nextMethod:
     for (Method method : methods) {
-      if (!baseMethod.getReturnType().equals(method.getReturnType())) {
-        continue;
-      }
-
       if (!baseMethod.getName().equals(method.getName())) {
         continue;
       }

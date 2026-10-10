@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -31,10 +30,7 @@ class PekkoHttpServerSourceInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("flow")
-            .and(takesArguments(0))
-            .and(returns(named("org.apache.pekko.stream.scaladsl.Flow"))),
-        getClass().getName() + "$PekkoConnectionFlowAdvice");
+        named("flow").and(takesArguments(0)), getClass().getName() + "$PekkoConnectionFlowAdvice");
     transformer.applyAdviceToMethod(
         named("handleWith").and(takesArgument(0, named("org.apache.pekko.stream.scaladsl.Flow"))),
         getClass().getName() + "$PekkoBindAndHandleAdvice");

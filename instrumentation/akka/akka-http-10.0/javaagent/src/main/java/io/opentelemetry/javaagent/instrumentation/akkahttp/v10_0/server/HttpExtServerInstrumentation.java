@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.server;
 
 import static net.bytebuddy.matcher.ElementMatchers.nameEndsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -38,8 +37,7 @@ class HttpExtServerInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         nameEndsWith("prepareAttributes")
             .and(takesArguments(2))
-            .and(takesArgument(1, InetSocketAddress.class))
-            .and(returns(named("akka.stream.Attributes"))),
+            .and(takesArgument(1, InetSocketAddress.class)),
         getClass().getName() + "$PrepareAttributesAdvice");
   }
 

@@ -61,6 +61,7 @@ class JavaExecutorInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("execute").and(takesArgument(0, ForkJoinTask.class)),
         getClass().getName() + "$SetJavaForkJoinStateAdvice");
+    // Executor implementations may also have non-Future submit/schedule methods.
     transformer.applyAdviceToMethod(
         named("submit")
             .and(takesArgument(0, Runnable.class))

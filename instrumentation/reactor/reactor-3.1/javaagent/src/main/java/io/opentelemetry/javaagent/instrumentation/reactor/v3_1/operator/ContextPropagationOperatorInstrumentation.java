@@ -9,7 +9,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
@@ -35,16 +34,14 @@ class ContextPropagationOperatorInstrumentation implements TypeInstrumentation {
             .and(isStatic())
             .and(named("storeOpenTelemetryContext"))
             .and(takesArgument(0, named("reactor.util.context.Context")))
-            .and(takesArgument(1, named("application.io.opentelemetry.context.Context")))
-            .and(returns(named("reactor.util.context.Context"))),
+            .and(takesArgument(1, named("application.io.opentelemetry.context.Context"))),
         getClass().getName() + "$StoreAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(isStatic())
             .and(named("getOpenTelemetryContext"))
             .and(takesArgument(0, named("reactor.util.context.Context")))
-            .and(takesArgument(1, named("application.io.opentelemetry.context.Context")))
-            .and(returns(named("application.io.opentelemetry.context.Context"))),
+            .and(takesArgument(1, named("application.io.opentelemetry.context.Context"))),
         getClass().getName() + "$GetAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
@@ -53,8 +50,7 @@ class ContextPropagationOperatorInstrumentation implements TypeInstrumentation {
             .and(
                 takesArgument(
                     0, namedOneOf("reactor.core.publisher.Mono", "reactor.core.publisher.Flux")))
-            .and(takesArgument(1, named("application.io.opentelemetry.context.Context")))
-            .and(returns(namedOneOf("reactor.core.publisher.Mono", "reactor.core.publisher.Flux"))),
+            .and(takesArgument(1, named("application.io.opentelemetry.context.Context"))),
         getClass().getName() + "$RunWithAdvice");
   }
 

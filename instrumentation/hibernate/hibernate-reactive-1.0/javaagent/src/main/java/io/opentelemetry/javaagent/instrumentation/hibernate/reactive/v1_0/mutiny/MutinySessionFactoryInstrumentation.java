@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.reactive.v1_0.mutin
 
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -27,10 +26,7 @@ class MutinySessionFactoryInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        nameStartsWith("open")
-            .or(nameStartsWith("with"))
-            .and(returns(named("io.smallrye.mutiny.Uni"))),
-        getClass().getName() + "$ContextAdvice");
+        nameStartsWith("open").or(nameStartsWith("with")), getClass().getName() + "$ContextAdvice");
   }
 
   @SuppressWarnings("unused")

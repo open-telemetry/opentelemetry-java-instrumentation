@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -31,9 +30,7 @@ class Http2RequestParsingInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("parseRequest")
-            .and(takesArgument(2, named("org.apache.pekko.stream.Attributes")))
-            .and(returns(named("scala.Function1"))),
+        named("parseRequest").and(takesArgument(2, named("org.apache.pekko.stream.Attributes"))),
         getClass().getName() + "$ParseRequestAdvice");
   }
 

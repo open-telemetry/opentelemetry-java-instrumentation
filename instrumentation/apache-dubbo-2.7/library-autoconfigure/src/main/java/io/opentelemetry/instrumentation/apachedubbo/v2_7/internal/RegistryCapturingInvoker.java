@@ -73,19 +73,13 @@ final class RegistryCapturingInvoker implements InvocationHandler {
       String methodName = method.getName();
       // Preserve identity-based Object method behavior. Forwarding equals to a delegate that
       // inherits Object.equals would make proxy.equals(proxy) return false.
-      if (methodName.equals("equals")
-          && method.getParameterCount() == 1
-          && method.getReturnType() == boolean.class) {
+      if (methodName.equals("equals") && method.getParameterCount() == 1) {
         return args != null && proxy == args[0];
       }
-      if (methodName.equals("hashCode")
-          && method.getParameterCount() == 0
-          && method.getReturnType() == int.class) {
+      if (methodName.equals("hashCode") && method.getParameterCount() == 0) {
         return System.identityHashCode(proxy);
       }
-      if (methodName.equals("toString")
-          && method.getParameterCount() == 0
-          && method.getReturnType() == String.class) {
+      if (methodName.equals("toString") && method.getParameterCount() == 0) {
         return RegistryCapturingInvoker.class.getName()
             + "@"
             + Integer.toHexString(System.identityHashCode(proxy));

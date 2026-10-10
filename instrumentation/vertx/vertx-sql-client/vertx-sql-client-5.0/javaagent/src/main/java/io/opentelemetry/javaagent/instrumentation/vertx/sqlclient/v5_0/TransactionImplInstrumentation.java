@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -26,9 +25,7 @@ class TransactionImplInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("wrap").and(returns(named("io.vertx.core.Completable"))),
-        getClass().getName() + "$WrapHandlerAdvice");
+    transformer.applyAdviceToMethod(named("wrap"), getClass().getName() + "$WrapHandlerAdvice");
   }
 
   @SuppressWarnings("unused")

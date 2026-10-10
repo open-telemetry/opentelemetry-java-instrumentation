@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0;
 import static java.util.logging.Level.WARNING;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -32,10 +31,7 @@ class OpenTelemetryInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isStatic()
-            .and(named("get"))
-            .and(takesArguments(0))
-            .and(returns(named("application.io.opentelemetry.api.OpenTelemetry"))),
+        isStatic().and(named("get")).and(takesArguments(0)),
         OpenTelemetryInstrumentation.class.getName() + "$GetAdvice");
     transformer.applyAdviceToMethod(
         isStatic()

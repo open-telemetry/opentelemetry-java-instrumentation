@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -26,9 +25,7 @@ class HttpServerBluePrintInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("requestPreparation")
-            .and(returns(named("org.apache.pekko.stream.scaladsl.BidiFlow"))),
-        getClass().getName() + "$PekkoBindAndHandleAdvice");
+        named("requestPreparation"), getClass().getName() + "$PekkoBindAndHandleAdvice");
   }
 
   @SuppressWarnings("unused")

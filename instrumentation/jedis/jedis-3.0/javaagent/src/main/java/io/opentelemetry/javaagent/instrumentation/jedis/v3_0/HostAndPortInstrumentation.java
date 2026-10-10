@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -28,10 +27,7 @@ class HostAndPortInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("parseString")
-            .and(isStatic())
-            .and(takesArgument(0, String.class))
-            .and(returns(named("redis.clients.jedis.HostAndPort"))),
+        named("parseString").and(isStatic()).and(takesArgument(0, String.class)),
         getClass().getName() + "$ParseStringAdvice");
   }
 

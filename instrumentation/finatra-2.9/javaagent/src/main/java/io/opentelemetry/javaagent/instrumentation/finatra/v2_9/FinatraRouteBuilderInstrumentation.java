@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.finatra.v2_9;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.twitter.finatra.http.internal.routing.Route;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -24,9 +23,7 @@ class FinatraRouteBuilderInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("build").and(returns(named("com.twitter.finatra.http.internal.routing.Route"))),
-        getClass().getName() + "$BuildAdvice");
+    transformer.applyAdviceToMethod(named("build"), getClass().getName() + "$BuildAdvice");
   }
 
   @SuppressWarnings("unused")

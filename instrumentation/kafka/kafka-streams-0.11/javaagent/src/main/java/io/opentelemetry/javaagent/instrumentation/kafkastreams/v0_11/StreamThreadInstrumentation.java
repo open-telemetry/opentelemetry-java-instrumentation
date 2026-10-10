@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11;
 import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.processSpanSuppression;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaProcessingOwnershipUtil.markProcessingOwnedOutsideKafkaClient;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -28,9 +27,7 @@ class StreamThreadInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("pollRequests")
-            .and(returns(named("org.apache.kafka.clients.consumer.ConsumerRecords"))),
-        getClass().getName() + "$PollRequestsAdvice");
+        named("pollRequests"), getClass().getName() + "$PollRequestsAdvice");
     transformer.applyAdviceToMethod(
         named("maybeUpdateStandbyTasks"), getClass().getName() + "$StandbyTaskUpdateAdvice");
   }

@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.openai.v1_1;
 
 import static io.opentelemetry.javaagent.instrumentation.openai.v1_1.OpenAiSingletons.telemetry;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.openai.client.OpenAIClient;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -24,9 +23,7 @@ class OpenAiClientInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("build").and(returns(named("com.openai.client.OpenAIClient"))),
-        getClass().getName() + "$BuildAdvice");
+    transformer.applyAdviceToMethod(named("build"), getClass().getName() + "$BuildAdvice");
   }
 
   @SuppressWarnings("unused")

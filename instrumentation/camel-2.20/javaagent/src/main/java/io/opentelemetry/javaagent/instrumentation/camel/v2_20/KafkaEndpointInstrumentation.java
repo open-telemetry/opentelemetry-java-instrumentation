@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessageTelemetry.messageTelemetry;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignals;
@@ -33,8 +32,7 @@ class KafkaEndpointInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("createKafkaExchange")
-            .and(takesArgument(0, named("org.apache.kafka.clients.consumer.ConsumerRecord")))
-            .and(returns(named("org.apache.camel.Exchange"))),
+            .and(takesArgument(0, named("org.apache.kafka.clients.consumer.ConsumerRecord"))),
         getClass().getName() + "$CreateExchangeAdvice");
   }
 

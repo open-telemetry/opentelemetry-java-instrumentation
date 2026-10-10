@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.instrumentation.spring.integration.v4_1.internal.SpringIntegrationHandoff;
@@ -27,9 +26,7 @@ class MessageHistoryInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("write")
-            .and(takesArgument(0, named("org.springframework.messaging.Message")))
-            .and(returns(named("org.springframework.messaging.Message"))),
+        named("write").and(takesArgument(0, named("org.springframework.messaging.Message"))),
         getClass().getName() + "$WriteAdvice");
   }
 

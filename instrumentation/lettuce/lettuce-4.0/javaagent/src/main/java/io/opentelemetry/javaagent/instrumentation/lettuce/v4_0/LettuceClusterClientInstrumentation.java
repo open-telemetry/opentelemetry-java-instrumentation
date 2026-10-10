@@ -9,7 +9,6 @@ import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.lambdaworks.redis.RedisChannelHandler;
@@ -34,15 +33,11 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
     // Every constructor stores the seed URIs, but the constructor argument lists differ.
     transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
-        named("connectClusterImpl")
-            .and(
-                returns(named("com.lambdaworks.redis.cluster.StatefulRedisClusterConnectionImpl"))),
-        getClass().getName() + "$AttachConnectionAdvice");
+        named("connectClusterImpl"), getClass().getName() + "$AttachConnectionAdvice");
     // Lettuce 4.0-4.3 opens node connections through connectToNode.
     transformer.applyAdviceToMethod(
         named("connectToNode")
-            .and(takesArgument(0, named("com.lambdaworks.redis.codec.RedisCodec")))
-            .and(returns(named("com.lambdaworks.redis.api.StatefulRedisConnection"))),
+            .and(takesArgument(0, named("com.lambdaworks.redis.codec.RedisCodec"))),
         getClass().getName() + "$AttachConnectionAdvice");
     // Lettuce 4.2+ uses connectStateful for every connection, including node connections in 4.4+.
     transformer.applyAdviceToMethod(

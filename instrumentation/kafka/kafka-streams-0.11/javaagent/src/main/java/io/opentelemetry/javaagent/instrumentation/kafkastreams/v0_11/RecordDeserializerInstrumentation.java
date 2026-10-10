@@ -9,7 +9,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPackagePrivate;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
@@ -37,8 +36,7 @@ class RecordDeserializerInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isPackagePrivate()
             .and(named("deserialize"))
-            .and(takesArgument(1, named("org.apache.kafka.clients.consumer.ConsumerRecord")))
-            .and(returns(named("org.apache.kafka.clients.consumer.ConsumerRecord"))),
+            .and(takesArgument(1, named("org.apache.kafka.clients.consumer.ConsumerRecord"))),
         getClass().getName() + "$DeserializeAdvice");
   }
 

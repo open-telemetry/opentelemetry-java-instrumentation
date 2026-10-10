@@ -68,6 +68,24 @@ class HasSuperMethodMatcherTest {
   }
 
   @Test
+  void covariantReturn() throws Exception {
+    MethodDescription method =
+        new MethodDescription.ForLoadedMethod(
+            CovariantImplementation.class.getDeclaredMethod("response"));
+
+    assertThat(hasSuperMethod(isAnnotatedWith(Trace.class)).matches(method)).isTrue();
+  }
+
+  @Test
+  void substitutedParametersWithCovariantReturn() throws Exception {
+    MethodDescription method =
+        new MethodDescription.ForLoadedMethod(
+            GenericImplementation.class.getDeclaredMethod("response", String.class));
+
+    assertThat(hasSuperMethod(isAnnotatedWith(Trace.class)).matches(method)).isTrue();
+  }
+
+  @Test
   void testTraversalExceptions() throws Exception {
     MethodDescription method = mock(MethodDescription.class);
     MethodDescription.SignatureToken sigToken =
@@ -84,5 +102,29 @@ class HasSuperMethodMatcherTest {
     verify(method, times(1)).asSignatureToken();
     verify(method, times(1)).getDeclaringType();
     verifyNoMoreInteractions(method);
+  }
+
+  interface CovariantInterface {
+    @Trace
+    Object response();
+  }
+
+  static class CovariantImplementation implements CovariantInterface {
+    @Override
+    public String response() {
+      return "response";
+    }
+  }
+
+  interface GenericInterface<T> {
+    @Trace
+    Object response(T parameter);
+  }
+
+  static class GenericImplementation implements GenericInterface<String> {
+    @Override
+    public String response(String parameter) {
+      return parameter;
+    }
   }
 }

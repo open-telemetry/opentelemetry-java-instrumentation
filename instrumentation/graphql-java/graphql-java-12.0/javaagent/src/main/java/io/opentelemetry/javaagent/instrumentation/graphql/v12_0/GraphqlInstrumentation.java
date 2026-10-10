@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.graphql.v12_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import graphql.execution.instrumentation.Instrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -27,8 +26,7 @@ class GraphqlInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        namedOneOf("checkInstrumentationDefaultState", "checkInstrumentation")
-            .and(returns(named("graphql.execution.instrumentation.Instrumentation"))),
+        namedOneOf("checkInstrumentationDefaultState", "checkInstrumentation"),
         getClass().getName() + "$AddInstrumentationAdvice");
   }
 

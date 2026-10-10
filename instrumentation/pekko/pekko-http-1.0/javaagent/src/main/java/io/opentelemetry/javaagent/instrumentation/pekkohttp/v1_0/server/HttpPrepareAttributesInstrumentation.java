@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -27,8 +26,8 @@ class HttpPrepareAttributesInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("prepareAttributes")
-            .and(takesArgument(1, named("org.apache.pekko.stream.scaladsl.Tcp$IncomingConnection")))
-            .and(returns(named("org.apache.pekko.stream.Attributes"))),
+            .and(
+                takesArgument(1, named("org.apache.pekko.stream.scaladsl.Tcp$IncomingConnection"))),
         getClass().getName() + "$PrepareAttributesAdvice");
   }
 

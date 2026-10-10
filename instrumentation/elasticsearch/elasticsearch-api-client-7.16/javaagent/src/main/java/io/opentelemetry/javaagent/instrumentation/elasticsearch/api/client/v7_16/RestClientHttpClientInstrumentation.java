@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.api.client.v7_1
 import static io.opentelemetry.javaagent.instrumentation.elasticsearch.api.client.v7_16.ElasticsearchApiClientSingletons.ENDPOINT_DEFINITION;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
@@ -35,8 +34,7 @@ class RestClientHttpClientInstrumentation implements TypeInstrumentation {
         namedOneOf("performRequest", "performRequestAsync").and(takesArgument(0, String.class)),
         getClass().getName() + "$PerformRequestAdvice");
     transformer.applyAdviceToMethod(
-        named("createRestRequest").and(returns(named("org.elasticsearch.client.Request"))),
-        getClass().getName() + "$CreateRestRequestAdvice");
+        named("createRestRequest"), getClass().getName() + "$CreateRestRequestAdvice");
   }
 
   @SuppressWarnings("unused")

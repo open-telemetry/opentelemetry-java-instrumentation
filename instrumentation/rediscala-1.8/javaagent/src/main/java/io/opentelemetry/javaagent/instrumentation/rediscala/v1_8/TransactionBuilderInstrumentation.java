@@ -6,9 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 
 import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.TRANSACTION_STATE;
-import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -32,9 +30,7 @@ class TransactionBuilderInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        namedOneOf("multi", "transaction", "watch")
-            .and(returns(named("redis.commands.TransactionBuilder"))),
-        getClass().getName() + "$CreateAdvice");
+        namedOneOf("multi", "transaction", "watch"), getClass().getName() + "$CreateAdvice");
   }
 
   @SuppressWarnings("unused")

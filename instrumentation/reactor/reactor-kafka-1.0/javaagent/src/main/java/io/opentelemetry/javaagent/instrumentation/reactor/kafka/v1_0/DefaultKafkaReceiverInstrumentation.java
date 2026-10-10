@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.reactor.kafka.v1_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -27,8 +26,7 @@ class DefaultKafkaReceiverInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("createConsumerFlux").and(returns(named("reactor.core.publisher.Flux"))),
-        getClass().getName() + "$CreateConsumerFluxAdvice");
+        named("createConsumerFlux"), getClass().getName() + "$CreateConsumerFluxAdvice");
   }
 
   @SuppressWarnings("unused")

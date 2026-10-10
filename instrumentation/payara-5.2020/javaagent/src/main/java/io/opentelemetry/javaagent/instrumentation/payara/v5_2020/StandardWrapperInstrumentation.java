@@ -73,10 +73,10 @@ class StandardWrapperInstrumentation implements TypeInstrumentation {
         int access, String name, String descriptor, String signature, String[] exceptions) {
       MethodVisitor mv = super.visitMethod(access, name, descriptor, signature, exceptions);
       if ("service".equals(name)
-          && ("(Ljakarta/servlet/ServletRequest;Ljakarta/servlet/ServletResponse;Ljakarta/servlet/Servlet;)V"
-                  .equals(descriptor)
-              || "(Ljavax/servlet/ServletRequest;Ljavax/servlet/ServletResponse;Ljavax/servlet/Servlet;)V"
-                  .equals(descriptor))) {
+          && (descriptor.startsWith(
+                  "(Ljakarta/servlet/ServletRequest;Ljakarta/servlet/ServletResponse;Ljakarta/servlet/Servlet;)")
+              || descriptor.startsWith(
+                  "(Ljavax/servlet/ServletRequest;Ljavax/servlet/ServletResponse;Ljavax/servlet/Servlet;)"))) {
         mv =
             new MethodVisitor(api, mv) {
               @Override
@@ -87,7 +87,7 @@ class StandardWrapperInstrumentation implements TypeInstrumentation {
                 // https://github.com/payara/Payara/blob/0369a7a9f724217e313d965902c03e06ea73f266/appserver/web/web-core/src/main/java/org/apache/catalina/core/StandardWrapper.java#L1576
                 if ("activeSpan".equals(name)
                     && "io/opentracing/Tracer".equals(owner)
-                    && "()Lio/opentracing/Span;".equals(descriptor)) {
+                    && descriptor.startsWith("()")) {
                   mv.visitInsn(Opcodes.POP);
                   mv.visitInsn(Opcodes.ACONST_NULL);
                 } else {

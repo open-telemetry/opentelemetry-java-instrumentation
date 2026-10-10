@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.reactor.v3_1.operator;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
@@ -37,8 +36,7 @@ class ContextPropagationOperatorContextViewInstrumentation implements TypeInstru
             .and(isStatic())
             .and(named("getOpenTelemetryContextFromContextView"))
             .and(takesArgument(0, named("reactor.util.context.ContextView")))
-            .and(takesArgument(1, named("application.io.opentelemetry.context.Context")))
-            .and(returns(named("application.io.opentelemetry.context.Context"))),
+            .and(takesArgument(1, named("application.io.opentelemetry.context.Context"))),
         getClass().getName() + "$GetContextViewAdvice");
   }
 

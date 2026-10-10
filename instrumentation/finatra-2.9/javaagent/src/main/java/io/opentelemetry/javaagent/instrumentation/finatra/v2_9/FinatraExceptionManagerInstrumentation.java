@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.finatra.v2_9;
 
 import static io.opentelemetry.javaagent.instrumentation.finatra.v2_9.FinatraSingletons.THROWABLE;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.twitter.finagle.http.Response;
@@ -26,9 +25,7 @@ class FinatraExceptionManagerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("toResponse")
-            .and(takesArgument(1, Throwable.class))
-            .and(returns(named("com.twitter.finagle.http.Response"))),
+        named("toResponse").and(takesArgument(1, Throwable.class)),
         getClass().getName() + "$HandleExceptionAdvice");
   }
 

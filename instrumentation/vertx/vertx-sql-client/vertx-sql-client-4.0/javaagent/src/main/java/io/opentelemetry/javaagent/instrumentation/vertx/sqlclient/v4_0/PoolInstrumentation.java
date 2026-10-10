@@ -15,7 +15,6 @@ import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
@@ -77,8 +76,7 @@ class PoolInstrumentation implements TypeInstrumentation {
         named("pool")
             .and(isStatic())
             .and(takesArguments(3))
-            .and(takesArgument(1, hasSuperType(named("io.vertx.sqlclient.SqlConnectOptions"))))
-            .and(returns(hasSuperType(named("io.vertx.sqlclient.Pool")))),
+            .and(takesArgument(1, hasSuperType(named("io.vertx.sqlclient.SqlConnectOptions")))),
         getClass().getName() + "$PoolAdvice");
 
     // Added in 4.2, these overloads take the servers the client load balances over.
@@ -86,12 +84,11 @@ class PoolInstrumentation implements TypeInstrumentation {
         namedOneOf("client", "pool")
             .and(isStatic())
             .and(takesArguments(3))
-            .and(takesArgument(1, named("java.util.List")))
-            .and(returns(hasSuperType(named("io.vertx.sqlclient.SqlClient")))),
+            .and(takesArgument(1, named("java.util.List"))),
         getClass().getName() + "$ServerListAdvice");
 
     transformer.applyAdviceToMethod(
-        named("getConnection").and(takesNoArguments()).and(returns(named("io.vertx.core.Future"))),
+        named("getConnection").and(takesNoArguments()),
         getClass().getName() + "$GetConnectionAdvice");
   }
 

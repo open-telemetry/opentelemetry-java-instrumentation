@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -28,10 +27,7 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("poll")
-            .and(isPublic())
-            .and(returns(named("org.apache.kafka.clients.consumer.ConsumerRecords"))),
-        getClass().getName() + "$PollAdvice");
+        named("poll").and(isPublic()), getClass().getName() + "$PollAdvice");
   }
 
   @SuppressWarnings("unused")

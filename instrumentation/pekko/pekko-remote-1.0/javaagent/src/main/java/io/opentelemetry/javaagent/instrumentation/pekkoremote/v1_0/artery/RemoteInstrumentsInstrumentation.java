@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.artery;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -29,9 +28,7 @@ class RemoteInstrumentsInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("create").and(returns(named("scala.collection.immutable.Vector"))),
-        getClass().getName() + "$CreateAdvice");
+    transformer.applyAdviceToMethod(named("create"), getClass().getName() + "$CreateAdvice");
   }
 
   @SuppressWarnings("unused")

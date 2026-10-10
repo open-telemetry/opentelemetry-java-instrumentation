@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.api.impl.InstrumentationUtil;
@@ -31,8 +30,7 @@ class InstrumentationUtilInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("shouldSuppressInstrumentation")
-            .and(takesArgument(0, named("application.io.opentelemetry.context.Context")))
-            .and(returns(boolean.class)),
+            .and(takesArgument(0, named("application.io.opentelemetry.context.Context"))),
         getClass().getName() + "$ShouldSuppressAdvice");
     transformer.applyAdviceToMethod(
         named("suppressInstrumentation").and(takesArgument(0, Runnable.class)),

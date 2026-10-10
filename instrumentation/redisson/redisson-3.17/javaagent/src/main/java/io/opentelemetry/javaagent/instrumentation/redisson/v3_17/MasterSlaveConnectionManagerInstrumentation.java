@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.redisson.v3_17;
 
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -43,8 +42,7 @@ class MasterSlaveConnectionManagerInstrumentation implements TypeInstrumentation
         isConstructor().and(takesArgument(1, named("org.redisson.connection.ServiceManager"))),
         getClass().getName() + "$ServiceManagerConstructorAdvice");
     transformer.applyAdviceToMethod(
-        named("createClient").and(returns(named("org.redisson.client.RedisClient"))),
-        getClass().getName() + "$CreateClientAdvice");
+        named("createClient"), getClass().getName() + "$CreateClientAdvice");
   }
 
   @SuppressWarnings("unused")

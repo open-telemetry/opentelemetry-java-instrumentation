@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11.Kafk
 import static io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11.StateHolder.holder;
 import static net.bytebuddy.matcher.ElementMatchers.isPackagePrivate;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
@@ -35,10 +34,7 @@ class PartitionGroupInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isPackagePrivate()
-            .and(named("nextRecord"))
-            .and(returns(named("org.apache.kafka.streams.processor.internals.StampedRecord"))),
-        getClass().getName() + "$NextRecordAdvice");
+        isPackagePrivate().and(named("nextRecord")), getClass().getName() + "$NextRecordAdvice");
   }
 
   @SuppressWarnings("unused")

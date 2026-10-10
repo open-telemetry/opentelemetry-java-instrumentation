@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.instrumentation.netty.common.v4_0.VirtualFieldHelper.CHANNEL_HANDLER;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -50,16 +49,16 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
         namedOneOf("remove", "replace").and(takesArgument(0, Class.class)),
         AbstractNettyChannelPipelineInstrumentation.class.getName() + "$RemoveByClassAdvice");
     transformer.applyAdviceToMethod(
-        named("removeFirst").and(returns(named("io.netty.channel.ChannelHandler"))),
+        named("removeFirst"),
         AbstractNettyChannelPipelineInstrumentation.class.getName() + "$RemoveFirstAdvice");
     transformer.applyAdviceToMethod(
-        named("removeLast").and(returns(named("io.netty.channel.ChannelHandler"))),
+        named("removeLast"),
         AbstractNettyChannelPipelineInstrumentation.class.getName() + "$RemoveLastAdvice");
     transformer.applyAdviceToMethod(
         named("addAfter").and(takesArgument(1, String.class)).and(takesArguments(4)),
         AbstractNettyChannelPipelineInstrumentation.class.getName() + "$AddAfterAdvice");
     transformer.applyAdviceToMethod(
-        named("toMap").and(takesArguments(0)).and(returns(Map.class)),
+        named("toMap").and(takesArguments(0)),
         AbstractNettyChannelPipelineInstrumentation.class.getName() + "$ToMapAdvice");
   }
 

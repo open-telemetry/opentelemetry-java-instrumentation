@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.awssdk.v2_2;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -28,9 +27,7 @@ class AwsAsyncClientHandlerInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("execute").and(returns(CompletableFuture.class)),
-        getClass().getName() + "$WrapFutureAdvice");
+    transformer.applyAdviceToMethod(named("execute"), getClass().getName() + "$WrapFutureAdvice");
   }
 
   @SuppressWarnings("unused")

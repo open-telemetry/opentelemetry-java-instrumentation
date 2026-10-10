@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
@@ -28,7 +27,7 @@ class NettyResponseFutureInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("toCompletableFuture").and(takesNoArguments()).and(returns(CompletableFuture.class)),
+        named("toCompletableFuture").and(takesNoArguments()),
         getClass().getName() + "$WrapFutureAdvice");
   }
 

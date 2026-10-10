@@ -6,7 +6,8 @@
 package io.opentelemetry.javaagent.extension.matcher;
 
 import static io.opentelemetry.javaagent.extension.matcher.SafeHasSuperTypeMatcher.safeGetSuperClass;
-import static net.bytebuddy.matcher.ElementMatchers.hasSignature;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -36,7 +37,9 @@ class HasSuperMethodMatcher<T extends MethodDescription>
     if (target.isConstructor()) {
       return false;
     }
-    Junction<MethodDescription> signatureMatcher = hasSignature(target.asSignatureToken());
+    MethodDescription.SignatureToken signature = target.asSignatureToken();
+    Junction<MethodDescription> signatureMatcher =
+        named(signature.getName()).and(takesArguments(signature.getParameterTypes()));
     TypeDefinition declaringType = target.getDeclaringType();
     Set<TypeDefinition> checkedInterfaces = new HashSet<>(8);
 
