@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SY
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 import static org.assertj.core.api.Assertions.entry;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -82,12 +83,12 @@ class RpcAttributesExtractorTest {
 
   @Test
   void server() {
-    testExtractor(RpcServerAttributesExtractor.create(new TestGetter()));
+    testExtractor(RpcServerAttributesExtractor.create(new TestGetter(), OpenTelemetry.noop()));
   }
 
   @Test
   void client() {
-    testExtractor(RpcClientAttributesExtractor.create(new TestGetter()));
+    testExtractor(RpcClientAttributesExtractor.create(new TestGetter(), OpenTelemetry.noop()));
   }
 
   private static void testExtractor(AttributesExtractor<Map<String, String>, Void> extractor) {
@@ -139,7 +140,7 @@ class RpcAttributesExtractorTest {
     request.put("errorType", "CANCELLED");
 
     AttributesExtractor<Map<String, String>, Void> extractor =
-        RpcServerAttributesExtractor.create(new TestGetter());
+        RpcServerAttributesExtractor.create(new TestGetter(), OpenTelemetry.noop());
 
     Context context = Context.root();
     AttributesBuilder attributes = Attributes.builder();
@@ -158,7 +159,7 @@ class RpcAttributesExtractorTest {
     request.put("method", "Method");
 
     AttributesExtractor<Map<String, String>, Void> extractor =
-        RpcServerAttributesExtractor.create(new TestGetter());
+        RpcServerAttributesExtractor.create(new TestGetter(), OpenTelemetry.noop());
 
     Context context = Context.root();
     AttributesBuilder attributes = Attributes.builder();
@@ -178,7 +179,7 @@ class RpcAttributesExtractorTest {
     request.put("method", "Method");
 
     AttributesExtractor<Map<String, String>, Void> extractor =
-        RpcServerAttributesExtractor.create(new TestGetter());
+        RpcServerAttributesExtractor.create(new TestGetter(), OpenTelemetry.noop());
 
     Context context = Context.root();
     AttributesBuilder attributes = Attributes.builder();

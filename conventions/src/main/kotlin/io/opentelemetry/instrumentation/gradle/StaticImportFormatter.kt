@@ -23,6 +23,7 @@ class StaticImportFormatter : FormatterFunc.NeedsFile, Serializable {
     val lineExcludePattern: String? = null,
     val filePattern: String? = null,
     val contentExcludePattern: String? = null,
+    val excludedFiles: Set<String> = emptySet(),
   ) : Serializable
 
   override fun applyWithFile(input: String, source: File): String {
@@ -76,6 +77,10 @@ class StaticImportFormatter : FormatterFunc.NeedsFile, Serializable {
         "SemconvStability",
         "io.opentelemetry.instrumentation.api.internal.SemconvStability",
         "emit[a-zA-Z0-9]*",
+        excludedFiles = setOf(
+          "SemconvRpcStabilityUtil.java",
+          "SemconvServiceStabilityUtil.java",
+        ),
       ),
       Rule(
         "TestLatestDeps",
@@ -107,6 +112,7 @@ class StaticImportFormatter : FormatterFunc.NeedsFile, Serializable {
     val importsToAdd = mutableSetOf<String>()
 
     for (rule in rules) {
+      if (source.name in rule.excludedFiles) continue
       if (rule.filePattern != null && !Regex(rule.filePattern).containsMatchIn(source.name)) continue
       if (rule.contentExcludePattern != null && content.contains(rule.contentExcludePattern)) continue
       val regex = Regex("\\b${rule.className}\\.(${rule.memberPattern})\\b")

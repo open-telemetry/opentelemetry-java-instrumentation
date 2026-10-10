@@ -5,6 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldServicePeerSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewServicePeerSemconv;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -253,8 +257,17 @@ class SemconvStabilityTest {
     ConfigProvider configProvider =
         SdkConfigProvider.create(DeclarativeConfiguration.toConfigProperties(model));
 
-    SemconvSelectionResolver resolver = resolver(configProvider);
-    assertThat(domain.equals("rpc") ? resolver.rpc() : resolver.servicePeer()).isEqualTo(expected);
+    OpenTelemetry openTelemetry = openTelemetry(configProvider);
+    assertThat(
+            domain.equals("rpc")
+                ? emitOldRpcSemconv(openTelemetry)
+                : emitOldServicePeerSemconv(openTelemetry))
+        .isEqualTo(expected.version() == 0 || expected.dualEmit());
+    assertThat(
+            domain.equals("rpc")
+                ? emitPreviewRpcSemconv(openTelemetry)
+                : emitPreviewServicePeerSemconv(openTelemetry))
+        .isEqualTo(expected.version() >= 1);
   }
 
   @ParameterizedTest
@@ -285,7 +298,12 @@ class SemconvStabilityTest {
     ConfigProvider configProvider =
         SdkConfigProvider.create(DeclarativeConfiguration.toConfigProperties(model));
 
-    assertThat(resolver(configProvider).rpc()).isEqualTo(expected);
+    OpenTelemetry openTelemetry = openTelemetry(configProvider);
+    assertThat(emitOldRpcSemconv(openTelemetry))
+        .isEqualTo(expected.version() == 0 || expected.dualEmit());
+    assertThat(emitPreviewRpcSemconv(openTelemetry)).isEqualTo(expected.version() >= 1);
+    assertThat(SemconvStability.rpcSchemaUrl(openTelemetry))
+        .isEqualTo(expected.version() >= 1 ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0);
   }
 
   private static Stream<Arguments> structuredRpcSelections() {
@@ -312,14 +330,13 @@ class SemconvStabilityTest {
                         SemconvMode.V1_EXPERIMENTAL.withDualEmit())));
   }
 
-  private static SemconvSelectionResolver resolver(ConfigProvider configProvider) {
+  private static OpenTelemetry openTelemetry(ConfigProvider configProvider) {
     ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
     when(openTelemetry.getGeneralInstrumentationConfig())
         .thenReturn(configProvider.getGeneralInstrumentationConfig());
     when(openTelemetry.getInstrumentationConfig("common"))
         .thenReturn(configProvider.getInstrumentationConfig("common"));
-    return new SemconvSelectionResolver(
-        openTelemetry, configProvider.getGeneralInstrumentationConfig());
+    return openTelemetry;
   }
 
   @SafeVarargs

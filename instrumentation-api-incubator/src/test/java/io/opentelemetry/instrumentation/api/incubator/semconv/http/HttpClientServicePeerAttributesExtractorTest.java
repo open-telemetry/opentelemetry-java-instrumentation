@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.http;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldServicePeerSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewServicePeerSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.emitOldServicePeerSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.emitPreviewServicePeerSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
@@ -155,7 +155,9 @@ class HttpClientServicePeerAttributesExtractorTest {
   private static ServicePeerResolver createResolver(DeclarativeConfigProperties... entries) {
     ExtendedOpenTelemetry otel = mock(ExtendedOpenTelemetry.class);
     DeclarativeConfigProperties commonConfig = mock(DeclarativeConfigProperties.class);
+    when(otel.getGeneralInstrumentationConfig()).thenReturn(DeclarativeConfigProperties.empty());
     when(otel.getInstrumentationConfig("common")).thenReturn(commonConfig);
+    when(commonConfig.get("semconv_stability")).thenReturn(DeclarativeConfigProperties.empty());
     List<DeclarativeConfigProperties> entryList = asList(entries);
     when(commonConfig.getStructuredList("service_peer_mapping", emptyList())).thenReturn(entryList);
     return new ServicePeerResolver(otel);

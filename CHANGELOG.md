@@ -130,6 +130,9 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Remove the global-backed factories in `RpcClientAttributesExtractor`,
+  `RpcServerAttributesExtractor`, `RpcSpanNameExtractor`, `RpcClientMetrics`, `RpcServerMetrics`,
+  and `RpcMetricsContextCustomizers`; pass the instrumentation's `OpenTelemetry` instance instead.
 - Remove the deprecated standalone appender boolean setters and XML settings:
   Log4j `setCaptureMapMessageAttributes` / `captureMapMessageAttributes`, and Logback
   `setCaptureKeyValuePairAttributes` / `captureKeyValuePairAttributes`,
