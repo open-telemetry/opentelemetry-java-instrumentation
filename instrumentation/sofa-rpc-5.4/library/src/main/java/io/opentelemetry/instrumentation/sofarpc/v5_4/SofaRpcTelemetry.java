@@ -5,13 +5,21 @@
 
 package io.opentelemetry.instrumentation.sofarpc.v5_4;
 
+import com.alipay.sofa.rpc.core.request.SofaRequest;
 import com.alipay.sofa.rpc.core.response.SofaResponse;
+import com.alipay.sofa.rpc.ext.ExtensionLoader;
+import com.alipay.sofa.rpc.ext.ExtensionLoaderFactory;
 import com.alipay.sofa.rpc.filter.Filter;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import javax.annotation.Nullable;
 
 /** Entrypoint for instrumenting SOFARPC clients or servers. */
 public final class SofaRpcTelemetry {
+
+  private static final String CLIENT_FILTER_NAME = "openTelemetryClient";
+
+  @Nullable private static volatile Filter cachedClientFilter;
 
   private final Instrumenter<SofaRpcRequest, SofaResponse> serverInstrumenter;
   private final Instrumenter<SofaRpcRequest, SofaResponse> clientInstrumenter;
@@ -33,6 +41,47 @@ public final class SofaRpcTelemetry {
       Instrumenter<SofaRpcRequest, SofaResponse> clientInstrumenter) {
     this.serverInstrumenter = serverInstrumenter;
     this.clientInstrumenter = clientInstrumenter;
+  }
+
+  /**
+   * Completes telemetry for an asynchronous client request when a custom transport bypasses the
+   * standard SOFARPC callback path.
+   *
+   * <p>This method must be called with the same {@link SofaRequest} instance that was passed to the
+   * client filter. It safely does nothing when the request has no pending asynchronous telemetry or
+   * has already been completed.
+   */
+  public static void completeAsyncResponse(
+      SofaRequest request, @Nullable SofaResponse response, @Nullable Throwable exception) {
+    Filter filter = getClientFilter();
+    if (filter == null) {
+      TracingFilter.completeAsyncRequest(request, response, exception);
+      return;
+    }
+    filter.onAsyncResponse(null, request, response, exception);
+  }
+
+  @Nullable
+  private static Filter getClientFilter() {
+    Filter cachedFilter = cachedClientFilter;
+    if (cachedFilter != null) {
+      return cachedFilter;
+    }
+
+    synchronized (SofaRpcTelemetry.class) {
+      cachedFilter = cachedClientFilter;
+      if (cachedFilter != null) {
+        return cachedFilter;
+      }
+
+      ExtensionLoader<Filter> loader = ExtensionLoaderFactory.getExtensionLoader(Filter.class);
+      if (loader.getExtensionClass(CLIENT_FILTER_NAME) == null) {
+        return null;
+      }
+      cachedFilter = loader.getExtension(CLIENT_FILTER_NAME);
+      cachedClientFilter = cachedFilter;
+      return cachedFilter;
+    }
   }
 
   /**
