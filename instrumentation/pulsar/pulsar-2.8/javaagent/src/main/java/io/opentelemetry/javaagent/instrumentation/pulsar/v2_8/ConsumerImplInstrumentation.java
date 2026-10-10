@@ -45,7 +45,9 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor(), getClass().getName() + "$ConsumerConstructorAdvice");
+        isConstructor()
+            .and(takesArgument(0, named("org.apache.pulsar.client.impl.PulsarClientImpl"))),
+        getClass().getName() + "$ConsumerConstructorAdvice");
 
     // internalReceive will apply to Consumer#receive(long,TimeUnit)
     // and called before MessageListener#receive.

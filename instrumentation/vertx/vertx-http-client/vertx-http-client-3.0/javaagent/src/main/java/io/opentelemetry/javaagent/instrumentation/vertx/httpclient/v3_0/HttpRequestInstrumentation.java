@@ -13,6 +13,7 @@ import static io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v3_0.V
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
@@ -66,7 +67,14 @@ class HttpRequestInstrumentation implements TypeInstrumentation {
         named("handleException"), getClass().getName() + "$HandleExceptionAdvice");
 
     transformer.applyAdviceToMethod(
-        named("handleResponse"), getClass().getName() + "$HandleResponseAdvice");
+        named("handleResponse")
+            .and(
+                takesArgument(
+                    0,
+                    namedOneOf(
+                        "io.vertx.core.http.HttpClientResponse",
+                        "io.vertx.core.http.impl.HttpClientResponseImpl"))),
+        getClass().getName() + "$HandleResponseAdvice");
 
     transformer.applyAdviceToMethod(
         isPrivate().and(nameStartsWith("write").or(nameStartsWith("connected"))),
