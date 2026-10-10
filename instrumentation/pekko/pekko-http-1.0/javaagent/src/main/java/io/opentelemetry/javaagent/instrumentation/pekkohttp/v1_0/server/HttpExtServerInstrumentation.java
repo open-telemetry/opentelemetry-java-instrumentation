@@ -5,7 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server;
 
+import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
+import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -37,6 +40,14 @@ class HttpExtServerInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("bindAndHandleAsync").and(takesArgument(0, named("scala.Function1"))),
         getClass().getName() + "$PekkoBindAndHandleAsyncAdvice");
+    // pekko-http 2.x removed bindAndHandle, newServerAt binds through bindAndHandleImpl, which in
+    // pekko-http 1.x delegates to bindAndHandle, so only advise it when bindAndHandle is gone to
+    // avoid wrapping the handler twice
+    transformer.applyAdviceToMethod(
+        named("bindAndHandleImpl")
+            .and(takesArgument(0, named("org.apache.pekko.stream.scaladsl.Flow")))
+            .and(isDeclaredBy(not(declaresMethod(named("bindAndHandle"))))),
+        getClass().getName() + "$PekkoBindAndHandleAdvice");
   }
 
   @SuppressWarnings("unused")
