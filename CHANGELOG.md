@@ -208,6 +208,12 @@
   `MessagingAttributesGetter` no longer requires or exposes `getMessageBodySize()` or
   `getMessageEnvelopeSize()`.
 
+### 🚫 Deprecations
+
+- Deprecate `GrpcRequest.getLogicalHost()` and `getLogicalPort()` in favor of
+  `getServerAddress()` and `getServerPort()`.
+  ([#16161](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16161))
+
 ## Version 2.32.0 (2026-10-03)
 
 This release targets the OpenTelemetry SDK 1.66.0.
