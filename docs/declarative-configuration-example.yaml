@@ -152,9 +152,9 @@ instrumentation/development:
           # attribute keys to capture. Applies to Log4j MapMessage entries, SLF4J key-value pairs,
           # Logback Logstash markers, and Logstash structured arguments. "*" matches any number of
           # characters and "?" matches one character. Excluded patterns take precedence. An
-          # exclude-only selector captures every key not excluded. An absent or empty selector
-          # captures all structured attributes by default. MDC and logger-context attributes remain
-          # separate and opt-in.
+          # exclude-only selector captures every key not excluded. When the selector is absent or
+          # empty, all structured attributes are captured by default. MDC and logger-context
+          # attributes remain separate and opt-in.
           included: []
 
         # Specifies the key name used to store the trace flags in the logging context.
@@ -169,14 +169,16 @@ instrumentation/development:
       messaging:
         headers:
           # A comma-separated list of case-sensitive message header name glob patterns to exclude
-          # from span attributes. `?` matches one character and `*` matches zero or more characters.
-          # Excluded patterns take precedence over included patterns. An absent or empty selector
-          # captures no headers; an exclude-only selector captures every header not excluded, which
-          # may expose sensitive information.
+          # from span attributes. Captured attribute keys preserve the header name's original
+          # spelling, including dashes. `?` matches one character and `*` matches zero or more
+          # characters. Excluded patterns take precedence over included patterns. An absent or empty
+          # selector captures no headers; an exclude-only selector captures every header not
+          # excluded, which may expose sensitive information.
           excluded: []
 
           # A comma-separated list of case-sensitive message header name glob patterns to capture as
-          # span attributes. `?` matches one character and `*` matches zero or more characters.
+          # span attributes. Captured attribute keys preserve the header name's original spelling,
+          # including dashes. `?` matches one character and `*` matches zero or more characters.
           # Excluded patterns take precedence over included patterns. An absent or empty selector
           # captures no headers; an exclude-only selector captures every header not excluded.
           included: []
@@ -606,7 +608,8 @@ instrumentation/development:
       javascript_snippet/development: ''
       request_parameters/development:
         # A comma-separated list of case-sensitive request parameter name patterns to exclude from
-        # span attributes. `?` matches one character and `*` matches zero or more characters.
+        # span attributes under `servlet.request.parameter.<name>`, preserving the original
+        # parameter-name casing. `?` matches one character and `*` matches zero or more characters.
         # Excluded patterns take precedence over included patterns. No request parameters are
         # captured unless an included or excluded pattern is configured; configuring only excluded
         # patterns captures all request parameters that do not match them, which may expose
@@ -614,7 +617,8 @@ instrumentation/development:
         excluded: []
 
         # A comma-separated list of case-sensitive request parameter name patterns to capture as
-        # span attributes. `?` matches one character and `*` matches zero or more characters.
+        # span attributes under `servlet.request.parameter.<name>`, preserving the original
+        # parameter-name casing. `?` matches one character and `*` matches zero or more characters.
         # Excluded patterns take precedence over included patterns. No request parameters are
         # captured unless an included or excluded pattern is configured; configuring only excluded
         # patterns captures all request parameters that do not match them, which may expose
@@ -623,7 +627,7 @@ instrumentation/development:
       trace_id_request_attribute/development:
         # Enables adding the trace ID and span ID as request attributes for downstream servlet
         # access.
-        enabled: true
+        enabled: false
     spring_batch:
       chunk/development:
         # When enabled, a new root span will be created for each chunk processing. Please note that

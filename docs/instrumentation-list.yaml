@@ -55,15 +55,6 @@ definitions:
         Enables augmenting queries with a comment containing tracing information. An instrumentation-specific setting takes precedence. See [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. WARNING: augmenting queries with tracing context will make query texts unique, which may have adverse impact on database performance.
       type: boolean
       default: false
-    common.logging.span-id:
-      name: otel.instrumentation.common.logging.span-id
-      declarative_name: java.common.logging.span_id
-      description: 'Deprecated: use `otel.instrumentation.common.logging.span-id-key`
-        instead. It is ignored under v3 preview and will be removed in 3.0.'
-      type: string
-      default: span_id
-      deprecated: true
-      replaced_by: otel.instrumentation.common.logging.span-id-key
     common.logging.span-id-key:
       name: otel.instrumentation.common.logging.span-id-key
       declarative_name: java.common.logging.span_id_key
@@ -71,15 +62,6 @@ definitions:
         context.
       type: string
       default: span_id
-    common.logging.trace-flags:
-      name: otel.instrumentation.common.logging.trace-flags
-      declarative_name: java.common.logging.trace_flags
-      description: 'Deprecated: use `otel.instrumentation.common.logging.trace-flags-key`
-        instead. It is ignored under v3 preview and will be removed in 3.0.'
-      type: string
-      default: trace_flags
-      deprecated: true
-      replaced_by: otel.instrumentation.common.logging.trace-flags-key
     common.logging.trace-flags-key:
       name: otel.instrumentation.common.logging.trace-flags-key
       declarative_name: java.common.logging.trace_flags_key
@@ -87,15 +69,6 @@ definitions:
         context.
       type: string
       default: trace_flags
-    common.logging.trace-id:
-      name: otel.instrumentation.common.logging.trace-id
-      declarative_name: java.common.logging.trace_id
-      description: 'Deprecated: use `otel.instrumentation.common.logging.trace-id-key`
-        instead. It is ignored under v3 preview and will be removed in 3.0.'
-      type: string
-      default: trace_id
-      deprecated: true
-      replaced_by: otel.instrumentation.common.logging.trace-id-key
     common.logging.trace-id-key:
       name: otel.instrumentation.common.logging.trace-id-key
       declarative_name: java.common.logging.trace_id_key
@@ -126,6 +99,20 @@ definitions:
             type: string
             description: Peer service name to record for matching peers.
             example: serviceName
+    common.user.name.enabled:
+      name: otel.instrumentation.common.user.name.enabled
+      declarative_name: java.common.user.name.enabled
+      description: Enables capturing the `user.name` identity attribute. Identity
+        attributes are not captured by default.
+      type: boolean
+      default: false
+    common.user.roles.enabled:
+      name: otel.instrumentation.common.user.roles.enabled
+      declarative_name: java.common.user.roles.enabled
+      description: Enables capturing the `user.roles` identity attribute. Identity
+        attributes are not captured by default.
+      type: boolean
+      default: false
     common.v3-preview:
       name: otel.instrumentation.common.v3-preview
       declarative_name: java.common.v3_preview
@@ -216,63 +203,27 @@ definitions:
         takes precedence.
       type: boolean
       default: true
-    messaging.capture-headers:
-      name: otel.instrumentation.messaging.experimental.capture-headers
-      declarative_name: java.common.messaging.capture_headers/development
-      description: 'Deprecated: use `otel.instrumentation.common.messaging.headers.included`
-        instead. Ignored without a warning under v3-preview; may be removed in a later
-        minor release and will be removed no later than 3.0. A comma-separated list
-        of header names to capture as span attributes. It does not support glob patterns:
-        an entry containing `*` or `?` is ignored with a warning, and every other
-        entry is matched as a literal header name.'
-      type: list
-      default: ''
-      deprecated: true
-      replaced_by: otel.instrumentation.common.messaging.headers.included
-    messaging.deprecated-headers.excluded:
-      name: otel.instrumentation.messaging.experimental.headers.excluded
-      description: 'Deprecated: use `otel.instrumentation.common.messaging.headers.excluded`
-        instead. Ignored without a warning under v3-preview; may be removed in a later
-        minor release and will be removed no later than 3.0.'
-      type: list
-      default: ''
-      deprecated: true
-      replaced_by: otel.instrumentation.common.messaging.headers.excluded
-    messaging.deprecated-headers.included:
-      name: otel.instrumentation.messaging.experimental.headers.included
-      description: 'Deprecated: use `otel.instrumentation.common.messaging.headers.included`
-        instead. Ignored without a warning under v3-preview; may be removed in a later
-        minor release and will be removed no later than 3.0.'
-      type: list
-      default: ''
-      deprecated: true
-      replaced_by: otel.instrumentation.common.messaging.headers.included
-    messaging.deprecated-receive-telemetry.enabled:
-      name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
-      description: 'Deprecated: use `otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled`
-        instead. It may be removed in the next minor release.'
-      type: boolean
-      default: false
-      deprecated: true
-      replaced_by: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
     messaging.headers.excluded:
       name: otel.instrumentation.common.messaging.headers.excluded
       declarative_name: java.common.messaging.headers.excluded
       description: A comma-separated list of case-sensitive message header name glob
-        patterns to exclude from span attributes. `?` matches one character and `*`
-        matches zero or more characters. Excluded patterns take precedence over included
-        patterns. An absent or empty selector captures no headers; an exclude-only
-        selector captures every header not excluded, which may expose sensitive information.
+        patterns to exclude from span attributes. Captured attribute keys preserve
+        the header name's original spelling, including dashes. `?` matches one character
+        and `*` matches zero or more characters. Excluded patterns take precedence
+        over included patterns. An absent or empty selector captures no headers; an
+        exclude-only selector captures every header not excluded, which may expose
+        sensitive information.
       type: list
       default: ''
     messaging.headers.included:
       name: otel.instrumentation.common.messaging.headers.included
       declarative_name: java.common.messaging.headers.included
       description: A comma-separated list of case-sensitive message header name glob
-        patterns to capture as span attributes. `?` matches one character and `*`
-        matches zero or more characters. Excluded patterns take precedence over included
-        patterns. An absent or empty selector captures no headers; an exclude-only
-        selector captures every header not excluded.
+        patterns to capture as span attributes. Captured attribute keys preserve the
+        header name's original spelling, including dashes. `?` matches one character
+        and `*` matches zero or more characters. Excluded patterns take precedence
+        over included patterns. An absent or empty selector captures no headers; an
+        exclude-only selector captures every header not excluded.
       type: list
       default: ''
     otel.experimental.javascript-snippet-ad834761:
@@ -400,27 +351,6 @@ definitions:
       type: boolean
       deprecated: true
       replaced_by: otel.instrumentation.clickhouse.query-sanitization.enabled
-    otel.instrumentation.common.enduser.id.enabled:
-      name: otel.instrumentation.common.enduser.id.enabled
-      declarative_name: java.common.enduser.id.enabled
-      description: Enables capturing the enduser.id attribute. This property and the
-        associated attribute are not supported when v3 preview is enabled.
-      type: boolean
-      default: false
-    otel.instrumentation.common.enduser.role.enabled:
-      name: otel.instrumentation.common.enduser.role.enabled
-      declarative_name: java.common.enduser.role.enabled
-      description: Enables capturing the enduser.role attribute. This property and
-        the associated attribute are not supported when v3 preview is enabled.
-      type: boolean
-      default: false
-    otel.instrumentation.common.enduser.scope.enabled:
-      name: otel.instrumentation.common.enduser.scope.enabled
-      declarative_name: java.common.enduser.scope.enabled
-      description: Enables capturing the enduser.scope attribute when v3 preview is
-        not enabled. This property is not honored when v3 preview is enabled.
-      type: boolean
-      default: false
     otel.instrumentation.common.logging.structured-attributes.excluded:
       name: otel.instrumentation.common.logging.structured-attributes.excluded
       declarative_name: java.common.logging.structured_attributes.excluded
@@ -432,7 +362,7 @@ definitions:
       name: otel.instrumentation.common.logging.structured-attributes.included
       declarative_name: java.common.logging.structured_attributes.included
       description: |
-        Comma-separated list of case-sensitive glob patterns for event-local structured log attribute keys to capture. Applies to Log4j MapMessage entries, SLF4J key-value pairs, Logback Logstash markers, and Logstash structured arguments. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence. An exclude-only selector captures every key not excluded. Under v3-preview, an absent or empty selector captures all structured attributes by default. MDC and logger-context attributes remain separate and opt-in.
+        Comma-separated list of case-sensitive glob patterns for event-local structured log attribute keys to capture. Applies to Log4j MapMessage entries, SLF4J key-value pairs, Logback Logstash markers, and Logstash structured arguments. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence. An exclude-only selector captures every key not excluded. When the selector is absent or empty, all structured attributes are captured by default. MDC and logger-context attributes remain separate and opt-in.
       type: list
       default: ''
     otel.instrumentation.common.mdc.resource-attributes:
@@ -447,22 +377,6 @@ definitions:
       declarative_name: java.common.messaging.receive_telemetry/development.enabled
       description: |
         Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.
-      type: boolean
-      default: false
-    otel.instrumentation.common.user.name.enabled:
-      name: otel.instrumentation.common.user.name.enabled
-      declarative_name: java.common.user.name.enabled
-      description: Enables capturing the user.name attribute when v3 preview is enabled.
-        This property and the associated attribute are not supported when v3 preview
-        is disabled.
-      type: boolean
-      default: false
-    otel.instrumentation.common.user.roles.enabled:
-      name: otel.instrumentation.common.user.roles.enabled
-      declarative_name: java.common.user.roles.enabled
-      description: Enables capturing the user.roles attribute when v3 preview is enabled.
-        This property and the associated attribute are not supported when v3 preview
-        is disabled.
       type: boolean
       default: false
     otel.instrumentation.common.view-telemetry.enabled:
@@ -644,24 +558,6 @@ definitions:
         fetcher is one that simply maps data from an object to a field.
       type: boolean
       default: false
-    otel.instrumentation.grpc.capture-metadata.client.request:
-      name: otel.instrumentation.grpc.capture-metadata.client.request
-      declarative_name: java.grpc.capture_metadata.client.request
-      description: |
-        Deprecated: use `otel.instrumentation.grpc.client.request-metadata.included` instead. A comma-separated list of request metadata keys to capture on client spans. It does not support glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other entry is matched as a literal metadata key.
-      type: list
-      default: ''
-      deprecated: true
-      replaced_by: otel.instrumentation.grpc.client.request-metadata.included
-    otel.instrumentation.grpc.capture-metadata.server.request:
-      name: otel.instrumentation.grpc.capture-metadata.server.request
-      declarative_name: java.grpc.capture_metadata.server.request
-      description: |
-        Deprecated: use `otel.instrumentation.grpc.server.request-metadata.included` instead. A comma-separated list of request metadata keys to capture on server spans. It does not support glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other entry is matched as a literal metadata key.
-      type: list
-      default: ''
-      deprecated: true
-      replaced_by: otel.instrumentation.grpc.server.request-metadata.included
     otel.instrumentation.grpc.client.request-metadata.excluded:
       name: otel.instrumentation.grpc.client.request-metadata.excluded
       declarative_name: java.grpc.client.request_metadata.excluded
@@ -1009,15 +905,6 @@ definitions:
         Enables the capture of code location attributes, including file path, class name, method name, and line number.
       type: boolean
       default: false
-    otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes:
-      name: otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes
-      declarative_name: java.log4j_appender.capture_map_message_attributes/development
-      description: |
-        Deprecated; use otel.instrumentation.common.logging.structured-attributes.included instead. This setting is ignored under v3-preview and will be removed in 3.0. Outside v3-preview, true captures all MapMessage attributes and false captures none. It is ignored when a source-specific included or excluded pattern is configured.
-      type: boolean
-      default: false
-      deprecated: true
-      replaced_by: otel.instrumentation.common.logging.structured-attributes.included
     otel.instrumentation.log4j-appender.experimental.capture-marker-attribute:
       name: otel.instrumentation.log4j-appender.experimental.capture-marker-attribute
       declarative_name: java.log4j_appender.capture_marker_attribute/development
@@ -1056,30 +943,6 @@ definitions:
         Enables the capture of the log message template (if arguments are provided).
       type: boolean
       default: false
-    otel.instrumentation.log4j-appender.experimental.map-message-attributes.excluded:
-      name: otel.instrumentation.log4j-appender.experimental.map-message-attributes.excluded
-      declarative_name: java.log4j_appender.map_message_attributes/development.excluded
-      description: |
-        Deprecated; use otel.instrumentation.common.logging.structured-attributes.excluded instead. This setting is ignored under v3-preview and will be removed in 3.0. Comma-separated list of case-sensitive glob patterns for MapMessage keys not to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No MapMessage attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes setting is configured; configuring only excluded patterns captures all MapMessage attributes that do not match them. Captured MapMessage attributes may contain sensitive information.
-      type: list
-      default: ''
-      deprecated: true
-      replaced_by: otel.instrumentation.common.logging.structured-attributes.excluded
-      examples:
-      - '*-secret'
-      - password,token
-    otel.instrumentation.log4j-appender.experimental.map-message-attributes.included:
-      name: otel.instrumentation.log4j-appender.experimental.map-message-attributes.included
-      declarative_name: java.log4j_appender.map_message_attributes/development.included
-      description: |
-        Deprecated; use otel.instrumentation.common.logging.structured-attributes.included instead. This setting is ignored under v3-preview and will be removed in 3.0. Comma-separated list of case-sensitive glob patterns for MapMessage keys to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No MapMessage attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes setting is configured; configuring only excluded patterns captures all MapMessage attributes that do not match them. Captured MapMessage attributes may contain sensitive information.
-      type: list
-      default: ''
-      deprecated: true
-      replaced_by: otel.instrumentation.common.logging.structured-attributes.included
-      examples:
-      - custom-map-message-key
-      - request-*,user-?
     otel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded-44fd371d:
       name: otel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded
       declarative_name: java.log4j_appender.mdc_attributes/development.excluded
@@ -1148,15 +1011,6 @@ definitions:
         Enables the capture of code location attributes, including file path, class name, method name, and line number.
       type: boolean
       default: false
-    otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes:
-      name: otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes
-      declarative_name: java.logback_appender.capture_key_value_pair_attributes/development
-      description: |
-        Deprecated; use otel.instrumentation.common.logging.structured-attributes.included instead. This setting is ignored under v3-preview and will be removed in 3.0. Outside v3-preview, it enables capture of all Logback key-value pair attributes unless a source-specific included or excluded pattern is configured.
-      type: boolean
-      default: false
-      deprecated: true
-      replaced_by: otel.instrumentation.common.logging.structured-attributes.included
     otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes:
       name: otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes
       declarative_name: java.logback_appender.capture_logger_context_attributes/development
@@ -1166,24 +1020,6 @@ definitions:
       default: false
       deprecated: true
       replaced_by: otel.instrumentation.logback-appender.experimental.logger-context-attributes.included
-    otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes:
-      name: otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes
-      declarative_name: java.logback_appender.capture_logstash_marker_attributes/development
-      description: |
-        Deprecated; use otel.instrumentation.common.logging.structured-attributes.included instead. This setting is ignored under v3-preview and will be removed in 3.0. Outside v3-preview, it enables capture of attributes added via Markers.append(), Markers.appendEntries(), Markers.appendArray(), and Markers.appendRaw() unless a source-specific included or excluded pattern is configured.
-      type: boolean
-      default: false
-      deprecated: true
-      replaced_by: otel.instrumentation.common.logging.structured-attributes.included
-    otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments:
-      name: otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments
-      declarative_name: java.logback_appender.capture_logstash_structured_arguments/development
-      description: |
-        Deprecated; use otel.instrumentation.common.logging.structured-attributes.included instead. This setting is ignored under v3-preview and will be removed in 3.0. Outside v3-preview, it enables capture of Logstash structured arguments unless a source-specific included or excluded pattern is configured.
-      type: boolean
-      default: false
-      deprecated: true
-      replaced_by: otel.instrumentation.common.logging.structured-attributes.included
     otel.instrumentation.logback-appender.experimental.capture-marker-attribute:
       name: otel.instrumentation.logback-appender.experimental.capture-marker-attribute
       declarative_name: java.logback_appender.capture_marker_attribute/development
@@ -1210,30 +1046,6 @@ definitions:
         Enables the capture of the log message template before parameter substitution.
       type: boolean
       default: false
-    otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.excluded:
-      name: otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.excluded
-      declarative_name: java.logback_appender.key_value_pair_attributes/development.excluded
-      description: |
-        Deprecated; use otel.instrumentation.common.logging.structured-attributes.excluded instead. This setting is ignored under v3-preview and will be removed in 3.0. Comma-separated list of case-sensitive glob patterns for Logback key value pair keys not to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No key value pair attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes setting is configured; configuring only excluded patterns captures all key value pair attributes that do not match them. Captured key value pair attributes may contain sensitive information.
-      type: list
-      default: ''
-      deprecated: true
-      replaced_by: otel.instrumentation.common.logging.structured-attributes.excluded
-      examples:
-      - '*-secret'
-      - password,token
-    otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included:
-      name: otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included
-      declarative_name: java.logback_appender.key_value_pair_attributes/development.included
-      description: |
-        Deprecated; use otel.instrumentation.common.logging.structured-attributes.included instead. This setting is ignored under v3-preview and will be removed in 3.0. Comma-separated list of case-sensitive glob patterns for Logback key value pair keys to capture as log attributes. "*" matches any number of characters and "?" matches one character, so "*" captures all key value pair attributes. Excluded patterns take precedence over included patterns. No key value pair attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes setting is configured; configuring only excluded patterns captures all key value pair attributes that do not match them. Captured key value pair attributes may contain sensitive information.
-      type: list
-      default: ''
-      deprecated: true
-      replaced_by: otel.instrumentation.common.logging.structured-attributes.included
-      examples:
-      - custom-key
-      - request-*,user-?
     otel.instrumentation.logback-appender.experimental.logger-context-attributes.excluded:
       name: otel.instrumentation.logback-appender.experimental.logger-context-attributes.excluded
       declarative_name: java.logback_appender.logger_context_attributes/development.excluded
@@ -1254,54 +1066,6 @@ definitions:
       examples:
       - app.version
       - app.*,deployment-?
-    otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.excluded:
-      name: otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.excluded
-      declarative_name: java.logback_appender.logstash_marker_attributes/development.excluded
-      description: |
-        Deprecated; use otel.instrumentation.common.logging.structured-attributes.excluded instead. This setting is ignored under v3-preview and will be removed in 3.0. Comma-separated list of case-sensitive glob patterns for Logstash marker keys not to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No Logstash marker attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes setting is configured; configuring only excluded patterns captures all Logstash marker attributes that do not match them. Captured Logstash marker attributes may contain sensitive information.
-      type: list
-      default: ''
-      deprecated: true
-      replaced_by: otel.instrumentation.common.logging.structured-attributes.excluded
-      examples:
-      - '*-secret'
-      - password,token
-    otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.included:
-      name: otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.included
-      declarative_name: java.logback_appender.logstash_marker_attributes/development.included
-      description: |
-        Deprecated; use otel.instrumentation.common.logging.structured-attributes.included instead. This setting is ignored under v3-preview and will be removed in 3.0. Comma-separated list of case-sensitive glob patterns for Logstash marker keys to capture as log attributes. "*" matches any number of characters and "?" matches one character, so "*" captures all Logstash marker attributes. Excluded patterns take precedence over included patterns. No Logstash marker attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes setting is configured; configuring only excluded patterns captures all Logstash marker attributes that do not match them. Captured Logstash marker attributes may contain sensitive information.
-      type: list
-      default: ''
-      deprecated: true
-      replaced_by: otel.instrumentation.common.logging.structured-attributes.included
-      examples:
-      - custom-key
-      - request-*,user-?
-    otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.excluded:
-      name: otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.excluded
-      declarative_name: java.logback_appender.logstash_structured_argument_attributes/development.excluded
-      description: |
-        Deprecated; use otel.instrumentation.common.logging.structured-attributes.excluded instead. This setting is ignored under v3-preview and will be removed in 3.0. Comma-separated list of case-sensitive glob patterns for Logstash structured argument keys not to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No Logstash structured argument attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments setting is configured; configuring only excluded patterns captures all Logstash structured argument attributes that do not match them. Captured Logstash structured argument attributes may contain sensitive information.
-      type: list
-      default: ''
-      deprecated: true
-      replaced_by: otel.instrumentation.common.logging.structured-attributes.excluded
-      examples:
-      - '*-secret'
-      - password,token
-    otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included:
-      name: otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included
-      declarative_name: java.logback_appender.logstash_structured_argument_attributes/development.included
-      description: |
-        Deprecated; use otel.instrumentation.common.logging.structured-attributes.included instead. This setting is ignored under v3-preview and will be removed in 3.0. Comma-separated list of case-sensitive glob patterns for Logstash structured argument keys to capture as log attributes. "*" matches any number of characters and "?" matches one character, so "*" captures all Logstash structured argument attributes. Excluded patterns take precedence over included patterns. No Logstash structured argument attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments setting is configured; configuring only excluded patterns captures all Logstash structured argument attributes that do not match them. Captured Logstash structured argument attributes may contain sensitive information.
-      type: list
-      default: ''
-      deprecated: true
-      replaced_by: otel.instrumentation.common.logging.structured-attributes.included
-      examples:
-      - custom-key
-      - request-*,user-?
     otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded:
       name: otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded
       declarative_name: java.logback_appender.mdc_attributes/development.excluded
@@ -1356,15 +1120,6 @@ definitions:
         Enables gauge-based Micrometer histograms for DistributionSummary and Timer instruments.
       type: boolean
       default: false
-    otel.instrumentation.micrometer.histogram-gauges.enabled:
-      name: otel.instrumentation.micrometer.histogram-gauges.enabled
-      declarative_name: java.micrometer.histogram_gauges.enabled
-      description: |
-        Deprecated alias for `otel.instrumentation.micrometer.experimental.histogram-gauges.enabled`. It will be removed in 3.0.
-      type: boolean
-      default: false
-      deprecated: true
-      replaced_by: otel.instrumentation.micrometer.experimental.histogram-gauges.enabled
     otel.instrumentation.micrometer.prometheus-mode.enabled:
       name: otel.instrumentation.micrometer.prometheus-mode.enabled
       declarative_name: java.micrometer.prometheus_mode.enabled
@@ -1669,7 +1424,16 @@ definitions:
       default: ''
       deprecated: true
       replaced_by: otel.instrumentation.servlet.experimental.request-parameters.included
-    otel.instrumentation.servlet.experimental.request-parameters.excluded:
+    otel.instrumentation.servlet.experimental.request-parameters.excluded-7948572c:
+      name: otel.instrumentation.servlet.experimental.request-parameters.excluded
+      declarative_name: java.servlet.request_parameters/development.excluded
+      description: |
+        A comma-separated list of case-sensitive request parameter name patterns to exclude from span attributes under `servlet.request.parameter.<name>`, preserving the original parameter-name casing. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. No request parameters are captured unless an included or excluded pattern is configured; configuring only excluded patterns captures all request parameters that do not match them, which may expose sensitive information.
+      type: list
+      default: ''
+      examples:
+      - password,*-token
+    otel.instrumentation.servlet.experimental.request-parameters.excluded-9e7e430a:
       name: otel.instrumentation.servlet.experimental.request-parameters.excluded
       declarative_name: java.servlet.request_parameters/development.excluded
       description: |
@@ -1678,11 +1442,21 @@ definitions:
       default: ''
       examples:
       - password,*-token
-    otel.instrumentation.servlet.experimental.request-parameters.included:
+    otel.instrumentation.servlet.experimental.request-parameters.included-e05d9cd5:
       name: otel.instrumentation.servlet.experimental.request-parameters.included
       declarative_name: java.servlet.request_parameters/development.included
       description: |
         A comma-separated list of case-sensitive request parameter name patterns to capture as span attributes. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. No request parameters are captured unless an included or excluded pattern is configured; configuring only excluded patterns captures all request parameters that do not match them, which may expose sensitive information.
+      type: list
+      default: ''
+      examples:
+      - request-id
+      - user-*,search-?
+    otel.instrumentation.servlet.experimental.request-parameters.included-ef49d5de:
+      name: otel.instrumentation.servlet.experimental.request-parameters.included
+      declarative_name: java.servlet.request_parameters/development.included
+      description: |
+        A comma-separated list of case-sensitive request parameter name patterns to capture as span attributes under `servlet.request.parameter.<name>`, preserving the original parameter-name casing. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. No request parameters are captured unless an included or excluded pattern is configured; configuring only excluded patterns captures all request parameters that do not match them, which may expose sensitive information.
       type: list
       default: ''
       examples:
@@ -1694,7 +1468,7 @@ definitions:
       description: Enables adding the trace ID and span ID as request attributes for
         downstream servlet access.
       type: boolean
-      default: true
+      default: false
     otel.instrumentation.spring-batch.experimental-span-attributes:
       name: otel.instrumentation.spring-batch.experimental-span-attributes
       declarative_name: java.spring_batch.experimental_span_attributes/development
@@ -1742,29 +1516,11 @@ definitions:
         `spring_scheduling`.
       type: boolean
       default: false
-    otel.instrumentation.spring-security.enduser.role.granted-authority-prefix:
-      name: otel.instrumentation.spring-security.enduser.role.granted-authority-prefix
-      declarative_name: java.spring_security.enduser.role.granted_authority_prefix
-      description: Prefix of granted authorities identifying roles to capture in the
-        `enduser.role` semantic attribute. This property is not honored when v3 preview
-        is enabled; use the `user.roles` variant instead.
-      type: string
-      default: ROLE_
-    otel.instrumentation.spring-security.enduser.scope.granted-authority-prefix:
-      name: otel.instrumentation.spring-security.enduser.scope.granted-authority-prefix
-      declarative_name: java.spring_security.enduser.scope.granted_authority_prefix
-      description: Prefix of granted authorities identifying scopes to capture in
-        the `enduser.scope` semantic attribute. This property and the associated attribute
-        are not supported when v3 preview is enabled.
-      type: string
-      default: SCOPE_
     otel.instrumentation.spring-security.user.roles.granted-authority-prefix:
       name: otel.instrumentation.spring-security.user.roles.granted-authority-prefix
       declarative_name: java.spring_security.user.roles.granted_authority_prefix
       description: Prefix of granted authorities identifying roles to capture in the
-        `user.roles` semantic attribute when v3 preview is enabled. This property
-        is not honored when v3 preview is disabled; use the `enduser.role` variant
-        instead.
+        `user.roles` semantic attribute.
       type: string
       default: ROLE_
     otel.instrumentation.spring-webmvc.experimental-span-attributes:
@@ -1921,10 +1677,8 @@ definitions:
     semconv-stability.opt-in:
       name: otel.semconv-stability.opt-in
       declarative_name: general.stability_opt_in_list
-      description: A comma-separated list of semantic convention groups to opt into,
-        such as `rpc` and `service.peer`. Use `<group>/dup` to emit both old and new
-        conventions. Under v3 preview the preview groups use `otel.semconv-stability.preview`
-        instead.
+      description: A comma-separated list of stable semantic convention groups to
+        opt into.
       type: list
       default: ''
       declarative_type: string
@@ -1941,11 +1695,9 @@ definitions:
       declarative_name: java.common.semconv_stability.preview
       description: Opt-in to emit preview (not yet stable) semantic conventions for
         the `rpc` and `service.peer` groups. Use `<group>/dup` to emit both the old
-        and the preview conventions simultaneously. Outside v3 preview these groups
-        are also accepted by `otel.semconv-stability.opt-in`; under v3 preview only
-        this setting selects them. The flat `otel.semconv-stability.preview` property
-        is read only from system properties and environment variables, not from the
-        agent configuration file.
+        and the preview conventions simultaneously. The flat `otel.semconv-stability.preview`
+        property is read only from system properties and environment variables, not
+        from the agent configuration file.
       type: list
     span-suppression-strategy:
       name: otel.instrumentation.common.span-suppression-strategy
@@ -6288,7 +6040,7 @@ libraries:
         type: STRING
       - name: user_agent.original
         type: STRING
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-a64b5297
     - http.server.request.duration-1f6f63ed
@@ -6460,7 +6212,7 @@ libraries:
         type: STRING
       - name: rpc.system
         type: STRING
-  - when: otel.semconv-stability.opt-in=rpc,service.peer
+  - when: otel.semconv-stability.preview=rpc,service.peer
     metric_refs:
     - rpc.client.call.duration-c22f308d
     - rpc.server.call.duration-b95d8012
@@ -6582,7 +6334,7 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-a64b5297
     spans:
@@ -6652,7 +6404,7 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-a64b5297
     spans:
@@ -6723,7 +6475,7 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-a64b5297
     spans:
@@ -6833,7 +6585,7 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-a64b5297
     spans:
@@ -6999,7 +6751,7 @@ libraries:
         type: STRING
       - name: user_agent.original
         type: STRING
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-a64b5297
     - http.server.request.duration-1f6f63ed
@@ -7098,7 +6850,7 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
-  - when: otel.semconv-stability.opt-in=rpc
+  - when: otel.semconv-stability.preview=rpc
     spans:
     - span_kind: CLIENT
       attributes:
@@ -7170,7 +6922,7 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-98bb5f3b
     spans:
@@ -7238,7 +6990,7 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-98bb5f3b
     spans:
@@ -7312,7 +7064,7 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-a64b5297
     spans:
@@ -7512,10 +7264,6 @@ libraries:
   - com.amazonaws:aws-java-sdk-sqs:[1.10.33,)
   configuration_refs:
   - messaging.batch-send.message-creation-spans.enabled
-  - messaging.capture-headers
-  - messaging.deprecated-headers.excluded
-  - messaging.deprecated-headers.included
-  - messaging.deprecated-receive-telemetry.enabled
   - messaging.headers.excluded
   - messaging.headers.included
   - otel.instrumentation.aws-sdk.experimental-span-attributes-f30ad240
@@ -7696,10 +7444,6 @@ libraries:
   - software.amazon.awssdk:sqs:[2.2.0,)
   configuration_refs:
   - messaging.batch-send.message-creation-spans.enabled
-  - messaging.capture-headers
-  - messaging.deprecated-headers.excluded
-  - messaging.deprecated-headers.included
-  - messaging.deprecated-receive-telemetry.enabled
   - messaging.headers.excluded
   - messaging.headers.included
   - otel.instrumentation.aws-sdk.experimental-record-individual-http-error
@@ -9413,7 +9157,7 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-98bb5f3b
     spans:
@@ -9546,6 +9290,7 @@ libraries:
   javaagent_target_versions:
   - org.glassfish.grizzly:grizzly-http:[2.3,)
   configuration_refs:
+  - common.user.name.enabled
   - http.known-methods
   - http.server.capture-request-headers
   - http.server.capture-response-headers
@@ -9604,8 +9349,6 @@ libraries:
   javaagent_target_versions:
   - io.grpc:grpc-core:[1.6.0,)
   configuration_refs:
-  - otel.instrumentation.grpc.capture-metadata.client.request
-  - otel.instrumentation.grpc.capture-metadata.server.request
   - otel.instrumentation.grpc.client.request-metadata.excluded
   - otel.instrumentation.grpc.client.request-metadata.included
   - otel.instrumentation.grpc.emit-message-events
@@ -9707,7 +9450,7 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
-  - when: otel.semconv-stability.opt-in=rpc
+  - when: otel.semconv-stability.preview=rpc
     metric_refs:
     - rpc.client.call.duration-7381532d
     - rpc.server.call.duration-1e979856
@@ -10230,7 +9973,7 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-a64b5297
     spans:
@@ -10391,7 +10134,7 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-a64b5297
     spans:
@@ -10917,11 +10660,8 @@ libraries:
   javaagent_target_versions:
   - org.jboss.logmanager:jboss-logmanager:[1.1.0.GA,)
   configuration_refs:
-  - common.logging.span-id
   - common.logging.span-id-key
-  - common.logging.trace-flags
   - common.logging.trace-flags-key
-  - common.logging.trace-id
   - common.logging.trace-id-key
 - name: jdbc
   display_name: JDBC
@@ -10987,7 +10727,7 @@ libraries:
         type: STRING
       - name: db.system.name
         type: STRING
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - db.client.operation.duration-18bcff8b
     spans:
@@ -11098,7 +10838,7 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - db.client.operation.duration-32559b79
     spans:
@@ -11165,7 +10905,7 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - db.client.operation.duration-8ae2b8ce
     spans:
@@ -11240,7 +10980,7 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - db.client.operation.duration-8ae2b8ce
     spans:
@@ -11330,6 +11070,7 @@ libraries:
   javaagent_target_versions:
   - org.eclipse.jetty:jetty-server:[8.0.0.v20110901,11)
   configuration_refs:
+  - common.user.name.enabled
   - http.known-methods
   - http.server.capture-request-headers
   - http.server.capture-response-headers
@@ -11386,6 +11127,7 @@ libraries:
   javaagent_target_versions:
   - org.eclipse.jetty:jetty-server:[11, 12)
   configuration_refs:
+  - common.user.name.enabled
   - http.known-methods
   - http.server.capture-request-headers
   - http.server.capture-response-headers
@@ -11442,6 +11184,7 @@ libraries:
   javaagent_target_versions:
   - org.eclipse.jetty:jetty-server:[12,)
   configuration_refs:
+  - common.user.name.enabled
   - http.known-methods
   - http.server.capture-request-headers
   - http.server.capture-response-headers
@@ -11530,7 +11273,7 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-a64b5297
     spans:
@@ -11604,7 +11347,7 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-a64b5297
     spans:
@@ -11668,10 +11411,6 @@ libraries:
   - javax.jms:javax.jms-api:(,)
   - javax.jms:jms-api:(,)
   configuration_refs:
-  - messaging.capture-headers
-  - messaging.deprecated-headers.excluded
-  - messaging.deprecated-headers.included
-  - messaging.deprecated-receive-telemetry.enabled
   - messaging.headers.excluded
   - messaging.headers.included
   - otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
@@ -11743,10 +11482,6 @@ libraries:
   javaagent_target_versions:
   - jakarta.jms:jakarta.jms-api:[3.0.0,)
   configuration_refs:
-  - messaging.capture-headers
-  - messaging.deprecated-headers.excluded
-  - messaging.deprecated-headers.included
-  - messaging.deprecated-receive-telemetry.enabled
   - messaging.headers.excluded
   - messaging.headers.included
   - otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
@@ -11848,7 +11583,7 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-a64b5297
     spans:
@@ -12006,10 +11741,6 @@ libraries:
   javaagent_target_versions:
   - org.apache.kafka:kafka-clients:[0.11.0.0,)
   configuration_refs:
-  - messaging.capture-headers
-  - messaging.deprecated-headers.excluded
-  - messaging.deprecated-headers.included
-  - messaging.deprecated-receive-telemetry.enabled
   - messaging.headers.excluded
   - messaging.headers.included
   - otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
@@ -12841,10 +12572,6 @@ libraries:
   javaagent_target_versions:
   - org.apache.kafka:kafka-streams:[0.11.0.0,)
   configuration_refs:
-  - messaging.capture-headers
-  - messaging.deprecated-headers.excluded
-  - messaging.deprecated-headers.included
-  - messaging.deprecated-receive-telemetry.enabled
   - messaging.headers.excluded
   - messaging.headers.included
   - otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
@@ -13310,7 +13037,7 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-98bb5f3b
     spans:
@@ -13400,7 +13127,7 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
-  - when: otel.instrumentation.lettuce.connection-telemetry.enabled=true,otel.semconv-stability.opt-in=service.peer
+  - when: otel.instrumentation.lettuce.connection-telemetry.enabled=true,otel.semconv-stability.preview=service.peer
     metric_refs:
     - db.client.operation.duration-8ae2b8ce
     spans:
@@ -13452,7 +13179,7 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - db.client.operation.duration-8ae2b8ce
     spans:
@@ -13581,7 +13308,7 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
-  - when: otel.instrumentation.lettuce.connection-telemetry.enabled=true,otel.semconv-stability.opt-in=service.peer
+  - when: otel.instrumentation.lettuce.connection-telemetry.enabled=true,otel.semconv-stability.preview=service.peer
     metric_refs:
     - db.client.operation.duration-8ae2b8ce
     spans:
@@ -13639,7 +13366,7 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - db.client.operation.duration-8ae2b8ce
     spans:
@@ -13724,14 +13451,15 @@ libraries:
     name: io.opentelemetry.liberty-20.0
   has_javaagent: true
   configuration_refs:
+  - common.user.name.enabled
   - http.known-methods
   - http.server.capture-request-headers
   - http.server.capture-response-headers
   - http.server.emit-experimental-telemetry
   - otel.instrumentation.servlet.experimental-span-attributes
   - otel.instrumentation.servlet.experimental.capture-request-parameters
-  - otel.instrumentation.servlet.experimental.request-parameters.excluded
-  - otel.instrumentation.servlet.experimental.request-parameters.included
+  - otel.instrumentation.servlet.experimental.request-parameters.excluded-9e7e430a
+  - otel.instrumentation.servlet.experimental.request-parameters.included-e05d9cd5
 - name: liberty-dispatcher-20.0
   display_name: Liberty
   description: |
@@ -13783,23 +13511,14 @@ libraries:
   javaagent_target_versions:
   - org.apache.logging.log4j:log4j-core:[2.0,)
   configuration_refs:
-  - common.logging.span-id
-  - common.logging.span-id-key
-  - common.logging.trace-flags
-  - common.logging.trace-flags-key
-  - common.logging.trace-id
-  - common.logging.trace-id-key
   - otel.instrumentation.common.logging.structured-attributes.excluded
   - otel.instrumentation.common.logging.structured-attributes.included
   - otel.instrumentation.log4j-appender.experimental-log-attributes
   - otel.instrumentation.log4j-appender.experimental.capture-arguments
   - otel.instrumentation.log4j-appender.experimental.capture-code-attributes
-  - otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes
   - otel.instrumentation.log4j-appender.experimental.capture-marker-attribute
   - otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes-bb9cf4ea
   - otel.instrumentation.log4j-appender.experimental.capture-template
-  - otel.instrumentation.log4j-appender.experimental.map-message-attributes.excluded
-  - otel.instrumentation.log4j-appender.experimental.map-message-attributes.included
   - otel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded-44fd371d
   - otel.instrumentation.log4j-appender.experimental.mdc-attributes.included-7522b9e5
 - name: log4j-context-data-2.7
@@ -13814,11 +13533,8 @@ libraries:
   javaagent_target_versions:
   - org.apache.logging.log4j:log4j-core:[2.7,2.17.0)
   configuration_refs:
-  - common.logging.span-id
   - common.logging.span-id-key
-  - common.logging.trace-flags
   - common.logging.trace-flags-key
-  - common.logging.trace-id
   - common.logging.trace-id-key
   - otel.instrumentation.common.mdc.resource-attributes
   - otel.instrumentation.log4j-context-data.add-baggage
@@ -13834,11 +13550,8 @@ libraries:
   javaagent_target_versions:
   - org.apache.logging.log4j:log4j-core:[2.17.0,)
   configuration_refs:
-  - common.logging.span-id
   - common.logging.span-id-key
-  - common.logging.trace-flags
   - common.logging.trace-flags-key
-  - common.logging.trace-id
   - common.logging.trace-id-key
   - otel.instrumentation.common.mdc.resource-attributes
   - otel.instrumentation.log4j-context-data.add-baggage
@@ -13854,11 +13567,8 @@ libraries:
   javaagent_target_versions:
   - log4j:log4j:[1.2,)
   configuration_refs:
-  - common.logging.span-id
   - common.logging.span-id-key
-  - common.logging.trace-flags
   - common.logging.trace-flags-key
-  - common.logging.trace-id
   - common.logging.trace-id-key
   - otel.instrumentation.common.mdc.resource-attributes
 - name: logback-appender-1.0
@@ -13881,21 +13591,12 @@ libraries:
   - otel.instrumentation.logback-appender.experimental-log-attributes
   - otel.instrumentation.logback-appender.experimental.capture-arguments
   - otel.instrumentation.logback-appender.experimental.capture-code-attributes
-  - otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes
   - otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes
-  - otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes
-  - otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments
   - otel.instrumentation.logback-appender.experimental.capture-marker-attribute
   - otel.instrumentation.logback-appender.experimental.capture-mdc-attributes
   - otel.instrumentation.logback-appender.experimental.capture-template
-  - otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.excluded
-  - otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included
   - otel.instrumentation.logback-appender.experimental.logger-context-attributes.excluded
   - otel.instrumentation.logback-appender.experimental.logger-context-attributes.included
-  - otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.excluded
-  - otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.included
-  - otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.excluded
-  - otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included
   - otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded
   - otel.instrumentation.logback-appender.experimental.mdc-attributes.included
 - name: logback-mdc-1.0
@@ -13911,11 +13612,8 @@ libraries:
   javaagent_target_versions:
   - ch.qos.logback:logback-classic:[1.0.0,1.2.3]
   configuration_refs:
-  - common.logging.span-id
   - common.logging.span-id-key
-  - common.logging.trace-flags
   - common.logging.trace-flags-key
-  - common.logging.trace-id
   - common.logging.trace-id-key
   - otel.instrumentation.common.mdc.resource-attributes
   - otel.instrumentation.logback-mdc.add-baggage
@@ -13935,7 +13633,6 @@ libraries:
   configuration_refs:
   - otel.instrumentation.micrometer.base-time-unit
   - otel.instrumentation.micrometer.experimental.histogram-gauges.enabled
-  - otel.instrumentation.micrometer.histogram-gauges.enabled
   - otel.instrumentation.micrometer.prometheus-mode.enabled
 - name: mongo-3.1
   display_name: MongoDB Driver
@@ -14129,9 +13826,6 @@ libraries:
   javaagent_target_versions:
   - io.nats:jnats:[2.17.2,)
   configuration_refs:
-  - messaging.capture-headers
-  - messaging.deprecated-headers.excluded
-  - messaging.deprecated-headers.included
   - messaging.headers.excluded
   - messaging.headers.included
   telemetry:
@@ -14278,7 +13972,7 @@ libraries:
         type: STRING
       - name: user_agent.original
         type: STRING
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-a64b5297
     - http.server.request.duration-639e2d0b
@@ -14428,7 +14122,7 @@ libraries:
         type: STRING
       - name: user_agent.original
         type: STRING
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-a64b5297
     - http.server.request.duration-639e2d0b
@@ -14579,7 +14273,7 @@ libraries:
         type: STRING
       - name: user_agent.original
         type: STRING
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-a64b5297
     - http.server.request.duration-639e2d0b
@@ -14685,7 +14379,7 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-a64b5297
     spans:
@@ -14764,7 +14458,7 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-a64b5297
     spans:
@@ -15441,10 +15135,6 @@ libraries:
   javaagent_target_versions:
   - org.apache.pulsar:pulsar-client:[2.8.0,5)
   configuration_refs:
-  - messaging.capture-headers
-  - messaging.deprecated-headers.excluded
-  - messaging.deprecated-headers.included
-  - messaging.deprecated-receive-telemetry.enabled
   - messaging.headers.excluded
   - messaging.headers.included
   - otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
@@ -15671,7 +15361,7 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - db.client.operation.duration-d4212042
     spans:
@@ -15710,9 +15400,6 @@ libraries:
   javaagent_target_versions:
   - com.rabbitmq:amqp-client:[2.7.0,)
   configuration_refs:
-  - messaging.capture-headers
-  - messaging.deprecated-headers.excluded
-  - messaging.deprecated-headers.included
   - messaging.headers.excluded
   - messaging.headers.included
   - otel.instrumentation.rabbitmq.experimental-span-attributes
@@ -16080,7 +15767,7 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-a64b5297
     spans:
@@ -16221,10 +15908,6 @@ libraries:
   javaagent_target_versions:
   - io.projectreactor.kafka:reactor-kafka:[1.0.0,)
   configuration_refs:
-  - messaging.capture-headers
-  - messaging.deprecated-headers.excluded
-  - messaging.deprecated-headers.included
-  - messaging.deprecated-receive-telemetry.enabled
   - messaging.headers.excluded
   - messaging.headers.included
   - otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
@@ -16351,7 +16034,7 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-a64b5297
     spans:
@@ -16755,9 +16438,6 @@ libraries:
   - org.apache.rocketmq:rocketmq-client:[4.0.0,)
   configuration_refs:
   - messaging.batch-send.message-creation-spans.enabled
-  - messaging.capture-headers
-  - messaging.deprecated-headers.excluded
-  - messaging.deprecated-headers.included
   - messaging.headers.excluded
   - messaging.headers.included
   - otel.instrumentation.rocketmq-client.experimental-span-attributes
@@ -16900,10 +16580,6 @@ libraries:
   javaagent_target_versions:
   - org.apache.rocketmq:rocketmq-client-java:[5.0.0,)
   configuration_refs:
-  - messaging.capture-headers
-  - messaging.deprecated-headers.excluded
-  - messaging.deprecated-headers.included
-  - messaging.deprecated-receive-telemetry.enabled
   - messaging.headers.excluded
   - messaging.headers.included
   - otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
@@ -17137,11 +16813,12 @@ libraries:
   javaagent_target_versions:
   - javax.servlet:servlet-api:[2.2, 3.0)
   configuration_refs:
+  - common.user.name.enabled
   - otel.experimental.javascript-snippet-ad834761
   - otel.instrumentation.servlet.experimental-span-attributes
   - otel.instrumentation.servlet.experimental.capture-request-parameters
-  - otel.instrumentation.servlet.experimental.request-parameters.excluded
-  - otel.instrumentation.servlet.experimental.request-parameters.included
+  - otel.instrumentation.servlet.experimental.request-parameters.excluded-7948572c
+  - otel.instrumentation.servlet.experimental.request-parameters.included-ef49d5de
   - otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
   telemetry:
   - when: default
@@ -17199,11 +16876,12 @@ libraries:
   javaagent_target_versions:
   - javax.servlet:javax.servlet-api:[3.0,)
   configuration_refs:
+  - common.user.name.enabled
   - otel.experimental.javascript-snippet-cfa9f908
   - otel.instrumentation.servlet.experimental-span-attributes
   - otel.instrumentation.servlet.experimental.capture-request-parameters
-  - otel.instrumentation.servlet.experimental.request-parameters.excluded
-  - otel.instrumentation.servlet.experimental.request-parameters.included
+  - otel.instrumentation.servlet.experimental.request-parameters.excluded-7948572c
+  - otel.instrumentation.servlet.experimental.request-parameters.included-ef49d5de
   - otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
   telemetry:
   - when: default
@@ -17246,6 +16924,36 @@ libraries:
         type: STRING
       - name: user_agent.original
         type: STRING
+  - when: otel.instrumentation.common.user.name.enabled=true
+    spans:
+    - span_kind: SERVER
+      attributes:
+      - name: client.address
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: http.route
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.path
+        type: STRING
+      - name: url.scheme
+        type: STRING
+      - name: user.name
+        type: STRING
+      - name: user_agent.original
+        type: STRING
 - name: servlet-5.0
   display_name: Servlet
   description: This instrumentation enables HTTP server spans and metrics for Jakarta
@@ -17265,11 +16973,12 @@ libraries:
   javaagent_target_versions:
   - jakarta.servlet:jakarta.servlet-api:[5.0.0,)
   configuration_refs:
+  - common.user.name.enabled
   - otel.experimental.javascript-snippet-ad834761
   - otel.instrumentation.servlet.experimental-span-attributes
   - otel.instrumentation.servlet.experimental.capture-request-parameters
-  - otel.instrumentation.servlet.experimental.request-parameters.excluded
-  - otel.instrumentation.servlet.experimental.request-parameters.included
+  - otel.instrumentation.servlet.experimental.request-parameters.excluded-7948572c
+  - otel.instrumentation.servlet.experimental.request-parameters.included-ef49d5de
   - otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
   telemetry:
   - when: otel.instrumentation.servlet.experimental.request-parameters.included=test-parameter
@@ -17553,9 +17262,6 @@ libraries:
   - org.springframework.integration:spring-integration-amqp:[4.1.0.RELEASE,)
   - org.springframework.integration:spring-integration-core:[4.1.0.RELEASE,)
   configuration_refs:
-  - messaging.capture-headers
-  - messaging.deprecated-headers.excluded
-  - messaging.deprecated-headers.included
   - messaging.headers.excluded
   - messaging.headers.included
   - otel.instrumentation.spring-integration.global-channel-interceptor-patterns
@@ -17618,10 +17324,6 @@ libraries:
   javaagent_target_versions:
   - org.springframework:spring-jms:[2.0,6)
   configuration_refs:
-  - messaging.capture-headers
-  - messaging.deprecated-headers.excluded
-  - messaging.deprecated-headers.included
-  - messaging.deprecated-receive-telemetry.enabled
   - messaging.headers.excluded
   - messaging.headers.included
   - otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
@@ -17661,10 +17363,6 @@ libraries:
   javaagent_target_versions:
   - org.springframework:spring-jms:[6.0.0,)
   configuration_refs:
-  - messaging.capture-headers
-  - messaging.deprecated-headers.excluded
-  - messaging.deprecated-headers.included
-  - messaging.deprecated-receive-telemetry.enabled
   - messaging.headers.excluded
   - messaging.headers.included
   - otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
@@ -17704,10 +17402,6 @@ libraries:
   javaagent_target_versions:
   - org.springframework.kafka:spring-kafka:[2.7.0,)
   configuration_refs:
-  - messaging.capture-headers
-  - messaging.deprecated-headers.excluded
-  - messaging.deprecated-headers.included
-  - messaging.deprecated-receive-telemetry.enabled
   - messaging.headers.excluded
   - messaging.headers.included
   - otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
@@ -17791,10 +17485,6 @@ libraries:
   javaagent_target_versions:
   - org.springframework.pulsar:spring-pulsar:[1.0.0,)
   configuration_refs:
-  - messaging.capture-headers
-  - messaging.deprecated-headers.excluded
-  - messaging.deprecated-headers.included
-  - messaging.deprecated-receive-telemetry.enabled
   - messaging.headers.excluded
   - messaging.headers.included
   - otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
@@ -17832,9 +17522,6 @@ libraries:
   javaagent_target_versions:
   - org.springframework.amqp:spring-rabbit:(,)
   configuration_refs:
-  - messaging.capture-headers
-  - messaging.deprecated-headers.excluded
-  - messaging.deprecated-headers.included
   - messaging.headers.excluded
   - messaging.headers.included
   telemetry:
@@ -17934,7 +17621,6 @@ libraries:
   display_name: Spring Security
   description: |
     This instrumentation does not emit any telemetry on its own. Instead, it captures identity attributes, and is only enabled when at least one common identity configuration is enabled.
-    NOTE: The `enduser` attributes have been deprecated. When `otel.instrumentation.common.v3-preview` is enabled, `enduser.id` is emitted as `user.name`, `enduser.role` is emitted as the string array `user.roles`, and `enduser.scope` is not emitted.
   library_link: https://spring.io/projects/spring-security
   source_path: instrumentation/spring/spring-security-config-6.0
   minimum_java_version: 17
@@ -17945,13 +17631,8 @@ libraries:
   javaagent_target_versions:
   - org.springframework.security:spring-security-config:[6.0.0,]
   configuration_refs:
-  - otel.instrumentation.common.enduser.id.enabled
-  - otel.instrumentation.common.enduser.role.enabled
-  - otel.instrumentation.common.enduser.scope.enabled
-  - otel.instrumentation.common.user.name.enabled
-  - otel.instrumentation.common.user.roles.enabled
-  - otel.instrumentation.spring-security.enduser.role.granted-authority-prefix
-  - otel.instrumentation.spring-security.enduser.scope.granted-authority-prefix
+  - common.user.name.enabled
+  - common.user.roles.enabled
   - otel.instrumentation.spring-security.user.roles.granted-authority-prefix
 - name: spring-web-3.1
   display_name: Spring Web
@@ -17985,7 +17666,7 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-98bb5f3b
     spans:
@@ -18068,7 +17749,7 @@ libraries:
       attributes:
       - name: code.function.name
         type: STRING
-  - when: otel.instrumentation.common.controller-telemetry.enabled=true,otel.semconv-stability.opt-in=service.peer
+  - when: otel.instrumentation.common.controller-telemetry.enabled=true,otel.semconv-stability.preview=service.peer
     spans:
     - span_kind: INTERNAL
       attributes:
@@ -18102,7 +17783,7 @@ libraries:
         type: STRING
     event_refs:
     - http.client.request.exception-ca66bc45
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-a64b5297
     spans:
@@ -18187,7 +17868,7 @@ libraries:
         type: STRING
       - name: user_agent.original
         type: STRING
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-98bb5f3b
     - http.server.request.duration-2311bdb1
@@ -18573,7 +18254,7 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
-  - when: otel.semconv-stability.opt-in=rpc
+  - when: otel.semconv-stability.preview=rpc
     metric_refs:
     - rpc.client.call.duration-c22f308d
     - rpc.server.call.duration-4a437c0b
@@ -18636,16 +18317,53 @@ libraries:
   javaagent_target_versions:
   - org.apache.tomcat.embed:tomcat-embed-core:[7.0.4, 10)
   configuration_refs:
+  - common.user.name.enabled
   - http.known-methods
   - http.server.capture-request-headers
   - http.server.capture-response-headers
   - http.server.emit-experimental-telemetry
   - otel.instrumentation.servlet.experimental-span-attributes
   - otel.instrumentation.servlet.experimental.capture-request-parameters
-  - otel.instrumentation.servlet.experimental.request-parameters.excluded
-  - otel.instrumentation.servlet.experimental.request-parameters.included
+  - otel.instrumentation.servlet.experimental.request-parameters.excluded-9e7e430a
+  - otel.instrumentation.servlet.experimental.request-parameters.included-e05d9cd5
   telemetry:
   - when: default
+    metric_refs:
+    - http.server.request.duration-1f6f63ed
+    spans:
+    - span_kind: SERVER
+      attributes:
+      - name: client.address
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.request.method_original
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: http.route
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.path
+        type: STRING
+      - name: url.query
+        type: STRING
+      - name: url.scheme
+        type: STRING
+      - name: user_agent.original
+        type: STRING
+  - when: otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled=true
     metric_refs:
     - http.server.request.duration-1f6f63ed
     spans:
@@ -18699,16 +18417,83 @@ libraries:
   javaagent_target_versions:
   - org.apache.tomcat.embed:tomcat-embed-core:[10,)
   configuration_refs:
+  - common.user.name.enabled
   - http.known-methods
   - http.server.capture-request-headers
   - http.server.capture-response-headers
   - http.server.emit-experimental-telemetry
   - otel.instrumentation.servlet.experimental-span-attributes
   - otel.instrumentation.servlet.experimental.capture-request-parameters
-  - otel.instrumentation.servlet.experimental.request-parameters.excluded
-  - otel.instrumentation.servlet.experimental.request-parameters.included
+  - otel.instrumentation.servlet.experimental.request-parameters.excluded-9e7e430a
+  - otel.instrumentation.servlet.experimental.request-parameters.included-e05d9cd5
   telemetry:
   - when: default
+    metric_refs:
+    - http.server.request.duration-1f6f63ed
+    spans:
+    - span_kind: SERVER
+      attributes:
+      - name: client.address
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.request.method_original
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: http.route
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.path
+        type: STRING
+      - name: url.query
+        type: STRING
+      - name: url.scheme
+        type: STRING
+      - name: user_agent.original
+        type: STRING
+  - when: otel.instrumentation.common.user.name.enabled=true,otel.instrumentation.servlet.experimental.request-parameters.included=test-*
+    spans:
+    - span_kind: SERVER
+      attributes:
+      - name: client.address
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: http.route
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.path
+        type: STRING
+      - name: url.scheme
+        type: STRING
+      - name: user.name
+        type: STRING
+      - name: user_agent.original
+        type: STRING
+  - when: otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled=true
     metric_refs:
     - http.server.request.duration-1f6f63ed
     spans:
@@ -18835,6 +18620,7 @@ libraries:
   javaagent_target_versions:
   - io.undertow:undertow-core:[1.4.0.Final,)
   configuration_refs:
+  - common.user.name.enabled
   - http.known-methods
   - http.server.capture-request-headers
   - http.server.capture-response-headers
@@ -18971,7 +18757,7 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-98bb5f3b
     spans:
@@ -19043,7 +18829,7 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-a64b5297
     spans:
@@ -19124,7 +18910,7 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-a64b5297
     spans:
@@ -19168,10 +18954,6 @@ libraries:
   javaagent_target_versions:
   - io.vertx:vertx-kafka-client:[3.5.1,)
   configuration_refs:
-  - messaging.capture-headers
-  - messaging.deprecated-headers.excluded
-  - messaging.deprecated-headers.included
-  - messaging.deprecated-receive-telemetry.enabled
   - messaging.headers.excluded
   - messaging.headers.included
   - otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
@@ -19285,7 +19067,7 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - db.client.operation.duration-8ae2b8ce
     spans:
@@ -19370,7 +19152,7 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - db.client.operation.duration-d4212042
     spans:
@@ -19441,7 +19223,7 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - db.client.operation.duration-d4212042
     spans:
