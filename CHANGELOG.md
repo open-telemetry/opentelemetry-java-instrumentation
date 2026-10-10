@@ -4,8 +4,6 @@
 
 ### ⚠️ Breaking changes
 
-- Remove the no-argument RPC and service-peer selection accessors and `rpcSchemaUrl()` in
-  `SemconvStability`; pass the instrumentation's `OpenTelemetry` instance instead.
 - The Java agent, Spring Boot setup, and standalone appenders now capture structured log attributes from Log4j
   `MapMessage` entries, SLF4J key-value pairs, Logback Logstash markers, and Logstash structured
   arguments by default. Replace the former flat settings for Log4j MapMessage
