@@ -8,8 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route.PekkoRouteUtil.PREFIX;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
@@ -33,13 +31,7 @@ class PathMatcherStaticInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("apply")
-            .and(takesArgument(0, named("org.apache.pekko.http.scaladsl.model.Uri$Path")))
-            .and(
-                returns(
-                    namedOneOf(
-                        "org.apache.pekko.http.scaladsl.server.PathMatcher$Matching",
-                        "org.apache.pekko.http.scaladsl.server.PathMatcher$Matched",
-                        "org.apache.pekko.http.scaladsl.server.PathMatcher$Unmatched$"))),
+            .and(takesArgument(0, named("org.apache.pekko.http.scaladsl.model.Uri$Path"))),
         getClass().getName() + "$ApplyAdvice");
   }
 

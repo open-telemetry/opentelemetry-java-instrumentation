@@ -9,8 +9,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.server.route.AkkaRouteUtil.PREFIX;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import akka.http.scaladsl.model.Uri;
@@ -38,14 +36,7 @@ class PathMatcherStaticInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("apply")
-            .and(takesArgument(0, named("akka.http.scaladsl.model.Uri$Path")))
-            .and(
-                returns(
-                    namedOneOf(
-                        "akka.http.scaladsl.server.PathMatcher$Matching",
-                        "akka.http.scaladsl.server.PathMatcher$Matched",
-                        "akka.http.scaladsl.server.PathMatcher$Unmatched$"))),
+        named("apply").and(takesArgument(0, named("akka.http.scaladsl.model.Uri$Path"))),
         getClass().getName() + "$ApplyAdvice");
   }
 
