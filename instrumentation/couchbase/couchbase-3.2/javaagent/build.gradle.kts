@@ -84,7 +84,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconvExperimental = register<Test>("testStableSemconvExperimental") {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs(
@@ -132,7 +132,7 @@ tasks {
   check {
     dependsOn(
       testing.suites,
-      testStableSemconvExperimental,
+      testExperimental,
       testV3Preview,
       testV3PreviewExperimental,
       testV3PreviewLegacyConfig,
